@@ -332,6 +332,7 @@ export const ExpressionPickerPopout = observer(
 							aria-label={i18n._(label)}
 							aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Backspace Delete"
 							className={clsx(styles.resizeCorner, className)}
+							data-flx="expressions.expression-picker-popout.resize-corner.button"
 							{...getHandleProps(edge)}
 						/>
 					))}

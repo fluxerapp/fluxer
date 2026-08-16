@@ -20,7 +20,8 @@ export type PremiumScenarioOverride =
 	| 'expired_old'
 	| 'visionary';
 export type DeveloperOptionsState = Readonly<{
-	bypassSplashScreen: boolean;
+	bypassLoadingSkeleton: boolean;
+	forceLoadingSkeleton: boolean;
 	forceFailMessageSends: boolean;
 	forceFailMessageLoads: boolean;
 	forceRenderPlaceholders: boolean;
@@ -103,7 +104,8 @@ type MutableDeveloperOptionsState = {
 };
 
 class DeveloperOptions implements DeveloperOptionsState {
-	bypassSplashScreen = false;
+	bypassLoadingSkeleton = false;
+	forceLoadingSkeleton = false;
 	forceFailMessageSends = false;
 	forceFailMessageLoads = false;
 	forceRenderPlaceholders = false;
@@ -189,7 +191,8 @@ class DeveloperOptions implements DeveloperOptionsState {
 
 	private async initPersistence(): Promise<void> {
 		await makePersistent(this, 'DeveloperOptions', [
-			'bypassSplashScreen',
+			'bypassLoadingSkeleton',
+			'forceLoadingSkeleton',
 			'forceFailMessageSends',
 			'forceFailMessageLoads',
 			'forceRenderPlaceholders',

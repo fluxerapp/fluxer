@@ -420,6 +420,7 @@ export const Autocomplete = observer(
 									onMouseLeave={handleMouseLeave}
 									rowRefs={rowRefs}
 									getOptionId={getOptionId}
+									data-flx="channel.autocomplete.autocomplete-command-choice.select"
 								/>
 							) : type === 'commandOptionalAdd' ? (
 								<AutocompleteCommandOptionalAdd
@@ -431,6 +432,7 @@ export const Autocomplete = observer(
 									onMouseLeave={handleMouseLeave}
 									rowRefs={rowRefs}
 									getOptionId={getOptionId}
+									data-flx="channel.autocomplete.autocomplete-command-optional-add.select"
 								/>
 							) : type === 'meme' ? (
 								<AutocompleteMeme

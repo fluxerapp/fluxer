@@ -62,6 +62,7 @@ interface PreviewGuildInviteHeaderProps {
 	memberCount: number;
 	previewIconUrl?: string | null;
 	previewName?: string | null;
+	eyebrowText?: string | null;
 }
 
 function formatInviteCount(value: number): string {
@@ -252,6 +253,7 @@ export const PreviewGuildInviteHeader = observer(function PreviewGuildInviteHead
 	memberCount,
 	previewIconUrl,
 	previewName,
+	eyebrowText,
 }: PreviewGuildInviteHeaderProps) {
 	const displayName = previewName ?? guildName;
 	const formattedPresenceCount = formatInviteCount(presenceCount);
@@ -294,7 +296,7 @@ export const PreviewGuildInviteHeader = observer(function PreviewGuildInviteHead
 				data-flx="auth.flow.invite-header.preview-guild-invite-header.entity-details"
 			>
 				<p className={styles.entityText} data-flx="auth.flow.invite-header.preview-guild-invite-header.entity-text">
-					<Trans>You've been invited to join</Trans>
+					{eyebrowText ?? <Trans>You've been invited to join</Trans>}
 				</p>
 				<div
 					className={styles.entityTitleWrapper}

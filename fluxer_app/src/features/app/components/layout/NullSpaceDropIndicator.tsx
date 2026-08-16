@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/layout/NullSpaceDropIndicator.module.css';
-import {DND_TYPES, type DragItem, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
+import {type DragItem, DragItemType, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
@@ -18,7 +18,7 @@ export const NullSpaceDropIndicator = observer(
 	({isDraggingAnything, onChannelDrop, variant = 'top'}: NullSpaceDropIndicatorProps) => {
 		const [{isOver, canDrop}, dropRef] = useDrop(
 			() => ({
-				accept: [DND_TYPES.CHANNEL, DND_TYPES.CATEGORY],
+				accept: [DragItemType.CHANNEL, DragItemType.CATEGORY],
 				drop: (item: DragItem): DropResult => {
 					const result: DropResult =
 						variant === 'top'

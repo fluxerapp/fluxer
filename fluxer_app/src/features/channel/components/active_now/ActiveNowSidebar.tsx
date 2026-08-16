@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type RememberedSkeletonActiveNowCard,
+	reportSkeletonActiveNowLayout,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import styles from '@app/features/channel/components/active_now/ActiveNowSidebar.module.css';
 import {useActiveFriendVoiceStates} from '@app/features/channel/components/active_now/useActiveFriendVoiceStates';
 import {ACTIVE_NOW_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -8,6 +12,7 @@ import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import {useEffect, useMemo} from 'react';
 
 const IT_S_QUIET_FOR_NOW_DESCRIPTOR = msg({
 	message: "It's quiet for now...",
@@ -21,6 +26,17 @@ export const ActiveNowSidebar: React.FC = observer(function ActiveNowSidebar() {
 	const {i18n} = useLingui();
 	const showActiveNow = PrivacyPreferences.getShowActiveNow();
 	const activeChannels = useActiveFriendVoiceStates();
+	const activeNowCards = useMemo<ReadonlyArray<RememberedSkeletonActiveNowCard>>(
+		() =>
+			activeChannels.map((activity) => ({
+				participantCount: activity.participantUsers.length,
+				streaming: activity.isStreaming && activity.streamKey != null,
+			})),
+		[activeChannels],
+	);
+	useEffect(() => {
+		reportSkeletonActiveNowLayout(showActiveNow, activeNowCards);
+	}, [activeNowCards, showActiveNow]);
 	if (!showActiveNow) {
 		return null;
 	}

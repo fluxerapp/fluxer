@@ -251,11 +251,6 @@ export interface DownloadFileResult {
 	error?: string;
 }
 
-export interface SwitchInstanceUrlOptions {
-	instanceUrl: string;
-	desktopHandoffCode?: string | null;
-}
-
 export type MediaAccessType = 'microphone' | 'camera' | 'screen' | 'audio-capture';
 export type MediaAccessStatus = 'granted' | 'denied' | 'not-determined' | 'restricted' | 'unknown';
 export type InputMonitoringPermissionStatus = 'granted' | 'denied' | 'not-determined' | 'unsupported';
@@ -780,8 +775,6 @@ export interface ElectronAPI {
 	passkeyIsSupported: () => Promise<boolean>;
 	passkeyAuthenticate: (options: PublicKeyCredentialRequestOptionsJSON) => Promise<AuthenticationResponseJSON>;
 	passkeyRegister: (options: PublicKeyCredentialCreationOptionsJSON) => Promise<RegistrationResponseJSON>;
-	switchInstanceUrl: (options: SwitchInstanceUrlOptions) => Promise<void>;
-	consumeDesktopHandoffCode: () => Promise<string | null>;
 	virtmic: VirtmicApi;
 	nativeAudio: NativeAudioApi;
 	nativeScreenCapture: NativeScreenCaptureApi;

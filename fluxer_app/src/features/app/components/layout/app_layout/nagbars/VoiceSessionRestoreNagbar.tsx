@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -99,8 +100,8 @@ export const VoiceSessionRestoreNagbar = observer(({isMobile}: {isMobile: boolea
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#15803d"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.VOICE].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.VOICE].textColor}
 			data-flx="app.app-layout.nagbars.voice-session-restore-nagbar.nagbar"
 		>
 			<NagbarContent

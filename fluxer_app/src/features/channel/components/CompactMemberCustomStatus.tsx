@@ -34,6 +34,17 @@ function getStatusExpiryDelay(status: CustomStatus | null): number | null {
 	return Math.max(0, expiresAtMs - Date.now());
 }
 
+export function hasVisibleCompactMemberCustomStatus(status: CustomStatus | null | undefined): boolean {
+	const normalized = normalizeCustomStatus(status ?? null);
+	if (!normalized || isCustomStatusExpired(normalized)) {
+		return false;
+	}
+	if (normalized.emojiId != null || normalized.emojiName != null) {
+		return true;
+	}
+	return sanitizeText(normalized.text ?? '').length > 0;
+}
+
 const loadedStatusMediaUrls = new Set<string>();
 
 function markStatusMediaLoaded(url: string): void {

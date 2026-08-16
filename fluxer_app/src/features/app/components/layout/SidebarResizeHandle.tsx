@@ -7,7 +7,7 @@ import SidebarWidth, {
 	SIDEBAR_WIDTH_MAX,
 	SIDEBAR_WIDTH_MIN,
 } from '@app/features/ui/state/SidebarWidth';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -33,7 +33,7 @@ interface DragState {
 }
 
 function resolveZoomFactor(ownerDocument: Document): number {
-	const zoomFactor = getAppZoomFactor(ownerDocument);
+	const zoomFactor = getAppRemScale(ownerDocument);
 	if (!Number.isFinite(zoomFactor) || zoomFactor <= 0) return 1;
 	return zoomFactor;
 }
@@ -229,7 +229,7 @@ export const SidebarResizeHandle = observer(() => {
 	}, []);
 
 	return (
-		<FocusRing offset={-2}>
+		<FocusRing offset={-2} data-flx="app.sidebar-resize-handle.focus-ring">
 			<div
 				ref={handleRef}
 				role="separator"
@@ -249,7 +249,7 @@ export const SidebarResizeHandle = observer(() => {
 				onKeyDown={onKeyDown}
 				data-flx="app.sidebar-resize-handle"
 			>
-				<span className={styles.indicator} aria-hidden />
+				<span className={styles.indicator} aria-hidden data-flx="app.sidebar-resize-handle.indicator" />
 			</div>
 		</FocusRing>
 	);

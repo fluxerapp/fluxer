@@ -103,6 +103,25 @@ var {
 	--input-wrapper-padding-bottom: 0.5rem;
 	--textarea-top-bar-height: 2.5rem;
 
+	--chat-horizontal-padding-default: 1rem;
+	--message-compact-horizontal-padding: min(
+		var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)),
+		1rem
+	);
+	--textarea-font-size: var(--font-size, 1rem);
+	--textarea-button-height: 2rem;
+	--textarea-button-icon-size: 1.375rem;
+	--textarea-button-compact-height: 2rem;
+	--textarea-button-compact-icon-size: 1.25rem;
+	--textarea-container-padding-x: 0px;
+	--textarea-line-height: calc(var(--textarea-font-size) * 1.375);
+	--textarea-content-offset: max(0rem, calc((var(--textarea-button-height) - var(--textarea-line-height)) / 2));
+	--textarea-upload-gap: var(--message-gutter, 1rem);
+	--textarea-side-button-padding: max(
+		0px,
+		calc((var(--message-avatar-size, 2.5rem) - var(--textarea-button-height)) / 2)
+	);
+
 	--footer-box-height: 3.625rem;
 	--footer-box-inset: 0.375rem;
 	--footer-box-inset-inline: var(--footer-box-inset);
@@ -111,8 +130,38 @@ var {
 	--outline-frame-border-width: 0.0625rem;
 	--composer-mobile-box-height: 3rem;
 	--composer-action-gap: 0.25rem;
+	--composer-surface-color: var(--background-secondary-lighter);
+	--composer-status-line-height: 1.125rem;
+	--composer-status-safe-gap: 0.5rem;
+	--composer-status-safe-area: calc(
+		var(--composer-status-line-height) +
+		var(--composer-status-safe-gap) +
+		var(--composer-status-safe-gap)
+	);
+	--guild-list-item-box-size: 3rem;
+	--guild-list-item-gap: 0.375rem;
+	--guild-list-item-target-size: calc(var(--guild-list-item-box-size) + var(--guild-list-item-gap));
+	--guild-list-item-target-half-extra: calc((var(--guild-list-item-target-size) - var(--guild-list-item-box-size)) / 2);
+	--guild-folder-expanded-surface-size: var(--guild-list-item-box-size);
+	--folder-radius: calc(var(--guild-folder-expanded-surface-size) * 0.3);
+	--mention-badge-small-size: 1.25rem;
+	--mention-badge-medium-size: 1.5rem;
+	--outline-frame-radius-native: clamp(0.5rem, 1.2vw, 0.875rem);
+	--guild-list-divider-line-size: 0.125rem;
+	--guild-list-divider-base-gap: var(--guild-list-item-gap);
+	--guild-members-columns: minmax(15rem, 2.2fr) minmax(7.5rem, 1fr) minmax(7.5rem, 1fr) minmax(9.375rem, 1.15fr)
+		minmax(10rem, 1.35fr) 4.5rem;
+	--guild-members-min-width: calc(15rem + 7.5rem + 7.5rem + 9.375rem + 10rem + 4.5rem);
+	--guild-members-select-column-width: 2.75rem;
+	--guild-members-columns-selectable: var(--guild-members-select-column-width) var(--guild-members-columns);
+	--guild-members-min-width-selectable: calc(var(--guild-members-select-column-width) + var(--guild-members-min-width));
 	--floating-surface-ring-color: color-mix(in srgb, var(--background-modifier-accent) 20%, transparent);
 	--floating-surface-ring-color-strong: color-mix(in srgb, var(--background-modifier-accent) 45%, transparent);
+	--skeleton-chrome-border-color: color-mix(in srgb, var(--background-modifier-accent) 25%, transparent);
+	--skeleton-chrome-border: 0.0625rem solid var(--skeleton-chrome-border-color);
+	--skeleton-opacity-strong: 0.55;
+	--skeleton-opacity-default: 0.45;
+	--skeleton-opacity-muted: 0.35;
 
 	--footer-box-padding-y: max(0rem, calc((var(--footer-box-height) - var(--textarea-button-height, 2rem)) / 2));
 	--composer-mobile-padding-y: max(
@@ -124,10 +173,14 @@ var {
 	--textarea-min-height: var(--footer-box-height);
 	--textarea-padding-y: var(--footer-box-padding-y);
 	--composer-box-inset: max(0rem, calc((var(--input-container-min-height) - var(--textarea-min-height)) / 2));
-	--composer-box-inset-inline: min(var(--footer-box-inset), var(--chat-horizontal-padding, var(--spacing-4)));
+	--messages-bottom-clearance: var(--composer-status-safe-area);
+	--composer-box-inset-inline: min(
+		var(--footer-box-inset),
+		var(--chat-horizontal-padding, var(--chat-horizontal-padding-default))
+	);
 	--composer-box-padding-inline: max(
 		0rem,
-		calc(var(--chat-horizontal-padding, var(--spacing-4)) - var(--composer-box-inset-inline))
+		calc(var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) - var(--composer-box-inset-inline))
 	);
 
 	--typing-indicator-height: 1rem;
@@ -167,6 +220,7 @@ var {
 	--layout-header-height: 3.5rem;
 	--layout-user-area-height: var(--footer-box-height);
 	--layout-user-area-reserved-height: 0px;
+	--layout-voice-connection-height: 0px;
 	--layout-mobile-bottom-nav-reserved-height: 0px;
 	--user-area-box-inset-block-end: calc(var(--footer-box-inset) + var(--outline-frame-border-width));
 	--user-area-content-height: var(--textarea-button-height, 2rem);
@@ -193,6 +247,90 @@ var {
 
 	--mobile-bottom-nav-height: 3.75rem;
 
+	--message-compact-text-indent-from-username: 2rem;
+	--guilds-layout-item-bg: var(--guild-list-foreground);
+	--guild-badge-surface: var(--background-secondary);
+	--layout-member-list-width: 16.5rem;
+	--layout-header-height-mobile: 4rem;
+
+	--channel-header-gap: var(--spacing-4);
+	--channel-header-padding-inline: var(--spacing-4);
+	--channel-header-action-size: 2rem;
+	--channel-header-action-size-mobile: 2.5rem;
+	--channel-header-actions-gap: var(--spacing-2);
+	--channel-header-back-button-size: 2rem;
+	--channel-header-back-button-gap: var(--spacing-3);
+	--channel-header-icon-size: 1.5rem;
+	--channel-header-back-icon-size: 1.5rem;
+	--channel-header-caret-size: 1rem;
+	--channel-header-action-icon-size: 1.5rem;
+	--channel-header-name-gap: var(--spacing-3);
+	--channel-header-name-gap-group-dm: var(--spacing-2);
+	--channel-header-caret-gap: var(--spacing-1);
+	--channel-header-topic-divider-gap: var(--spacing-2);
+
+	--chat-mobile-horizontal-padding: 0.75rem;
+	--dm-sidebar-mobile-header-height: 3.5rem;
+
+	--message-search-bar-width: 15.25rem;
+	--message-search-bar-height: 2.25rem;
+	--message-search-bar-icon-size: 1rem;
+	--message-search-bar-icon-gap: 0.5rem;
+
+	--member-list-item-content-height: 2rem;
+	--member-list-item-padding-block: 0.25rem;
+	--member-list-item-padding-inline: 0.5rem;
+	--member-list-item-content-gap: 0.625rem;
+	--member-list-item-name-line-height: 1.25rem;
+	--member-list-item-status-line-height: 0.875rem;
+	--member-list-row-gap: 0.125rem;
+	--member-list-group-spacer-height: 0.25rem;
+	--member-list-scroller-padding-block-start: 0.25rem;
+	--member-list-scroller-padding-block-end: var(--spacing-4);
+	--member-list-scroller-padding-inline: var(--spacing-2);
+
+	--friend-row-padding-block: 0.75rem;
+	--friend-row-padding-inline: 1rem;
+	--friend-row-separator-inset: 0 0.4rem 0 var(--spacing-2);
+	--friend-row-separator-radius: 0.375rem;
+	--friend-row-content-gap: 0.75rem;
+	--friend-row-name-line-height: 1.25rem;
+	--friend-row-subtext-line-height: 1rem;
+	--friend-row-subtext-offset: -0.0625rem;
+	--friend-row-avatar-size: 2.25rem;
+	--friend-row-action-size: 2.25rem;
+	--friend-row-action-gap: 0.5rem;
+
+	--avatar-stack-extra-height: 0.375rem;
+
+	--active-now-sidebar-width: 22rem;
+	--active-now-sidebar-header-padding-inline: 1rem;
+	--active-now-sidebar-header-padding-block-start: 1rem;
+	--active-now-sidebar-header-padding-block-end: 0.75rem;
+	--active-now-sidebar-content-gap: 0.5rem;
+	--active-now-sidebar-content-padding-inline: 0.75rem;
+	--active-now-sidebar-content-padding-block-end: 0.75rem;
+	--active-now-card-gap: 0.75rem;
+	--active-now-card-padding-block: 0.75rem;
+	--active-now-card-padding-inline: 0.875rem;
+	--active-now-card-radius: var(--radius-md);
+	--active-now-card-shadow: 0 0.375rem 1.125rem rgba(0, 0, 0, 0.08);
+	--active-now-context-gap: 0.375rem;
+	--active-now-action-height: 2rem;
+	--active-now-action-radius: 0.5rem;
+	--active-now-action-gap: 0.375rem;
+	--active-now-action-padding-block: 0.3125rem;
+	--active-now-action-padding-inline: 0.625rem;
+
+	--discovery-card-description-min-height: 5.25rem;
+	--guild-list-indicator-inset: -0.15rem;
+	--guild-list-indicator-track-width: 0.5rem;
+	--guild-list-indicator-bar-width: 0.35rem;
+	--count-indicator-gap: 0.25rem;
+
+	--guild-members-table-row-min-height: 3rem;
+	--guild-members-table-row-border-width: 0.0625rem;
+
 	--form-surface-background: var(--background-tertiary);
 	--surface-interactive-hover-bg: var(--background-modifier-hover);
 	--surface-interactive-selected-bg: var(--background-modifier-selected);
@@ -209,6 +347,7 @@ html.platform-native.platform-macos {
 }
 
 .theme-light {
+	--guilds-layout-item-bg: color-mix(in srgb, var(--guild-list-foreground) 72%, var(--background-primary) 28%);
 	--form-surface-background: var(--background-primary);
 	--surface-interactive-hover-bg: var(--background-modifier-hover);
 	--surface-interactive-selected-bg: var(--background-modifier-selected);

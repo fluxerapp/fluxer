@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/layout/NagbarButton.module.css';
-import {Button} from '@app/features/ui/button/Button';
+import {Button, type ButtonVariant} from '@app/features/ui/button/Button';
 import {clsx} from 'clsx';
 import type React from 'react';
 
@@ -12,6 +12,7 @@ interface NagbarButtonProps {
 	className?: string;
 	disabled?: boolean;
 	submitting?: boolean;
+	variant?: ButtonVariant;
 }
 
 export const NagbarButton = ({
@@ -21,10 +22,11 @@ export const NagbarButton = ({
 	className,
 	disabled = false,
 	submitting,
+	variant = 'inverted',
 }: NagbarButtonProps) => {
 	return (
 		<Button
-			variant="inverted"
+			variant={variant}
 			superCompact={!isMobile}
 			compact={isMobile}
 			fitContent

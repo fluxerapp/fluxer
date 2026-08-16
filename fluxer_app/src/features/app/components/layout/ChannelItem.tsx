@@ -6,13 +6,18 @@ import {ChannelItemContent} from '@app/features/app/components/layout/ChannelIte
 import {ChannelItemIcon} from '@app/features/app/components/layout/ChannelItemIcon';
 import channelItemSurfaceStyles from '@app/features/app/components/layout/ChannelItemSurface.module.css';
 import {
+	DirectSelectionSurface,
+	markDirectSelection,
+	peekDirectSelection,
+} from '@app/features/app/components/layout/DirectSelectionOrigin';
+import {
 	type ChannelReorderTarget,
 	canChannelDropOnTarget,
 	selectChannelReorderResolution,
 } from '@app/features/app/components/layout/dnd/ChannelReorderStateMachine';
 import {GenericChannelItem} from '@app/features/app/components/layout/GenericChannelItem';
 import type {ScrollIndicatorSeverity} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
-import {DND_TYPES, type DragItem, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
+import {type DragItem, DragItemType, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
 import {isCategory, isTextChannel} from '@app/features/app/components/layout/utils/ChannelOrganization';
 import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {VoiceChannelUserCount} from '@app/features/app/components/layout/VoiceChannelUserCount';
@@ -221,7 +226,7 @@ export const ChannelItem = observer(
 			defaultHiddenForChannel: channelIsVoice,
 			enabled: !channelIsCategory,
 		});
-		const draggingChannel = activeDragItem?.type === DND_TYPES.CHANNEL ? activeDragItem : null;
+		const draggingChannel = activeDragItem?.type === DragItemType.CHANNEL ? activeDragItem : null;
 		const isVoiceDragActive = draggingChannel?.channelType === ChannelTypes.GUILD_VOICE;
 		const shouldDimForVoiceDrag = Boolean(isVoiceDragActive && channelIsText && channel.parentId !== null);
 		const unreadCount = ReadStates.getUnreadCount(channel.id);
@@ -283,7 +288,7 @@ export const ChannelItem = observer(
 		const [dropIndicator, setDropIndicator] = useState<{position: 'top' | 'bottom'; isValid: boolean} | null>(null);
 		const dragItemData = useMemo<DragItem>(
 			() => ({
-				type: channelIsCategory ? DND_TYPES.CATEGORY : DND_TYPES.CHANNEL,
+				type: channelIsCategory ? DragItemType.CATEGORY : DragItemType.CHANNEL,
 				id: channel.id,
 				channelType: channel.type,
 				parentId: channel.parentId,
@@ -319,7 +324,7 @@ export const ChannelItem = observer(
 		);
 		const [{isOver}, dropRef] = useDrop(
 			() => ({
-				accept: [DND_TYPES.CHANNEL, DND_TYPES.CATEGORY, DND_TYPES.VOICE_PARTICIPANT],
+				accept: [DragItemType.CHANNEL, DragItemType.CATEGORY, DragItemType.VOICE_PARTICIPANT],
 				canDrop: (item: DragItem) => canChannelDropOnTarget(item, dropTargetData),
 				hover: (item: DragItem, monitor) => {
 					const node = dropTargetRef.current;
@@ -335,7 +340,7 @@ export const ChannelItem = observer(
 						setDropIndicator(null);
 						return;
 					}
-					if (item.type === DND_TYPES.VOICE_PARTICIPANT && channelIsVoice) {
+					if (item.type === DragItemType.VOICE_PARTICIPANT && channelIsVoice) {
 						const canMove = Permission.can(Permissions.MOVE_MEMBERS, {guildId: guild.id});
 						if (!canMove || item.currentChannelId === channel.id) {
 							setDropIndicator(null);
@@ -405,6 +410,7 @@ export const ChannelItem = observer(
 			CompactVoiceCallHeight.setExpandedForKey(getGuildVoiceCallExpansionKey(channel.id), false);
 		}, [channelIsVoice, channel.id]);
 		const handleSelect = useCallback(() => {
+			markDirectSelection(DirectSelectionSurface.CHANNEL_LIST);
 			if (channel.type === ChannelTypes.GUILD_CATEGORY) {
 				onToggle?.();
 				return;
@@ -465,7 +471,8 @@ export const ChannelItem = observer(
 		const shouldShowSelectedState = !channelIsCategory && isSelected && (!channelIsVoice || isSelectedByPath);
 		const hasMountedRef = useRef(false);
 		useEffect(() => {
-			if (shouldShowSelectedState && hasMountedRef.current) {
+			const selectedFromThisRow = peekDirectSelection(DirectSelectionSurface.CHANNEL_LIST);
+			if (shouldShowSelectedState && hasMountedRef.current && !selectedFromThisRow) {
 				elementRef.current?.scrollIntoView({block: 'nearest'});
 			}
 			hasMountedRef.current = true;

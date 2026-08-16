@@ -38,7 +38,11 @@ export const ComposerMentionPill = observer(({mentionType, mentionId, display}: 
 	const {i18n} = useLingui();
 	if (plainText) {
 		return (
-			<span className={styles.plainText} contentEditable={false}>
+			<span
+				className={styles.plainText}
+				contentEditable={false}
+				data-flx="lexical.composer.nodes.composer-mention-pill.plain-text"
+			>
 				{display}
 			</span>
 		);
@@ -49,17 +53,28 @@ export const ComposerMentionPill = observer(({mentionType, mentionId, display}: 
 		const label = channel == null || channel.name == null ? display.replace(/^#/, '') : channel.name;
 		if (channel != null && channel.type === ChannelTypes.GUILD_CATEGORY) {
 			return (
-				<span contentEditable={false} data-lexical-mention-type="channel">
+				<span
+					contentEditable={false}
+					data-lexical-mention-type="channel"
+					data-flx="lexical.composer.nodes.composer-mention-pill.span"
+				>
 					#{label}
 				</span>
 			);
 		}
 		return (
-			<span className={markupStyles.mention} contentEditable={false} data-lexical-mention-type="channel">
+			<span
+				className={markupStyles.mention}
+				contentEditable={false}
+				data-lexical-mention-type="channel"
+				data-flx="lexical.composer.nodes.composer-mention-pill.span--2"
+			>
 				{ChannelDisplayUtils.getIcon(channel == null ? {type: ChannelTypes.GUILD_TEXT} : channel, {
 					className: mentionRendererStyles.channelIcon,
 				})}
-				<span className={mentionRendererStyles.label}>{label}</span>
+				<span className={mentionRendererStyles.label} data-flx="lexical.composer.nodes.composer-mention-pill.span--3">
+					{label}
+				</span>
 			</span>
 		);
 	}
@@ -69,10 +84,19 @@ export const ComposerMentionPill = observer(({mentionType, mentionId, display}: 
 		const label = user ? `@${DisplayNameUtils.getNickname(user, guildId, channelId)}` : display;
 		const fullTag = user ? `@${DisplayNameUtils.formatUserTagForStreamerMode(user)}` : null;
 		const pill = (
-			<span className={markupStyles.mention} contentEditable={false} data-lexical-mention-type="user">
-				<span className={mentionRendererStyles.label}>{label}</span>
+			<span
+				className={markupStyles.mention}
+				contentEditable={false}
+				data-lexical-mention-type="user"
+				data-flx="lexical.composer.nodes.composer-mention-pill.span--4"
+			>
+				<span className={mentionRendererStyles.label} data-flx="lexical.composer.nodes.composer-mention-pill.span--5">
+					{label}
+				</span>
 				{fullTag != null && fullTag !== label && (
-					<span className={styles.srOnly}>{i18n._(FULL_USER_TAG_DESCRIPTOR, {tag: fullTag})}</span>
+					<span className={styles.srOnly} data-flx="lexical.composer.nodes.composer-mention-pill.sr-only">
+						{i18n._(FULL_USER_TAG_DESCRIPTOR, {tag: fullTag})}
+					</span>
 				)}
 			</span>
 		);
@@ -80,7 +104,12 @@ export const ComposerMentionPill = observer(({mentionType, mentionId, display}: 
 			return pill;
 		}
 		return (
-			<MentionWithTooltip userId={mentionId} guildId={guildId} channelId={channelId}>
+			<MentionWithTooltip
+				userId={mentionId}
+				guildId={guildId}
+				channelId={channelId}
+				data-flx="lexical.composer.nodes.composer-mention-pill.mention-with-tooltip"
+			>
 				{pill}
 			</MentionWithTooltip>
 		);
@@ -90,15 +119,29 @@ export const ComposerMentionPill = observer(({mentionType, mentionId, display}: 
 		const role = guildId != null ? Guilds.getGuildRole(guildId, mentionId) : undefined;
 		const label = role ? `@${role.name}` : `@${i18n._(UNKNOWN_ROLE_DESCRIPTOR)}`;
 		return (
-			<span className={markupStyles.mention} contentEditable={false} data-lexical-mention-type="role">
-				<span className={mentionRendererStyles.label}>{label}</span>
+			<span
+				className={markupStyles.mention}
+				contentEditable={false}
+				data-lexical-mention-type="role"
+				data-flx="lexical.composer.nodes.composer-mention-pill.span--6"
+			>
+				<span className={mentionRendererStyles.label} data-flx="lexical.composer.nodes.composer-mention-pill.span--7">
+					{label}
+				</span>
 			</span>
 		);
 	}
 
 	return (
-		<span className={markupStyles.mention} contentEditable={false} data-lexical-mention-type={mentionType}>
-			<span className={mentionRendererStyles.label}>{display}</span>
+		<span
+			className={markupStyles.mention}
+			contentEditable={false}
+			data-lexical-mention-type={mentionType}
+			data-flx="lexical.composer.nodes.composer-mention-pill.span--8"
+		>
+			<span className={mentionRendererStyles.label} data-flx="lexical.composer.nodes.composer-mention-pill.span--9">
+				{display}
+			</span>
 		</span>
 	);
 });

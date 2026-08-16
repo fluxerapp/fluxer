@@ -1,16 +1,16 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-09-12 11:17+0200\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Language: ko\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-12 11:17+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
 "Plural-Forms: \n"
 
 #. Description text in the messages tab.
@@ -49,7 +49,7 @@ msgid "(you)"
 msgstr "(나)"
 
 #. placeholder {0}: guild.member_count
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:257
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:146
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {#명} other {#명}}"
 
@@ -287,6 +287,11 @@ msgstr "{blikPaymentMethod}은(는) {paymentProviderName} 결제에서 구독을
 msgid "{blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout."
 msgstr "{blikPaymentMethod}은(는) {paymentProviderName} 결제에서 구독을 지원하지 않습니다."
 
+#. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:35
+msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
+msgstr "{categoryLabel}, {count, plural, other {커뮤니티 #개}}"
+
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:52
 msgid "{channelHeading}, {mentionCount} mentions"
@@ -351,11 +356,11 @@ msgid "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgstr "{count, plural, one {#개 북마크} other {#개 북마크}}"
 
 #. Screen-reader status text in Discovery. {count} is the total number of matching communities.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:61
+#: src/features/discovery/discovery/DiscoveryPage.tsx:33
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {#개 커뮤니티 찾음} other {#개 커뮤니티 찾음}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:907
+#: src/features/app/components/layout/GuildsLayout.tsx:1926
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {#개 커뮤니티가 플럭스 캐패시터 오작동으로 인해 일시적으로 이용할 수 없습니다.} other {#개 커뮤니티가 플럭스 캐패시터 오작동으로 인해 일시적으로 이용할 수 없습니다.}}"
 
@@ -514,7 +519,7 @@ msgid "{count, plural, one {You have a new gift code waiting for you!} other {Yo
 msgstr "{count, plural, one {새로운 선물 코드가 도착했어요!} other {#개의 새로운 선물 코드가 도착했어요!}}"
 
 #. Nagbar body shown when the user has unread gift inventory items. {count} is the unread gift count.
-#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:18
 msgid "{count, plural, one {You have a new gift code waiting in your gift inventory.} other {You have # new gift codes waiting in your gift inventory.}}"
 msgstr "{count, plural, one {새로운 선물 코드가 선물함에 도착했어요.} other {#개의 새로운 선물 코드가 선물함에 도착했어요.}}"
 
@@ -629,12 +634,12 @@ msgid "{deviceCount, plural, one {# device selected for sign out} other {# devic
 msgstr "{deviceCount, plural, one {# 선택한 장치} other {# 선택한 장치들}} (로그아웃됩니다)"
 
 #. Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:48
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:50
 msgid "{displayedIncomingFriendRequestCount} friend requests"
 msgstr "친구 요청 {displayedIncomingFriendRequestCount}개"
 
 #. Short label in the sidebar navigation fluxer button. Preserve {displayedUnreadDmCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:39
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:41
 msgid "{displayedUnreadDmCount} unread DMs"
 msgstr "읽지 않은 DM {displayedUnreadDmCount}개"
 
@@ -721,7 +726,7 @@ msgid "{fifteenMinutes} minutes"
 msgstr "{fifteenMinutes}분"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:67
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:78
 msgid "{folderName} folder"
 msgstr "{folderName} 폴더"
 
@@ -745,14 +750,14 @@ msgstr "{formats}. 최대 {maxSize}. 권장 크기: {recommendedSize}"
 msgid "{formats}. Max {maxSize}. Recommended: {recommendedSize}. {note}"
 msgstr "{formats}. 최대 {maxSize}. 권장 크기: {recommendedSize}. {note}"
 
-#: src/features/auth/flow/InviteHeader.tsx:116
-#: src/features/auth/flow/InviteHeader.tsx:161
-#: src/features/auth/flow/InviteHeader.tsx:333
+#: src/features/auth/flow/InviteHeader.tsx:117
+#: src/features/auth/flow/InviteHeader.tsx:162
+#: src/features/auth/flow/InviteHeader.tsx:335
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{formattedMemberCount} {memberCount, plural, one {명} other {명}}"
 
-#: src/features/auth/flow/InviteHeader.tsx:110
-#: src/features/auth/flow/InviteHeader.tsx:318
+#: src/features/auth/flow/InviteHeader.tsx:111
+#: src/features/auth/flow/InviteHeader.tsx:320
 msgid "{formattedPresenceCount} online"
 msgstr "{formattedPresenceCount}명 온라인"
 
@@ -767,7 +772,7 @@ msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/ChannelListContent.tsx:73
+#: src/features/app/components/layout/ChannelListContent.tsx:83
 msgid "{guildName} channels"
 msgstr "{guildName} 채널"
 
@@ -889,7 +894,7 @@ msgid "{megabits} Mbps"
 msgstr "{megabits}Mbps"
 
 #. Community tooltip stat showing the total member count. memberCount is already localized for display; rawMemberCount controls plural grammar.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:126
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:36
 msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {명} other {명}}"
 
@@ -949,8 +954,8 @@ msgstr "{oneMinute}분"
 
 #. Community tooltip stat showing how many members are currently online.
 #. Short label in the discovery guild card. Keep it concise. Preserve {onlineCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:118
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:137
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:28
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:27
 msgid "{onlineCount} online"
 msgstr "{onlineCount}명 온라인"
 
@@ -1035,11 +1040,6 @@ msgstr "{productName} 애플리케이션 아이콘"
 #: src/features/ui/components/icons/FluxerLogo.tsx:10
 msgid "{productName} application logo"
 msgstr "{productName} 애플리케이션 로고"
-
-#. Accessible label for the Fluxer application symbol logo.
-#: src/features/ui/components/icons/FluxerSymbol.tsx:10
-msgid "{productName} application symbol"
-msgstr "{productName} 앱 심볼"
 
 #. Label in the push settings.
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:16
@@ -1151,12 +1151,12 @@ msgid "{productName} Partner"
 msgstr "{productName} 파트너"
 
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:23
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:24
 msgid "{productName} restarted while you were connected to the {channelName} channel in the {communityName} community."
 msgstr "{productName}이(가) {communityName} 커뮤니티의 {channelName} 채널에 연결되어 있는 동안 다시 시작되었습니다."
 
 #. Nagbar shown after the app restarts while the user can reconnect to an active DM or group DM call. {productName} is Fluxer and {directCallName} is the DM or group DM display name.
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:29
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:30
 msgid "{productName} restarted while you were connected to the call in {directCallName}."
 msgstr "{productName}이(가) {directCallName} 통화에 연결되어 있는 동안 다시 시작되었습니다."
 
@@ -1202,7 +1202,7 @@ msgstr "{productName} 워드마크"
 msgid "{releaseChannel} Web {buildVersion}"
 msgstr "{releaseChannel} 웹 {buildVersion}"
 
-#: src/features/lexical/composer/nodes/SlashOptionalHintPill.tsx:13
+#: src/features/lexical/composer/nodes/SlashOptionalHintPill.tsx:17
 msgid "{remaining, plural, one {+# more} other {+# more}}"
 msgstr "{remaining, plural, one {#개 더} other {#개 더}}"
 
@@ -1324,11 +1324,6 @@ msgstr "{tokenGroupCount, plural, one {#개 그룹} other {#개 그룹}}"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:41
 msgid "{total, plural, one {# result} other {# results}}"
 msgstr "{total, plural, one {#개 결과} other {#개 결과}}"
-
-#. Short label in the sidebar navigation guild folder item. Preserve {totalMentionCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:79
-msgid "{totalMentionCount} mentions"
-msgstr "멘션 {totalMentionCount}개"
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:34
@@ -1572,7 +1567,7 @@ msgid "1 day"
 msgstr "1일"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:44
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:46
 msgid "1 friend request"
 msgstr "친구 요청 1개"
 
@@ -1627,7 +1622,7 @@ msgid "1 unread"
 msgstr "읽지 않음 1개"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:35
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:37
 msgid "1 unread DM"
 msgstr "읽지 않은 DM 1개"
 
@@ -2035,10 +2030,6 @@ msgstr "{appName} 정보"
 msgid "About me"
 msgstr "소개"
 
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:233
-msgid "About this community: "
-msgstr "이 커뮤니티에 대해: "
-
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:78
 msgid "About you"
@@ -2258,7 +2249,7 @@ msgid "Active"
 msgstr "활성"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:355
-#: src/features/auth/components/accounts/AccountRow.tsx:186
+#: src/features/auth/components/accounts/AccountRow.tsx:135
 msgid "Active account"
 msgstr "사용 중인 계정"
 
@@ -2369,7 +2360,7 @@ msgstr "적응형 화질"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:592
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:79
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:100
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:594
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:598
 msgid "Add"
 msgstr "추가"
 
@@ -2393,7 +2384,7 @@ msgstr "코멘트 추가 (선택 사항)"
 msgid "Add a community"
 msgstr "커뮤니티 추가"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:76
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
 msgid "Add a different account"
 msgstr "다른 계정 추가"
 
@@ -2403,7 +2394,7 @@ msgid "Add a friend to get started."
 msgstr "친구를 추가하여 시작해 보세요."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:890
+#: src/features/app/components/setup/SetupWizardSteps.tsx:933
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Klipy API 키를 추가하여 실행 시 GIF 검색을 사용 설정하세요."
 
@@ -2439,12 +2430,12 @@ msgid "Add a working email"
 msgstr "사용 가능한 이메일 추가"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:898
+#: src/features/app/components/setup/SetupWizardSteps.tsx:941
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "YouTube 링크를 풍부하게 하려면 YouTube Data API 키를 추가하세요."
 
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:33
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:21
 msgid "Add account"
 msgstr "계정 추가"
 
@@ -2454,8 +2445,8 @@ msgid "Add action."
 msgstr "작업 추가."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:188
-#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:123
+#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
 msgstr "계정 추가"
@@ -2485,7 +2476,7 @@ msgid "Add another reaction"
 msgstr "다른 이모티콘 추가"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:922
+#: src/features/app/components/setup/SetupWizardSteps.tsx:965
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Bluesky OAuth 클라이언트 메타데이터와 서명 키를 추가하세요."
 
@@ -2538,7 +2529,7 @@ msgstr "컴퓨터에서 파일을 추가하여 업로드하지 않고도 사용�
 msgid "Add friend"
 msgstr "친구 추가"
 
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:307
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:343
 msgid "Add friends"
 msgstr "친구 추가"
 
@@ -2628,7 +2619,7 @@ msgid "Add shortcut"
 msgstr "바로 가기 추가"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:914
+#: src/features/app/components/setup/SetupWizardSteps.tsx:957
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "인스턴스에서 확인 및 알림 이메일을 보낼 수 있도록 SMTP 자격 증명을 추가하세요."
 
@@ -2655,7 +2646,7 @@ msgid "Add stream"
 msgstr "스트림 추가"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:882
+#: src/features/app/components/setup/SetupWizardSteps.tsx:925
 msgid "Add the credentials during setup."
 msgstr "설정 중에 자격 증명을 추가하세요."
 
@@ -2833,7 +2824,7 @@ msgstr "관리자가 초대를 일시 중지했습니다. 지금은 참여할 �
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
 #. Voice participant context menu submenu label for IDs and diagnostics.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:336
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:145
@@ -2905,17 +2896,19 @@ msgstr "정렬 컨트롤은 더 넓은 화면에서만 사용할 수 있습니�
 #. Column header in the notification overrides table. Short label for the All messages option. Standalone word; refers to "all messages".
 #. Date-range filter option meaning no time window is applied. Used on the community members page.
 #. Label for the all-categories tab in the Discovery page.
+#. Label for the all-categories tab in the Discovery page.
 #. Short label in the channel and chat memes picker header. Keep it concise.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #. Tab label in the DM friends view showing all friends.
 #. Tab label in the mobile memes (saved media) picker. Shows all saved media regardless of type.
 #: src/features/app/config/AuditLogConstants.ts:148
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:39
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:41
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:10
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryPage.tsx:33
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:19
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:23
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
 msgstr "전체"
@@ -2983,7 +2976,7 @@ msgid "All external links are trusted. Warnings will not be shown."
 msgstr "모든 외부 링크는 신뢰할 수 있습니다. 경고가 표시되지 않습니다."
 
 #. Tab label in the friends list showing all friends.
-#: src/features/channel/components/friends/views/FriendsList.tsx:44
+#: src/features/channel/components/friends/views/FriendsList.tsx:49
 msgid "All friends"
 msgstr "모든 친구"
 
@@ -2992,7 +2985,7 @@ msgid "All inputs are fully interactive, so type away."
 msgstr "모든 입력란은 자유롭게 상호작용할 수 있습니다. 마음껏 입력해 보세요."
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:41
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:27
 msgid "All languages"
 msgstr "모든 언어"
 
@@ -3644,7 +3637,7 @@ msgid "Any key"
 msgstr "아무 키"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:65
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:69
 msgid "Any updater ready"
 msgstr "업데이트 준비 완료"
 
@@ -3694,7 +3687,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "누구나 계정을 요청할 수 있지만, 관리자의 승인이 필요합니다."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:935
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "API key"
 msgstr "API 키"
 
@@ -3895,7 +3888,7 @@ msgid "Are you sure you want to delete <0>{0}</0>? This cannot be undone."
 msgstr "<0>{0}</0> 채널을 정말 삭제하시겠어요? 이 작업은 되돌릴 수 없습니다."
 
 #. Body of the destructive purge-personal-notes confirmation alert. Keep tone serious and explicit about irreversibility.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:71
 msgid "Are you sure you want to delete every message in your personal notes? This will permanently remove all messages and their attachments. This action cannot be undone."
 msgstr "개인 노트의 모든 메시지를 삭제하시겠어요? 모든 메시지 및 첨부파일이 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다."
 
@@ -5000,7 +4993,7 @@ msgid "Bans"
 msgstr "차단된 사용자"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:189
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:193
 msgid "Barrier countdown"
 msgstr "장벽 카운트다운"
 
@@ -5049,7 +5042,7 @@ msgid "Billing"
 msgstr "결제"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:161
 msgid "Billing cycle"
 msgstr "결제 주기"
 
@@ -5204,7 +5197,7 @@ msgid "Bluesky connections"
 msgstr "Bluesky 연결"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:918
+#: src/features/app/components/setup/SetupWizardSteps.tsx:961
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5253,7 +5246,7 @@ msgstr "메시지 북마크"
 #. Description text in the saved messages content popout.
 #. Description text in the saved messages page.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:165
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:25
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:31
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:33
 msgid "Bookmark messages to save them for later."
 msgstr "나중에 다시 보고 싶은 메시지는 북마크에 저장하세요."
@@ -5272,7 +5265,7 @@ msgstr "북마크했습니다."
 #. Short label in the saved messages page. Keep it concise.
 #. Tab label in the inbox popout listing the user bookmarks.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:32
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:17
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
 msgstr "북마크"
@@ -5363,7 +5356,7 @@ msgid "Bot profile"
 msgstr "봇 프로필"
 
 #. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:902
+#: src/features/app/components/setup/SetupWizardSteps.tsx:945
 msgid "Bot protection"
 msgstr "봇 보호"
 
@@ -5598,6 +5591,13 @@ msgstr "구매함으로써 {terms} 및 {privacy}에 동의했습니다."
 msgid "By using {productName}, you agree to the updated policies."
 msgstr "{productName}을(를) 이용하면 업데이트된 정책에 동의하는 것으로 간주됩니다."
 
+#. Developer option label.
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:41
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:41
+msgid "Bypass loading skeleton"
+msgstr "로딩 스켈레톤 건너뛰기"
+
 #. Setting label that bypasses mention suppression for the current user.
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:40
 msgid "Bypass mention suppression"
@@ -5607,13 +5607,6 @@ msgstr "멘션 알림 끄기 무시"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
 msgid "Bypass slowmode"
 msgstr "슬로우 모드 우회"
-
-#. Developer option label.
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:41
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:41
-msgid "Bypass splash screen"
-msgstr "시작 화면 건너뛰기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:150
@@ -5798,7 +5791,7 @@ msgstr "여기에 파일을 올릴 수 없어요"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:245
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -5819,7 +5812,7 @@ msgstr "여기에 파일을 올릴 수 없어요"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:620
+#: src/features/messaging/components/modals/ForwardModal.tsx:627
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
@@ -6002,8 +5995,10 @@ msgstr "카드는 빠른 {paymentProviderName} 인증 후에도 PLN 가격을 �
 msgid "Cards can keep TRY pricing after a quick {paymentProviderName} verification, but the card must be issued in Türkiye."
 msgstr "카드는 {paymentProviderName} 인증을 거치면 TRY 가격을 유지할 수 있지만, 카드는 튀르키예에서 발급된 것이어야 합니다."
 
+#. Heading above the category filter list in the Discovery search sidebar.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:15
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:19
 msgid "Categories"
 msgstr "카테고리"
 
@@ -6049,7 +6044,7 @@ msgid "Category deleted"
 msgstr "카테고리 삭제됨"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:64
+#: src/features/app/components/layout/ChannelListContent.tsx:74
 msgid "Category full"
 msgstr "카테고리 가득 참"
 
@@ -6624,6 +6619,11 @@ msgstr "내 테마를 확인해 보세요!"
 msgid "Check your connection and try again."
 msgstr "연결 상태를 확인하고 다시 시도해 주세요."
 
+#. Empty-state hint in Discovery shown under the heading when the request for communities failed.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:32
+msgid "Check your connection, then try again."
+msgstr "연결을 확인한 후 다시 시도해 주세요."
+
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
@@ -6767,7 +6767,7 @@ msgid "Choose a window in your system picker"
 msgstr "시스템 선택기에서 창을 선택하세요"
 
 #. OAuth authorization step title. The user must choose which account to authorize with.
-#: src/features/auth/components/accounts/AccountSelector.tsx:63
+#: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
 msgid "Choose an account"
@@ -6805,7 +6805,7 @@ msgid "Choose friends to message."
 msgstr "메시지를 보낼 친구를 선택하세요."
 
 #. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:906
+#: src/features/app/components/setup/SetupWizardSteps.tsx:949
 msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "가입 시 hCaptcha 또는 Cloudflare Turnstile을 선택하세요."
 
@@ -7148,7 +7148,7 @@ msgstr "첨부 모의 데이터 지우기"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "명령 취소"
@@ -7359,7 +7359,7 @@ msgid "Client"
 msgstr "클라이언트"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:970
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
 msgid "Client name"
 msgstr "클라이언트 이름"
 
@@ -7376,7 +7376,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "클라이언트 보안 비밀이 재생성되었습니다. 이전 보안 비밀을 사용하는 코드를 업데이트하세요."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:974
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1017
 msgid "Client URL"
 msgstr "클라이언트 URL"
 
@@ -7514,12 +7514,12 @@ msgid "Closed DMs"
 msgstr "종료된 DM"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:117
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:121
 msgid "Cloud upload"
 msgstr "클라우드 업로드"
 
 #. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:931
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Cloudflare Turnstile"
 msgstr "Cloudflare Turnstile"
 
@@ -7597,7 +7597,7 @@ msgid "Collapse"
 msgstr "접기"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:92
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:98
 msgid "Collapse {folderName}"
 msgstr "{folderName} 접기"
 
@@ -7642,7 +7642,7 @@ msgstr "{channelHeading}의 읽지 않은 메시지 접기"
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for a collapsed category.
 #: src/features/app/components/layout/ChannelItem.tsx:95
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:75
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:86
 msgid "collapsed"
 msgstr "접힘"
 
@@ -7954,6 +7954,11 @@ msgstr "커뮤니티 소유자 크라운"
 msgid "Community owners and users with the <0>{administratorPermissionLabel}</0> permission always have all permissions, including <1>{readMessageHistoryPermissionLabel}</1>, so they aren't affected by this setting."
 msgstr "커뮤니티 소유자 및 <0>{administratorPermissionLabel}</0> 권한이 있는 사용자는 <1>{readMessageHistoryPermissionLabel}</1>을 포함한 모든 권한을 항상 가지고 있으므로 이 설정의 영향을 받지 않습니다."
 
+#. Accessible title of the modal that previews a Discovery community before joining it.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:22
+msgid "Community preview"
+msgstr "커뮤니티 미리보기"
+
 #. Submenu label that groups privacy options for the community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:69
 msgid "Community privacy settings"
@@ -8123,7 +8128,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "키보드 단축키 설정"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:878
+#: src/features/app/components/setup/SetupWizardSteps.tsx:921
 msgid "Configure now"
 msgstr "지금 설정"
 
@@ -8243,10 +8248,6 @@ msgstr "커뮤니티 음성 채팅 참여 시 확인 또는 더블 클릭"
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel}과 충돌"
 
-#: src/features/auth/flow/InstanceSelector.tsx:338
-msgid "Connect"
-msgstr "연결"
-
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8318,7 +8319,8 @@ msgstr "연결에 실패했습니다"
 msgid "Connection ID"
 msgstr "연결 ID"
 
-#: src/features/app/components/ConnectionIssuesLinks.tsx:21
+#. Banner shown while the app is still loading and the connection is taking unusually long. Phrased as a question offering help.
+#: src/features/app/hooks/useConnectionNotice.ts:33
 msgid "Connection issues?"
 msgstr "연결에 문제가 있나요?"
 
@@ -8327,10 +8329,14 @@ msgstr "연결에 문제가 있나요?"
 msgid "Connection limit"
 msgstr "연결 제한"
 
-#: src/features/app/components/layout/SplashScreen.tsx:163
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Connection lost"
 msgstr "연결 끊김"
+
+#. Banner shown when the app loses its gateway connection after having loaded. The app stays usable, so keep the tone calm.
+#: src/features/app/hooks/useConnectionNotice.ts:38
+msgid "Connection lost. Reconnecting…"
+msgstr "연결이 끊어졌어요. 다시 연결 중…"
 
 #. Short label in the connection connection commands.
 #: src/features/connection/commands/ConnectionCommands.ts:47
@@ -8506,7 +8512,7 @@ msgid "Continue with passkey"
 msgstr "패스키로 계속하기"
 
 #. Button label that starts single sign-on.
-#: src/features/auth/flow/AuthSsoPanel.tsx:22
+#: src/features/auth/flow/AuthSsoPanel.tsx:21
 msgid "Continue with SSO"
 msgstr "SSO로 계속하기"
 
@@ -9173,7 +9179,7 @@ msgid "Couldn't join community"
 msgstr "커뮤니티에 참여할 수 없습니다"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:32
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:13
 msgid "Couldn't join this community"
 msgstr "이 커뮤니티에 참여할 수 없습니다"
 
@@ -9196,6 +9202,11 @@ msgstr "승인된 앱을 로드할 수 없습니다"
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:40
 msgid "Couldn't load bans"
 msgstr "차단 목록을 불러올 수 없습니다"
+
+#. Empty-state heading in Discovery shown when the request for communities failed.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:28
+msgid "Couldn't load communities"
+msgstr "커뮤니티를 불러올 수 없어요"
 
 #. Error modal title shown when fetching invites fails.
 #: src/features/invite/components/alerts/InvitesLoadFailedModal.tsx:9
@@ -9222,8 +9233,8 @@ msgstr "검색 결과를 열 수 없습니다"
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:12
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:28
-#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:28
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
+#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
 msgid "Couldn't open the billing portal"
 msgstr "결제 포털을 열 수 없습니다"
 
@@ -9285,7 +9296,7 @@ msgid "Couldn't remove from group"
 msgstr "그룹에서 삭제할 수 없습니다"
 
 #. Toast error shown when removing the current account from the device fails.
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:37
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:35
 msgid "Couldn't remove this account. Try again."
 msgstr "이 계정을 제거할 수 없습니다. 다시 시도해 주세요."
 
@@ -9392,7 +9403,7 @@ msgid "Couldn't stop ringing"
 msgstr "벨소리를 중지할 수 없습니다"
 
 #. Toast error shown when switching to a different saved account fails.
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:29
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:27
 msgid "Couldn't switch accounts. Try again."
 msgstr "계정을 전환할 수 없습니다. 다시 시도해 주세요."
 
@@ -9548,14 +9559,14 @@ msgid "Create a new group with {userName}"
 msgstr "{userName}님과 새 그룹 만들기"
 
 #. Generic authentication action label for starting or submitting account creation.
-#: src/features/auth/components/pages/RegisterPage.tsx:42
+#: src/features/auth/components/pages/RegisterPage.tsx:46
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:82
 #: src/features/invite/components/modals/InvitePagePreviewModal.tsx:163
-#: src/features/theme/components/pages/ThemeRegisterPage.tsx:125
+#: src/features/theme/components/pages/ThemeRegisterPage.tsx:129
 msgid "Create account"
 msgstr "계정 만들기"
 
-#: src/features/expressions/components/pages/GiftRegisterPage.tsx:119
+#: src/features/expressions/components/pages/GiftRegisterPage.tsx:123
 msgid "Create account to claim gift"
 msgstr "선물 받으려면 계정을 만드세요"
 
@@ -9564,7 +9575,7 @@ msgstr "선물 받으려면 계정을 만드세요"
 msgid "Create administrator account"
 msgstr "관리자 계정 만들기"
 
-#: src/features/auth/components/pages/RegisterPage.tsx:32
+#: src/features/auth/components/pages/RegisterPage.tsx:36
 msgid "Create an account"
 msgstr "계정 만들기"
 
@@ -9613,7 +9624,7 @@ msgstr "커뮤니티 만들기 양식"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:97
 #: src/features/channel/utils/CreateDMModalUtils.tsx:35
 msgid "Create DM"
 msgstr "DM 만들기"
@@ -9679,7 +9690,7 @@ msgid "Create or join a community"
 msgstr "커뮤니티 만들기 또는 참여하기"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:206
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:209
 msgid "Create role"
 msgstr "역할 만들기"
 
@@ -10015,7 +10026,7 @@ msgstr "{premiumProductName}으로 나만의 입장음 설정하기"
 msgid "Custom expiry (seconds)"
 msgstr "만료 시간 직접 설정(초)"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:222
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:225
 msgid "Custom hoist order"
 msgstr "호이스팅 순서 직접 지정"
 
@@ -11172,7 +11183,7 @@ msgid "Developer mode"
 msgstr "개발자 모드"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:273
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:277
 msgid "Developer option"
 msgstr "개발자 옵션"
 
@@ -11330,7 +11341,7 @@ msgstr "다이렉트 메시지 미리보기"
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:347
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:592
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:218
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
 msgid "Direct messages"
@@ -11404,7 +11415,7 @@ msgid "Disable built-ins"
 msgstr "기본 설정 비활성화"
 
 #. Confirmation modal title shown before dismissing the desktop-notification nagbar.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:30
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:31
 msgid "Disable desktop notifications?"
 msgstr "데스크톱 알림을 사용 중지할까요?"
 
@@ -11646,7 +11657,7 @@ msgid "Discovery application withdrawn"
 msgstr "디스커버리 신청 철회됨"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:37
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:23
 msgid "Discovery categories"
 msgstr "탐색 카테고리"
 
@@ -11660,14 +11671,14 @@ msgid "Discovery navigation"
 msgstr "탐색 페이지 탐색"
 
 #. Accessible label for the Discovery community results region.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:57
+#: src/features/discovery/discovery/DiscoveryPage.tsx:29
 msgid "Discovery results"
 msgstr "검색 결과"
 
-#. Accessible label for the search and filter controls in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:53
-msgid "Discovery search and filters"
-msgstr "검색 및 필터"
+#. Accessible label for the search form in the Discovery navigation bar.
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:31
+msgid "Discovery search"
+msgstr "Discovery 검색"
 
 #. Short label in the bot profile section. Keep it concise.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:52
@@ -11686,12 +11697,12 @@ msgid "Dismiss"
 msgstr "닫기"
 
 #. Secondary button in the desktop-notification nagbar dismissal confirmation. Dismisses the nagbar.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:43
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:44
 msgid "Dismiss anyway"
 msgstr "그래도 닫기"
 
 #. Short label in the recent mentions page. Keep it concise.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:17
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:23
 msgid "Dismiss mention"
 msgstr "멘션 해제"
 
@@ -11952,7 +11963,7 @@ msgid "Don't show"
 msgstr "표시 안 함"
 
 #. Button label that permanently dismisses the software encoding or decoding warning banner.
-#: src/features/voice/components/SoftwareEncoderNagbar.tsx:25
+#: src/features/voice/components/SoftwareEncoderNagbar.tsx:26
 msgid "Don't show again"
 msgstr "다시 표시 안 함"
 
@@ -12014,7 +12025,7 @@ msgstr "다운로드"
 
 #. Nagbar button label that downloads the desktop app. productName is the app name.
 #. Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:16
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:17
 #: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:26
 msgid "Download {productName}"
 msgstr "{productName} 다운로드"
@@ -12599,7 +12610,7 @@ msgid "Email changed"
 msgstr "이메일 변경 완료"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:910
+#: src/features/app/components/setup/SetupWizardSteps.tsx:953
 msgid "Email delivery"
 msgstr "이메일 전송"
 
@@ -12645,7 +12656,7 @@ msgid "Email verification required"
 msgstr "이메일 인증 필요"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:177
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:181
 msgid "Email verified"
 msgstr "이메일 인증됨"
 
@@ -12687,7 +12698,7 @@ msgid "Embed links"
 msgstr "링크 임베드"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:57
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:61
 msgid "Embed skeletons"
 msgstr "임베드 스켈레톤"
 
@@ -12874,7 +12885,7 @@ msgid "Emoticons"
 msgstr "이모티콘"
 
 #. Short label in the app layout favorites channel list content.
-#: src/features/app/components/layout/FavoritesChannelListContent.tsx:64
+#: src/features/app/components/layout/FavoritesChannelListContent.tsx:65
 msgid "Empty favorites"
 msgstr "즐겨찾기 없음"
 
@@ -12889,7 +12900,7 @@ msgstr "디코딩 코덱 에뮬레이션 (테스트용)"
 #. Button label in the keybind settings system-wide shortcuts section.
 #. Button or menu action label in the invites disable invites button. Keep it concise.
 #. Primary button label in the enable-invites confirmation modal.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:31
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
@@ -12947,7 +12958,7 @@ msgid "Enable beta feature"
 msgstr "베타 기능 활성화"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:966
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 msgid "Enable Bluesky OAuth"
 msgstr "Bluesky OAuth 사용 설정"
 
@@ -12962,7 +12973,7 @@ msgid "Enable desktop notifications"
 msgstr "데스크톱 알림 켜기"
 
 #. Nagbar body shown in desktop/web contexts when notification permission is not yet enabled.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:51
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:52
 msgid "Enable desktop notifications to stay updated on new messages."
 msgstr "새 메시지 알림을 받으려면 데스크톱 알림을 켜세요."
 
@@ -12975,7 +12986,7 @@ msgid "Enable developer mode"
 msgstr "개발자 모드 활성화"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:938
+#: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Enable email delivery"
 msgstr "이메일 전송 사용 설정"
 
@@ -12999,7 +13010,7 @@ msgid "Enable hardware acceleration?"
 msgstr "하드웨어 가속을 사용하시겠어요?"
 
 #. Description for a Linux Wayland input-access nagbar. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:15
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:16
 msgid "Enable input access to use system-wide shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
 msgstr "Wayland에서 시스템 전체 단축키를 사용하려면 입력 접근을 활성화하세요. 입력 접근을 변경한 후에는 {productName}을(를) 완전히 종료하고 다시 시작해야 단축키를 사용할 수 있습니다."
 
@@ -13043,7 +13054,7 @@ msgid "Enable notifications"
 msgstr "알림 켜기"
 
 #. Confirmation modal body explaining why notifications are useful before dismissing the nagbar.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:34
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:35
 msgid "Enable notifications to stay updated on mentions when you're away from the app."
 msgstr "앱을 사용하지 않을 때 멘션 알림을 받으려면 알림을 켜세요."
 
@@ -13068,7 +13079,7 @@ msgid "Enable push for this device"
 msgstr "이 기기에서 푸시 알림 켜기"
 
 #. Nagbar body shown in mobile/PWA contexts. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:47
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:48
 msgid "Enable push notifications for the {productName} app to keep receiving messages when it's backgrounded."
 msgstr "{productName} 앱의 푸시 알림을 활성화하여 백그라운드에서도 메시지를 계속 받으세요."
 
@@ -13379,11 +13390,6 @@ msgstr "전체 화면으로 보기"
 msgid "Enter gift code…"
 msgstr "선물 코드 입력…"
 
-#. Instance selector text input placeholder. Example instance domain is interpolated.
-#: src/features/auth/flow/InstanceSelector.tsx:22
-msgid "Enter instance URL (e.g. {exampleInstanceDomain})"
-msgstr "인스턴스 URL 입력 (예: {exampleInstanceDomain})"
-
 #. Required-action modal carousel step title for changing to a new email address.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:276
 msgid "Enter new email"
@@ -13495,7 +13501,7 @@ msgstr "SMS 코드 입력"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "브라우저에 이 코드를 입력하여 로그인을 완료하세요."
 
-#: src/features/channel/components/EditingMessageInput.tsx:358
+#: src/features/channel/components/EditingMessageInput.tsx:366
 msgid "enter to <0><1>save</1></0>"
 msgstr "Enter 키를 눌러 <0><1>저장</1></0>"
 
@@ -13636,7 +13642,7 @@ msgstr "Esc 키"
 msgid "Escape key exits keyboard mode"
 msgstr "Esc 키로 키보드 모드 종료"
 
-#: src/features/channel/components/EditingMessageInput.tsx:345
+#: src/features/channel/components/EditingMessageInput.tsx:347
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "취소하려면 <0><1>Esc</1></0> 키를 누르세요"
 
@@ -13797,7 +13803,7 @@ msgstr "{channelHeading}의 읽지 않은 메시지 펼치기"
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for an expanded category.
 #: src/features/app/components/layout/ChannelItem.tsx:99
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:71
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:82
 msgid "expanded"
 msgstr "펼쳐짐"
 
@@ -13825,7 +13831,7 @@ msgstr "다음 기간 후 만료"
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:348
-#: src/features/auth/components/accounts/AccountRow.tsx:20
+#: src/features/auth/components/accounts/AccountRow.tsx:18
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:41
 #: src/features/invite/components/InviteListItem.tsx:30
 msgid "Expired"
@@ -13909,7 +13915,7 @@ msgid "Explicit content filter setting"
 msgstr "음란물 필터 설정"
 
 #. Short label in the app layout discovery guild header.
-#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:11
+#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:10
 msgid "Explore"
 msgstr "둘러보기"
 
@@ -13917,11 +13923,6 @@ msgstr "둘러보기"
 #: src/features/app/components/layout/sidebar_nav/DiscoveryButton.tsx:21
 msgid "Explore communities"
 msgstr "커뮤니티 둘러보기"
-
-#. Main heading on the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:23
-msgid "Explore public communities"
-msgstr "공개 커뮤니티 둘러보기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme_studio/sections/LibrarySection.tsx:494
@@ -13955,12 +13956,12 @@ msgid "Export themes"
 msgstr "테마 내보내기"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the Expression packs settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
 msgid "Expose the staff-only Expression packs page in user settings."
 msgstr "사용자 설정에서 직원 전용 이모지 패키 페이지를 표시합니다."
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:138
 msgid "Expose the staff-only timezone section in profile settings."
 msgstr "프로필 설정에서 직원 전용 시간대 섹션을 표시합니다."
 
@@ -14053,12 +14054,12 @@ msgid "Faded unread"
 msgstr "흐리게 표시된 읽지 않은 메시지"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:49
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:53
 msgid "Fail message loads"
 msgstr "메시지 로드 실패"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:45
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:49
 msgid "Fail message sends"
 msgstr "메시지 전송 실패"
 
@@ -14075,11 +14076,6 @@ msgstr "신뢰할 수 있는 도메인 지우기 실패."
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:28
 msgid "Failed to complete SSO sign-in"
 msgstr "SSO 로그인 실패"
-
-#. Short label in the authentication instance selector. Keep the tone plain and specific.
-#: src/features/auth/flow/InstanceSelector.tsx:18
-msgid "Failed to connect to instance"
-msgstr "인스턴스 연결 실패"
 
 #. Error message in the add friends to group modal utils helper.
 #: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:21
@@ -14313,12 +14309,12 @@ msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "카메라 미리보기를 시작하지 못했습니다. 카메라 권한을 확인해 주세요."
 
 #. Login flow error shown when the single sign-on redirect cannot be started.
-#: src/features/auth/flow/AuthSsoPanel.tsx:14
+#: src/features/auth/flow/AuthSsoPanel.tsx:13
 msgid "Failed to start SSO"
 msgstr "SSO를 시작하지 못했습니다"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:52
+#: src/features/auth/flow/AuthLoginLayout.tsx:51
 msgid "Failed to switch account"
 msgstr "계정 전환 실패"
 
@@ -14486,7 +14482,7 @@ msgstr "일시적으로 비활성화된 기능"
 
 #. Developer options group for feature behavior overrides.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:109
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:113
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:137
 msgid "Features"
 msgstr "기능"
@@ -14605,7 +14601,7 @@ msgid "Filter by join method"
 msgstr "가입 방식별 필터링"
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:49
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:31
 msgid "Filter by language"
 msgstr "언어별 필터"
 
@@ -14625,11 +14621,6 @@ msgstr "역할로 필터링"
 #: src/features/search/components/search/UserFilterSheet.tsx:25
 msgid "Filter by user"
 msgstr "사용자 필터링"
-
-#. Label in the discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:69
-msgid "Filter Discovery by language"
-msgstr "언어별로 둘러보기 필터링"
 
 #. Explicit content filter option in the community moderation settings tab. Filters messages from every member regardless of role.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:117
@@ -14810,7 +14801,7 @@ msgstr "음성 포커스"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:63
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:74
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:39
 msgid "Folder"
 msgstr "폴더"
@@ -14938,17 +14929,17 @@ msgid "Force enabled"
 msgstr "강제 활성화됨"
 
 #. Developer option label for simulating failed message loads.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:105
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:109
 msgid "Force failed message loads"
 msgstr "메시지 로드 실패 강제 실행"
 
 #. Developer option label for simulating failed message sends.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:101
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:105
 msgid "Force failed message sends"
 msgstr "메시지 전송 실패 강제 실행"
 
 #. Developer option label for simulating a loading GIF picker.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:61
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:65
 msgid "Force GIF picker loading"
 msgstr "GIF 선택기 로딩 강제 실행"
 
@@ -14958,7 +14949,14 @@ msgid "Force hide"
 msgstr "강제 숨기기"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:201
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:45
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:45
+msgid "Force loading skeleton"
+msgstr "스켈레톤 강제 로드"
+
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:205
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:281
 msgid "Force mature media"
 msgstr "성인용 미디어 강제 적용"
@@ -14973,12 +14971,12 @@ msgid "Force no {permissionName} permission"
 msgstr "{permissionName} 권한 없음 강제 적용"
 
 #. Developer option label for always showing profile data warnings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:97
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:101
 msgid "Force profile data warning"
 msgstr "프로필 데이터 경고 강제 표시"
 
 #. Developer option label for forcing user profile loading skeletons.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:93
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:97
 msgid "Force profile skeletons"
 msgstr "프로필 스켈레톤 강제 적용"
 
@@ -14988,12 +14986,12 @@ msgid "Force show"
 msgstr "강제로 표시"
 
 #. Developer option label for always showing a community settings warning.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:65
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:69
 msgid "Force show vanity URL disclaimer"
 msgstr "꾸밈 URL 고지 사항 강제 표시"
 
 #. Developer option label for always showing the voice connection status bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:117
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:121
 msgid "Force show voice connection"
 msgstr "음성 연결 강제 표시"
 
@@ -15002,12 +15000,12 @@ msgid "Force slowmode active"
 msgstr "슬로우 모드 강제 활성화"
 
 #. Developer option label for rendering messages as unknown message types.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:113
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:117
 msgid "Force unknown message type"
 msgstr "알 수 없는 메시지 유형 강제 적용"
 
 #. Developer option label for simulating an available update.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:45
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:49
 msgid "Force update ready"
 msgstr "업데이트 준비 강제 실행"
 
@@ -15038,7 +15036,7 @@ msgstr "비밀번호를 잊으셨나요"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
-#: src/features/auth/flow/AuthLoginLayout.tsx:64
+#: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "비밀번호를 잊으셨나요?"
 
@@ -15210,7 +15208,7 @@ msgstr "친근한 봇"
 #. Profile timezone privacy option label. Allows friends to see local time.
 #. Quick switcher tab label that lists friends.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:518
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:555
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:47
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
@@ -15265,7 +15263,7 @@ msgid "Friends only calls"
 msgstr "친구에게만 전화 허용"
 
 #. Accessible label for the friends-view section tablist.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:35
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "친구 섹션"
 
@@ -15301,12 +15299,12 @@ msgid "From another community"
 msgstr "다른 커뮤니티에서"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:942
+#: src/features/app/components/setup/SetupWizardSteps.tsx:985
 msgid "From email"
 msgstr "보내는 사람 이메일"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:946
+#: src/features/app/components/setup/SetupWizardSteps.tsx:989
 msgid "From name"
 msgstr "보내는 사람 이름"
 
@@ -15351,7 +15349,7 @@ msgid "Game capture"
 msgstr "게임 캡처"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:277
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:281
 msgid "Game capture injection (Windows)"
 msgstr "게임 캡처 주입(Windows)"
 
@@ -15415,7 +15413,7 @@ msgid "Generating code…"
 msgstr "코드 생성 중…"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:213
 msgid "Geo block overlay"
 msgstr "지역 차단 오버레이"
 
@@ -15471,7 +15469,7 @@ msgid "Get notified when you receive messages. You may need to allow notificatio
 msgstr "메시지를 받으면 알림을 받습니다. 브라우저 설정에서 알림을 허용해야 할 수도 있습니다. 채널/커뮤니티별 설정은 커뮤니티 아이콘을 마우스 오른쪽 버튼으로 클릭하고 알림 설정을 여세요."
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:16
+#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:17
 msgid "Get the {productName} desktop app for system-wide push-to-talk and a few other goodies."
 msgstr "시스템 전체 푸시투톡 및 기타 유용한 기능을 사용하려면 {productName} 데스크톱 앱을 다운로드하세요."
 
@@ -15503,7 +15501,7 @@ msgid "GIF options"
 msgstr "GIF 옵션"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:121
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:125
 msgid "GIF picker loading"
 msgstr "GIF 선택기 로드 중"
 
@@ -15513,7 +15511,7 @@ msgid "GIF preview"
 msgstr "GIF 미리보기"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:886
+#: src/features/app/components/setup/SetupWizardSteps.tsx:929
 msgid "GIF search"
 msgstr "GIF 검색"
 
@@ -15581,14 +15579,14 @@ msgstr "선물 코드"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:261
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:265
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:100
 msgid "Gift duration"
 msgstr "선물 기간"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:257
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:261
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:42
 msgid "Gift inventory"
 msgstr "선물함"
@@ -15616,7 +15614,7 @@ msgid "Gift not found"
 msgstr "선물을 찾을 수 없음"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:265
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:269
 msgid "Gift redeemed"
 msgstr "선물 사용 완료"
 
@@ -16146,7 +16144,7 @@ msgid "Has"
 msgstr "포함"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:165
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:169
 msgid "Has ever purchased"
 msgstr "구매한 적 있음"
 
@@ -16171,7 +16169,7 @@ msgid "Having issues? Try hCaptcha instead"
 msgstr "문제가 있으신가요? hCaptcha를 대신 사용해 보세요"
 
 #. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:930
+#: src/features/app/components/setup/SetupWizardSteps.tsx:973
 msgid "hCaptcha"
 msgstr "hCaptcha"
 
@@ -16262,12 +16260,12 @@ msgid "Hex value for {tokenLabel}"
 msgstr "{tokenLabel}의 헥스 값"
 
 #. Nagbar warning shown to unclaimed-account users. displayName is the current user display name.
-#: src/features/app/components/layout/app_layout/nagbars/UnclaimedAccountNagbar.tsx:14
+#: src/features/app/components/layout/app_layout/nagbars/UnclaimedAccountNagbar.tsx:15
 msgid "Hey {displayName}, claim your account to prevent losing access."
 msgstr "{displayName}님, 계정을 소유하여 액세스 권한을 잃지 않도록 하세요."
 
 #. Nagbar warning shown when the current user still needs to verify email. displayName is the user display name.
-#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:16
+#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:17
 msgid "Hey {displayName}, please verify your email address."
 msgstr "{displayName}님, 이메일 주소를 확인해 주세요."
 
@@ -16539,7 +16537,7 @@ msgid "Hold to send voice message"
 msgstr "눌러서 음성 메시지 보내기"
 
 #. Action label in quick switcher for navigating to the Home tab.
-#: src/features/app/components/layout/MobileBottomNav.tsx:105
+#: src/features/app/components/layout/MobileBottomNav.tsx:110
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:48
 msgid "Home"
 msgstr "홈"
@@ -16815,7 +16813,7 @@ msgid "If you cannot use any verification method, contact support for help."
 msgstr "어떤 인증 방법도 사용할 수 없는 경우, 지원팀에 문의하여 도움을 받으세요."
 
 #. Confirmation modal body shown before dismissing the desktop-notification nagbar. {notificationSettingsPath} is the localized settings path.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:38
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:39
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "이 알림을 닫으면 나중에 {notificationSettingsPath}에서 데스크톱 알림을 다시 켤 수 있습니다."
 
@@ -17149,7 +17147,7 @@ msgstr "가져오는 중… {processedCount, number}/{totalCount, number}개 처
 msgid "In"
 msgstr "채널 내"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:555
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:559
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "'운영체제' 모드에서는 위에 나열된 사전은 권장 사항입니다. {PRODUCT_NAME}은 지원되는 경우 이러한 언어 태그를 OS 맞춤법 검사기에 전달합니다. 인식하지 못하는 태그는 무시됩니다."
 
@@ -17189,7 +17187,7 @@ msgstr "내가 관리하는 채널"
 msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
 msgstr "태초에 아무것도 없었으니, {channelDisplayName}이(가) 생겨나 비로소 좋았더라."
 
-#: src/features/user/components/profile/VoiceActivityCard.tsx:234
+#: src/features/user/components/profile/VoiceActivityCard.tsx:238
 msgid "In voice"
 msgstr "음성 채팅 중"
 
@@ -17243,10 +17241,6 @@ msgstr "받은 메시지 미리 보기"
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
 msgid "Inbox tabs"
 msgstr "받은 메시지 탭"
-
-#: src/features/app/components/ConnectionIssuesLinks.tsx:43
-msgid "Incident history"
-msgstr "장애 이력"
 
 #. Recent mentions filter checkbox. mentionType is a mention token such as @everyone or @role.
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:56
@@ -17318,7 +17312,7 @@ msgid "Incoming friend request"
 msgstr "받은 친구 요청"
 
 #. Short label in the channel and chat pending friends view. Keep it concise.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:33
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:38
 msgid "Incoming friend requests"
 msgstr "받은 친구 요청"
 
@@ -17425,7 +17419,7 @@ msgid "Input access could not be enabled automatically. Change it manually, then
 msgstr "입력 접근 권한을 자동으로 활성화할 수 없습니다. 수동으로 변경한 다음, {productName}을(를) 완전히 종료하고 다시 시작하여 단축키를 사용할 수 있도록 하세요."
 
 #. Description for a Linux Wayland input-access nagbar after automatic permission setup failed. {settingsMenuName} is the shared user settings tab label for shortcuts and {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:25
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:26
 msgid "Input access could not be enabled. Try again from {settingsMenuName} settings, then fully quit and restart {productName}."
 msgstr "입력 접근 권한을 활성화할 수 없습니다. {settingsMenuName} 설정에서 다시 시도한 다음, {productName}을(를) 완전히 종료하고 다시 시작하세요."
 
@@ -17436,7 +17430,7 @@ msgstr "Wayland에서 시스템 전체 키보드 및 마우스 단축키를 사�
 
 #. Description for a Linux Wayland input-access nagbar after access was changed. {productName} is the app name.
 #. Status text after Linux input access was changed. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:20
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:21
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:31
 msgid "Input access was changed. Fully quit and restart {productName} so system-wide shortcuts can use it."
 msgstr "입력 접근 권한이 변경되었습니다. 시스템 전체 단축키를 사용할 수 있도록 {productName}을(를) 완전히 종료한 후 다시 시작하세요."
@@ -17539,13 +17533,6 @@ msgstr "데스크톱 업데이트 {version} 설치 중…"
 msgid "Installing desktop update…"
 msgstr "데스크톱 업데이트 설치 중…"
 
-#. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#. Short label in the authentication instance selector. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:37
-#: src/features/auth/flow/InstanceSelector.tsx:30
-msgid "Instance URL"
-msgstr "인스턴스 URL"
-
 #. Audit log operation flag label for invite creation.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:170
 msgid "Instant invites"
@@ -17627,11 +17614,6 @@ msgstr "유효하지 않은 선물 코드"
 #: src/features/channel/components/modals/EditGroupModal.tsx:68
 msgid "Invalid image"
 msgstr "잘못된 이미지"
-
-#. Browser login handoff modal form validation error for an unparseable instance URL. Example domain and URL are interpolated.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:28
-msgid "Invalid instance URL. Try something like \"{exampleDomain}\" or \"{exampleUrl}\"."
-msgstr "인스턴스 URL이 유효하지 않습니다. \"{exampleDomain}\" 또는 \"{exampleUrl}\"처럼 입력해 보세요."
 
 #. Validation error in the paste-template-JSON form. "JSON" is a protocol token and must not be translated.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:132
@@ -17902,14 +17884,14 @@ msgid "Invites"
 msgstr "초대 링크 관리"
 
 #. Short label in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:114
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:24
 msgid "Invites are currently paused in this community"
 msgstr "이 커뮤니티에서는 현재 초대가 일시 중지되었습니다"
 
-#. Community sidebar tooltip shown when raid protection has paused invites. Product name is interpolated.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:110
-msgid "Invites are paused because {productName} detected a potential raid"
-msgstr "잠재적인 레이드가 감지되어 {productName}에서 초대 기능을 일시 중지했습니다"
+#. Community sidebar tooltip shown while invites are paused after a suspected raid.
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:20
+msgid "Invites are paused after a suspected raid"
+msgstr "초대 기능이 의심스러운 공격으로 인해 일시 중지됐어요."
 
 #. Invite settings notice shown when automated raid protection pauses invites. productName is the Fluxer product name.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:28
@@ -17992,7 +17974,7 @@ msgid "It may have been deleted. The name was reverted to what it was before."
 msgstr "삭제되었을 수 있습니다. 이름이 이전 상태로 되돌려졌습니다."
 
 #. Body of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:69
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:50
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "더 이상 검색에 표시되지 않거나 새로운 참여가 비활성화되었을 수 있습니다. 페이지를 새로고침하면 다시 표시되지 않습니다."
 
@@ -18002,7 +17984,7 @@ msgid "It's a full-blown typing fiesta in here"
 msgstr "모두 열심히 채팅을 입력하고 있어요"
 
 #. Label in the channel and chat active now sidebar.
-#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:12
+#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:17
 msgid "It's quiet for now..."
 msgstr "지금은 조용하네요..."
 
@@ -18043,15 +18025,13 @@ msgstr "지터:"
 msgid "Join"
 msgstr "참여하기"
 
-#. Accessible label for a Discovery guild card join button. {communityName} is the public community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:28
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:145
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
 msgid "Join {communityName}"
 msgstr "{communityName}에 참여하기"
 
 #. Nagbar body inviting users to join the official product community. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:24
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:25
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "{communityName}에 참여하여 팀과 채팅하고 최신 소식을 받아보세요."
 
@@ -18128,7 +18108,7 @@ msgstr "영상 통화 참여"
 #. Button or menu action label in the user settings voice activity card. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:63
+#: src/features/user/components/profile/VoiceActivityCard.tsx:67
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
@@ -18145,16 +18125,6 @@ msgstr "음성 통화 참여"
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "음성 채널 참여"
-
-#. Button or menu action label in the discovery guild card. Keep it concise.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:141
-msgid "Joined"
-msgstr "참여 중"
-
-#. Accessible label for a disabled Discovery guild card join button when the user is already in the community. {communityName} is the public community name.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:149
-msgid "Joined {communityName}"
-msgstr "{communityName}에 참여함"
 
 #. Community members table column header for the date the account joined Fluxer.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:29
@@ -18229,7 +18199,7 @@ msgid "Jump to page"
 msgstr "페이지로 이동"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:69
+#: src/features/channel/components/ChannelMessages.tsx:74
 msgid "Jump to present"
 msgstr "현재 메시지로 이동"
 
@@ -18460,7 +18430,7 @@ msgid "Larger media size with more detail"
 msgstr "더욱 선명하고 큰 미디어"
 
 #. Account switcher metadata showing when a saved account was last used.
-#: src/features/auth/components/accounts/AccountListItem.tsx:67
+#: src/features/auth/components/accounts/AccountListItem.tsx:65
 msgid "Last active {lastActive}"
 msgstr "마지막 활동: {lastActive}"
 
@@ -18531,7 +18501,7 @@ msgid "Learn about screen share previews"
 msgstr "화면 공유 미리보기에 대해 자세히 알아보세요"
 
 #. CTA on the planned-maintenance banner. Opens the external status-page maintenance notice.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:62
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:49
 msgid "Learn more"
 msgstr "자세히 알아보기"
 
@@ -18953,17 +18923,12 @@ msgstr "라이브 영역"
 msgid "Loading"
 msgstr "로드 중"
 
-#. Neutral splash-screen loading fallback for non-English locales. Do not imply that rotating quotes exist.
-#: src/media/data/SplashQuotes.ts:8
-msgid "Loading {productName}."
-msgstr "{productName} 로드 중."
-
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:164
 msgid "Loading banned users"
 msgstr "차단된 사용자 불러오는 중"
 
 #. Screen-reader status text shown while Discovery communities are loading.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:65
+#: src/features/discovery/discovery/DiscoveryPage.tsx:37
 msgid "Loading communities"
 msgstr "커뮤니티 로드 중"
 
@@ -19139,7 +19104,7 @@ msgid "Logo"
 msgstr "로고"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:978
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
 msgid "Logo URL"
 msgstr "로고 URL"
 
@@ -19240,17 +19205,17 @@ msgid "Mail"
 msgstr "메일"
 
 #. Maintenance banner message shown after a planned status-page maintenance finishes. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:53
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:40
 msgid "Maintenance is complete."
 msgstr "점검이 완료되었습니다."
 
 #. Maintenance banner message shown while a planned status-page maintenance is in progress. {duration} is already localized. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:48
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:35
 msgid "Maintenance is in progress. Expected duration: {duration}."
 msgstr "점검이 진행 중입니다. 예상 소요 시간: {duration}."
 
 #. Maintenance banner message shown before a planned status-page maintenance begins. {localizedTime} and {duration} are already localized. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:57
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:44
 msgid "Maintenance is scheduled for {localizedTime}. Expected duration: {duration}."
 msgstr "{localizedTime}에 예정된 점검이 있습니다. 예상 소요 시간: {duration}."
 
@@ -19304,7 +19269,7 @@ msgid "Manage"
 msgstr "관리"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:395
-#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:76
+#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:78
 msgid "Manage accounts"
 msgstr "계정 관리"
 
@@ -19617,7 +19582,7 @@ msgid "Mature content & content warnings"
 msgstr "성인 및 콘텐츠 경고"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:193
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:197
 msgid "Mature content channel gate"
 msgstr "성인 콘텐츠 채널 게이트"
 
@@ -19643,7 +19608,7 @@ msgid "Mature content checks are currently available only in the UK."
 msgstr "성인 콘텐츠 확인 기능은 현재 영국에서만 이용할 수 있습니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:197
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:201
 msgid "Mature content media gate"
 msgstr "성인 콘텐츠 미디어 게이트"
 
@@ -19814,7 +19779,7 @@ msgid "Media from links (embeds)"
 msgstr "링크 미디어 (임베드)"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:61
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:65
 msgid "Media loading state"
 msgstr "미디어 로딩 상태"
 
@@ -19936,7 +19901,7 @@ msgid "Member verification level"
 msgstr "멤버 확인 레벨"
 
 #. Community tooltip stat label shown next to a loading skeleton while the member count is loading.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:131
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:41
 msgid "members"
 msgstr "멤버"
 
@@ -19995,7 +19960,7 @@ msgid "Members without the {readMessageHistoryPermissionLabel} permission can vi
 msgstr "{readMessageHistoryPermissionLabel} 권한이 없는 멤버는 이 날짜 이후에 전송된 메시지를 볼 수 있습니다."
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:77
+#: src/features/app/components/layout/ChannelListContent.tsx:87
 msgid "Members, selected"
 msgstr "멤버 선택됨"
 
@@ -20068,7 +20033,7 @@ msgid "Mentions and timestamps"
 msgstr "멘션 및 타임스탬프"
 
 #. Description text in the recent mentions page. Preserve {recentMentionsRetentionDays}; it is inserted by code.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:29
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:35
 msgid "Mentions of you show up here for {recentMentionsRetentionDays} days."
 msgstr "회원님을 언급한 메시지가 {recentMentionsRetentionDays}일 동안 여기에 표시됩니다."
 
@@ -20265,12 +20230,12 @@ msgid "Message link"
 msgstr "메시지 링크"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:61
+#: src/features/channel/components/ChannelMessages.tsx:66
 msgid "Message list"
 msgstr "메시지 목록"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:57
+#: src/features/channel/components/ChannelMessages.tsx:62
 msgid "Message list for {channelName}"
 msgstr "{channelName} 메시지 목록"
 
@@ -20350,7 +20315,7 @@ msgstr "메시지: {0}."
 #. Short label in the inline. Keep it concise.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/channel/components/ChannelChatLayout.tsx:10
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:276
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:312
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:28
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
@@ -20376,7 +20341,7 @@ msgid "Messages deleted"
 msgstr "메시지 삭제됨"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:73
+#: src/features/channel/components/ChannelMessages.tsx:78
 msgid "Messages failed to load"
 msgstr "메시지 로드 실패"
 
@@ -20390,7 +20355,7 @@ msgstr "커뮤니티 채널 메시지"
 msgid "Messages shortcuts"
 msgstr "메시지 단축키"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:273
+#: src/features/channel/components/barriers/BarrierComponents.tsx:272
 msgid "Messaging is temporarily paused in this community."
 msgstr "이 커뮤니티에서는 메시지 전송이 일시적으로 중지되었습니다."
 
@@ -20700,7 +20665,7 @@ msgstr "월별 선물"
 #. Short label in the buttons tab. Keep it concise.
 #. Short label in the channel and chat friend list item. Keep it concise.
 #. Tooltip on the overflow button in the inline message hover action bar. Opens the full action menu.
-#: src/features/auth/components/accounts/AccountRow.tsx:24
+#: src/features/auth/components/accounts/AccountRow.tsx:22
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
 #: src/features/channel/components/MessageActionBar.tsx:88
@@ -21020,7 +20985,7 @@ msgstr "멤버 음소거"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:62
+#: src/features/app/components/layout/UserArea.tsx:63
 #: src/features/platform/utils/DesktopLocaleBridge.ts:144
 msgid "Mute microphone"
 msgstr "마이크 음소거"
@@ -21051,7 +21016,7 @@ msgstr "스트림 오디오 음소거"
 #. Screen-reader fragment announcing that the DM list row is muted. Lowercase fragment.
 #: src/features/app/components/layout/ChannelItem.tsx:107
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:60
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:98
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
 #: src/features/channel/components/direct_message/DMListItem.tsx:75
 msgid "muted"
 msgstr "음소거됨"
@@ -21063,7 +21028,7 @@ msgstr "음소거됨"
 #. Short label in the sidebar navigation guild list item.
 #. Status badge on a voice participant tile. The participant's microphone is muted.
 #. Status label indicating the surface is currently muted.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:82
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:15
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
@@ -21086,7 +21051,7 @@ msgid "Muted channels"
 msgstr "채널 알림 끄기"
 
 #. Community sidebar tooltip showing when the per-community mute will expire. Date/time is interpolated.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:78
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:31
 msgid "Muted until {dateUtilsGetFormattedDateTimeNewDateMuteConfigEndTime}"
 msgstr "~{dateUtilsGetFormattedDateTimeNewDateMuteConfigEndTime}까지 음소거됨"
 
@@ -21191,7 +21156,7 @@ msgid "My devices"
 msgstr "내 기기"
 
 #. Page title for the DM-list friends view.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:31
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:33
 msgid "My friends"
 msgstr "내 친구"
 
@@ -21314,12 +21279,12 @@ msgid "Native title bar"
 msgstr "기본 제목 표시줄"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:73
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:77
 msgid "Native update progress"
 msgstr "네이티브 업데이트 진행률"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:69
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:73
 msgid "Native updater ready"
 msgstr "네이티브 업데이터 준비 완료"
 
@@ -21393,7 +21358,7 @@ msgid "Network error"
 msgstr "네트워크 오류"
 
 #. Developer options group for simulated slow or failed operations.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:69
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:73
 msgid "Networking and performance"
 msgstr "네트워킹 및 성능"
 
@@ -21424,7 +21389,7 @@ msgid "New"
 msgstr "새로운"
 
 #. Small badge on a new or recently added app navigation item.
-#: src/features/app/components/layout/GuildsLayout.tsx:76
+#: src/features/app/components/layout/GuildsLayout.tsx:131
 msgctxt "navigation-badge"
 msgid "New"
 msgstr "신규"
@@ -21492,14 +21457,14 @@ msgstr "새로운 그룹"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the new message button at the top of the DM list.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:93
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:159
 msgid "New message"
 msgstr "새 메시지"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:81
+#: src/features/app/components/layout/ChannelListContent.tsx:91
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "새 메시지"
@@ -21602,12 +21567,12 @@ msgid "No"
 msgstr "아니요"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:245
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
 msgid "No {attachFilesPermission} permission"
 msgstr "{attachFilesPermission} 권한 없음"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:241
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:245
 msgid "No {sendMessagesPermission} permission"
 msgstr "{sendMessagesPermission} 권한 없음"
 
@@ -21621,8 +21586,8 @@ msgstr "액세스 권한 없음"
 msgid "No accessible channels"
 msgstr "접근 가능한 채널 없음"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:150
-#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:86
+#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "계정 없음"
 
@@ -21696,7 +21661,7 @@ msgstr "차단된 사용자 없음"
 #. Empty-state text in the saved messages content popout.
 #. Empty-state text in the saved messages page.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:162
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:21
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:27
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:29
 msgid "No bookmarks"
 msgstr "저장한 메시지 없음"
@@ -21743,8 +21708,13 @@ msgstr "채널을 찾을 수 없습니다"
 msgid "No channels found"
 msgstr "채널을 찾을 수 없습니다"
 
+#. Empty-state hint in Discovery shown under the heading when no communities are listed at all.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:24
+msgid "No communities are listed right now. Check back a little later."
+msgstr "지금은 표시된 커뮤니티가 없어요. 잠시 후 다시 확인해 주세요."
+
 #. Empty-state text in the discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:73
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:12
 msgid "No communities match."
 msgstr "일치하는 커뮤니티가 없습니다."
 
@@ -21780,7 +21750,9 @@ msgid "No description provided."
 msgstr "설명 없음."
 
 #. Empty-state text in the discovery guild card.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:133
+#. Empty-state text shown in the Discovery community preview modal when a community has no description.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:30
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:23
 msgid "No description."
 msgstr "설명 없음."
 
@@ -21828,7 +21800,7 @@ msgstr "친구가 없습니다"
 
 #. Empty state title in the friends list when the search query returns no results.
 #. Empty-state text in the friends list utils helper.
-#: src/features/channel/components/friends/views/FriendsList.tsx:36
+#: src/features/channel/components/friends/views/FriendsList.tsx:41
 #: src/features/relationship/utils/FriendsListUtils.tsx:35
 msgid "No friends match that search"
 msgstr "검색 결과와 일치하는 친구가 없습니다"
@@ -21851,7 +21823,7 @@ msgstr "일치하는 GIF 없음"
 msgid "No gifts yet"
 msgstr "아직 선물이 없어요"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:166
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:169
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "표시된 역할이 없습니다. 역할 설정에서 \"역할 구성원 별도 표시\"를 켜면 여기에 표시됩니다."
 
@@ -21936,12 +21908,12 @@ msgid "No password set"
 msgstr "비밀번호가 설정되지 않았습니다"
 
 #. Empty-state text in the channel and chat pending friends view.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:17
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:22
 msgid "No pending requests"
 msgstr "받은 요청이 없어요"
 
 #. Empty-state text in the channel and chat pending friends view.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:25
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:30
 msgid "No pending requests match that search"
 msgstr "검색 결과와 일치하는 보류 중인 요청이 없습니다"
 
@@ -21950,7 +21922,7 @@ msgstr "검색 결과와 일치하는 보류 중인 요청이 없습니다"
 msgid "No permissions found"
 msgstr "권한 없음"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:602
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:606
 msgid "No personal words yet."
 msgstr "아직 나만의 단어가 없어요."
 
@@ -21971,7 +21943,7 @@ msgstr "설정 안 함"
 
 #. Empty-state text in the user settings voice activity card.
 #. Placeholder text on the screen-share hover card when no thumbnail has been received yet.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:90
+#: src/features/user/components/profile/VoiceActivityCard.tsx:94
 #: src/features/voice/components/StreamWatchHoverCard.tsx:25
 msgid "No preview yet"
 msgstr "미리보기 없음"
@@ -21991,7 +21963,7 @@ msgid "No reason was provided."
 msgstr "사유가 제공되지 않았습니다."
 
 #. Empty-state text in the recent mentions page.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:25
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:31
 msgid "No recent mentions"
 msgstr "최근 멘션 없음"
 
@@ -22189,7 +22161,7 @@ msgid "No webhooks"
 msgstr "웹훅 없음"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:143
 msgid "No-op in-app reports"
 msgstr "앱 내 신고 무효화"
 
@@ -22288,7 +22260,7 @@ msgstr "마음에 들지 않으세요? 언제든지 끌 수 있습니다."
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:58
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:34
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/state/NewDeviceMonitoring.tsx:31
 msgid "Not now"
 msgstr "나중에"
@@ -22334,6 +22306,11 @@ msgstr "없음"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:587
 msgid "Nothing matches"
 msgstr "일치하는 항목 없음"
+
+#. Empty-state heading in Discovery shown when no communities are listed at all.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:20
+msgid "Nothing to explore yet"
+msgstr "아직 둘러볼 항목이 없어요"
 
 #. Title of the error modal shown when there is no refundable purchase on the account.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:55
@@ -22382,9 +22359,9 @@ msgstr "알림 소리 크기"
 #. Advanced settings category tag.
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/layout/MobileBottomNav.tsx:131
+#: src/features/app/components/layout/MobileBottomNav.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:699
-#: src/features/notification/components/pages/NotificationsPage.tsx:43
+#: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
 msgid "Notifications"
@@ -22402,7 +22379,7 @@ msgid "Notifications blocked"
 msgstr "알림 차단됨"
 
 #. Modal title shown when the current device/browser cannot show notifications.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:22
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:23
 msgid "Notifications not supported"
 msgstr "알림이 지원되지 않습니다"
 
@@ -22526,7 +22503,7 @@ msgstr "삭제하면 애플리케이션과 자격 증명이 영구적으로 제�
 msgid "Once deletion is processed, you cannot recover access to your account"
 msgstr "계정 삭제가 처리되면 다시 복구할 수 없습니다"
 
-#: src/features/theme/components/pages/ThemeRegisterPage.tsx:130
+#: src/features/theme/components/pages/ThemeRegisterPage.tsx:134
 msgid "Once your account is created, we'll take you back to the theme so you can apply it."
 msgstr "계정 생성 후 테마를 적용할 수 있도록 다시 테마로 이동합니다."
 
@@ -22556,7 +22533,7 @@ msgid "one-time purchase"
 msgstr "일회성 구매"
 
 #. Community tooltip stat label shown next to a loading skeleton while the online count is loading.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:122
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:32
 msgid "online"
 msgstr "온라인"
 
@@ -22578,11 +22555,6 @@ msgstr "온라인 상태"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:243
 msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "{count, plural, one {#개 커뮤니티만} other {#개 커뮤니티만}}"
-
-#. Community sidebar tooltip shown when a community is only accessible to Fluxer staff.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:90
-msgid "Only accessible to {productName} staff"
-msgstr "{productName} 직원만 접근 가능"
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:119
 msgid "Only applies on wide screens."
@@ -22701,12 +22673,12 @@ msgid "Open {appName} settings"
 msgstr "{appName} 설정 열기"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {contextName}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:71
+#: src/features/user/components/profile/VoiceActivityCard.tsx:75
 msgid "Open {contextName}"
 msgstr "{contextName} 열기"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {displayName}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:76
+#: src/features/user/components/profile/VoiceActivityCard.tsx:80
 msgid "Open {displayName}"
 msgstr "{displayName} 열기"
 
@@ -22741,7 +22713,7 @@ msgid "Open {title}"
 msgstr "{title} 열기"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {displayName}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:81
+#: src/features/user/components/profile/VoiceActivityCard.tsx:85
 msgid "Open @{displayName}"
 msgstr "@{displayName}님 열기"
 
@@ -22800,11 +22772,11 @@ msgid "Open banner options"
 msgstr "배너 옵션 열기"
 
 #. Button or menu action label in the notifications page. Keep it concise.
-#: src/features/notification/components/pages/NotificationsPage.tsx:19
+#: src/features/notification/components/pages/NotificationsPage.tsx:26
 msgid "Open bookmarks"
 msgstr "북마크 열기"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:258
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
 msgid "Open browser"
 msgstr "브라우저 열기"
 
@@ -22845,8 +22817,13 @@ msgstr "계정 소유권 주장 모달 열기"
 msgid "Open color picker"
 msgstr "색상 선택기 열기"
 
+#. Button label in the Discovery community preview modal shown when the user is already a member.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:26
+msgid "Open community"
+msgstr "커뮤니티 열기"
+
 #. Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/GuildHeader.tsx:30
+#: src/features/app/components/layout/GuildHeader.tsx:38
 msgid "Open community menu for {guildName}"
 msgstr "{guildName} 커뮤니티 메뉴 열기"
 
@@ -23029,7 +23006,7 @@ msgstr "{directMessageName} 님의 프로필 열기"
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:47
-#: src/features/ui/avatars/AvatarStack.tsx:17
+#: src/features/ui/avatars/AvatarStack.tsx:21
 msgid "Open profile for {displayName}"
 msgstr "{displayName}님의 프로필 열기"
 
@@ -23039,7 +23016,7 @@ msgid "Open profile for {nickname}"
 msgstr "{nickname}님의 프로필 열기"
 
 #. Accessible label and tooltip for the search field at the top of the DM list. Opens the quick switcher.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:89
 msgid "Open quick switcher"
 msgstr "빠른 전환 열기"
 
@@ -23121,7 +23098,7 @@ msgid "Open theme studio…"
 msgstr "테마 스튜디오 열기…"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:70
+#: src/features/app/components/layout/UserArea.tsx:71
 msgid "Open user menu for {displayName}"
 msgstr "{displayName}님을 위한 사용자 메뉴 열기"
 
@@ -23141,11 +23118,11 @@ msgid "Open video link"
 msgstr "동영상 링크 열기"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:59
+#: src/features/user/components/profile/VoiceActivityCard.tsx:63
 msgid "Open voice"
 msgstr "음성 채팅 시작"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:194
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "브라우저를 열고 로그인한 다음 아래 코드를 입력하여 계정을 연결하세요."
 
@@ -23332,7 +23309,7 @@ msgid "Outgoing capacity:"
 msgstr "보내는 용량:"
 
 #. Short label in the channel and chat pending friends view. Keep it concise.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:37
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:42
 msgid "Outgoing friend requests"
 msgstr "보낸 친구 요청"
 
@@ -23491,7 +23468,7 @@ msgid "Participant options for {participantDisplayName}"
 msgstr "{participantDisplayName}님에 대한 참여자 옵션"
 
 #. Short label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:46
+#: src/features/user/components/profile/VoiceActivityCard.tsx:50
 msgid "Participants"
 msgstr "참여자"
 
@@ -23501,7 +23478,7 @@ msgid "Participants:"
 msgstr "참가자:"
 
 #. Short label in the user settings voice activity card. Keep it concise. Preserve {names}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:50
+#: src/features/user/components/profile/VoiceActivityCard.tsx:54
 msgid "Participants: {names}"
 msgstr "참여자: {names}"
 
@@ -23537,7 +23514,7 @@ msgstr "패스키를 사용하려면 유효한 앱 식별자가 있는 서명된
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:996
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:210
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -23710,13 +23687,13 @@ msgstr "결제를 이용할 수 없습니다"
 
 #. Discovery application status badge in the community Discovery settings tab. The application is awaiting staff review.
 #. Tab label in the DM friends view showing pending friend requests.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:43
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:45
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:40
 msgid "Pending"
 msgstr "대기 중"
 
 #. Description text in the channel and chat pending friends view.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:21
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:26
 msgid "Pending friend requests show up here."
 msgstr "대기 중인 친구 요청이 여기에 표시됩니다."
 
@@ -23850,7 +23827,7 @@ msgid "Personal notes"
 msgstr "개인 메모"
 
 #. Toast shown when triggering the purge personal notes flow on an already empty self-DM.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:85
 msgid "Personal notes were already empty"
 msgstr "개인 노트가 이미 비어 있습니다"
 
@@ -24208,7 +24185,7 @@ msgstr "동작 줄이기 설정에도 애니메이션 재생 중."
 #. Body of the error modal shown when joining a discovery community is rate limited.
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:78
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:59
 #: src/features/theme/components/modals/ShareThemeModal.tsx:67
 msgid "Please wait a moment and try again."
 msgstr "잠시 기다린 후 다시 시도해 주세요."
@@ -24278,7 +24255,7 @@ msgid "Popup"
 msgstr "팝업"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:951
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "Port"
 msgstr "포트"
 
@@ -24332,7 +24309,7 @@ msgid "Prefer software"
 msgstr "소프트웨어 선호"
 
 #. Optional sign-in note. ssoDisplayName is the configured provider display name.
-#: src/features/auth/flow/AuthSsoPanel.tsx:30
+#: src/features/auth/flow/AuthSsoPanel.tsx:29
 msgid "Prefer using SSO? Continue with {ssoDisplayName}."
 msgstr "SSO를 사용하시겠어요? {ssoDisplayName}으로 계속하세요."
 
@@ -24389,7 +24366,7 @@ msgid "Premium perks disabled"
 msgstr "프리미엄 혜택 비활성화됨"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:149
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:153
 msgid "Premium since date"
 msgstr "프리미엄 시작일"
 
@@ -24399,12 +24376,12 @@ msgid "Premium state reset on the backend."
 msgstr "백엔드에서 프리미엄 상태가 재설정되었습니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:141
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:145
 msgid "Premium type"
 msgstr "프리미엄 유형"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:153
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
 msgid "Premium until date"
 msgstr "~까지 프리미엄"
 
@@ -24464,6 +24441,11 @@ msgstr "멤버가 메시지 전송, 반응, 음성 채팅 참여를 일정 기�
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:272
 msgid "Preview"
 msgstr "미리 보기"
+
+#. Accessible label for a Discovery community card, which opens a preview of the community. {communityName} is the public community name.
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:31
+msgid "Preview {communityName}"
+msgstr "{communityName} 미리보기"
 
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:40
@@ -24651,7 +24633,7 @@ msgid "Privacy settings"
 msgstr "개인 정보 보호 설정"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:986
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
 msgid "Privacy URL"
 msgstr "개인정보처리방침 URL"
 
@@ -24676,7 +24658,7 @@ msgid "Private details"
 msgstr "개인 정보"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:994
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
 msgid "Private key"
 msgstr "개인 키"
 
@@ -24758,7 +24740,7 @@ msgid "Profile customization form"
 msgstr "프로필 편집 양식"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:113
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:117
 msgid "Profile data warning"
 msgstr "프로필 데이터 경고"
 
@@ -24806,7 +24788,7 @@ msgid "Profile privacy"
 msgstr "프로필 공개 범위"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:109
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:113
 msgid "Profile skeletons"
 msgstr "프로필 스켈레톤"
 
@@ -24867,7 +24849,7 @@ msgid "Pronouns: "
 msgstr "대명사: "
 
 #. Nagbar body shown to Visionary premium users who have not enabled two-factor authentication. {productName} is Fluxer.
-#: src/features/app/components/layout/app_layout/nagbars/VisionaryMfaNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/VisionaryMfaNagbar.tsx:18
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "2단계 인증을 활성화하여 Visionary 계정을 보호하세요. {productName}을(를) 지원해 주셔서 감사합니다!"
 
@@ -24886,7 +24868,7 @@ msgid "Provide your full legal name for the declaration."
 msgstr "신고를 위해 본인의 실명을 입력해 주세요."
 
 #. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:926
+#: src/features/app/components/setup/SetupWizardSteps.tsx:969
 msgid "Provider"
 msgstr "공급자"
 
@@ -24905,6 +24887,11 @@ msgstr "PTT"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:44
 msgid "Public bot"
 msgstr "공개 봇"
+
+#. Line shown above the community name in the Discovery community preview modal. The user found this community in the public directory rather than being invited to it.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:34
+msgid "Public community"
+msgstr "공개 커뮤니티"
 
 #. Description for the closed registration mode.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:174
@@ -24962,7 +24949,7 @@ msgstr "구매 불가"
 
 #. Confirm button label on the purge-personal-notes destructive alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:74
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:77
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:248
 msgid "Purge"
 msgstr "비우기"
@@ -24973,7 +24960,7 @@ msgid "Purge messages"
 msgstr "메시지 삭제"
 
 #. Title of the destructive confirmation alert when wiping the personal notes self-DM. Keep tone serious.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:64
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:67
 #: src/features/ui/action_menu/PersonalNotesContextMenu.tsx:26
 msgid "Purge personal notes"
 msgstr "개인 노트 비우기"
@@ -24989,7 +24976,7 @@ msgid "Purge this sticker from storage and CDN"
 msgstr "이 스티커를 저장소 및 CDN에서 삭제"
 
 #. Toast confirmation after wiping personal notes. deletedCount is the number of messages removed.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:81
 msgid "Purged {deletedCount} messages from personal notes"
 msgstr "개인 노트에서 메시지 {deletedCount}개 삭제됨"
 
@@ -25040,7 +25027,7 @@ msgid "Push to talk (priority)"
 msgstr "눌러서 말하기 (우선순위)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:53
+#: src/features/app/components/layout/UserArea.tsx:54
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "음성 활성화가 켜져 있습니다. {pushToTalkHint}을(를) 길게 눌러 말하세요."
 
@@ -25125,7 +25112,7 @@ msgstr "빠른 이모티콘 답장"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:479
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:516
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:77
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:50
 msgid "Quick switcher"
@@ -25246,7 +25233,7 @@ msgstr "반응"
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:604
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:24
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "재활성화"
 
@@ -25259,10 +25246,6 @@ msgstr "구독 재활성화"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:130
 msgid "Read aloud"
 msgstr "소리 내어 읽기"
-
-#: src/features/app/components/ConnectionIssuesLinks.tsx:43
-msgid "Read incident"
-msgstr "장애 정보 보기"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:29
@@ -25353,16 +25336,12 @@ msgstr "수신:"
 msgid "Recent"
 msgstr "최근"
 
-#: src/features/auth/flow/InstanceSelector.tsx:278
-msgid "Recent instances"
-msgstr "최근 인스턴스"
-
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:45
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:62
 msgid "Recent members"
 msgstr "최근 멤버"
 
 #. Short label in the recent mentions page. Keep it concise.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:21
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:27
 msgid "Recent mentions"
 msgstr "최근 멘션"
 
@@ -25373,7 +25352,7 @@ msgstr "최근 검색"
 
 #. Button label in the Linux Wayland input-access nagbar after the user changes OS permissions.
 #. Button label in the keybind settings system-wide shortcuts section.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:35
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:36
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:27
 msgid "Recheck"
 msgstr "다시 확인"
@@ -25399,7 +25378,7 @@ msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "권장. 마이크를 정리하여 음성을 선명하게 만듭니다."
 
 #. Primary button on the voice-session-restore nagbar. Rejoins the previous voice channel or active call.
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:38
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:39
 msgid "Reconnect"
 msgstr "다시 연결"
 
@@ -25689,7 +25668,7 @@ msgstr "관련성 높은 항목"
 msgid "Reload"
 msgstr "새로고침"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:479
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:483
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. (switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers in-flight.)"
 msgstr "{PRODUCT_NAME}을(를) 다시 로드하여 엔진 변경 사항을 완전히 적용하세요. (앱 내 및 시스템 맞춤법 검사기 간 전환 시 Electron이 공급자를 즉시 교체할 수 없으므로 렌더러를 다시 로드해야 합니다.)"
 
@@ -25708,7 +25687,7 @@ msgstr "{productName}을 다시 로드하여 웹 업데이트 {version}을 적�
 msgid "Reload app"
 msgstr "앱 다시 시작"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:491
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:495
 msgid "Reload now"
 msgstr "지금 다시 로드"
 
@@ -25752,8 +25731,8 @@ msgstr "창 크기 및 위치 기억"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
-#: src/features/auth/components/accounts/AccountSelector.tsx:80
-#: src/features/auth/components/accounts/AccountSelector.tsx:127
+#: src/features/auth/components/accounts/AccountSelector.tsx:78
+#: src/features/auth/components/accounts/AccountSelector.tsx:125
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:155
@@ -25780,14 +25759,9 @@ msgstr "사전에서 \"{word}\" 삭제"
 
 #. ARIA label for removing a selected friend from a recipient picker. {displayName} is the friend name.
 #: src/features/app/components/shared/FriendSelector.tsx:24
-#: src/features/auth/components/accounts/AccountSelector.tsx:72
+#: src/features/auth/components/accounts/AccountSelector.tsx:70
 msgid "Remove {displayName}"
 msgstr "{displayName} 계정 삭제"
-
-#. Short label in the authentication instance selector. Preserve {domain}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InstanceSelector.tsx:34
-msgid "Remove {domain} from recent instances"
-msgstr "최근 인스턴스에서 {domain} 제거"
 
 #. Confirmation prompt in the channel and chat message reactions sheet. Preserve {emojiNameWithColons}, {reactorName}; they are inserted by code. Keep the tone plain and specific.
 #: src/features/channel/components/MessageReactionsSheet.tsx:48
@@ -26186,7 +26160,7 @@ msgid "Render all your messages as an unknown message type."
 msgstr "모든 메시지를 알 수 없는 메시지 유형으로 렌더링합니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:53
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:57
 msgid "Render placeholders"
 msgstr "자리표시자 렌더링"
 
@@ -26427,7 +26401,7 @@ msgid "Required"
 msgstr "필수"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:221
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:225
 msgid "Required action default tab"
 msgstr "필수 작업 기본 탭"
 
@@ -26437,32 +26411,32 @@ msgid "Required action flow"
 msgstr "필수 작업 흐름"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:225
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:229
 msgid "Required action phone step"
 msgstr "필수 작업 전화 단계"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:229
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:233
 msgid "Required action resend loading"
 msgstr "필수 작업 재전송 로딩 중"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:233
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:237
 msgid "Required action resend outcome"
 msgstr "필수 작업 재전송 결과"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:237
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:241
 msgid "Required action reverification text"
 msgstr "필수 작업 재인증 텍스트"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:217
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:221
 msgid "Required action variant"
 msgstr "필수 작업 변형"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:213
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:217
 msgid "Required actions overlay"
 msgstr "필수 작업 오버레이"
 
@@ -26940,7 +26914,7 @@ msgid "Review"
 msgstr "검토"
 
 #. Button label on the policy-update nagbar. Opens the terms acceptance modal.
-#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:18
+#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:19
 msgid "Review & agree"
 msgstr "검토 및 동의"
 
@@ -27532,12 +27506,12 @@ msgid "Screen share ended"
 msgstr "화면 공유가 종료되었습니다"
 
 #. Warning banner shown when a watched screen share uses a software video decoder instead of hardware-accelerated decoding. {codec} is the codec name such as H.264 or AV1.
-#: src/features/voice/components/SoftwareEncoderNagbar.tsx:19
+#: src/features/voice/components/SoftwareEncoderNagbar.tsx:20
 msgid "Screen share is using software decoding ({codec}). Playback may stutter and CPU usage may increase. Your GPU may not support hardware decoding for this codec."
 msgstr "화면 공유에서 소프트웨어 디코딩({codec})을 사용하고 있습니다. 재생이 끊기거나 CPU 사용량이 증가할 수 있습니다. GPU가 이 코덱의 하드웨어 디코딩을 지원하지 않을 수 있습니다."
 
 #. Warning banner shown when screen share falls back to a software video encoder instead of hardware-accelerated encoding. {codec} is the codec name such as H.264 or AV1.
-#: src/features/voice/components/SoftwareEncoderNagbar.tsx:13
+#: src/features/voice/components/SoftwareEncoderNagbar.tsx:14
 msgid "Screen share is using software encoding ({codec}). Quality may be reduced and CPU usage increased. Your GPU may not support hardware encoding for this codec."
 msgstr "화면 공유에서 소프트웨어 인코딩({codec})을 사용하고 있습니다. 화질이 저하되고 CPU 사용량이 증가할 수 있습니다. GPU가 이 코덱에 대한 하드웨어 인코딩을 지원하지 않을 수 있습니다."
 
@@ -27728,7 +27702,7 @@ msgid "Search by image"
 msgstr "이미지로 검색"
 
 #. Placeholder text in the search input on the community members page.
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:12
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:18
 msgid "Search by username or ID"
 msgstr "사용자 이름 또는 ID로 검색"
 
@@ -27745,7 +27719,7 @@ msgid "Search channels or DMs"
 msgstr "채널 또는 DM 검색"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:45
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:27
 msgid "Search communities"
 msgstr "커뮤니티 검색"
 
@@ -27779,10 +27753,12 @@ msgstr "검색 엔진"
 msgid "Search filter: {filter}"
 msgstr "검색 필터: {filter}"
 
+#. Accessible label for the filter sidebar shown beside the Discovery search results.
 #. Section header in the message search popout listing available filter operators.
 #. Section header in the message search popout listing available filter operators.
 #: src/features/channel/components/message_search_bar/FilterOption.tsx:14
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:17
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:15
 msgid "Search filters"
 msgstr "검색 필터"
 
@@ -27839,7 +27815,7 @@ msgid "Search messages"
 msgstr "메시지 검색"
 
 #. Placeholder text in the search input of the Online tab in the DM friends view.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:47
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:49
 msgid "Search online friends"
 msgstr "온라인 친구 검색"
 
@@ -27854,7 +27830,7 @@ msgid "Search only in the current DM"
 msgstr "현재 DM에서만 검색"
 
 #. Placeholder text in the search input of the Pending tab in the DM friends view.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:51
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:53
 msgid "Search pending requests"
 msgstr "대기 중인 요청 검색"
 
@@ -27874,6 +27850,11 @@ msgstr "권한 검색…"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "검색 결과"
+
+#. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:35
+msgid "Search results for “{query}”"
+msgstr "“{query}” 검색 결과"
 
 #. Short label in the settings dialog add override popout.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:29
@@ -28017,7 +27998,7 @@ msgid "Secret"
 msgstr "비밀"
 
 #. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:937
+#: src/features/app/components/setup/SetupWizardSteps.tsx:980
 msgid "Secret key"
 msgstr "비밀 키"
 
@@ -28160,7 +28141,7 @@ msgstr "적용할 시나리오를 선택하세요..."
 msgid "Select a violation category."
 msgstr "위반 카테고리를 선택하세요."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:116
+#: src/features/auth/components/accounts/AccountSelector.tsx:114
 msgid "Select account"
 msgstr "계정 선택"
 
@@ -28169,7 +28150,7 @@ msgstr "계정 선택"
 msgid "Select all"
 msgstr "모두 선택"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:64
+#: src/features/auth/components/accounts/AccountSelector.tsx:62
 msgid "Select an account to continue, or add a different one."
 msgstr "계속하려면 계정을 선택하거나 다른 계정을 추가하세요."
 
@@ -28253,7 +28234,7 @@ msgstr "텍스트 선택 가능"
 #. Screen-reader suffix announcing that the DM list row is the active selection. Lowercase fragment.
 #: src/features/app/components/layout/ChannelItem.tsx:91
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:52
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:86
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "선택됨"
@@ -28306,12 +28287,12 @@ msgid "Self-host setup"
 msgstr "셀프 호스팅 설정"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:129
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:133
 msgid "Self-hosted mode"
 msgstr "자체 호스팅 모드"
 
 #. Developer option label for forcing self-hosted client mode.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:53
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
 msgid "Self-hosted mode override"
 msgstr "자체 호스팅 모드 재정의"
 
@@ -28623,7 +28604,7 @@ msgid "Session"
 msgstr "세션"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:47
+#: src/features/auth/flow/AuthLoginLayout.tsx:46
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "{identifier} 계정의 세션이 만료되었습니다. 다시 로그인하세요."
 
@@ -28834,7 +28815,7 @@ msgid "Set up {productName}"
 msgstr "{productName} 설정"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:870
+#: src/features/app/components/setup/SetupWizardSteps.tsx:913
 msgid "Set up later"
 msgstr "나중에 설정"
 
@@ -29276,7 +29257,7 @@ msgid "Show emoji reactions on messages"
 msgstr "메시지에 이모티콘 반응 표시"
 
 #. Developer option label for exposing the staff-only Expression packs page in user settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:121
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
 msgid "Show expression packs settings"
 msgstr "사용자 설정에서 직원 전용 이모티콘 팩 페이지를 표시합니다"
 
@@ -29428,8 +29409,8 @@ msgstr "내 화면 공유 보기"
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:85
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:49
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:89
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:53
 msgid "Show myself typing"
 msgstr "내가 입력 중으로 표시"
 
@@ -29483,7 +29464,7 @@ msgid "Show per-device participant volume sliders in voice menus"
 msgstr "음성 메뉴에서 기기별 참가자 볼륨 슬라이더 표시"
 
 #. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:130
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
 msgid "Show profile timezone settings"
 msgstr "프로필 설정에서 직원 전용 프로필 시간대 섹션을 표시합니다"
 
@@ -29491,11 +29472,6 @@ msgstr "프로필 설정에서 직원 전용 프로필 시간대 섹션을 표�
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:53
 msgid "Show quick reactions"
 msgstr "빠른 이모티콘 반응 표시"
-
-#. Short label in the authentication instance selector. Keep the tone plain and specific.
-#: src/features/auth/flow/InstanceSelector.tsx:26
-msgid "Show recent instances"
-msgstr "최근 인스턴스 보기"
 
 #. Description for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:289
@@ -29585,7 +29561,7 @@ msgstr "이 커뮤니티에 내 글로벌 프로필 배너 표시"
 msgid "Show your Visionary as a regular subscription instead"
 msgstr "Visionary를 일반 구독으로 표시"
 
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:52
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:69
 msgid "Showing {displayedCount} of {totalCount} total members"
 msgstr "총 {totalCount}명 중 {displayedCount}명 표시"
 
@@ -29614,7 +29590,7 @@ msgstr "사이드바"
 msgid "Sign in"
 msgstr "로그인"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:283
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "다시 로그인"
 
@@ -29624,7 +29600,7 @@ msgstr "선물 받으려면 로그인하세요"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
-#: src/features/auth/flow/AuthLoginLayout.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:67
 msgid "Sign in via browser"
 msgstr "브라우저로 로그인"
 
@@ -29633,7 +29609,7 @@ msgid "Sign in with a passkey"
 msgstr "패스키로 로그인"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
-#: src/features/auth/flow/AuthSsoPanel.tsx:18
+#: src/features/auth/flow/AuthSsoPanel.tsx:17
 msgid "Sign in with your organization's single sign-on provider."
 msgstr "소속 기관의 SSO(Single Sign-On)로 로그인."
 
@@ -29641,9 +29617,9 @@ msgstr "소속 기관의 SSO(Single Sign-On)로 로그인."
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog logout modal. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/LogoutModal.tsx:13
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:204
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:265
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:322
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:195
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:256
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:313
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:595
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
@@ -29663,7 +29639,7 @@ msgstr "{deviceCount, plural, one {#개 기기에서 로그아웃} other {#개 �
 msgid "Sign out all other devices"
 msgstr "다른 모든 기기에서 로그아웃"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:192
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:183
 msgid "Sign out of {displayName}"
 msgstr "{displayName}에서 로그아웃"
 
@@ -29698,7 +29674,7 @@ msgid "Sign-in details"
 msgstr "로그인 정보"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:56
+#: src/features/auth/flow/AuthLoginLayout.tsx:55
 msgid "Sign-in flow"
 msgstr "로그인 절차"
 
@@ -29723,24 +29699,24 @@ msgid "Signed-in devices"
 msgstr "로그인된 기기"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:990
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
 msgid "Signing key ID"
 msgstr "서명 키 ID"
 
 #. Toast error shown when signing out from the account switcher fails.
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:33
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:31
 msgid "Signing out failed. Try again in a moment."
 msgstr "로그아웃하지 못했습니다. 잠시 후에 다시 시도해 주세요."
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:196
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:187
 msgid "Signing out will bring you to the sign-in screen so you can pick another account."
 msgstr "로그아웃하면 로그인 화면으로 이동하여 다른 계정을 선택할 수 있습니다."
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:198
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:189
 msgid "Signing out will bring you to the sign-in screen."
 msgstr "로그아웃하면 로그인 화면으로 이동합니다."
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:201
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:192
 msgid "Signing out will remove this account from the device."
 msgstr "로그아웃하면 이 기기에서 계정이 삭제됩니다."
 
@@ -29810,7 +29786,7 @@ msgid "Single user (all statuses)"
 msgstr "단일 사용자 (모든 상태)"
 
 #. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:936
+#: src/features/app/components/setup/SetupWizardSteps.tsx:979
 msgid "Site key"
 msgstr "사이트 키"
 
@@ -29853,7 +29829,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "모든 도메인에서 외부 링크 경고 건너뛰기"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:144
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:148
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "앱 내 신고 제출 시 네트워크 호출을 건너뜁니다. UI를 테스트할 수 있도록 성공 화면으로 계속 진행되지만, 안전팀에는 아무것도 전송되지 않습니다."
 
@@ -29863,7 +29839,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "시스템 퇴장 알림을 건너뛰어 아무도 알림을 받지 않도록 합니다."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:874
+#: src/features/app/components/setup/SetupWizardSteps.tsx:917
 msgid "Skip this now and configure it from the admin panel."
 msgstr "지금 건너뛰고 관리자 패널에서 설정하세요."
 
@@ -29872,7 +29848,7 @@ msgid "Skip this step"
 msgstr "건너뛰기"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:78
+#: src/app/App.tsx:75
 msgid "Skip to content"
 msgstr "본문으로 건너뛰기"
 
@@ -29910,8 +29886,8 @@ msgstr "슬로베니아"
 
 #. Developer option label for simulating slow file uploads.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:89
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:85
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:93
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:89
 msgid "Slow attachment upload"
 msgstr "첨부 파일 업로드 속도 저하"
 
@@ -29927,29 +29903,29 @@ msgstr "속도를 늦춰주세요. 잠시 후 다시 시도해 주세요."
 
 #. Developer option label for simulating slow message edits.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:101
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:81
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:105
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:85
 msgid "Slow message edit"
 msgstr "메시지 편집 속도 저하"
 
 #. Developer option label for simulating slow message loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:93
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:73
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:97
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:77
 msgid "Slow message load"
 msgstr "메시지 로드 속도 저하"
 
 #. Developer option label for simulating slow message sending.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:97
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:77
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:101
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:81
 msgid "Slow message send"
 msgstr "메시지 전송 속도 저하"
 
 #. Developer option label for simulating slow profile loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:105
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:89
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:109
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:93
 msgid "Slow profile load"
 msgstr "느린 프로필 로드"
 
@@ -29965,7 +29941,7 @@ msgstr "슬로우 모드 · {remaining} 기다리기"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:13
 msgid "Slowmode active"
 msgstr "슬로우 모드 활성화됨"
@@ -30001,7 +29977,7 @@ msgid "Slowmode is set to {durationLabel}. Wait before sending another message."
 msgstr "슬로우 모드가 {durationLabel}로 설정되어 있습니다. 다음 메시지를 보내기 전에 기다려 주세요."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:257
 msgid "Slowmode remaining"
 msgstr "슬로우 모드 남은 시간"
 
@@ -30086,12 +30062,12 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "지금은 SMS 인증을 이용할 수 없습니다. 나중에 다시 시도하거나 지원팀에 문의하세요."
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:962
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
 msgid "SMTP connection verified."
 msgstr "SMTP 연결이 확인되었습니다."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:950
+#: src/features/app/components/setup/SetupWizardSteps.tsx:993
 msgid "SMTP host"
 msgstr "SMTP 호스트"
 
@@ -30205,8 +30181,8 @@ msgstr "활동 로그를 로드하는 동안 문제가 발생했습니다."
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:16
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:33
-#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:33
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
+#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
 msgid "Something went wrong while opening the billing portal. Please try again in a moment."
 msgstr "결제 포털을 여는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
 
@@ -30255,7 +30231,7 @@ msgstr "문제가 발생했습니다."
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:36
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:17
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
@@ -30288,14 +30264,14 @@ msgstr "문제가 발생했습니다. 다시 시도해 주세요."
 
 #. Community layout error-boundary body shown when rendering the community pane crashes. Keep plain and calm.
 #: src/features/app/components/layout/GuildLayout.tsx:96
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:639
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:203
 msgid "Something went wrong. We're working on it."
 msgstr "문제가 발생했습니다. 다시 시도 중입니다."
 
 #. Accessible label for the sort-mode select on the community members page.
 #. Filter category label in the mobile channel search sheet for the sort mode selector.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:145
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:16
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:22
 msgid "Sort"
 msgstr "정렬"
 
@@ -30534,8 +30510,8 @@ msgstr "맞춤법 검사"
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:60
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:409
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:451
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:413
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:455
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
 msgid "Spellcheck"
@@ -30601,7 +30577,7 @@ msgid "Square icon buttons"
 msgstr "정사각형 아이콘 버튼"
 
 #. Short sign-in note shown when the instance requires single sign-on.
-#: src/features/auth/flow/AuthSsoPanel.tsx:26
+#: src/features/auth/flow/AuthSsoPanel.tsx:25
 msgid "SSO is required to access this workspace."
 msgstr "이 워크스페이스에 액세스하려면 SSO가 필요합니다."
 
@@ -30810,10 +30786,6 @@ msgstr "상태 아이콘"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:61
 msgid "Status indicators"
 msgstr "상태 표시"
-
-#: src/features/app/components/ConnectionIssuesLinks.tsx:31
-msgid "Status page"
-msgstr "상태 페이지"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:340
 msgid "Status slate"
@@ -31136,7 +31108,7 @@ msgstr "화면 공유 숨김"
 #. Aria label for the small thumbnail preview on the screen-share hover card.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:86
+#: src/features/user/components/profile/VoiceActivityCard.tsx:90
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
@@ -31158,7 +31130,7 @@ msgid "Stream volume"
 msgstr "스트림 볼륨"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:228
+#: src/features/user/components/profile/VoiceActivityCard.tsx:232
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:221
 msgid "Streaming"
 msgstr "스트리밍 중"
@@ -31178,7 +31150,7 @@ msgid "Streaming privacy"
 msgstr "스트리밍 개인 정보 보호"
 
 #. Nagbar message shown while streaming privacy is active.
-#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:11
+#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:12
 msgid "Streaming privacy is on. Names are shortened."
 msgstr "스트리밍 개인 정보 보호 기능이 켜져 있습니다. 이름이 짧게 표시됩니다."
 
@@ -31375,6 +31347,11 @@ msgstr "스웨덴"
 msgid "Swedish"
 msgstr "스웨덴어"
 
+#. Button on the connection banner that opens the account switcher.
+#: src/features/app/components/layout/app_layout/nagbars/ConnectionNagbar.tsx:37
+msgid "Switch account"
+msgstr "계정 전환"
+
 #: src/features/app/components/floating/UserAreaPopout.tsx:681
 msgid "Switch accounts"
 msgstr "계정 전환"
@@ -31481,7 +31458,7 @@ msgstr "한 줄로 보기"
 msgid "Switch to source"
 msgstr "원본으로 전환"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:299
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:290
 msgid "Switch to this account"
 msgstr "이 계정으로 전환"
 
@@ -31815,7 +31792,7 @@ msgid "Temporarily disable your account. You can reactivate it later by signing 
 msgstr "계정을 일시적으로 비활성화합니다. 나중에 다시 로그인하여 재활성화할 수 있습니다."
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:102
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:43
 msgid "temporarily unavailable"
 msgstr "일시적으로 이용 불가"
 
@@ -31840,7 +31817,7 @@ msgid "Terms of service"
 msgstr "이용약관"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:982
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
 msgid "Terms URL"
 msgstr "이용 약관 URL"
 
@@ -31850,7 +31827,7 @@ msgid "Terrorism or violent extremism"
 msgstr "테러 또는 폭력적 극단주의"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:958
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
 msgid "Test SMTP"
 msgstr "SMTP 테스트"
 
@@ -31894,7 +31871,7 @@ msgstr "텍스트 채널"
 
 #. Accessible name of the composer selection toolbar.
 #. Short label in the markdown tab. Keep it concise.
-#: src/features/lexical/composer/SelectionFormattingToolbar.tsx:386
+#: src/features/lexical/composer/SelectionFormattingToolbar.tsx:390
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:21
 msgid "Text formatting"
 msgstr "텍스트 서식"
@@ -32041,7 +32018,7 @@ msgstr "해당 메시지가 사라졌거나 대화에 대한 액세스 권한을
 
 #. End-of-list line in the saved messages popout after every bookmark has been shown.
 #. End-of-list line on the saved messages page after every bookmark has been shown.
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:29
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:35
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:41
 msgid "That's all of them."
 msgstr "모두 불러왔습니다."
@@ -32187,11 +32164,6 @@ msgstr "스티커가 정적 이미지로 업로드되었습니다."
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:59
 msgid "The upload service rejected this sticker as larger than {maxSize}. Try a smaller file, a simpler image, or a shorter animation."
 msgstr "업로드 서비스에서 스티커가 {maxSize}보다 크다고 거부했습니다. 더 작은 파일, 더 간단한 이미지 또는 더 짧은 애니메이션을 사용해 보세요."
-
-#. Browser login handoff modal field hint for the instance URL input. Product name is interpolated.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:24
-msgid "The URL of the {productName} instance you want to sign in to."
-msgstr "로그인하려는 {productName} 인스턴스의 URL입니다."
 
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:135
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
@@ -32435,7 +32407,7 @@ msgid "This card does not match your billing country, so it cannot be used for t
 msgstr "카드 청구지 국가가 일치하지 않아 현지 통화로 결제할 수 없습니다. 현지 카드를 사용하거나 다른 결제 수단을 선택하거나 {productName}으로 돌아가 표준 가격으로 전환하세요."
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
-#: src/features/app/components/layout/ChannelListContent.tsx:68
+#: src/features/app/components/layout/ChannelListContent.tsx:78
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
 msgstr "이 카테고리에는 이미 최대 {maxChannelsPerCategory}개의 채널이 있습니다."
 
@@ -32542,7 +32514,7 @@ msgid "This community has reached its maximum member limit and is not accepting 
 msgstr "이 커뮤니티는 최대 멤버 수에 도달하여 현재 새로운 멤버를 받을 수 없습니다."
 
 #. Body of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:44
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:25
 msgid "This community has reached its member limit, so you can't join right now."
 msgstr "이 커뮤니티는 회원 수 한도에 도달하여 지금은 가입할 수 없습니다."
 
@@ -32552,7 +32524,7 @@ msgid "This community is for Visionary members"
 msgstr "이 커뮤니티는 Visionary 회원 전용입니다"
 
 #. Title of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:40
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:21
 msgid "This community is full"
 msgstr "이 커뮤니티는 가득 찼습니다"
 
@@ -32563,7 +32535,7 @@ msgid "This community is marked for mature content and may contain material that
 msgstr "이 커뮤니티는 성인용 콘텐츠를 포함하고 있으며 일부 사용자에게는 부적절한 자료가 있을 수 있습니다."
 
 #. Title of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:64
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:45
 msgid "This community is no longer available"
 msgstr "이 커뮤니티는 더 이상 이용할 수 없습니다"
 
@@ -32605,7 +32577,7 @@ msgid "This development build cannot update itself. Download a desktop installer
 msgstr "이 개발 빌드는 자체적으로 업데이트할 수 없습니다. 업데이트 흐름을 테스트하려면 데스크톱 설치 프로그램을 다운로드하세요."
 
 #. Modal body shown when the current device/browser cannot show notifications.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:27
 msgid "This device does not support notifications."
 msgstr "이 기기는 알림을 지원하지 않습니다."
 
@@ -32652,7 +32624,7 @@ msgid "This file is {fileSize}, over the {maxSize} limit. Animated stickers and 
 msgstr "이 파일은 {fileSize}이며, 제한 크기인 {maxSize}를 초과합니다. 움직이는 스티커와 SVG는 업로드할 수 있을 만큼 작아야 합니다. 더 작은 파일을 선택하거나 애니메이션 길이를 줄여주세요."
 
 #. Empty state title in the friends list when the user has no friends. Tone can be friendly and playful.
-#: src/features/channel/components/friends/views/FriendsList.tsx:20
+#: src/features/channel/components/friends/views/FriendsList.tsx:25
 msgid "This friends list needs more power"
 msgstr "친구 목록에 더 많은 친구가 필요해요"
 
@@ -33133,11 +33105,11 @@ msgstr "이 채널에서 회원님이 보낸 모든 메시지가 영구적으로
 msgid "This will permanently delete every message you have ever sent in this conversation. This cannot be undone."
 msgstr "이 대화에서 회원님이 보낸 모든 메시지가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:77
+#: src/features/auth/components/accounts/AccountSelector.tsx:75
 msgid "This will remove the only saved account on this device."
 msgstr "기기에 저장된 유일한 계정이 삭제됩니다."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:75
+#: src/features/auth/components/accounts/AccountSelector.tsx:73
 msgid "This will remove the saved session for this account."
 msgstr "이 계정의 저장된 세션이 제거됩니다."
 
@@ -33220,7 +33192,7 @@ msgstr "시간"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for app time display format.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:369
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:373
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
 msgid "Time format"
@@ -33323,7 +33295,7 @@ msgid "Titlebar"
 msgstr "제목 표시줄"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:269
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:273
 msgid "Titlebar platform"
 msgstr "타이틀바 플랫폼"
 
@@ -33600,7 +33572,7 @@ msgstr "번역"
 msgid "Translation provider"
 msgstr "번역 서비스 제공자"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:356
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:360
 msgid "Translations are automated. Help improve localization by emailing <0>{I18N_EMAIL}</0>."
 msgstr "번역은 자동입니다. <0>{I18N_EMAIL}</0>로 이메일을 보내 현지화 개선에 도움을 주세요."
 
@@ -33717,7 +33689,7 @@ msgstr "다른 이름을 사용하거나 @ / # / ! / * 접두사를 사용하여
 
 #. Description text in the channel and chat pending friends view.
 #. Empty-state hint in the friends list when a search returns no results.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:29
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:34
 #: src/features/relationship/utils/FriendsListUtils.tsx:39
 msgid "Try a different name."
 msgstr "다른 이름을 시도해 보세요."
@@ -33775,7 +33747,7 @@ msgid "Try again, or refresh {productName} if the problem continues."
 msgstr "다시 시도하거나 문제가 계속되면 {productName}을 새로 고쳐보세요."
 
 #. Empty state body in the friends list when the search query returns no results.
-#: src/features/channel/components/friends/views/FriendsList.tsx:40
+#: src/features/channel/components/friends/views/FriendsList.tsx:45
 msgid "Try another name or check your spelling."
 msgstr "다른 이름을 시도하거나 철자를 확인해 주세요."
 
@@ -33783,6 +33755,11 @@ msgstr "다른 이름을 시도하거나 철자를 확인해 주세요."
 #: src/features/channel/components/pickers/gif/GifPickerView.tsx:36
 msgid "Try another search term"
 msgstr "다른 검색어를 입력해 보세요"
+
+#. Empty-state hint in Discovery shown under the heading when a search returns no communities.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:16
+msgid "Try another search term, or pick a different category or language."
+msgstr "다른 검색어를 시도하거나 다른 카테고리나 언어를 선택해 주세요."
 
 #. Helper text on an unknown invite embed suggesting the user request a fresh invite.
 #: src/features/channel/components/InviteEmbed.tsx:129
@@ -33852,7 +33829,7 @@ msgid "Turkish"
 msgstr "튀르키예어"
 
 #. Button label that turns off streaming privacy.
-#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:15
+#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
 msgid "Turn off"
 msgstr "끄기"
 
@@ -34054,12 +34031,12 @@ msgid "Typing state"
 msgstr "입력 상태"
 
 #. Developer options group for forcing UI component states.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:61
 msgid "UI components"
 msgstr "UI 구성 요소"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:205
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
 msgid "UK geo"
 msgstr "영국 지역"
 
@@ -34179,7 +34156,7 @@ msgstr "직원 외에는 이용할 수 없음"
 
 #. Relationship action label for removing a block from this user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/barriers/BarrierComponents.tsx:370
+#: src/features/channel/components/barriers/BarrierComponents.tsx:369
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:45
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:177
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:22
@@ -34215,7 +34192,7 @@ msgstr "미분류"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:14
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:181
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:185
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:35
 msgid "Unclaimed account"
 msgstr "미등록 계정"
@@ -34439,7 +34416,7 @@ msgid "Unknown invite"
 msgstr "알 수 없는 초대"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:125
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:129
 msgid "Unknown message type"
 msgstr "알 수 없는 메시지 유형"
 
@@ -34645,7 +34622,7 @@ msgstr "즐겨찾기 알림 켜기"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:58
+#: src/features/app/components/layout/UserArea.tsx:59
 #: src/features/platform/utils/DesktopLocaleBridge.ts:148
 msgid "Unmute microphone"
 msgstr "마이크 음소거 해제"
@@ -34740,9 +34717,9 @@ msgstr "고정 해제된 그룹 DM"
 #. Lowercase state label used inside channel-list accessible text when a channel has unread messages.
 #. Screen-reader fragment announcing that the DM list row has unread messages. Lowercase fragment.
 #: src/features/app/components/layout/ChannelItem.tsx:103
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:84
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:90
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:56
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:94
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
 #: src/features/channel/components/direct_message/DMListItem.tsx:71
 msgid "unread"
 msgstr "읽지 않음"
@@ -34783,12 +34760,12 @@ msgid "Unread DMs only"
 msgstr "읽지 않은 DM만"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:173
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:177
 msgid "Unread gift count"
 msgstr "읽지 않은 선물 개수"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:169
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:173
 msgid "Unread gift inventory"
 msgstr "읽지 않은 선물 인벤토리"
 
@@ -34809,7 +34786,7 @@ msgid "Unread message badge"
 msgstr "읽지 않은 메시지 배지"
 
 #. Short label in the notifications page. Keep it concise.
-#: src/features/notification/components/pages/NotificationsPage.tsx:15
+#: src/features/notification/components/pages/NotificationsPage.tsx:22
 msgid "Unreads"
 msgstr "안 읽음"
 
@@ -35022,7 +34999,7 @@ msgid "Updated the webhook avatar."
 msgstr "웹훅 아바타를 업데이트했습니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:81
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:85
 msgid "Updater state"
 msgstr "업데이터 상태"
 
@@ -35595,7 +35572,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "클라이언트 문제 해결 또는 로그 수집 시 사용하세요. 현재 클라이언트에 대한 자세한 메시지가 브라우저 콘솔에 추가될 수 있습니다."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:954
+#: src/features/app/components/setup/SetupWizardSteps.tsx:997
 msgid "Use TLS"
 msgstr "TLS 사용"
 
@@ -35676,7 +35653,7 @@ msgid "User avatars"
 msgstr "프로필 사진"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:66
+#: src/features/app/components/layout/UserArea.tsx:67
 msgid "User controls"
 msgstr "사용자 관리"
 
@@ -35763,7 +35740,7 @@ msgstr "사용자, 봇 또는 웹훅"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:952
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -35930,7 +35907,7 @@ msgid "Vanity URL code: {0}."
 msgstr "꾸미기 URL 코드: {0}."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:133
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:137
 msgid "Vanity URL disclaimer"
 msgstr "고유 URL 고지 사항"
 
@@ -35963,7 +35940,7 @@ msgid "Verification & membership barriers"
 msgstr "인증 및 멤버십 제한"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:185
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:189
 msgid "Verification barrier"
 msgstr "인증 장벽"
 
@@ -36056,7 +36033,7 @@ msgstr "본인 인증하기"
 
 #. Primary button in the required-action modal. Sends or submits phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:178
-#: src/features/channel/components/barriers/BarrierComponents.tsx:263
+#: src/features/channel/components/barriers/BarrierComponents.tsx:262
 #: src/features/user/components/modals/PhoneAddModal.tsx:398
 msgid "Verify phone"
 msgstr "전화번호 인증"
@@ -36340,7 +36317,7 @@ msgid "View"
 msgstr "보기"
 
 #. Button label on the premium onboarding nagbar. Opens premium feature and subscription settings. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:56
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:57
 msgid "View {premiumProductName} features"
 msgstr "{premiumProductName} 기능을 확인하세요."
 
@@ -36449,7 +36426,7 @@ msgid "View full profile"
 msgstr "프로필 전체 보기"
 
 #. Button label on the gift-inventory nagbar. Opens the gift inventory settings tab.
-#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:22
+#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:23
 msgid "View gift inventory"
 msgstr "선물함 보기"
 
@@ -36469,20 +36446,25 @@ msgstr "글로벌 프로필 보기"
 msgid "View help article"
 msgstr "도움말 보기"
 
+#. Button on the connection banner when an incident is ongoing. Opens that incident on the status page.
+#: src/features/app/hooks/useConnectionNotice.ts:47
+msgid "View incident details"
+msgstr "사고 세부 정보 보기"
+
 #. Action label in the DM channel header pill that opens the incoming call ringer view.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:117
 msgid "View incoming call"
 msgstr "수신 전화 보기"
 
+#. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
+#: src/features/app/hooks/useConnectionNotice.ts:51
+msgid "View maintenance details"
+msgstr "점검 상세 보기"
+
 #. Accessible label for the row click target on the community members page.
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:72
 msgid "View member profile for {displayName}"
 msgstr "{displayName} 님의 프로필 보기"
-
-#: src/features/app/components/layout/SplashScreen.tsx:174
-#: src/features/app/components/layout/SplashScreen.tsx:240
-msgid "View on status page"
-msgstr "상태 페이지에서 보기"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:86
@@ -36515,6 +36497,11 @@ msgstr "{displayName}님의 프로필 보기"
 #: src/features/channel/components/MessageActionMenu.tsx:75
 msgid "View reactions"
 msgstr "이모티콘 반응 보기"
+
+#. Button on the connection banner. Opens the external service status page.
+#: src/features/app/hooks/useConnectionNotice.ts:43
+msgid "View status page"
+msgstr "상태 페이지 보기"
 
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:21
@@ -36608,7 +36595,7 @@ msgid "Visionary badge"
 msgstr "Visionary 배지"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:145
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:149
 msgid "Visionary badge ID"
 msgstr "Visionary 뱃지 ID"
 
@@ -36646,7 +36633,7 @@ msgstr "사용자 상태를 나타내는 시각적 표시입니다. 아바타와
 #. Advanced settings category tag.
 #. Channel type chip label for a voice channel.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/layout/MobileBottomNav.tsx:118
+#: src/features/app/components/layout/MobileBottomNav.tsx:123
 #: src/features/channel/utils/ChannelUtils.tsx:31
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:81
@@ -36672,8 +36659,8 @@ msgstr "음성 활성화"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:88
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:106
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:94
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:47
 msgid "voice activity"
 msgstr "음성 활동"
 
@@ -36776,7 +36763,7 @@ msgid "Voice connection confirmation"
 msgstr "음성 연결 확인"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:137
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:141
 msgid "Voice connection debug"
 msgstr "음성 연결 디버그"
 
@@ -36946,11 +36933,6 @@ msgstr "선택한 채널 중 일부 채널의 슬로우 모드 만료를 기다�
 msgid "Waiting for you to..."
 msgstr "회원님을 기다리는 중..."
 
-#. Subheading on the Discovery page. "settings > Discovery" refers to the navigation path in community settings.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:27
-msgid "Want to list your community on here? Apply if you meet the requirements in your community's settings > Discovery."
-msgstr "여기에 커뮤니티를 등록하고 싶으신가요? 커뮤니티 설정 > 검색 탭에서 요건을 충족하는 경우 신청하세요."
-
 #. Markdown alert label for a warning callout when copied as plaintext.
 #. Warning text in the messaging block elements. Keep the tone plain and specific.
 #: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:47
@@ -36973,7 +36955,7 @@ msgid "Watch stream"
 msgstr "스트림 시청"
 
 #. Short label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:67
+#: src/features/user/components/profile/VoiceActivityCard.tsx:71
 msgid "Watching"
 msgstr "시청 중"
 
@@ -37107,7 +37089,7 @@ msgstr "스티커 크기를 320x320픽셀로 조정하고 압축했지만, 여�
 msgid "We sent a code to {email}."
 msgstr "{email}으로 코드를 전송했습니다."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:233
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "브라우저 로그인 창이 열리면 {prefillEmail}이(가) 자동으로 입력됩니다."
 
@@ -37199,7 +37181,7 @@ msgid "We've sent password reset instructions to your email. Check your inbox fo
 msgstr "비밀번호 재설정 안내를 이메일로 보내드렸습니다. 받은 편지함에서 재설정 링크를 확인해 주세요."
 
 #. Nagbar body shown when the user must accept updated policies before continuing.
-#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:14
+#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:15
 msgid "We've updated our policies. Review and accept them to continue."
 msgstr "정책이 업데이트되었습니다. 계속하려면 검토하고 동의하세요."
 
@@ -37224,7 +37206,7 @@ msgid "Web search provider"
 msgstr "웹 검색 공급자"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:77
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:81
 msgid "Web updater ready"
 msgstr "웹 업데이터 준비 완료"
 
@@ -37307,7 +37289,7 @@ msgid "Website previews"
 msgstr "웹사이트 미리보기"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:60
+#: src/features/auth/flow/AuthLoginLayout.tsx:59
 msgid "Welcome back"
 msgstr "다시 오신 것을 환영합니다"
 
@@ -37321,32 +37303,32 @@ msgid "Welcome to {channelDisplayName}"
 msgstr "{channelDisplayName}에 오신 것을 환영합니다"
 
 #. Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:21
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:22
 msgid "Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "{premiumProductFullName}에 오신 것을 환영합니다. {premiumProductName} 혜택을 살펴보고 구독을 관리하세요."
 
 #. Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:27
 msgid "Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks."
 msgstr "{premiumProductFullName}에 오신 것을 환영합니다. 평생 멤버십으로 Visionary 등급을 받으셨습니다. {premiumProductName} 혜택을 살펴보세요."
 
 #. Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:50
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:51
 msgid "Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks."
 msgstr "{premiumProductFullName}에 오신 것을 환영합니다. 선물 구독은 {formattedDate}까지 유효합니다. {premiumProductName} 혜택을 살펴 보세요."
 
 #. Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:38
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:39
 msgid "Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "{premiumProductFullName}에 오신 것을 환영합니다. 월간 구독은 {formattedDate}일에 갱신됩니다. {premiumProductName} 혜택을 살펴보고 구독을 관리하세요."
 
 #. Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:32
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:33
 msgid "Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "{premiumProductFullName}에 오신 것을 환영합니다. 구독은 {formattedDate}까지 유효합니다. {premiumProductName} 혜택을 살펴보고 구독을 관리하세요."
 
 #. Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:44
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:45
 msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "{premiumProductFullName}에 오신 것을 환영합니다. 연간 구독은 {formattedDate}일에 갱신됩니다. {premiumProductName} 혜택을 살펴보고 구독을 관리하세요."
 
@@ -37456,7 +37438,7 @@ msgid "When enabled, members of other communities can use the in-app one-click \
 msgstr "활성화하면 다른 커뮤니티 회원들이 인앱 원클릭 \"복제\" 단축키를 사용하여 회원님의 맞춤 스티커를 복제할 수 있습니다. 이는 다른 회원들이 이미지를 저장하여 직접 업로드하는 것을 막지는 않습니다."
 
 #. Description text in the channel and chat active now sidebar.
-#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:16
+#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "친구가 음성 채널에서 활동하면 여기에 표시됩니다."
 
@@ -37486,7 +37468,7 @@ msgid "When streaming privacy is on"
 msgstr "스트리밍 개인 정보 보호 기능이 켜져 있을 때"
 
 #. Empty state body in the friends list Online tab.
-#: src/features/channel/components/friends/views/FriendsList.tsx:32
+#: src/features/channel/components/friends/views/FriendsList.tsx:37
 msgid "When they come online, they'll appear right here."
 msgstr "온라인 상태가 되면 여기에 표시됩니다."
 
@@ -37496,7 +37478,7 @@ msgid "When uploaded directly to {productName}"
 msgstr "{productName}에 직접 업로드할 때"
 
 #. Empty state body in the friends list when the user has no friends. Tone can be friendly and playful.
-#: src/features/channel/components/friends/views/FriendsList.tsx:24
+#: src/features/channel/components/friends/views/FriendsList.tsx:29
 msgid "Where we're going, we need more friends."
 msgstr "새로운 친구를 더 많이 만나보세요."
 
@@ -37571,7 +37553,7 @@ msgid "Whoa, this is heavy"
 msgstr "우와, 너무 많은데요"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:161
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:165
 msgid "Will cancel"
 msgstr "취소 예정"
 
@@ -37745,7 +37727,7 @@ msgid "Yesterday at {timeString}"
 msgstr "어제 {timeString}"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
-#: src/features/app/components/layout/MobileBottomNav.tsx:148
+#: src/features/app/components/layout/MobileBottomNav.tsx:153
 #: src/features/channel/components/direct_message/DMListItem.tsx:59
 msgid "You"
 msgstr "나"
@@ -37807,6 +37789,11 @@ msgstr "결제를 완료하려면 {paymentProviderName}(으)로 이동합니다.
 msgid "You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance."
 msgstr "인스턴스 관리자로 로그인하셨습니다. 다음 단계에서는 이 인스턴스의 모든 사용자를 위한 브랜딩, 등록 및 핵심 정책을 구성합니다."
 
+#. Session-dismissible nagbar identifying a non-stable official desktop app build. {releaseChannel} is development, staging, or canary. {productName} is the fixed official desktop product name, not the active instance name.
+#: src/features/app/components/layout/app_layout/nagbars/BuildEnvironmentNagbar.tsx:12
+msgid "You are using a {releaseChannel} build of {productName}."
+msgstr "{productName}의 {releaseChannel} 빌드를 사용 중이에요."
+
 #. Plutonium subscription checkout guidance. States that the standard (non-localized) price applies. The currency code is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:119
 msgid "You are using the full standard {baseCurrencyLabel} price instead of localized pricing."
@@ -37832,7 +37819,7 @@ msgstr "업로드 전 댓글을 추가할 수 있습니다. 슬로우 모드 중
 msgid "You can add comments before uploading. Hold shift to upload directly."
 msgstr "업로드 전 댓글을 추가할 수 있습니다. Shift 키를 누르면 바로 업로드됩니다."
 
-#: src/features/channel/components/direct_message/AddFriendView.tsx:30
+#: src/features/channel/components/direct_message/AddFriendView.tsx:33
 msgid "You can add friends with their username."
 msgstr "사용자 이름으로 친구를 추가할 수 있습니다."
 
@@ -37887,7 +37874,7 @@ msgstr "계정을 만들거나 로그인할 수 있습니다. 나중에 초대 �
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "별표 표시한 GIF를 URL 전용 즐겨찾기로 저장하거나 저장된 미디어에 업로드할 수 있습니다. 사용 방식에 맞는 옵션을 선택하세요. 이 설정은 {mediaSettingsPath}에서 언제든지 변경할 수 있습니다."
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:257
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:275
 msgid "You can use links, emoji, and markdown."
 msgstr "링크, 이모지, 마크다운을 사용할 수 있습니다."
 
@@ -37952,12 +37939,12 @@ msgid "You can't install this sticker pack."
 msgstr "이 스티커 팩을 설치할 수 없습니다."
 
 #. Title of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:56
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:37
 msgid "You can't join this community"
 msgstr "이 커뮤니티에 참여할 수 없습니다"
 
 #. Label in the user settings voice activity card. Keep the tone plain and specific.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:55
+#: src/features/user/components/profile/VoiceActivityCard.tsx:59
 msgid "You can't join this voice channel"
 msgstr "이 음성 채널에 참여할 수 없습니다"
 
@@ -38004,7 +37991,7 @@ msgstr "나 자신에게 친구 요청을 보낼 수 없습니다."
 msgid "You can't send messages in this channel."
 msgstr "이 채널에서는 메시지를 보낼 수 없습니다."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:312
+#: src/features/channel/components/barriers/BarrierComponents.tsx:311
 msgid "You can't send messages in this community."
 msgstr "이 커뮤니티에서는 메시지를 보낼 수 없습니다."
 
@@ -38149,11 +38136,11 @@ msgid "You don't have permission to rename this emoji. The name was reverted to 
 msgstr "이 이모티콘의 이름을 변경할 권한이 없습니다. 이름이 이전으로 되돌려졌습니다."
 
 #. Body of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:60
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:41
 msgid "You have been banned from this community."
 msgstr "이 커뮤니티에서 차단되었습니다."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:356
+#: src/features/channel/components/barriers/BarrierComponents.tsx:355
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "{username}님을 차단했습니다. 메시지를 보내려면 차단을 해제하세요."
 
@@ -38180,7 +38167,7 @@ msgstr "저장되지 않은 변경사항이 있습니다. 나가기 전에 저�
 msgid "You haven't authorized any applications to access your account."
 msgstr "계정에 접근하도록 승인된 앱이 없습니다."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:219
+#: src/features/channel/components/barriers/BarrierComponents.tsx:218
 msgid "You haven't been a member of this community long enough to send messages."
 msgstr "이 커뮤니티에 가입한 지 얼마 되지 않아 메시지를 보낼 수 없습니다."
 
@@ -38301,15 +38288,15 @@ msgstr "커뮤니티를 만들려면 먼저 계정을 등록해야 합니다."
 msgid "You need to claim your account before you can start a direct message."
 msgstr "계정을 등록해야만 DM을 시작할 수 있습니다."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:381
+#: src/features/channel/components/barriers/BarrierComponents.tsx:380
 msgid "You need to claim your account to send direct messages."
 msgstr "쪽지를 보내려면 계정을 등록해야 합니다."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:134
+#: src/features/channel/components/barriers/BarrierComponents.tsx:133
 msgid "You need to claim your account to send messages in this community."
 msgstr "이 커뮤니티에서 메시지를 보내려면 계정을 등록해야 합니다."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:242
+#: src/features/channel/components/barriers/BarrierComponents.tsx:241
 msgid "You need to verify a phone number to send messages in this community."
 msgstr "이 커뮤니티에서 메시지를 보내려면 전화번호 인증이 필요합니다."
 
@@ -38332,7 +38319,7 @@ msgstr "쪽지를 보내려면 이메일 주소를 인증해야 합니다."
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "{premiumProductFullName}을(를) 구매하려면 먼저 이메일을 인증해야 합니다."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:162
+#: src/features/channel/components/barriers/BarrierComponents.tsx:161
 msgid "You need to verify your email to send messages in this community."
 msgstr "이 커뮤니티에서 메시지를 보내려면 이메일 인증이 필요합니다."
 
@@ -38382,7 +38369,7 @@ msgstr "현재 활동 공유를 중단하면 모든 친구(향후 친구 포함)
 #. Body text in the unread channels content.
 #. End-of-list text in the recent mentions page when every mention has been seen.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:85
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:34
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:40
 msgid "You're all caught up."
 msgstr "모두 확인했어요."
 
@@ -38480,7 +38467,7 @@ msgstr "메시지를 너무 빨리 수정하고 있습니다"
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:9
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:23
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:74
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:55
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:76
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:148
 #: src/features/theme/components/modals/ShareThemeModal.tsx:63
@@ -38507,7 +38494,7 @@ msgid "You're in the call"
 msgstr "통화 중입니다"
 
 #. Body of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:52
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:33
 msgid "You're in the maximum number of communities. Leave one and try again."
 msgstr "최대 커뮤니티 수에 도달했습니다. 커뮤니티를 하나 나간 후 다시 시도해 주세요."
 
@@ -38541,12 +38528,12 @@ msgstr "메시지 전송 속도가 너무 빠릅니다"
 msgid "You're streaming!"
 msgstr "스트리밍 중입니다!"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:289
+#: src/features/channel/components/barriers/BarrierComponents.tsx:288
 msgid "You're timed out. Messaging, reactions, and voice are paused until the timeout expires."
 msgstr "시간 초과되었습니다. 시간 초과가 만료될 때까지 메시지, 반응, 음성 기능이 일시 중지됩니다."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:65
+#: src/features/channel/components/ChannelMessages.tsx:70
 msgid "You're viewing older messages"
 msgstr "이전 메시지를 보고 있습니다"
 
@@ -38565,16 +38552,16 @@ msgstr "최근에 셀프 환불을 사용하셨습니다. 쿨다운 기간이 �
 msgid "You've arrived, {username}! Let's get started."
 msgstr "{username}님, 오신 것을 환영합니다! 시작해 볼까요."
 
-#: src/features/auth/flow/InviteHeader.tsx:199
+#: src/features/auth/flow/InviteHeader.tsx:200
 msgid "You've been invited to install"
 msgstr "초대받아 설치합니다"
 
-#: src/features/auth/flow/InviteHeader.tsx:95
-#: src/features/auth/flow/InviteHeader.tsx:297
+#: src/features/auth/flow/InviteHeader.tsx:96
+#: src/features/auth/flow/InviteHeader.tsx:299
 msgid "You've been invited to join"
 msgstr "초대받으셨습니다"
 
-#: src/features/auth/flow/InviteHeader.tsx:150
+#: src/features/auth/flow/InviteHeader.tsx:151
 msgid "You've been invited to join a group DM by"
 msgstr "그룹 DM에 초대받았습니다"
 
@@ -38587,7 +38574,7 @@ msgid "You've got CSS!"
 msgstr "CSS를 받았습니다!"
 
 #. Title of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:48
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:29
 msgid "You've reached the community limit"
 msgstr "커뮤니티 제한에 도달했습니다"
 
@@ -38645,7 +38632,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "모든 멘션을 확인했습니다. 새로운 멘션이 여기에 표시됩니다."
 
 #. Nagbar body shown when a premium subscription has expired. {premiumProductName} is the premium product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:18
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:19
 msgid "Your {premiumProductName} subscription has expired. You have lost all {premiumProductName} perks. Reactivate your subscription to regain access."
 msgstr "{premiumProductName} 구독이 만료되었습니다. 모든 {premiumProductName} 혜택을 잃게 됩니다. 다시 구독하여 액세스 권한을 되찾으세요."
 
@@ -38666,7 +38653,7 @@ msgstr "계정이 성공적으로 연결되었습니다. 이 탭을 닫고 앱�
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
 msgstr "아직 계정이 등록되지 않았습니다. 이메일과 비밀번호가 없으면 다른 기기에서 로그인할 수 없으며 계정에 대한 액세스 권한을 잃을 수 있습니다. 지금 계정을 등록하여 안전하게 보호하세요."
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:196
+#: src/features/channel/components/barriers/BarrierComponents.tsx:195
 msgid "Your account is too new to send messages in this community."
 msgstr "회원님의 계정은 너무 새로워서 이 커뮤니티에 메시지를 보낼 수 없습니다."
 
@@ -38752,7 +38739,7 @@ msgid "Your fallback entrance sound for all communities and direct messages. Mor
 msgstr "모든 커뮤니티 및 DM에 적용되는 입장음입니다. 더 구체적인 설정이 있는 경우 해당 설정이 우선 적용됩니다."
 
 #. Empty state title in the friends list Online tab when no friends are online. Tone can be friendly.
-#: src/features/channel/components/friends/views/FriendsList.tsx:28
+#: src/features/channel/components/friends/views/FriendsList.tsx:33
 msgid "Your friends are stuck in another timeline"
 msgstr "친구들이 다른 타임라인에 갇혀 있어요"
 
@@ -38787,7 +38774,7 @@ msgid "Your grace period has ended."
 msgstr "유예 기간이 종료되었습니다."
 
 #. Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:12
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:13
 msgid "Your installation is corrupted, and you need to reinstall the app for all functionality to work."
 msgstr "설치 파일이 손상되었습니다. 모든 기능을 사용하려면 앱을 다시 설치해야 합니다."
 
@@ -38931,7 +38918,7 @@ msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Re
 msgstr "구독이 종료되었지만 <0/> <1>{graceDate}</1>까지는 활성 상태가 유지됩니다. 구독 기록을 유지하려면 그 전에 다시 구독하세요."
 
 #. Nagbar body shown while a premium subscription is in its grace period. {premiumProductName} is the premium product name and {formattedGraceDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:22
+#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:23
 msgid "Your subscription failed to renew, but you still have access to {premiumProductName} perks until {formattedGraceDate}. Take action now or you'll lose all perks."
 msgstr "구독 갱신에 실패했지만, {formattedGraceDate}까지는 {premiumProductName} 혜택을 계속 이용할 수 있습니다. 지금 조치하지 않으면 모든 혜택이 사라집니다."
 
@@ -39005,7 +38992,7 @@ msgid "YouTube enrichment"
 msgstr "YouTube 콘텐츠 연동"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:894
+#: src/features/app/components/setup/SetupWizardSteps.tsx:937
 msgid "YouTube previews"
 msgstr "YouTube 미리보기"
 

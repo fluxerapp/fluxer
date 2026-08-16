@@ -7,6 +7,7 @@ import {
 	type UserAreaMuteReason,
 } from '@app/features/app/components/layout/UserAreaState';
 import {CustomStatusDisplay} from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay';
+import {reportSkeletonVoicePresence} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
@@ -155,11 +156,13 @@ const UserAreaInner = observer(
 			};
 			if (!hasVoiceConnection) {
 				clearHeight();
+				reportSkeletonVoicePresence(false, 0);
 				return;
 			}
 			const element = voiceConnectionRef.current;
 			if (!element || typeof ResizeObserver === 'undefined') {
 				clearHeight();
+				reportSkeletonVoicePresence(false, 0);
 				return;
 			}
 			let pendingHeight: number | null = null;
@@ -169,6 +172,7 @@ const UserAreaInner = observer(
 					if (voiceConnectionHeightRef.current !== roundedHeight) {
 						voiceConnectionHeightRef.current = roundedHeight;
 						root.style.setProperty(VOICE_CONNECTION_HEIGHT_VARIABLE, `${roundedHeight}px`);
+						reportSkeletonVoicePresence(true, roundedHeight);
 					}
 				} else {
 					clearHeight();

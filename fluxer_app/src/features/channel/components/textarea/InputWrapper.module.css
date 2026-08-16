@@ -44,21 +44,22 @@
 
 .composerRoot {
 	--composer-action-button-size: 2rem;
-	--composer-divider-color: var(--floating-surface-ring-color-strong);
+	--composer-divider-color: var(--floating-surface-ring-color);
+	--composer-surface-fill: var(--composer-surface-color, var(--background-secondary-lighter));
 }
 
-.composerRoot::before {
+.composerRoot:has(.statusTypingSlot)::before {
 	content: '';
 	position: absolute;
-	bottom: calc(100% + var(--composer-box-inset, 0px));
+	bottom: 100%;
 	inset-inline: calc(-1 * var(--composer-box-inset-inline, 0px));
-	height: max(0px, calc(var(--composer-status-safe-area) - var(--composer-box-inset, 0px)));
+	height: var(--composer-status-safe-area);
 	background: linear-gradient(
 		to bottom,
 		transparent 0%,
-		color-mix(in srgb, var(--composer-surface-color) 42%, transparent) 34%,
-		color-mix(in srgb, var(--composer-surface-color) 82%, transparent) 66%,
-		var(--composer-surface-color) 100%
+		color-mix(in srgb, var(--composer-surface-fill) 42%, transparent) 34%,
+		color-mix(in srgb, var(--composer-surface-fill) 82%, transparent) 66%,
+		var(--composer-surface-fill) 100%
 	);
 	pointer-events: none;
 }
@@ -79,8 +80,8 @@
 	height: var(--composer-status-line-height, 1.125rem);
 	box-sizing: border-box;
 	text-shadow:
-		0 0 0.1875rem var(--composer-surface-color),
-		0 0 0.5rem var(--composer-surface-color);
+		0 0 0.1875rem var(--composer-surface-fill),
+		0 0 0.5rem var(--composer-surface-fill);
 	pointer-events: none;
 }
 

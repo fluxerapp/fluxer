@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -44,8 +45,8 @@ const GiftInventoryNagbarContent = observer(function GiftInventoryNagbarContent(
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="var(--brand-primary)"
-			textColor="var(--text-on-brand-primary)"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.BRAND].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.BRAND].textColor}
 			dismissible
 			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.gift-inventory-nagbar.nagbar"

@@ -115,9 +115,6 @@
 }
 
 .tableSurface {
-	--guild-members-columns: minmax(15rem, 2.2fr) minmax(7.5rem, 1fr) minmax(7.5rem, 1fr) minmax(9.375rem, 1.15fr)
-		minmax(10rem, 1.35fr) 4.5rem;
-	--guild-members-min-width: calc(15rem + 7.5rem + 7.5rem + 9.375rem + 10rem + 4.5rem);
 	display: grid;
 	grid-template-rows: auto auto minmax(0, 1fr);
 	width: 100%;
@@ -259,7 +256,7 @@
 	display: grid;
 	grid-template-columns: var(--guild-members-columns);
 	min-width: 0;
-	border-bottom: 0.0625rem solid var(--background-header-secondary);
+	border-bottom: var(--guild-members-table-row-border-width) solid var(--background-header-secondary);
 	transition: background-color 0.1s;
 	cursor: pointer;
 }
@@ -278,7 +275,7 @@
 	display: flex;
 	align-items: center;
 	min-width: 0;
-	min-height: 3rem;
+	min-height: var(--guild-members-table-row-min-height);
 	padding: 0 0.875rem;
 	box-sizing: border-box;
 	font-size: 0.875rem;

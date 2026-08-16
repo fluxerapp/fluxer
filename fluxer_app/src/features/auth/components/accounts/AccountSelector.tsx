@@ -35,7 +35,6 @@ interface AccountSelectorProps {
 	description?: React.ReactNode;
 	error?: string | null;
 	disabled?: boolean;
-	showInstance?: boolean;
 	clickableRows?: boolean;
 	addButtonLabel?: React.ReactNode;
 	onSelectAccount: (account: Account) => void;
@@ -52,7 +51,6 @@ export const AccountSelector = observer(
 		description,
 		error,
 		disabled = false,
-		showInstance = false,
 		clickableRows = false,
 		addButtonLabel,
 		onSelectAccount,
@@ -165,7 +163,6 @@ export const AccountSelector = observer(
 											variant="manage"
 											isCurrent={isCurrent}
 											isExpired={account.isValid === false}
-											showInstance={showInstance}
 											onClick={clickableRows && !disabled ? () => onSelectAccount(account) : undefined}
 											showCaretIndicator={clickableRows}
 											onMenuClick={!clickableRows && !disabled ? openMenu(account) : undefined}

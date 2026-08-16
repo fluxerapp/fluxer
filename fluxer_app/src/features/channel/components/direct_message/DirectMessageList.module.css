@@ -108,7 +108,7 @@
 
 .mobileHeader {
 	display: flex;
-	min-height: 3.5rem;
+	min-height: var(--dm-sidebar-mobile-header-height);
 	flex-shrink: 0;
 	align-items: center;
 	justify-content: space-between;

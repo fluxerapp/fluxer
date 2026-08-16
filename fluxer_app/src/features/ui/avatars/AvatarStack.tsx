@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
-import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/avatars/AvatarStack.module.css';
+import {
+	AVATAR_STACK_DEFAULT_MAX_VISIBLE,
+	AVATAR_STACK_DEFAULT_SIZE_PX,
+	resolveAvatarStackGeometry,
+} from '@app/features/ui/avatars/AvatarStackGeometry';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -39,8 +43,8 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 	({
 		children,
 		users,
-		size = 28,
-		maxVisible = 3,
+		size = AVATAR_STACK_DEFAULT_SIZE_PX,
+		maxVisible = AVATAR_STACK_DEFAULT_MAX_VISIBLE,
 		overlap,
 		className,
 		guildId,
@@ -106,12 +110,11 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 		const totalCount = resolvedChildren.length;
 		const visibleChildren = resolvedChildren.slice(0, maxVisible);
 		const remainingCount = Math.max(0, totalCount - maxVisible);
-		const computedOutline = Math.min(3, Math.max(1, Math.round(size * 0.05)));
-		const computedOverlap = overlap !== undefined ? overlap : Math.round(-0.35 * size);
+		const geometry = resolveAvatarStackGeometry(size, overlap);
 		const cssVars = {
-			'--avatar-size': remFromPx(size),
-			'--avatar-overlap': remFromPx(computedOverlap),
-			'--avatar-outline': remFromPx(computedOutline),
+			'--avatar-size': geometry.sizeRem,
+			'--avatar-overlap': geometry.overlapRem,
+			'--avatar-outline': geometry.outlineRem,
 		} as React.CSSProperties;
 		const wrapWithContextMenu = (node: React.ReactNode, user: User, index: number) => {
 			if (!onUserContextMenu) return node;

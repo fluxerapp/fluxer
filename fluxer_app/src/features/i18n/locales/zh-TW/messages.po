@@ -1,16 +1,16 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-09-12 11:17+0200\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Language: zh-TW\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-12 11:17+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: zh-TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
 "Plural-Forms: \n"
 
 #. Description text in the messages tab.
@@ -49,7 +49,7 @@ msgid "(you)"
 msgstr "(你)"
 
 #. placeholder {0}: guild.member_count
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:257
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:146
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# 位成員} other {# 位成員}}"
 
@@ -287,6 +287,11 @@ msgstr "{blikPaymentMethod} 可用於一次性波蘭茲羅提禮物付款，即�
 msgid "{blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout."
 msgstr "在 {paymentProviderName} 結帳時，{blikPaymentMethod} 不支援訂閱。"
 
+#. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:35
+msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
+msgstr "{categoryLabel}，{count, plural, other {# 個社群}}"
+
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:52
 msgid "{channelHeading}, {mentionCount} mentions"
@@ -351,11 +356,11 @@ msgid "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgstr "{count, plural, one {# 個書籤} other {# 個書籤}}"
 
 #. Screen-reader status text in Discovery. {count} is the total number of matching communities.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:61
+#: src/features/discovery/discovery/DiscoveryPage.tsx:33
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# 個社群} other {# 個社群}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:907
+#: src/features/app/components/layout/GuildsLayout.tsx:1926
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# 個社群} other {# 個社群}}因時空電容器故障，暫時無法使用"
 
@@ -514,7 +519,7 @@ msgid "{count, plural, one {You have a new gift code waiting for you!} other {Yo
 msgstr "{count, plural, one {您有一組新的禮物代碼正在等您領取！} other {您有 # 組新的禮物代碼正在等您領取！}}"
 
 #. Nagbar body shown when the user has unread gift inventory items. {count} is the unread gift count.
-#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:18
 msgid "{count, plural, one {You have a new gift code waiting in your gift inventory.} other {You have # new gift codes waiting in your gift inventory.}}"
 msgstr "{count, plural, one {您的禮物庫中有一組新的禮物代碼。} other {您的禮物庫中有 # 組新的禮物代碼。}}"
 
@@ -629,12 +634,12 @@ msgid "{deviceCount, plural, one {# device selected for sign out} other {# devic
 msgstr "{deviceCount, plural, one {# 已選取 1 個裝置以供登出} other {# 已選取 {deviceCount} 個裝置以供登出}}"
 
 #. Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:48
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:50
 msgid "{displayedIncomingFriendRequestCount} friend requests"
 msgstr "{displayedIncomingFriendRequestCount} 個好友邀請"
 
 #. Short label in the sidebar navigation fluxer button. Preserve {displayedUnreadDmCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:39
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:41
 msgid "{displayedUnreadDmCount} unread DMs"
 msgstr "{displayedUnreadDmCount} 則未讀訊息"
 
@@ -721,7 +726,7 @@ msgid "{fifteenMinutes} minutes"
 msgstr "{fifteenMinutes} 分鐘"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:67
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:78
 msgid "{folderName} folder"
 msgstr "「{folderName}」資料夾"
 
@@ -745,14 +750,14 @@ msgstr "{formats}。最大 {maxSize}。建議：{recommendedSize}"
 msgid "{formats}. Max {maxSize}. Recommended: {recommendedSize}. {note}"
 msgstr "{formats}。最大 {maxSize}。建議：{recommendedSize}。{note}"
 
-#: src/features/auth/flow/InviteHeader.tsx:116
-#: src/features/auth/flow/InviteHeader.tsx:161
-#: src/features/auth/flow/InviteHeader.tsx:333
+#: src/features/auth/flow/InviteHeader.tsx:117
+#: src/features/auth/flow/InviteHeader.tsx:162
+#: src/features/auth/flow/InviteHeader.tsx:335
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{formattedMemberCount} {memberCount, plural, one {位成員} other {位成員}}"
 
-#: src/features/auth/flow/InviteHeader.tsx:110
-#: src/features/auth/flow/InviteHeader.tsx:318
+#: src/features/auth/flow/InviteHeader.tsx:111
+#: src/features/auth/flow/InviteHeader.tsx:320
 msgid "{formattedPresenceCount} online"
 msgstr "{formattedPresenceCount} 位在線上"
 
@@ -767,7 +772,7 @@ msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/ChannelListContent.tsx:73
+#: src/features/app/components/layout/ChannelListContent.tsx:83
 msgid "{guildName} channels"
 msgstr "{guildName} 頻道"
 
@@ -889,7 +894,7 @@ msgid "{megabits} Mbps"
 msgstr "{megabits} Mbps"
 
 #. Community tooltip stat showing the total member count. memberCount is already localized for display; rawMemberCount controls plural grammar.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:126
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:36
 msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {位成員} other {位成員}}"
 
@@ -949,8 +954,8 @@ msgstr "{oneMinute} 分鐘"
 
 #. Community tooltip stat showing how many members are currently online.
 #. Short label in the discovery guild card. Keep it concise. Preserve {onlineCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:118
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:137
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:28
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:27
 msgid "{onlineCount} online"
 msgstr "{onlineCount} 位線上"
 
@@ -1035,11 +1040,6 @@ msgstr "{productName} 應用程式圖示"
 #: src/features/ui/components/icons/FluxerLogo.tsx:10
 msgid "{productName} application logo"
 msgstr "{productName} 應用程式標誌"
-
-#. Accessible label for the Fluxer application symbol logo.
-#: src/features/ui/components/icons/FluxerSymbol.tsx:10
-msgid "{productName} application symbol"
-msgstr "{productName} 應用程式符號"
 
 #. Label in the push settings.
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:16
@@ -1151,12 +1151,12 @@ msgid "{productName} Partner"
 msgstr "{productName} 合作夥伴"
 
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:23
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:24
 msgid "{productName} restarted while you were connected to the {channelName} channel in the {communityName} community."
 msgstr "{productName} 重新啟動時，您正連線到「{communityName}」社群中的「{channelName}」語音頻道。"
 
 #. Nagbar shown after the app restarts while the user can reconnect to an active DM or group DM call. {productName} is Fluxer and {directCallName} is the DM or group DM display name.
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:29
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:30
 msgid "{productName} restarted while you were connected to the call in {directCallName}."
 msgstr "{productName} 在您連線到 {directCallName} 中的通話時重新啟動。"
 
@@ -1202,7 +1202,7 @@ msgstr "{productName} 標誌"
 msgid "{releaseChannel} Web {buildVersion}"
 msgstr "{releaseChannel} 網路版 {buildVersion}"
 
-#: src/features/lexical/composer/nodes/SlashOptionalHintPill.tsx:13
+#: src/features/lexical/composer/nodes/SlashOptionalHintPill.tsx:17
 msgid "{remaining, plural, one {+# more} other {+# more}}"
 msgstr "{remaining, plural, one {# 個更多} other {# 個更多}}"
 
@@ -1324,11 +1324,6 @@ msgstr "{tokenGroupCount, plural, one {# 個群組} other {# 個群組}}"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:41
 msgid "{total, plural, one {# result} other {# results}}"
 msgstr "{total, plural, one {# 個結果} other {# 個結果}}"
-
-#. Short label in the sidebar navigation guild folder item. Preserve {totalMentionCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:79
-msgid "{totalMentionCount} mentions"
-msgstr "{totalMentionCount} 個提及"
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:34
@@ -1572,7 +1567,7 @@ msgid "1 day"
 msgstr "1 天"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:44
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:46
 msgid "1 friend request"
 msgstr "1 位好友邀請"
 
@@ -1627,7 +1622,7 @@ msgid "1 unread"
 msgstr "1 則未讀訊息"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:35
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:37
 msgid "1 unread DM"
 msgstr "1 則未讀訊息"
 
@@ -2035,10 +2030,6 @@ msgstr "關於 {appName}"
 msgid "About me"
 msgstr "關於我"
 
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:233
-msgid "About this community: "
-msgstr "關於此社群： "
-
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:78
 msgid "About you"
@@ -2258,7 +2249,7 @@ msgid "Active"
 msgstr "啟用中"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:355
-#: src/features/auth/components/accounts/AccountRow.tsx:186
+#: src/features/auth/components/accounts/AccountRow.tsx:135
 msgid "Active account"
 msgstr "使用中的帳號"
 
@@ -2369,7 +2360,7 @@ msgstr "自動調整畫質"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:592
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:79
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:100
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:594
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:598
 msgid "Add"
 msgstr "新增"
 
@@ -2393,7 +2384,7 @@ msgstr "新增留言（選填）"
 msgid "Add a community"
 msgstr "新增社群"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:76
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
 msgid "Add a different account"
 msgstr "新增其他帳號"
 
@@ -2403,7 +2394,7 @@ msgid "Add a friend to get started."
 msgstr "新增朋友以開始使用。"
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:890
+#: src/features/app/components/setup/SetupWizardSteps.tsx:933
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "在執行階段啟用 GIF 搜尋，請新增 Klipy API 金鑰。"
 
@@ -2439,12 +2430,12 @@ msgid "Add a working email"
 msgstr "新增可用的電子郵件"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:898
+#: src/features/app/components/setup/SetupWizardSteps.tsx:941
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "新增 YouTube Data API 金鑰以豐富 YouTube 連結。"
 
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:33
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:21
 msgid "Add account"
 msgstr "新增帳號"
 
@@ -2454,8 +2445,8 @@ msgid "Add action."
 msgstr "新增動作."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:188
-#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:123
+#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
 msgstr "新增帳號"
@@ -2485,7 +2476,7 @@ msgid "Add another reaction"
 msgstr "新增其他心情"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:922
+#: src/features/app/components/setup/SetupWizardSteps.tsx:965
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "新增 Bluesky OAuth 用戶端中繼資料和簽署金鑰。"
 
@@ -2538,7 +2529,7 @@ msgstr "從您的電腦新增檔案，以便在自訂 CSS 中參考，而無需�
 msgid "Add friend"
 msgstr "新增朋友"
 
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:307
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:343
 msgid "Add friends"
 msgstr "新增好友"
 
@@ -2628,7 +2619,7 @@ msgid "Add shortcut"
 msgstr "新增快捷鍵"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:914
+#: src/features/app/components/setup/SetupWizardSteps.tsx:957
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "新增 SMTP 憑證，以便伺服器能傳送驗證和通知電子郵件。"
 
@@ -2655,7 +2646,7 @@ msgid "Add stream"
 msgstr "新增直播"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:882
+#: src/features/app/components/setup/SetupWizardSteps.tsx:925
 msgid "Add the credentials during setup."
 msgstr "在設定期間新增憑證。"
 
@@ -2833,7 +2824,7 @@ msgstr "管理員已暫停邀請 — 您目前無法加入。"
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
 #. Voice participant context menu submenu label for IDs and diagnostics.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:336
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:145
@@ -2905,17 +2896,19 @@ msgstr "對齊控制項僅適用於較寬的螢幕"
 #. Column header in the notification overrides table. Short label for the All messages option. Standalone word; refers to "all messages".
 #. Date-range filter option meaning no time window is applied. Used on the community members page.
 #. Label for the all-categories tab in the Discovery page.
+#. Label for the all-categories tab in the Discovery page.
 #. Short label in the channel and chat memes picker header. Keep it concise.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #. Tab label in the DM friends view showing all friends.
 #. Tab label in the mobile memes (saved media) picker. Shows all saved media regardless of type.
 #: src/features/app/config/AuditLogConstants.ts:148
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:39
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:41
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:10
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryPage.tsx:33
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:19
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:23
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
 msgstr "全部"
@@ -2983,7 +2976,7 @@ msgid "All external links are trusted. Warnings will not be shown."
 msgstr "所有外部連結皆為信任連結，將不會顯示警告。"
 
 #. Tab label in the friends list showing all friends.
-#: src/features/channel/components/friends/views/FriendsList.tsx:44
+#: src/features/channel/components/friends/views/FriendsList.tsx:49
 msgid "All friends"
 msgstr "所有朋友"
 
@@ -2992,7 +2985,7 @@ msgid "All inputs are fully interactive, so type away."
 msgstr "所有輸入欄位都可完整互動，請盡情輸入。"
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:41
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:27
 msgid "All languages"
 msgstr "所有語言"
 
@@ -3644,7 +3637,7 @@ msgid "Any key"
 msgstr "任何按鍵"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:65
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:69
 msgid "Any updater ready"
 msgstr "有更新程式準備好了"
 
@@ -3694,7 +3687,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "任何人都可以申請帳號，但必須由管理員核准。"
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:935
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "API key"
 msgstr "API 金鑰"
 
@@ -3895,7 +3888,7 @@ msgid "Are you sure you want to delete <0>{0}</0>? This cannot be undone."
 msgstr "確定要刪除 <0>{0}</0> 嗎？此動作無法復原。"
 
 #. Body of the destructive purge-personal-notes confirmation alert. Keep tone serious and explicit about irreversibility.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:71
 msgid "Are you sure you want to delete every message in your personal notes? This will permanently remove all messages and their attachments. This action cannot be undone."
 msgstr "確定要刪除個人記事中的所有訊息嗎？這將永久移除所有訊息和附加檔案，此動作無法復原。"
 
@@ -5000,7 +4993,7 @@ msgid "Bans"
 msgstr "封鎖"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:189
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:193
 msgid "Barrier countdown"
 msgstr "屏障倒數"
 
@@ -5049,7 +5042,7 @@ msgid "Billing"
 msgstr "帳單"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:161
 msgid "Billing cycle"
 msgstr "帳單週期"
 
@@ -5204,7 +5197,7 @@ msgid "Bluesky connections"
 msgstr "Bluesky 連線"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:918
+#: src/features/app/components/setup/SetupWizardSteps.tsx:961
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5253,7 +5246,7 @@ msgstr "將訊息加到書籤"
 #. Description text in the saved messages content popout.
 #. Description text in the saved messages page.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:165
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:25
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:31
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:33
 msgid "Bookmark messages to save them for later."
 msgstr "將訊息加入書籤，以便稍後查看。"
@@ -5272,7 +5265,7 @@ msgstr "已加入書籤。"
 #. Short label in the saved messages page. Keep it concise.
 #. Tab label in the inbox popout listing the user bookmarks.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:32
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:17
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
 msgstr "書籤"
@@ -5363,7 +5356,7 @@ msgid "Bot profile"
 msgstr "機器人檔案"
 
 #. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:902
+#: src/features/app/components/setup/SetupWizardSteps.tsx:945
 msgid "Bot protection"
 msgstr "機器人驗證"
 
@@ -5598,6 +5591,13 @@ msgstr "購買即表示您同意我們的{terms}和{privacy}。"
 msgid "By using {productName}, you agree to the updated policies."
 msgstr "使用 {productName} 即表示您同意更新後的政策。"
 
+#. Developer option label.
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:41
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:41
+msgid "Bypass loading skeleton"
+msgstr "略過載入骨架"
+
 #. Setting label that bypasses mention suppression for the current user.
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:40
 msgid "Bypass mention suppression"
@@ -5607,13 +5607,6 @@ msgstr "略過提及抑制"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
 msgid "Bypass slowmode"
 msgstr "略過慢速模式"
-
-#. Developer option label.
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:41
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:41
-msgid "Bypass splash screen"
-msgstr "略過啟動畫面"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:150
@@ -5798,7 +5791,7 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:245
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -5819,7 +5812,7 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:620
+#: src/features/messaging/components/modals/ForwardModal.tsx:627
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
@@ -6002,8 +5995,10 @@ msgstr "卡片在經過 {paymentProviderName} 快速驗證後，可以保留波�
 msgid "Cards can keep TRY pricing after a quick {paymentProviderName} verification, but the card must be issued in Türkiye."
 msgstr "卡片在經過快速的 {paymentProviderName} 驗證後，可以保留土耳其里拉定價，但該卡片必須是在土耳其發行的。"
 
+#. Heading above the category filter list in the Discovery search sidebar.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:15
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:19
 msgid "Categories"
 msgstr "分類"
 
@@ -6049,7 +6044,7 @@ msgid "Category deleted"
 msgstr "類別已刪除"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:64
+#: src/features/app/components/layout/ChannelListContent.tsx:74
 msgid "Category full"
 msgstr "類別已滿"
 
@@ -6624,6 +6619,11 @@ msgstr "來看看我設計的佈景主題！"
 msgid "Check your connection and try again."
 msgstr "請檢查您的連線，然後再試一次。"
 
+#. Empty-state hint in Discovery shown under the heading when the request for communities failed.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:32
+msgid "Check your connection, then try again."
+msgstr "檢查您的連線，然後再試一次。"
+
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
@@ -6767,7 +6767,7 @@ msgid "Choose a window in your system picker"
 msgstr "在系統選取器中選擇視窗"
 
 #. OAuth authorization step title. The user must choose which account to authorize with.
-#: src/features/auth/components/accounts/AccountSelector.tsx:63
+#: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
 msgid "Choose an account"
@@ -6805,7 +6805,7 @@ msgid "Choose friends to message."
 msgstr "選擇要傳送訊息的朋友。"
 
 #. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:906
+#: src/features/app/components/setup/SetupWizardSteps.tsx:949
 msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "選擇 hCaptcha 或 Cloudflare Turnstile 來進行註冊驗證。"
 
@@ -7148,7 +7148,7 @@ msgstr "清除附件模擬資料"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "清除指令"
@@ -7359,7 +7359,7 @@ msgid "Client"
 msgstr "客戶端"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:970
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
 msgid "Client name"
 msgstr "用戶端名稱"
 
@@ -7376,7 +7376,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "用戶端密鑰已重新產生。請更新任何使用舊密鑰的程式碼。"
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:974
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1017
 msgid "Client URL"
 msgstr "用戶端網址"
 
@@ -7514,12 +7514,12 @@ msgid "Closed DMs"
 msgstr "已關閉的私訊"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:117
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:121
 msgid "Cloud upload"
 msgstr "雲端上傳"
 
 #. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:931
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Cloudflare Turnstile"
 msgstr "Cloudflare Turnstile"
 
@@ -7597,7 +7597,7 @@ msgid "Collapse"
 msgstr "收合"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:92
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:98
 msgid "Collapse {folderName}"
 msgstr "收合「{folderName}」"
 
@@ -7642,7 +7642,7 @@ msgstr "收合「{channelHeading}」的未讀訊息"
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for a collapsed category.
 #: src/features/app/components/layout/ChannelItem.tsx:95
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:75
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:86
 msgid "collapsed"
 msgstr "已收合"
 
@@ -7954,6 +7954,11 @@ msgstr "社群擁有者皇冠"
 msgid "Community owners and users with the <0>{administratorPermissionLabel}</0> permission always have all permissions, including <1>{readMessageHistoryPermissionLabel}</1>, so they aren't affected by this setting."
 msgstr "社群擁有者和具備 <0>{administratorPermissionLabel}</0> 權限的使用者，永遠都會有所有權限，包含 <1>{readMessageHistoryPermissionLabel}</1>，因此不會受到此設定的影響。"
 
+#. Accessible title of the modal that previews a Discovery community before joining it.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:22
+msgid "Community preview"
+msgstr "社群預覽"
+
 #. Submenu label that groups privacy options for the community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:69
 msgid "Community privacy settings"
@@ -8123,7 +8128,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "設定鍵盤快速鍵"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:878
+#: src/features/app/components/setup/SetupWizardSteps.tsx:921
 msgid "Configure now"
 msgstr "立即設定"
 
@@ -8243,10 +8248,6 @@ msgstr "社群語音加入時的確認或雙擊動作"
 msgid "Conflicts with {conflictLabel}"
 msgstr "與 {conflictLabel} 衝突"
 
-#: src/features/auth/flow/InstanceSelector.tsx:338
-msgid "Connect"
-msgstr "連接"
-
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8318,7 +8319,8 @@ msgstr "連線失敗"
 msgid "Connection ID"
 msgstr "連線 ID"
 
-#: src/features/app/components/ConnectionIssuesLinks.tsx:21
+#. Banner shown while the app is still loading and the connection is taking unusually long. Phrased as a question offering help.
+#: src/features/app/hooks/useConnectionNotice.ts:33
 msgid "Connection issues?"
 msgstr "連線有問題？"
 
@@ -8327,10 +8329,14 @@ msgstr "連線有問題？"
 msgid "Connection limit"
 msgstr "連線限制"
 
-#: src/features/app/components/layout/SplashScreen.tsx:163
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Connection lost"
 msgstr "連線中斷"
+
+#. Banner shown when the app loses its gateway connection after having loaded. The app stays usable, so keep the tone calm.
+#: src/features/app/hooks/useConnectionNotice.ts:38
+msgid "Connection lost. Reconnecting…"
+msgstr "連線已中斷。正在重新連線中…"
 
 #. Short label in the connection connection commands.
 #: src/features/connection/commands/ConnectionCommands.ts:47
@@ -8506,7 +8512,7 @@ msgid "Continue with passkey"
 msgstr "使用通行密鑰繼續"
 
 #. Button label that starts single sign-on.
-#: src/features/auth/flow/AuthSsoPanel.tsx:22
+#: src/features/auth/flow/AuthSsoPanel.tsx:21
 msgid "Continue with SSO"
 msgstr "使用 SSO 繼續"
 
@@ -9173,7 +9179,7 @@ msgid "Couldn't join community"
 msgstr "無法加入社群"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:32
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:13
 msgid "Couldn't join this community"
 msgstr "無法加入此社群"
 
@@ -9196,6 +9202,11 @@ msgstr "無法載入授權應用程式"
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:40
 msgid "Couldn't load bans"
 msgstr "無法載入封鎖名單"
+
+#. Empty-state heading in Discovery shown when the request for communities failed.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:28
+msgid "Couldn't load communities"
+msgstr "無法載入社群"
 
 #. Error modal title shown when fetching invites fails.
 #: src/features/invite/components/alerts/InvitesLoadFailedModal.tsx:9
@@ -9222,8 +9233,8 @@ msgstr "無法開啟搜尋結果"
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:12
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:28
-#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:28
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
+#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
 msgid "Couldn't open the billing portal"
 msgstr "無法開啟帳務入口網站"
 
@@ -9285,7 +9296,7 @@ msgid "Couldn't remove from group"
 msgstr "無法從群組中移除"
 
 #. Toast error shown when removing the current account from the device fails.
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:37
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:35
 msgid "Couldn't remove this account. Try again."
 msgstr "無法移除此帳號。請再試一次。"
 
@@ -9392,7 +9403,7 @@ msgid "Couldn't stop ringing"
 msgstr "無法停止響鈴"
 
 #. Toast error shown when switching to a different saved account fails.
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:29
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:27
 msgid "Couldn't switch accounts. Try again."
 msgstr "無法切換帳號。請再試一次。"
 
@@ -9548,14 +9559,14 @@ msgid "Create a new group with {userName}"
 msgstr "與 {userName} 建立新群組"
 
 #. Generic authentication action label for starting or submitting account creation.
-#: src/features/auth/components/pages/RegisterPage.tsx:42
+#: src/features/auth/components/pages/RegisterPage.tsx:46
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:82
 #: src/features/invite/components/modals/InvitePagePreviewModal.tsx:163
-#: src/features/theme/components/pages/ThemeRegisterPage.tsx:125
+#: src/features/theme/components/pages/ThemeRegisterPage.tsx:129
 msgid "Create account"
 msgstr "建立帳號"
 
-#: src/features/expressions/components/pages/GiftRegisterPage.tsx:119
+#: src/features/expressions/components/pages/GiftRegisterPage.tsx:123
 msgid "Create account to claim gift"
 msgstr "建立帳號以領取禮物"
 
@@ -9564,7 +9575,7 @@ msgstr "建立帳號以領取禮物"
 msgid "Create administrator account"
 msgstr "建立管理員帳號"
 
-#: src/features/auth/components/pages/RegisterPage.tsx:32
+#: src/features/auth/components/pages/RegisterPage.tsx:36
 msgid "Create an account"
 msgstr "建立帳號"
 
@@ -9613,7 +9624,7 @@ msgstr "建立社群表單"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:97
 #: src/features/channel/utils/CreateDMModalUtils.tsx:35
 msgid "Create DM"
 msgstr "建立私人訊息"
@@ -9679,7 +9690,7 @@ msgid "Create or join a community"
 msgstr "建立或加入社群"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:206
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:209
 msgid "Create role"
 msgstr "建立角色"
 
@@ -10015,7 +10026,7 @@ msgstr "使用 {premiumProductName} 自訂入場音效"
 msgid "Custom expiry (seconds)"
 msgstr "自訂到期時間（秒）"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:222
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:225
 msgid "Custom hoist order"
 msgstr "自訂置頂順序"
 
@@ -11172,7 +11183,7 @@ msgid "Developer mode"
 msgstr "開發人員模式"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:273
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:277
 msgid "Developer option"
 msgstr "開發人員選項"
 
@@ -11330,7 +11341,7 @@ msgstr "訊息預覽"
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:347
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:592
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:218
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
 msgid "Direct messages"
@@ -11404,7 +11415,7 @@ msgid "Disable built-ins"
 msgstr "停用內建功能"
 
 #. Confirmation modal title shown before dismissing the desktop-notification nagbar.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:30
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:31
 msgid "Disable desktop notifications?"
 msgstr "要關閉桌面通知嗎？"
 
@@ -11646,7 +11657,7 @@ msgid "Discovery application withdrawn"
 msgstr "已撤回探索申請"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:37
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:23
 msgid "Discovery categories"
 msgstr "探索類別"
 
@@ -11660,14 +11671,14 @@ msgid "Discovery navigation"
 msgstr "探索導覽"
 
 #. Accessible label for the Discovery community results region.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:57
+#: src/features/discovery/discovery/DiscoveryPage.tsx:29
 msgid "Discovery results"
 msgstr "探索結果"
 
-#. Accessible label for the search and filter controls in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:53
-msgid "Discovery search and filters"
-msgstr "探索搜尋與篩選條件"
+#. Accessible label for the search form in the Discovery navigation bar.
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:31
+msgid "Discovery search"
+msgstr "探索搜尋"
 
 #. Short label in the bot profile section. Keep it concise.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:52
@@ -11686,12 +11697,12 @@ msgid "Dismiss"
 msgstr "關閉"
 
 #. Secondary button in the desktop-notification nagbar dismissal confirmation. Dismisses the nagbar.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:43
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:44
 msgid "Dismiss anyway"
 msgstr "仍要關閉"
 
 #. Short label in the recent mentions page. Keep it concise.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:17
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:23
 msgid "Dismiss mention"
 msgstr "關閉提及"
 
@@ -11952,7 +11963,7 @@ msgid "Don't show"
 msgstr "不顯示"
 
 #. Button label that permanently dismisses the software encoding or decoding warning banner.
-#: src/features/voice/components/SoftwareEncoderNagbar.tsx:25
+#: src/features/voice/components/SoftwareEncoderNagbar.tsx:26
 msgid "Don't show again"
 msgstr "不再顯示"
 
@@ -12014,7 +12025,7 @@ msgstr "下載"
 
 #. Nagbar button label that downloads the desktop app. productName is the app name.
 #. Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:16
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:17
 #: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:26
 msgid "Download {productName}"
 msgstr "下載 {productName}"
@@ -12599,7 +12610,7 @@ msgid "Email changed"
 msgstr "Email 已變更"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:910
+#: src/features/app/components/setup/SetupWizardSteps.tsx:953
 msgid "Email delivery"
 msgstr "電子郵件遞送"
 
@@ -12645,7 +12656,7 @@ msgid "Email verification required"
 msgstr "需要驗證電子郵件"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:177
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:181
 msgid "Email verified"
 msgstr "Email 已驗證"
 
@@ -12687,7 +12698,7 @@ msgid "Embed links"
 msgstr "嵌入連結"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:57
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:61
 msgid "Embed skeletons"
 msgstr "嵌入骨架"
 
@@ -12874,7 +12885,7 @@ msgid "Emoticons"
 msgstr "表情符號"
 
 #. Short label in the app layout favorites channel list content.
-#: src/features/app/components/layout/FavoritesChannelListContent.tsx:64
+#: src/features/app/components/layout/FavoritesChannelListContent.tsx:65
 msgid "Empty favorites"
 msgstr "沒有最愛項目"
 
@@ -12889,7 +12900,7 @@ msgstr "模擬解碼轉碼器 (測試中)"
 #. Button label in the keybind settings system-wide shortcuts section.
 #. Button or menu action label in the invites disable invites button. Keep it concise.
 #. Primary button label in the enable-invites confirmation modal.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:31
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
@@ -12947,7 +12958,7 @@ msgid "Enable beta feature"
 msgstr "啟用測試功能"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:966
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 msgid "Enable Bluesky OAuth"
 msgstr "啟用 Bluesky OAuth"
 
@@ -12962,7 +12973,7 @@ msgid "Enable desktop notifications"
 msgstr "啟用桌面通知"
 
 #. Nagbar body shown in desktop/web contexts when notification permission is not yet enabled.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:51
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:52
 msgid "Enable desktop notifications to stay updated on new messages."
 msgstr "啟用桌面通知，隨時掌握新訊息。"
 
@@ -12975,7 +12986,7 @@ msgid "Enable developer mode"
 msgstr "啟用開發者模式"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:938
+#: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Enable email delivery"
 msgstr "啟用電子郵件遞送"
 
@@ -12999,7 +13010,7 @@ msgid "Enable hardware acceleration?"
 msgstr "啟用硬體加速？"
 
 #. Description for a Linux Wayland input-access nagbar. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:15
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:16
 msgid "Enable input access to use system-wide shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
 msgstr "啟用輸入存取權，以便在 Wayland 上使用全系統捷徑。變更輸入存取權後，請完全退出並重新啟動 {productName}，捷徑才能使用。"
 
@@ -13043,7 +13054,7 @@ msgid "Enable notifications"
 msgstr "開啟通知"
 
 #. Confirmation modal body explaining why notifications are useful before dismissing the nagbar.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:34
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:35
 msgid "Enable notifications to stay updated on mentions when you're away from the app."
 msgstr "開啟通知，即使離開應用程式也不錯過任何提及。"
 
@@ -13068,7 +13079,7 @@ msgid "Enable push for this device"
 msgstr "開啟此裝置的推播通知"
 
 #. Nagbar body shown in mobile/PWA contexts. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:47
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:48
 msgid "Enable push notifications for the {productName} app to keep receiving messages when it's backgrounded."
 msgstr "啟用 {productName} 應用程式的推播通知，以便在應用程式於背景執行時仍能接收訊息。"
 
@@ -13379,11 +13390,6 @@ msgstr "進入全螢幕"
 msgid "Enter gift code…"
 msgstr "輸入禮物代碼…"
 
-#. Instance selector text input placeholder. Example instance domain is interpolated.
-#: src/features/auth/flow/InstanceSelector.tsx:22
-msgid "Enter instance URL (e.g. {exampleInstanceDomain})"
-msgstr "輸入實例網址（例如 {exampleInstanceDomain}）"
-
 #. Required-action modal carousel step title for changing to a new email address.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:276
 msgid "Enter new email"
@@ -13495,7 +13501,7 @@ msgstr "輸入簡訊驗證碼"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "請在瀏覽器中輸入此代碼以完成登入。"
 
-#: src/features/channel/components/EditingMessageInput.tsx:358
+#: src/features/channel/components/EditingMessageInput.tsx:366
 msgid "enter to <0><1>save</1></0>"
 msgstr "按 Enter 鍵<0><1>儲存</1></0>"
 
@@ -13636,7 +13642,7 @@ msgstr "Esc 鍵"
 msgid "Escape key exits keyboard mode"
 msgstr "按下 Esc 鍵可離開鍵盤模式"
 
-#: src/features/channel/components/EditingMessageInput.tsx:345
+#: src/features/channel/components/EditingMessageInput.tsx:347
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "按 Esc 鍵<0><1>取消</1></0>"
 
@@ -13797,7 +13803,7 @@ msgstr "展開「{channelHeading}」的未讀訊息"
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for an expanded category.
 #: src/features/app/components/layout/ChannelItem.tsx:99
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:71
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:82
 msgid "expanded"
 msgstr "已展開"
 
@@ -13825,7 +13831,7 @@ msgstr "有效期限"
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:348
-#: src/features/auth/components/accounts/AccountRow.tsx:20
+#: src/features/auth/components/accounts/AccountRow.tsx:18
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:41
 #: src/features/invite/components/InviteListItem.tsx:30
 msgid "Expired"
@@ -13909,7 +13915,7 @@ msgid "Explicit content filter setting"
 msgstr "色情內容篩選設定"
 
 #. Short label in the app layout discovery guild header.
-#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:11
+#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:10
 msgid "Explore"
 msgstr "探索"
 
@@ -13917,11 +13923,6 @@ msgstr "探索"
 #: src/features/app/components/layout/sidebar_nav/DiscoveryButton.tsx:21
 msgid "Explore communities"
 msgstr "探索社群"
-
-#. Main heading on the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:23
-msgid "Explore public communities"
-msgstr "探索公開社群"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme_studio/sections/LibrarySection.tsx:494
@@ -13955,12 +13956,12 @@ msgid "Export themes"
 msgstr "匯出主題"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the Expression packs settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
 msgid "Expose the staff-only Expression packs page in user settings."
 msgstr "在使用者設定中顯示僅限工作人員使用的表情符號套件頁面。"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:138
 msgid "Expose the staff-only timezone section in profile settings."
 msgstr "在個人資料設定中顯示僅限管理員使用的時區部分。"
 
@@ -14053,12 +14054,12 @@ msgid "Faded unread"
 msgstr "已讀不回"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:49
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:53
 msgid "Fail message loads"
 msgstr "訊息載入失敗"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:45
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:49
 msgid "Fail message sends"
 msgstr "傳送訊息失敗"
 
@@ -14075,11 +14076,6 @@ msgstr "無法清除信任的網域。"
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:28
 msgid "Failed to complete SSO sign-in"
 msgstr "無法完成單一登入"
-
-#. Short label in the authentication instance selector. Keep the tone plain and specific.
-#: src/features/auth/flow/InstanceSelector.tsx:18
-msgid "Failed to connect to instance"
-msgstr "無法連線到伺服器"
 
 #. Error message in the add friends to group modal utils helper.
 #: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:21
@@ -14313,12 +14309,12 @@ msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "無法啟動相機預覽。請檢查您的相機權限。"
 
 #. Login flow error shown when the single sign-on redirect cannot be started.
-#: src/features/auth/flow/AuthSsoPanel.tsx:14
+#: src/features/auth/flow/AuthSsoPanel.tsx:13
 msgid "Failed to start SSO"
 msgstr "無法啟動單一登入"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:52
+#: src/features/auth/flow/AuthLoginLayout.tsx:51
 msgid "Failed to switch account"
 msgstr "無法切換帳號"
 
@@ -14486,7 +14482,7 @@ msgstr "功能暫時停用"
 
 #. Developer options group for feature behavior overrides.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:109
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:113
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:137
 msgid "Features"
 msgstr "功能"
@@ -14605,7 +14601,7 @@ msgid "Filter by join method"
 msgstr "依加入方式篩選"
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:49
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:31
 msgid "Filter by language"
 msgstr "依語言篩選"
 
@@ -14625,11 +14621,6 @@ msgstr "依身分組篩選"
 #: src/features/search/components/search/UserFilterSheet.tsx:25
 msgid "Filter by user"
 msgstr "依用戶篩選"
-
-#. Label in the discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:69
-msgid "Filter Discovery by language"
-msgstr "依語言篩選探索內容"
 
 #. Explicit content filter option in the community moderation settings tab. Filters messages from every member regardless of role.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:117
@@ -14810,7 +14801,7 @@ msgstr "語音聚焦"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:63
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:74
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:39
 msgid "Folder"
 msgstr "資料夾"
@@ -14938,17 +14929,17 @@ msgid "Force enabled"
 msgstr "強制啟用"
 
 #. Developer option label for simulating failed message loads.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:105
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:109
 msgid "Force failed message loads"
 msgstr "強制訊息載入失敗"
 
 #. Developer option label for simulating failed message sends.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:101
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:105
 msgid "Force failed message sends"
 msgstr "強制訊息傳送失敗"
 
 #. Developer option label for simulating a loading GIF picker.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:61
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:65
 msgid "Force GIF picker loading"
 msgstr "強制載入 GIF 選擇器"
 
@@ -14958,7 +14949,14 @@ msgid "Force hide"
 msgstr "強制隱藏"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:201
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:45
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:45
+msgid "Force loading skeleton"
+msgstr "強制載入骨架"
+
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:205
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:281
 msgid "Force mature media"
 msgstr "強制成熟媒體"
@@ -14973,12 +14971,12 @@ msgid "Force no {permissionName} permission"
 msgstr "強制不授予「{permissionName}」權限"
 
 #. Developer option label for always showing profile data warnings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:97
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:101
 msgid "Force profile data warning"
 msgstr "強制顯示個人資料警告"
 
 #. Developer option label for forcing user profile loading skeletons.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:93
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:97
 msgid "Force profile skeletons"
 msgstr "強制顯示個人檔案骨架"
 
@@ -14988,12 +14986,12 @@ msgid "Force show"
 msgstr "強制顯示"
 
 #. Developer option label for always showing a community settings warning.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:65
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:69
 msgid "Force show vanity URL disclaimer"
 msgstr "強制顯示自訂網址免責聲明"
 
 #. Developer option label for always showing the voice connection status bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:117
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:121
 msgid "Force show voice connection"
 msgstr "強制顯示語音連線"
 
@@ -15002,12 +15000,12 @@ msgid "Force slowmode active"
 msgstr "強制慢速模式已啟用"
 
 #. Developer option label for rendering messages as unknown message types.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:113
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:117
 msgid "Force unknown message type"
 msgstr "強制顯示為未知訊息類型"
 
 #. Developer option label for simulating an available update.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:45
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:49
 msgid "Force update ready"
 msgstr "強制更新就緒"
 
@@ -15038,7 +15036,7 @@ msgstr "忘記密碼"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
-#: src/features/auth/flow/AuthLoginLayout.tsx:64
+#: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "忘記密碼？"
 
@@ -15210,7 +15208,7 @@ msgstr "友善的機器人"
 #. Profile timezone privacy option label. Allows friends to see local time.
 #. Quick switcher tab label that lists friends.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:518
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:555
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:47
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
@@ -15265,7 +15263,7 @@ msgid "Friends only calls"
 msgstr "僅限朋友通話"
 
 #. Accessible label for the friends-view section tablist.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:35
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:37
 msgid "Friends sections"
 msgstr "好友區塊"
 
@@ -15301,12 +15299,12 @@ msgid "From another community"
 msgstr "來自其他社群"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:942
+#: src/features/app/components/setup/SetupWizardSteps.tsx:985
 msgid "From email"
 msgstr "寄件人電子郵件"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:946
+#: src/features/app/components/setup/SetupWizardSteps.tsx:989
 msgid "From name"
 msgstr "寄件人名稱"
 
@@ -15351,7 +15349,7 @@ msgid "Game capture"
 msgstr "遊戲截圖"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:277
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:281
 msgid "Game capture injection (Windows)"
 msgstr "遊戲擷取注入 (Windows)"
 
@@ -15415,7 +15413,7 @@ msgid "Generating code…"
 msgstr "正在產生代碼…"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:213
 msgid "Geo block overlay"
 msgstr "地理封鎖覆疊"
 
@@ -15471,7 +15469,7 @@ msgid "Get notified when you receive messages. You may need to allow notificatio
 msgstr "當您收到訊息時會收到通知。您可能需要在瀏覽器設定中允許通知。若要設定個別頻道/社群的通知，請在社群圖示上按一下右鍵，然後開啟通知設定。"
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:16
+#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:17
 msgid "Get the {productName} desktop app for system-wide push-to-talk and a few other goodies."
 msgstr "取得 {productName} 電腦版應用程式，即可使用全系統的按鍵通話功能及其他好用功能。"
 
@@ -15503,7 +15501,7 @@ msgid "GIF options"
 msgstr "GIF 選項"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:121
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:125
 msgid "GIF picker loading"
 msgstr "正在載入 GIF 選擇器"
 
@@ -15513,7 +15511,7 @@ msgid "GIF preview"
 msgstr "GIF 預覽"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:886
+#: src/features/app/components/setup/SetupWizardSteps.tsx:929
 msgid "GIF search"
 msgstr "GIF 搜尋"
 
@@ -15581,14 +15579,14 @@ msgstr "禮物代碼"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:261
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:265
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:100
 msgid "Gift duration"
 msgstr "贈禮期限"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:257
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:261
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:42
 msgid "Gift inventory"
 msgstr "禮物庫存"
@@ -15616,7 +15614,7 @@ msgid "Gift not found"
 msgstr "找不到贈禮"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:265
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:269
 msgid "Gift redeemed"
 msgstr "已兌換贈禮"
 
@@ -16146,7 +16144,7 @@ msgid "Has"
 msgstr "有"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:165
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:169
 msgid "Has ever purchased"
 msgstr "曾購買過"
 
@@ -16171,7 +16169,7 @@ msgid "Having issues? Try hCaptcha instead"
 msgstr "有問題嗎？試試 hCaptcha 吧"
 
 #. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:930
+#: src/features/app/components/setup/SetupWizardSteps.tsx:973
 msgid "hCaptcha"
 msgstr "hCaptcha"
 
@@ -16262,12 +16260,12 @@ msgid "Hex value for {tokenLabel}"
 msgstr "{tokenLabel} 的十六進位值"
 
 #. Nagbar warning shown to unclaimed-account users. displayName is the current user display name.
-#: src/features/app/components/layout/app_layout/nagbars/UnclaimedAccountNagbar.tsx:14
+#: src/features/app/components/layout/app_layout/nagbars/UnclaimedAccountNagbar.tsx:15
 msgid "Hey {displayName}, claim your account to prevent losing access."
 msgstr "嗨，{displayName}，請領取你的帳號，以免失去存取權限。"
 
 #. Nagbar warning shown when the current user still needs to verify email. displayName is the user display name.
-#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:16
+#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:17
 msgid "Hey {displayName}, please verify your email address."
 msgstr "嗨，{displayName}，請驗證您的電子郵件地址。"
 
@@ -16539,7 +16537,7 @@ msgid "Hold to send voice message"
 msgstr "按住 即可傳送語音訊息"
 
 #. Action label in quick switcher for navigating to the Home tab.
-#: src/features/app/components/layout/MobileBottomNav.tsx:105
+#: src/features/app/components/layout/MobileBottomNav.tsx:110
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:48
 msgid "Home"
 msgstr "首頁"
@@ -16815,7 +16813,7 @@ msgid "If you cannot use any verification method, contact support for help."
 msgstr "如果您無法使用任何驗證方式，請聯絡客服以取得協助。"
 
 #. Confirmation modal body shown before dismissing the desktop-notification nagbar. {notificationSettingsPath} is the localized settings path.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:38
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:39
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
 msgstr "如果你關閉此通知，之後還是可以隨時到「{notificationSettingsPath}」開啟桌面通知。"
 
@@ -17149,7 +17147,7 @@ msgstr "正在匯入… 已處理 {processedCount, number} / {totalCount, number
 msgid "In"
 msgstr "在"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:555
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:559
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "在「作業系統」模式中，上方列出的字典僅供參考。如果支援，{PRODUCT_NAME} 會將這些語言標籤傳遞給您的作業系統拼字檢查工具。無法辨識的標籤將會被忽略。"
 
@@ -17189,7 +17187,7 @@ msgstr "在我管理的頻道中"
 msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
 msgstr "起初，什麼都沒有。後來，有了「{channelDisplayName}」。一切都美好了。"
 
-#: src/features/user/components/profile/VoiceActivityCard.tsx:234
+#: src/features/user/components/profile/VoiceActivityCard.tsx:238
 msgid "In voice"
 msgstr "在語音通話中"
 
@@ -17243,10 +17241,6 @@ msgstr "收件匣預覽"
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
 msgid "Inbox tabs"
 msgstr "收件匣分頁"
-
-#: src/features/app/components/ConnectionIssuesLinks.tsx:43
-msgid "Incident history"
-msgstr "事件記錄"
 
 #. Recent mentions filter checkbox. mentionType is a mention token such as @everyone or @role.
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:56
@@ -17318,7 +17312,7 @@ msgid "Incoming friend request"
 msgstr "收到的交友邀請"
 
 #. Short label in the channel and chat pending friends view. Keep it concise.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:33
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:38
 msgid "Incoming friend requests"
 msgstr "收到的好友邀請"
 
@@ -17425,7 +17419,7 @@ msgid "Input access could not be enabled automatically. Change it manually, then
 msgstr "無法自動啟用輸入權限。請手動變更，然後完全結束並重新啟動 {productName}，這樣捷徑才能使用它。"
 
 #. Description for a Linux Wayland input-access nagbar after automatic permission setup failed. {settingsMenuName} is the shared user settings tab label for shortcuts and {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:25
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:26
 msgid "Input access could not be enabled. Try again from {settingsMenuName} settings, then fully quit and restart {productName}."
 msgstr "無法啟用輸入存取。請從「{settingsMenuName}」設定中再試一次，然後完全結束並重新啟動 {productName}。"
 
@@ -17436,7 +17430,7 @@ msgstr "在 Wayland 上，系統級鍵盤和滑鼠捷徑需要輸入存取權。
 
 #. Description for a Linux Wayland input-access nagbar after access was changed. {productName} is the app name.
 #. Status text after Linux input access was changed. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:20
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:21
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:31
 msgid "Input access was changed. Fully quit and restart {productName} so system-wide shortcuts can use it."
 msgstr "輸入權限已變更。請完全結束並重新啟動 {productName}，以便系統範圍的快捷鍵可以使用它。"
@@ -17539,13 +17533,6 @@ msgstr "正在安裝桌面版更新 {version}…"
 msgid "Installing desktop update…"
 msgstr "正在安裝桌面版更新…"
 
-#. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#. Short label in the authentication instance selector. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:37
-#: src/features/auth/flow/InstanceSelector.tsx:30
-msgid "Instance URL"
-msgstr "伺服器網址"
-
 #. Audit log operation flag label for invite creation.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:170
 msgid "Instant invites"
@@ -17627,11 +17614,6 @@ msgstr "無效的禮物代碼"
 #: src/features/channel/components/modals/EditGroupModal.tsx:68
 msgid "Invalid image"
 msgstr "無效的圖片"
-
-#. Browser login handoff modal form validation error for an unparseable instance URL. Example domain and URL are interpolated.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:28
-msgid "Invalid instance URL. Try something like \"{exampleDomain}\" or \"{exampleUrl}\"."
-msgstr "無效的實例網址。請嘗試類似「{exampleDomain}」或「{exampleUrl}」的網址。"
 
 #. Validation error in the paste-template-JSON form. "JSON" is a protocol token and must not be translated.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:132
@@ -17902,14 +17884,14 @@ msgid "Invites"
 msgstr "邀請"
 
 #. Short label in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:114
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:24
 msgid "Invites are currently paused in this community"
 msgstr "此社群目前暫停邀請"
 
-#. Community sidebar tooltip shown when raid protection has paused invites. Product name is interpolated.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:110
-msgid "Invites are paused because {productName} detected a potential raid"
-msgstr "由於 {productName} 偵測到潛在的惡意攻擊，邀請功能已暫停"
+#. Community sidebar tooltip shown while invites are paused after a suspected raid.
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:20
+msgid "Invites are paused after a suspected raid"
+msgstr "邀請已暫停，因為疑似有惡意攻擊"
 
 #. Invite settings notice shown when automated raid protection pauses invites. productName is the Fluxer product name.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:28
@@ -17992,7 +17974,7 @@ msgid "It may have been deleted. The name was reverted to what it was before."
 msgstr "表情符號可能已被刪除。名稱已還原為先前的名稱。"
 
 #. Body of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:69
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:50
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "它可能已退出探索或關閉了新加入功能。重新整理頁面後，您將不會再看到它。"
 
@@ -18002,7 +17984,7 @@ msgid "It's a full-blown typing fiesta in here"
 msgstr "這裡現在打字打得正熱鬧"
 
 #. Label in the channel and chat active now sidebar.
-#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:12
+#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:17
 msgid "It's quiet for now..."
 msgstr "目前很安靜..."
 
@@ -18043,15 +18025,13 @@ msgstr "抖動："
 msgid "Join"
 msgstr "加入"
 
-#. Accessible label for a Discovery guild card join button. {communityName} is the public community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:28
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:145
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
 msgid "Join {communityName}"
 msgstr "加入「{communityName}」"
 
 #. Nagbar body inviting users to join the official product community. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:24
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:25
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "加入「{communityName}」與團隊聊天，並隨時掌握最新資訊。"
 
@@ -18128,7 +18108,7 @@ msgstr "加入視訊通話"
 #. Button or menu action label in the user settings voice activity card. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:63
+#: src/features/user/components/profile/VoiceActivityCard.tsx:67
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
@@ -18145,16 +18125,6 @@ msgstr "加入語音通話"
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "加入語音頻道"
-
-#. Button or menu action label in the discovery guild card. Keep it concise.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:141
-msgid "Joined"
-msgstr "已加入"
-
-#. Accessible label for a disabled Discovery guild card join button when the user is already in the community. {communityName} is the public community name.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:149
-msgid "Joined {communityName}"
-msgstr "已加入「{communityName}」"
 
 #. Community members table column header for the date the account joined Fluxer.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:29
@@ -18229,7 +18199,7 @@ msgid "Jump to page"
 msgstr "跳轉到頁面"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:69
+#: src/features/channel/components/ChannelMessages.tsx:74
 msgid "Jump to present"
 msgstr "跳到最新訊息"
 
@@ -18460,7 +18430,7 @@ msgid "Larger media size with more detail"
 msgstr "較大的媒體尺寸，細節更清晰"
 
 #. Account switcher metadata showing when a saved account was last used.
-#: src/features/auth/components/accounts/AccountListItem.tsx:67
+#: src/features/auth/components/accounts/AccountListItem.tsx:65
 msgid "Last active {lastActive}"
 msgstr "上次使用時間：{lastActive}"
 
@@ -18531,7 +18501,7 @@ msgid "Learn about screen share previews"
 msgstr "了解螢幕分享預覽功能"
 
 #. CTA on the planned-maintenance banner. Opens the external status-page maintenance notice.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:62
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:49
 msgid "Learn more"
 msgstr "瞭解詳情"
 
@@ -18953,17 +18923,12 @@ msgstr "即時區域"
 msgid "Loading"
 msgstr "載入中"
 
-#. Neutral splash-screen loading fallback for non-English locales. Do not imply that rotating quotes exist.
-#: src/media/data/SplashQuotes.ts:8
-msgid "Loading {productName}."
-msgstr "正在載入 {productName}。"
-
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:164
 msgid "Loading banned users"
 msgstr "正在載入遭禁用的使用者"
 
 #. Screen-reader status text shown while Discovery communities are loading.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:65
+#: src/features/discovery/discovery/DiscoveryPage.tsx:37
 msgid "Loading communities"
 msgstr "正在載入社群"
 
@@ -19139,7 +19104,7 @@ msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:978
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
 msgid "Logo URL"
 msgstr "標誌 URL"
 
@@ -19240,17 +19205,17 @@ msgid "Mail"
 msgstr "郵件"
 
 #. Maintenance banner message shown after a planned status-page maintenance finishes. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:53
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:40
 msgid "Maintenance is complete."
 msgstr "維護已完成。"
 
 #. Maintenance banner message shown while a planned status-page maintenance is in progress. {duration} is already localized. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:48
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:35
 msgid "Maintenance is in progress. Expected duration: {duration}."
 msgstr "維護正在進行中。預計持續時間：{duration}。"
 
 #. Maintenance banner message shown before a planned status-page maintenance begins. {localizedTime} and {duration} are already localized. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:57
+#: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:44
 msgid "Maintenance is scheduled for {localizedTime}. Expected duration: {duration}."
 msgstr "預計於 {localizedTime} 進行維護。預計持續時間：{duration}。"
 
@@ -19304,7 +19269,7 @@ msgid "Manage"
 msgstr "管理"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:395
-#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:76
+#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:78
 msgid "Manage accounts"
 msgstr "管理帳號"
 
@@ -19617,7 +19582,7 @@ msgid "Mature content & content warnings"
 msgstr "成人內容與內容警告"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:193
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:197
 msgid "Mature content channel gate"
 msgstr "成人內容頻道閘門"
 
@@ -19643,7 +19608,7 @@ msgid "Mature content checks are currently available only in the UK."
 msgstr "成人內容檢查目前僅在英國提供。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:197
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:201
 msgid "Mature content media gate"
 msgstr "成人內容媒體閘門"
 
@@ -19814,7 +19779,7 @@ msgid "Media from links (embeds)"
 msgstr "連結中的媒體 (嵌入)"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:61
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:65
 msgid "Media loading state"
 msgstr "媒體載入狀態"
 
@@ -19936,7 +19901,7 @@ msgid "Member verification level"
 msgstr "成員驗證等級"
 
 #. Community tooltip stat label shown next to a loading skeleton while the member count is loading.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:131
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:41
 msgid "members"
 msgstr "成員"
 
@@ -19995,7 +19960,7 @@ msgid "Members without the {readMessageHistoryPermissionLabel} permission can vi
 msgstr "沒有「{readMessageHistoryPermissionLabel}」權限的成員，可以查看此日期之後傳送的訊息。"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:77
+#: src/features/app/components/layout/ChannelListContent.tsx:87
 msgid "Members, selected"
 msgstr "已選取成員"
 
@@ -20068,7 +20033,7 @@ msgid "Mentions and timestamps"
 msgstr "提及和時間戳記"
 
 #. Description text in the recent mentions page. Preserve {recentMentionsRetentionDays}; it is inserted by code.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:29
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:35
 msgid "Mentions of you show up here for {recentMentionsRetentionDays} days."
 msgstr "提及你的內容會在這裡顯示 {recentMentionsRetentionDays} 天。"
 
@@ -20265,12 +20230,12 @@ msgid "Message link"
 msgstr "訊息連結"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:61
+#: src/features/channel/components/ChannelMessages.tsx:66
 msgid "Message list"
 msgstr "訊息列表"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:57
+#: src/features/channel/components/ChannelMessages.tsx:62
 msgid "Message list for {channelName}"
 msgstr "{channelName} 的訊息列表"
 
@@ -20350,7 +20315,7 @@ msgstr "訊息：{0}。"
 #. Short label in the inline. Keep it concise.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/channel/components/ChannelChatLayout.tsx:10
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:276
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:312
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:28
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
@@ -20376,7 +20341,7 @@ msgid "Messages deleted"
 msgstr "訊息已刪除"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:73
+#: src/features/channel/components/ChannelMessages.tsx:78
 msgid "Messages failed to load"
 msgstr "訊息載入失敗"
 
@@ -20390,7 +20355,7 @@ msgstr "社群頻道中的訊息"
 msgid "Messages shortcuts"
 msgstr "訊息捷徑"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:273
+#: src/features/channel/components/barriers/BarrierComponents.tsx:272
 msgid "Messaging is temporarily paused in this community."
 msgstr "此社群的訊息功能已暫停。"
 
@@ -20700,7 +20665,7 @@ msgstr "每月贈禮"
 #. Short label in the buttons tab. Keep it concise.
 #. Short label in the channel and chat friend list item. Keep it concise.
 #. Tooltip on the overflow button in the inline message hover action bar. Opens the full action menu.
-#: src/features/auth/components/accounts/AccountRow.tsx:24
+#: src/features/auth/components/accounts/AccountRow.tsx:22
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
 #: src/features/channel/components/MessageActionBar.tsx:88
@@ -21020,7 +20985,7 @@ msgstr "將成員靜音"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:62
+#: src/features/app/components/layout/UserArea.tsx:63
 #: src/features/platform/utils/DesktopLocaleBridge.ts:144
 msgid "Mute microphone"
 msgstr "麥克風靜音"
@@ -21051,7 +21016,7 @@ msgstr "將串流音訊靜音"
 #. Screen-reader fragment announcing that the DM list row is muted. Lowercase fragment.
 #: src/features/app/components/layout/ChannelItem.tsx:107
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:60
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:98
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
 #: src/features/channel/components/direct_message/DMListItem.tsx:75
 msgid "muted"
 msgstr "已關閉通知"
@@ -21063,7 +21028,7 @@ msgstr "已關閉通知"
 #. Short label in the sidebar navigation guild list item.
 #. Status badge on a voice participant tile. The participant's microphone is muted.
 #. Status label indicating the surface is currently muted.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:82
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:15
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
@@ -21086,7 +21051,7 @@ msgid "Muted channels"
 msgstr "已關閉通知的頻道"
 
 #. Community sidebar tooltip showing when the per-community mute will expire. Date/time is interpolated.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:78
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:31
 msgid "Muted until {dateUtilsGetFormattedDateTimeNewDateMuteConfigEndTime}"
 msgstr "已靜音直到 {dateUtilsGetFormattedDateTimeNewDateMuteConfigEndTime}"
 
@@ -21191,7 +21156,7 @@ msgid "My devices"
 msgstr "我的裝置"
 
 #. Page title for the DM-list friends view.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:31
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:33
 msgid "My friends"
 msgstr "我的好友"
 
@@ -21314,12 +21279,12 @@ msgid "Native title bar"
 msgstr "原生標題列"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:73
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:77
 msgid "Native update progress"
 msgstr "原生更新進度"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:69
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:73
 msgid "Native updater ready"
 msgstr "原生更新程式已就緒"
 
@@ -21393,7 +21358,7 @@ msgid "Network error"
 msgstr "網路錯誤"
 
 #. Developer options group for simulated slow or failed operations.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:69
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:73
 msgid "Networking and performance"
 msgstr "網路與效能"
 
@@ -21424,7 +21389,7 @@ msgid "New"
 msgstr "新訊息"
 
 #. Small badge on a new or recently added app navigation item.
-#: src/features/app/components/layout/GuildsLayout.tsx:76
+#: src/features/app/components/layout/GuildsLayout.tsx:131
 msgctxt "navigation-badge"
 msgid "New"
 msgstr "新"
@@ -21492,14 +21457,14 @@ msgstr "建立群組"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the new message button at the top of the DM list.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:93
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:159
 msgid "New message"
 msgstr "新訊息"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:81
+#: src/features/app/components/layout/ChannelListContent.tsx:91
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "新訊息"
@@ -21602,12 +21567,12 @@ msgid "No"
 msgstr "否"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:245
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
 msgid "No {attachFilesPermission} permission"
 msgstr "沒有 {attachFilesPermission} 權限"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:241
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:245
 msgid "No {sendMessagesPermission} permission"
 msgstr "沒有 {sendMessagesPermission} 權限"
 
@@ -21621,8 +21586,8 @@ msgstr "無法存取"
 msgid "No accessible channels"
 msgstr "沒有可存取的頻道"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:150
-#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:86
+#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "沒有任何帳號"
 
@@ -21696,7 +21661,7 @@ msgstr "沒有封鎖的用戶"
 #. Empty-state text in the saved messages content popout.
 #. Empty-state text in the saved messages page.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:162
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:21
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:27
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:29
 msgid "No bookmarks"
 msgstr "沒有書籤"
@@ -21743,8 +21708,13 @@ msgstr "沒有可用的頻道"
 msgid "No channels found"
 msgstr "找不到任何頻道"
 
+#. Empty-state hint in Discovery shown under the heading when no communities are listed at all.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:24
+msgid "No communities are listed right now. Check back a little later."
+msgstr "目前沒有列出任何社群。稍後再回來查看。"
+
 #. Empty-state text in the discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:73
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:12
 msgid "No communities match."
 msgstr "沒有符合的社群。"
 
@@ -21780,7 +21750,9 @@ msgid "No description provided."
 msgstr "沒有提供說明。"
 
 #. Empty-state text in the discovery guild card.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:133
+#. Empty-state text shown in the Discovery community preview modal when a community has no description.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:30
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:23
 msgid "No description."
 msgstr "沒有說明。"
 
@@ -21828,7 +21800,7 @@ msgstr "找不到朋友"
 
 #. Empty state title in the friends list when the search query returns no results.
 #. Empty-state text in the friends list utils helper.
-#: src/features/channel/components/friends/views/FriendsList.tsx:36
+#: src/features/channel/components/friends/views/FriendsList.tsx:41
 #: src/features/relationship/utils/FriendsListUtils.tsx:35
 msgid "No friends match that search"
 msgstr "沒有朋友符合搜尋條件"
@@ -21851,7 +21823,7 @@ msgstr "沒有符合的 GIF"
 msgid "No gifts yet"
 msgstr "還沒有任何禮物"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:166
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:169
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "沒有置頂身分組。請在身分組上啟用「單獨顯示此身分組」即可在此處查看。"
 
@@ -21936,12 +21908,12 @@ msgid "No password set"
 msgstr "未設定密碼"
 
 #. Empty-state text in the channel and chat pending friends view.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:17
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:22
 msgid "No pending requests"
 msgstr "沒有待處理的邀請"
 
 #. Empty-state text in the channel and chat pending friends view.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:25
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:30
 msgid "No pending requests match that search"
 msgstr "沒有符合搜尋條件的待處理請求"
 
@@ -21950,7 +21922,7 @@ msgstr "沒有符合搜尋條件的待處理請求"
 msgid "No permissions found"
 msgstr "找不到權限"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:602
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:606
 msgid "No personal words yet."
 msgstr "還沒有個人詞彙喔。"
 
@@ -21971,7 +21943,7 @@ msgstr "無偏好設定"
 
 #. Empty-state text in the user settings voice activity card.
 #. Placeholder text on the screen-share hover card when no thumbnail has been received yet.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:90
+#: src/features/user/components/profile/VoiceActivityCard.tsx:94
 #: src/features/voice/components/StreamWatchHoverCard.tsx:25
 msgid "No preview yet"
 msgstr "尚未提供預覽"
@@ -21991,7 +21963,7 @@ msgid "No reason was provided."
 msgstr "未提供原因。"
 
 #. Empty-state text in the recent mentions page.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:25
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:31
 msgid "No recent mentions"
 msgstr "沒有提及你的訊息"
 
@@ -22189,7 +22161,7 @@ msgid "No webhooks"
 msgstr "沒有網路掛鉤"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:143
 msgid "No-op in-app reports"
 msgstr "停用應用程式內檢舉"
 
@@ -22288,7 +22260,7 @@ msgstr "不喜歡？隨時都能關閉。"
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:58
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:34
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/state/NewDeviceMonitoring.tsx:31
 msgid "Not now"
 msgstr "暫時不要"
@@ -22334,6 +22306,11 @@ msgstr "無"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:587
 msgid "Nothing matches"
 msgstr "沒有符合項目"
+
+#. Empty-state heading in Discovery shown when no communities are listed at all.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:20
+msgid "Nothing to explore yet"
+msgstr "目前沒有可探索的內容"
 
 #. Title of the error modal shown when there is no refundable purchase on the account.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:55
@@ -22382,9 +22359,9 @@ msgstr "通知音量"
 #. Advanced settings category tag.
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/layout/MobileBottomNav.tsx:131
+#: src/features/app/components/layout/MobileBottomNav.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:699
-#: src/features/notification/components/pages/NotificationsPage.tsx:43
+#: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
 msgid "Notifications"
@@ -22402,7 +22379,7 @@ msgid "Notifications blocked"
 msgstr "已關閉通知"
 
 #. Modal title shown when the current device/browser cannot show notifications.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:22
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:23
 msgid "Notifications not supported"
 msgstr "不支援通知"
 
@@ -22526,7 +22503,7 @@ msgstr "應用程式和憑證一旦刪除，就無法復原。"
 msgid "Once deletion is processed, you cannot recover access to your account"
 msgstr "帳號刪除程序一旦完成，您將無法復原帳號"
 
-#: src/features/theme/components/pages/ThemeRegisterPage.tsx:130
+#: src/features/theme/components/pages/ThemeRegisterPage.tsx:134
 msgid "Once your account is created, we'll take you back to the theme so you can apply it."
 msgstr "帳號建立後，我們會將您帶回主題頁面，以便您套用主題。"
 
@@ -22556,7 +22533,7 @@ msgid "one-time purchase"
 msgstr "一次性購買"
 
 #. Community tooltip stat label shown next to a loading skeleton while the online count is loading.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:122
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:32
 msgid "online"
 msgstr "線上"
 
@@ -22578,11 +22555,6 @@ msgstr "上線狀態"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:243
 msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "僅限 {count, plural, one {# 個社群} other {# 個社群}}"
-
-#. Community sidebar tooltip shown when a community is only accessible to Fluxer staff.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:90
-msgid "Only accessible to {productName} staff"
-msgstr "僅限 {productName} 員工存取"
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:119
 msgid "Only applies on wide screens."
@@ -22701,12 +22673,12 @@ msgid "Open {appName} settings"
 msgstr "開啟 {appName} 設定"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {contextName}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:71
+#: src/features/user/components/profile/VoiceActivityCard.tsx:75
 msgid "Open {contextName}"
 msgstr "開啟「{contextName}」"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {displayName}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:76
+#: src/features/user/components/profile/VoiceActivityCard.tsx:80
 msgid "Open {displayName}"
 msgstr "開啟 {displayName}"
 
@@ -22741,7 +22713,7 @@ msgid "Open {title}"
 msgstr "開啟「{title}」"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise. Preserve {displayName}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:81
+#: src/features/user/components/profile/VoiceActivityCard.tsx:85
 msgid "Open @{displayName}"
 msgstr "開啟 @{displayName}"
 
@@ -22800,11 +22772,11 @@ msgid "Open banner options"
 msgstr "開啟橫幅選項"
 
 #. Button or menu action label in the notifications page. Keep it concise.
-#: src/features/notification/components/pages/NotificationsPage.tsx:19
+#: src/features/notification/components/pages/NotificationsPage.tsx:26
 msgid "Open bookmarks"
 msgstr "開啟書籤"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:258
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
 msgid "Open browser"
 msgstr "開啟瀏覽器"
 
@@ -22845,8 +22817,13 @@ msgstr "開啟帳號認領視窗"
 msgid "Open color picker"
 msgstr "開啟選色器"
 
+#. Button label in the Discovery community preview modal shown when the user is already a member.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:26
+msgid "Open community"
+msgstr "開啟社群"
+
 #. Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/GuildHeader.tsx:30
+#: src/features/app/components/layout/GuildHeader.tsx:38
 msgid "Open community menu for {guildName}"
 msgstr "開啟「{guildName}」社群選單"
 
@@ -23029,7 +23006,7 @@ msgstr "開啟 {directMessageName} 的個人檔案"
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:47
-#: src/features/ui/avatars/AvatarStack.tsx:17
+#: src/features/ui/avatars/AvatarStack.tsx:21
 msgid "Open profile for {displayName}"
 msgstr "開啟 {displayName} 的個人檔案"
 
@@ -23039,7 +23016,7 @@ msgid "Open profile for {nickname}"
 msgstr "開啟 {nickname} 的個人檔案"
 
 #. Accessible label and tooltip for the search field at the top of the DM list. Opens the quick switcher.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:89
 msgid "Open quick switcher"
 msgstr "開啟快速切換"
 
@@ -23121,7 +23098,7 @@ msgid "Open theme studio…"
 msgstr "開啟主題工作室…"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:70
+#: src/features/app/components/layout/UserArea.tsx:71
 msgid "Open user menu for {displayName}"
 msgstr "開啟 {displayName} 的使用者選單"
 
@@ -23141,11 +23118,11 @@ msgid "Open video link"
 msgstr "開啟影片連結"
 
 #. Button or menu action label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:59
+#: src/features/user/components/profile/VoiceActivityCard.tsx:63
 msgid "Open voice"
 msgstr "開啟語音"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:194
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "開啟您的瀏覽器，登入後輸入以下代碼，即可連結您的帳號。"
 
@@ -23332,7 +23309,7 @@ msgid "Outgoing capacity:"
 msgstr "外送容量："
 
 #. Short label in the channel and chat pending friends view. Keep it concise.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:37
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:42
 msgid "Outgoing friend requests"
 msgstr "已送出的好友邀請"
 
@@ -23491,7 +23468,7 @@ msgid "Participant options for {participantDisplayName}"
 msgstr "「{participantDisplayName}」的參與者選項"
 
 #. Short label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:46
+#: src/features/user/components/profile/VoiceActivityCard.tsx:50
 msgid "Participants"
 msgstr "參與者"
 
@@ -23501,7 +23478,7 @@ msgid "Participants:"
 msgstr "參與者："
 
 #. Short label in the user settings voice activity card. Keep it concise. Preserve {names}; it is inserted by code.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:50
+#: src/features/user/components/profile/VoiceActivityCard.tsx:54
 msgid "Participants: {names}"
 msgstr "參與者：{names}"
 
@@ -23537,7 +23514,7 @@ msgstr "通行金鑰需要有有效應用程式識別碼的已簽署 macOS 套�
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:996
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:210
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -23710,13 +23687,13 @@ msgstr "無法使用付款功能"
 
 #. Discovery application status badge in the community Discovery settings tab. The application is awaiting staff review.
 #. Tab label in the DM friends view showing pending friend requests.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:43
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:45
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:40
 msgid "Pending"
 msgstr "待處理"
 
 #. Description text in the channel and chat pending friends view.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:21
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:26
 msgid "Pending friend requests show up here."
 msgstr "待處理的好友邀請會顯示在這裡。"
 
@@ -23850,7 +23827,7 @@ msgid "Personal notes"
 msgstr "個人筆記"
 
 #. Toast shown when triggering the purge personal notes flow on an already empty self-DM.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:85
 msgid "Personal notes were already empty"
 msgstr "個人記事已經是空的了"
 
@@ -24208,7 +24185,7 @@ msgstr "播放動畫，不顧「減少動態」設定。"
 #. Body of the error modal shown when joining a discovery community is rate limited.
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:78
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:59
 #: src/features/theme/components/modals/ShareThemeModal.tsx:67
 msgid "Please wait a moment and try again."
 msgstr "請稍候片刻再試一次。"
@@ -24278,7 +24255,7 @@ msgid "Popup"
 msgstr "彈出式視窗"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:951
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "Port"
 msgstr "埠號"
 
@@ -24332,7 +24309,7 @@ msgid "Prefer software"
 msgstr "偏好軟體"
 
 #. Optional sign-in note. ssoDisplayName is the configured provider display name.
-#: src/features/auth/flow/AuthSsoPanel.tsx:30
+#: src/features/auth/flow/AuthSsoPanel.tsx:29
 msgid "Prefer using SSO? Continue with {ssoDisplayName}."
 msgstr "偏好使用單一登入嗎？繼續使用 {ssoDisplayName}。"
 
@@ -24389,7 +24366,7 @@ msgid "Premium perks disabled"
 msgstr "已停用加值福利"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:149
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:153
 msgid "Premium since date"
 msgstr "付費會員起始日期"
 
@@ -24399,12 +24376,12 @@ msgid "Premium state reset on the backend."
 msgstr "已在後端重設付費狀態。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:141
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:145
 msgid "Premium type"
 msgstr "付費方案類型"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:153
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
 msgid "Premium until date"
 msgstr "Premium 服務至"
 
@@ -24464,6 +24441,11 @@ msgstr "在一段時間內，禁止成員傳送訊息、心情回應和加入語
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:272
 msgid "Preview"
 msgstr "預覽"
+
+#. Accessible label for a Discovery community card, which opens a preview of the community. {communityName} is the public community name.
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:31
+msgid "Preview {communityName}"
+msgstr "預覽 {communityName}"
 
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:40
@@ -24651,7 +24633,7 @@ msgid "Privacy settings"
 msgstr "隱私設定"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:986
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
 msgid "Privacy URL"
 msgstr "隱私權政策網址"
 
@@ -24676,7 +24658,7 @@ msgid "Private details"
 msgstr "個人詳細資料"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:994
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
 msgid "Private key"
 msgstr "私鑰"
 
@@ -24758,7 +24740,7 @@ msgid "Profile customization form"
 msgstr "個人檔案設定表單"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:113
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:117
 msgid "Profile data warning"
 msgstr "個人檔案資料警告"
 
@@ -24806,7 +24788,7 @@ msgid "Profile privacy"
 msgstr "個人檔案隱私設定"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:109
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:113
 msgid "Profile skeletons"
 msgstr "個人檔案骨架"
 
@@ -24867,7 +24849,7 @@ msgid "Pronouns: "
 msgstr "代名詞： "
 
 #. Nagbar body shown to Visionary premium users who have not enabled two-factor authentication. {productName} is Fluxer.
-#: src/features/app/components/layout/app_layout/nagbars/VisionaryMfaNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/VisionaryMfaNagbar.tsx:18
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "啟用雙重驗證，保護您的 Visionary 帳號。感謝您對 {productName} 的支持！"
 
@@ -24886,7 +24868,7 @@ msgid "Provide your full legal name for the declaration."
 msgstr "請提供您的完整法定姓名以進行聲明。"
 
 #. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:926
+#: src/features/app/components/setup/SetupWizardSteps.tsx:969
 msgid "Provider"
 msgstr "供應商"
 
@@ -24905,6 +24887,11 @@ msgstr "PTT"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:44
 msgid "Public bot"
 msgstr "公開機器人"
+
+#. Line shown above the community name in the Discovery community preview modal. The user found this community in the public directory rather than being invited to it.
+#: src/features/discovery/components/modals/DiscoveryGuildPreviewModal.tsx:34
+msgid "Public community"
+msgstr "公開社群"
 
 #. Description for the closed registration mode.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:174
@@ -24962,7 +24949,7 @@ msgstr "無法購買"
 
 #. Confirm button label on the purge-personal-notes destructive alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:74
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:77
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:248
 msgid "Purge"
 msgstr "清除"
@@ -24973,7 +24960,7 @@ msgid "Purge messages"
 msgstr "清除訊息"
 
 #. Title of the destructive confirmation alert when wiping the personal notes self-DM. Keep tone serious.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:64
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:67
 #: src/features/ui/action_menu/PersonalNotesContextMenu.tsx:26
 msgid "Purge personal notes"
 msgstr "清除個人記事"
@@ -24989,7 +24976,7 @@ msgid "Purge this sticker from storage and CDN"
 msgstr "從儲存空間和 CDN 清除此貼圖"
 
 #. Toast confirmation after wiping personal notes. deletedCount is the number of messages removed.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:81
 msgid "Purged {deletedCount} messages from personal notes"
 msgstr "已從個人記事中刪除 {deletedCount} 則訊息"
 
@@ -25040,7 +25027,7 @@ msgid "Push to talk (priority)"
 msgstr "按住說話 (優先)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:53
+#: src/features/app/components/layout/UserArea.tsx:54
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "已開啟「按住說話」。按住 {pushToTalkHint} 即可說話。"
 
@@ -25125,7 +25112,7 @@ msgstr "快速回應"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:479
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:516
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:77
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:50
 msgid "Quick switcher"
@@ -25246,7 +25233,7 @@ msgstr "心情回應"
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:604
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:24
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "重新啟用"
 
@@ -25259,10 +25246,6 @@ msgstr "重新啟用訂閱"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:130
 msgid "Read aloud"
 msgstr "朗讀"
-
-#: src/features/app/components/ConnectionIssuesLinks.tsx:43
-msgid "Read incident"
-msgstr "閱讀事件報告"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:29
@@ -25353,16 +25336,12 @@ msgstr "接收："
 msgid "Recent"
 msgstr "最近"
 
-#: src/features/auth/flow/InstanceSelector.tsx:278
-msgid "Recent instances"
-msgstr "最近的執行個體"
-
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:45
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:62
 msgid "Recent members"
 msgstr "最近加入的成員"
 
 #. Short label in the recent mentions page. Keep it concise.
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:21
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:27
 msgid "Recent mentions"
 msgstr "最近被提及的訊息"
 
@@ -25373,7 +25352,7 @@ msgstr "最近的搜尋"
 
 #. Button label in the Linux Wayland input-access nagbar after the user changes OS permissions.
 #. Button label in the keybind settings system-wide shortcuts section.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:35
+#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:36
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:27
 msgid "Recheck"
 msgstr "重新檢查"
@@ -25399,7 +25378,7 @@ msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "建議使用。讓你的麥克風更清晰地收音。"
 
 #. Primary button on the voice-session-restore nagbar. Rejoins the previous voice channel or active call.
-#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:38
+#: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:39
 msgid "Reconnect"
 msgstr "重新連線"
 
@@ -25689,7 +25668,7 @@ msgstr "相關"
 msgid "Reload"
 msgstr "重新載入"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:479
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:483
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. (switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers in-flight.)"
 msgstr "重新載入 {PRODUCT_NAME} 以完整套用引擎變更。(在應用程式內和系統拼字檢查之間切換需要重新載入轉譯器，因為 Electron 無法在執行中交換提供者。)"
 
@@ -25708,7 +25687,7 @@ msgstr "重新載入 {productName} 以使用網路更新 {version}"
 msgid "Reload app"
 msgstr "重新載入應用程式"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:491
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:495
 msgid "Reload now"
 msgstr "立即重新載入"
 
@@ -25752,8 +25731,8 @@ msgstr "記住視窗大小和位置"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
-#: src/features/auth/components/accounts/AccountSelector.tsx:80
-#: src/features/auth/components/accounts/AccountSelector.tsx:127
+#: src/features/auth/components/accounts/AccountSelector.tsx:78
+#: src/features/auth/components/accounts/AccountSelector.tsx:125
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:155
@@ -25780,14 +25759,9 @@ msgstr "從字典中移除「{word}」"
 
 #. ARIA label for removing a selected friend from a recipient picker. {displayName} is the friend name.
 #: src/features/app/components/shared/FriendSelector.tsx:24
-#: src/features/auth/components/accounts/AccountSelector.tsx:72
+#: src/features/auth/components/accounts/AccountSelector.tsx:70
 msgid "Remove {displayName}"
 msgstr "移除 {displayName}"
-
-#. Short label in the authentication instance selector. Preserve {domain}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InstanceSelector.tsx:34
-msgid "Remove {domain} from recent instances"
-msgstr "從最近的實例中移除 {domain}"
 
 #. Confirmation prompt in the channel and chat message reactions sheet. Preserve {emojiNameWithColons}, {reactorName}; they are inserted by code. Keep the tone plain and specific.
 #: src/features/channel/components/MessageReactionsSheet.tsx:48
@@ -26186,7 +26160,7 @@ msgid "Render all your messages as an unknown message type."
 msgstr "將所有訊息顯示為不明訊息類型。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:53
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:57
 msgid "Render placeholders"
 msgstr "顯示預留位置"
 
@@ -26427,7 +26401,7 @@ msgid "Required"
 msgstr "必填"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:221
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:225
 msgid "Required action default tab"
 msgstr "必要動作預設分頁"
 
@@ -26437,32 +26411,32 @@ msgid "Required action flow"
 msgstr "必要動作流程"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:225
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:229
 msgid "Required action phone step"
 msgstr "必要動作電話步驟"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:229
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:233
 msgid "Required action resend loading"
 msgstr "重新傳送必要動作中"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:233
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:237
 msgid "Required action resend outcome"
 msgstr "重新傳送必要動作的結果"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:237
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:241
 msgid "Required action reverification text"
 msgstr "需要重新驗證的動作文字"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:217
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:221
 msgid "Required action variant"
 msgstr "必要動作變體"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:213
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:217
 msgid "Required actions overlay"
 msgstr "必要動作重疊畫面"
 
@@ -26940,7 +26914,7 @@ msgid "Review"
 msgstr "檢視"
 
 #. Button label on the policy-update nagbar. Opens the terms acceptance modal.
-#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:18
+#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:19
 msgid "Review & agree"
 msgstr "檢視並同意"
 
@@ -27532,12 +27506,12 @@ msgid "Screen share ended"
 msgstr "螢幕分享已結束"
 
 #. Warning banner shown when a watched screen share uses a software video decoder instead of hardware-accelerated decoding. {codec} is the codec name such as H.264 or AV1.
-#: src/features/voice/components/SoftwareEncoderNagbar.tsx:19
+#: src/features/voice/components/SoftwareEncoderNagbar.tsx:20
 msgid "Screen share is using software decoding ({codec}). Playback may stutter and CPU usage may increase. Your GPU may not support hardware decoding for this codec."
 msgstr "螢幕分享正在使用軟體解碼 ({codec})。播放可能會卡頓，且 CPU 使用率可能會增加。您的 GPU 可能不支援此編解碼器的硬體解碼。"
 
 #. Warning banner shown when screen share falls back to a software video encoder instead of hardware-accelerated encoding. {codec} is the codec name such as H.264 or AV1.
-#: src/features/voice/components/SoftwareEncoderNagbar.tsx:13
+#: src/features/voice/components/SoftwareEncoderNagbar.tsx:14
 msgid "Screen share is using software encoding ({codec}). Quality may be reduced and CPU usage increased. Your GPU may not support hardware encoding for this codec."
 msgstr "螢幕分享正在使用軟體編碼 ({codec})。畫質可能會降低，且 CPU 使用率會增加。您的 GPU 可能不支援此編解碼器的硬體編碼。"
 
@@ -27728,7 +27702,7 @@ msgid "Search by image"
 msgstr "以圖搜尋"
 
 #. Placeholder text in the search input on the community members page.
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:12
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:18
 msgid "Search by username or ID"
 msgstr "依使用者名稱或 ID 搜尋"
 
@@ -27745,7 +27719,7 @@ msgid "Search channels or DMs"
 msgstr "搜尋頻道或私訊"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:45
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:27
 msgid "Search communities"
 msgstr "搜尋社群"
 
@@ -27779,10 +27753,12 @@ msgstr "搜尋引擎"
 msgid "Search filter: {filter}"
 msgstr "搜尋篩選器：{filter}"
 
+#. Accessible label for the filter sidebar shown beside the Discovery search results.
 #. Section header in the message search popout listing available filter operators.
 #. Section header in the message search popout listing available filter operators.
 #: src/features/channel/components/message_search_bar/FilterOption.tsx:14
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:17
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:15
 msgid "Search filters"
 msgstr "搜尋篩選條件"
 
@@ -27839,7 +27815,7 @@ msgid "Search messages"
 msgstr "搜尋訊息"
 
 #. Placeholder text in the search input of the Online tab in the DM friends view.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:47
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:49
 msgid "Search online friends"
 msgstr "搜尋線上朋友"
 
@@ -27854,7 +27830,7 @@ msgid "Search only in the current DM"
 msgstr "僅搜尋此聊天室"
 
 #. Placeholder text in the search input of the Pending tab in the DM friends view.
-#: src/features/channel/components/direct_message/DMFriendsView.tsx:51
+#: src/features/channel/components/direct_message/DMFriendsView.tsx:53
 msgid "Search pending requests"
 msgstr "搜尋待處理的邀請"
 
@@ -27874,6 +27850,11 @@ msgstr "搜尋權限…"
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:53
 msgid "Search results"
 msgstr "搜尋結果"
+
+#. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:35
+msgid "Search results for “{query}”"
+msgstr "「{query}」的搜尋結果"
 
 #. Short label in the settings dialog add override popout.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:29
@@ -28017,7 +27998,7 @@ msgid "Secret"
 msgstr "密語"
 
 #. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:937
+#: src/features/app/components/setup/SetupWizardSteps.tsx:980
 msgid "Secret key"
 msgstr "祕密金鑰"
 
@@ -28160,7 +28141,7 @@ msgstr "選擇要套用的情境…"
 msgid "Select a violation category."
 msgstr "請選擇違規類別."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:116
+#: src/features/auth/components/accounts/AccountSelector.tsx:114
 msgid "Select account"
 msgstr "選擇帳號"
 
@@ -28169,7 +28150,7 @@ msgstr "選擇帳號"
 msgid "Select all"
 msgstr "全選"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:64
+#: src/features/auth/components/accounts/AccountSelector.tsx:62
 msgid "Select an account to continue, or add a different one."
 msgstr "請選擇一個帳號以繼續，或新增其他帳號。"
 
@@ -28253,7 +28234,7 @@ msgstr "可選取文字"
 #. Screen-reader suffix announcing that the DM list row is the active selection. Lowercase fragment.
 #: src/features/app/components/layout/ChannelItem.tsx:91
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:52
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:86
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "已選取"
@@ -28306,12 +28287,12 @@ msgid "Self-host setup"
 msgstr "自行代管設定"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:129
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:133
 msgid "Self-hosted mode"
 msgstr "自管模式"
 
 #. Developer option label for forcing self-hosted client mode.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:53
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
 msgid "Self-hosted mode override"
 msgstr "自託管模式覆寫"
 
@@ -28623,7 +28604,7 @@ msgid "Session"
 msgstr "工作階段"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:47
+#: src/features/auth/flow/AuthLoginLayout.tsx:46
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "「{identifier}」的會話已過期。請重新登入。"
 
@@ -28834,7 +28815,7 @@ msgid "Set up {productName}"
 msgstr "設定 {productName}"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:870
+#: src/features/app/components/setup/SetupWizardSteps.tsx:913
 msgid "Set up later"
 msgstr "稍後設定"
 
@@ -29276,7 +29257,7 @@ msgid "Show emoji reactions on messages"
 msgstr "在訊息上顯示表情回應"
 
 #. Developer option label for exposing the staff-only Expression packs page in user settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:121
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
 msgid "Show expression packs settings"
 msgstr "顯示表情符號設定"
 
@@ -29428,8 +29409,8 @@ msgstr "分享我的螢幕畫面"
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:85
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:49
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:89
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:53
 msgid "Show myself typing"
 msgstr "顯示我正在輸入"
 
@@ -29483,7 +29464,7 @@ msgid "Show per-device participant volume sliders in voice menus"
 msgstr "在語音選單中顯示個別裝置的參與者音量滑桿"
 
 #. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:130
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
 msgid "Show profile timezone settings"
 msgstr "顯示個人檔案時區設定"
 
@@ -29491,11 +29472,6 @@ msgstr "顯示個人檔案時區設定"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:53
 msgid "Show quick reactions"
 msgstr "顯示快速回應"
-
-#. Short label in the authentication instance selector. Keep the tone plain and specific.
-#: src/features/auth/flow/InstanceSelector.tsx:26
-msgid "Show recent instances"
-msgstr "顯示最近的執行個體"
 
 #. Description for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:289
@@ -29585,7 +29561,7 @@ msgstr "在此社群顯示您的全球個人檔案橫幅"
 msgid "Show your Visionary as a regular subscription instead"
 msgstr "改顯示為一般訂閱"
 
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:52
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:69
 msgid "Showing {displayedCount} of {totalCount} total members"
 msgstr "顯示 {totalCount} 位成員中的 {displayedCount} 位"
 
@@ -29614,7 +29590,7 @@ msgstr "側邊欄"
 msgid "Sign in"
 msgstr "登入"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:283
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "再次登入"
 
@@ -29624,7 +29600,7 @@ msgstr "登入以領取您的禮物"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
-#: src/features/auth/flow/AuthLoginLayout.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:67
 msgid "Sign in via browser"
 msgstr "透過瀏覽器登入"
 
@@ -29633,7 +29609,7 @@ msgid "Sign in with a passkey"
 msgstr "使用通行密鑰登入"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
-#: src/features/auth/flow/AuthSsoPanel.tsx:18
+#: src/features/auth/flow/AuthSsoPanel.tsx:17
 msgid "Sign in with your organization's single sign-on provider."
 msgstr "使用您機構的單一登入服務供應商登入。"
 
@@ -29641,9 +29617,9 @@ msgstr "使用您機構的單一登入服務供應商登入。"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog logout modal. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/LogoutModal.tsx:13
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:204
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:265
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:322
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:195
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:256
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:313
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:595
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
@@ -29663,7 +29639,7 @@ msgstr "登出 {deviceCount, plural, one {# 個裝置} other {# 個裝置}}"
 msgid "Sign out all other devices"
 msgstr "登出所有其他裝置"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:192
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:183
 msgid "Sign out of {displayName}"
 msgstr "登出「{displayName}」"
 
@@ -29698,7 +29674,7 @@ msgid "Sign-in details"
 msgstr "登入詳細資訊"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:56
+#: src/features/auth/flow/AuthLoginLayout.tsx:55
 msgid "Sign-in flow"
 msgstr "登入流程"
 
@@ -29723,24 +29699,24 @@ msgid "Signed-in devices"
 msgstr "已登入的裝置"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:990
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
 msgid "Signing key ID"
 msgstr "簽署金鑰 ID"
 
 #. Toast error shown when signing out from the account switcher fails.
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:33
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:31
 msgid "Signing out failed. Try again in a moment."
 msgstr "登出失敗。請稍後再試一次。"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:196
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:187
 msgid "Signing out will bring you to the sign-in screen so you can pick another account."
 msgstr "登出後會回到登入畫面，這樣你就能選擇其他帳號了。"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:198
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:189
 msgid "Signing out will bring you to the sign-in screen."
 msgstr "登出後會回到登入畫面。"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:201
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:192
 msgid "Signing out will remove this account from the device."
 msgstr "登出會將此帳號從裝置中移除。"
 
@@ -29810,7 +29786,7 @@ msgid "Single user (all statuses)"
 msgstr "單一用戶 (所有狀態)"
 
 #. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:936
+#: src/features/app/components/setup/SetupWizardSteps.tsx:979
 msgid "Site key"
 msgstr "網站金鑰"
 
@@ -29853,7 +29829,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "略過所有網域的外部連結警告"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:144
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:148
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "提交應用程式內報告時，跳過網路呼叫。流程仍會進展到成功畫面，讓您可以操作使用者介面，但實際上不會傳送任何內容給安全團隊。"
 
@@ -29863,7 +29839,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "略過系統離群通知 — 不會有人收到通知。"
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:874
+#: src/features/app/components/setup/SetupWizardSteps.tsx:917
 msgid "Skip this now and configure it from the admin panel."
 msgstr "現在略過，並從管理員面板進行設定。"
 
@@ -29872,7 +29848,7 @@ msgid "Skip this step"
 msgstr "略過此步驟"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:78
+#: src/app/App.tsx:75
 msgid "Skip to content"
 msgstr "跳到內容"
 
@@ -29910,8 +29886,8 @@ msgstr "斯洛維尼亞"
 
 #. Developer option label for simulating slow file uploads.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:89
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:85
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:93
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:89
 msgid "Slow attachment upload"
 msgstr "附件上傳速度慢"
 
@@ -29927,29 +29903,29 @@ msgstr "慢一點 — 請稍候再試一次。"
 
 #. Developer option label for simulating slow message edits.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:101
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:81
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:105
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:85
 msgid "Slow message edit"
 msgstr "訊息編輯速度慢"
 
 #. Developer option label for simulating slow message loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:93
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:73
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:97
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:77
 msgid "Slow message load"
 msgstr "訊息載入緩慢"
 
 #. Developer option label for simulating slow message sending.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:97
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:77
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:101
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:81
 msgid "Slow message send"
 msgstr "訊息傳送速度慢"
 
 #. Developer option label for simulating slow profile loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:105
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:89
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:109
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:93
 msgid "Slow profile load"
 msgstr "載入個人檔案緩慢"
 
@@ -29965,7 +29941,7 @@ msgstr "慢速模式 · 等待 {remaining}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:13
 msgid "Slowmode active"
 msgstr "慢速模式已啟用"
@@ -30001,7 +29977,7 @@ msgid "Slowmode is set to {durationLabel}. Wait before sending another message."
 msgstr "慢速模式設為 {durationLabel}。請稍候再傳送下一則訊息。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:257
 msgid "Slowmode remaining"
 msgstr "慢速模式剩餘時間"
 
@@ -30086,12 +30062,12 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "目前無法進行簡訊驗證。請稍後再試或聯絡客服。"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:962
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
 msgid "SMTP connection verified."
 msgstr "SMTP 連線已驗證。"
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:950
+#: src/features/app/components/setup/SetupWizardSteps.tsx:993
 msgid "SMTP host"
 msgstr "SMTP 主機"
 
@@ -30205,8 +30181,8 @@ msgstr "載入活動記錄時發生問題。"
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:16
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:33
-#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:33
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
+#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
 msgid "Something went wrong while opening the billing portal. Please try again in a moment."
 msgstr "開啟帳務入口網站時發生錯誤。請稍後再試一次。"
 
@@ -30255,7 +30231,7 @@ msgstr "發生錯誤。"
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:36
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:17
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
@@ -30288,14 +30264,14 @@ msgstr "發生錯誤。請再試一次。"
 
 #. Community layout error-boundary body shown when rendering the community pane crashes. Keep plain and calm.
 #: src/features/app/components/layout/GuildLayout.tsx:96
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:639
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:203
 msgid "Something went wrong. We're working on it."
 msgstr "發生了一些問題，我們正在處理中。"
 
 #. Accessible label for the sort-mode select on the community members page.
 #. Filter category label in the mobile channel search sheet for the sort mode selector.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:145
-#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:16
+#: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:22
 msgid "Sort"
 msgstr "排序"
 
@@ -30534,8 +30510,8 @@ msgstr "拼字檢查"
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:60
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:409
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:451
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:413
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:455
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
 msgid "Spellcheck"
@@ -30601,7 +30577,7 @@ msgid "Square icon buttons"
 msgstr "方形圖示按鈕"
 
 #. Short sign-in note shown when the instance requires single sign-on.
-#: src/features/auth/flow/AuthSsoPanel.tsx:26
+#: src/features/auth/flow/AuthSsoPanel.tsx:25
 msgid "SSO is required to access this workspace."
 msgstr "此工作區需要單一登入 (SSO) 才能存取。"
 
@@ -30810,10 +30786,6 @@ msgstr "狀態圖示"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:61
 msgid "Status indicators"
 msgstr "狀態指示器"
-
-#: src/features/app/components/ConnectionIssuesLinks.tsx:31
-msgid "Status page"
-msgstr "狀態頁面"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:340
 msgid "Status slate"
@@ -31136,7 +31108,7 @@ msgstr "已隱藏串流"
 #. Aria label for the small thumbnail preview on the screen-share hover card.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:86
+#: src/features/user/components/profile/VoiceActivityCard.tsx:90
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
@@ -31158,7 +31130,7 @@ msgid "Stream volume"
 msgstr "串流音量"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:228
+#: src/features/user/components/profile/VoiceActivityCard.tsx:232
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:221
 msgid "Streaming"
 msgstr "直播中"
@@ -31178,7 +31150,7 @@ msgid "Streaming privacy"
 msgstr "串流隱私"
 
 #. Nagbar message shown while streaming privacy is active.
-#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:11
+#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:12
 msgid "Streaming privacy is on. Names are shortened."
 msgstr "直播隱私已開啟。名稱會縮短。"
 
@@ -31375,6 +31347,11 @@ msgstr "瑞典"
 msgid "Swedish"
 msgstr "瑞典文"
 
+#. Button on the connection banner that opens the account switcher.
+#: src/features/app/components/layout/app_layout/nagbars/ConnectionNagbar.tsx:37
+msgid "Switch account"
+msgstr "切換帳號"
+
 #: src/features/app/components/floating/UserAreaPopout.tsx:681
 msgid "Switch accounts"
 msgstr "切換帳號"
@@ -31481,7 +31458,7 @@ msgstr "切換成單欄顯示"
 msgid "Switch to source"
 msgstr "切換到來源"
 
-#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:299
+#: src/features/auth/utils/AccountSwitcherModalUtils.tsx:290
 msgid "Switch to this account"
 msgstr "切換到此帳號"
 
@@ -31815,7 +31792,7 @@ msgid "Temporarily disable your account. You can reactivate it later by signing 
 msgstr "暫時停用您的帳號。之後登入即可重新啟用。"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:102
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:43
 msgid "temporarily unavailable"
 msgstr "暫時無法使用"
 
@@ -31840,7 +31817,7 @@ msgid "Terms of service"
 msgstr "服務條款"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:982
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
 msgid "Terms URL"
 msgstr "條款 URL"
 
@@ -31850,7 +31827,7 @@ msgid "Terrorism or violent extremism"
 msgstr "恐怖主義或暴力極端主義"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:958
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
 msgid "Test SMTP"
 msgstr "測試 SMTP"
 
@@ -31894,7 +31871,7 @@ msgstr "文字頻道"
 
 #. Accessible name of the composer selection toolbar.
 #. Short label in the markdown tab. Keep it concise.
-#: src/features/lexical/composer/SelectionFormattingToolbar.tsx:386
+#: src/features/lexical/composer/SelectionFormattingToolbar.tsx:390
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:21
 msgid "Text formatting"
 msgstr "文字格式"
@@ -32041,7 +32018,7 @@ msgstr "該訊息已不存在，或您已無法存取該對話。"
 
 #. End-of-list line in the saved messages popout after every bookmark has been shown.
 #. End-of-list line on the saved messages page after every bookmark has been shown.
-#: src/features/messaging/components/pages/SavedMessagesPage.tsx:29
+#: src/features/messaging/components/pages/SavedMessagesPage.tsx:35
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:41
 msgid "That's all of them."
 msgstr "就這些了。"
@@ -32187,11 +32164,6 @@ msgstr "此貼圖是以靜態方式上傳。"
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:59
 msgid "The upload service rejected this sticker as larger than {maxSize}. Try a smaller file, a simpler image, or a shorter animation."
 msgstr "上傳服務拒絕了此貼圖，因為它大於 {maxSize}。請嘗試較小的檔案、較簡單的圖片或較短的動畫。"
-
-#. Browser login handoff modal field hint for the instance URL input. Product name is interpolated.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:24
-msgid "The URL of the {productName} instance you want to sign in to."
-msgstr "您要登入的 {productName} 實例網址。"
 
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:135
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
@@ -32435,7 +32407,7 @@ msgid "This card does not match your billing country, so it cannot be used for t
 msgstr "此卡片與您的帳單國家/地區不符，因此無法用於此當地貨幣。請使用當地卡片、選擇其他付款方式，或返回 {productName} 並切換為標準價格。"
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
-#: src/features/app/components/layout/ChannelListContent.tsx:68
+#: src/features/app/components/layout/ChannelListContent.tsx:78
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
 msgstr "此類別已包含最多 {maxChannelsPerCategory} 個頻道。"
 
@@ -32542,7 +32514,7 @@ msgid "This community has reached its maximum member limit and is not accepting 
 msgstr "此社群已達成員上限，目前無法接受新成員加入。"
 
 #. Body of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:44
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:25
 msgid "This community has reached its member limit, so you can't join right now."
 msgstr "此社群已達成員上限，因此您目前無法加入。"
 
@@ -32552,7 +32524,7 @@ msgid "This community is for Visionary members"
 msgstr "此社群僅限遠見者會員"
 
 #. Title of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:40
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:21
 msgid "This community is full"
 msgstr "此社群已滿"
 
@@ -32563,7 +32535,7 @@ msgid "This community is marked for mature content and may contain material that
 msgstr "此社群標示為成人內容，可能包含不適合部分使用者的內容。"
 
 #. Title of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:64
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:45
 msgid "This community is no longer available"
 msgstr "此社群已無法使用"
 
@@ -32605,7 +32577,7 @@ msgid "This development build cannot update itself. Download a desktop installer
 msgstr "此開發版本無法自行更新。請下載桌面安裝程式以測試更新流程。"
 
 #. Modal body shown when the current device/browser cannot show notifications.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:27
 msgid "This device does not support notifications."
 msgstr "此裝置不支援通知。"
 
@@ -32652,7 +32624,7 @@ msgid "This file is {fileSize}, over the {maxSize} limit. Animated stickers and 
 msgstr "此檔案為 {fileSize}，超過 {maxSize} 的限制。動畫貼圖和 SVG 必須已夠小才能上傳。請選擇較小的檔案或縮短動畫。"
 
 #. Empty state title in the friends list when the user has no friends. Tone can be friendly and playful.
-#: src/features/channel/components/friends/views/FriendsList.tsx:20
+#: src/features/channel/components/friends/views/FriendsList.tsx:25
 msgid "This friends list needs more power"
 msgstr "這個好友列表需要更多人"
 
@@ -33133,11 +33105,11 @@ msgstr "這會永久刪除您在此頻道中傳送過的所有訊息。此動作
 msgid "This will permanently delete every message you have ever sent in this conversation. This cannot be undone."
 msgstr "這會永久刪除您在此對話中傳送過的所有訊息。此動作無法復原。"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:77
+#: src/features/auth/components/accounts/AccountSelector.tsx:75
 msgid "This will remove the only saved account on this device."
 msgstr "這會移除此裝置上唯一儲存的帳號。"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:75
+#: src/features/auth/components/accounts/AccountSelector.tsx:73
 msgid "This will remove the saved session for this account."
 msgstr "這會移除此帳號的已儲存工作階段。"
 
@@ -33220,7 +33192,7 @@ msgstr "時間"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for app time display format.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:369
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:373
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
 msgid "Time format"
@@ -33323,7 +33295,7 @@ msgid "Titlebar"
 msgstr "標題列"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:269
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:273
 msgid "Titlebar platform"
 msgstr "標題列平台"
 
@@ -33600,7 +33572,7 @@ msgstr "翻譯"
 msgid "Translation provider"
 msgstr "翻譯服務供應商"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:356
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:360
 msgid "Translations are automated. Help improve localization by emailing <0>{I18N_EMAIL}</0>."
 msgstr "翻譯為自動產生。請來信至 <0>{I18N_EMAIL}</0> 協助改進本地化。"
 
@@ -33717,7 +33689,7 @@ msgstr "請嘗試其他名稱，或使用 @ / # / ! / * 篩選結果。"
 
 #. Description text in the channel and chat pending friends view.
 #. Empty-state hint in the friends list when a search returns no results.
-#: src/features/channel/components/friends/views/PendingFriendsView.tsx:29
+#: src/features/channel/components/friends/views/PendingFriendsView.tsx:34
 #: src/features/relationship/utils/FriendsListUtils.tsx:39
 msgid "Try a different name."
 msgstr "試試其他名稱。"
@@ -33775,7 +33747,7 @@ msgid "Try again, or refresh {productName} if the problem continues."
 msgstr "再試一次，或如果問題仍然存在，請重新整理 {productName}。"
 
 #. Empty state body in the friends list when the search query returns no results.
-#: src/features/channel/components/friends/views/FriendsList.tsx:40
+#: src/features/channel/components/friends/views/FriendsList.tsx:45
 msgid "Try another name or check your spelling."
 msgstr "請再試另一個名稱或檢查您的拼字。"
 
@@ -33783,6 +33755,11 @@ msgstr "請再試另一個名稱或檢查您的拼字。"
 #: src/features/channel/components/pickers/gif/GifPickerView.tsx:36
 msgid "Try another search term"
 msgstr "試試其他搜尋字詞"
+
+#. Empty-state hint in Discovery shown under the heading when a search returns no communities.
+#: src/features/discovery/discovery/DiscoveryEmptyState.tsx:16
+msgid "Try another search term, or pick a different category or language."
+msgstr "嘗試另一個搜尋字詞，或選擇不同的分類或語言。"
 
 #. Helper text on an unknown invite embed suggesting the user request a fresh invite.
 #: src/features/channel/components/InviteEmbed.tsx:129
@@ -33852,7 +33829,7 @@ msgid "Turkish"
 msgstr "土耳其文"
 
 #. Button label that turns off streaming privacy.
-#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:15
+#: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
 msgid "Turn off"
 msgstr "關閉"
 
@@ -34054,12 +34031,12 @@ msgid "Typing state"
 msgstr "輸入狀態"
 
 #. Developer options group for forcing UI component states.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:61
 msgid "UI components"
 msgstr "UI 元件"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:205
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
 msgid "UK geo"
 msgstr "英國地理位置"
 
@@ -34179,7 +34156,7 @@ msgstr "除了管理員以外，其他人都無法使用"
 
 #. Relationship action label for removing a block from this user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/barriers/BarrierComponents.tsx:370
+#: src/features/channel/components/barriers/BarrierComponents.tsx:369
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:45
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:177
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:22
@@ -34215,7 +34192,7 @@ msgstr "未分類"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:14
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:181
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:185
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:35
 msgid "Unclaimed account"
 msgstr "未認領的帳號"
@@ -34439,7 +34416,7 @@ msgid "Unknown invite"
 msgstr "不明邀請"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:125
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:129
 msgid "Unknown message type"
 msgstr "不明訊息類型"
 
@@ -34645,7 +34622,7 @@ msgstr "取消最愛通知靜音"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:58
+#: src/features/app/components/layout/UserArea.tsx:59
 #: src/features/platform/utils/DesktopLocaleBridge.ts:148
 msgid "Unmute microphone"
 msgstr "解除麥克風靜音"
@@ -34740,9 +34717,9 @@ msgstr "取消釘選群組訊息"
 #. Lowercase state label used inside channel-list accessible text when a channel has unread messages.
 #. Screen-reader fragment announcing that the DM list row has unread messages. Lowercase fragment.
 #: src/features/app/components/layout/ChannelItem.tsx:103
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:84
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:90
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:56
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:94
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
 #: src/features/channel/components/direct_message/DMListItem.tsx:71
 msgid "unread"
 msgstr "未讀"
@@ -34783,12 +34760,12 @@ msgid "Unread DMs only"
 msgstr "只顯示未讀訊息"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:173
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:177
 msgid "Unread gift count"
 msgstr "未讀禮物數量"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:169
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:173
 msgid "Unread gift inventory"
 msgstr "未讀禮物庫存"
 
@@ -34809,7 +34786,7 @@ msgid "Unread message badge"
 msgstr "未讀訊息標章"
 
 #. Short label in the notifications page. Keep it concise.
-#: src/features/notification/components/pages/NotificationsPage.tsx:15
+#: src/features/notification/components/pages/NotificationsPage.tsx:22
 msgid "Unreads"
 msgstr "未讀訊息"
 
@@ -35022,7 +34999,7 @@ msgid "Updated the webhook avatar."
 msgstr "已更新網路掛鉤的頭像。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:81
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:85
 msgid "Updater state"
 msgstr "更新器狀態"
 
@@ -35595,7 +35572,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "當您在排解客戶端問題或收集日誌時使用此功能。這可能會在目前客戶端的瀏覽器主控台中新增詳細訊息。"
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:954
+#: src/features/app/components/setup/SetupWizardSteps.tsx:997
 msgid "Use TLS"
 msgstr "使用 TLS"
 
@@ -35676,7 +35653,7 @@ msgid "User avatars"
 msgstr "使用者頭像"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:66
+#: src/features/app/components/layout/UserArea.tsx:67
 msgid "User controls"
 msgstr "使用者控制項"
 
@@ -35763,7 +35740,7 @@ msgstr "用戶、機器人或 webhook"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:952
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -35930,7 +35907,7 @@ msgid "Vanity URL code: {0}."
 msgstr "自訂網址代碼：{0}。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:133
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:137
 msgid "Vanity URL disclaimer"
 msgstr "自訂網址免責聲明"
 
@@ -35963,7 +35940,7 @@ msgid "Verification & membership barriers"
 msgstr "驗證與成員資格限制"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:185
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:189
 msgid "Verification barrier"
 msgstr "驗證門檻"
 
@@ -36056,7 +36033,7 @@ msgstr "驗證是您本人操作"
 
 #. Primary button in the required-action modal. Sends or submits phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:178
-#: src/features/channel/components/barriers/BarrierComponents.tsx:263
+#: src/features/channel/components/barriers/BarrierComponents.tsx:262
 #: src/features/user/components/modals/PhoneAddModal.tsx:398
 msgid "Verify phone"
 msgstr "驗證電話號碼"
@@ -36340,7 +36317,7 @@ msgid "View"
 msgstr "檢視"
 
 #. Button label on the premium onboarding nagbar. Opens premium feature and subscription settings. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:56
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:57
 msgid "View {premiumProductName} features"
 msgstr "查看 {premiumProductName} 功能"
 
@@ -36449,7 +36426,7 @@ msgid "View full profile"
 msgstr "查看完整個人檔案"
 
 #. Button label on the gift-inventory nagbar. Opens the gift inventory settings tab.
-#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:22
+#: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx:23
 msgid "View gift inventory"
 msgstr "查看禮物庫存"
 
@@ -36469,20 +36446,25 @@ msgstr "查看全球個人檔案"
 msgid "View help article"
 msgstr "查看說明文章"
 
+#. Button on the connection banner when an incident is ongoing. Opens that incident on the status page.
+#: src/features/app/hooks/useConnectionNotice.ts:47
+msgid "View incident details"
+msgstr "查看事件詳情"
+
 #. Action label in the DM channel header pill that opens the incoming call ringer view.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:117
 msgid "View incoming call"
 msgstr "查看來電"
 
+#. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
+#: src/features/app/hooks/useConnectionNotice.ts:51
+msgid "View maintenance details"
+msgstr "查看維護詳情"
+
 #. Accessible label for the row click target on the community members page.
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:72
 msgid "View member profile for {displayName}"
 msgstr "查看 {displayName} 的個人檔案"
-
-#: src/features/app/components/layout/SplashScreen.tsx:174
-#: src/features/app/components/layout/SplashScreen.tsx:240
-msgid "View on status page"
-msgstr "在狀態頁面查看"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:86
@@ -36515,6 +36497,11 @@ msgstr "查看 {displayName} 的個人檔案"
 #: src/features/channel/components/MessageActionMenu.tsx:75
 msgid "View reactions"
 msgstr "查看心情"
+
+#. Button on the connection banner. Opens the external service status page.
+#: src/features/app/hooks/useConnectionNotice.ts:43
+msgid "View status page"
+msgstr "查看狀態頁面"
 
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:21
@@ -36608,7 +36595,7 @@ msgid "Visionary badge"
 msgstr "遠見者徽章"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:145
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:149
 msgid "Visionary badge ID"
 msgstr "遠見者徽章 ID"
 
@@ -36646,7 +36633,7 @@ msgstr "顯示使用者狀態的視覺指示器，使用與頭像相同的遮罩
 #. Advanced settings category tag.
 #. Channel type chip label for a voice channel.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/layout/MobileBottomNav.tsx:118
+#: src/features/app/components/layout/MobileBottomNav.tsx:123
 #: src/features/channel/utils/ChannelUtils.tsx:31
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:81
@@ -36672,8 +36659,8 @@ msgstr "語音啟用"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:88
-#: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:106
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:94
+#: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:47
 msgid "voice activity"
 msgstr "語音動態"
 
@@ -36776,7 +36763,7 @@ msgid "Voice connection confirmation"
 msgstr "語音連線確認"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:137
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:141
 msgid "Voice connection debug"
 msgstr "語音連線偵錯"
 
@@ -36946,11 +36933,6 @@ msgstr "等待一個或多個所選頻道的慢速模式結束。"
 msgid "Waiting for you to..."
 msgstr "等你來…"
 
-#. Subheading on the Discovery page. "settings > Discovery" refers to the navigation path in community settings.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:27
-msgid "Want to list your community on here? Apply if you meet the requirements in your community's settings > Discovery."
-msgstr "想讓你的社群顯示在這裡嗎？如果你的社群符合「設定」>「探索」中的要求，即可申請。"
-
 #. Markdown alert label for a warning callout when copied as plaintext.
 #. Warning text in the messaging block elements. Keep the tone plain and specific.
 #: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:47
@@ -36973,7 +36955,7 @@ msgid "Watch stream"
 msgstr "觀看直播"
 
 #. Short label in the user settings voice activity card. Keep it concise.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:67
+#: src/features/user/components/profile/VoiceActivityCard.tsx:71
 msgid "Watching"
 msgstr "正在觀看"
 
@@ -37107,7 +37089,7 @@ msgstr "我們已將此貼圖調整大小並壓縮至 320x320 像素，但它仍
 msgid "We sent a code to {email}."
 msgstr "我們已將驗證碼傳送至 {email}。"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:233
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "瀏覽器登入開啟後，我們會預填 {prefillEmail}。"
 
@@ -37199,7 +37181,7 @@ msgid "We've sent password reset instructions to your email. Check your inbox fo
 msgstr "我們已將重設密碼的指示寄到您的電子郵件。請檢查您的收件匣以取得重設連結。"
 
 #. Nagbar body shown when the user must accept updated policies before continuing.
-#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:14
+#: src/features/app/components/layout/app_layout/nagbars/TermsAcceptanceNagbar.tsx:15
 msgid "We've updated our policies. Review and accept them to continue."
 msgstr "我們已更新政策。請檢閱並接受以繼續使用。"
 
@@ -37224,7 +37206,7 @@ msgid "Web search provider"
 msgstr "網路搜尋服務"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:77
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:81
 msgid "Web updater ready"
 msgstr "網頁更新程式已就緒"
 
@@ -37307,7 +37289,7 @@ msgid "Website previews"
 msgstr "網站預覽"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:60
+#: src/features/auth/flow/AuthLoginLayout.tsx:59
 msgid "Welcome back"
 msgstr "歡迎回來"
 
@@ -37321,32 +37303,32 @@ msgid "Welcome to {channelDisplayName}"
 msgstr "歡迎來到「{channelDisplayName}」"
 
 #. Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:21
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:22
 msgid "Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "歡迎來到 {premiumProductFullName}。探索您的 {premiumProductName} 權益，並管理您的訂閱。"
 
 #. Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:27
 msgid "Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks."
 msgstr "歡迎來到 {premiumProductFullName}。您擁有終身使用權，成為 Visionary 會員。探索您的 {premiumProductName} 權益。"
 
 #. Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:50
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:51
 msgid "Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks."
 msgstr "歡迎來到 {premiumProductFullName}。您的禮物訂閱將於 {formattedDate} 到期。探索您的 {premiumProductName} 權益。"
 
 #. Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:38
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:39
 msgid "Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "歡迎來到 {premiumProductFullName}。您的每月訂閱將於 {formattedDate} 續訂。探索您的 {premiumProductName} 權益，並管理您的訂閱。"
 
 #. Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:32
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:33
 msgid "Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "歡迎來到 {premiumProductFullName}。您的訂閱有效期限至 {formattedDate}。探索您的 {premiumProductName} 權益，並管理您的訂閱。"
 
 #. Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:44
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:45
 msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "歡迎來到 {premiumProductFullName}。您的年度訂閱將於 {formattedDate} 續訂。探索您的 {premiumProductName} 權益，並管理您的訂閱。"
 
@@ -37456,7 +37438,7 @@ msgid "When enabled, members of other communities can use the in-app one-click \
 msgstr "啟用後，其他社群的成員就能使用應用程式內的「一鍵複製」捷徑來複製您的自訂貼圖。這並不會阻止他們儲存圖片並自行上傳。"
 
 #. Description text in the channel and chat active now sidebar.
-#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:16
+#: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "當朋友在語音頻道中活動時，他們的動態會顯示在這裡。"
 
@@ -37486,7 +37468,7 @@ msgid "When streaming privacy is on"
 msgstr "當直播隱私模式開啟時"
 
 #. Empty state body in the friends list Online tab.
-#: src/features/channel/components/friends/views/FriendsList.tsx:32
+#: src/features/channel/components/friends/views/FriendsList.tsx:37
 msgid "When they come online, they'll appear right here."
 msgstr "他們上線時，就會顯示在這裡。"
 
@@ -37496,7 +37478,7 @@ msgid "When uploaded directly to {productName}"
 msgstr "直接上傳到 {productName} 時"
 
 #. Empty state body in the friends list when the user has no friends. Tone can be friendly and playful.
-#: src/features/channel/components/friends/views/FriendsList.tsx:24
+#: src/features/channel/components/friends/views/FriendsList.tsx:29
 msgid "Where we're going, we need more friends."
 msgstr "我們要去的地方，需要更多朋友。"
 
@@ -37571,7 +37553,7 @@ msgid "Whoa, this is heavy"
 msgstr "哇，訊息量有點大"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:161
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:165
 msgid "Will cancel"
 msgstr "即將取消"
 
@@ -37745,7 +37727,7 @@ msgid "Yesterday at {timeString}"
 msgstr "昨天 {timeString}"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
-#: src/features/app/components/layout/MobileBottomNav.tsx:148
+#: src/features/app/components/layout/MobileBottomNav.tsx:153
 #: src/features/channel/components/direct_message/DMListItem.tsx:59
 msgid "You"
 msgstr "你"
@@ -37807,6 +37789,11 @@ msgstr "您現在將前往 {paymentProviderName} 完成付款。完成後請返�
 msgid "You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance."
 msgstr "您已登入為此伺服器的管理員。接下來的步驟將為此伺服器上的所有人設定品牌、註冊和核心政策。"
 
+#. Session-dismissible nagbar identifying a non-stable official desktop app build. {releaseChannel} is development, staging, or canary. {productName} is the fixed official desktop product name, not the active instance name.
+#: src/features/app/components/layout/app_layout/nagbars/BuildEnvironmentNagbar.tsx:12
+msgid "You are using a {releaseChannel} build of {productName}."
+msgstr "你正在使用 {productName} 的 {releaseChannel} 版本。"
+
 #. Plutonium subscription checkout guidance. States that the standard (non-localized) price applies. The currency code is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:119
 msgid "You are using the full standard {baseCurrencyLabel} price instead of localized pricing."
@@ -37832,7 +37819,7 @@ msgstr "上傳前可新增說明。慢速模式期間無法直接上傳。"
 msgid "You can add comments before uploading. Hold shift to upload directly."
 msgstr "上傳前可新增說明文字。按住 Shift 鍵可直接上傳。"
 
-#: src/features/channel/components/direct_message/AddFriendView.tsx:30
+#: src/features/channel/components/direct_message/AddFriendView.tsx:33
 msgid "You can add friends with their username."
 msgstr "你可以透過用戶名稱加朋友。"
 
@@ -37887,7 +37874,7 @@ msgstr "您仍然可以建立帳號或登入。如果稍後重新啟用邀請，
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "您可以將已加星號的 GIF 儲存為僅限網址的收藏，或上傳到您已儲存的媒體。請選擇最適合您使用方式的選項。您可以隨時在 {mediaSettingsPath} 中更改設定。"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:257
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:275
 msgid "You can use links, emoji, and markdown."
 msgstr "您可以使用連結、表情符號和 Markdown。"
 
@@ -37952,12 +37939,12 @@ msgid "You can't install this sticker pack."
 msgstr "您無法安裝此貼圖包。"
 
 #. Title of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:56
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:37
 msgid "You can't join this community"
 msgstr "您無法加入此社群"
 
 #. Label in the user settings voice activity card. Keep the tone plain and specific.
-#: src/features/user/components/profile/VoiceActivityCard.tsx:55
+#: src/features/user/components/profile/VoiceActivityCard.tsx:59
 msgid "You can't join this voice channel"
 msgstr "您無法加入此語音頻道"
 
@@ -38004,7 +37991,7 @@ msgstr "你不能傳送交友邀請給自己。"
 msgid "You can't send messages in this channel."
 msgstr "您無法在此頻道中傳送訊息。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:312
+#: src/features/channel/components/barriers/BarrierComponents.tsx:311
 msgid "You can't send messages in this community."
 msgstr "您無法在此社群中傳送訊息。"
 
@@ -38149,11 +38136,11 @@ msgid "You don't have permission to rename this emoji. The name was reverted to 
 msgstr "您沒有重新命名此表情符號的權限。名稱已還原為先前的名稱。"
 
 #. Body of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:60
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:41
 msgid "You have been banned from this community."
 msgstr "您已被此社群停權。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:356
+#: src/features/channel/components/barriers/BarrierComponents.tsx:355
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "您已封鎖 {username}。解除封鎖才能傳送訊息。"
 
@@ -38180,7 +38167,7 @@ msgstr "您有未儲存的變更。請先儲存或重設，再離開。"
 msgid "You haven't authorized any applications to access your account."
 msgstr "您尚未授權任何應用程式存取您的帳號。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:219
+#: src/features/channel/components/barriers/BarrierComponents.tsx:218
 msgid "You haven't been a member of this community long enough to send messages."
 msgstr "您加入此社群的時間還不夠長，因此無法傳送訊息。"
 
@@ -38301,15 +38288,15 @@ msgstr "您必須先驗證帳號，才能建立社群。"
 msgid "You need to claim your account before you can start a direct message."
 msgstr "您必須先認領帳號，才能開始傳送私訊。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:381
+#: src/features/channel/components/barriers/BarrierComponents.tsx:380
 msgid "You need to claim your account to send direct messages."
 msgstr "您需要先認領帳號才能傳送私人訊息。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:134
+#: src/features/channel/components/barriers/BarrierComponents.tsx:133
 msgid "You need to claim your account to send messages in this community."
 msgstr "您必須先驗證帳號，才能在這個社群傳送訊息。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:242
+#: src/features/channel/components/barriers/BarrierComponents.tsx:241
 msgid "You need to verify a phone number to send messages in this community."
 msgstr "您需要驗證電話號碼才能在這個社群傳送訊息。"
 
@@ -38332,7 +38319,7 @@ msgstr "您需要先驗證電子郵件地址，才能開始傳送私訊。"
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "您必須先驗證電子郵件，才能購買 {premiumProductFullName}。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:162
+#: src/features/channel/components/barriers/BarrierComponents.tsx:161
 msgid "You need to verify your email to send messages in this community."
 msgstr "您需要驗證電子郵件才能在這個社群傳送訊息。"
 
@@ -38382,7 +38369,7 @@ msgstr "您即將停止與所有朋友（包括未來的朋友）分享您的語
 #. Body text in the unread channels content.
 #. End-of-list text in the recent mentions page when every mention has been seen.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:85
-#: src/features/messaging/components/pages/RecentMentionsPage.tsx:34
+#: src/features/messaging/components/pages/RecentMentionsPage.tsx:40
 msgid "You're all caught up."
 msgstr "你都看完了喔."
 
@@ -38480,7 +38467,7 @@ msgstr "您編輯訊息的速度太快了"
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:9
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:23
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:74
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:55
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:76
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:148
 #: src/features/theme/components/modals/ShareThemeModal.tsx:63
@@ -38507,7 +38494,7 @@ msgid "You're in the call"
 msgstr "您在通話中"
 
 #. Body of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:52
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:33
 msgid "You're in the maximum number of communities. Leave one and try again."
 msgstr "您已加入最多社群數。請先離開一個社群，然後再試一次。"
 
@@ -38541,12 +38528,12 @@ msgstr "您傳送訊息的速度太快了"
 msgid "You're streaming!"
 msgstr "您正在直播！"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:289
+#: src/features/channel/components/barriers/BarrierComponents.tsx:288
 msgid "You're timed out. Messaging, reactions, and voice are paused until the timeout expires."
 msgstr "您已逾時。在逾時結束前，訊息、表情回應和語音功能將會暫停。"
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:65
+#: src/features/channel/components/ChannelMessages.tsx:70
 msgid "You're viewing older messages"
 msgstr "您正在檢視較舊的訊息"
 
@@ -38565,16 +38552,16 @@ msgstr "您最近已使用過自助退款。冷卻期結束後，您可以再次
 msgid "You've arrived, {username}! Let's get started."
 msgstr "{username}，歡迎上線！我們開始吧。"
 
-#: src/features/auth/flow/InviteHeader.tsx:199
+#: src/features/auth/flow/InviteHeader.tsx:200
 msgid "You've been invited to install"
 msgstr "你受邀安裝"
 
-#: src/features/auth/flow/InviteHeader.tsx:95
-#: src/features/auth/flow/InviteHeader.tsx:297
+#: src/features/auth/flow/InviteHeader.tsx:96
+#: src/features/auth/flow/InviteHeader.tsx:299
 msgid "You've been invited to join"
 msgstr "你受邀加入了"
 
-#: src/features/auth/flow/InviteHeader.tsx:150
+#: src/features/auth/flow/InviteHeader.tsx:151
 msgid "You've been invited to join a group DM by"
 msgstr "你受邀加入群組私訊，邀請人："
 
@@ -38587,7 +38574,7 @@ msgid "You've got CSS!"
 msgstr "你已擁有 CSS！"
 
 #. Title of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:48
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:29
 msgid "You've reached the community limit"
 msgstr "您已達到社群上限"
 
@@ -38645,7 +38632,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "你已讀取所有最近提及你的訊息。更多訊息將會陸續顯示於此。"
 
 #. Nagbar body shown when a premium subscription has expired. {premiumProductName} is the premium product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:18
+#: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:19
 msgid "Your {premiumProductName} subscription has expired. You have lost all {premiumProductName} perks. Reactivate your subscription to regain access."
 msgstr "您的 {premiumProductName} 訂閱已到期。您已失去所有 {premiumProductName} 福利。請重新啟用訂閱以重新取得存取權。"
 
@@ -38666,7 +38653,7 @@ msgstr "您的帳號已成功連結。現在您可以關閉此分頁並返回應
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
 msgstr "您的帳號尚未認領。如果沒有電子郵件和密碼，您將無法從其他裝置登入，並可能因此失去帳號的存取權。請立即認領您的帳號以確保安全。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:196
+#: src/features/channel/components/barriers/BarrierComponents.tsx:195
 msgid "Your account is too new to send messages in this community."
 msgstr "您的帳號啟用時間過短，目前無法在此社群傳送訊息。"
 
@@ -38752,7 +38739,7 @@ msgid "Your fallback entrance sound for all communities and direct messages. Mor
 msgstr "這是所有社群和直接訊息的預設進入音效。更具體的設定會覆寫此設定。"
 
 #. Empty state title in the friends list Online tab when no friends are online. Tone can be friendly.
-#: src/features/channel/components/friends/views/FriendsList.tsx:28
+#: src/features/channel/components/friends/views/FriendsList.tsx:33
 msgid "Your friends are stuck in another timeline"
 msgstr "你的朋友們都卡在另一個時間線了"
 
@@ -38787,7 +38774,7 @@ msgid "Your grace period has ended."
 msgstr "您的寬限期已結束。"
 
 #. Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:12
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:13
 msgid "Your installation is corrupted, and you need to reinstall the app for all functionality to work."
 msgstr "您的應用程式安裝已損毀，需要重新安裝才能正常使用所有功能。"
 
@@ -38931,7 +38918,7 @@ msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Re
 msgstr "您的訂閱已結束，但 <0/> 會保持啟用狀態直到 <1>{graceDate}</1>。請在此之前重新訂閱，以保留您的訂閱者歷史記錄。"
 
 #. Nagbar body shown while a premium subscription is in its grace period. {premiumProductName} is the premium product name and {formattedGraceDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:22
+#: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:23
 msgid "Your subscription failed to renew, but you still have access to {premiumProductName} perks until {formattedGraceDate}. Take action now or you'll lose all perks."
 msgstr "您的訂閱續訂失敗，但您仍可使用 {premiumProductName} 的所有福利，直到 {formattedGraceDate} 為止。請立即採取行動，否則您將失去所有福利。"
 
@@ -39005,7 +38992,7 @@ msgid "YouTube enrichment"
 msgstr "YouTube 豐富功能"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:894
+#: src/features/app/components/setup/SetupWizardSteps.tsx:937
 msgid "YouTube previews"
 msgstr "YouTube 預覽"
 

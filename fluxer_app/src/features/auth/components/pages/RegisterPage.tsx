@@ -22,7 +22,11 @@ const RegisterPageContent = observer(function RegisterPageContent() {
 	if (isRuntimeSsoEnforced()) {
 		return (
 			<div className={sharedStyles.container} data-flx="auth.register-page.register-page-content.sso-container">
-				<AuthSsoPanel redirectPath={redirectTo} dataFlx="auth.register-page.register-page-content.sso-panel" />
+				<AuthSsoPanel
+					redirectPath={redirectTo}
+					dataFlx="auth.register-page.register-page-content.sso-panel"
+					data-flx="auth.register-page.register-page-content.auth-sso-panel"
+				/>
 			</div>
 		);
 	}

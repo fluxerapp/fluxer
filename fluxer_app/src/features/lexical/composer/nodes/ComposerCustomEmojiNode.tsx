@@ -158,11 +158,21 @@ export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
 
 	override decorate(): JSX.Element {
 		return (
-			<ComposerAtomicPresentation spoiler={this.__spoiler}>
+			<ComposerAtomicPresentation
+				spoiler={this.__spoiler}
+				data-flx="lexical.composer.nodes.composer-custom-emoji-node.composer-atomic-presentation"
+			>
 				{this.__literal ? (
-					<span className={styles.literal}>{this.__wire}</span>
+					<span className={styles.literal} data-flx="lexical.composer.nodes.composer-custom-emoji-node.literal">
+						{this.__wire}
+					</span>
 				) : (
-					<ComposerCustomEmoji emojiId={this.__emojiId} animated={this.__animated} display={this.__display} />
+					<ComposerCustomEmoji
+						emojiId={this.__emojiId}
+						animated={this.__animated}
+						display={this.__display}
+						data-flx="lexical.composer.nodes.composer-custom-emoji-node.composer-custom-emoji"
+					/>
 				)}
 			</ComposerAtomicPresentation>
 		);

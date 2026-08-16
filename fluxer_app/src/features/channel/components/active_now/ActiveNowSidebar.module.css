@@ -3,8 +3,8 @@
 .sidebar {
 	display: flex;
 	flex-direction: column;
-	width: 22rem;
-	min-width: 22rem;
+	width: var(--active-now-sidebar-width);
+	min-width: var(--active-now-sidebar-width);
 	height: 100%;
 	border-left: 0.0625rem solid var(--background-modifier-accent);
 	background-color: var(--background-secondary-lighter);
@@ -19,8 +19,8 @@
 .header {
 	display: flex;
 	align-items: center;
-	padding: 1rem;
-	padding-bottom: 0.75rem;
+	padding: var(--active-now-sidebar-header-padding-block-start) var(--active-now-sidebar-header-padding-inline);
+	padding-bottom: var(--active-now-sidebar-header-padding-block-end);
 }
 
 .headerTitle {
@@ -33,8 +33,8 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem;
-	padding: 0 0.75rem 0.75rem;
+	gap: var(--active-now-sidebar-content-gap);
+	padding: 0 var(--active-now-sidebar-content-padding-inline) var(--active-now-sidebar-content-padding-block-end);
 	overflow-y: auto;
 	scrollbar-width: thin;
 }

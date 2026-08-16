@@ -126,7 +126,7 @@ export const StickersPicker = observer(
 			allUpsell.accessibleItems,
 			renderedStickers,
 		);
-		const virtualRows = useVirtualRows(
+		const pickerRows = useVirtualRows(
 			searchTerm,
 			renderedStickers,
 			favoriteStickers,
@@ -162,13 +162,13 @@ export const StickersPicker = observer(
 			shouldShowPremiumFeatures() && shouldShowStickerPremiumUpsell(channel) && !isSearching && lockedStickerCount > 0;
 		const sections = useMemo(() => {
 			const result: Array<number> = [];
-			for (const row of virtualRows) {
+			for (const row of pickerRows) {
 				if (row.type === 'sticker-row') {
 					result.push(row.stickers.length);
 				}
 			}
 			return result;
-		}, [virtualRows]);
+		}, [pickerRows]);
 		const handleCategoryClick = (category: string) => {
 			const element = categoryRefs.current.get(category);
 			if (element) {
@@ -201,10 +201,10 @@ export const StickersPicker = observer(
 				setSelectedColumn(column);
 				setShouldScrollOnSelection(shouldScroll);
 				let currentRow = 0;
-				for (const virtualRow of virtualRows) {
-					if (virtualRow.type === 'sticker-row') {
-						if (currentRow === row && column < virtualRow.stickers.length) {
-							const sticker = virtualRow.stickers[column];
+				for (const pickerRow of pickerRows) {
+					if (pickerRow.type === 'sticker-row') {
+						if (currentRow === row && column < pickerRow.stickers.length) {
+							const sticker = pickerRow.stickers[column];
 							setHoveredSticker(sticker);
 							break;
 						}
@@ -212,7 +212,7 @@ export const StickersPicker = observer(
 					}
 				}
 			},
-			[virtualRows],
+			[pickerRows],
 		);
 		useEffect(() => {
 			if (renderedStickers.length > 0 && selectedRow === 0 && selectedColumn === 0 && !hoveredSticker) {
@@ -225,10 +225,10 @@ export const StickersPicker = observer(
 					return;
 				}
 				let currentRow = 0;
-				for (const virtualRow of virtualRows) {
-					if (virtualRow.type === 'sticker-row') {
-						if (currentRow === row && column < virtualRow.stickers.length) {
-							const sticker = virtualRow.stickers[column];
+				for (const pickerRow of pickerRows) {
+					if (pickerRow.type === 'sticker-row') {
+						if (currentRow === row && column < pickerRow.stickers.length) {
+							const sticker = pickerRow.stickers[column];
 							handleStickerSelect(sticker, event?.shiftKey);
 							return;
 						}
@@ -236,7 +236,7 @@ export const StickersPicker = observer(
 					}
 				}
 			},
-			[virtualRows, handleStickerSelect],
+			[pickerRows, handleStickerSelect],
 		);
 		if (hasNoStickersAtAll) {
 			return (
@@ -294,9 +294,9 @@ export const StickersPicker = observer(
 										data-flx="channel.stickers-picker.premium-upsell-banner"
 									/>
 								)}
-								{virtualRows.map((row, index) => {
-									const stickerRowIndex = virtualRows.slice(0, index).filter((r) => r.type === 'sticker-row').length;
-									const needsSpacingAfter = row.type === 'sticker-row' && virtualRows[index + 1]?.type === 'header';
+								{pickerRows.map((row, index) => {
+									const stickerRowIndex = pickerRows.slice(0, index).filter((r) => r.type === 'sticker-row').length;
+									const needsSpacingAfter = row.type === 'sticker-row' && pickerRows[index + 1]?.type === 'header';
 									return (
 										<div
 											key={`${row.type}-${row.index}`}

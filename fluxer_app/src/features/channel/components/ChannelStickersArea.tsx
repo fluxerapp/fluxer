@@ -66,7 +66,7 @@ export const ChannelStickersArea: React.FC<ChannelStickersAreaProps> = observer(
 	});
 	return (
 		<div
-			className={clsx(styles.container, hasAttachments ? styles.withAttachments : styles.standalone)}
+			className={clsx(styles.container, !hasAttachments && styles.standalone)}
 			data-flx="channel.channel-stickers-area.container"
 		>
 			<div className={styles.content} data-flx="channel.channel-stickers-area.content">

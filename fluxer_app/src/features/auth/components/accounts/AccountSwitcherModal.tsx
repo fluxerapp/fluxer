@@ -16,10 +16,12 @@ import {useCallback} from 'react';
 interface AccountSwitcherModalProps {
 	redirectAfterSwitch?: string | null;
 	redirectAfterLogin?: string | null;
+	switchAccount?: (userId: string) => Promise<void>;
 	'data-flx'?: string;
 }
 
-const AccountSwitcherModal = observer(({redirectAfterSwitch, redirectAfterLogin}: AccountSwitcherModalProps) => {
+const AccountSwitcherModal = observer((props: AccountSwitcherModalProps) => {
+	const {redirectAfterSwitch, redirectAfterLogin, switchAccount} = props;
 	const {
 		accounts,
 		currentAccount,
@@ -29,7 +31,7 @@ const AccountSwitcherModal = observer(({redirectAfterSwitch, redirectAfterLogin}
 		handleAddAccount,
 		handleLogout,
 		handleLogoutStoredAccount,
-	} = useAccountSwitcherLogic({redirectAfterSwitch, redirectAfterLogin});
+	} = useAccountSwitcherLogic({redirectAfterSwitch, redirectAfterLogin, switchAccount});
 	const hasMultipleAccounts = accounts.length > 1;
 	const openMenu = useCallback(
 		(account: (typeof accounts)[number]) => (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -101,7 +103,6 @@ const AccountSwitcherModal = observer(({redirectAfterSwitch, redirectAfterLogin}
 										variant="manage"
 										isCurrent={isCurrent}
 										isExpired={account.isValid === false}
-										showInstance
 										onClick={isCurrent ? undefined : () => handleAccountClick(account)}
 										onMenuClick={openMenu(account)}
 										data-flx="auth.accounts.account-switcher-modal.account-row"

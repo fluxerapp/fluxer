@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -131,8 +132,8 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="var(--brand-primary)"
-			textColor="var(--text-on-brand-primary)"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.BRAND].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.BRAND].textColor}
 			dismissible
 			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.nagbar"

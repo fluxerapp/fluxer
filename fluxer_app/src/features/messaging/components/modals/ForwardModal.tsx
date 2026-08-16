@@ -487,7 +487,13 @@ export const ForwardModal = observer(
 					</div>
 				</Modal.Content>
 				<div className={modalStyles.inputAreaContainer} data-flx="messaging.forward-modal.div--8">
-					<FocusRing within ringTarget={containerRef} offset={-2} enabled={!isCommentComposerDisabled}>
+					<FocusRing
+						within
+						ringTarget={containerRef}
+						offset={-2}
+						enabled={!isCommentComposerDisabled}
+						data-flx="messaging.forward-modal.focus-ring"
+					>
 						<div
 							ref={setContainerNode}
 							className={clsx(
@@ -519,6 +525,7 @@ export const ForwardModal = observer(
 									void handleForward(false);
 								}}
 								i18n={i18n}
+								data-flx="messaging.forward-modal.lexical-rich-input.comment-change"
 							/>
 							<MessageCharacterCounter
 								currentLength={actualOptionalMessage.length}

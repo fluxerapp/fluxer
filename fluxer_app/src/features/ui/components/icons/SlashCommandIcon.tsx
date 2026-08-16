@@ -14,6 +14,7 @@ export const SlashCommandIcon = React.forwardRef<SVGSVGElement, IconProps>(({siz
 		xmlns="http://www.w3.org/2000/svg"
 		className={className}
 		aria-hidden={true}
+		data-flx="ui.icons.slash-command-icon.svg"
 		{...props}
 	>
 		<path
@@ -21,6 +22,7 @@ export const SlashCommandIcon = React.forwardRef<SVGSVGElement, IconProps>(({siz
 			clipRule="evenodd"
 			d="M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3ZM14.05 6.75h1.9L9.95 17.25h-1.9z"
 			fill="currentColor"
+			data-flx="ui.icons.slash-command-icon.path"
 		/>
 	</svg>
 ));

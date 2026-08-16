@@ -38,8 +38,12 @@ const MONTHS_PLURAL_DESCRIPTOR = msg({
 	message: '{months, plural, one {# month} other {# months}}',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const BYPASS_SPLASH_SCREEN_DESCRIPTOR = msg({
-	message: 'Bypass splash screen',
+const BYPASS_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Bypass loading skeleton',
+	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
+});
+const FORCE_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Force loading skeleton',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const FAIL_MESSAGE_SENDS_DESCRIPTOR = msg({
@@ -354,8 +358,10 @@ const formatDeveloperOptionValue = <K extends keyof DeveloperOptionsState>(
 };
 export const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): MessageDescriptor => {
 	switch (key) {
-		case 'bypassSplashScreen':
-			return BYPASS_SPLASH_SCREEN_DESCRIPTOR;
+		case 'bypassLoadingSkeleton':
+			return BYPASS_LOADING_SKELETON_DESCRIPTOR;
+		case 'forceLoadingSkeleton':
+			return FORCE_LOADING_SKELETON_DESCRIPTOR;
 		case 'forceFailMessageSends':
 			return FAIL_MESSAGE_SENDS_DESCRIPTOR;
 		case 'forceFailMessageLoads':

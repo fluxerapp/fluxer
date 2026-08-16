@@ -12,5 +12,9 @@ export function ComposerAtomicPresentation({spoiler, children}: ComposerAtomicPr
 	if (!spoiler) {
 		return <>{children}</>;
 	}
-	return <span className={styles.spoiler}>{children}</span>;
+	return (
+		<span className={styles.spoiler} data-flx="lexical.composer.nodes.composer-atomic-presentation.spoiler">
+			{children}
+		</span>
+	);
 }

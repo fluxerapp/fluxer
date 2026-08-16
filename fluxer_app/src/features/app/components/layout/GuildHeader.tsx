@@ -3,8 +3,16 @@
 import styles from '@app/features/app/components/layout/GuildHeader.module.css';
 import {GuildHeaderShell} from '@app/features/app/components/layout/GuildHeaderShell';
 import {NativeDragRegion} from '@app/features/app/components/layout/NativeDragRegion';
+import {
+	reportSkeletonGuildPresentation,
+	SkeletonGuildBannerPlacement,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {useAnimatedImageUrl} from '@app/features/app/hooks/useAnimatedImageUrl';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
+import {
+	measureSkeletonTextWidthPx,
+	useSkeletonLayoutReport,
+} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {clampWideAssetAspectRatio} from '@app/features/expressions/utils/AssetImageGeometry';
 import {GuildHeaderBottomSheet} from '@app/features/guild/components/bottomsheets/GuildHeaderBottomSheet';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
@@ -34,6 +42,25 @@ const OPEN_COMMUNITY_MENU_FOR_DESCRIPTOR = msg({
 const HEADER_MIN_HEIGHT = 56;
 const DEFAULT_BANNER_ASPECT_RATIO = 16 / 9;
 const MAX_VIEWPORT_HEIGHT_FRACTION = 0.3;
+const GUILD_BADGE_FEATURES: ReadonlyArray<string> = [
+	GuildFeatures.VERIFIED,
+	GuildFeatures.PARTNERED,
+	GuildFeatures.DISCOVERABLE,
+];
+
+function resolveGuildBadgeVisible(features: ReadonlySet<string>): boolean {
+	return GUILD_BADGE_FEATURES.some((feature) => features.has(feature));
+}
+
+function resolveSkeletonBannerPlacement(hasBanner: boolean, isDetachedBanner: boolean): SkeletonGuildBannerPlacement {
+	if (!hasBanner) {
+		return SkeletonGuildBannerPlacement.NONE;
+	}
+	if (isDetachedBanner) {
+		return SkeletonGuildBannerPlacement.DETACHED;
+	}
+	return SkeletonGuildBannerPlacement.INTEGRATED;
+}
 export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 	const {i18n} = useLingui();
 	const {popouts} = Popout;
@@ -54,6 +81,10 @@ export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 	});
 	const isDetachedBanner = guild.features.has(GuildFeatures.DETACHED_BANNER);
 	const showIntegratedBanner = Boolean(bannerURL && !isDetachedBanner);
+	const bannerAspectRatio =
+		guild.bannerWidth && guild.bannerHeight
+			? (clampWideAssetAspectRatio(guild.bannerWidth / guild.bannerHeight) ?? DEFAULT_BANNER_ASPECT_RATIO)
+			: DEFAULT_BANNER_ASPECT_RATIO;
 	const headerContainerRef = useRef<HTMLElement | null>(null);
 	const mergedHeaderContainerRef = useMergeRefs([headerContainerRef, bannerHoverRef]);
 	const [containerWidth, setContainerWidth] = useState<number>(() =>
@@ -87,11 +118,7 @@ export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 		if (!showIntegratedBanner || !bannerURL || !containerWidth) {
 			return {bannerMaxHeight: HEADER_MIN_HEIGHT, centerCrop: false};
 		}
-		const aspectRatio =
-			guild.bannerWidth && guild.bannerHeight
-				? (clampWideAssetAspectRatio(guild.bannerWidth / guild.bannerHeight) ?? DEFAULT_BANNER_ASPECT_RATIO)
-				: DEFAULT_BANNER_ASPECT_RATIO;
-		const idealHeight = containerWidth / aspectRatio;
+		const idealHeight = containerWidth / bannerAspectRatio;
 		const viewportCap = viewportHeight * MAX_VIEWPORT_HEIGHT_FRACTION;
 		const isCapped = idealHeight > viewportCap;
 		return {
@@ -112,6 +139,17 @@ export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 		[guild],
 	);
 	const headerButtonRef = useRef<HTMLDivElement | null>(null);
+	const guildNameRef = useRef<HTMLSpanElement | null>(null);
+	const badgeVisible = resolveGuildBadgeVisible(guild.features);
+	const bannerPlacement = resolveSkeletonBannerPlacement(Boolean(bannerURL), isDetachedBanner);
+	useSkeletonLayoutReport(() => {
+		reportSkeletonGuildPresentation(guild.id, {
+			headerNameWidthPx: measureSkeletonTextWidthPx(guildNameRef.current),
+			badgeVisible,
+			bannerPlacement,
+			bannerAspectRatio,
+		});
+	}, `${guild.id}:${guild.name}:${badgeVisible}:${bannerPlacement}:${bannerAspectRatio}:${isMobile}`);
 	return (
 		<div className={styles.headerWrapper} data-flx="app.guild-header.header-wrapper">
 			<NativeDragRegion
@@ -162,6 +200,7 @@ export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 								data-flx="app.guild-header.guild-badge"
 							/>
 							<span
+								ref={guildNameRef}
 								className={showIntegratedBanner ? styles.guildNameWithBanner : styles.guildNameDefault}
 								data-flx="app.guild-header.guild-name"
 							>

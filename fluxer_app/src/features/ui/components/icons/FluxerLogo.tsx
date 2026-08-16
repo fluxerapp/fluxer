@@ -25,5 +25,5 @@ export const FluxerLogo = observer((props: BrandSvgProps) => {
 			/>
 		);
 	}
-	return <FluxerLogoAsset role="img" aria-label={ariaLabel} {...props} />;
+	return <FluxerLogoAsset role="img" aria-label={ariaLabel} data-flx="ui.icons.fluxer-logo.img" {...props} />;
 });

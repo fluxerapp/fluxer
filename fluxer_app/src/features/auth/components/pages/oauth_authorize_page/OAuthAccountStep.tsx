@@ -94,7 +94,6 @@ export const OAuthAccountStep: React.FC<OAuthAccountStepProps> = observer(({clie
 								variant="manage"
 								isCurrent={isCurrent}
 								isExpired={account.isValid === false}
-								showInstance
 								onClick={canClick ? () => handleAccountClick(account) : undefined}
 								data-flx="auth.o-auth-authorize-page.account-step.account-row"
 							/>

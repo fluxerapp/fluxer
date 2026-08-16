@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import React, {useCallback, useEffect, useImperativeHandle, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 const LONG_PRESS_MOVEMENT_THRESHOLD = 10;
 const SWIPE_VELOCITY_THRESHOLD = 0.4;
@@ -9,6 +10,7 @@ const MIN_VELOCITY_SAMPLES = 2;
 const MAX_VELOCITY_SAMPLE_AGE = 100;
 const PRESS_HIGHLIGHT_DELAY_MS = 100;
 const LONG_PRESS_DURATION_MS = 500;
+const LONG_PRESS_CLICK_SUPPRESSION_MS = 750;
 const HAS_POINTER_EVENTS = typeof window !== 'undefined' && 'PointerEvent' in window;
 
 interface VelocitySample {
@@ -53,8 +55,12 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 		const storedEvent = useRef<LongPressEvent | null>(null);
 		const velocitySamples = useRef<Array<VelocitySample>>([]);
 		const isPressIntent = useRef(false);
+		const pressScrollCancelHandler = useRef<(() => void) | null>(null);
+		const clearTimerRef = useRef<() => void>(() => {});
+		const suppressNextClickRef = useRef(false);
+		const suppressClickTimer = useRef<NodeJS.Timeout | null>(null);
 		const [isPressed, setIsPressed] = useState(false);
-		useImperativeHandle(forwardedRef, () => innerRef.current as HTMLElement);
+		const composedRef = useMergeRefs<HTMLElement>([forwardedRef, innerRef]);
 		const setPressed = useCallback(
 			(pressed: boolean) => {
 				setIsPressed(pressed);
@@ -62,6 +68,21 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 			},
 			[onPressStateChange],
 		);
+		const clearSuppressedClick = useCallback(() => {
+			suppressNextClickRef.current = false;
+			if (suppressClickTimer.current) {
+				clearTimeout(suppressClickTimer.current);
+				suppressClickTimer.current = null;
+			}
+		}, []);
+		const suppressNextClick = useCallback(() => {
+			suppressNextClickRef.current = true;
+			if (suppressClickTimer.current) clearTimeout(suppressClickTimer.current);
+			suppressClickTimer.current = setTimeout(() => {
+				suppressClickTimer.current = null;
+				suppressNextClickRef.current = false;
+			}, LONG_PRESS_CLICK_SUPPRESSION_MS);
+		}, []);
 		const calculateVelocity = useCallback((): number => {
 			const samples = velocitySamples.current;
 			if (samples.length < MIN_VELOCITY_SAMPLES) return 0;
@@ -83,7 +104,24 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 			const distance = Math.sqrt(dx * dx + dy * dy);
 			return distance / dt;
 		}, []);
+		const detachPressScrollCancel = useCallback(() => {
+			const handler = pressScrollCancelHandler.current;
+			if (handler == null) return;
+			pressScrollCancelHandler.current = null;
+			window.removeEventListener('scroll', handler, {capture: true});
+		}, []);
+		const attachPressScrollCancel = useCallback(() => {
+			if (pressScrollCancelHandler.current != null) return;
+			const handler = () => {
+				if (isPressIntent.current) {
+					clearTimerRef.current();
+				}
+			};
+			pressScrollCancelHandler.current = handler;
+			window.addEventListener('scroll', handler, {capture: true, passive: true});
+		}, []);
 		const clearTimer = useCallback(() => {
+			detachPressScrollCancel();
 			if (longPressTimer.current) {
 				clearTimeout(longPressTimer.current);
 				longPressTimer.current = null;
@@ -103,7 +141,8 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 			velocitySamples.current = [];
 			isPressIntent.current = false;
 			setPressed(false);
-		}, [setPressed]);
+		}, [detachPressScrollCancel, setPressed]);
+		clearTimerRef.current = clearTimer;
 		const {
 			onPointerDown: userOnPointerDown,
 			onPointerMove: userOnPointerMove,
@@ -136,6 +175,7 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 				pointerIdRef.current = pointerId ?? null;
 				velocitySamples.current = [{x, y, timestamp: performance.now()}];
 				isPressIntent.current = true;
+				attachPressScrollCancel();
 				if (capturePointer && pointerId != null && innerRef.current?.setPointerCapture) {
 					try {
 						innerRef.current.setPointerCapture(pointerId);
@@ -150,13 +190,14 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 				}, PRESS_HIGHLIGHT_DELAY_MS);
 				longPressTimer.current = setTimeout(() => {
 					if (!disabled && onLongPress && storedEvent.current && isPressIntent.current) {
+						suppressNextClick();
 						onLongPress(storedEvent.current);
 						setPressed(false);
 					}
 					clearTimer();
 				}, delay);
 			},
-			[clearTimer, delay, disabled, onLongPress, setPressed],
+			[attachPressScrollCancel, clearTimer, delay, disabled, onLongPress, setPressed, suppressNextClick],
 		);
 		const handlePointerDown = useCallback(
 			(event: React.PointerEvent<HTMLElement>) => {
@@ -255,26 +296,35 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 			},
 			[clearTimer, userOnTouchCancel],
 		);
-		useEffect(() => {
-			const handleScroll = () => {
-				if (isPressIntent.current) {
-					clearTimer();
+		const handleClick = useCallback(
+			(event: React.MouseEvent<HTMLElement>) => {
+				if (suppressNextClickRef.current) {
+					event.preventDefault();
+					event.stopPropagation();
+					clearSuppressedClick();
+					return;
 				}
-			};
-			window.addEventListener('scroll', handleScroll, {capture: true, passive: true});
+				userOnClick?.(event);
+			},
+			[clearSuppressedClick, userOnClick],
+		);
+		useEffect(() => {
 			return () => {
-				window.removeEventListener('scroll', handleScroll, {capture: true});
+				detachPressScrollCancel();
 				if (longPressTimer.current) {
 					clearTimeout(longPressTimer.current);
 				}
 				if (highlightTimer.current) {
 					clearTimeout(highlightTimer.current);
 				}
+				if (suppressClickTimer.current) {
+					clearTimeout(suppressClickTimer.current);
+				}
 			};
-		}, [clearTimer]);
+		}, [detachPressScrollCancel]);
 		const finalClassName = isPressed && pressedClassName ? `${className ?? ''} ${pressedClassName}`.trim() : className;
 		return React.createElement(Component, {
-			ref: innerRef,
+			ref: composedRef,
 			className: finalClassName,
 			onPointerDown: HAS_POINTER_EVENTS ? handlePointerDown : undefined,
 			onPointerMove: HAS_POINTER_EVENTS ? handlePointerMove : undefined,
@@ -284,7 +334,7 @@ export const LongPressable = React.forwardRef<HTMLElement, LongPressableProps>(
 			onTouchMove: !HAS_POINTER_EVENTS ? handleTouchMove : undefined,
 			onTouchEnd: !HAS_POINTER_EVENTS ? handleTouchEnd : undefined,
 			onTouchCancel: !HAS_POINTER_EVENTS ? handleTouchCancel : undefined,
-			onClick: userOnClick,
+			onClick: userOnClick ? handleClick : undefined,
 			onKeyDown: handleKeyDown,
 			...restWithoutPointer,
 			'data-long-press-owner': !disabled && onLongPress ? 'true' : undefined,

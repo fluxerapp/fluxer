@@ -20,7 +20,12 @@ export const EmojiWithTooltip = observer(({children, emojiUrl, emojiName, emojiF
 	const tooltip = useHoverFloatingTooltip(500);
 	return (
 		<>
-			<HoverFloatingTooltipTrigger tooltip={tooltip}>{children}</HoverFloatingTooltipTrigger>
+			<HoverFloatingTooltipTrigger
+				tooltip={tooltip}
+				data-flx="ui.emoji-tooltip-content.emoji-with-tooltip.hover-floating-tooltip-trigger"
+			>
+				{children}
+			</HoverFloatingTooltipTrigger>
 			<HoverFloatingTooltipSurface
 				tooltip={tooltip}
 				portalDataFlx="ui.emoji-with-tooltip.floating-portal"
@@ -31,7 +36,13 @@ export const EmojiWithTooltip = observer(({children, emojiUrl, emojiName, emojiF
 					emojiUrl={emojiUrl}
 					emojiAlt={emojiName}
 					primaryContent={emojiName}
-					subtext={<EmojiInfoContent emoji={emojiForSubtext} />}
+					subtext={
+						<EmojiInfoContent
+							emoji={emojiForSubtext}
+							data-flx="ui.emoji-tooltip-content.emoji-with-tooltip.emoji-info-content"
+						/>
+					}
+					data-flx="ui.emoji-tooltip-content.emoji-with-tooltip.emoji-tooltip-content"
 				/>
 			</HoverFloatingTooltipSurface>
 		</>

@@ -7,7 +7,7 @@ import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
 import {AvatarWithPresence} from '@app/features/ui/avatars/AvatarWithPresence';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import {UserProfilePopout} from '@app/features/user/components/popouts/UserProfilePopout';
 import {useUserProfileHoverPreload} from '@app/features/user/hooks/useUserProfileHoverPreload';
 import type {User} from '@app/features/user/models/User';
@@ -549,7 +549,7 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 			shouldAnimateAvatarChanges,
 		);
 		const gapPx = useResolvedWrappedAvatarGapPx(containerRef);
-		const slotSize = avatarSize * getAppZoomFactor() + gapPx;
+		const slotSize = avatarSize * getAppRemScale() + gapPx;
 		const handleContextMenu = useCallback(
 			(event: React.MouseEvent<HTMLElement>, entry: VoiceParticipantAvatarEntry) => {
 				event.preventDefault();

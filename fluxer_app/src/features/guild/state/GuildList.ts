@@ -105,16 +105,23 @@ class GuildList {
 		const guildMap = new Map(this.guilds.map((guild) => [guild.id, guild]));
 		const result: Array<OrganizedItem> = [];
 		const placedGuildIds = new Set<string>();
+		const emittedFolderIds = new Set<number | null>();
 		for (const folder of guildFolders) {
-			const folderGuilds = folder.guildIds
-				.map((guildId) => guildMap.get(guildId))
-				.filter((guild): guild is Guild => guild !== undefined);
-			for (const guild of folderGuilds) {
-				placedGuildIds.add(guild.id);
+			if (folder.id !== UNCATEGORIZED_FOLDER_ID && emittedFolderIds.has(folder.id)) {
+				continue;
+			}
+			const folderGuilds: Array<Guild> = [];
+			for (const guildId of folder.guildIds) {
+				if (placedGuildIds.has(guildId)) continue;
+				const guild = guildMap.get(guildId);
+				if (guild === undefined) continue;
+				placedGuildIds.add(guildId);
+				folderGuilds.push(guild);
 			}
 			if (folderGuilds.length === 0) {
 				continue;
 			}
+			emittedFolderIds.add(folder.id);
 			if (folder.id === UNCATEGORIZED_FOLDER_ID) {
 				for (const guild of folderGuilds) {
 					result.push({type: 'guild', guild});

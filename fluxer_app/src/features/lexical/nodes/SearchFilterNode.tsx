@@ -117,6 +117,7 @@ export class SearchFilterNode extends DecoratorNode<JSX.Element> {
 				filterKey={this.__filterKey}
 				value={this.__value}
 				exclude={this.__exclude}
+				data-flx="lexical.nodes.search-filter-node.search-filter-pill"
 			/>
 		);
 	}

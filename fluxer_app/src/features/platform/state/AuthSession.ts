@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import RuntimeConfig, {
+	type RuntimeConfigSnapshot,
+	runtimeConfigSnapshotsAreSameInstance,
+} from '@app/features/app/state/RuntimeConfig';
 import accountStorage, {
 	type AccountPresenceIntent,
 	type StoredAccount,
@@ -30,7 +32,6 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import LayerManager from '@app/features/ui/state/LayerManager';
-import {DEFAULT_API_VERSION} from '@fluxer/constants/src/AppConstants';
 import {action, makeAutoObservable} from 'mobx';
 
 export {type Account, SessionState};
@@ -44,6 +45,13 @@ export class SessionExpiredError extends Error {
 	}
 }
 
+export class AccountInstanceMismatchError extends Error {
+	constructor(userId: string) {
+		super(`Account ${userId} does not belong to the current instance`);
+		this.name = 'AccountInstanceMismatchError';
+	}
+}
+
 interface AuthSessionAccountStorage {
 	getAllAccounts(): Promise<Array<StoredAccount>>;
 	stashAccountData(
@@ -53,7 +61,7 @@ interface AuthSessionAccountStorage {
 		instance?: RuntimeConfigSnapshot,
 		presenceIntent?: AccountPresenceIntent | null,
 	): Promise<void>;
-	restoreAccountData(userId: string): Promise<StoredAccount | null>;
+	restoreAccountData(userId: string, expectedInstance: RuntimeConfigSnapshot): Promise<StoredAccount | null>;
 	deleteAccount(userId: string): Promise<void>;
 	updateAccountValidity(userId: string, isValid: boolean): Promise<void>;
 }
@@ -75,7 +83,6 @@ export interface AuthSessionDependencies {
 	appStorage: AuthSessionAppStorage;
 	http: AuthSessionHttp;
 	getRuntimeSnapshot: () => RuntimeConfigSnapshot;
-	applyRuntimeSnapshot: (snapshot: RuntimeConfigSnapshot) => void;
 	closeLayers: () => void;
 	clearSudoToken: () => void;
 	sendInvisiblePresence: (reason: 'logout' | 'account-switch') => void;
@@ -92,7 +99,6 @@ function createDefaultAuthSessionDependencies(): AuthSessionDependencies {
 		appStorage: AppStorage,
 		http,
 		getRuntimeSnapshot: () => RuntimeConfig.getSnapshot(),
-		applyRuntimeSnapshot: (snapshot) => RuntimeConfig.applySnapshot(snapshot),
 		closeLayers: () => LayerManager.closeAll(),
 		clearSudoToken: () => Sudo.clearToken(),
 		sendInvisiblePresence: (reason) => GatewayConnection.sendInvisiblePresenceForCurrentSession(reason),
@@ -106,14 +112,6 @@ function createDefaultAuthSessionDependencies(): AuthSessionDependencies {
 		restoreLocalPresenceIntent: (intent) => LocalPresence.restoreIntent(intent),
 		now: () => Date.now(),
 	};
-}
-
-function buildInstanceUserMeUrl(instance: RuntimeConfigSnapshot): string {
-	const endpoint = instance.apiEndpoint.replace(/\/+$/, '');
-	if (!endpoint) {
-		return Endpoints.USER_ME;
-	}
-	return `${endpoint}/v${DEFAULT_API_VERSION}${Endpoints.USER_ME}`;
 }
 
 function accountFromStoredRecord(record: StoredAccount): Account | null {
@@ -199,7 +197,10 @@ export class AuthSessionManager {
 	}
 
 	get accounts(): Array<Account> {
-		return selectAuthSessionAccounts(this._snapshot);
+		const currentInstance = this.deps.getRuntimeSnapshot();
+		return selectAuthSessionAccounts(this._snapshot).filter((account) =>
+			runtimeConfigSnapshotsAreSameInstance(account.instance, currentInstance),
+		);
 	}
 
 	get currentAccount(): Account | null {
@@ -210,6 +211,17 @@ export class AuthSessionManager {
 
 	canSwitchAccount(): boolean {
 		return selectAuthSessionCanSwitch(this._snapshot);
+	}
+
+	requireAccountOnCurrentInstance(userId: string): Account {
+		const account = this._snapshot.context.accounts.get(userId);
+		if (!account) {
+			throw new Error(`No account found for ${userId}`);
+		}
+		if (!runtimeConfigSnapshotsAreSameInstance(account.instance, this.deps.getRuntimeSnapshot())) {
+			throw new AccountInstanceMismatchError(userId);
+		}
+		return account;
 	}
 
 	send(event: AuthSessionMachineEvent): void {
@@ -290,14 +302,12 @@ export class AuthSessionManager {
 			const storedToken = parseStoredSessionValue(this.deps.appStorage.getItem(AuthSessionStorageKey.Token));
 			const storedUserId = parseStoredSessionValue(this.deps.appStorage.getItem(AuthSessionStorageKey.UserId));
 			logger.debug(`Loaded from storage: token=${storedToken ? 'present' : 'null'}, userId=${storedUserId ?? 'null'}`);
-			if (storedToken) {
+			const storedAccount = storedUserId ? this._snapshot.context.accounts.get(storedUserId) : undefined;
+			if (storedToken && storedUserId && storedAccount?.token === storedToken) {
 				this.send({type: 'initialize.tokenLoaded', token: storedToken, userId: storedUserId});
-				if (storedUserId) {
-					this.deps.restoreLocalPresenceIntent(
-						this._snapshot.context.accounts.get(storedUserId)?.presenceIntent ?? null,
-					);
-				}
+				this.deps.restoreLocalPresenceIntent(storedAccount.presenceIntent ?? null);
 			} else {
+				this.persistActiveCredentials(null, null);
 				this.send({type: 'initialize.noToken'});
 			}
 			logger.debug(`Initialization complete: state=${this.state}, isAuthenticated=${this.isAuthenticated}`);
@@ -311,12 +321,13 @@ export class AuthSessionManager {
 	private async loadStoredAccounts(): Promise<void> {
 		try {
 			const stored = await this.deps.accountStorage.getAllAccounts();
+			const currentInstance = this.deps.getRuntimeSnapshot();
 			const accounts = stored.flatMap((record) => {
 				const account = accountFromStoredRecord(record);
-				return account ? [account] : [];
+				return account && runtimeConfigSnapshotsAreSameInstance(account.instance, currentInstance) ? [account] : [];
 			});
 			this.send({type: 'accounts.loaded', accounts});
-			logger.debug(`Loaded ${stored.length} accounts`);
+			logger.debug(`Loaded ${accounts.length} of ${stored.length} accounts for the current instance`);
 		} catch (err) {
 			logger.error('Failed to load accounts', err);
 		}
@@ -352,10 +363,9 @@ export class AuthSessionManager {
 		});
 	}
 
-	async validateToken(token: string, instance?: RuntimeConfigSnapshot): Promise<boolean> {
-		const url = instance ? buildInstanceUserMeUrl(instance) : Endpoints.USER_ME;
+	async validateToken(token: string): Promise<boolean> {
 		try {
-			await this.deps.http.get<unknown>(url, {
+			await this.deps.http.get<unknown>(Endpoints.USER_ME, {
 				auth: 'none',
 				headers: {Authorization: token},
 			});
@@ -430,41 +440,36 @@ export class AuthSessionManager {
 				logger.debug('Already on requested account');
 				return;
 			}
-			const account = this._snapshot.context.accounts.get(userId);
-			if (!account) {
-				throw new Error(`No account found for ${userId}`);
-			}
+			const account = this.requireAccountOnCurrentInstance(userId);
 			if (!this.canSwitchAccount()) {
 				throw new Error(`Cannot switch from state: ${this.state}`);
 			}
 			this.send({type: 'account.switch.start'});
-			const previousSnapshot = this.deps.getRuntimeSnapshot();
+			const currentSnapshot = this.deps.getRuntimeSnapshot();
 			this.prepareForAccountTransition('account-switch');
 			try {
 				await this.stashCurrentAccount();
 				this.deps.cleanupGatewaySession('account-switch');
-				const isValid = await this.validateToken(account.token, account.instance);
+				const isValid = await this.validateToken(account.token);
 				if (!isValid) {
 					this.markAccountInvalid(userId);
 					throw new SessionExpiredError();
 				}
-				const restored = await this.deps.accountStorage.restoreAccountData(userId);
+				const restored = await this.deps.accountStorage.restoreAccountData(userId, currentSnapshot);
 				if (!restored) {
 					throw new Error(`No data found for ${userId}`);
 				}
-				const nextSnapshot = restored.instance ?? account.instance ?? previousSnapshot;
 				const nextPresenceIntent = restored.presenceIntent ?? account.presenceIntent ?? null;
 				const nextAccount: Account = {
 					...account,
 					userData: restored.userData ?? account.userData,
 					presenceIntent: nextPresenceIntent,
 					lastActive: this.deps.now(),
-					instance: nextSnapshot,
+					instance: currentSnapshot,
 					isValid: true,
 				};
 				this.deps.closeLayers();
 				this.deps.clearSudoToken();
-				this.deps.applyRuntimeSnapshot(nextSnapshot);
 				this.deps.restoreLocalPresenceIntent(nextPresenceIntent);
 				this.persistActiveCredentials(account.token, userId);
 				this.send({type: 'account.switch.complete', account: nextAccount});
@@ -472,12 +477,11 @@ export class AuthSessionManager {
 					userId,
 					account.token,
 					restored.userData ?? account.userData,
-					nextSnapshot,
+					currentSnapshot,
 					nextPresenceIntent,
 				);
 			} catch (err) {
 				logger.error('Failed to switch account', err);
-				this.deps.applyRuntimeSnapshot(previousSnapshot);
 				this.send({type: 'account.switch.failed'});
 				throw err;
 			}

@@ -12,12 +12,12 @@
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, auto);
 	align-items: center;
-	gap: var(--spacing-4);
+	gap: var(--channel-header-gap);
 	height: var(--layout-header-height);
 	min-height: var(--layout-header-height);
 	border-bottom: 0.0625rem solid var(--user-area-divider-color);
 	background-color: var(--background-secondary-lighter);
-	padding: 0 var(--spacing-4);
+	padding: 0 var(--channel-header-padding-inline);
 	color: var(--channel-header-text-primary);
 }
 
@@ -177,8 +177,8 @@
 
 @media (max-width: 767px) {
 	.headerContainer {
-		height: 4rem;
-		min-height: 4rem;
+		height: var(--layout-header-height-mobile);
+		min-height: var(--layout-header-height-mobile);
 	}
 }
 
@@ -191,15 +191,15 @@
 }
 
 .backButton {
-	margin-right: var(--spacing-3);
+	margin-right: var(--channel-header-back-button-gap);
 	flex-shrink: 0;
 	cursor: pointer;
 	-webkit-app-region: no-drag;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 2rem;
-	width: 2rem;
+	height: var(--channel-header-back-button-size);
+	width: var(--channel-header-back-button-size);
 	border-radius: var(--radius-full);
 	background-color: transparent;
 	color: var(--channel-header-text-muted);
@@ -222,8 +222,8 @@
 }
 
 .backIcon {
-	height: 1.5rem;
-	width: 1.5rem;
+	height: var(--channel-header-back-icon-size);
+	width: var(--channel-header-back-icon-size);
 }
 
 .backIconBold {
@@ -309,7 +309,7 @@
 	flex: 1;
 	min-width: 0;
 	max-width: 100%;
-	gap: var(--spacing-2);
+	gap: var(--channel-header-name-gap-group-dm);
 	position: relative;
 	z-index: 1;
 }
@@ -329,7 +329,7 @@
 }
 
 .channelName {
-	margin-left: var(--spacing-3);
+	margin-left: var(--channel-header-name-gap);
 	min-width: 0;
 	flex-shrink: 1;
 	font-weight: 500;
@@ -358,16 +358,16 @@
 }
 
 .channelIcon {
-	height: 1.5rem;
-	width: 1.5rem;
+	height: var(--channel-header-icon-size);
+	width: var(--channel-header-icon-size);
 	flex-shrink: 0;
 	color: var(--channel-header-text-muted);
 }
 
 .caretRight {
-	margin-left: var(--spacing-1);
-	height: 1rem;
-	width: 1rem;
+	margin-left: var(--channel-header-caret-gap);
+	height: var(--channel-header-caret-size);
+	width: var(--channel-header-caret-size);
 	flex-shrink: 0;
 	color: var(--channel-header-text-muted);
 }
@@ -382,7 +382,7 @@
 }
 
 .topicDivider {
-	margin: 0 var(--spacing-2);
+	margin: 0 var(--channel-header-topic-divider-gap);
 	flex-shrink: 0;
 	color: var(--channel-header-divider-color);
 }
@@ -471,7 +471,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
-	gap: var(--spacing-2);
+	gap: var(--channel-header-actions-gap);
 	flex-shrink: 0;
 	min-width: 0;
 	-webkit-app-region: no-drag;
@@ -495,8 +495,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 2rem;
-	width: 2rem;
+	height: var(--channel-header-action-size);
+	width: var(--channel-header-action-size);
 	flex-shrink: 0;
 	cursor: pointer;
 	border-radius: var(--radius-full);
@@ -565,8 +565,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 2.5rem;
-	width: 2.5rem;
+	height: var(--channel-header-action-size-mobile);
+	width: var(--channel-header-action-size-mobile);
 	flex-shrink: 0;
 	border-radius: var(--radius-full);
 	background-color: var(--background-tertiary);
@@ -575,8 +575,8 @@
 }
 
 .buttonIcon {
-	height: 1.5rem;
-	width: 1.5rem;
+	height: var(--channel-header-action-icon-size);
+	width: var(--channel-header-action-icon-size);
 }
 
 .buttonIconMobile {

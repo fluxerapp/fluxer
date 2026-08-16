@@ -69,7 +69,6 @@ const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSel
 			description={<Trans>Select the account you want to sign in with on the desktop app.</Trans>}
 			disabled={isLoading}
 			error={error}
-			showInstance
 			clickableRows
 			onSelectAccount={handleSelectAccount}
 			onAddAccount={onSelectNewAccount}

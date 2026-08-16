@@ -251,7 +251,11 @@ export const ThemeTabContent: React.FC = observer(() => {
 	}, []);
 	return (
 		<>
-			<ThemeSelector value={currentSelectedTheme} onChange={handleThemeChange} />
+			<ThemeSelector
+				value={currentSelectedTheme}
+				onChange={handleThemeChange}
+				data-flx="user.appearance-tab.theme.theme-tab-content.theme-selector.theme-change"
+			/>
 			<Switch
 				label={i18n._(SYNC_THEME_ACROSS_DEVICES_DESCRIPTOR)}
 				description={i18n._(WHEN_ENABLED_THEME_CHANGES_WILL_SYNC_TO_ALL_DESCRIPTOR)}

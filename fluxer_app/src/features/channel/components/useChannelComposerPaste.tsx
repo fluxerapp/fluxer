@@ -92,9 +92,20 @@ export function useChannelComposerPaste({
 			);
 			if (!result.success) {
 				if (result.error === 'too_many_attachments') {
-					ModalCommands.push(modal(() => <TooManyAttachmentsModal />));
+					ModalCommands.push(
+						modal(() => (
+							<TooManyAttachmentsModal data-flx="channel.use-channel-composer-paste.handle-paste-exceeds-limit.too-many-attachments-modal" />
+						)),
+					);
 				} else if (result.error === 'file_size_too_large') {
-					ModalCommands.push(modal(() => <FileSizeTooLargeModal oversizedFileCount={result.oversizedFileCount} />));
+					ModalCommands.push(
+						modal(() => (
+							<FileSizeTooLargeModal
+								oversizedFileCount={result.oversizedFileCount}
+								data-flx="channel.use-channel-composer-paste.handle-paste-exceeds-limit.file-size-too-large-modal"
+							/>
+						)),
+					);
 				}
 			}
 		},
@@ -114,9 +125,20 @@ export function useChannelComposerPaste({
 			);
 			if (!result.success) {
 				if (result.error === 'too_many_attachments') {
-					ModalCommands.push(modal(() => <TooManyAttachmentsModal />));
+					ModalCommands.push(
+						modal(() => (
+							<TooManyAttachmentsModal data-flx="channel.use-channel-composer-paste.handle-paste-files.too-many-attachments-modal" />
+						)),
+					);
 				} else if (result.error === 'file_size_too_large') {
-					ModalCommands.push(modal(() => <FileSizeTooLargeModal oversizedFileCount={result.oversizedFileCount} />));
+					ModalCommands.push(
+						modal(() => (
+							<FileSizeTooLargeModal
+								oversizedFileCount={result.oversizedFileCount}
+								data-flx="channel.use-channel-composer-paste.handle-paste-files.file-size-too-large-modal"
+							/>
+						)),
+					);
 				}
 			}
 		},

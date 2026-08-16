@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import RuntimeConfig, {describeApiEndpoint} from '@app/features/app/state/RuntimeConfig';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/auth/components/accounts/AccountListItem.module.css';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import {MockAvatar} from '@app/features/ui/components/MockAvatar';
@@ -24,7 +24,6 @@ interface AccountListItemProps {
 	isCurrent?: boolean;
 	onClick?: () => void;
 	variant?: 'default' | 'compact';
-	showInstance?: boolean;
 	badge?: ReactNode;
 	meta?: ReactNode;
 }
@@ -32,7 +31,7 @@ interface AccountListItemProps {
 export const getAccountAvatarUrl = (account: Account): string | undefined => {
 	const avatar = account.userData?.avatar ?? null;
 	try {
-		const mediaEndpoint = account.instance?.mediaEndpoint ?? RuntimeConfig.getSnapshot().mediaEndpoint;
+		const mediaEndpoint = RuntimeConfig.mediaEndpoint;
 		if (mediaEndpoint) {
 			return AvatarUtils.getUserAvatarURLWithProxy({id: account.userId, avatar}, mediaEndpoint, false) ?? undefined;
 		}
@@ -50,7 +49,6 @@ export const AccountListItem = ({
 	isCurrent = false,
 	onClick,
 	variant = 'default',
-	showInstance = false,
 	badge,
 	meta,
 }: AccountListItemProps) => {
@@ -93,11 +91,6 @@ export const AccountListItem = ({
 					<span className={styles.accountMeta} data-flx="auth.accounts.account-list-item.account-meta">
 						{meta ?? defaultMeta}
 					</span>
-					{showInstance && account.instance && (
-						<span className={styles.instanceLabel} data-flx="auth.accounts.account-list-item.instance-label">
-							{describeApiEndpoint(account.instance.apiEndpoint)}
-						</span>
-					)}
 				</div>
 			</div>
 			{badge}

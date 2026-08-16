@@ -191,15 +191,21 @@ export class ComposerMentionNode extends DecoratorNode<JSX.Element> {
 	override decorate(): JSX.Element {
 		const presentationStyle = mentionPresentationStyle(this.__presentation);
 		return (
-			<ComposerAtomicPresentation spoiler={this.__spoiler}>
-				<span style={presentationStyle}>
+			<ComposerAtomicPresentation
+				spoiler={this.__spoiler}
+				data-flx="lexical.composer.nodes.composer-mention-node.composer-atomic-presentation"
+			>
+				<span style={presentationStyle} data-flx="lexical.composer.nodes.composer-mention-node.span">
 					{this.__literal ? (
-						<span className={styles.literal}>{this.__wire}</span>
+						<span className={styles.literal} data-flx="lexical.composer.nodes.composer-mention-node.literal">
+							{this.__wire}
+						</span>
 					) : (
 						<ComposerMentionPill
 							mentionType={this.__mentionType}
 							mentionId={this.__mentionId}
 							display={this.__display}
+							data-flx="lexical.composer.nodes.composer-mention-node.composer-mention-pill"
 						/>
 					)}
 				</span>

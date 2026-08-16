@@ -4,10 +4,20 @@ import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {NativeDragRegion} from '@app/features/app/components/layout/NativeDragRegion';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
+import {
+	reportSkeletonChannelHeaderLayout,
+	reportSkeletonChannelProjection,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {
+	measureSkeletonTextWidthPx,
+	measureSkeletonWidthPx,
+	useSkeletonLayoutReport,
+} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import {ChannelDetailsBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheet';
 import {ChannelSearchBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelSearchBottomSheet';
 import styles from '@app/features/channel/components/ChannelHeader.module.css';
+import {CHANNEL_HEADER_DM_AVATAR_SIZE_PX} from '@app/features/channel/components/ChannelHeaderMetrics';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
 import {
 	ADD_FRIENDS_TO_GROUP_DESCRIPTOR,
@@ -32,8 +42,15 @@ import {CallButtons} from '@app/features/channel/components/channel_header_compo
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
 import {ChannelNotificationSettingsButton} from '@app/features/channel/components/channel_header_components/ChannelNotificationSettingsButton';
 import {ChannelPinsButton} from '@app/features/channel/components/channel_header_components/ChannelPinsButton';
-import {UpdaterIcon} from '@app/features/channel/components/channel_header_components/UpdaterIcon';
-import {InboxButton, StaffToolsButton} from '@app/features/channel/components/channel_header_components/UtilityButtons';
+import {
+	isUpdaterIconVisible,
+	UpdaterIcon,
+} from '@app/features/channel/components/channel_header_components/UpdaterIcon';
+import {
+	InboxButton,
+	isStaffToolsButtonVisible,
+	StaffToolsButton,
+} from '@app/features/channel/components/channel_header_components/UtilityButtons';
 import {useChannelSearchState} from '@app/features/channel/components/channel_view/useChannelSearchState';
 import {MessageSearchBar} from '@app/features/channel/components/message_search_bar/MessageSearchBar';
 import {ChannelTopicModal} from '@app/features/channel/components/modals/ChannelTopicModal';
@@ -190,6 +207,16 @@ export const ChannelHeader = observer(
 		);
 		const isHeaderPopoutOpen = PopoutState.isOpen('inbox') || PopoutState.isOpen('channel-pins');
 		const isVoiceCallChromePinned = isHeaderContextMenuOpen || isHeaderPopoutOpen;
+		const channelId = channel?.id;
+		const channelType = channel?.type;
+		const channelHasTopic = Boolean(channel?.topic);
+		const staffToolsVisible = isStaffToolsButtonVisible();
+		const updaterVisible = isUpdaterIconVisible();
+		const favoritesVisible = Accessibility.showFavorites;
+		useSkeletonLayoutReport(
+			() => reportSkeletonChannelHeaderLayout({staffToolsVisible, updaterVisible, favoritesVisible}),
+			`${staffToolsVisible}|${updaterVisible}|${favoritesVisible}`,
+		);
 		useEffect(() => {
 			latestSearchQueryRef.current = searchQuery;
 			latestSearchSegmentsRef.current = searchSegments;
@@ -497,6 +524,59 @@ export const ChannelHeader = observer(
 			Relationships.getRelationship(recipient.id)?.type === RelationshipTypes.FRIEND;
 		const shouldShowCreateGroupButton = !!channel && !isMobile && !isPersonalNotes && isFriendDM && !isGroupDM;
 		const shouldShowAddFriendsButton = !!channel && !isMobile && !isPersonalNotes && isGroupDM && !isGroupDMFull;
+		const hasChannel = Boolean(channel) && !isPersonalNotes;
+		const hasCallableRecipients = hasChannel && (isDM || isGroupDM);
+		let desktopLeadingActionCount = 0;
+		if (hasChannel && isGuildChannel) {
+			desktopLeadingActionCount += 1;
+		}
+		if (hasCallableRecipients && !(isDM && isBotDMRecipient)) {
+			desktopLeadingActionCount += 2;
+		}
+		if (showPins && Boolean(channel)) {
+			desktopLeadingActionCount += 1;
+		}
+		if (hasChannel && isFriendDM && !isGroupDM) {
+			desktopLeadingActionCount += 1;
+		}
+		if (hasChannel && isGroupDM && !isGroupDMFull) {
+			desktopLeadingActionCount += 1;
+		}
+		if (hasChannel && favoritesVisible) {
+			desktopLeadingActionCount += 1;
+		}
+		if (showMembersToggle) {
+			desktopLeadingActionCount += 1;
+		}
+		let mobileActionCount = 0;
+		if (hasChannel && favoritesVisible) {
+			mobileActionCount += 1;
+		}
+		if (hasCallableRecipients) {
+			mobileActionCount += 2;
+		}
+		if (isGuildChannel) {
+			mobileActionCount += 1;
+		}
+		const searchPanelOpen = Boolean(isSearchResultsVisible);
+		useSkeletonLayoutReport(
+			() => {
+				if (channelId == null || channelType == null) {
+					return;
+				}
+				const nameElement = dmNameRef.current ?? groupDMNameRef.current ?? guildChannelNameRef.current;
+				reportSkeletonChannelProjection(channelId, channelType, {
+					showTopic: channelHasTopic,
+					nameWidthPx: measureSkeletonWidthPx(nameElement),
+					topicWidthPx: measureSkeletonTextWidthPx(topicButtonRef.current),
+					desktopLeadingActionCount,
+					mobileActionCount,
+					memberListVisible: isMembersToggleOpen,
+					searchPanelOpen,
+				});
+			},
+			`${channelId}|${channelType ?? ''}|${channelHasTopic}|${channel?.topic ?? ''}|${channelName}|${directMessageName}|${groupDMName}|${desktopLeadingActionCount}|${mobileActionCount}|${searchPanelOpen}|${isMembersToggleOpen}|${Accessibility.fontSize}|${Accessibility.zoomLevel}`,
+		);
 		return (
 			<>
 				<header
@@ -557,7 +637,7 @@ export const ChannelHeader = observer(
 													<>
 														<StatusAwareAvatar
 															user={recipient}
-															size={32}
+															size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
 															showOffline={true}
 															data-flx="channel.channel-header.status-aware-avatar"
 														/>
@@ -592,7 +672,7 @@ export const ChannelHeader = observer(
 													<>
 														<GroupDMAvatar
 															channel={channel}
-															size={32}
+															size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
 															data-flx="channel.channel-header.group-dm-avatar"
 														/>
 														<Tooltip
@@ -649,7 +729,7 @@ export const ChannelHeader = observer(
 											>
 												<StatusAwareAvatar
 													user={recipient}
-													size={32}
+													size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
 													showOffline={true}
 													data-flx="channel.channel-header.status-aware-avatar--2"
 												/>
@@ -681,7 +761,7 @@ export const ChannelHeader = observer(
 											<div className={styles.avatarWrapper} data-flx="channel.channel-header.avatar-wrapper">
 												<GroupDMAvatar
 													channel={channel}
-													size={32}
+													size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
 													data-flx="channel.channel-header.group-dm-avatar--2"
 												/>
 												<Tooltip
@@ -720,7 +800,7 @@ export const ChannelHeader = observer(
 													>
 														<GroupDMAvatar
 															channel={channel}
-															size={32}
+															size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
 															data-flx="channel.channel-header.group-dm-avatar--3"
 														/>
 														<div className={styles.dmNameWrapper} data-flx="channel.channel-header.dm-name-wrapper--3">

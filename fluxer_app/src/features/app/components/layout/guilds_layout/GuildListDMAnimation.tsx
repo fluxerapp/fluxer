@@ -30,7 +30,7 @@ interface DMListAnimatedRowProps {
 	readonly onHoverStart: (channelId: string) => void;
 	readonly onHoverEnd: (channelId: string) => void;
 	readonly onRemovalAnimationComplete: (channelId: string) => void;
-	readonly scrollAnchorRef: React.RefCallback<HTMLElement>;
+	readonly scrollTargetRef: React.RefCallback<HTMLElement>;
 	readonly voiceCallActive: boolean;
 }
 
@@ -43,9 +43,10 @@ export const DMListAnimatedRow: React.FC<DMListAnimatedRowProps> = ({
 	onHoverStart,
 	onHoverEnd,
 	onRemovalAnimationComplete,
-	scrollAnchorRef,
+	scrollTargetRef,
 	voiceCallActive,
 }) => {
+	const setRowRef = scrollTargetRef;
 	const previousPendingRemovalRef = useRef(pendingRemoval);
 	const removalCycleRef = useRef(0);
 	if (previousPendingRemovalRef.current !== pendingRemoval) {
@@ -64,7 +65,7 @@ export const DMListAnimatedRow: React.FC<DMListAnimatedRowProps> = ({
 	if (reducedMotion) durationMs = 0;
 	return (
 		<motion.div
-			ref={scrollAnchorRef}
+			ref={setRowRef}
 			className={styles.dmListRow}
 			initial={reducedMotion ? false : {height: 0}}
 			animate={{height: pendingRemoval ? 0 : rowHeight}}

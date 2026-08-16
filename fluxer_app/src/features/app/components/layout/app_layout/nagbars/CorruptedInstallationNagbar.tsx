@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
@@ -25,8 +26,8 @@ export const CorruptedInstallationNagbar = observer(({isMobile}: {isMobile: bool
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#b00000"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.CRITICAL].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.CRITICAL].textColor}
 			data-flx="app.app-layout.nagbars.corrupted-installation-nagbar.nagbar"
 		>
 			<NagbarContent

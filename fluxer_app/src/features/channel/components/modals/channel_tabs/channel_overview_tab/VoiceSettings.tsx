@@ -79,8 +79,12 @@ const VoiceBitrateSlider: React.FC<{
 		<SettingsControlRow
 			label={voiceQualityLabel}
 			dataFlx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider"
+			data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.settings-control-row"
 		>
-			<div className={styles.settingsSliderControl}>
+			<div
+				className={styles.settingsSliderControl}
+				data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.settings-slider-control"
+			>
 				<Slider
 					value={currentValue}
 					defaultValue={currentValue}
@@ -97,6 +101,7 @@ const VoiceBitrateSlider: React.FC<{
 					showResetButton={true}
 					onReset={() => onChange(64)}
 					resetTooltip={resetSliderLabel}
+					data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.slider"
 				/>
 			</div>
 		</SettingsControlRow>
@@ -113,7 +118,13 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
 				<Controller
 					name="bitrate"
 					control={form.control}
-					render={({field}) => <VoiceBitrateSlider value={field.value} onChange={field.onChange} />}
+					render={({field}) => (
+						<VoiceBitrateSlider
+							value={field.value}
+							onChange={field.onChange}
+							data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider.change"
+						/>
+					)}
 					data-flx="channel.channel-tabs.channel-overview-tab.controller--2"
 				/>
 			</div>
@@ -127,6 +138,7 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
 							<SettingsControlRow
 								label={participantLimitLabel}
 								dataFlx="channel.channel-tabs.channel-overview-tab.participant-limit"
+								data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.settings-control-row"
 							>
 								<div
 									className={styles.settingsSliderControl}
@@ -177,6 +189,7 @@ export const VoiceConnectionLimitControl: React.FC<VoiceSettingsProps> = ({form}
 							label={connectionLimitLabel}
 							description={connectionLimitDescription}
 							dataFlx="channel.channel-tabs.channel-overview-tab.voice-connection-limit"
+							data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-connection-limit-control.settings-control-row"
 						>
 							<div
 								className={styles.settingsSliderControl}

@@ -250,6 +250,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 		overflow,
 		minThumbSize,
 		scrollRef,
+		showTrack,
 	});
 	onResizeRef.current = onResize;
 	const animRef = useRef<{
@@ -280,6 +281,9 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 		}
 	}, []);
 	const scheduleThumbRefresh = useCallback(() => {
+		if (!showTrack) {
+			return;
+		}
 		if (thumbRefreshRafRef.current != null) {
 			return;
 		}
@@ -287,7 +291,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 			thumbRefreshRafRef.current = null;
 			refreshThumbState();
 		});
-	}, [refreshThumbState]);
+	}, [refreshThumbState, showTrack]);
 	const getMaxScroll = useCallback(
 		(node: HTMLDivElement): number => {
 			if (orientation === 'vertical') {
@@ -621,7 +625,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 	);
 	const handleScroll = useCallback(
 		(event: UIEvent<HTMLDivElement>) => {
-			if (fade) {
+			if (fade && showTrack) {
 				setIsScrolling(true);
 				window.clearTimeout(scrollTimeoutRef.current);
 				scrollTimeoutRef.current = window.setTimeout(() => {
@@ -631,7 +635,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 			scheduleThumbRefresh();
 			onScroll?.(event);
 		},
-		[fade, onScroll, scheduleThumbRefresh],
+		[fade, onScroll, scheduleThumbRefresh, showTrack],
 	);
 	const handleScrollerWheel = useCallback(
 		(event: ReactWheelEvent<HTMLDivElement>) => {

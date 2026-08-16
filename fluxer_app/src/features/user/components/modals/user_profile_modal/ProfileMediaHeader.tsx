@@ -11,7 +11,7 @@ import {
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import userProfileModalStyles from '@app/features/user/components/modals/UserProfileModal.module.css';
 import {
 	isKeyboardContextMenuTrigger,
@@ -204,7 +204,7 @@ export const ProfileMediaHeader: React.FC<ProfileMediaHeaderProps> = observer(
 		);
 		const avatarContent = (
 			<StatusAwareAvatar
-				size={avatarSize / getAppZoomFactor()}
+				size={avatarSize / getAppRemScale()}
 				user={user}
 				avatarUrl={avatarUrl}
 				hoverAvatarUrl={hoverAvatarUrl}

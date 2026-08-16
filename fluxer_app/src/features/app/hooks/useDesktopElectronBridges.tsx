@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import Initialization from '@app/features/app/state/Initialization';
+import {isClientBooting} from '@app/features/app/state/ClientReadiness';
 import Authentication from '@app/features/auth/state/Authentication';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {initializeDesktopTrayBridge} from '@app/features/platform/utils/DesktopTrayBridge';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -22,12 +20,7 @@ export function useDesktopElectronBridges(): void {
 		const unsubZoomReset = electronApi.onZoomReset?.(() => Accessibility.updateSettings({zoomLevel: 1.0}));
 		const unsubOpenSettings = electronApi.onOpenSettings?.(() => {
 			if (!Authentication.isAuthenticated) return;
-			if (
-				!DeveloperOptions.bypassSplashScreen &&
-				(GatewayConnection.isConnectionInterrupted || !Initialization.canNavigateToProtectedRoutes)
-			) {
-				return;
-			}
+			if (isClientBooting()) return;
 			void import('@app/features/user/components/modals/UserSettingsModal').then(({UserSettingsModal}) => {
 				ModalCommands.push(
 					ModalCommands.modal(() => (

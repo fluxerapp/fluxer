@@ -437,7 +437,12 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 				/>
 			) : null}
 			{extraContent}
-			<RegistrationLegalConsent checked={consent} config={legalConsentConfig} onChange={handleConsentChange} />
+			<RegistrationLegalConsent
+				checked={consent}
+				config={legalConsentConfig}
+				onChange={handleConsentChange}
+				data-flx="auth.flow.auth-register-form-core.registration-legal-consent.consent-change"
+			/>
 			<SubmitTooltip
 				consent={effectiveConsent}
 				legalConsentRequirement={legalConsentConfig.requirement ?? undefined}

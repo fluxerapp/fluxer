@@ -17,6 +17,10 @@ import {LiveBadge} from '@app/features/ui/components/LiveBadge';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/user/components/profile/VoiceActivityCard.module.css';
+import {
+	VOICE_ACTIVITY_AVATAR_MAX_VISIBLE,
+	VOICE_ACTIVITY_AVATAR_SIZE_PX,
+} from '@app/features/user/components/profile/VoiceActivityCardMetrics';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -252,8 +256,8 @@ export const VoiceActivityCard: React.FC<VoiceActivityCardProps> = observer(({ac
 					data-flx="user.profile.voice-activity-card.participants-row"
 				>
 					<AvatarStack
-						size={20}
-						maxVisible={5}
+						size={VOICE_ACTIVITY_AVATAR_SIZE_PX}
+						maxVisible={VOICE_ACTIVITY_AVATAR_MAX_VISIBLE}
 						users={avatarStackUsers}
 						guildId={guildId}
 						channelId={channelId}

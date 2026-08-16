@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {reportSkeletonFriendsHeaderLayout} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {measureSkeletonWidthPx, useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {ActiveNowSidebar} from '@app/features/channel/components/active_now/ActiveNowSidebar';
 import {ChannelHeader} from '@app/features/channel/components/ChannelHeader';
 import {AddFriendView} from '@app/features/channel/components/direct_message/AddFriendView';
@@ -113,6 +115,14 @@ export const DMFriendsView: React.FC = observer(() => {
 			setActiveTab(pendingTab);
 		}
 	}, []);
+	const pendingBadgeVisible = pendingCount > 0;
+	useSkeletonLayoutReport(() => {
+		reportSkeletonFriendsHeaderLayout({
+			activeTab,
+			tabWidthsPx: tabRefs.current.map((tabElement) => measureSkeletonWidthPx(tabElement)),
+			pendingBadgeVisible,
+		});
+	}, `${activeTab}:${pendingBadgeVisible}:${i18n.locale}`);
 	const openProfile = useCallback((userId: string) => {
 		UserProfileCommands.openUserProfile(userId);
 	}, []);

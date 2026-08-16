@@ -1,0 +1,241 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.grid {
+	--textarea-font-size: var(--font-size, 1rem);
+	--textarea-line-height: calc(var(--textarea-font-size) * 1.375);
+	--textarea-content-offset: max(0rem, calc((var(--textarea-button-height) - var(--textarea-line-height)) / 2));
+	--composer-box-inset-inline: min(
+		var(--footer-box-inset),
+		var(--chat-horizontal-padding, var(--chat-horizontal-padding-default))
+	);
+	--composer-box-padding-inline: max(
+		0rem,
+		calc(var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) - var(--composer-box-inset-inline))
+	);
+	display: grid;
+	grid-template-rows: var(--layout-header-height-mobile) minmax(0, 1fr);
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	overflow: hidden;
+	background-color: var(--background-secondary-lighter);
+}
+
+@media (min-width: 768px) {
+	.grid {
+		grid-template-rows: var(--layout-header-height) minmax(0, 1fr);
+	}
+}
+
+.header {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+	align-items: center;
+	gap: var(--channel-header-gap);
+	height: var(--layout-header-height);
+	min-height: var(--layout-header-height);
+	padding: 0 var(--channel-header-padding-inline);
+	border-bottom: 0.0625rem solid var(--user-area-divider-color);
+	background-color: var(--background-secondary-lighter);
+}
+
+@media (max-width: 767px) {
+	.header {
+		height: var(--layout-header-height-mobile);
+		min-height: var(--layout-header-height-mobile);
+	}
+}
+
+.identity {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.identityBack {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--channel-header-back-button-size);
+	width: var(--channel-header-back-button-size);
+	flex-shrink: 0;
+	margin-right: var(--channel-header-back-button-gap);
+}
+
+@media (min-width: 768px) {
+	.identityBackDesktop {
+		display: none;
+	}
+}
+
+.identityName {
+	margin-left: var(--channel-header-name-gap);
+}
+
+.identityNameGroupDM {
+	margin-left: var(--channel-header-name-gap-group-dm);
+}
+
+.identityCaret {
+	margin-left: var(--channel-header-caret-gap);
+}
+
+.identityTopicDivider {
+	margin-left: var(--channel-header-topic-divider-gap);
+	margin-right: var(--channel-header-topic-divider-gap);
+}
+
+.headerActions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--channel-header-actions-gap);
+	min-width: 0;
+	flex-shrink: 0;
+}
+
+.headerAction {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--channel-header-action-size);
+	width: var(--channel-header-action-size);
+	flex-shrink: 0;
+}
+
+.headerSearch {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	width: var(--message-search-bar-width);
+	min-width: var(--message-search-bar-width);
+	max-width: var(--message-search-bar-width);
+	height: var(--message-search-bar-height);
+	min-height: var(--message-search-bar-height);
+	padding-left: var(--input-container-padding);
+	padding-right: var(--input-container-padding);
+	border: var(--skeleton-chrome-border);
+	border-radius: var(--radius-xl);
+	background-color: var(--background-textarea);
+	flex-shrink: 0;
+}
+
+.headerSearchIcon {
+	margin-right: var(--message-search-bar-icon-gap);
+	flex-shrink: 0;
+}
+
+.content {
+	--member-list-width: var(--layout-member-list-width);
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	overflow: hidden;
+	contain: layout style;
+}
+
+.memberListDivider {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: var(--member-list-width);
+	width: 0.0625rem;
+	background: var(--user-area-divider-color);
+	z-index: 5;
+}
+
+.chatArea {
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.chatBody {
+	display: flex;
+	flex-direction: column;
+	font-size: var(--font-size, 1rem);
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	overflow: hidden;
+	background-color: var(--composer-surface-color);
+}
+
+.messages {
+	display: flex;
+	flex: 1 1 0%;
+	flex-direction: column;
+	justify-content: flex-end;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	padding-left: var(--chat-mobile-horizontal-padding);
+	padding-right: var(--chat-mobile-horizontal-padding);
+	padding-bottom: var(--messages-bottom-clearance);
+}
+
+@media (min-width: 768px) {
+	.messages {
+		padding-left: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+		padding-right: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+	}
+}
+
+.composerInputLine {
+	display: flex;
+	align-items: center;
+	height: var(--textarea-line-height);
+	min-width: 0;
+}
+
+.composerAction {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--textarea-button-height);
+	min-width: var(--textarea-button-height);
+	flex-shrink: 0;
+}
+
+.memberList {
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	height: 100%;
+	min-height: 0;
+	width: calc(var(--member-list-width) + var(--outline-frame-border-width, 0.0625rem));
+	min-width: 0;
+	overflow: hidden;
+	border-right: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
+	border-bottom: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
+	border-top-left-radius: var(--outline-radius, 0px);
+	background-color: var(--background-secondary-lighter);
+}
+
+.memberListGroupDM {
+	width: calc(var(--member-list-width) + 2 * var(--outline-frame-border-width, 0.0625rem));
+	border-left: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
+}
+
+.memberListScroller {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+	padding-top: var(--member-list-scroller-padding-block-start);
+	padding-left: var(--member-list-scroller-padding-inline);
+	padding-right: var(--member-list-scroller-padding-inline);
+	padding-bottom: var(--member-list-scroller-padding-block-end);
+}

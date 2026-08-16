@@ -85,6 +85,7 @@ export class Nagbar implements NagbarSettings {
 	guildMfaRequirementDismissed: Record<string, boolean> = {};
 	guildMembershipCtaDismissed = false;
 	visionaryMfaDismissed = false;
+	buildEnvironmentDismissedThisSession = false;
 	scheduledMaintenanceDismissalVersion = 0;
 	claimAccountModalShownThisSession = false;
 	forceOffline = false;
@@ -107,6 +108,7 @@ export class Nagbar implements NagbarSettings {
 	forceScheduledMaintenance = false;
 	forceVoiceSessionRestore = false;
 	forceGuildMfaRequirement = false;
+	forceConnectionNotice = false;
 	forceHideOffline = false;
 	forceHideEmailVerification = false;
 	forceHideIOSInstall = false;
@@ -127,6 +129,7 @@ export class Nagbar implements NagbarSettings {
 	forceHideScheduledMaintenance = false;
 	forceHideVoiceSessionRestore = false;
 	forceHideGuildMfaRequirement = false;
+	forceHideConnectionNotice = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -296,6 +299,10 @@ export class Nagbar implements NagbarSettings {
 		this.scheduledMaintenanceDismissalVersion++;
 	}
 
+	dismissBuildEnvironmentNagbar(): void {
+		this.buildEnvironmentDismissedThisSession = true;
+	}
+
 	markClaimAccountModalShown(): void {
 		this.claimAccountModalShownThisSession = true;
 	}
@@ -355,6 +362,7 @@ export class Nagbar implements NagbarSettings {
 		this.guildMfaRequirementDismissed = {};
 		this.guildMembershipCtaDismissed = false;
 		this.visionaryMfaDismissed = false;
+		this.buildEnvironmentDismissedThisSession = false;
 		this.claimAccountModalShownThisSession = false;
 		this.forceOffline = false;
 		this.forceEmailVerification = false;
@@ -376,6 +384,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceScheduledMaintenance = false;
 		this.forceVoiceSessionRestore = false;
 		this.forceGuildMfaRequirement = false;
+		this.forceConnectionNotice = false;
 		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
 		this.forceHideIOSInstall = false;
@@ -396,6 +405,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceHideScheduledMaintenance = false;
 		this.forceHideVoiceSessionRestore = false;
 		this.forceHideGuildMfaRequirement = false;
+		this.forceHideConnectionNotice = false;
 	}
 
 	handleGuildUpdate(action: {

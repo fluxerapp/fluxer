@@ -6,13 +6,19 @@ import channelItemStyles from '@app/features/app/components/layout/ChannelItem.m
 import {ChannelItemIcon} from '@app/features/app/components/layout/ChannelItemIcon';
 import channelItemSurfaceStyles from '@app/features/app/components/layout/ChannelItemSurface.module.css';
 import styles from '@app/features/app/components/layout/ChannelListContent.module.css';
-import {ChannelListSkeleton} from '@app/features/app/components/layout/ChannelListSkeleton';
+import {
+	DirectSelectionSurface,
+	markDirectSelection,
+	peekDirectSelection,
+} from '@app/features/app/components/layout/DirectSelectionOrigin';
 import {computeVerticalDropPosition} from '@app/features/app/components/layout/dnd/DndDropPosition';
 import {useDragTargetRect} from '@app/features/app/components/layout/dnd/useDragTargetRect';
 import favoritesChannelListStyles from '@app/features/app/components/layout/FavoritesChannelListContent.module.css';
 import {GenericChannelItem} from '@app/features/app/components/layout/GenericChannelItem';
+import {DragItemType} from '@app/features/app/components/layout/types/DndTypes';
 import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
+import {GuildChannelListSkeleton} from '@app/features/app/components/skeleton/GuildSidebarSkeleton';
 import {useChannelHoverPreload} from '@app/features/app/hooks/useChannelHoverPreload';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
@@ -65,24 +71,19 @@ const EMPTY_FAVORITES_DESCRIPTOR = msg({
 	message: 'Empty favorites',
 	comment: 'Short label in the app layout favorites channel list content.',
 });
-const DND_TYPES = {
-	FAVORITES_CHANNEL: 'favorites-channel',
-	FAVORITES_CATEGORY: 'favorites-category',
-} as const;
-
 type ChannelDragItem = {
-	type: typeof DND_TYPES.FAVORITES_CHANNEL;
+	type: typeof DragItemType.FAVORITES_CHANNEL;
 	channelId: string;
 	parentId: string | null;
 };
 type CategoryDragItem = {
-	type: typeof DND_TYPES.FAVORITES_CATEGORY;
+	type: typeof DragItemType.FAVORITES_CATEGORY;
 	categoryId: string;
 };
 type DragItem = ChannelDragItem | CategoryDragItem;
 
-const isCategoryDragItem = (item: DragItem): item is CategoryDragItem => item.type === DND_TYPES.FAVORITES_CATEGORY;
-const isChannelDragItem = (item: DragItem): item is ChannelDragItem => item.type === DND_TYPES.FAVORITES_CHANNEL;
+const isCategoryDragItem = (item: DragItem): item is CategoryDragItem => item.type === DragItemType.FAVORITES_CATEGORY;
+const isChannelDragItem = (item: DragItem): item is ChannelDragItem => item.type === DragItemType.FAVORITES_CHANNEL;
 
 type FavoriteDropIndicator = {position: 'top' | 'bottom'; isValid: boolean};
 
@@ -120,7 +121,8 @@ const FavoriteChannelResolvedItem = observer(
 		const isSelected = location.pathname === Routes.favoritesChannel(favoriteChannel.channelId);
 		const shouldShowSelectedState = isSelected;
 		useEffect(() => {
-			if (isSelected) {
+			const selectedFromThisRow = peekDirectSelection(DirectSelectionSurface.FAVORITES_LIST);
+			if (isSelected && !selectedFromThisRow) {
 				elementRef.current?.scrollIntoView({block: 'nearest'});
 			}
 		}, [isSelected]);
@@ -128,9 +130,9 @@ const FavoriteChannelResolvedItem = observer(
 		const {keyboardModeEnabled} = KeyboardMode;
 		const showKeyboardAffordances = keyboardModeEnabled && isFocused;
 		const [{isDragging}, dragRef, preview] = useDrag<ChannelDragItem, unknown, {isDragging: boolean}>({
-			type: DND_TYPES.FAVORITES_CHANNEL,
+			type: DragItemType.FAVORITES_CHANNEL,
 			item: {
-				type: DND_TYPES.FAVORITES_CHANNEL,
+				type: DragItemType.FAVORITES_CHANNEL,
 				channelId: favoriteChannel.channelId,
 				parentId: favoriteChannel.parentId,
 			},
@@ -140,7 +142,7 @@ const FavoriteChannelResolvedItem = observer(
 			end: resetFavoriteDropIndicator,
 		});
 		const [{isOver}, dropRef] = useDrop<ChannelDragItem, unknown, {isOver: boolean}>({
-			accept: DND_TYPES.FAVORITES_CHANNEL,
+			accept: DragItemType.FAVORITES_CHANNEL,
 			hover: (_item, monitor) => {
 				const clientOffset = monitor.getClientOffset();
 				if (!clientOffset) return;
@@ -233,6 +235,7 @@ const FavoriteChannelResolvedItem = observer(
 			if (LinkChannelCommands.openLinkChannel(channel)) {
 				return;
 			}
+			markDirectSelection(DirectSelectionSurface.FAVORITES_LIST);
 			preloadChannelNow();
 			NavigationCommands.selectChannel(FAVORITES_GUILD_ID, favoriteChannel.channelId);
 		};
@@ -427,9 +430,9 @@ const FavoriteCategoryItem = observer(
 		const {keyboardModeEnabled} = KeyboardMode;
 		const showKeyboardAffordances = keyboardModeEnabled && isFocused;
 		const [{isDragging}, dragRef, preview] = useDrag<CategoryDragItem, unknown, {isDragging: boolean}>({
-			type: DND_TYPES.FAVORITES_CATEGORY,
+			type: DragItemType.FAVORITES_CATEGORY,
 			item: {
-				type: DND_TYPES.FAVORITES_CATEGORY,
+				type: DragItemType.FAVORITES_CATEGORY,
 				categoryId: category.id,
 			},
 			collect: (monitor) => ({
@@ -442,7 +445,7 @@ const FavoriteCategoryItem = observer(
 			unknown,
 			{isOver: boolean; draggedItemType: string | symbol | null}
 		>({
-			accept: [DND_TYPES.FAVORITES_CHANNEL, DND_TYPES.FAVORITES_CATEGORY],
+			accept: [DragItemType.FAVORITES_CHANNEL, DragItemType.FAVORITES_CATEGORY],
 			hover: (item, monitor) => {
 				if (!isCategoryDragItem(item)) {
 					resetCategoryDropIndicator();
@@ -490,8 +493,8 @@ const FavoriteCategoryItem = observer(
 				draggedItemType: monitor.getItemType(),
 			}),
 		});
-		const isCategoryDragOver = isOver && draggedItemType === DND_TYPES.FAVORITES_CATEGORY;
-		const isChannelDragOver = isOver && draggedItemType === DND_TYPES.FAVORITES_CHANNEL;
+		const isCategoryDragOver = isOver && draggedItemType === DragItemType.FAVORITES_CATEGORY;
+		const isChannelDragOver = isOver && draggedItemType === DragItemType.FAVORITES_CHANNEL;
 		useEffect(() => {
 			if (!isCategoryDragOver) resetCategoryDropIndicator();
 		}, [isCategoryDragOver, resetCategoryDropIndicator]);
@@ -605,7 +608,7 @@ const FavoriteCategoryItem = observer(
 );
 const UncategorizedGroup = ({children}: {children: React.ReactNode}) => {
 	const [{isOver}, dropRef] = useDrop<ChannelDragItem, unknown, {isOver: boolean}>({
-		accept: DND_TYPES.FAVORITES_CHANNEL,
+		accept: DragItemType.FAVORITES_CHANNEL,
 		drop: (item, monitor) => {
 			if (monitor.didDrop()) return;
 			if (item.parentId === null) return;
@@ -640,7 +643,8 @@ export const FavoritesChannelListContent = observer(() => {
 	const isDraggingFavorite = useDragLayer((monitor) => {
 		const itemType = monitor.getItemType();
 		return (
-			monitor.isDragging() && (itemType === DND_TYPES.FAVORITES_CHANNEL || itemType === DND_TYPES.FAVORITES_CATEGORY)
+			monitor.isDragging() &&
+			(itemType === DragItemType.FAVORITES_CHANNEL || itemType === DragItemType.FAVORITES_CATEGORY)
 		);
 	});
 	const scrollerRef = useRef<ScrollerHandle>(null);
@@ -704,7 +708,11 @@ export const FavoritesChannelListContent = observer(() => {
 					aria-label={i18n._(EMPTY_FAVORITES_DESCRIPTOR)}
 					data-flx="app.favorites-channel-list-content.region.context-menu"
 				>
-					<ChannelListSkeleton data-flx="app.favorites-channel-list-content.channel-list-skeleton" />
+					<GuildChannelListSkeleton
+						channelList={null}
+						detachedBannerAspectRatio={null}
+						data-flx="app.favorites-channel-list-content.guild-channel-list-skeleton"
+					/>
 					<div className={styles.bottomSpacer} data-flx="app.favorites-channel-list-content.bottom-spacer.empty" />
 				</div>
 			</Scroller>

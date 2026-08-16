@@ -51,7 +51,6 @@ export const VISIONARY_LIFETIME_BADGE_LABEL = 'Visionary #42';
 export const FLUXER_TAG_MIN_WITH_ZERO_LABEL = '#0000';
 export const FLUXER_TAG_MIN_STANDARD_LABEL = '#0001';
 export const FLUXER_TAG_MAX_LABEL = '#9999';
-export const EXAMPLE_INSTANCE_DOMAIN = 'fluxer.app';
 export const LINK_PREVIEW_EXAMPLE_URL = 'https://fluxer.app';
 export const EXAMPLE_MESSAGE_LINK = `${LINK_PREVIEW_EXAMPLE_URL}/channels/...`;
 export const EXAMPLE_GIF_URLS = `${EXAMPLE_URL}/gif1.gif\n${EXAMPLE_URL}/gif2.gif`;

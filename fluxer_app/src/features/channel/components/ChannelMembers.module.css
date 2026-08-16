@@ -41,7 +41,7 @@
 .membersList {
 	display: flex;
 	flex-direction: column;
-	gap: 0.125rem;
+	gap: var(--member-list-row-gap);
 }
 
 .virtualListContent {
@@ -55,8 +55,8 @@
 	right: 0;
 	display: flex;
 	align-items: center;
-	height: 2.75rem;
-	min-height: 2.75rem;
+	height: var(--member-list-item-height);
+	min-height: var(--member-list-item-height);
 }
 
 .virtualMemberRow {
@@ -72,8 +72,8 @@
 
 .virtualGroupRow {
 	display: flex;
-	height: 2rem;
-	min-height: 2rem;
+	height: var(--member-list-group-header-height);
+	min-height: var(--member-list-group-header-height);
 	align-items: flex-start;
 	padding-left: 0.5rem;
 	padding-right: 0.5rem;
@@ -83,77 +83,5 @@
 }
 
 .groupSpacer {
-	height: 0.25rem;
-}
-
-.skeletonItem {
-	display: grid;
-	height: 2.125rem;
-	min-width: 0;
-	grid-template-columns: 1fr auto;
-	align-items: center;
-	gap: 0.25rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
-	padding-top: 0.25rem;
-	padding-bottom: 0.25rem;
-	box-sizing: border-box;
-}
-
-.virtualRow .skeletonItem {
-	height: 2.125rem;
-}
-
-.skeletonContent {
-	display: flex;
-	min-width: 0;
-	align-items: center;
-	gap: 0.625rem;
-}
-
-.skeletonAvatar {
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-	flex-shrink: 0;
-	background: var(--background-modifier-accent);
-	opacity: 0.45;
-}
-
-.skeletonUserInfoContainer {
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
-	flex-grow: 1;
-	gap: 0.125rem;
-}
-
-.skeletonName {
-	height: 0.625rem;
-	width: 60%;
-	border-radius: 0.125rem;
-	background: var(--background-modifier-accent);
-	opacity: 0.45;
-}
-
-.skeletonStatus {
-	height: 0.5rem;
-	width: 40%;
-	border-radius: 0.125rem;
-	background: var(--background-modifier-accent);
-	opacity: 0.35;
-}
-
-.skeletonHeader {
-	width: 5rem;
-	height: 0.875rem;
-	border-radius: 0.25rem;
-	background: var(--background-modifier-accent);
-	opacity: 0.45;
-}
-
-.skeleton {
-	background: var(--background-modifier-accent);
-	opacity: 0.45;
-	border-radius: 0.25rem;
+	height: var(--member-list-group-spacer-height);
 }

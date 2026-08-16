@@ -77,7 +77,7 @@ export const DiscoverySidebar = observer(function DiscoverySidebar() {
 									data-flx="discovery.discovery.discovery-sidebar.nav-item"
 								>
 									<ItemIcon
-										size={remFromPx(18)}
+										size={remFromPx(20)}
 										weight={item.active ? 'fill' : 'bold'}
 										className={styles.navItemIcon}
 										aria-hidden

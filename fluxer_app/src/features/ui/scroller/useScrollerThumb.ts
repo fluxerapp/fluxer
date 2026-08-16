@@ -18,6 +18,7 @@ interface UseScrollerThumbOptions {
 	overflow: ScrollOverflow;
 	minThumbSize: number;
 	scrollRef: React.RefObject<HTMLDivElement | null>;
+	showTrack: boolean;
 }
 
 interface DragState {
@@ -59,6 +60,7 @@ export function useScrollerThumb({
 	overflow,
 	minThumbSize,
 	scrollRef,
+	showTrack,
 }: UseScrollerThumbOptions): UseScrollerThumbResult {
 	const [isDragging, setIsDragging] = useState(false);
 	const [thumbState, setThumbState] = useState<ScrollbarThumbState>(createEmptyThumbState);
@@ -153,7 +155,7 @@ export function useScrollerThumb({
 	}, [orientation]);
 	const refreshThumbState = useCallback(() => {
 		const scrollElement = scrollRef.current;
-		if (!scrollElement || overflow === 'hidden') {
+		if (!scrollElement || overflow === 'hidden' || !showTrack) {
 			setThumbStateIfChanged(createEmptyThumbState());
 			return;
 		}
@@ -161,7 +163,7 @@ export function useScrollerThumb({
 		const forceTrack = overflow === 'scroll';
 		const nextThumbState = calculateThumbState(metrics, minThumbSize, forceTrack, getTrackElementSize());
 		setThumbStateIfChanged(nextThumbState);
-	}, [getTrackElementSize, minThumbSize, orientation, overflow, scrollRef, setThumbStateIfChanged]);
+	}, [getTrackElementSize, minThumbSize, orientation, overflow, scrollRef, setThumbStateIfChanged, showTrack]);
 	const setTrackElement = useCallback(
 		(element: HTMLDivElement | null) => {
 			trackResizeObserverRef.current?.disconnect();

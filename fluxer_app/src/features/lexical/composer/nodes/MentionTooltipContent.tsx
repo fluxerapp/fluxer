@@ -25,15 +25,29 @@ export const MentionWithTooltip = observer(({children, userId, guildId, channelI
 	}
 	return (
 		<>
-			<HoverFloatingTooltipTrigger tooltip={tooltip}>{children}</HoverFloatingTooltipTrigger>
+			<HoverFloatingTooltipTrigger
+				tooltip={tooltip}
+				data-flx="lexical.composer.nodes.mention-tooltip-content.mention-with-tooltip.hover-floating-tooltip-trigger"
+			>
+				{children}
+			</HoverFloatingTooltipTrigger>
 			<HoverFloatingTooltipSurface
 				tooltip={tooltip}
 				portalDataFlx="lexical.mention-tooltip-content.floating-portal"
 				presenceDataFlx="lexical.mention-tooltip-content.animate-presence"
 				data-flx="lexical.mention-tooltip-content.surface"
 			>
-				<flx-lexical-mention-tooltip-card className={flxElementClassName(styles.card)}>
-					<UserIdentityRow user={user} guildId={guildId} channelId={channelId} avatarSize={40} />
+				<flx-lexical-mention-tooltip-card
+					className={flxElementClassName(styles.card)}
+					data-flx="lexical.composer.nodes.mention-tooltip-content.mention-with-tooltip.card"
+				>
+					<UserIdentityRow
+						user={user}
+						guildId={guildId}
+						channelId={channelId}
+						avatarSize={40}
+						data-flx="lexical.composer.nodes.mention-tooltip-content.mention-with-tooltip.user-identity-row"
+					/>
 				</flx-lexical-mention-tooltip-card>
 			</HoverFloatingTooltipSurface>
 		</>

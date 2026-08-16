@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {usePlaceholderSpecs} from '@app/features/app/utils/PlaceholderSpecs';
+import {usePlaceholderSpecs} from '@app/features/app/components/skeleton/PlaceholderSpecs';
+import {ScrollFillerSkeleton} from '@app/features/app/components/skeleton/ScrollFillerSkeleton';
+import {
+	reportSkeletonMessagePresentation,
+	resolveDefaultSkeletonChatViewportHeightPx,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {measureSkeletonHeightPx, useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {renderChannelStream} from '@app/features/channel/components/ChannelMessageStream';
 import styles from '@app/features/channel/components/ChannelMessages.module.css';
 import {ChannelWelcomeSection} from '@app/features/channel/components/ChannelWelcomeSection';
 import {CollapsedMessageVisibilityProvider} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {NewMessagesBar} from '@app/features/channel/components/NewMessagesBar';
-import ScrollFillerSkeleton from '@app/features/channel/components/ScrollFillerSkeleton';
 import {UploadManager} from '@app/features/channel/components/UploadManager';
 import type {Channel} from '@app/features/channel/models/Channel';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
@@ -150,6 +155,7 @@ export const Messages = observer(function Messages({
 }: MessagesProps) {
 	const {i18n} = useLingui();
 	const scrollerInnerRef = useRef<HTMLDivElement | null>(null);
+	const scrollerContainerRef = useRef<HTMLDivElement | null>(null);
 	const lastStateSnapshotRef = useRef<MessagesStateSnapshot | null>(null);
 	const recoveryFetchChannelIdRef = useRef<string | null>(null);
 	interface MessageState extends MessagesStateSnapshot {
@@ -170,12 +176,13 @@ export const Messages = observer(function Messages({
 	const isModalOpen = Modal.hasModalOpen();
 	const isGatewayConnected = GatewayConnection.isConnected;
 	const selectedChannelId = SelectedChannel.currentChannelId;
-	const placeholderSpecs = usePlaceholderSpecs(
-		state.messageDisplayCompact,
-		state.messageGroupSpacing,
-		state.fontSize,
-		channel.id,
-	);
+	const placeholderSpecs = usePlaceholderSpecs({
+		compact: state.messageDisplayCompact,
+		compactAvatarsVisible: Accessibility.showUserAvatarsInCompactMode,
+		groupSpacing: state.messageGroupSpacing,
+		viewportHeightPx: resolveDefaultSkeletonChatViewportHeightPx(),
+		seedKey: channel.id,
+	});
 	const safeMessages = state.messages ?? MessagesState.getMessages(channel.id);
 	const canAutoAck = shouldAutoAck({
 		channelActive: allowAutoAck,
@@ -617,6 +624,20 @@ export const Messages = observer(function Messages({
 		}),
 		[state.messageGroupSpacing],
 	);
+	const compactAvatarsVisible = Accessibility.showUserAvatarsInCompactMode;
+	const messageGutter = Accessibility.messageGutter;
+	useSkeletonLayoutReport(
+		() =>
+			reportSkeletonMessagePresentation({
+				compact: state.messageDisplayCompact,
+				messageGutterPx: messageGutter,
+				fontSizePx: state.fontSize,
+				groupSpacingPx: state.messageGroupSpacing,
+				compactAvatarsVisible,
+				viewportHeightPx: measureSkeletonHeightPx(scrollerContainerRef.current),
+			}),
+		`${state.messageDisplayCompact}|${messageGutter}|${state.fontSize}|${state.messageGroupSpacing}|${compactAvatarsVisible}|${channel.id}|${state.messageVersion}`,
+	);
 	const messageListLabel = channel.name
 		? i18n._(MESSAGE_LIST_FOR_DESCRIPTOR, {channelName: channel.name})
 		: i18n._(MESSAGE_LIST_DESCRIPTOR);
@@ -648,7 +669,11 @@ export const Messages = observer(function Messages({
 				data-flx="channel.messages.upload-manager"
 			/>
 			{topBar}
-			<div className={styles.scrollerContainer} data-flx="channel.messages.scroller-container">
+			<div
+				className={styles.scrollerContainer}
+				ref={scrollerContainerRef}
+				data-flx="channel.messages.scroller-container"
+			>
 				<Scroller
 					fade={false}
 					scrollbar="regular"

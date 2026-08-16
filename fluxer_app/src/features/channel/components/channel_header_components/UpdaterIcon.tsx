@@ -96,16 +96,29 @@ function formatBytes(bytes: number): string {
 	return `${value.toFixed(value >= 100 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
+function resolveUpdaterVisibility(): {
+	readonly hasActionableNativeUpdate: boolean;
+	readonly hasActionableWebUpdate: boolean;
+} {
+	const hasActionableNativeUpdate =
+		Platform.isElectron &&
+		(Updater.nativeUpdateReady ||
+			Updater.nativeAwaitingDownload ||
+			Updater.nativeManualUpdateAvailable ||
+			Updater.nativeDownloadInFlight);
+	const hasActionableWebUpdate = !!Updater.updateInfo.web.available && !hasActionableNativeUpdate;
+	return {hasActionableNativeUpdate, hasActionableWebUpdate};
+}
+
+export function isUpdaterIconVisible(): boolean {
+	const {hasActionableNativeUpdate, hasActionableWebUpdate} = resolveUpdaterVisibility();
+	return hasActionableNativeUpdate || hasActionableWebUpdate;
+}
+
 export const UpdaterIcon = observer(() => {
 	const {i18n} = useLingui();
 	const store = Updater;
-	const hasActionableNativeUpdate =
-		Platform.isElectron &&
-		(store.nativeUpdateReady ||
-			store.nativeAwaitingDownload ||
-			store.nativeManualUpdateAvailable ||
-			store.nativeDownloadInFlight);
-	const hasActionableWebUpdate = !!store.updateInfo.web.available && !hasActionableNativeUpdate;
+	const {hasActionableNativeUpdate, hasActionableWebUpdate} = resolveUpdaterVisibility();
 	const tooltip = useMemo(() => {
 		const version = store.displayVersion;
 		if (Platform.isElectron && store.updateInfo.native.installing) {

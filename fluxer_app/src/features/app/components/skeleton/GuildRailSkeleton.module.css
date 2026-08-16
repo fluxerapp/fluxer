@@ -1,0 +1,277 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.rail {
+	grid-column: 1;
+	grid-row: 1;
+	position: relative;
+	z-index: var(--z-index-elevated-1);
+	height: calc(
+		100% -
+		var(--layout-user-area-reserved-height, 0px) -
+		var(--layout-mobile-bottom-nav-reserved-height, 0px)
+	);
+	min-height: 0;
+	width: var(--layout-guild-list-width);
+	min-width: 0;
+	background-color: var(--background-secondary);
+}
+
+.scroller {
+	height: 100%;
+	width: 100%;
+	min-width: 0;
+	overflow: hidden;
+	clip-path: inset(0);
+	padding-top: var(--spacing-1);
+	padding-bottom: var(--spacing-2);
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	padding-bottom: calc(
+		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +
+		var(--spacing-2)
+	);
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	gap: var(--guild-list-item-gap);
+}
+
+.sectionTrailingGap {
+	padding-bottom: var(--guild-list-item-gap);
+}
+
+.items {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	gap: 0;
+}
+
+.itemSlot {
+	--guild-rail-skeleton-badge-size: var(--mention-badge-small-size);
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	min-height: var(--guild-list-item-target-size);
+	z-index: 0;
+}
+
+.itemSlot[data-selected='true'] flx-skeleton-circle {
+	border-radius: 30%;
+}
+
+.folderSlot {
+	min-height: var(--guild-list-item-target-size);
+	z-index: 1;
+}
+
+.outageSlot {
+	min-height: var(--guild-list-item-box-size);
+}
+
+.mentionBadge {
+	position: absolute;
+	right: calc(50% - var(--guild-icon-size) / 2 - 0.25rem);
+	bottom: calc(50% - var(--guild-icon-size) / 2 - 0.25rem);
+	box-shadow: 0 0 0 0.1875rem var(--guild-badge-surface);
+}
+
+.folderSlot .mentionBadge {
+	right: -0.25rem;
+	bottom: -0.25rem;
+}
+
+.itemsTrailingGapCancel {
+	margin-bottom: calc(-1 * var(--guild-list-item-gap));
+}
+
+.collapsedFolder {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--guild-list-item-box-size);
+	height: var(--guild-list-item-box-size);
+}
+
+.collapsedFolderBackground {
+	position: absolute;
+	inset: 0;
+	border-radius: var(--folder-radius);
+}
+
+.collapsedFolderGrid {
+	position: absolute;
+	inset: 0.25rem;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-rows: repeat(2, minmax(0, 1fr));
+	gap: 0.125rem;
+}
+
+.collapsedFolderMini {
+	border-radius: calc(var(--folder-radius) * 0.38);
+}
+
+.expandedFolderSlot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+}
+
+.expandedFolder {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+}
+
+.expandedFolderBackground {
+	position: absolute;
+	top: 0;
+	bottom: calc(var(--guild-list-item-gap) / 2);
+	height: auto;
+	border-radius: calc(var(--guild-list-item-box-size) * 0.32);
+}
+
+.expandedFolderHeader {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: var(--guild-list-item-target-size);
+}
+
+.expandedFolderHeaderSurface {
+	border-radius: var(--folder-radius);
+}
+
+.expandedFolderGuilds {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	gap: 0.0625rem;
+	padding-bottom: calc(var(--guild-list-item-gap) / 2);
+	transform: translateY(0rem);
+}
+
+.expandedFolderGuild {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: var(--guild-list-item-target-size);
+	z-index: 0;
+}
+
+.expandedFolderGuild[data-selected='true'] flx-skeleton-circle {
+	border-radius: 30%;
+}
+
+.item {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: var(--guild-list-item-box-size);
+	z-index: 0;
+}
+
+.item[data-selected='true'] flx-skeleton-circle {
+	border-radius: 30%;
+}
+
+.fluxerIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--guild-icon-size);
+	width: var(--guild-icon-size);
+	flex-shrink: 0;
+	border-radius: var(--radius-full);
+	background-color: var(--guilds-layout-item-bg);
+	color: var(--text-primary);
+}
+
+.item[data-selected='true'] .fluxerIcon {
+	border-radius: 30%;
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+.fluxerIconGlyph {
+	height: 1.75rem;
+	width: 1.75rem;
+	color: currentColor;
+}
+
+.dividerSlot {
+	display: grid;
+	grid-template-rows:
+		var(--guild-list-divider-base-gap)
+		var(--guild-list-divider-line-size)
+		var(--guild-list-divider-base-gap);
+	justify-items: center;
+	width: 100%;
+	flex-shrink: 0;
+}
+
+.dividerSlotExtended {
+	grid-template-rows:
+		calc(var(--guild-list-divider-base-gap) + var(--guild-list-item-target-half-extra))
+		var(--guild-list-divider-line-size)
+		var(--guild-list-divider-base-gap);
+}
+
+.divider {
+	grid-row: 2;
+	height: var(--guild-list-divider-line-size);
+	width: 2rem;
+	flex-shrink: 0;
+	border-radius: 0.0625rem;
+	background-color: var(--background-modifier-hover);
+}
+
+.actionIcon {
+	composes: createGuildButtonIcon from '@app/features/app/components/layout/GuildsLayout.module.css';
+}
+
+.item[data-selected='true'] .actionIcon {
+	border-radius: 30%;
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+.actionIconGlyph {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: currentColor;
+}
+
+.favoritesIconGlyph {
+	height: 1.75rem;
+	width: 1.75rem;
+	color: currentColor;
+}

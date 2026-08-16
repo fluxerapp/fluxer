@@ -28,6 +28,7 @@ interface ListScrollAnchorSnapshot {
 	readonly anchors: ReadonlyArray<ListScrollAnchorPosition>;
 	readonly clientHeight: number;
 	readonly scrollHeight: number;
+	readonly scrollTop: number;
 }
 
 interface OwnedAnimationFrame {
@@ -101,6 +102,7 @@ function measureListScrollAnchors(
 		anchors,
 		clientHeight: scrollNode.clientHeight,
 		scrollHeight: scrollNode.scrollHeight,
+		scrollTop,
 	};
 }
 
@@ -217,7 +219,6 @@ export function useListScrollAnchor({scrollerRef}: UseListScrollAnchorOptions): 
 	const anchorNodesRef = useRef<Map<string, HTMLElement>>(new Map());
 	const anchorCallbacksRef = useRef<Map<string, RefCallback<HTMLElement>>>(new Map());
 	const snapshotRef = useRef<ListScrollAnchorSnapshot | null>(null);
-	const latestScrollTopRef = useRef(0);
 	const resizeFrameRef = useRef<OwnedAnimationFrame | null>(null);
 
 	const getAnchorRef = useCallback((key: string): RefCallback<HTMLElement> => {
@@ -242,11 +243,10 @@ export function useListScrollAnchor({scrollerRef}: UseListScrollAnchorOptions): 
 		const previousSnapshot = snapshotRef.current;
 		if (previousSnapshot == null) {
 			snapshotRef.current = currentSnapshot;
-			latestScrollTopRef.current = scrollNode.scrollTop;
 			return;
 		}
 
-		const previousScrollTop = latestScrollTopRef.current;
+		const previousScrollTop = previousSnapshot.scrollTop;
 		let targetScrollTop = previousScrollTop;
 		const previousMaxScrollTop = Math.max(0, previousSnapshot.scrollHeight - previousSnapshot.clientHeight);
 		const previousDistanceFromBottom = previousMaxScrollTop - previousScrollTop;
@@ -273,12 +273,11 @@ export function useListScrollAnchor({scrollerRef}: UseListScrollAnchorOptions): 
 		if (Math.abs(scrollNode.scrollTop - targetScrollTop) > LIST_SCROLL_TOP_EPSILON_PX) {
 			scrollNode.scrollTop = targetScrollTop;
 		}
-		latestScrollTopRef.current = targetScrollTop;
-		snapshotRef.current = currentSnapshot;
+		snapshotRef.current = {...currentSnapshot, scrollTop: targetScrollTop};
 	}, [scrollerRef]);
 
 	const handleScroll = useCallback((scrollNode: HTMLElement) => {
-		latestScrollTopRef.current = scrollNode.scrollTop;
+		snapshotRef.current = measureListScrollAnchors(scrollNode, anchorNodesRef.current);
 	}, []);
 
 	const handleResize = useCallback(() => {

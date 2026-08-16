@@ -95,7 +95,11 @@ const ThemeRegisterPage = observer(function ThemeRegisterPage() {
 					subtitle={i18n._(SHARED_THEME_DESCRIPTOR)}
 					data-flx="theme.theme-register-page.auth-page-header.sso"
 				/>
-				<AuthSsoPanel redirectPath={themePath} dataFlx="theme.theme-register-page.sso-panel" />
+				<AuthSsoPanel
+					redirectPath={themePath}
+					dataFlx="theme.theme-register-page.sso-panel"
+					data-flx="theme.theme-register-page.auth-sso-panel"
+				/>
 				<AuthBottomLink variant="login" to={loginPath} data-flx="theme.theme-register-page.auth-bottom-link.sso" />
 			</div>
 		);

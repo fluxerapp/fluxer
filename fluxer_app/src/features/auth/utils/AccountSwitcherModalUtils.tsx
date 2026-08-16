@@ -4,7 +4,6 @@ import i18n from '@app/app/I18n';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import {describeApiEndpoint} from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {getAccountAvatarUrl, getAccountDisplayName} from '@app/features/auth/components/accounts/AccountListItem';
 import {showBrowserLoginHandoffModal} from '@app/features/auth/flow/BrowserLoginHandoffModal';
@@ -19,7 +18,6 @@ import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {DEFAULT_API_VERSION} from '@fluxer/constants/src/AppConstants';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
@@ -52,9 +50,7 @@ function showAccountSwitcherErrorModal(message: MessageDescriptor): void {
 export interface AccountSwitcherLogic {
 	currentAccount: Account | null;
 	accounts: Array<Account>;
-	secondaryAccounts: Array<Account>;
 	isBusy: boolean;
-	currentInstanceLabel: string | null;
 	handleSwitchAccount: (userId: string) => Promise<void>;
 	handleLogout: () => Promise<void>;
 	handleLogoutStoredAccount: (account: Account) => Promise<void>;
@@ -67,40 +63,37 @@ export interface AccountSwitcherLogic {
 export interface AccountSwitcherLogicOptions {
 	redirectAfterSwitch?: string | null;
 	redirectAfterLogin?: string | null;
-}
-
-function buildAccountLogoutUrl(account: Account): string {
-	const endpoint = account.instance?.apiEndpoint?.replace(/\/+$/, '');
-	if (!endpoint) {
-		return Endpoints.AUTH_LOGOUT;
-	}
-	return `${endpoint}/v${DEFAULT_API_VERSION}${Endpoints.AUTH_LOGOUT}`;
+	switchAccount?: (userId: string) => Promise<void>;
 }
 
 export function useAccountSwitcherLogic(options: AccountSwitcherLogicOptions = {}): AccountSwitcherLogic {
-	const {redirectAfterSwitch = undefined, redirectAfterLogin = undefined} = options;
+	const {redirectAfterSwitch = undefined, redirectAfterLogin = undefined, switchAccount} = options;
 	const currentAccount = AccountManager.currentAccount;
 	const accounts = AccountManager.getAllAccounts();
 	const isBusy = AccountManager.isSwitching || AccountManager.isLoading;
-	const secondaryAccounts = accounts.filter((a) => a.userId !== currentAccount?.userId);
-	const currentInstanceLabel = currentAccount?.instance
-		? describeApiEndpoint(currentAccount.instance.apiEndpoint)
-		: null;
 	const handleLoginSuccess = async (payload: LoginSuccessPayload): Promise<void> => {
 		await AuthenticationCommands.completeLogin(payload, {redirectPath: redirectAfterLogin});
 		ModalCommands.popAll();
 	};
 	const handleReLogin = (userId: string): void => {
 		const account = AccountManager.accounts.get(userId);
-		const email = account?.userData?.email ?? undefined;
-		showBrowserLoginHandoffModal(handleLoginSuccess, undefined, email);
+		if (!account) {
+			showAccountSwitcherErrorModal(WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR);
+			return;
+		}
+		const email = account.userData?.email ?? undefined;
+		showBrowserLoginHandoffModal(handleLoginSuccess, email);
 	};
 	const handleSwitchAccount = async (userId: string): Promise<void> => {
 		if (isBusy) {
 			return;
 		}
 		try {
-			await AccountManager.switchToAccount(userId, redirectAfterSwitch);
+			if (switchAccount) {
+				await switchAccount(userId);
+			} else {
+				await AccountManager.switchToAccount(userId, redirectAfterSwitch);
+			}
 			ModalCommands.pop();
 		} catch (error) {
 			if (error instanceof SessionExpiredError) {
@@ -128,7 +121,7 @@ export function useAccountSwitcherLogic(options: AccountSwitcherLogicOptions = {
 			return;
 		}
 		try {
-			await http.post(buildAccountLogoutUrl(account), {
+			await http.post(Endpoints.AUTH_LOGOUT, {
 				headers: {Authorization: account.token},
 				timeoutMs: 5000,
 				retries: 0,
@@ -156,9 +149,7 @@ export function useAccountSwitcherLogic(options: AccountSwitcherLogicOptions = {
 	return {
 		currentAccount,
 		accounts,
-		secondaryAccounts,
 		isBusy,
-		currentInstanceLabel,
 		handleSwitchAccount,
 		handleLogout,
 		handleLogoutStoredAccount,

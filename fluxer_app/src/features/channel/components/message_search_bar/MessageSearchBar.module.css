@@ -4,7 +4,7 @@
 	position: relative;
 	display: flex;
 	align-items: center;
-	width: 15.25rem;
+	width: var(--message-search-bar-width);
 }
 
 .srOnly {
@@ -41,7 +41,7 @@
 	width: 100%;
 	padding-left: var(--input-container-padding);
 	padding-right: var(--input-container-padding);
-	min-height: 2.25rem;
+	min-height: var(--message-search-bar-height);
 	border-radius: var(--radius-xl);
 	border: 0.0625rem solid var(--search-input-border-color);
 	background-color: var(--search-input-background);
@@ -71,8 +71,8 @@
 }
 
 .searchIcon {
-	height: 1rem;
-	width: 1rem;
+	height: var(--message-search-bar-icon-size);
+	width: var(--message-search-bar-icon-size);
 	flex-shrink: 0;
 	color: var(--search-icon-color);
 	transition: color 0.1s ease;
@@ -98,7 +98,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-right: 0.5rem;
+	margin-right: var(--message-search-bar-icon-gap);
 	padding: 0;
 	border: none;
 	background: transparent;

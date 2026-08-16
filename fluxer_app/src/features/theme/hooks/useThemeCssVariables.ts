@@ -2,7 +2,7 @@
 
 import {HdrDisplayMode} from '@app/features/accessibility/state/Accessibility';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {useEffect} from 'react';
+import {useLayoutEffect} from 'react';
 
 interface ThemeCssVariablesOptions {
 	effectiveTheme: string;
@@ -27,7 +27,7 @@ export function useThemeCssVariables({
 	messageGroupSpacing,
 	hdrDisplayMode,
 }: ThemeCssVariablesOptions): void {
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
 		htmlNode.classList.add(`theme-${effectiveTheme}`);
 		htmlNode.style.setProperty('--saturation-factor', saturationFactor.toString());

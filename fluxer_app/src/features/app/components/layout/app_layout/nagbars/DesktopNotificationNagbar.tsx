@@ -5,6 +5,7 @@ import styles from '@app/features/app/components/layout/app_layout/nagbars/Deskt
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {ENABLE_NOTIFICATIONS_DESCRIPTOR, OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {usePushSubscriptions} from '@app/features/notification/hooks/usePushSubscriptions';
@@ -130,8 +131,8 @@ export const DesktopNotificationNagbar = observer(({isMobile}: {isMobile: boolea
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="var(--brand-primary)"
-			textColor="var(--text-on-brand-primary)"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.BRAND].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.BRAND].textColor}
 			dismissible
 			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.desktop-notification-nagbar.nagbar"

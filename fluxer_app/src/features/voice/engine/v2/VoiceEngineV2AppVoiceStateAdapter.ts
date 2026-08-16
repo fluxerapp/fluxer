@@ -45,6 +45,9 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 	private voiceStates: VoiceGatewayVoiceStates = {};
 	private userVoiceStates: VoiceGatewayUserVoiceStates = {};
 	private connectionVoiceStates: VoiceGatewayConnectionVoiceStates = {};
+	private readonly guildVoiceStates = observable.map<string, VoiceGatewayVoiceStates[string]>(undefined, {
+		deep: false,
+	});
 	private readonly ignoredConnectionIds = new Set<string>();
 
 	constructor() {
@@ -171,13 +174,13 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 	}
 
 	getAllVoiceStatesInChannel(guildId: string, channelId: string): Readonly<Record<string, NormalizedVoiceState>> {
-		return this.voiceStates[guildId]?.[channelId] ?? {};
+		return this.guildVoiceStates.get(guildId)?.[channelId] ?? {};
 	}
 
 	getAllVoiceStatesInGuild(
 		guildId: string,
 	): Readonly<Record<string, Readonly<Record<string, NormalizedVoiceState>>>> | undefined {
-		return this.voiceStates[guildId];
+		return this.guildVoiceStates.get(guildId);
 	}
 
 	getAllVoiceStates(): Readonly<
@@ -201,6 +204,20 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 		this.voiceStates = context.voiceStates;
 		this.userVoiceStates = context.userVoiceStates;
 		this.connectionVoiceStates = context.connectionVoiceStates;
+		this.synchronizeGuildVoiceStates(context.voiceStates);
+	}
+
+	private synchronizeGuildVoiceStates(voiceStates: VoiceGatewayVoiceStates): void {
+		for (const guildId of Array.from(this.guildVoiceStates.keys())) {
+			if (!Object.hasOwn(voiceStates, guildId)) {
+				this.guildVoiceStates.delete(guildId);
+			}
+		}
+		for (const guildId in voiceStates) {
+			const guildStates = voiceStates[guildId];
+			if (this.guildVoiceStates.get(guildId) === guildStates) continue;
+			this.guildVoiceStates.set(guildId, guildStates);
+		}
 	}
 }
 

@@ -2,7 +2,7 @@
 
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import channelItemSurfaceStyles from '@app/features/app/components/layout/ChannelItemSurface.module.css';
-import {DND_TYPES} from '@app/features/app/components/layout/types/DndTypes';
+import {DragItemType} from '@app/features/app/components/layout/types/DndTypes';
 import styles from '@app/features/app/components/layout/VoiceParticipantItem.module.css';
 import {VoiceStateIcons} from '@app/features/app/components/layout/VoiceStateIcons';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
@@ -83,9 +83,9 @@ export const VoiceParticipantItem = observer(function VoiceParticipantItem({
 	const isContextMenuOpen = useContextMenuHoverState(rowRef);
 	const [{isDragging}, dragRef] = useDrag(
 		() => ({
-			type: DND_TYPES.VOICE_PARTICIPANT,
+			type: DragItemType.VOICE_PARTICIPANT,
 			item: {
-				type: DND_TYPES.VOICE_PARTICIPANT,
+				type: DragItemType.VOICE_PARTICIPANT,
 				id: user.id,
 				userId: user.id,
 				guildId,

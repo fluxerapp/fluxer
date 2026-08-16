@@ -61,7 +61,7 @@ export const OutlineFrame: React.FC<OutlineFrameProps> = ({
 				{nagbar}
 				<div className={styles.contentWrapper} data-flx="app.outline-frame.content-wrapper">
 					{sidebarDivider && <div className={styles.divider} aria-hidden data-flx="app.outline-frame.divider" />}
-					{sidebarResizeHandle && <SidebarResizeHandle />}
+					{sidebarResizeHandle && <SidebarResizeHandle data-flx="app.outline-frame.sidebar-resize-handle" />}
 					<div className={styles.body} data-flx="app.outline-frame.body">
 						{children}
 					</div>

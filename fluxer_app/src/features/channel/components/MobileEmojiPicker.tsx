@@ -184,7 +184,7 @@ export const MobileEmojiPicker = observer(
 			}
 			return Math.max(0, effectiveViewportWidth - 24);
 		}, [effectiveViewportWidth]);
-		const virtualRows = useVirtualRows(
+		const pickerRows = useVirtualRows(
 			normalizedSearchTerm,
 			renderedEmojis,
 			favoriteEmojis,
@@ -269,7 +269,7 @@ export const MobileEmojiPicker = observer(
 										data-flx="channel.mobile-emoji-picker.premium-upsell-banner"
 									/>
 								)}
-								{virtualRows.map((row) => (
+								{pickerRows.map((row) => (
 									<div
 										key={`${row.type}-${row.index}`}
 										ref={

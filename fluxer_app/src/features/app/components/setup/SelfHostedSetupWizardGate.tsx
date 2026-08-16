@@ -885,12 +885,28 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											productName={fallbackProductName}
 											isAuthenticated={isAuthenticated}
 											initialFocusRef={welcomeInitialFocusRef}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.welcome-step"
 										/>
 									)}
-									{step === 'theme' && <ThemeStep theme={setupTheme} onThemeChange={setSetupTheme} />}
-									{step === 'admin_intro' && <AdminIntroStep />}
-									{step === 'admin_account' && <AdminAccountStep theme={setupTheme} />}
-									{step === 'loading' && <LoadingStep />}
+									{step === 'theme' && (
+										<ThemeStep
+											theme={setupTheme}
+											onThemeChange={setSetupTheme}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.theme-step"
+										/>
+									)}
+									{step === 'admin_intro' && (
+										<AdminIntroStep data-flx="app.setup.self-hosted-setup-wizard-gate.admin-intro-step" />
+									)}
+									{step === 'admin_account' && (
+										<AdminAccountStep
+											theme={setupTheme}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.admin-account-step"
+										/>
+									)}
+									{step === 'loading' && (
+										<LoadingStep data-flx="app.setup.self-hosted-setup-wizard-gate.loading-step" />
+									)}
 									{step === 'branding' && (
 										<BrandingStep
 											productName={productName}
@@ -902,10 +918,16 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											onThemeColorChange={setThemeColor}
 											onUploadAsset={handleUploadAsset}
 											onClearAsset={handleClearAsset}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.branding-step"
 										/>
 									)}
 									{step === 'registration' && (
-										<RegistrationStep mode={registrationMode} disabled={submitting} onChange={setRegistrationMode} />
+										<RegistrationStep
+											mode={registrationMode}
+											disabled={submitting}
+											onChange={setRegistrationMode}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.registration-step.set-registration-mode"
+										/>
 									)}
 									{step === 'community' && (
 										<CommunityStep
@@ -917,6 +939,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											onToggleSingleCommunity={setSingleCommunityEnabled}
 											onSingleCommunityNameChange={setSingleCommunityName}
 											onToggleDirectMessages={setDirectMessagesDisabled}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.community-step"
 										/>
 									)}
 									{step === 'media_expiry' && (
@@ -924,6 +947,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											draft={mediaExpiryDraft}
 											disabled={submitting}
 											onDraftChange={handleMediaExpiryDraftChange}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.media-expiry-step"
 										/>
 									)}
 									{wizardStepToIntegrationKind(step) && (
@@ -935,6 +959,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											smtpTestResult={smtpTestResult}
 											onDraftChange={handleIntegrationDraftChange}
 											onTestSmtp={handleTestSmtp}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.integration-step"
 										/>
 									)}
 									{step === 'services' && (
@@ -943,10 +968,16 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											selection={serviceSelection}
 											disabled={submitting}
 											onToggle={handleToggleService}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.services-step"
 										/>
 									)}
 									{step === 'premium' && (
-										<PremiumStep mode={premiumMode} disabled={submitting} onChange={setPremiumMode} />
+										<PremiumStep
+											mode={premiumMode}
+											disabled={submitting}
+											onChange={setPremiumMode}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.premium-step.set-premium-mode"
+										/>
 									)}
 									{step === 'finish' && (
 										<FinishStep
@@ -957,6 +988,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											attachmentExpiryEnabled={mediaExpiryDraft.enabled}
 											premiumMode={premiumMode}
 											submitError={submitError}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.finish-step"
 										/>
 									)}
 								</SteppedCarousel>
@@ -989,7 +1021,13 @@ export const SelfHostedSetupWizardGate = observer(() => {
 													<Button
 														variant="secondary"
 														disabled={stepNavigationLocked}
-														leftIcon={<ArrowLeftIcon size={18} weight="bold" />}
+														leftIcon={
+															<ArrowLeftIcon
+																size={18}
+																weight="bold"
+																data-flx="app.setup.self-hosted-setup-wizard-gate.arrow-left-icon"
+															/>
+														}
 														onClick={goBack}
 														data-flx="app.self-hosted-setup-wizard-gate.back-button"
 													>
@@ -1015,7 +1053,13 @@ export const SelfHostedSetupWizardGate = observer(() => {
 													>
 														<Button
 															submitting={submitting}
-															rightIcon={<CheckIcon size={18} weight="bold" />}
+															rightIcon={
+																<CheckIcon
+																	size={18}
+																	weight="bold"
+																	data-flx="app.setup.self-hosted-setup-wizard-gate.check-icon"
+																/>
+															}
 															onClick={submit}
 															data-flx="app.self-hosted-setup-wizard-gate.finish-button"
 														>
@@ -1035,7 +1079,13 @@ export const SelfHostedSetupWizardGate = observer(() => {
 														<Button
 															disabled={primaryButtonDisabled}
 															submitting={isLoading}
-															rightIcon={<ArrowRightIcon size={18} weight="bold" />}
+															rightIcon={
+																<ArrowRightIcon
+																	size={18}
+																	weight="bold"
+																	data-flx="app.setup.self-hosted-setup-wizard-gate.arrow-right-icon"
+																/>
+															}
 															onClick={handlePrimaryButton}
 															data-flx="app.self-hosted-setup-wizard-gate.next-button"
 														>

@@ -32,9 +32,7 @@ function createDefaultGuildDimensions(guildId: string): GuildDimensions {
 class Dimension {
 	channelDimensions = observable.map(new Map<string, ChannelDimensions>());
 	guildDimensions = observable.map(new Map<string, GuildDimensions>());
-	guildListDimensions = observable.box({
-		scrollTop: 0,
-	});
+	guildListDimensions = observable.box<GuildListDimensions>({scrollTop: 0}, {deep: false});
 
 	constructor() {
 		makeObservable(this, {
@@ -125,6 +123,9 @@ class Dimension {
 	}
 
 	updateGuildListDimensions(scrollTop: number): void {
+		if (this.guildListDimensions.get().scrollTop === scrollTop) {
+			return;
+		}
 		this.guildListDimensions.set({scrollTop});
 	}
 

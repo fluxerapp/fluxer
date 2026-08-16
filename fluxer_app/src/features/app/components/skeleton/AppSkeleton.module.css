@@ -1,0 +1,104 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.container {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr);
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	overflow: hidden;
+	position: relative;
+	user-select: none;
+	-webkit-user-select: none;
+	opacity: 1;
+	transition: opacity 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.containerExiting {
+	position: absolute;
+	inset: 0;
+	z-index: calc(var(--z-index-modal) - 1);
+	opacity: 0;
+	pointer-events: none;
+}
+
+.containerGuilds {
+	--layout-user-area-overlay-height: 0px;
+	grid-template-columns: var(--layout-guild-list-width) minmax(0, 1fr);
+	background-color: var(--background-secondary);
+}
+
+.containerRailless {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.containerReserveUserArea {
+	--layout-user-area-overlay-height: calc(
+		var(--layout-user-area-height) +
+		var(--user-area-box-inset-block-end) +
+		var(--layout-voice-connection-height)
+	);
+}
+
+.containerReserveMobileBottomNav {
+	--layout-mobile-bottom-nav-reserved-height: var(--mobile-bottom-nav-height);
+}
+
+:global(html.platform-native) .containerGuilds {
+	padding-top: var(--native-titlebar-height);
+}
+
+.outlineFrame {
+	--outline-radius: 0px;
+}
+
+:global(html:not(.platform-native)) .outlineFrame {
+	border-top: none;
+}
+
+:global(html.platform-native) .outlineFrame {
+	border-top: 0.0625rem solid var(--user-area-divider-color);
+	--outline-radius: var(--outline-frame-radius-native);
+}
+
+.content {
+	display: grid;
+	grid-template-rows: minmax(0, 1fr);
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.main {
+	display: grid;
+	grid-template-columns: var(--layout-sidebar-width) minmax(0, 1fr);
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.mainSidebarless {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.contentColumn {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	background-color: var(--background-secondary);
+}
+
+:global(html.reduced-motion) .container {
+	transition-duration: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.container {
+		transition-duration: 0s;
+	}
+}

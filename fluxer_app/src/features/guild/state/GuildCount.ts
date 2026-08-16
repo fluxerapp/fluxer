@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import {makeAutoObservable} from 'mobx';
+import {makeAutoObservable, observable} from 'mobx';
 
 export interface GuildCounts {
 	memberCount: number;
@@ -21,10 +21,9 @@ const FRESH_TTL_MS = 60 * 1000;
 const REQUEST_DEBOUNCE_MS = 100;
 
 class GuildCount {
-	private cache: Map<string, GuildCounts> = new Map();
+	private readonly cache = observable.map<string, GuildCounts>(undefined, {deep: false});
 	private pending: Set<string> = new Set();
 	private flushTimer: NodeJS.Timeout | null = null;
-	private cacheVersion = 0;
 
 	constructor() {
 		makeAutoObservable<GuildCount, 'cache' | 'pending' | 'flushTimer'>(
@@ -35,7 +34,6 @@ class GuildCount {
 	}
 
 	getCounts(guildId: string): GuildCounts | null {
-		void this.cacheVersion;
 		return this.cache.get(guildId) ?? null;
 	}
 
@@ -86,13 +84,10 @@ class GuildCount {
 			});
 			this.pending.delete(entry.guild_id);
 		}
-		this.cacheVersion += 1;
 	}
 
 	handleGuildDelete(guildId: string): void {
-		if (this.cache.delete(guildId)) {
-			this.cacheVersion += 1;
-		}
+		this.cache.delete(guildId);
 		this.pending.delete(guildId);
 	}
 
@@ -103,12 +98,10 @@ class GuildCount {
 			clearTimeout(this.flushTimer);
 			this.flushTimer = null;
 		}
-		this.cacheVersion += 1;
 	}
 
 	private hydrate(guilds: ReadonlyArray<HydratableGuild>): void {
 		const now = Date.now();
-		let updated = false;
 		for (const guild of guilds) {
 			if (!guild || typeof guild.id !== 'string') continue;
 			if (guild.unavailable) continue;
@@ -118,10 +111,6 @@ class GuildCount {
 				onlineCount: guild.online_count,
 				fetchedAt: now,
 			});
-			updated = true;
-		}
-		if (updated) {
-			this.cacheVersion += 1;
 		}
 	}
 

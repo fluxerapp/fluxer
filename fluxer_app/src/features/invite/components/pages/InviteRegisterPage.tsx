@@ -160,7 +160,11 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 				/>
 				<InviteHeader invite={invite} data-flx="invite.invite-register-page.invite-header.sso" />
 				<div className={sharedStyles.container} data-flx="invite.invite-register-page.sso-container">
-					<AuthSsoPanel redirectPath={ssoRedirectPath} dataFlx="invite.invite-register-page.sso-panel" />
+					<AuthSsoPanel
+						redirectPath={ssoRedirectPath}
+						dataFlx="invite.invite-register-page.sso-panel"
+						data-flx="invite.invite-register-page.auth-sso-panel"
+					/>
 					<AuthBottomLink variant="login" to={loginPath} data-flx="invite.invite-register-page.auth-bottom-link.sso" />
 				</div>
 			</>

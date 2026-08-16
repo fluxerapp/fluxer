@@ -228,6 +228,7 @@ export function SelectionFormattingToolbarPlugin({enabled = true}: {enabled?: bo
 			onDismiss={() => setRect(null)}
 			toolbarRef={toolbarRef}
 			savedSelectionRef={savedSelectionRef}
+			data-flx="lexical.composer.selection-formatting-toolbar.selection-formatting-toolbar-plugin.selection-toolbar-surface"
 		/>
 	);
 }
@@ -374,7 +375,10 @@ function SelectionToolbarSurface({
 		[focusButton, focusIndex, returnFocusToEditor],
 	);
 	return (
-		<FloatingPortal root={portalRoot}>
+		<FloatingPortal
+			root={portalRoot}
+			data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.floating-portal"
+		>
 			<flx-lexical-selection-formatting-toolbar
 				ref={(element) => {
 					(ref as React.MutableRefObject<HTMLElement | null>).current = element;
@@ -401,6 +405,7 @@ function SelectionToolbarSurface({
 					}
 				}}
 				onKeyDown={handleToolbarKeyDown}
+				data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.toolbar"
 			>
 				{FORMATS.map((format, index) => {
 					const label = i18n._(format.label);
@@ -421,8 +426,13 @@ function SelectionToolbarSurface({
 								event.preventDefault();
 							}}
 							onClick={() => apply(format.wrapper)}
+							data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.button.apply"
 						>
-							<format.icon weight="bold" className={styles.icon} />
+							<format.icon
+								weight="bold"
+								className={styles.icon}
+								data-flx="lexical.composer.selection-formatting-toolbar.selection-toolbar-surface.icon"
+							/>
 						</button>
 					);
 				})}

@@ -6,11 +6,6 @@
 	width: fit-content;
 }
 
-.withAttachments {
-	border-top-width: 0.0625rem;
-	border-top-style: solid;
-}
-
 .standalone {
 	border-radius: var(--radius-lg);
 	border-width: 0.0625rem;

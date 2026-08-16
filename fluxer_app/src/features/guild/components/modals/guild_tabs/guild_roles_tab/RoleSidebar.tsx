@@ -139,7 +139,10 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 							backend={HTML5Backend}
 							data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.dnd-provider"
 						>
-							<RoleDragAutoScroll listRef={listRef} />
+							<RoleDragAutoScroll
+								listRef={listRef}
+								data-flx="guild.guild-tabs.guild-roles-tab.role-sidebar.role-drag-auto-scroll"
+							/>
 							{hoistedRoles.map((role, index) => {
 								const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
 								return (
@@ -232,7 +235,10 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 						backend={HTML5Backend}
 						data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.dnd-provider--2"
 					>
-						<RoleDragAutoScroll listRef={listRef} />
+						<RoleDragAutoScroll
+							listRef={listRef}
+							data-flx="guild.guild-tabs.guild-roles-tab.role-sidebar.role-drag-auto-scroll--2"
+						/>
 						{roles.map((role: GuildRole, index) => {
 							const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
 							return (

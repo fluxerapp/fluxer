@@ -30,13 +30,13 @@
 	word-break: break-word;
 	-webkit-tap-highlight-color: transparent;
 	display: grid;
-	grid-template-columns: var(--chat-horizontal-padding, var(--message-gutter)) var(--message-avatar-size) var(
-			--message-gutter
-		) minmax(0, 1fr);
+	grid-template-columns: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) var(
+			--message-avatar-size
+		) var(--message-gutter) minmax(0, 1fr);
 	grid-template-rows: auto auto auto;
 	grid-template-areas: '. . . reply' 'gutter-left avatar gutter-right content' '. . . container';
 	padding-block: var(--message-spacing-y);
-	padding-inline-end: var(--chat-horizontal-padding, var(--message-gutter));
+	padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 	padding-inline-start: 0;
 	margin-inline: calc(-1 * var(--message-mobile-margin));
 }
@@ -62,13 +62,16 @@
 
 @media (min-width: 768px) {
 	.message {
-		margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--message-gutter)));
-		padding-inline-end: calc(var(--chat-horizontal-padding, var(--message-gutter)) + var(--message-action-bar-offset));
+		margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+		padding-inline-end: calc(
+			var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) +
+			var(--message-action-bar-offset)
+		);
 	}
 
 	.messagePreview {
 		margin-inline: 0;
-		padding-inline-end: var(--chat-horizontal-padding, var(--message-gutter));
+		padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 	}
 }
 
@@ -145,19 +148,17 @@
 .messageGrouped {
 	grid-template-areas: '. . . reply' 'gutter-left timestamp gutter-right content' '. . . container';
 
-	grid-template-columns: var(--chat-horizontal-padding, var(--message-gutter)) var(--message-avatar-size) var(
-			--message-gutter
-		) minmax(0, 1fr);
+	grid-template-columns: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) var(
+			--message-avatar-size
+		) var(--message-gutter) minmax(0, 1fr);
 }
 
 .messageCompact {
-	--message-compact-horizontal-padding: min(var(--chat-horizontal-padding, var(--message-gutter)), 1rem);
 	--message-compact-timestamp-column-width: var(--message-compact-measured-timestamp-width, max-content);
 	--message-compact-timestamp-calc-width: var(
 		--message-compact-measured-timestamp-width,
 		var(--message-compact-timestamp-width)
 	);
-	--message-compact-text-indent-from-username: 2rem;
 	--message-compact-text-start: calc(
 		var(--message-compact-timestamp-calc-width) +
 		var(--message-compact-gap) +
@@ -177,7 +178,7 @@
 	padding-inline-start: 0;
 	padding-inline-end: var(--message-compact-horizontal-padding);
 	text-indent: 0;
-	margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--message-gutter)));
+	margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
 }
 
 @media (min-width: 768px) {

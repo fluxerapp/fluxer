@@ -38,6 +38,7 @@ export const ChannelTextarea = observer(({channel, inputSuppressed = false}: Cha
 			draftSegments={draftSegments}
 			disabled={disabled}
 			inputSuppressed={inputSuppressed}
+			data-flx="channel.channel-textarea.lexical-channel-textarea-content"
 		/>
 	);
 });

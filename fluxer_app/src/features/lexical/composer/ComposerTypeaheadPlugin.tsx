@@ -116,6 +116,7 @@ export const ComposerTypeaheadPlugin = ({
 						anchorElementRef={anchorElementRef}
 						listboxId={listboxId}
 						selectedIndex={resolvedSelectedIndex}
+						data-flx="lexical.composer.composer-typeahead-plugin.menu-render-fn.composer-typeahead-accessibility-bridge"
 					/>
 					<Autocomplete
 						type={type}
@@ -136,6 +137,7 @@ export const ComposerTypeaheadPlugin = ({
 						query={query}
 						attached
 						listboxId={listboxId}
+						data-flx="lexical.composer.composer-typeahead-plugin.menu-render-fn.autocomplete"
 					/>
 				</>
 			);
@@ -153,6 +155,7 @@ export const ComposerTypeaheadPlugin = ({
 			menuRenderFn={menuRenderFn}
 			commandPriority={COMMAND_PRIORITY_LOW}
 			ignoreEntityBoundary
+			data-flx="lexical.composer.composer-typeahead-plugin.lexical-typeahead-menu-plugin"
 		/>
 	);
 };

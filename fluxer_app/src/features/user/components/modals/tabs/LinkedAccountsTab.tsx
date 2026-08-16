@@ -6,7 +6,7 @@ import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/compon
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {computeVerticalDropPosition} from '@app/features/app/components/layout/dnd/DndDropPosition';
 import type {ConnectionDragItem} from '@app/features/app/components/layout/types/DndTypes';
-import {DND_TYPES} from '@app/features/app/components/layout/types/DndTypes';
+import {DragItemType} from '@app/features/app/components/layout/types/DndTypes';
 import {BLUESKY_PROVIDER_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -85,7 +85,7 @@ interface ConnectionCardProps {
 
 const ConnectionDragAutoScroll: React.FC<{listRef: React.RefObject<HTMLDivElement | null>}> = ({listRef}) => {
 	const isDraggingConnection = useDragLayer(
-		(monitor) => monitor.isDragging() && monitor.getItemType() === DND_TYPES.CONNECTION,
+		(monitor) => monitor.isDragging() && monitor.getItemType() === DragItemType.CONNECTION,
 	);
 	const getScrollElement = useCallback(() => {
 		const list = listRef.current;
@@ -103,7 +103,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 		const cardRef = useRef<HTMLDivElement>(null);
 		const dragItemData = useMemo<ConnectionDragItem>(
 			() => ({
-				type: DND_TYPES.CONNECTION,
+				type: DragItemType.CONNECTION,
 				id: connection.id,
 				index,
 			}),
@@ -111,7 +111,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 		);
 		const [{isDragging}, dragRef, preview] = useDrag(
 			() => ({
-				type: DND_TYPES.CONNECTION,
+				type: DragItemType.CONNECTION,
 				item: () => dragItemData,
 				collect: (monitor) => ({isDragging: monitor.isDragging()}),
 				end: () => setDropIndicator(null),
@@ -120,7 +120,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 		);
 		const [{isOver}, dropRef] = useDrop(
 			() => ({
-				accept: DND_TYPES.CONNECTION,
+				accept: DragItemType.CONNECTION,
 				hover: (item: ConnectionDragItem, monitor) => {
 					if (item.id === connection.id) {
 						setDropIndicator(null);
@@ -431,7 +431,10 @@ const LinkedAccountsTab: React.FC = observer(() => {
 						</div>
 					) : (
 						<DndProvider backend={HTML5Backend} data-flx="user.linked-accounts-tab.dnd-provider">
-							<ConnectionDragAutoScroll listRef={connectionsListRef} />
+							<ConnectionDragAutoScroll
+								listRef={connectionsListRef}
+								data-flx="user.linked-accounts-tab.connection-drag-auto-scroll"
+							/>
 							<div
 								ref={connectionsListRef}
 								className={styles.connectionsList}

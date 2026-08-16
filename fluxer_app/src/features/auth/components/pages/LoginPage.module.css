@@ -97,29 +97,6 @@
 	text-align: center;
 }
 
-.instanceToggle {
-	display: block;
-	width: fit-content;
-	padding: 0;
-	border: none;
-	background: none;
-	font-size: 0.75rem;
-	color: var(--text-secondary);
-	text-align: left;
-	cursor: pointer;
-}
-
-.instanceToggle:hover {
-	color: var(--text-primary);
-	text-decoration: underline;
-}
-
-.instanceToggle:disabled {
-	color: var(--text-tertiary);
-	cursor: not-allowed;
-	text-decoration: none;
-}
-
 .passkeyActions {
 	display: flex;
 	flex-direction: column;
@@ -299,10 +276,6 @@
 	flex-shrink: 0;
 }
 
-.instanceNotice {
-	margin-top: 1rem;
-}
-
 .handoffSuccess {
 	text-align: center;
 }
@@ -431,11 +404,4 @@
 	text-align: center;
 	font-size: 0.875rem;
 	color: var(--text-tertiary);
-}
-
-.instanceSection {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-	margin-bottom: 1.5rem;
 }

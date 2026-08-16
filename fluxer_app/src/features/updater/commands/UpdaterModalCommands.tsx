@@ -7,7 +7,7 @@ import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron'
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
-import {openExternalUrl, isCanaryDesktop} from '@app/features/ui/utils/NativeUtils';
+import {isCanaryDesktop, openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/updater/commands/UpdaterModalCommands.module.css';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';

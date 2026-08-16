@@ -8,7 +8,7 @@ import {
 	type PopoutResizePositionSession,
 	usePopoutResizePositionController,
 } from '@app/features/ui/popover/PopoutResizePositionContext';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -88,7 +88,7 @@ function clampDimension(value: number, configuredMin: number, availableMax: numb
 }
 
 function getUsableAppZoomFactor(ownerDocument: Document): number {
-	const zoom = getAppZoomFactor(ownerDocument);
+	const zoom = getAppRemScale(ownerDocument);
 	if (!Number.isFinite(zoom) || zoom <= 0) return 1;
 	return zoom;
 }

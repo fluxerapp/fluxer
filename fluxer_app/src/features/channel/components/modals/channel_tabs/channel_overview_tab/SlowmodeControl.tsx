@@ -88,8 +88,12 @@ export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form}) => {
 						description={i18n._(SLOWMODE_DESCRIPTION_DESCRIPTOR, {bypassSlowmodePermissionLabel})}
 						stacked
 						dataFlx="channel.channel-tabs.channel-overview-tab.slowmode-control"
+						data-flx="channel.channel-tabs.channel-overview-tab.slowmode-control.settings-control-row"
 					>
-						<div className={styles.settingsSliderControl}>
+						<div
+							className={styles.settingsSliderControl}
+							data-flx="channel.channel-tabs.channel-overview-tab.slowmode-control.settings-slider-control"
+						>
 							<Slider
 								value={currentSeconds}
 								defaultValue={currentSeconds}
@@ -109,11 +113,13 @@ export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form}) => {
 								}}
 								onValueRender={(seconds) => formatSlowmodeDuration(i18n, Math.round(seconds))}
 								onValueChange={(seconds) => field.onChange(Math.round(seconds))}
+								data-flx="channel.channel-tabs.channel-overview-tab.slowmode-control.slider"
 							/>
 						</div>
 					</SettingsControlRow>
 				);
 			}}
+			data-flx="channel.channel-tabs.channel-overview-tab.slowmode-control.controller"
 		/>
 	);
 };

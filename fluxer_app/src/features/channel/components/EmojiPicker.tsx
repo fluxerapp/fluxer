@@ -139,7 +139,7 @@ export const EmojiPicker = observer(
 			renderedEmojis,
 		);
 		const showFrequentlyUsedButton = frequentlyUsedEmojis.length > 0 && !normalizedSearchTerm;
-		const virtualRows = useVirtualRows(
+		const pickerRows = useVirtualRows(
 			normalizedSearchTerm,
 			renderedEmojis,
 			favoriteEmojis,
@@ -177,13 +177,13 @@ export const EmojiPicker = observer(
 			lockedEmojiCount > 0;
 		const sections = useMemo(() => {
 			const result: Array<number> = [];
-			for (const row of virtualRows) {
+			for (const row of pickerRows) {
 				if (row.type === 'emoji-row') {
 					result.push(row.emojis.length);
 				}
 			}
 			return result;
-		}, [virtualRows]);
+		}, [pickerRows]);
 		const handleCategoryClick = (category: string) => {
 			const element = categoryRefs.current.get(category);
 			if (element) {
@@ -216,10 +216,10 @@ export const EmojiPicker = observer(
 				setSelectedColumn(column);
 				setShouldScrollOnSelection(shouldScroll);
 				let currentRow = 0;
-				for (const virtualRow of virtualRows) {
-					if (virtualRow.type === 'emoji-row') {
-						if (currentRow === row && column < virtualRow.emojis.length) {
-							const emoji = virtualRow.emojis[column];
+				for (const pickerRow of pickerRows) {
+					if (pickerRow.type === 'emoji-row') {
+						if (currentRow === row && column < pickerRow.emojis.length) {
+							const emoji = pickerRow.emojis[column];
 							setHoveredEmoji(emoji);
 							break;
 						}
@@ -227,7 +227,7 @@ export const EmojiPicker = observer(
 					}
 				}
 			},
-			[virtualRows],
+			[pickerRows],
 		);
 		useEffect(() => {
 			if (renderedEmojis.length > 0 && selectedRow === 0 && selectedColumn === 0 && !hoveredEmoji) {
@@ -240,10 +240,10 @@ export const EmojiPicker = observer(
 					return;
 				}
 				let currentRow = 0;
-				for (const virtualRow of virtualRows) {
-					if (virtualRow.type === 'emoji-row') {
-						if (currentRow === row && column < virtualRow.emojis.length) {
-							const emoji = virtualRow.emojis[column];
+				for (const pickerRow of pickerRows) {
+					if (pickerRow.type === 'emoji-row') {
+						if (currentRow === row && column < pickerRow.emojis.length) {
+							const emoji = pickerRow.emojis[column];
 							handleEmojiSelect(emoji, event?.shiftKey);
 							return;
 						}
@@ -251,7 +251,7 @@ export const EmojiPicker = observer(
 					}
 				}
 			},
-			[virtualRows, handleEmojiSelect],
+			[pickerRows, handleEmojiSelect],
 		);
 		return (
 			<div className={styles.container} data-flx="channel.emoji-picker.container">
@@ -294,9 +294,9 @@ export const EmojiPicker = observer(
 										data-flx="channel.emoji-picker.premium-upsell-banner"
 									/>
 								)}
-								{virtualRows.map((row, index) => {
-									const emojiRowIndex = virtualRows.slice(0, index).filter((r) => r.type === 'emoji-row').length;
-									const needsSpacingAfter = row.type === 'emoji-row' && virtualRows[index + 1]?.type === 'header';
+								{pickerRows.map((row, index) => {
+									const emojiRowIndex = pickerRows.slice(0, index).filter((r) => r.type === 'emoji-row').length;
+									const needsSpacingAfter = row.type === 'emoji-row' && pickerRows[index + 1]?.type === 'header';
 									return (
 										<div
 											key={`${row.type}-${row.index}`}

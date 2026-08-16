@@ -1,0 +1,99 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+@property --skeleton-shimmer-position {
+	syntax: '<percentage>';
+	inherits: true;
+	initial-value: -150%;
+}
+
+.skeleton {
+	--skeleton-opacity: var(--skeleton-opacity-default, 0.45);
+	--skeleton-width: 100%;
+	--skeleton-height: 0.75rem;
+	background-color: var(--background-modifier-accent);
+	background-image: linear-gradient(
+		105deg,
+		transparent 46%,
+		color-mix(in srgb, var(--text-primary) 7%, transparent) 50%,
+		transparent 54%
+	);
+	background-size: 200vw 100%;
+	background-position: var(--skeleton-shimmer-position) 0;
+	background-attachment: fixed;
+	opacity: var(--skeleton-opacity);
+	pointer-events: none;
+	user-select: none;
+	-webkit-user-select: none;
+	flex-shrink: 0;
+	width: var(--skeleton-width);
+	height: var(--skeleton-height);
+	max-width: 100%;
+}
+
+:global(html):has(.skeleton) {
+	animation: skeleton-shimmer 3.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+	from {
+		--skeleton-shimmer-position: -150%;
+	}
+
+	to {
+		--skeleton-shimmer-position: 150%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:global(html):has(.skeleton) {
+		animation: none;
+	}
+
+	.skeleton {
+		background-image: none;
+	}
+}
+
+:global(html.reduced-motion):has(.skeleton) {
+	animation: none;
+}
+
+:global(html.reduced-motion) .skeleton {
+	background-image: none;
+}
+
+.emphasisStrong {
+	--skeleton-opacity: var(--skeleton-opacity-strong, 0.55);
+}
+
+.emphasisMuted {
+	--skeleton-opacity: var(--skeleton-opacity-muted, 0.35);
+}
+
+.radiusSharp {
+	border-radius: 0;
+}
+
+.radiusSm {
+	border-radius: var(--radius-sm);
+}
+
+.radiusMd {
+	border-radius: var(--radius-md);
+}
+
+.radiusLg {
+	border-radius: var(--radius-lg);
+}
+
+.radiusXl {
+	border-radius: var(--radius-xl);
+}
+
+.radiusPill {
+	border-radius: var(--radius-full);
+}
+
+.radiusCircle {
+	border-radius: 50%;
+}

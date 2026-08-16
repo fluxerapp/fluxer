@@ -49,7 +49,6 @@ import type {
 	SpellcheckState,
 	StreamerModeCaptureAppStatus,
 	StreamingPriorityDiagnostics,
-	SwitchInstanceUrlOptions,
 	TextareaContextMenuParams,
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
@@ -484,9 +483,6 @@ const api: ElectronAPI = {
 		options: PublicKeyCredentialCreationOptionsJSON,
 		requestContext?: {pin?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
-	switchInstanceUrl: (options: SwitchInstanceUrlOptions): Promise<void> =>
-		ipcRenderer.invoke('switch-instance-url', options),
-	consumeDesktopHandoffCode: (): Promise<string | null> => ipcRenderer.invoke('consume-desktop-handoff-code'),
 	toggleDevTools: (): void => {
 		ipcRenderer.send('toggle-devtools');
 	},

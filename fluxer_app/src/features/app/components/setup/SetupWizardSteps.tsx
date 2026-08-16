@@ -483,7 +483,11 @@ export const WelcomeStep = observer(
 						>
 							{welcome.text}
 						</span>
-						<AnimatePresence mode="wait" initial={false}>
+						<AnimatePresence
+							mode="wait"
+							initial={false}
+							data-flx="app.setup.setup-wizard-steps.welcome-step.animate-presence"
+						>
 							<motion.h2
 								key={welcome.code}
 								className={styles.welcomeWord}
@@ -519,6 +523,7 @@ export const WelcomeStep = observer(
 						maxMenuHeight={SETUP_LANGUAGE_MENU_MAX_HEIGHT}
 						menuPlacement="bottom"
 						className={styles.localeSelector}
+						data-flx="app.setup.setup-wizard-steps.welcome-step.locale-selector.set-local-locale"
 					/>
 				</div>
 			</section>
@@ -532,13 +537,18 @@ export const ThemeStep = observer(
 		const themeLabel = i18n._(THEME_TITLE_DESCRIPTOR);
 		return (
 			<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.theme-step">
-				<StepHeader title={themeLabel} body={i18n._(THEME_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={themeLabel}
+					body={i18n._(THEME_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.theme-step.step-header"
+				/>
 				<div className={styles.themeBlock} data-flx="app.self-hosted-setup-wizard-gate.theme-block">
 					<ThemeSelector
 						value={theme}
 						onChange={onThemeChange}
 						ariaLabel={themeLabel}
 						className={styles.themeButtonGroup}
+						data-flx="app.setup.setup-wizard-steps.theme-step.theme-button-group.theme-change"
 					/>
 				</div>
 			</section>
@@ -550,7 +560,11 @@ export const AdminIntroStep = observer(() => {
 	const {i18n} = useLingui();
 	return (
 		<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.admin-intro-step">
-			<StepHeader title={i18n._(WELCOME_UNAUTHED_TITLE_DESCRIPTOR)} body={i18n._(WELCOME_UNAUTHED_BODY_DESCRIPTOR)} />
+			<StepHeader
+				title={i18n._(WELCOME_UNAUTHED_TITLE_DESCRIPTOR)}
+				body={i18n._(WELCOME_UNAUTHED_BODY_DESCRIPTOR)}
+				data-flx="app.setup.setup-wizard-steps.admin-intro-step.step-header"
+			/>
 		</section>
 	);
 });
@@ -583,7 +597,11 @@ export const LoadingStep = observer(() => {
 	return (
 		<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.loading-step">
 			<Spinner size="large" data-flx="app.self-hosted-setup-wizard-gate.loading-spinner" />
-			<StepHeader title={i18n._(LOADING_TITLE_DESCRIPTOR)} body={i18n._(LOADING_BODY_DESCRIPTOR)} />
+			<StepHeader
+				title={i18n._(LOADING_TITLE_DESCRIPTOR)}
+				body={i18n._(LOADING_BODY_DESCRIPTOR)}
+				data-flx="app.setup.setup-wizard-steps.loading-step.step-header"
+			/>
 		</section>
 	);
 });
@@ -621,7 +639,13 @@ const BrandingAssetRow = observer(({asset, disabled, onUpload, onClear}: Brandin
 					variant="secondary"
 					small
 					disabled={disabled}
-					leftIcon={<UploadSimpleIcon size={16} weight="bold" />}
+					leftIcon={
+						<UploadSimpleIcon
+							size={16}
+							weight="bold"
+							data-flx="app.setup.setup-wizard-steps.branding-asset-row.upload-simple-icon"
+						/>
+					}
 					onClick={() => onUpload(asset.kind)}
 					data-flx="app.self-hosted-setup-wizard-gate.asset-upload-button"
 				>
@@ -632,7 +656,13 @@ const BrandingAssetRow = observer(({asset, disabled, onUpload, onClear}: Brandin
 						variant="secondary"
 						small
 						square
-						icon={<TrashIcon size={16} weight="bold" />}
+						icon={
+							<TrashIcon
+								size={16}
+								weight="bold"
+								data-flx="app.setup.setup-wizard-steps.branding-asset-row.trash-icon"
+							/>
+						}
 						aria-label={i18n._(CLEAR_ASSET_DESCRIPTOR)}
 						disabled={disabled}
 						onClick={() => onClear(asset.kind)}
@@ -669,7 +699,11 @@ export const BrandingStep = observer(
 		const {i18n} = useLingui();
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.branding-step">
-				<StepHeader title={i18n._(BRANDING_TITLE_DESCRIPTOR)} body={i18n._(BRANDING_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(BRANDING_TITLE_DESCRIPTOR)}
+					body={i18n._(BRANDING_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.branding-step.step-header"
+				/>
 				<Input
 					label={i18n._(PRODUCT_NAME_LABEL_DESCRIPTOR)}
 					value={productName}
@@ -699,6 +733,7 @@ export const BrandingStep = observer(
 							disabled={disabled}
 							onUpload={onUploadAsset}
 							onClear={onClearAsset}
+							data-flx="app.setup.setup-wizard-steps.branding-step.branding-asset-row"
 						/>
 					))}
 				</div>
@@ -737,7 +772,11 @@ export const RegistrationStep = observer(
 		];
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.registration-step">
-				<StepHeader title={i18n._(REGISTRATION_TITLE_DESCRIPTOR)} body={i18n._(REGISTRATION_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(REGISTRATION_TITLE_DESCRIPTOR)}
+					body={i18n._(REGISTRATION_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.registration-step.step-header"
+				/>
 				<RadioGroup
 					options={options}
 					value={mode}
@@ -774,7 +813,11 @@ export const CommunityStep = observer(
 		const {i18n} = useLingui();
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.community-step">
-				<StepHeader title={i18n._(COMMUNITY_TITLE_DESCRIPTOR)} body={i18n._(COMMUNITY_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(COMMUNITY_TITLE_DESCRIPTOR)}
+					body={i18n._(COMMUNITY_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.community-step.step-header"
+				/>
 				<Switch
 					label={i18n._(SINGLE_COMMUNITY_LABEL_DESCRIPTOR)}
 					description={i18n._(SINGLE_COMMUNITY_DESC_DESCRIPTOR)}
@@ -1069,7 +1112,11 @@ export const MediaExpiryStep = observer(
 		const prefersReducedMotion = useReducedMotion();
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.media-expiry-step">
-				<StepHeader title={i18n._(MEDIA_EXPIRY_TITLE_DESCRIPTOR)} body={i18n._(MEDIA_EXPIRY_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(MEDIA_EXPIRY_TITLE_DESCRIPTOR)}
+					body={i18n._(MEDIA_EXPIRY_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.media-expiry-step.step-header"
+				/>
 				<Switch
 					label={i18n._(MEDIA_EXPIRY_ENABLE_LABEL_DESCRIPTOR)}
 					description={i18n._(MEDIA_EXPIRY_ENABLE_DESC_DESCRIPTOR)}
@@ -1078,7 +1125,7 @@ export const MediaExpiryStep = observer(
 					disabled={disabled}
 					data-flx="app.self-hosted-setup-wizard-gate.media-expiry-switch"
 				/>
-				<AnimatePresence initial={false}>
+				<AnimatePresence initial={false} data-flx="app.setup.setup-wizard-steps.media-expiry-step.animate-presence">
 					{draft.enabled && (
 						<motion.div
 							key="media-expiry-fields"
@@ -1093,13 +1140,17 @@ export const MediaExpiryStep = observer(
 								className={styles.integrationFields}
 								data-flx="app.self-hosted-setup-wizard-gate.media-expiry-fields"
 							>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.integration-grid"
+								>
 									<Input
 										label={i18n._(MEDIA_MIN_SIZE_LABEL_DESCRIPTOR)}
 										inputMode="decimal"
 										value={draft.minSizeMb}
 										onChange={(event) => onDraftChange({minSizeMb: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change"
 									/>
 									<Input
 										label={i18n._(MEDIA_MAX_SIZE_LABEL_DESCRIPTOR)}
@@ -1107,6 +1158,7 @@ export const MediaExpiryStep = observer(
 										value={draft.maxSizeMb}
 										onChange={(event) => onDraftChange({maxSizeMb: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--2"
 									/>
 								</div>
 								<Input
@@ -1115,14 +1167,19 @@ export const MediaExpiryStep = observer(
 									value={draft.maxEligibleSizeMb}
 									onChange={(event) => onDraftChange({maxEligibleSizeMb: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--3"
 								/>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.integration-grid--2"
+								>
 									<Input
 										label={i18n._(MEDIA_MIN_LIFETIME_LABEL_DESCRIPTOR)}
 										inputMode="numeric"
 										value={draft.minLifetimeDays}
 										onChange={(event) => onDraftChange({minLifetimeDays: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--4"
 									/>
 									<Input
 										label={i18n._(MEDIA_MAX_LIFETIME_LABEL_DESCRIPTOR)}
@@ -1130,15 +1187,20 @@ export const MediaExpiryStep = observer(
 										value={draft.maxLifetimeDays}
 										onChange={(event) => onDraftChange({maxLifetimeDays: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--5"
 									/>
 								</div>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.integration-grid--3"
+								>
 									<Input
 										label={i18n._(MEDIA_CURVE_LABEL_DESCRIPTOR)}
 										inputMode="decimal"
 										value={draft.curve}
 										onChange={(event) => onDraftChange({curve: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--6"
 									/>
 									<Input
 										label={i18n._(MEDIA_RENEW_THRESHOLD_LABEL_DESCRIPTOR)}
@@ -1146,6 +1208,7 @@ export const MediaExpiryStep = observer(
 										value={draft.renewThresholdDays}
 										onChange={(event) => onDraftChange({renewThresholdDays: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--7"
 									/>
 								</div>
 								<Input
@@ -1154,6 +1217,7 @@ export const MediaExpiryStep = observer(
 									value={draft.renewWindowDays}
 									onChange={(event) => onDraftChange({renewWindowDays: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.media-expiry-step.input.draft-change--8"
 								/>
 							</div>
 						</motion.div>
@@ -1213,13 +1277,18 @@ export const IntegrationStep = observer(
 		];
 		return (
 			<section className={styles.step} data-flx={`app.self-hosted-setup-wizard-gate.integration-${kind}-step`}>
-				<StepHeader title={i18n._(copy.title)} body={i18n._(copy.body)} />
+				<StepHeader
+					title={i18n._(copy.title)}
+					body={i18n._(copy.body)}
+					data-flx="app.setup.setup-wizard-steps.integration-step.step-header"
+				/>
 				<RadioGroup
 					options={buildIntegrationModeOptions(i18n)}
 					value={mode}
 					onChange={setMode}
 					disabled={disabled}
 					aria-label={i18n._(copy.title)}
+					data-flx="app.setup.setup-wizard-steps.integration-step.radio-group.set-mode"
 				/>
 				{mode === 'configure' && (
 					<div className={styles.integrationFields} data-flx="app.self-hosted-setup-wizard-gate.integration-fields">
@@ -1229,6 +1298,7 @@ export const IntegrationStep = observer(
 								value={draft.klipyApiKey}
 								onChange={(event) => onDraftChange({klipyApiKey: event.target.value})}
 								disabled={disabled}
+								data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change"
 							/>
 						)}
 						{kind === 'youtube' && (
@@ -1237,17 +1307,21 @@ export const IntegrationStep = observer(
 								value={draft.youtubeApiKey}
 								onChange={(event) => onDraftChange({youtubeApiKey: event.target.value})}
 								disabled={disabled}
+								data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--2"
 							/>
 						)}
 						{kind === 'captcha' && (
 							<>
-								<div className={styles.fieldLabel}>{i18n._(PROVIDER_LABEL_DESCRIPTOR)}</div>
+								<div className={styles.fieldLabel} data-flx="app.setup.setup-wizard-steps.integration-step.field-label">
+									{i18n._(PROVIDER_LABEL_DESCRIPTOR)}
+								</div>
 								<RadioGroup
 									options={captchaOptions}
 									value={draft.captchaProvider}
 									onChange={(value) => onDraftChange({captchaProvider: value})}
 									disabled={disabled}
 									aria-label={i18n._(PROVIDER_LABEL_DESCRIPTOR)}
+									data-flx="app.setup.setup-wizard-steps.integration-step.radio-group.draft-change"
 								/>
 								<Input
 									label={i18n._(SITE_KEY_LABEL_DESCRIPTOR)}
@@ -1260,6 +1334,7 @@ export const IntegrationStep = observer(
 										)
 									}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--3"
 								/>
 								<Input
 									label={i18n._(SECRET_KEY_LABEL_DESCRIPTOR)}
@@ -1273,6 +1348,7 @@ export const IntegrationStep = observer(
 										)
 									}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password"
 								/>
 							</>
 						)}
@@ -1283,25 +1359,32 @@ export const IntegrationStep = observer(
 									value={draft.emailEnabled}
 									onChange={(value) => onDraftChange({emailEnabled: value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.switch.draft-change"
 								/>
 								<Input
 									label={i18n._(EMAIL_FROM_EMAIL_LABEL_DESCRIPTOR)}
 									value={draft.emailFromEmail}
 									onChange={(event) => onDraftChange({emailFromEmail: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--4"
 								/>
 								<Input
 									label={i18n._(EMAIL_FROM_NAME_LABEL_DESCRIPTOR)}
 									value={draft.emailFromName}
 									onChange={(event) => onDraftChange({emailFromName: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--5"
 								/>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.integration-step.integration-grid"
+								>
 									<Input
 										label={i18n._(SMTP_HOST_LABEL_DESCRIPTOR)}
 										value={draft.smtpHost}
 										onChange={(event) => onDraftChange({smtpHost: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--6"
 									/>
 									<Input
 										label={i18n._(SMTP_PORT_LABEL_DESCRIPTOR)}
@@ -1309,6 +1392,7 @@ export const IntegrationStep = observer(
 										value={draft.smtpPort}
 										onChange={(event) => onDraftChange({smtpPort: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--7"
 									/>
 								</div>
 								<Input
@@ -1316,6 +1400,7 @@ export const IntegrationStep = observer(
 									value={draft.smtpUsername}
 									onChange={(event) => onDraftChange({smtpUsername: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--8"
 								/>
 								<Input
 									label={i18n._(SMTP_PASSWORD_LABEL_DESCRIPTOR)}
@@ -1323,14 +1408,19 @@ export const IntegrationStep = observer(
 									value={draft.smtpPassword}
 									onChange={(event) => onDraftChange({smtpPassword: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password--2"
 								/>
 								<Switch
 									label={i18n._(SMTP_SECURE_LABEL_DESCRIPTOR)}
 									value={draft.smtpSecure}
 									onChange={(value) => onDraftChange({smtpSecure: value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.switch.draft-change--2"
 								/>
-								<div className={styles.integrationActionRow}>
+								<div
+									className={styles.integrationActionRow}
+									data-flx="app.setup.setup-wizard-steps.integration-step.integration-action-row"
+								>
 									<Button
 										variant="secondary"
 										small
@@ -1343,11 +1433,16 @@ export const IntegrationStep = observer(
 											!draft.smtpPassword.trim()
 										}
 										onClick={onTestSmtp}
+										data-flx="app.setup.setup-wizard-steps.integration-step.button.test-smtp"
 									>
 										{i18n._(SMTP_TEST_DESCRIPTOR)}
 									</Button>
 									{smtpTestResult && (
-										<span className={styles.integrationStatus} role="status">
+										<span
+											className={styles.integrationStatus}
+											role="status"
+											data-flx="app.setup.setup-wizard-steps.integration-step.integration-status"
+										>
 											{smtpTestResult === 'ok' ? i18n._(SMTP_TEST_OK_DESCRIPTOR) : smtpTestResult}
 										</span>
 									)}
@@ -1361,37 +1456,46 @@ export const IntegrationStep = observer(
 									value={draft.blueskyEnabled}
 									onChange={(value) => onDraftChange({blueskyEnabled: value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.switch.draft-change--3"
 								/>
 								<Input
 									label={i18n._(BLUESKY_CLIENT_NAME_LABEL_DESCRIPTOR)}
 									value={draft.blueskyClientName}
 									onChange={(event) => onDraftChange({blueskyClientName: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--9"
 								/>
 								<Input
 									label={i18n._(BLUESKY_CLIENT_URI_LABEL_DESCRIPTOR)}
 									value={draft.blueskyClientUri}
 									onChange={(event) => onDraftChange({blueskyClientUri: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--10"
 								/>
 								<Input
 									label={i18n._(BLUESKY_LOGO_URI_LABEL_DESCRIPTOR)}
 									value={draft.blueskyLogoUri}
 									onChange={(event) => onDraftChange({blueskyLogoUri: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--11"
 								/>
-								<div className={styles.integrationGrid}>
+								<div
+									className={styles.integrationGrid}
+									data-flx="app.setup.setup-wizard-steps.integration-step.integration-grid--2"
+								>
 									<Input
 										label={i18n._(BLUESKY_TOS_URI_LABEL_DESCRIPTOR)}
 										value={draft.blueskyTosUri}
 										onChange={(event) => onDraftChange({blueskyTosUri: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--12"
 									/>
 									<Input
 										label={i18n._(BLUESKY_POLICY_URI_LABEL_DESCRIPTOR)}
 										value={draft.blueskyPolicyUri}
 										onChange={(event) => onDraftChange({blueskyPolicyUri: event.target.value})}
 										disabled={disabled}
+										data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--13"
 									/>
 								</div>
 								<Input
@@ -1399,6 +1503,7 @@ export const IntegrationStep = observer(
 									value={draft.blueskyKeyId}
 									onChange={(event) => onDraftChange({blueskyKeyId: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--14"
 								/>
 								<Input
 									label={i18n._(BLUESKY_PRIVATE_KEY_LABEL_DESCRIPTOR)}
@@ -1406,6 +1511,7 @@ export const IntegrationStep = observer(
 									value={draft.blueskyPrivateKey}
 									onChange={(event) => onDraftChange({blueskyPrivateKey: event.target.value})}
 									disabled={disabled}
+									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password--3"
 								/>
 							</>
 						)}
@@ -1432,7 +1538,11 @@ export const ServicesStep = observer(
 		const anyAvailable = available.gif || available.youtube || available.bluesky;
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.services-step">
-				<StepHeader title={i18n._(SERVICES_TITLE_DESCRIPTOR)} body={i18n._(SERVICES_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(SERVICES_TITLE_DESCRIPTOR)}
+					body={i18n._(SERVICES_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.services-step.step-header"
+				/>
 				{!anyAvailable && (
 					<p className={styles.emptyNote} data-flx="app.self-hosted-setup-wizard-gate.services-empty">
 						{i18n._(SERVICES_NONE_DESCRIPTOR)}
@@ -1490,7 +1600,11 @@ export const PremiumStep = observer(
 		];
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.premium-step">
-				<StepHeader title={i18n._(PREMIUM_TITLE_DESCRIPTOR)} body={i18n._(PREMIUM_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(PREMIUM_TITLE_DESCRIPTOR)}
+					body={i18n._(PREMIUM_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.premium-step.step-header"
+				/>
 				<RadioGroup
 					options={options}
 					value={mode}
@@ -1551,23 +1665,42 @@ export const FinishStep = observer(
 		const offLabel = i18n._(SUMMARY_OFF_DESCRIPTOR);
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.finish-step">
-				<StepHeader title={i18n._(FINISH_TITLE_DESCRIPTOR)} body={i18n._(FINISH_BODY_DESCRIPTOR)} />
+				<StepHeader
+					title={i18n._(FINISH_TITLE_DESCRIPTOR)}
+					body={i18n._(FINISH_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.finish-step.step-header"
+				/>
 				<div className={styles.summary} data-flx="app.self-hosted-setup-wizard-gate.summary">
-					<SummaryRow label={i18n._(SUMMARY_PRODUCT_NAME_DESCRIPTOR)} value={productName} />
-					<SummaryRow label={i18n._(SUMMARY_REGISTRATION_DESCRIPTOR)} value={registrationLabel} />
+					<SummaryRow
+						label={i18n._(SUMMARY_PRODUCT_NAME_DESCRIPTOR)}
+						value={productName}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row"
+					/>
+					<SummaryRow
+						label={i18n._(SUMMARY_REGISTRATION_DESCRIPTOR)}
+						value={registrationLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--2"
+					/>
 					<SummaryRow
 						label={i18n._(SUMMARY_SINGLE_COMMUNITY_DESCRIPTOR)}
 						value={singleCommunityEnabled ? onLabel : offLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--3"
 					/>
 					<SummaryRow
 						label={i18n._(SUMMARY_DIRECT_MESSAGES_DESCRIPTOR)}
 						value={directMessagesDisabled ? offLabel : onLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--4"
 					/>
 					<SummaryRow
 						label={i18n._(SUMMARY_ATTACHMENT_EXPIRY_DESCRIPTOR)}
 						value={attachmentExpiryEnabled ? onLabel : offLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--5"
 					/>
-					<SummaryRow label={i18n._(SUMMARY_PREMIUM_DESCRIPTOR)} value={premiumLabel} />
+					<SummaryRow
+						label={i18n._(SUMMARY_PREMIUM_DESCRIPTOR)}
+						value={premiumLabel}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--6"
+					/>
 				</div>
 				{submitError && (
 					<p className={styles.submitError} role="alert" data-flx="app.self-hosted-setup-wizard-gate.submit-error">

@@ -54,6 +54,8 @@ class ReadStates {
 	private readonly mentionChannels = new Set<ChannelId>();
 	private readonly listeners = new Set<() => void>();
 	private readonly versionBox = observable.box(0);
+	private readonly privateChannelVersionBox = observable.box(0);
+	private hasPendingPrivateChannelChange = false;
 	private readonly pendingAcks = new Map<ChannelId, PendingAck>();
 	updateCounter = 0;
 	private pendingChanges = new Map<ChannelId, GuildId | null>();
@@ -67,11 +69,27 @@ class ReadStates {
 		return this.versionBox.get();
 	}
 
+	get privateChannelVersion(): number {
+		return this.privateChannelVersionBox.get();
+	}
+
 	private setVersion(version: number): void {
 		this.updateCounter = version;
+		const bumpPrivateChannelVersion = this.hasPendingPrivateChannelChange;
+		this.hasPendingPrivateChannelChange = false;
 		runInAction(() => {
 			this.versionBox.set(version);
+			if (bumpPrivateChannelVersion) {
+				this.privateChannelVersionBox.set(this.privateChannelVersionBox.get() + 1);
+			}
 		});
+	}
+
+	private notePrivateChannelChange(guildId: string | null | undefined): void {
+		if (guildId != null) {
+			return;
+		}
+		this.hasPendingPrivateChannelChange = true;
 	}
 
 	private bumpVersion(): void {
@@ -150,10 +168,12 @@ class ReadStates {
 			this.rebuildMentionChannels();
 			this.pendingGlobalRecompute = true;
 			this.pendingChanges.clear();
+			this.notePrivateChannelChange(null);
 		} else if (channelId != null && !this.pendingGlobalRecompute) {
 			this.refreshMentionChannel(channelId);
 			const entry = this.states.get(channelId as ChannelId);
 			const guildId = guildIdOverride !== undefined ? guildIdOverride : (entry?.guildId ?? null);
+			this.notePrivateChannelChange(guildId);
 			this.pendingChanges.set(channelId as ChannelId, guildId as GuildId | null);
 		}
 		this.bumpVersion();
@@ -277,6 +297,26 @@ class ReadStates {
 		this.versionBox.get();
 		const state = this.getIfExists(channelId);
 		return !!(state?.canBeUnread() && state.hasUnread());
+	}
+
+	hasUnreadPrivateChannel(channelId: string): boolean {
+		this.privateChannelVersionBox.get();
+		const state = this.getIfExists(channelId);
+		return !!(state?.canBeUnread() && state.hasUnread());
+	}
+
+	getPrivateChannelUnreadCount(channelId: string): number {
+		this.privateChannelVersionBox.get();
+		const state = this.getIfExists(channelId);
+		if (state == null || !state.canBeUnread() || !state.hasUnread()) return 0;
+		return state.unreadCount;
+	}
+
+	getPrivateChannelMentionCount(channelId: string): number {
+		this.privateChannelVersionBox.get();
+		const state = this.getIfExists(channelId);
+		if (state == null || !state.canHaveMentions()) return 0;
+		return state.mentionCount;
 	}
 
 	hasUnreadOrMentions(channelId: string): boolean {
@@ -555,6 +595,7 @@ class ReadStates {
 		for (const channelId of changedChannels) {
 			if (!this.pendingGlobalRecompute) {
 				const entry = this.states.get(channelId);
+				this.notePrivateChannelChange(entry?.guildId ?? null);
 				this.pendingChanges.set(channelId, (entry?.guildId ?? null) as GuildId | null);
 			}
 		}
@@ -615,6 +656,7 @@ class ReadStates {
 			this.refreshMentionChannel(channelId);
 			if (!this.pendingGlobalRecompute) {
 				const entry = this.states.get(channelId as ChannelId);
+				this.notePrivateChannelChange(entry?.guildId ?? null);
 				this.pendingChanges.set(channelId as ChannelId, (entry?.guildId ?? null) as GuildId | null);
 			}
 		}

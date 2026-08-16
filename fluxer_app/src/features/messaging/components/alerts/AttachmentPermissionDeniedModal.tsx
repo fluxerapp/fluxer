@@ -57,5 +57,9 @@ export const AttachmentPermissionDeniedModal = observer(
 
 export function showAttachmentPermissionDeniedModal(channel: Channel): void {
 	void channel;
-	ModalCommands.push(modal(() => <AttachmentPermissionDeniedModal />));
+	ModalCommands.push(
+		modal(() => (
+			<AttachmentPermissionDeniedModal data-flx="messaging.attachment-permission-denied-modal.show-attachment-permission-denied-modal.attachment-permission-denied-modal" />
+		)),
+	);
 }

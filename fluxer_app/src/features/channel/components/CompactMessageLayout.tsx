@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {reportSkeletonCompactTimestampWidth} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
 import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
 import {MessageTimeoutIndicator} from '@app/features/channel/components/MessageTimeoutIndicator';
@@ -9,6 +10,7 @@ import type {Guild} from '@app/features/guild/models/Guild';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {compactMessagePrefixProps} from '@app/features/theme/layout/MessageLayoutAttributes';
+import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/theme/styles/Message.module.css';
 import type {User} from '@app/features/user/models/User';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
@@ -68,6 +70,7 @@ function useMeasuredCompactTimestampWidth(enabled: boolean): React.RefCallback<H
 			if (nextWidth === lastWidth) return;
 			lastWidth = nextWidth;
 			if (nextWidth) {
+				reportSkeletonCompactTimestampWidth(width / getRemScaleForDocument(timestampElement.ownerDocument));
 				messageElement.style.setProperty(COMPACT_TIMESTAMP_WIDTH_CSS_VARIABLE, nextWidth);
 			} else {
 				messageElement.style.removeProperty(COMPACT_TIMESTAMP_WIDTH_CSS_VARIABLE);

@@ -1,60 +1,11 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-:root {
-	--textarea-font-size: var(--font-size, 1rem);
-	--textarea-button-height: 2rem;
-	--textarea-button-icon-size: 1.375rem;
-	--textarea-button-padding-x: 0px;
-	--textarea-button-min-width: auto;
-
-	--textarea-button-compact-height: 2rem;
-	--textarea-button-compact-icon-size: 1.25rem;
-
-	--textarea-container-padding-y: 0px;
-	--textarea-container-padding-x: 0px;
-	--textarea-content-offset: max(0rem, calc((var(--textarea-button-height) - var(--textarea-line-height)) / 2));
-	--textarea-upload-gap: var(--message-gutter, 1rem);
-	--textarea-side-button-padding: max(
-		0px,
-		calc((var(--message-avatar-size, 2.5rem) - var(--textarea-button-height)) / 2)
-	);
-
-	--textarea-line-height: calc(var(--textarea-font-size) * 1.375);
-}
-
 .textareaContainer {
 	position: relative;
 	margin-top: 0.5rem;
 	background-color: var(--background-textarea);
 	border-radius: var(--radius-xl);
 	font-size: var(--textarea-font-size);
-}
-
-.textareaWrapper {
-	display: grid;
-	grid-template-columns: 1fr auto;
-	align-items: start;
-	position: relative;
-	min-width: 0;
-	min-height: var(--textarea-min-height);
-}
-
-.textareaContent {
-	grid-column: 1;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	min-width: 0;
-	padding: 1rem;
-	min-height: var(--textarea-min-height);
-}
-
-.editingButtonContainer {
-	grid-column: 2;
-	display: flex;
-	align-items: stretch;
-	padding-right: 1rem;
-	height: var(--textarea-min-height);
 }
 
 .textarea {
@@ -99,67 +50,6 @@
 .textarea:disabled::placeholder {
 	color: var(--text-tertiary);
 	font-size: calc(var(--textarea-font-size) * 0.875);
-}
-
-.buttonRow {
-	display: flex;
-	align-items: center;
-	position: relative;
-	border-color: var(--background-modifier-accent);
-	padding: 0.5rem 1rem;
-	min-height: 2.75rem;
-}
-
-.buttonRowTop {
-	composes: buttonRow;
-	border-bottom-width: 0.0625rem;
-}
-
-.buttonRowBottom {
-	composes: buttonRow;
-	border-top-width: 0.0625rem;
-}
-
-.buttonGroup {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-}
-
-.buttonRowCompact {
-	padding: 0 0.75rem;
-	min-height: 2rem;
-	height: 2rem;
-}
-
-.buttonRowCompact .buttonGroup {
-	gap: 0.125rem;
-}
-
-.buttonGroupLeft {
-	composes: buttonGroup;
-}
-
-.buttonGroupCenter {
-	composes: buttonGroup;
-	flex: 1;
-	margin: 0 0.5rem;
-	overflow: hidden;
-}
-
-.typingContainer {
-	min-width: 0;
-	flex-shrink: 1;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: var(--text-chat);
-}
-
-.buttonGroupRight {
-	composes: buttonGroup;
 }
 
 .divider {
@@ -224,7 +114,12 @@
 	display: flex;
 	align-items: flex-start;
 	gap: var(--spacing-3);
-	padding: var(--spacing-2) var(--spacing-4);
+	padding-block: var(--spacing-2);
+	padding-inline-start: var(--spacing-4);
+	padding-inline-end: max(
+		0rem,
+		calc(var(--spacing-4) - (var(--textarea-button-height) - var(--textarea-button-icon-size)) / 2)
+	);
 	background-color: var(--background-textarea);
 	border: 0.0625rem solid var(--background-modifier-accent);
 	border-radius: var(--radius-md);
@@ -234,12 +129,6 @@
 
 .mainWrapperEditing:focus-within {
 	border-color: var(--background-modifier-accent-focus);
-}
-
-.mainWrapperComfy {
-	display: flex;
-	flex-direction: column;
-	position: relative;
 }
 
 .uploadButtonColumn {
@@ -283,14 +172,6 @@
 	min-height: 0;
 }
 
-.contentAreaComfy {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	padding: 1rem;
-	min-height: var(--textarea-min-height);
-}
-
 .buttonContainerDense {
 	grid-column: 3;
 	display: flex;
@@ -307,52 +188,6 @@
 	justify-content: center;
 }
 
-.footerArea {
-	position: absolute;
-	bottom: 0.0625rem;
-	left: 1rem;
-	right: 1rem;
-	margin-left: 0.25rem;
-	display: flex;
-	align-items: center;
-	height: 1.5rem;
-	min-width: 0;
-	overflow: visible;
-}
-
-.footerText {
-	font-size: 0.875rem;
-	font-weight: 600;
-	line-height: 1.5rem;
-	color: var(--text-chat);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	min-width: 0;
-	flex-shrink: 1;
-}
-
-.footerAreaComfy {
-	composes: footerArea;
-	justify-content: flex-end;
-}
-
-.slowmodeSpacing {
-	margin: 0 0.5rem;
-}
-
-.layoutComfy .textareaWrapper,
-.layoutCompact .textareaWrapper {
-	padding-left: 1rem;
-	padding-right: 1rem;
-}
-
-.layoutDense .textareaWrapper,
-.layoutDefault .textareaWrapper {
-	padding-left: var(--textarea-container-padding-x);
-	padding-right: var(--textarea-container-padding-x);
-}
-
 .scroller {
 	max-height: 50svh;
 	width: 100%;
@@ -367,7 +202,8 @@
 
 .textareaOuterRow {
 	min-height: var(--textarea-min-height);
-	margin-block: var(--composer-box-inset);
+	margin-block-start: 0;
+	margin-block-end: var(--composer-box-inset);
 	margin-inline: var(--composer-box-inset-inline);
 	background-color: var(--background-textarea);
 	--composer-box-radius: var(--footer-box-radius);

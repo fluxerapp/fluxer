@@ -6,10 +6,10 @@
 	grid-auto-columns: calc(var(--avatar-size) + var(--avatar-overlap));
 	align-items: center;
 	width: fit-content;
-	height: calc(var(--avatar-size) + (2 * var(--avatar-outline, 0.125rem)) + var(--avatar-stack-extra-height, 0.375rem));
-	padding-right: calc(max(calc(0px - var(--avatar-overlap)), 0px) + var(--avatar-outline, 0.125rem));
-	padding-block: var(--avatar-stack-padding-block-start, var(--avatar-outline, 0.125rem))
-		var(--avatar-stack-padding-block-end, 0.375rem);
+	height: calc(var(--avatar-size) + (2 * var(--avatar-outline)) + var(--avatar-stack-extra-height));
+	padding-right: calc(max(calc(0px - var(--avatar-overlap)), 0px) + var(--avatar-outline));
+	padding-block: var(--avatar-stack-padding-block-start, var(--avatar-outline))
+		var(--avatar-stack-padding-block-end, var(--avatar-stack-extra-height));
 	flex-shrink: 0;
 	overflow: visible;
 }
@@ -39,7 +39,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 0 0 var(--avatar-outline, 0.125rem) var(--avatar-stack-outline-color, var(--background-tertiary));
+	box-shadow: 0 0 0 var(--avatar-outline) var(--avatar-stack-outline-color, var(--background-tertiary));
 	overflow: visible;
 }
 
@@ -50,7 +50,7 @@
 	align-items: center;
 	justify-content: center;
 	border-radius: 50%;
-	box-shadow: 0 0 0 var(--avatar-outline, 0.125rem) var(--avatar-stack-outline-color, var(--background-tertiary));
+	box-shadow: 0 0 0 var(--avatar-outline) var(--avatar-stack-outline-color, var(--background-tertiary));
 	overflow: visible;
 }
 
@@ -71,10 +71,10 @@
 	align-items: center;
 	justify-content: center;
 	border-radius: 50%;
-	border: var(--avatar-outline, 0.125rem) solid var(--avatar-stack-outline-color, var(--background-tertiary));
+	border: var(--avatar-outline) solid var(--avatar-stack-outline-color, var(--background-tertiary));
 	background: var(--avatar-stack-outline-color, var(--background-tertiary));
 	color: var(--text-secondary);
-	font-size: var(--font-size-xxs, 0.625rem);
+	font-size: 0.625rem;
 	font-weight: 600;
 	width: var(--avatar-size);
 	height: var(--avatar-size);

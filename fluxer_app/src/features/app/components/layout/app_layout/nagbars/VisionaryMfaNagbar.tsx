@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {ENABLE_TWO_FACTOR_AUTH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -38,8 +39,8 @@ export const VisionaryMfaNagbar = observer(({isMobile}: {isMobile: boolean}) => 
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="var(--brand-primary)"
-			textColor="var(--text-on-brand-primary)"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.BRAND].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.BRAND].textColor}
 			dismissible
 			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.visionary-mfa-nagbar.nagbar"

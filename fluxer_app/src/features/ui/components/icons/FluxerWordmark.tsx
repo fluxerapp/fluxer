@@ -53,5 +53,5 @@ export const FluxerWordmark = observer(({variant = 'default', ...props}: FluxerW
 		);
 	}
 	const Asset = variant === 'monochrome' ? FluxerWordmarkMonochromeAsset : FluxerWordmarkAsset;
-	return <Asset role="img" aria-label={ariaLabel} {...props} />;
+	return <Asset role="img" aria-label={ariaLabel} data-flx="ui.icons.fluxer-wordmark.img" {...props} />;
 });

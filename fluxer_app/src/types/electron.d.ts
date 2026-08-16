@@ -486,8 +486,6 @@ export interface ElectronAPI {
 	passkeyRegister?(options: unknown, requestContext?: {pin?: string}): Promise<RegistrationResponseJSON>;
 	passkeyAuthenticate?(options: unknown, requestContext?: {pin?: string}): Promise<AuthenticationResponseJSON>;
 	onRpcNavigate?(callback: (path: string) => void): () => void;
-	switchInstanceUrl?(options: {instanceUrl: string; desktopHandoffCode?: string | null}): Promise<void>;
-	consumeDesktopHandoffCode?(): Promise<string | null>;
 	getOpenH264Status?(): Promise<OpenH264Status>;
 	setOpenH264Enabled?(enabled: boolean): Promise<OpenH264Status>;
 	virtmic?: VirtmicApi;

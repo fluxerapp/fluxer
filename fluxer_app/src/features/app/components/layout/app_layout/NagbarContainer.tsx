@@ -2,6 +2,8 @@
 
 import {type NagbarState, NagbarType} from '@app/features/app/components/layout/app_layout/AppLayoutTypes';
 import styles from '@app/features/app/components/layout/app_layout/NagbarContainer.module.css';
+import {BuildEnvironmentNagbar} from '@app/features/app/components/layout/app_layout/nagbars/BuildEnvironmentNagbar';
+import {ConnectionNagbar} from '@app/features/app/components/layout/app_layout/nagbars/ConnectionNagbar';
 import {CorruptedInstallationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar';
 import {DesktopDownloadNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar';
 import {DesktopNotificationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar';
@@ -28,6 +30,13 @@ interface NagbarContainerProps {
 	nagbars: Array<NagbarState>;
 }
 
+class UnexpectedNagbarTypeError extends Error {
+	constructor(nagbarType: never) {
+		super(`Unexpected nagbar type: ${String(nagbarType)}`);
+		this.name = 'UnexpectedNagbarTypeError';
+	}
+}
+
 export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbars}) => {
 	const mobileLayout = MobileLayout;
 	const showPremiumFeatures = shouldShowPremiumFeatures();
@@ -36,6 +45,22 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 		<div className={styles.container} data-flx="app.app-layout.nagbar-container.container">
 			{nagbars.map((nagbar) => {
 				switch (nagbar.type) {
+					case NagbarType.BUILD_ENVIRONMENT:
+						return (
+							<BuildEnvironmentNagbar
+								key={nagbar.type}
+								isMobile={mobileLayout.enabled}
+								data-flx="app.app-layout.nagbar-container.build-environment-nagbar"
+							/>
+						);
+					case NagbarType.CONNECTION:
+						return (
+							<ConnectionNagbar
+								key={nagbar.type}
+								isMobile={mobileLayout.enabled}
+								data-flx="app.app-layout.nagbar-container.connection-nagbar"
+							/>
+						);
 					case NagbarType.CORRUPTED_INSTALLATION:
 						return (
 							<CorruptedInstallationNagbar
@@ -177,7 +202,7 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 							/>
 						);
 					default:
-						return null;
+						throw new UnexpectedNagbarTypeError(nagbar.type);
 				}
 			})}
 		</div>

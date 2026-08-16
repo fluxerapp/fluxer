@@ -92,10 +92,23 @@ const SearchFilterPillComponent = ({nodeKey, filterKey, value, exclude}: SearchF
 	const renderFilterIcon = (): React.ReactNode => {
 		if (resolvedUser != null) {
 			return (
-				<Avatar user={resolvedUser} size={14} className={styles.avatar} disableStatusTooltip showOffline={false} />
+				<Avatar
+					user={resolvedUser}
+					size={14}
+					className={styles.avatar}
+					disableStatusTooltip
+					showOffline={false}
+					data-flx="lexical.search.search-filter-pill.render-filter-icon.avatar"
+				/>
 			);
 		}
-		return <meta.Icon weight="bold" className={styles.icon} />;
+		return (
+			<meta.Icon
+				weight="bold"
+				className={styles.icon}
+				data-flx="lexical.search.search-filter-pill.render-filter-icon.icon"
+			/>
+		);
 	};
 
 	return (
@@ -104,12 +117,31 @@ const SearchFilterPillComponent = ({nodeKey, filterKey, value, exclude}: SearchF
 			className={clsx(styles.pill, exclude && styles.pillExclude, isSelected && styles.selected)}
 			contentEditable={false}
 			aria-label={pillLabel}
+			data-flx="lexical.search.search-filter-pill.search-filter-pill-component.pill"
 		>
-			<span className={styles.visual} aria-hidden="true">
-				{exclude && <span className={styles.notBadge}>{i18n._(NOT_BADGE_DESCRIPTOR)}</span>}
+			<span
+				className={styles.visual}
+				aria-hidden="true"
+				data-flx="lexical.search.search-filter-pill.search-filter-pill-component.visual"
+			>
+				{exclude && (
+					<span
+						className={styles.notBadge}
+						data-flx="lexical.search.search-filter-pill.search-filter-pill-component.not-badge"
+					>
+						{i18n._(NOT_BADGE_DESCRIPTOR)}
+					</span>
+				)}
 				{renderFilterIcon()}
-				<span className={styles.operator}>{meta.operator}</span>
-				<span className={styles.value}>{displayValue}</span>
+				<span
+					className={styles.operator}
+					data-flx="lexical.search.search-filter-pill.search-filter-pill-component.operator"
+				>
+					{meta.operator}
+				</span>
+				<span className={styles.value} data-flx="lexical.search.search-filter-pill.search-filter-pill-component.value">
+					{displayValue}
+				</span>
 			</span>
 		</span>
 	);

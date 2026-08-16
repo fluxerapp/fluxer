@@ -5,7 +5,8 @@ import type {DeveloperOptionsState} from '@app/features/devtools/state/Developer
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 
 export const DEFAULT_DEVELOPER_OPTIONS = {
-	bypassSplashScreen: false,
+	bypassLoadingSkeleton: false,
+	forceLoadingSkeleton: false,
 	forceFailMessageSends: false,
 	forceFailMessageLoads: false,
 	forceRenderPlaceholders: false,

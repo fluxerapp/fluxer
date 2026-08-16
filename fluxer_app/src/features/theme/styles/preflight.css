@@ -11,6 +11,21 @@
 	border: 0 solid;
 }
 
+:where(.flx-element) {
+	border: 0;
+	font-family: inherit;
+	font-size: 100%;
+	font-style: inherit;
+	font-weight: inherit;
+	margin: 0;
+	padding: 0;
+	vertical-align: baseline;
+}
+
+:where(.flx-element:not([hidden])) {
+	display: block;
+}
+
 html,
 :host {
 	line-height: 1.5;

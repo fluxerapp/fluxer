@@ -207,6 +207,7 @@ export const LexicalRichInput = ({
 				size === 'form' && composerStyles.formSize,
 				className,
 			)}
+			data-flx="lexical.composer.lexical-rich-input.flx-lexical-rich-input"
 		>
 			<LexicalComposerInput
 				placeholder={placeholder}
@@ -241,6 +242,7 @@ export const LexicalRichInput = ({
 				onKeyDown={onKeyDown}
 				onFocus={onFocus}
 				onBlur={onBlur}
+				data-flx="lexical.composer.lexical-rich-input.lexical-composer-input.emit-change"
 			/>
 		</flx-lexical-rich-input>
 	);

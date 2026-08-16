@@ -123,8 +123,9 @@ export const BioEditor = observer(
 					aria-label={i18n._(OPEN_EMOJI_PICKER_DESCRIPTOR)}
 					aria-haspopup="dialog"
 					aria-expanded={emojiPickerOpen}
+					data-flx="user.my-profile-tab.bio-editor.emoji-button.emoji-picker-open-change"
 				>
-					<SmileyIcon size={remFromPx(20)} weight="fill" />
+					<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="user.my-profile-tab.bio-editor.smiley-icon" />
 				</button>
 			</FocusRing>
 		) : (
@@ -147,10 +148,12 @@ export const BioEditor = observer(
 						}}
 						onClose={onClose}
 						visibleTabs={['emojis']}
+						data-flx="user.my-profile-tab.bio-editor.expression-picker-popout"
 					/>
 				)}
+				data-flx="user.my-profile-tab.bio-editor.popout"
 			>
-				<FocusRing offset={-2} enabled={!disabled}>
+				<FocusRing offset={-2} enabled={!disabled} data-flx="user.my-profile-tab.bio-editor.focus-ring">
 					<button
 						type="button"
 						className={clsx(styles.emojiButton, emojiPickerOpen && styles.emojiButtonActive)}
@@ -158,16 +161,17 @@ export const BioEditor = observer(
 						aria-label={i18n._(OPEN_EMOJI_PICKER_DESCRIPTOR)}
 						aria-haspopup="dialog"
 						aria-expanded={emojiPickerOpen}
+						data-flx="user.my-profile-tab.bio-editor.emoji-button"
 					>
-						<SmileyIcon size={remFromPx(20)} weight="fill" />
+						<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="user.my-profile-tab.bio-editor.smiley-icon--2" />
 					</button>
 				</FocusRing>
 			</Popout>
 		);
 		return (
-			<div className="flx-element">
-				<fieldset className={formStyles.fieldset}>
-					<div className={formStyles.labelContainer}>
+			<div className="flx-element" data-flx="user.my-profile-tab.bio-editor.flx-element">
+				<fieldset className={formStyles.fieldset} data-flx="user.my-profile-tab.bio-editor.fieldset">
+					<div className={formStyles.labelContainer} data-flx="user.my-profile-tab.bio-editor.div">
 						<label
 							id={labelId}
 							htmlFor={editableId}
@@ -182,12 +186,20 @@ export const BioEditor = observer(
 								}
 							}}
 							className={formStyles.label}
+							data-flx="user.my-profile-tab.bio-editor.label.prevent-default"
 						>
 							{i18n._(ABOUT_ME_DESCRIPTOR)}
 						</label>
 					</div>
-					<div className={formStyles.inputGroup}>
-						<FocusRing within={true} ringTarget={wrapperRef} focusTarget={wrapperRef} offset={-2} enabled={!disabled}>
+					<div className={formStyles.inputGroup} data-flx="user.my-profile-tab.bio-editor.div--2">
+						<FocusRing
+							within={true}
+							ringTarget={wrapperRef}
+							focusTarget={wrapperRef}
+							offset={-2}
+							enabled={!disabled}
+							data-flx="user.my-profile-tab.bio-editor.focus-ring--2"
+						>
 							<div
 								ref={wrapperRef}
 								className={clsx(formStyles.textareaWrapper, surfaceStyles.surface, surfaceInteractionClass)}
@@ -205,6 +217,7 @@ export const BioEditor = observer(
 										composer.focus();
 									}
 								}}
+								data-flx="user.my-profile-tab.bio-editor.div.prevent-default"
 							>
 								<LexicalRichInput
 									key={hydrationKey}
@@ -231,29 +244,34 @@ export const BioEditor = observer(
 									onFocus={() => setIsFocused(true)}
 									onBlur={() => setIsFocused(false)}
 									i18n={i18n}
+									data-flx="user.my-profile-tab.bio-editor.editor.change"
 								/>
-								<div className={formStyles.textareaActions}>
+								<div className={formStyles.textareaActions} data-flx="user.my-profile-tab.bio-editor.div--3">
 									{emojiButton}
-									<div className={styles.characterCountContainer}>
+									<div
+										className={styles.characterCountContainer}
+										data-flx="user.my-profile-tab.bio-editor.character-count-container"
+									>
 										<CharacterCounter
 											currentLength={actualLength}
 											maxLength={actualMaxLength}
 											canUpgrade={false}
 											premiumMaxLength={actualMaxLength}
 											onUpgradeClick={() => undefined}
+											data-flx="user.my-profile-tab.bio-editor.character-counter"
 										/>
 									</div>
 								</div>
 							</div>
 						</FocusRing>
 						{hasError && (
-							<span id={errorId} className={formStyles.errorText}>
+							<span id={errorId} className={formStyles.errorText} data-flx="user.my-profile-tab.bio-editor.span">
 								{errorMessage}
 							</span>
 						)}
 					</div>
 				</fieldset>
-				<div id={descriptionId} className={styles.description}>
+				<div id={descriptionId} className={styles.description} data-flx="user.my-profile-tab.bio-editor.description">
 					<Trans>You can use links, emoji, and markdown.</Trans>
 				</div>
 			</div>

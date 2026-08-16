@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	reportSkeletonSimplePageLayout,
+	SkeletonSimplePageBody,
+	SkeletonSimplePageRoute,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import styles from '@app/features/channel/components/GuildMembersPage.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -38,6 +44,17 @@ export function MembersTableToolbar({
 	indexing,
 }: MembersTableToolbarProps) {
 	const {i18n} = useLingui();
+	const reportableRowCount = inputValue === '' && !indexing ? displayedCount : null;
+	useSkeletonLayoutReport(() => {
+		if (reportableRowCount == null) {
+			return;
+		}
+		reportSkeletonSimplePageLayout(
+			SkeletonSimplePageRoute.GUILD_MEMBERS,
+			SkeletonSimplePageBody.MEMBER_TABLE,
+			reportableRowCount,
+		);
+	}, `${reportableRowCount}`);
 	return (
 		<div className={styles.toolbar} data-flx="channel.guild-members-page.members-table-view.toolbar">
 			<div className={styles.toolbarLeft} data-flx="channel.guild-members-page.members-table-view.toolbar-left">

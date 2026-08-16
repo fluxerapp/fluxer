@@ -149,15 +149,21 @@ export class ComposerStandardEmojiNode extends DecoratorNode<JSX.Element> {
 
 	override decorate(): JSX.Element {
 		return (
-			<ComposerAtomicPresentation spoiler={this.__spoiler}>
+			<ComposerAtomicPresentation
+				spoiler={this.__spoiler}
+				data-flx="lexical.composer.nodes.composer-standard-emoji-node.composer-atomic-presentation"
+			>
 				{this.__literal ? (
-					<span className={styles.literal}>{this.__display}</span>
+					<span className={styles.literal} data-flx="lexical.composer.nodes.composer-standard-emoji-node.literal">
+						{this.__display}
+					</span>
 				) : (
 					<ComposerStandardEmoji
 						name={this.__name}
 						surrogate={this.__surrogate}
 						url={this.__url}
 						display={this.__display}
+						data-flx="lexical.composer.nodes.composer-standard-emoji-node.composer-standard-emoji"
 					/>
 				)}
 			</ComposerAtomicPresentation>

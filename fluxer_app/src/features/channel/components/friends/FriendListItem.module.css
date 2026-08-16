@@ -5,7 +5,7 @@
 	justify-content: space-between;
 	align-items: center;
 	cursor: pointer;
-	padding: 0.75rem 1rem;
+	padding: var(--friend-row-padding-block) var(--friend-row-padding-inline);
 	position: relative;
 	overflow: hidden;
 	max-width: 100%;
@@ -14,8 +14,8 @@
 .friendListItem::before {
 	content: '';
 	position: absolute;
-	inset: 0 0.4rem 0 var(--spacing-2);
-	border-radius: 0.375rem;
+	inset: var(--friend-row-separator-inset);
+	border-radius: var(--friend-row-separator-radius);
 	border-top: 0.0625rem solid var(--background-modifier-accent);
 	pointer-events: none;
 }
@@ -46,7 +46,7 @@
 	z-index: 1;
 	display: flex;
 	align-items: center;
-	gap: 0.75rem;
+	gap: var(--friend-row-content-gap);
 	flex: 1 1 0;
 	width: 0;
 	min-width: 0;
@@ -82,8 +82,8 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	line-height: 1.25rem;
-	max-height: 1.25rem;
+	line-height: var(--friend-row-name-line-height);
+	max-height: var(--friend-row-name-line-height);
 	min-width: 0;
 }
 
@@ -108,13 +108,13 @@
 
 .friendSubtext {
 	font-size: 0.6875rem;
-	line-height: 1rem;
+	line-height: var(--friend-row-subtext-line-height);
 	color: color-mix(in srgb, var(--text-primary-muted) 85%, transparent);
 	font-weight: 500;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	margin-top: -0.0625rem;
+	margin-top: var(--friend-row-subtext-offset);
 	width: 100%;
 	min-width: 0;
 }
@@ -181,7 +181,7 @@
 	z-index: 1;
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--friend-row-action-gap);
 	flex-shrink: 0;
 }
 

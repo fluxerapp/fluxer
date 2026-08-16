@@ -413,6 +413,7 @@ export const MessageSearchBar = observer(
 								'aria-keyshortcuts': 'ArrowDown ArrowUp Enter Escape',
 								'aria-describedby': `${suggestionsStatusId} ${activeSuggestionStatusId} ${hintId}`,
 							}}
+							data-flx="channel.message-search-bar.message-search-bar.combobox.key-down"
 						/>
 						{hasValue && (
 							<button

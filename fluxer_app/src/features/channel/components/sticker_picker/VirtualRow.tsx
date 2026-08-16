@@ -111,6 +111,7 @@ const StickerButton: React.FC<StickerButtonProps> = React.memo(
 						})}
 						alt={sticker.name}
 						className={styles.stickerImage}
+						loading="lazy"
 						data-flx="channel.sticker-picker.virtual-row.sticker-button.sticker-image"
 					/>
 				</button>

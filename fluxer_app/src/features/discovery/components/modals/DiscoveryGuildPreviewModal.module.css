@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.description {
+	margin: 0;
+	text-align: center;
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	color: var(--text-tertiary);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}

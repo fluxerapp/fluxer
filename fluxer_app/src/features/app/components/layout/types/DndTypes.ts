@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const DND_TYPES = {
+import type {RelativePosition} from '@app/features/ui/RelativePosition';
+
+export const DragItemType = Object.freeze({
 	CHANNEL: 'channel',
 	CATEGORY: 'category',
 	VOICE_PARTICIPANT: 'voice-participant',
@@ -8,7 +10,29 @@ export const DND_TYPES = {
 	GUILD_FOLDER: 'guild-folder',
 	ATTACHMENT: 'attachment',
 	CONNECTION: 'connection',
-} as const;
+	FAVORITES_CHANNEL: 'favorites-channel',
+	FAVORITES_CATEGORY: 'favorites-category',
+} as const);
+
+export type DragItemType = (typeof DragItemType)[keyof typeof DragItemType];
+
+export const DropPlacement = Object.freeze({
+	INSIDE: 'inside',
+	COMBINE: 'combine',
+} as const);
+
+export type DropPlacement = (typeof DropPlacement)[keyof typeof DropPlacement];
+
+export type DropPosition = RelativePosition | typeof DropPlacement.INSIDE;
+
+export const DNDReorderState = Object.freeze({
+	IDLE: 'idle',
+	RESOLVING: 'resolving',
+	TARGETING: 'targeting',
+	BLOCKED: 'blocked',
+} as const);
+
+export type DNDReorderState = (typeof DNDReorderState)[keyof typeof DNDReorderState];
 
 export interface DragItem {
 	type: string;
@@ -22,39 +46,39 @@ export interface DragItem {
 
 export interface DropResult {
 	targetId: string;
-	position: 'before' | 'after' | 'inside';
+	position: DropPosition;
 	targetParentId: string | null;
 }
 
 export interface GuildDragItem {
-	type: typeof DND_TYPES.GUILD_ITEM | typeof DND_TYPES.GUILD_FOLDER;
+	type: typeof DragItemType.GUILD_ITEM | typeof DragItemType.GUILD_FOLDER;
 	id: string;
 	isFolder: boolean;
-	folderId?: number | null;
+	folderId: number | null;
 }
 
-export type GuildDropPosition = 'before' | 'after' | 'inside' | 'combine';
+export type GuildDropPosition = DropPosition | typeof DropPlacement.COMBINE;
 
 export interface GuildDropResult {
-	targetId: string;
-	position: GuildDropPosition;
-	targetIsFolder: boolean;
-	targetFolderId?: number | null;
+	readonly targetId: string;
+	readonly position: GuildDropPosition;
+	readonly targetIsFolder: boolean;
+	readonly targetFolderId: number | null;
 }
 
 export interface AttachmentDragItem {
-	type: typeof DND_TYPES.ATTACHMENT;
+	type: typeof DragItemType.ATTACHMENT;
 	id: number;
 	channelId: string;
 }
 
 export interface AttachmentDropResult {
 	targetId: number;
-	position: 'before' | 'after';
+	position: RelativePosition;
 }
 
 export interface ConnectionDragItem {
-	type: typeof DND_TYPES.CONNECTION;
+	type: typeof DragItemType.CONNECTION;
 	id: string;
 	index: number;
 }

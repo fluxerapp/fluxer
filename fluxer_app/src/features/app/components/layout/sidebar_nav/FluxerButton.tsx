@@ -3,6 +3,8 @@
 import {Routes} from '@app/app/Routes';
 import styles from '@app/features/app/components/layout/GuildsLayout.module.css';
 import {getFluxerButtonBadgeCount} from '@app/features/app/components/layout/sidebar_nav/FluxerButtonBadgeUtils';
+import {resolveGuildListIndicatorBarTarget} from '@app/features/app/components/layout/sidebar_nav/GuildListIndicator';
+import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -13,10 +15,8 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
-import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {FluxerButtonContextMenu} from '@app/features/ui/action_menu/FluxerButtonContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import {FluxerSymbol} from '@app/features/ui/components/icons/FluxerSymbol';
 import {MentionBadgeAnimated} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -26,6 +26,7 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {ChatCircleIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -56,6 +57,7 @@ export const FluxerButton = observer(() => {
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
 	const iconRef = useRef<HTMLDivElement | null>(null);
 	const mergedButtonRef = useMergeRefs([hoverRef, buttonRef]);
+	const contextMenuOpen = useContextMenuHoverState(buttonRef, !MobileLayout.enabled);
 	const location = useLocation();
 	const isSelected = location.pathname.startsWith(Routes.ME) || Routes.isSpecialPage(location.pathname);
 	const selectedChannel = SelectedChannel.selectedChannelIds.get(ME);
@@ -117,14 +119,9 @@ export const FluxerButton = observer(() => {
 			/>
 		));
 	}, []);
-	const indicatorHeight = remFromPx(
-		(() => {
-			if (isSelected) return 40;
-			if (isHovering) return 20;
-			return 8;
-		})(),
-	);
-	const isActive = isHovering || isSelected;
+	const shouldShowHoverState = isHovering || contextMenuOpen;
+	const indicatorTarget = resolveGuildListIndicatorBarTarget({isSelected, showHoverState: shouldShowHoverState});
+	const isActive = shouldShowHoverState || isSelected;
 	if (RuntimeConfig.directMessagesDisabled) {
 		return null;
 	}
@@ -143,7 +140,7 @@ export const FluxerButton = observer(() => {
 			>
 				<button
 					type="button"
-					className={styles.fluxerButton}
+					className={clsx(styles.fluxerButton, contextMenuOpen && styles.contextMenuHover)}
 					aria-label={directMessagesLabel}
 					aria-current={isSelected ? 'page' : undefined}
 					data-guild-list-focus-item="true"
@@ -153,13 +150,13 @@ export const FluxerButton = observer(() => {
 					data-flx="app.sidebar-nav.fluxer-button.fluxer-button.select"
 				>
 					<AnimatePresence data-flx="app.sidebar-nav.fluxer-button.animate-presence">
-						{(isSelected || isHovering) && (
+						{(isSelected || shouldShowHoverState) && (
 							<div className={styles.guildIndicator} data-flx="app.sidebar-nav.fluxer-button.guild-indicator">
 								<motion.span
 									className={styles.guildIndicatorBar}
 									initial={false}
-									animate={{opacity: 1, scale: 1, height: indicatorHeight}}
-									exit={{opacity: 0, scale: 0, height: 0}}
+									animate={indicatorTarget}
+									exit={{opacity: 0, height: 0}}
 									transition={{duration: 0.2, ease: [0.25, 0.1, 0.25, 1]}}
 									data-flx="app.sidebar-nav.fluxer-button.guild-indicator-bar"
 								/>
@@ -175,9 +172,10 @@ export const FluxerButton = observer(() => {
 							transition={{duration: 0.07, ease: 'easeOut'}}
 							data-flx="app.sidebar-nav.fluxer-button.fluxer-button-icon"
 						>
-							<FluxerSymbol
-								className={styles.fluxerSymbolIcon}
-								data-flx="app.sidebar-nav.fluxer-button.fluxer-symbol-icon"
+							<ChatCircleIcon
+								weight="fill"
+								className={styles.messageBubbleIcon}
+								data-flx="app.sidebar-nav.fluxer-button.message-bubble-icon"
 							/>
 						</motion.div>
 						<div

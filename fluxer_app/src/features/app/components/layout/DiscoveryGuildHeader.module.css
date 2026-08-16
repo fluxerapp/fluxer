@@ -1,11 +1,13 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.headerIconContainer {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.headerIcon {
+.headerTitle {
+	margin: 0;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 1.25rem;
+	font-weight: 700;
+	line-height: 1.75rem;
 	color: var(--text-primary);
 }

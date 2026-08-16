@@ -36,7 +36,11 @@ export const ComposerCustomEmoji = observer(({emojiId, animated, display}: Compo
 	const shouldAnimate = useShouldAnimate({kind: 'emoji'});
 	if (plainText) {
 		return (
-			<span className={styles.plainText} contentEditable={false}>
+			<span
+				className={styles.plainText}
+				contentEditable={false}
+				data-flx="lexical.composer.nodes.composer-custom-emoji.plain-text"
+			>
 				{display}
 			</span>
 		);
@@ -62,13 +66,19 @@ export const ComposerCustomEmoji = observer(({emojiId, animated, display}: Compo
 	const displayUrl = AvatarSourceUtils.getEmojiURL({id: emojiId, animated: animated && shouldAnimate});
 	const tooltipUrl = setUrlQueryParams(displayUrl, {size: 240, quality: 'lossless'});
 	return (
-		<EmojiWithTooltip emojiUrl={tooltipUrl} emojiName={display} emojiForSubtext={emojiForSubtext}>
+		<EmojiWithTooltip
+			emojiUrl={tooltipUrl}
+			emojiName={display}
+			emojiForSubtext={emojiForSubtext}
+			data-flx="lexical.composer.nodes.composer-custom-emoji.emoji-with-tooltip"
+		>
 			<img
 				src={displayUrl}
 				alt={accessibleLabel}
 				className={styles.customEmoji}
 				draggable={false}
 				contentEditable={false}
+				data-flx="lexical.composer.nodes.composer-custom-emoji.custom-emoji"
 			/>
 		</EmojiWithTooltip>
 	);

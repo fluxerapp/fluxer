@@ -193,6 +193,23 @@
 	background-color: rgba(255, 255, 255, 0.05);
 }
 
+.button.ghost {
+	background-color: transparent;
+	border-color: transparent;
+	color: inherit;
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.button.ghost:hover:not(:disabled):not([data-disabled]) {
+	background-color: color-mix(in srgb, currentColor 12%, transparent);
+	text-decoration: underline;
+	text-underline-offset: 0.1875rem;
+}
+
+.button.ghost:active:not(:disabled):not([data-disabled]) {
+	background-color: color-mix(in srgb, currentColor 6%, transparent);
+}
+
 .button.recording {
 	background-color: var(--accent-success, #16a34a);
 	border-color: color-mix(in srgb, var(--accent-success, #16a34a) 80%, white 20%);

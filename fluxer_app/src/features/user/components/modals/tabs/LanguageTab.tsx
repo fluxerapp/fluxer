@@ -350,7 +350,11 @@ const LanguageTab = observer(() => {
 					data-flx="user.language-tab.settings-tab-section.language-settings"
 				>
 					<div className={styles.languageControls} data-flx="user.language-tab.language-controls">
-						<LanguageSelector value={currentLocale} onChange={handleLocaleChange} />
+						<LanguageSelector
+							value={currentLocale}
+							onChange={handleLocaleChange}
+							data-flx="user.language-tab.language-selector.locale-change"
+						/>
 						<div className={styles.notice} data-flx="user.language-tab.notice">
 							<p className={styles.noticeText} data-flx="user.language-tab.notice-text">
 								<Trans>

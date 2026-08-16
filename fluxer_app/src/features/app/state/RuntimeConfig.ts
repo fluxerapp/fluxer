@@ -64,6 +64,38 @@ export interface RuntimeConfigSnapshot {
 	appPublic: InstanceAppPublic;
 }
 
+function runtimeInstanceKey(snapshot: RuntimeConfigSnapshot): string | null {
+	try {
+		const endpoint = snapshot.apiEndpoint.trim();
+		const url = new URL(endpoint);
+		if (
+			(url.protocol !== 'https:' && url.protocol !== 'http:') ||
+			url.username ||
+			url.password ||
+			url.search ||
+			url.hash
+		) {
+			return null;
+		}
+		const path = url.pathname.replace(/\/+$/u, '');
+		return `${url.origin.toLowerCase()}${path}`;
+	} catch {
+		return null;
+	}
+}
+
+export function runtimeConfigSnapshotsAreSameInstance(
+	left: RuntimeConfigSnapshot | undefined,
+	right: RuntimeConfigSnapshot,
+): boolean {
+	if (!left) {
+		return false;
+	}
+	const leftKey = runtimeInstanceKey(left);
+	const rightKey = runtimeInstanceKey(right);
+	return leftKey !== null && leftKey === rightKey;
+}
+
 const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
 	voice_enabled: false,
 	stripe_enabled: false,
@@ -244,7 +276,6 @@ export function normalizeAppPublicConfig(appPublic?: Partial<InstanceAppPublic> 
 }
 
 class RuntimeConfig {
-	private _connectSeq = 0;
 	apiEndpoint: string = '';
 	apiPublicEndpoint: string = '';
 	gatewayEndpoint: string = '';
@@ -288,43 +319,6 @@ class RuntimeConfig {
 
 	waitForInit(): Promise<void> {
 		return Promise.resolve();
-	}
-
-	applySnapshot(snapshot: RuntimeConfigSnapshot): void {
-		const gifProviderInfo = normalizeGifProviderInfo({
-			name: snapshot.gifProvider,
-			attributionRequired: snapshot.gifAttributionRequired,
-		});
-		this.apiEndpoint = snapshot.apiEndpoint;
-		this.apiPublicEndpoint = snapshot.apiPublicEndpoint;
-		this.gatewayEndpoint = snapshot.gatewayEndpoint;
-		this.mediaEndpoint = snapshot.mediaEndpoint;
-		this.staticCdnEndpoint = snapshot.staticCdnEndpoint;
-		this.marketingEndpoint = snapshot.marketingEndpoint;
-		this.adminEndpoint = snapshot.adminEndpoint;
-		this.inviteEndpoint = snapshot.inviteEndpoint;
-		this.giftEndpoint = snapshot.giftEndpoint;
-		this.webAppEndpoint = snapshot.webAppEndpoint;
-		this.gifProvider = gifProviderInfo.name;
-		this.gifProviderDisplayName = gifProviderInfo.displayName;
-		this.gifAttributionRequired = gifProviderInfo.attributionRequired;
-		this.captchaProvider = snapshot.captchaProvider;
-		this.hcaptchaSiteKey = snapshot.hcaptchaSiteKey;
-		this.turnstileSiteKey = snapshot.turnstileSiteKey;
-		this.apiCodeVersion = snapshot.apiCodeVersion;
-		this.features = {
-			...DEFAULT_INSTANCE_FEATURES,
-			...snapshot.features,
-		};
-		this.sso = snapshot.sso;
-		this.registration = normalizeInstanceRegistration(snapshot.registration);
-		this.community = normalizeInstanceCommunity(snapshot.community);
-		this.services = normalizeInstanceServices(snapshot.services);
-		this.publicPushVapidKey = snapshot.publicPushVapidKey;
-		this.limits = this.normalizeLimits(snapshot.limits ?? this.createEmptyLimitConfig());
-		this.currentDefaultsHash = null;
-		this.appPublic = normalizeAppPublicConfig(snapshot.appPublic);
-		applyDocumentBranding(this.appPublic);
 	}
 
 	getSnapshot(): RuntimeConfigSnapshot {
@@ -388,16 +382,6 @@ class RuntimeConfig {
 		return this.normalizeLimits(limits as LimitConfigSnapshot | undefined);
 	}
 
-	async withSnapshot<T>(snapshot: RuntimeConfigSnapshot, fn: () => Promise<T>): Promise<T> {
-		const before = this.getSnapshot();
-		this.applySnapshot(snapshot);
-		try {
-			return await fn();
-		} finally {
-			this.applySnapshot(before);
-		}
-	}
-
 	applyAdminInstanceConfig(config: InstanceConfigResponse): void {
 		const appPublic = normalizeAppPublicConfig({
 			branding: config.app_public.branding,
@@ -429,50 +413,6 @@ class RuntimeConfig {
 			this.appPublic = appPublic;
 		});
 		applyDocumentBranding(appPublic);
-	}
-
-	async connectToEndpoint(input: string): Promise<void> {
-		const connectId = ++this._connectSeq;
-		const apiEndpoint = this.normalizeEndpoint(input);
-		const wellKnownUrl = this.buildWellKnownUrl(apiEndpoint);
-		const response = await http.get<InstanceDiscoveryResponse>(wellKnownUrl);
-		if (connectId !== this._connectSeq) {
-			return;
-		}
-		if (!response.ok) {
-			throw new Error(`Failed to reach ${wellKnownUrl} (${response.status})`);
-		}
-		this.updateFromInstance(response.body);
-	}
-
-	private buildWellKnownUrl(apiEndpoint: string): string {
-		try {
-			const url = new URL(apiEndpoint);
-			const isOfficialWebApp = url.hostname === 'web.fluxer.app' || url.hostname === 'web.canary.fluxer.app';
-			url.pathname = isOfficialWebApp ? '/api/.well-known/fluxer' : '/.well-known/fluxer';
-			return url.toString();
-		} catch {
-			return `${apiEndpoint.replace(/\/api\/?$/, '')}/.well-known/fluxer`;
-		}
-	}
-
-	private normalizeEndpoint(input: string): string {
-		const trimmed = input['trim']();
-		if (!trimmed) {
-			throw new Error('API endpoint is required');
-		}
-		let candidate = trimmed;
-		if (candidate.startsWith('/')) {
-			candidate = `${window.location.origin}${candidate}`;
-		} else if (!/^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(candidate)) {
-			candidate = `https://${candidate}`;
-		}
-		const url = new URL(candidate);
-		if (url.pathname === '' || url.pathname === '/') {
-			url.pathname = '/api';
-		}
-		url.pathname = url.pathname.replace(/\/+$/, '');
-		return url.toString();
 	}
 
 	private updateFromInstance(instance: InstanceDiscoveryResponse): void {
@@ -684,16 +624,6 @@ class RuntimeConfig {
 		} catch {
 			return 'localhost';
 		}
-	}
-}
-
-export function describeApiEndpoint(endpoint: string): string {
-	try {
-		const url = new URL(endpoint);
-		const path = url.pathname === '/api' ? '' : url.pathname;
-		return `${url.host}${path}`;
-	} catch {
-		return endpoint;
 	}
 }
 

@@ -3,6 +3,8 @@
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 
 export const NagbarType = {
+	BUILD_ENVIRONMENT: 'build-environment',
+	CONNECTION: 'connection',
 	CORRUPTED_INSTALLATION: 'corrupted-installation',
 	SCHEDULED_MAINTENANCE: 'scheduled-maintenance',
 	UNCLAIMED_ACCOUNT: 'unclaimed-account',
@@ -36,6 +38,8 @@ export interface AppLayoutState {
 }
 
 export interface NagbarConditions {
+	canShowBuildEnvironment: boolean;
+	canShowConnection: boolean;
 	canShowCorruptedInstallation: boolean;
 	canShowScheduledMaintenance: boolean;
 	userIsUnclaimed: boolean;

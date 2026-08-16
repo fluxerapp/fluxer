@@ -2,6 +2,7 @@
 
 import {existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {dirname, join, relative, resolve} from 'node:path';
+import {SKELETON_SURFACE_TOKENS} from '@app/features/app/components/skeleton/SkeletonSurfaceContract';
 
 type ThemeVariableKind = 'color' | 'font' | 'dimension' | 'number' | 'shadow' | 'transition' | 'other';
 
@@ -407,6 +408,11 @@ function renderValueMap(name: string, values: ReadonlyMap<string, string>): stri
 	return `export const ${name}: Readonly<Record<string, string>> = {\n${body}\n};`;
 }
 
+function renderNameUnion(definitions: ReadonlyArray<VariableDefinition>): string {
+	const body = definitions.map((definition) => `\t| ${JSON.stringify(definition.name)}`).join('\n');
+	return `export type ThemeVariableName =\n${body};`;
+}
+
 function renderDefinitions(definitions: ReadonlyArray<VariableDefinition>): string {
 	const body = definitions
 		.map(
@@ -439,6 +445,8 @@ export interface ThemeVariableDefinition {
 \tsource: string;
 }
 
+${renderNameUnion(definitions)}
+
 ${renderDefinitions(definitions)}
 
 ${renderStringArray(
@@ -456,9 +464,361 @@ ${renderValueMap('THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES', lightDefaults)}
 `;
 }
 
+interface SkeletonSurfaceInvariant {
+	file: string;
+	requires?: ReadonlyArray<string>;
+	requiresPattern?: ReadonlyArray<string>;
+	forbids?: ReadonlyArray<string>;
+	forbidsPattern?: ReadonlyArray<string>;
+	counts?: Readonly<Record<string, number>>;
+	minimums?: Readonly<Record<string, number>>;
+}
+
+const SKELETON_CHROME_BORDER_TOKEN = 'var(--skeleton-chrome-border)';
+
+const SKELETON_SURFACE_INVARIANTS: ReadonlyArray<SkeletonSurfaceInvariant> = [
+	{
+		file: 'src/app/globals.css',
+		counts: {
+			'--skeleton-chrome-border-color': 2,
+			'--skeleton-chrome-border-color: color-mix(in srgb, var(--background-modifier-accent) 25%, transparent);': 1,
+			'--skeleton-chrome-border: 0.0625rem solid var(--skeleton-chrome-border-color);': 1,
+			'--chat-horizontal-padding-default: 1rem;': 1,
+			'--guild-members-columns-selectable: var(--guild-members-select-column-width) var(--guild-members-columns);': 1,
+			'--guilds-layout-item-bg: color-mix(in srgb, var(--guild-list-foreground) 72%, var(--background-primary) 28%);': 1,
+		},
+	},
+	{
+		file: 'src/features/app/components/skeleton/ChatSkeleton.module.css',
+		minimums: {[SKELETON_CHROME_BORDER_TOKEN]: 1},
+		forbidsPattern: ['border[a-z-]*:\\s*[^;]*var\\(--background-modifier-accent\\)'],
+		forbids: ['scopeBadge', 'scope-badge'],
+	},
+	{
+		file: 'src/features/app/components/skeleton/ChatSkeleton.tsx',
+		requires: [
+			"import composerWrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';",
+			'composerWrapperStyles.composerRoot',
+			"'--chat-horizontal-padding': remFromPx(messagePresentation.messageGutterPx),",
+			"'--font-size': remFromPx(messagePresentation.fontSizePx),",
+			"'--message-group-spacing': remFromPx(messagePresentation.groupSpacingPx),",
+			"'--message-compact-timestamp-width': remFromPx(messagePresentation.compactTimestampWidthPx),",
+		],
+		forbids: ['scopeBadge', 'scope-badge', '@tanstack/react-virtual'],
+	},
+	{
+		file: 'src/features/app/components/skeleton/DiscoverySkeleton.module.css',
+		minimums: {[SKELETON_CHROME_BORDER_TOKEN]: 2},
+		forbidsPattern: ['border[a-z-]*:\\s*[^;]*var\\(--background-modifier-accent\\)'],
+	},
+	{
+		file: 'src/features/app/components/skeleton/FriendsSkeleton.module.css',
+		minimums: {[SKELETON_CHROME_BORDER_TOKEN]: 4},
+		forbidsPattern: ['border[a-z-]*:\\s*[^;]*var\\(--background-modifier-accent\\)'],
+		forbids: ['.activeNowPreview'],
+	},
+	{
+		file: 'src/features/app/components/skeleton/FriendsSkeleton.tsx',
+		forbids: ['LIVE_BADGE', 'CONTEXT_CHEVRON', 'ACTIVE_NOW_CONTEXT_ICON_SIZE'],
+		requires: ['function resolveFriendsListSections('],
+	},
+	{
+		file: 'src/features/app/components/skeleton/GuildRailSkeleton.module.css',
+		requires: [
+			'.outageSlot {\n\tmin-height: var(--guild-list-item-box-size);\n}',
+			'.sectionTrailingGap {\n\tpadding-bottom: var(--guild-list-item-gap);\n}',
+			'.itemsTrailingGapCancel {\n\tmargin-bottom: calc(-1 * var(--guild-list-item-gap));\n}',
+			'background-color: var(--guilds-layout-item-bg);',
+			".item[data-selected='true'] .fluxerIcon",
+			'clip-path: inset(0);',
+			'\ttransform: translateY(0rem);',
+		],
+		forbids: ['--guild-list-indicator-', '::before'],
+		counts: {'z-index: 0;': 3, 'z-index: 1;': 3},
+	},
+	{
+		file: 'src/features/app/components/skeleton/GuildRailSkeleton.tsx',
+		requires: [
+			"import guildStyles from '@app/features/app/components/layout/GuildsLayout.module.css';",
+			'guildStyles.guildIndicator',
+			'guildStyles.guildIndicatorBar',
+			'resolveGuildListIndicatorBarTarget(',
+			'const InlineDMPlaceholder = ',
+		],
+		requiresPattern: ['<ChatCircleIcon[^>]*weight="fill"[^>]*className=\\{styles\\.fluxerIconGlyph\\}'],
+		forbids: ['data-indicator', 'GUILD_RAIL_INDICATOR_METRICS', 'Math.round'],
+		counts: {'styles.sectionTrailingGap': 2, 'styles.itemsTrailingGapCancel': 1},
+	},
+	{
+		file: 'src/features/ui/components/Scroller.module.css',
+		counts: {'clip-path: inset(0);': 1},
+	},
+	{
+		file: 'src/features/channel/components/MemberListSkeleton.tsx',
+		counts: {'style={MEMBER_LIST_METRICS_STYLE}': 2},
+	},
+	{
+		file: 'src/features/channel/components/textarea/InputWrapper.module.css',
+		requires: ['.composerRoot:has(.statusTypingSlot)::before'],
+	},
+	{
+		file: 'src/features/app/components/layout/GuildsLayout.module.css',
+		requires: [
+			'.guildListScrollContainer.guildListScrollContainer {\n\toverflow-anchor: auto;\n}',
+			'--layout-user-area-overlay-height',
+			'\tpadding-bottom: calc(\n\t\tvar(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +\n\t\tvar(--spacing-2)\n\t);',
+			'.messageBubbleIcon {\n\theight: 1.75rem;\n\twidth: 1.75rem;',
+			'.guildIndicator {',
+			'.guildIndicatorBar {',
+		],
+		forbids: ['.fluxerSymbolIcon'],
+	},
+	{
+		file: 'src/features/app/components/layout/GuildsLayout.tsx',
+		forbids: ['useListScrollAnchor', 'usePersistentScrollAnchor', '@tanstack/react-virtual'],
+		counts: {'scrollNode.scrollTop = ': 2},
+	},
+	{
+		file: 'src/features/discovery/discovery/DiscoveryPage.tsx',
+		counts: {"import {useVirtualizer} from '@tanstack/react-virtual';": 1},
+	},
+	{
+		file: 'src/features/app/components/LongPressable.ts',
+		forbids: ['useImperativeHandle'],
+		requires: ['useMergeRefs'],
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/GuildListIndicator.ts',
+		requires: ['height: remFromPx(resolveGuildListIndicatorHeight(request))'],
+		forbids: ['transform', 'scale', 'getAppZoomFactor', 'getAppRemScale'],
+		counts: {
+			'function resolveGuildListIndicatorHeight': 1,
+			'export function resolveGuildListIndicatorBarTarget': 1,
+			'export ': 3,
+		},
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/FluxerButton.tsx',
+		requires: [
+			'const shouldShowHoverState = isHovering || contextMenuOpen;',
+			'ChatCircleIcon',
+			'styles.messageBubbleIcon',
+			'styles.contextMenuHover',
+			'resolveGuildListIndicatorBarTarget(',
+		],
+		forbids: ['scale', 'getAppZoomFactor'],
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/FavoritesButton.tsx',
+		requires: ['resolveGuildListIndicatorBarTarget('],
+		forbids: ['scale', 'getAppZoomFactor'],
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx',
+		requires: [
+			'const shouldShowHoverState = isHovering || contextMenuOpen;',
+			'guildStyles.contextMenuHover',
+			'resolveGuildListIndicatorBarTarget(',
+		],
+		forbids: ['@tanstack/react-virtual', 'scale', 'getAppZoomFactor'],
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx',
+		requires: [
+			'const shouldShowHoverState = isHovering || contextMenuOpen;',
+			'const FOLDER_BACKGROUND_FADE_TARGET = Object.freeze({opacity: 0});',
+			"const FOLDER_GUILDS_COLLAPSE_TARGET = Object.freeze({opacity: 0, translateY: '-0.5rem'});",
+			"to={{opacity: 1, translateY: '0rem'}}",
+			'resolveGuildListIndicatorBarTarget(',
+			'guildStyles.guildIndicatorBar',
+		],
+		forbids: ['@tanstack/react-virtual', 'scale', 'getAppZoomFactor'],
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/GuildFolderItem.module.css',
+		forbids: ['.folderIndicator'],
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/GuildListItemContent.tsx',
+		requires: [
+			'const selectedFromThisRow = peekDirectSelection(DirectSelectionSurface.GUILD_RAIL);',
+			'if (isInitialMount || selectedFromThisRow || !props.isSelected) return;',
+		],
+		forbids: ['preserveInitialScrollPosition', '@tanstack/react-virtual', 'scale', 'getAppZoomFactor'],
+	},
+	{
+		file: 'src/features/app/components/layout/sidebar_nav/GuildListItemPresentation.tsx',
+		forbids: ['@tanstack/react-virtual', 'scale', 'getAppZoomFactor'],
+	},
+	{
+		file: 'src/features/channel/components/ChannelMembers.tsx',
+		forbids: ['@tanstack/react-virtual'],
+		requires: ['styles.virtualRow'],
+	},
+];
+
+const SKELETON_STYLESHEET_DIRECTORIES: ReadonlyArray<string> = [
+	'src/features/app/components/skeleton',
+	'src/features/channel/components',
+	'src/features/user/components/profile',
+];
+const SKELETON_STYLESHEET_SUFFIX = 'Skeleton.module.css';
+const BORDER_DECLARATION_PATTERN =
+	/(?<![\w-])border(?:-(?:top|right|bottom|left|block|inline|block-start|block-end|inline-start|inline-end))?\s*:\s*([^;}]+)/g;
+const RAW_COLOR_PATTERN = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color-mix)\(/;
+
+function collectSkeletonStylesheets(appDir: string): ReadonlyArray<string> {
+	const files: Array<string> = [];
+	const visit = (directory: string) => {
+		for (const entry of readdirSync(directory, {withFileTypes: true})) {
+			const absolutePath = join(directory, entry.name);
+			if (entry.isDirectory()) {
+				visit(absolutePath);
+				continue;
+			}
+			if (!entry.isFile() || !entry.name.endsWith(SKELETON_STYLESHEET_SUFFIX)) continue;
+			files.push(toPosixPath(relative(appDir, absolutePath)));
+		}
+	};
+	for (const directory of SKELETON_STYLESHEET_DIRECTORIES) {
+		visit(join(appDir, directory));
+	}
+	return files.sort();
+}
+
+interface SkeletonSharedRuleSource {
+	readonly file: string;
+	readonly selectors: ReadonlyArray<string>;
+}
+
+const SKELETON_SHARED_RULE_SOURCES: ReadonlyArray<SkeletonSharedRuleSource> = [
+	{
+		file: 'src/features/app/components/layout/GuildsLayout.module.css',
+		selectors: ['.guildIndicator', '.guildIndicatorBar'],
+	},
+];
+const CUSTOM_PROPERTY_REFERENCE_PATTERN = /var\(\s*(--[a-zA-Z0-9-]+)/g;
+
+function assertSkeletonSharedRuleTokens(appDir: string): void {
+	const violations: Array<string> = [];
+	const declaredTokens = new Set<string>(SKELETON_SURFACE_TOKENS);
+	for (const source of SKELETON_SHARED_RULE_SOURCES) {
+		const contents = readFileSync(join(appDir, source.file), 'utf8');
+		for (const selector of source.selectors) {
+			const rule = new RegExp(`^${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`, 'mu').exec(contents);
+			if (rule == null) {
+				violations.push(`${source.file} must declare ${selector}; skeleton markup renders through that rule.`);
+				continue;
+			}
+			for (const match of rule[1].matchAll(CUSTOM_PROPERTY_REFERENCE_PATTERN)) {
+				const token = match[1];
+				if (declaredTokens.has(token)) continue;
+				violations.push(
+					`${source.file} ${selector} reads ${token}, which skeleton markup also renders through; ` +
+						'list it in SKELETON_SURFACE_TOKENS.',
+				);
+			}
+		}
+	}
+	if (violations.length > 0) {
+		throw new Error(`Skeleton surface invariants violated:\n${violations.map((line) => `  - ${line}`).join('\n')}`);
+	}
+}
+
+const SKELETON_CHROME_BORDER_COLOR_DECLARATION = /--skeleton-chrome-border-color\s*:\s*([^;}]+)/g;
+
+function assertSkeletonChromeBorderColourIsSoftened(appDir: string, violations: Array<string>): void {
+	const file = 'src/app/globals.css';
+	const contents = readFileSync(join(appDir, file), 'utf8');
+	for (const match of contents.matchAll(SKELETON_CHROME_BORDER_COLOR_DECLARATION)) {
+		const value = match[1].trim();
+		if (value.startsWith('var(--background-modifier-accent')) {
+			violations.push(
+				`${file} declares --skeleton-chrome-border-color as ${JSON.stringify(value)}; ` +
+					'skeleton chrome must use the softened colour, never the raw accent.',
+			);
+		}
+	}
+}
+
+function assertSkeletonBorderTokens(appDir: string): void {
+	const violations: Array<string> = [];
+	assertSkeletonChromeBorderColourIsSoftened(appDir, violations);
+	for (const file of collectSkeletonStylesheets(appDir)) {
+		const contents = readFileSync(join(appDir, file), 'utf8');
+		if (contents.includes('--skeleton-chrome-border-color')) {
+			violations.push(
+				`${file} names --skeleton-chrome-border-color directly; skeleton chrome must use ${SKELETON_CHROME_BORDER_TOKEN}.`,
+			);
+		}
+		for (const match of contents.matchAll(BORDER_DECLARATION_PATTERN)) {
+			const value = match[1].trim();
+			if (RAW_COLOR_PATTERN.test(value) || value.includes('--background-modifier-accent')) {
+				violations.push(
+					`${file} writes a literal border colour in ${JSON.stringify(`border: ${value}`)}; ` +
+						'skeleton borders must reference a shared token.',
+				);
+			}
+		}
+	}
+	if (violations.length > 0) {
+		throw new Error(`Skeleton surface invariants violated:\n${violations.map((line) => `  - ${line}`).join('\n')}`);
+	}
+}
+
+function assertSkeletonSurfaceInvariants(appDir: string): void {
+	const violations: Array<string> = [];
+	for (const invariant of SKELETON_SURFACE_INVARIANTS) {
+		const path = join(appDir, invariant.file);
+		if (!existsSync(path)) {
+			violations.push(`${invariant.file} is missing; a skeleton surface invariant depends on it.`);
+			continue;
+		}
+		const contents = readFileSync(path, 'utf8');
+		for (const required of invariant.requires ?? []) {
+			if (!contents.includes(required)) {
+				violations.push(`${invariant.file} must contain ${JSON.stringify(required)}.`);
+			}
+		}
+		for (const forbidden of invariant.forbids ?? []) {
+			if (contents.includes(forbidden)) {
+				violations.push(`${invariant.file} must not contain ${JSON.stringify(forbidden)}.`);
+			}
+		}
+		for (const source of invariant.requiresPattern ?? []) {
+			if (!new RegExp(source, 'u').test(contents)) {
+				violations.push(`${invariant.file} must match /${source}/.`);
+			}
+		}
+		for (const source of invariant.forbidsPattern ?? []) {
+			if (new RegExp(source, 'u').test(contents)) {
+				violations.push(`${invariant.file} must not match /${source}/.`);
+			}
+		}
+		for (const [needle, expected] of Object.entries(invariant.counts ?? {})) {
+			const actual = contents.split(needle).length - 1;
+			if (actual !== expected) {
+				violations.push(`${invariant.file} must contain ${needle} exactly ${expected} time(s); found ${actual}.`);
+			}
+		}
+		for (const [needle, minimum] of Object.entries(invariant.minimums ?? {})) {
+			const actual = contents.split(needle).length - 1;
+			if (actual < minimum) {
+				violations.push(`${invariant.file} must contain ${needle} at least ${minimum} time(s); found ${actual}.`);
+			}
+		}
+	}
+	if (violations.length > 0) {
+		throw new Error(`Skeleton surface invariants violated:\n${violations.map((line) => `  - ${line}`).join('\n')}`);
+	}
+}
+
 function main(): void {
 	const scriptDir = import.meta.dirname;
 	const appDir = resolve(scriptDir, '..');
+	assertSkeletonSurfaceInvariants(appDir);
+	assertSkeletonSharedRuleTokens(appDir);
+	assertSkeletonBorderTokens(appDir);
 	const outputPath = join(appDir, 'src', 'features', 'theme', 'variables', 'ThemeVariableManifest.ts');
 	const contents = render(appDir);
 	if (process.argv.includes('--check')) {

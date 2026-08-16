@@ -16,11 +16,14 @@ class Discovery {
 	language: string | null = null;
 	tag: string | null = null;
 	sortBy = 'member_count';
+	categoryCounts: ReadonlyMap<number, number> | null = null;
 	categories: Array<{
 		id: number;
 		name: string;
+		listed_in_all?: boolean;
 	}> = [];
 	categoriesLoaded = false;
+	categoriesError = false;
 	private activeSearchToken = 0;
 
 	constructor() {
@@ -44,9 +47,14 @@ class Discovery {
 		const offset = params.offset ?? 0;
 		const limit = params.limit ?? DEFAULT_DISCOVERY_PAGE_SIZE;
 		const searchToken = ++this.activeSearchToken;
+		const searchModeChanged = query.length > 0 !== this.query.length > 0;
 		runInAction(() => {
 			this.loading = true;
 			this.error = false;
+			if (offset === 0 && searchModeChanged) {
+				this.guilds = [];
+				this.total = 0;
+			}
 			this.query = query;
 			this.category = category;
 			this.language = language;
@@ -93,14 +101,42 @@ class Discovery {
 			runInAction(() => {
 				this.categories = categories;
 				this.categoriesLoaded = true;
+				this.categoriesError = false;
 			});
-		} catch {}
+		} catch {
+			runInAction(() => {
+				this.categoriesError = true;
+			});
+		}
+	}
+
+	getCategoryMatchCount(categoryId: number): number | null {
+		const counts = this.categoryCounts;
+		if (counts == null) {
+			return null;
+		}
+		return counts.get(categoryId) ?? 0;
+	}
+
+	get listedInAllMatchCount(): number | null {
+		const counts = this.categoryCounts;
+		if (counts == null) {
+			return null;
+		}
+		let total = 0;
+		for (const category of this.categories) {
+			if (category.listed_in_all !== false) {
+				total += counts.get(category.id) ?? 0;
+			}
+		}
+		return total;
 	}
 
 	reset(): void {
 		this.activeSearchToken += 1;
 		this.guilds = [];
 		this.total = 0;
+		this.categoryCounts = null;
 		this.loading = false;
 		this.error = false;
 		this.query = '';

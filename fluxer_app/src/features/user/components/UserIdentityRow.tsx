@@ -20,10 +20,20 @@ export const UserIdentityRow = observer(
 		const displayName = DisplayNameUtils.getNickname(user, guildId, channelId);
 		return (
 			<>
-				<Avatar user={user} size={avatarSize} guildId={guildId === null ? undefined : guildId} className={className} />
-				<flx-user-identity-row-info className={flxElementClassName(styles.info)}>
-					<span className={styles.name}>{displayName}</span>
-					<span className={styles.tag}>{user.tag}</span>
+				<Avatar
+					user={user}
+					size={avatarSize}
+					guildId={guildId === null ? undefined : guildId}
+					className={className}
+					data-flx="user.user-identity-row.avatar"
+				/>
+				<flx-user-identity-row-info className={flxElementClassName(styles.info)} data-flx="user.user-identity-row.info">
+					<span className={styles.name} data-flx="user.user-identity-row.name">
+						{displayName}
+					</span>
+					<span className={styles.tag} data-flx="user.user-identity-row.tag">
+						{user.tag}
+					</span>
 				</flx-user-identity-row-info>
 			</>
 		);

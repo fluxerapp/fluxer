@@ -813,39 +813,6 @@
 	}
 }
 
-.addFriendsContainer {
-	display: flex;
-	height: 100%;
-	flex-direction: column;
-	overflow: hidden;
-}
-
-.addFriendsDescription {
-	padding: 1rem;
-	padding-bottom: 0.5rem;
-	color: var(--text-primary-muted);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
-
-.addFriendsSelectorContainer {
-	flex: 1;
-	min-height: 0;
-	height: 25rem;
-	padding: 0 1rem;
-}
-
-.addFriendsFooter {
-	display: flex;
-	flex-shrink: 0;
-	align-items: center;
-	justify-content: flex-end;
-	gap: 0.5rem;
-	padding: 1rem;
-	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-	border-top: 0.0625rem solid var(--border-color);
-}
-
 .skeletonItem {
 	display: flex;
 	align-items: center;

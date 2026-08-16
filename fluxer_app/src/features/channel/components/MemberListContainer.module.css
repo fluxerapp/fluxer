@@ -14,7 +14,7 @@
 
 @media (min-width: 768px) {
 	.memberListContainer {
-		--member-list-width: 16.5rem;
+		--member-list-width: var(--layout-member-list-width);
 		width: var(--member-list-width);
 	}
 }
@@ -23,8 +23,8 @@
 	flex: 1;
 	min-height: 0;
 	background-color: var(--background-secondary-lighter);
-	padding-top: 0.25rem;
-	padding-left: var(--spacing-2);
-	padding-right: var(--spacing-2);
-	padding-bottom: var(--spacing-4);
+	padding-top: var(--member-list-scroller-padding-block-start);
+	padding-left: var(--member-list-scroller-padding-inline);
+	padding-right: var(--member-list-scroller-padding-inline);
+	padding-bottom: var(--member-list-scroller-padding-block-end);
 }

@@ -57,6 +57,15 @@ const getFocusableElements = (
 	});
 };
 const ROVING_MANAGED_ATTR = 'data-roving-focus-managed';
+const hasFocusableNode = (nodes: NodeList, selector: string): boolean => {
+	for (let index = 0; index < nodes.length; index++) {
+		const node = nodes.item(index);
+		if (!(node instanceof HTMLElement)) continue;
+		if (node.matches(selector)) return true;
+		if (node.querySelector(selector) != null) return true;
+	}
+	return false;
+};
 const applyTabIndices = (focusable: Array<HTMLElement>, activeIndex: number): void => {
 	if (focusable.length === 0) return;
 	const clamped = activeIndex >= 0 && activeIndex < focusable.length ? activeIndex : 0;
@@ -289,8 +298,12 @@ export const useRovingFocusList = <T extends HTMLElement>(options: UseRovingFocu
 		};
 		apply();
 		const observer = new MutationObserver((mutations) => {
+			const {focusableSelector: selector} = latestOptionsRef.current;
 			for (const m of mutations) {
 				if (m.type === 'childList') {
+					if (!hasFocusableNode(m.addedNodes, selector) && !hasFocusableNode(m.removedNodes, selector)) {
+						continue;
+					}
 					invalidateFocusableCache();
 					schedule();
 					return;

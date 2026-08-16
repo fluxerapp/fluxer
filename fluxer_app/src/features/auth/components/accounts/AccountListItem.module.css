@@ -123,11 +123,6 @@
 	color: color-mix(in srgb, var(--surface-interactive-selected-color) 80%, transparent);
 }
 
-.instanceLabel {
-	font-size: 0.6875rem;
-	color: var(--text-primary-muted);
-}
-
 .badge {
 	flex-shrink: 0;
 	font-size: 0.625rem;

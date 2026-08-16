@@ -96,7 +96,11 @@ const GiftRegisterPage = observer(function GiftRegisterPage() {
 				/>
 				<GiftHeader gift={gift} variant="register" data-flx="expressions.gift-register-page.gift-header.sso" />
 				<div className={sharedStyles.container} data-flx="expressions.gift-register-page.sso-container">
-					<AuthSsoPanel redirectPath={ssoRedirectPath} dataFlx="expressions.gift-register-page.sso-panel" />
+					<AuthSsoPanel
+						redirectPath={ssoRedirectPath}
+						dataFlx="expressions.gift-register-page.sso-panel"
+						data-flx="expressions.gift-register-page.auth-sso-panel"
+					/>
 					<AuthBottomLink
 						variant="login"
 						to={loginPath}

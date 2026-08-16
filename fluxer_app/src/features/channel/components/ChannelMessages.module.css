@@ -63,8 +63,8 @@
 	flex-direction: column;
 	justify-content: flex-end;
 	min-height: 100%;
-	padding-left: 0.75rem;
-	padding-right: 0.75rem;
+	padding-left: var(--chat-mobile-horizontal-padding);
+	padding-right: var(--chat-mobile-horizontal-padding);
 	position: relative;
 }
 

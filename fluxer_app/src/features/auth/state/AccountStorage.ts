@@ -4,6 +4,7 @@ import {
 	normalizeAppPublicConfig,
 	normalizeInstanceRegistration,
 	type RuntimeConfigSnapshot,
+	runtimeConfigSnapshotsAreSameInstance,
 } from '@app/features/app/state/RuntimeConfig';
 import {getProtectedIndexedDB, getProtectedLocalStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -52,6 +53,13 @@ export interface StoredAccount {
 	lastActive: number;
 	instance?: RuntimeConfigSnapshot;
 	isValid?: boolean;
+}
+
+export class StoredAccountInstanceMismatchError extends Error {
+	constructor(userId: string) {
+		super(`Stored account ${userId} does not belong to the current instance`);
+		this.name = 'StoredAccountInstanceMismatchError';
+	}
 }
 
 type IdbOpenState = 'idle' | 'opening' | 'open' | 'failed';
@@ -396,7 +404,7 @@ class AccountStorage {
 		}
 	}
 
-	async restoreAccountData(userId: string): Promise<StoredAccount | null> {
+	async restoreAccountData(userId: string, expectedInstance: RuntimeConfigSnapshot): Promise<StoredAccount | null> {
 		if (!userId) {
 			return null;
 		}
@@ -406,6 +414,9 @@ class AccountStorage {
 			return null;
 		}
 		const normalized = this.normalizeRecord(record);
+		if (!runtimeConfigSnapshotsAreSameInstance(normalized.instance, expectedInstance)) {
+			throw new StoredAccountInstanceMismatchError(userId);
+		}
 		await this.enqueueStorageSwap(async () => {
 			await this.applyManagedStorageSnapshot(normalized.localStorageData ?? {});
 		});

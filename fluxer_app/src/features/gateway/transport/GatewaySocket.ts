@@ -2,6 +2,7 @@
 
 import GeoIP from '@app/features/app/state/GeoIP';
 import Authentication from '@app/features/auth/state/Authentication';
+import {takeFastConnect} from '@app/features/gateway/transport/FastConnect';
 import {
 	type CompressionType,
 	GatewayCompression,
@@ -557,9 +558,10 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		this.teardownSocket();
 		this.buildGatewayUrl()
 			.then((url) => {
+				const adopted = takeFastConnect(url);
 				this.log.debug(`Opening WebSocket connection to ${url}`);
 				try {
-					this.socket = new WebSocket(url);
+					this.socket = adopted ? adopted.ws : new WebSocket(url);
 					const compression: CompressionType = this.options.compression ?? 'zstd-stream';
 					if (compression !== 'none') {
 						this.socket.binaryType = 'arraybuffer';
@@ -576,6 +578,17 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 					this.socket.addEventListener('error', this.handleSocketError);
 					this.startHelloTimeout();
 					this.emitDeferred('connecting');
+					if (adopted) {
+						this.log.info(
+							`Adopted fast connect socket opened ${Date.now() - adopted.state.startedAt}ms ago with ${adopted.state.messages.length} buffered message(s)`,
+						);
+						if (adopted.state.open || this.socket.readyState === WebSocket.OPEN) {
+							this.handleSocketOpen(new Event('open'));
+						}
+						for (const message of adopted.state.messages) {
+							void this.handleSocketMessage(message);
+						}
+					}
 				} catch (error) {
 					this.log.error('Failed to create WebSocket', error);
 					this.handleConnectionFailure();

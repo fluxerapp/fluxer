@@ -2,7 +2,6 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/auth/components/pages/LoginPage.module.css';
-import {AuthInstanceSelectorControl} from '@app/features/auth/flow/AuthInstanceSelectorControl';
 import {startSsoLogin} from '@app/features/auth/state/AuthFlow';
 import {Button} from '@app/features/ui/button/Button';
 import * as FormUtils from '@app/lib/forms';
@@ -74,7 +73,6 @@ export const AuthSsoPanel = observer(function AuthSsoPanel({
 	}, [ssoConfig?.enabled, redirectPath, i18n]);
 	return (
 		<div className={styles.ssoPane} data-flx={dataFlx}>
-			<AuthInstanceSelectorControl dataFlx={`${dataFlx}.auth-instance-selector-control`} />
 			{extraTopContent}
 			{showTitle ? (
 				<h1 className={styles.title} data-flx={`${dataFlx}.title`}>

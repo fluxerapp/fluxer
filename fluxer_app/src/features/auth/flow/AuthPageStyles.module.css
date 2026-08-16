@@ -128,10 +128,10 @@
 .entityStat {
 	display: flex;
 	align-items: center;
+	gap: var(--count-indicator-gap);
 }
 
 .onlineDot {
-	margin-right: 0.375rem;
 	height: 0.625rem;
 	width: 0.625rem;
 	border-radius: 624.9375rem;
@@ -139,7 +139,6 @@
 }
 
 .offlineDot {
-	margin-right: 0.375rem;
 	height: 0.625rem;
 	width: 0.625rem;
 	border-radius: 624.9375rem;

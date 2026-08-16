@@ -23,6 +23,7 @@
 <!--{{FLUXER_BOOTSTRAP}}-->
 <script nonce="{{CSP_NONCE_PLACEHOLDER}}">(function(){try{var loc=window.location;if(loc.pathname==='/'){var target='/channels/@me';if(loc.search)target+=loc.search;if(loc.hash)target+=loc.hash;loc.replace(target);}}catch(e){}})();</script>
 <script nonce="{{CSP_NONCE_PLACEHOLDER}}">(function(){try{var t=localStorage.getItem('theme');if(t){document.documentElement.classList.add('theme-'+t)}}catch{}})()</script>
+<script nonce="{{CSP_NONCE_PLACEHOLDER}}">(function(){try{if(typeof WebSocket!=='function')return;var t=localStorage.getItem('token');if(!t||t==='undefined'||t==='null')return;var b=window.__FLUXER_BOOTSTRAP__;var g=b&&b.instance&&b.instance.endpoints&&b.instance.endpoints.gateway;if(!g)return;var u=new URL(g);u.searchParams.set('v','1');u.searchParams.set('encoding','json');u.searchParams.set('compress','zstd-stream');u.searchParams.set('stream','1');var url=u.toString();var ws=new WebSocket(url);ws.binaryType='arraybuffer';var s={open:false,url:url,messages:[],startedAt:Date.now()};ws.onopen=function(){s.open=true};ws.onmessage=function(e){s.messages.push(e)};ws.onclose=ws.onerror=function(){window.__FLUXER_FAST_CONNECT__=null};window.__FLUXER_FAST_CONNECT__={ws:ws,state:s};setTimeout(function(){var h=window.__FLUXER_FAST_CONNECT__;if(h&&h.ws===ws){window.__FLUXER_FAST_CONNECT__=null;try{ws.close(1000,'Fast connect unclaimed')}catch(e){}}},30000)}catch(e){}})()</script>
 </head>
 <body>
 <div id="root"></div>

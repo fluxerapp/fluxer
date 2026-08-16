@@ -916,6 +916,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											composerRef={bioComposerRef}
 											emojiPickerOpen={bioExpressionPickerOpen}
 											onEmojiPickerOpenChange={setBioExpressionPickerOpen}
+											data-flx="user.my-profile-tab.my-profile-tab-component.bio-editor.bio-change"
 										/>
 									</div>
 								</div>

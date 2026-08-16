@@ -6,6 +6,7 @@ import {
 	getMessageGroupSpacingForDisplayMode,
 	migrateLegacyMessageGroupSpacing,
 } from '@app/features/accessibility/state/MessageGroupSpacing';
+import {DEFAULT_MESSAGE_GUTTER_PX} from '@app/features/accessibility/state/MessagePresentationDefaults';
 import type {AnimatedMediaKind} from '@app/features/accessibility/state/MotionPreferencesMachine';
 import {
 	AuthSessionStorageKey,
@@ -667,7 +668,7 @@ class Accessibility {
 	keepStickerAnimationUnderReducedMotion = false;
 	messageGroupSpacing = COMFY_MESSAGE_GROUP_SPACING_DEFAULT;
 	compactMessageGroupSpacing = COMPACT_MESSAGE_GROUP_SPACING_DEFAULT;
-	messageGutter = 16;
+	messageGutter = DEFAULT_MESSAGE_GUTTER_PX;
 	fontSize = 16;
 	showUserAvatarsInCompactMode = false;
 	mobileStickerAnimationOverridden = false;

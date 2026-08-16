@@ -502,8 +502,11 @@ export const LexicalSearchInput = (props: LexicalSearchInputProps) => {
 		};
 	}
 	return (
-		<LexicalComposer initialConfig={initialConfigRef.current}>
-			<SearchEditorInner {...props} />
+		<LexicalComposer
+			initialConfig={initialConfigRef.current}
+			data-flx="lexical.search.lexical-search-input.lexical-composer"
+		>
+			<SearchEditorInner data-flx="lexical.search.lexical-search-input.search-editor-inner" {...props} />
 		</LexicalComposer>
 	);
 };
@@ -674,7 +677,12 @@ const SearchEditorInner = ({
 		resolvedRole = role;
 	}
 	return (
-		<FocusRing offset={-2} focusTarget={editableRef} ringTarget={editorShellRef}>
+		<FocusRing
+			offset={-2}
+			focusTarget={editableRef}
+			ringTarget={editorShellRef}
+			data-flx="lexical.search.lexical-search-input.search-editor-inner.focus-ring"
+		>
 			<flx-lexical-search-input
 				ref={editorShellRef}
 				className={flxElementClassName(styles.editorShell)}
@@ -708,6 +716,7 @@ const SearchEditorInner = ({
 				onPointerCancel={() => {
 					touchPointerRef.current = null;
 				}}
+				data-flx="lexical.search.lexical-search-input.search-editor-inner.editor-shell.mouse-down"
 			>
 				<PlainTextPlugin
 					contentEditable={
@@ -728,11 +737,20 @@ const SearchEditorInner = ({
 							}}
 							aria-label={placeholder}
 							aria-placeholder={placeholder}
-							placeholder={<span className={styles.placeholder}>{placeholder}</span>}
+							placeholder={
+								<span
+									className={styles.placeholder}
+									data-flx="lexical.search.lexical-search-input.search-editor-inner.placeholder"
+								>
+									{placeholder}
+								</span>
+							}
+							data-flx="lexical.search.lexical-search-input.search-editor-inner.editable.key-down"
 							{...ARIAProps}
 						/>
 					}
 					ErrorBoundary={LexicalErrorBoundary}
+					data-flx="lexical.search.lexical-search-input.search-editor-inner.plain-text-plugin"
 				/>
 			</flx-lexical-search-input>
 		</FocusRing>

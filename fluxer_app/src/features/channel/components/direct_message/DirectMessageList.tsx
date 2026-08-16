@@ -3,8 +3,11 @@
 import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {LongPressable} from '@app/features/app/components/LongPressable';
+import {reportSkeletonDMSidebarLayout} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {PersonalNotesPurgeFailedModal} from '@app/features/channel/components/alerts/PersonalNotesPurgeFailedModal';
 import {CreateDMBottomSheet} from '@app/features/channel/components/bottomsheets/CreateDMBottomSheet';
 import styles from '@app/features/channel/components/direct_message/DirectMessageList.module.css';
@@ -59,7 +62,7 @@ import {
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const PURGE_PERSONAL_NOTES_DESCRIPTOR = msg({
 	message: 'Purge personal notes',
@@ -96,6 +99,16 @@ const CREATE_DM_DESCRIPTOR = msg({
 	comment: 'Accessible label for the create-DM trigger in the DM list header.',
 });
 const logger = new Logger('DMList');
+const DM_ROW_INFO_SELECTOR = `.${styles.dmItemInfo}`;
+
+function readDMRowSubtextFlags(container: HTMLElement | null, rowCount: number): ReadonlyArray<boolean> {
+	const flags: Array<boolean> = [];
+	const infoElements = container?.querySelectorAll(DM_ROW_INFO_SELECTOR);
+	for (let index = 0; index < rowCount; index++) {
+		flags.push((infoElements?.item(index)?.childElementCount ?? 0) > 1);
+	}
+	return flags;
+}
 const ClickableItem = observer(
 	({
 		isSelected,
@@ -249,6 +262,29 @@ export const DMList = observer(() => {
 		(routeDmChannelId === currentUserId || (isMobileDmIndexRoute && lastSelectedDmChannelId === currentUserId));
 	const showPremiumFeatures = shouldShowPremiumFeatures();
 	const showMobilePlutoniumButton = showPremiumFeatures && !isMobile;
+	const personalNotesVisible = currentUserId != null;
+	const displayedDmChannelCount = filteredDmChannels.length;
+	const dmRowsContainerRef = useRef<HTMLDivElement | null>(null);
+	const dmChannelListRef = useMergeRefs<HTMLDivElement>([dmListNavigationRef, dmRowsContainerRef]);
+	const dmSidebarSkeletonSubtextFlags = readDMRowSubtextFlags(dmRowsContainerRef.current, displayedDmChannelCount);
+	const dmSidebarSkeletonChangeKey = [
+		isMobile,
+		personalNotesVisible,
+		showMobilePlutoniumButton,
+		filteredDmChannels.map((channel) => channel.id).join(','),
+		dmSidebarSkeletonSubtextFlags.map((flag) => (flag ? '1' : '0')).join(''),
+	].join(':');
+	useSkeletonLayoutReport(() => {
+		reportSkeletonDMSidebarLayout({
+			isMobile,
+			friendsVisible: !isMobile,
+			personalNotesVisible,
+			premiumVisible: showMobilePlutoniumButton,
+			sectionVisible: !isMobile,
+			channelRowCount: displayedDmChannelCount,
+			channelSubtextFlags: dmSidebarSkeletonSubtextFlags,
+		});
+	}, dmSidebarSkeletonChangeKey);
 	const navigateTo = (path: string) => () => {
 		if (Routes.isDMRoute(path)) {
 			if (path === Routes.ME) {
@@ -324,6 +360,7 @@ export const DMList = observer(() => {
 					data-flx="channel.direct-message.dm-list.mobile-scroller"
 				>
 					<div
+						ref={dmRowsContainerRef}
 						className={styles.mobileScrollerContent}
 						data-flx="channel.direct-message.dm-list.mobile-scroller-content"
 					>
@@ -631,7 +668,7 @@ export const DMList = observer(() => {
 					</div>
 					<div
 						className={styles.dmChannelList}
-						ref={dmListNavigationRef}
+						ref={dmChannelListRef}
 						role="list"
 						data-flx="channel.direct-message.dm-list.dm-channel-list"
 					>

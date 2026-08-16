@@ -7,7 +7,7 @@ import {Button as BaseButton} from '@base-ui/react/button';
 import {clsx} from 'clsx';
 import React from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'inverted' | 'inverted-outline';
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'inverted' | 'inverted-outline' | 'ghost';
 
 interface BaseButtonProps
 	extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'type' | 'disabled' | 'className' | 'title'> {

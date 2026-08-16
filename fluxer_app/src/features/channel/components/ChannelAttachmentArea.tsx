@@ -5,7 +5,7 @@ import {computeHorizontalDropPosition} from '@app/features/app/components/layout
 import {
 	type AttachmentDragItem,
 	type AttachmentDropResult,
-	DND_TYPES,
+	DragItemType,
 } from '@app/features/app/components/layout/types/DndTypes';
 import styles from '@app/features/channel/components/ChannelAttachmentArea.module.css';
 import EmbedVideo from '@app/features/channel/components/embeds/media/EmbedVideo';
@@ -213,7 +213,7 @@ const SortableAttachmentItem = observer(
 		const isSpoiler = (attachment.flags & MessageAttachmentFlags.IS_SPOILER) !== 0;
 		const dragItemData = useMemo<AttachmentDragItem>(
 			() => ({
-				type: DND_TYPES.ATTACHMENT,
+				type: DragItemType.ATTACHMENT,
 				id: attachment.id,
 				channelId,
 			}),
@@ -244,7 +244,7 @@ const SortableAttachmentItem = observer(
 		}, []);
 		const [{isDragging}, dragRef, preview] = useDrag(
 			() => ({
-				type: DND_TYPES.ATTACHMENT,
+				type: DragItemType.ATTACHMENT,
 				item: () => {
 					onDragStateChange?.(dragItemData);
 					return dragItemData;
@@ -260,7 +260,7 @@ const SortableAttachmentItem = observer(
 		);
 		const [{isOver}, dropRef] = useDrop(
 			() => ({
-				accept: DND_TYPES.ATTACHMENT,
+				accept: DragItemType.ATTACHMENT,
 				canDrop: (item: AttachmentDragItem) => item.id !== attachment.id,
 				hover: (item: AttachmentDragItem, monitor) => {
 					if (item.id === attachment.id) {

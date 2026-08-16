@@ -19,11 +19,8 @@ import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {useServiceWorkerBadge} from '@app/features/app/hooks/useServiceWorkerBadge';
 import {useTabKeyFocusGuard} from '@app/features/app/hooks/useTabKeyFocusGuard';
-import Initialization from '@app/features/app/state/Initialization';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
-import Authentication from '@app/features/auth/state/Authentication';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
@@ -127,12 +124,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		}, []),
 	);
 	const handleSkipLinkFocus = useTabKeyFocusGuard();
-	const isSplashScreenActive =
-		Authentication.isAuthenticated &&
-		!DeveloperOptions.bypassSplashScreen &&
-		(GatewayConnection.isConnectionInterrupted || !Initialization.canNavigateToProtectedRoutes);
 	useInertBackground(ringsContainerRef, hasBlockingModal || topPopoutRequiresBackdrop);
-	useInertBackground(overlayScopeRef, isSplashScreenActive);
 	useEffect(() => {
 		showMyselfTypingHelper.start();
 		return () => showMyselfTypingHelper.stop();

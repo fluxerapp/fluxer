@@ -244,6 +244,7 @@ export const EditingMessageInput = observer(
 							onEmojiSelect={handleEmojiSelect}
 							onClose={onClose}
 							visibleTabs={['emojis']}
+							data-flx="channel.editing-message-input.handle-expression-picker-toggle.expression-picker-popout"
 						/>
 					),
 					position: 'top-end',
@@ -311,6 +312,7 @@ export const EditingMessageInput = observer(
 									onFocus={() => setIsFocused(true)}
 									onBlur={() => setIsFocused(false)}
 									i18n={i18n}
+									data-flx="channel.editing-message-input.lexical-rich-input.submit"
 								/>
 							</div>
 							<div
@@ -345,7 +347,13 @@ export const EditingMessageInput = observer(
 						<Trans>
 							escape to{' '}
 							<FocusRing offset={-2} data-flx="channel.editing-message-input.focus-ring--2">
-								<button type="button" className={editingStyles.footerLink} onClick={onCancel} key="cancel">
+								<button
+									type="button"
+									className={editingStyles.footerLink}
+									onClick={onCancel}
+									key="cancel"
+									data-flx="channel.editing-message-input.button.cancel"
+								>
 									cancel
 								</button>
 							</FocusRing>
@@ -364,6 +372,7 @@ export const EditingMessageInput = observer(
 									onClick={handleSubmit}
 									disabled={editingDisabled}
 									key="save"
+									data-flx="channel.editing-message-input.button.submit"
 								>
 									save
 								</button>

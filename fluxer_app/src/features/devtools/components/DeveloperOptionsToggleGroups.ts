@@ -38,9 +38,13 @@ const APP_STATE_DESCRIPTOR = msg({
 	message: 'App state',
 	comment: 'Developer options group for overriding app/account state.',
 });
-const BYPASS_SPLASH_SCREEN_DESCRIPTOR = msg({
-	message: 'Bypass splash screen',
+const BYPASS_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Bypass loading skeleton',
 	comment: 'Developer option label.',
+});
+const FORCE_LOADING_SKELETON_DESCRIPTOR = msg({
+	message: 'Force loading skeleton',
+	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const FORCE_UPDATE_READY_DESCRIPTOR = msg({
 	message: 'Force update ready',
@@ -163,7 +167,8 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 	{
 		title: APP_STATE_DESCRIPTOR,
 		items: [
-			{key: 'bypassSplashScreen', label: BYPASS_SPLASH_SCREEN_DESCRIPTOR},
+			{key: 'bypassLoadingSkeleton', label: BYPASS_LOADING_SKELETON_DESCRIPTOR},
+			{key: 'forceLoadingSkeleton', label: FORCE_LOADING_SKELETON_DESCRIPTOR},
 			{
 				key: 'forceUpdateReady',
 				label: FORCE_UPDATE_READY_DESCRIPTOR,

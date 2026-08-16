@@ -301,8 +301,9 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 							form={form}
 							initialTopic={remoteValues != null && remoteValues.topic != null ? remoteValues.topic : ''}
 							onTopicExceedsLimit={handleTopicExceedsLimit}
+							data-flx="channel.channel-tabs.channel-overview-tab.channel-overview-topic-editor"
 						/>
-						<SlowmodeControl form={form} />
+						<SlowmodeControl form={form} data-flx="channel.channel-tabs.channel-overview-tab.slowmode-control" />
 					</div>
 				)}
 				{showVoiceSection && (

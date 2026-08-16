@@ -166,7 +166,11 @@ export const AutocompleteMention = observer(function AutocompleteMention({
 			<AutocompleteItem
 				key={option.role.id}
 				id={resolveOptionId(getOptionId, currentIndex)}
-				name={<span style={{color: roleColor}}>@{option.role.name}</span>}
+				name={
+					<span style={{color: roleColor}} data-flx="channel.autocomplete-mention.render-role.span">
+						@{option.role.name}
+					</span>
+				}
 				description={i18n._(NOTIFY_USERS_WITH_THIS_ROLE_WHO_HAVE_PERMISSION_DESCRIPTOR)}
 				isKeyboardSelected={currentIndex === keyboardFocusIndex}
 				isHovered={currentIndex === hoverIndex}

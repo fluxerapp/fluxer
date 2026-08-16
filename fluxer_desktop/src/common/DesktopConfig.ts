@@ -14,7 +14,6 @@ const MINIMIZE_TO_TRAY_STORAGE_KEY_V2 = 'minimizeToTrayV2';
 const CLOSE_TO_TRAY_STORAGE_KEY_V2 = 'closeToTrayV2';
 
 interface DesktopConfig extends Record<string, unknown> {
-	app_url?: string;
 	chromiumSwitches?: ChromiumSwitchesSetting;
 	window_behavior?: PersistedDesktopWindowBehaviorSettings;
 	troubleshooting?: PersistedDesktopTroubleshootingSettings;
@@ -144,11 +143,7 @@ function sanitizeDesktopConfig(value: unknown): DesktopConfig {
 		return {};
 	}
 	const nextConfig: DesktopConfig = {...value};
-	if (typeof value.app_url === 'string') {
-		nextConfig.app_url = value.app_url;
-	} else {
-		delete nextConfig.app_url;
-	}
+	delete nextConfig.app_url;
 	const chromiumSwitches = sanitizeChromiumSwitchesSetting(value.chromiumSwitches);
 	if (chromiumSwitches) {
 		nextConfig.chromiumSwitches = chromiumSwitches;
@@ -300,7 +295,7 @@ function saveDesktopConfig(): void {
 	try {
 		fs.writeFileSync(tempPath, JSON.stringify(config, null, 2), 'utf-8');
 		fs.renameSync(tempPath, configPath);
-		log.debug('Saved desktop config to', configPath, {app_url: config.app_url ?? '(default)'});
+		log.debug('Saved desktop config to', configPath);
 	} catch (error) {
 		log.error('Failed to save desktop config:', error);
 		try {
@@ -315,7 +310,7 @@ export function loadDesktopConfig(userDataPath: string): void {
 		if (fs.existsSync(configPath)) {
 			const data = fs.readFileSync(configPath, 'utf-8');
 			config = sanitizeDesktopConfig(JSON.parse(data));
-			log.info('Loaded desktop config from', configPath, {app_url: config.app_url ?? '(default)'});
+			log.info('Loaded desktop config from', configPath);
 		}
 	} catch (error) {
 		log.error('Failed to load desktop config:', error);
@@ -326,27 +321,15 @@ export function getAppUrl(): string {
 	if (runtimeAppUrlOverride) {
 		return runtimeAppUrlOverride;
 	}
-	if (config.app_url) {
-		return config.app_url;
-	}
 	return BUILD_CHANNEL === 'canary' ? CANARY_APP_URL : STABLE_APP_URL;
 }
 
 export function getCustomAppUrl(): string | null {
-	return runtimeAppUrlOverride ?? config.app_url ?? null;
+	return runtimeAppUrlOverride;
 }
 
 export function setRuntimeAppUrlOverride(appUrl: string | null): void {
 	runtimeAppUrlOverride = appUrl;
-}
-
-export function setCustomAppUrl(appUrl: string | null): void {
-	if (appUrl) {
-		config.app_url = appUrl;
-	} else {
-		delete config.app_url;
-	}
-	saveDesktopConfig();
 }
 
 export function getConfiguredChromiumSwitches(): ChromiumSwitchesSetting | undefined {

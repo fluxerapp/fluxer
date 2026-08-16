@@ -200,6 +200,7 @@
 		"@radix-ui/react-switch": "catalog:",
 		"@simplewebauthn/browser": "catalog:",
 		"@tanstack/react-virtual": "^3.13.23",
+		"animejs": "4.5.0",
 		"bowser": "catalog:",
 		"clsx": "catalog:",
 		"codemirror": "^6.0.2",

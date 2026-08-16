@@ -310,6 +310,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 						aria-label={i18n._(label)}
 						aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Backspace Delete"
 						className={clsx(styles.resizeCorner, className)}
+						data-flx="messaging.inbox-popout.resize-corner.button"
 						{...getHandleProps(edge)}
 					/>
 				))}

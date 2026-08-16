@@ -4,15 +4,21 @@ import {Routes} from '@app/app/Routes';
 import {isAutoRedirectExemptPath} from '@app/app/router/RouterConstants';
 import {KeyboardModeListener} from '@app/features/app/components/layout/KeyboardModeListener';
 import {MobileBottomNav} from '@app/features/app/components/layout/MobileBottomNav';
-import {SplashScreen} from '@app/features/app/components/layout/SplashScreen';
 import {SelfHostedSetupWizardGate} from '@app/features/app/components/setup/SelfHostedSetupWizardGate';
+import {AppSkeleton} from '@app/features/app/components/skeleton/AppSkeleton';
+import {useLoadingSkeletonRetention} from '@app/features/app/hooks/useLoadingSkeletonRetention';
+import {useSkeletonLayoutMemoryCapture} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
+import {
+	shouldShowLoadingSkeleton as getShouldShowLoadingSkeleton,
+	shouldShowMobileBottomNav,
+} from '@app/features/app/state/AppShellPresentationPolicy';
+import {isClientBooting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import AccountManager from '@app/features/auth/state/AccountManager';
 import Authentication from '@app/features/auth/state/Authentication';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
@@ -40,6 +46,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	const requiresSelfHostedSetup = RuntimeConfig.requiresSelfHostedSetup();
 	const mobileLayoutState = MobileLayout;
 	const [hasRestoredLocation, setHasRestoredLocation] = useState(false);
+	const [effectiveSkeletonPathname, setEffectiveSkeletonPathname] = useState<string | null>(null);
 	const currentUser = Users.currentUser;
 	const [hasHandledNotificationNav, setHasHandledNotificationNav] = useState(false);
 	const previousMobileLayoutStateRef = useRef(mobileLayoutState.enabled);
@@ -77,13 +84,57 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	const shouldShowSelfHostedSetup = requiresSelfHostedSetup && !isStandaloneRoute;
 	const shouldBypassGateway = requiresSelfHostedSetup || isStandaloneRoute;
 	const authToken = Authentication.authToken;
-	const protectedRouteBlocked = !canNavigateToProtectedRoutes && !shouldBypassGateway;
-	const splashScreenCoversProtectedRoute =
+	const shouldShowLoadingSkeleton = getShouldShowLoadingSkeleton({
+		booting: isClientBooting(),
+		isAuthenticated,
+		isAuthSessionInitialized: SessionManager.isInitialized,
+		shouldBypassGateway,
+	});
+	useSkeletonLayoutMemoryCapture(
+		isAuthenticated && Initialization.isReady && !shouldBypassGateway && !shouldShowLoadingSkeleton,
+	);
+	const shouldDismissTransientOverlays = !isAuthenticated || shouldShowLoadingSkeleton;
+	const {isLoadingSkeletonRetained, handleLoadingSkeletonTransitionEnd} = useLoadingSkeletonRetention({
+		shouldShowLoadingSkeleton,
+	});
+	let pendingRestorableSkeletonPathname: string | null = null;
+	if (
 		isAuthenticated &&
-		!DeveloperOptions.bypassSplashScreen &&
-		!shouldBypassGateway &&
-		(GatewayConnection.isConnectionInterrupted || !canNavigateToProtectedRoutes);
-	const shouldDismissTransientOverlays = !isAuthenticated || protectedRouteBlocked || splashScreenCoversProtectedRoute;
+		isLocationStateHydrated &&
+		!AccountManager.isSwitching &&
+		pathname === Routes.ME &&
+		!hasRestoredLocation
+	) {
+		const lastLocation = Location.getLastLocation();
+		if (lastLocation != null && lastLocation !== pathname) {
+			pendingRestorableSkeletonPathname = lastLocation;
+		}
+	}
+	useLayoutEffect(() => {
+		if (
+			!isAuthenticated ||
+			!isLocationStateHydrated ||
+			AccountManager.isSwitching ||
+			pathname !== Routes.ME ||
+			hasRestoredLocation
+		) {
+			return;
+		}
+		const lastLocation = Location.getLastLocation();
+		if (lastLocation && lastLocation !== pathname) {
+			setEffectiveSkeletonPathname(lastLocation);
+		}
+	}, [hasRestoredLocation, isAuthenticated, isLocationStateHydrated, pathname]);
+	useLayoutEffect(() => {
+		if (effectiveSkeletonPathname != null && pathname !== Routes.ME) {
+			setEffectiveSkeletonPathname(null);
+		}
+	}, [effectiveSkeletonPathname, pathname]);
+	useLayoutEffect(() => {
+		if (!shouldShowLoadingSkeleton && !isLoadingSkeletonRetained && effectiveSkeletonPathname != null) {
+			setEffectiveSkeletonPathname(null);
+		}
+	}, [effectiveSkeletonPathname, isLoadingSkeletonRetained, shouldShowLoadingSkeleton]);
 	useEffect(() => {
 		if (!isAuthenticated) return;
 		void PushSubscriptionService.cleanupNativeDesktopWebPushSubscriptions('desktop-authenticated');
@@ -298,25 +349,32 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		navigateWithHistoryStack,
 		normalizeInternalUrl,
 	]);
-	const showBottomNav =
-		mobileLayoutState.enabled &&
-		(location.pathname === Routes.ME ||
-			location.pathname === Routes.FAVORITES ||
-			location.pathname === Routes.NOTIFICATIONS ||
-			location.pathname === Routes.YOU ||
-			(Routes.isGuildChannelRoute(location.pathname) && location.pathname.split('/').length === 3));
+	const showBottomNav = shouldShowMobileBottomNav({
+		mobileLayoutEnabled: mobileLayoutState.enabled,
+		pathname,
+	});
 	if (shouldShowSelfHostedSetup) {
-		return <SelfHostedSetupWizardGate />;
-	}
-	if (isAuthenticated && !canNavigateToProtectedRoutes && !shouldBypassGateway) {
-		return <SplashScreen data-flx="app.router.root-component.splash-screen" />;
+		return <SelfHostedSetupWizardGate data-flx="app.router.root-component.self-hosted-setup-wizard-gate" />;
 	}
 	return (
 		<>
-			<KeyboardModeListener data-flx="app.router.root-component.keyboard-mode-listener" />
-			{children}
-			{showBottomNav && currentUser && (
-				<MobileBottomNav currentUser={currentUser} data-flx="app.router.root-component.mobile-bottom-nav" />
+			{!shouldShowLoadingSkeleton && (
+				<>
+					<KeyboardModeListener data-flx="app.router.root-component.keyboard-mode-listener" />
+					{children}
+					{showBottomNav && currentUser && (
+						<MobileBottomNav currentUser={currentUser} data-flx="app.router.root-component.mobile-bottom-nav" />
+					)}
+				</>
+			)}
+			{(shouldShowLoadingSkeleton || isLoadingSkeletonRetained) && (
+				<AppSkeleton
+					key={`loading-skeleton:${AccountManager.currentUserId ?? 'unauthenticated'}`}
+					effectivePathname={effectiveSkeletonPathname ?? pendingRestorableSkeletonPathname ?? pathname}
+					isExiting={!shouldShowLoadingSkeleton}
+					onTransitionEnd={handleLoadingSkeletonTransitionEnd}
+					data-flx="app.router.root-component.app-skeleton"
+				/>
 			)}
 		</>
 	);

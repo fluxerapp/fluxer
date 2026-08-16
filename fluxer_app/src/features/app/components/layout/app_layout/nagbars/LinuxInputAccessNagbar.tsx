@@ -3,6 +3,7 @@
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import KeybindManager from '@app/features/app/keybindings/KeybindManager';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
@@ -71,8 +72,8 @@ export const LinuxInputAccessNagbar = observer(({isMobile}: {isMobile: boolean})
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="var(--brand-primary)"
-			textColor="var(--text-on-brand-primary)"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.BRAND].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.BRAND].textColor}
 			dismissible
 			onDismiss={NativePermission.dismissLinuxInputAccessNagbar}
 			data-flx="app.app-layout.nagbars.linux-input-access-nagbar.nagbar"

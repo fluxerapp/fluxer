@@ -14,6 +14,7 @@ type InitializationState = ValueOf<typeof InitializationState>;
 
 class Initialization {
 	state: InitializationState = InitializationState.LOADING;
+	hasCompletedInitialLoad = false;
 	error: string | null = null;
 	readyPayload: unknown = null;
 
@@ -58,6 +59,7 @@ class Initialization {
 	@action
 	setReady(payload: unknown): void {
 		this.state = InitializationState.READY;
+		this.hasCompletedInitialLoad = true;
 		this.error = null;
 		this.readyPayload = payload;
 	}
@@ -72,6 +74,7 @@ class Initialization {
 	@action
 	reset(): void {
 		this.state = InitializationState.LOADING;
+		this.hasCompletedInitialLoad = false;
 		this.error = null;
 		this.readyPayload = null;
 	}

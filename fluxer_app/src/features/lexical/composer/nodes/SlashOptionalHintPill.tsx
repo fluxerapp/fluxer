@@ -9,8 +9,17 @@ interface SlashOptionalHintPillProps {
 
 export const SlashOptionalHintPill = ({remaining}: SlashOptionalHintPillProps) => {
 	return (
-		<span className={styles.optionalHint} aria-hidden>
-			<Plural value={remaining} one="+# more" other="+# more" />
+		<span
+			className={styles.optionalHint}
+			aria-hidden
+			data-flx="lexical.composer.nodes.slash-optional-hint-pill.optional-hint"
+		>
+			<Plural
+				value={remaining}
+				one="+# more"
+				other="+# more"
+				data-flx="lexical.composer.nodes.slash-optional-hint-pill.plural"
+			/>
 		</span>
 	);
 };

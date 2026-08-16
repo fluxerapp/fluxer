@@ -4,6 +4,7 @@ import {showPremiumActionErrorModal} from '@app/features/app/components/dialogs/
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
+import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
@@ -70,8 +71,8 @@ export const PremiumGracePeriodNagbar = observer(({isMobile}: {isMobile: boolean
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor="#f97316"
-			textColor="#ffffff"
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.PREMIUM].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.PREMIUM].textColor}
 			dismissible
 			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.premium-grace-period-nagbar.nagbar"

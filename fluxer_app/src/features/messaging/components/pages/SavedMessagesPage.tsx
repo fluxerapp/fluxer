@@ -2,6 +2,12 @@
 
 import previewStyles from '@app/features/app/components/shared/MessagePreview.module.css';
 import {SavedMessageMissingCard} from '@app/features/app/components/shared/SavedMessageMissingCard';
+import {
+	reportSkeletonSimplePageLayout,
+	SkeletonSimplePageBody,
+	SkeletonSimplePageRoute,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {REMOVE_BOOKMARK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMessageCommands';
 import {MessageListPage} from '@app/features/messaging/components/pages/MessageListPage';
@@ -38,6 +44,16 @@ export const SavedMessagesPage = observer(() => {
 			SavedMessageCommands.fetch();
 		}
 	}, [fetched]);
+	useSkeletonLayoutReport(() => {
+		if (!fetched) {
+			return;
+		}
+		reportSkeletonSimplePageLayout(
+			SkeletonSimplePageRoute.BOOKMARKS,
+			SkeletonSimplePageBody.MESSAGE_LIST,
+			savedMessages.length,
+		);
+	}, `${fetched}|${savedMessages.length}`);
 	const renderActionButtons = (message: Message) => (
 		<button
 			type="button"

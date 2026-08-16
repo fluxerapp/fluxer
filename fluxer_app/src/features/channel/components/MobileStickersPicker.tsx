@@ -136,7 +136,7 @@ export const MobileStickersPicker = observer(
 		);
 		const zoomLevel = Accessibility.zoomLevel;
 		const gridColumns = useMemo(() => getMobileStickerGridColumns(viewportSize.width), [viewportSize.width, zoomLevel]);
-		const virtualRows = useVirtualRows(
+		const pickerRows = useVirtualRows(
 			searchTerm,
 			renderedStickers,
 			favoriteStickers,
@@ -264,8 +264,8 @@ export const MobileStickersPicker = observer(
 										data-flx="channel.mobile-stickers-picker.premium-upsell-banner"
 									/>
 								)}
-								{virtualRows.map((row, index) => {
-									const stickerRowIndex = virtualRows.slice(0, index).filter((r) => r.type === 'sticker-row').length;
+								{pickerRows.map((row, index) => {
+									const stickerRowIndex = pickerRows.slice(0, index).filter((r) => r.type === 'sticker-row').length;
 									return (
 										<div
 											key={`${row.type}-${row.index}`}

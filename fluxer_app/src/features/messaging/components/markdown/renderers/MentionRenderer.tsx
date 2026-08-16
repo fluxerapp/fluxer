@@ -94,7 +94,10 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 				}}
 				data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation--2"
 			>
-				<MentionLabel icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}>
+				<MentionLabel
+					icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
+					data-flx="messaging.markdown.renderers.mention-renderer.interactive-channel-mention.mention-label"
+				>
 					{channel.name}
 				</MentionLabel>
 			</span>
@@ -125,7 +128,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 			}
 			const genericMention = (
 				<span key={id} className={markupStyles.mention} data-flx="messaging.markdown.renderers.mention-renderer.span">
-					<MentionLabel>@{name || kind.id}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label">
+						@{name || kind.id}
+					</MentionLabel>
 				</span>
 			);
 			if (!user) {
@@ -138,7 +143,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--2"
 					>
-						<MentionLabel>@{name || user.displayName}</MentionLabel>
+						<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--2">
+							@{name || user.displayName}
+						</MentionLabel>
 					</span>
 				);
 			}
@@ -164,7 +171,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 							}}
 							data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation"
 						>
-							<MentionLabel>@{name || user.displayName}</MentionLabel>
+							<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--3">
+								@{name || user.displayName}
+							</MentionLabel>
 						</span>
 					</FocusRing>
 				</PreloadableUserPopout>
@@ -182,7 +191,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--3"
 					>
-						<MentionLabel>@{i18n._(UNKNOWN_ROLE_DESCRIPTOR)}</MentionLabel>
+						<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--4">
+							@{i18n._(UNKNOWN_ROLE_DESCRIPTOR)}
+						</MentionLabel>
 					</span>
 				);
 			}
@@ -200,7 +211,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 					style={style}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--4"
 				>
-					<MentionLabel>@{role.name}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--5">
+						@{role.name}
+					</MentionLabel>
 				</span>
 			);
 		}
@@ -214,6 +227,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 				>
 					<MentionLabel
 						icon={ChannelUtils.getIcon({type: ChannelTypes.GUILD_TEXT}, {className: mentionRendererStyles.channelIcon})}
+						data-flx="messaging.markdown.renderers.mention-renderer.mention-label--6"
 					>
 						{i18n._(UNKNOWN_CHANNEL_DESCRIPTOR)}
 					</MentionLabel>
@@ -230,6 +244,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 						>
 							<MentionLabel
 								icon={ChannelUtils.getIcon(fallbackMention, {className: mentionRendererStyles.channelIcon})}
+								data-flx="messaging.markdown.renderers.mention-renderer.mention-label--7"
 							>
 								{fallbackMention.name}
 							</MentionLabel>
@@ -259,13 +274,23 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--8"
 					>
-						<MentionLabel icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}>
+						<MentionLabel
+							icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
+							data-flx="messaging.markdown.renderers.mention-renderer.mention-label--8"
+						>
 							{channel.name}
 						</MentionLabel>
 					</span>
 				);
 			}
-			return <InteractiveChannelMention key={id} channel={channel} roleDescription={i18n._(CHANNEL_LINK_DESCRIPTOR)} />;
+			return (
+				<InteractiveChannelMention
+					key={id}
+					channel={channel}
+					roleDescription={i18n._(CHANNEL_LINK_DESCRIPTOR)}
+					data-flx="messaging.markdown.renderers.mention-renderer.interactive-channel-mention"
+				/>
+			);
 		}
 		case MentionKind.Everyone: {
 			return (
@@ -274,7 +299,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--9"
 				>
-					<MentionLabel>@everyone</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--9">
+						@everyone
+					</MentionLabel>
 				</span>
 			);
 		}
@@ -285,7 +312,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--10"
 				>
-					<MentionLabel>@here</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--10">@here</MentionLabel>
 				</span>
 			);
 		}
@@ -302,7 +329,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--11"
 				>
-					<MentionLabel>{commandName}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--11">
+						{commandName}
+					</MentionLabel>
 				</span>
 			);
 		}
@@ -334,7 +363,9 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--12"
 				>
-					<MentionLabel>{content}</MentionLabel>
+					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--12">
+						{content}
+					</MentionLabel>
 				</span>
 			);
 		}
