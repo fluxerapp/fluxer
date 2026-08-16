@@ -94,7 +94,13 @@ pub async fn fetch_oembed(
             Ok(response)
         }
         OEmbedFormat::Xml => {
-            let text = String::from_utf8_lossy(&result.bytes);
+            let text = crate::charset::decode_body(
+                &result.bytes,
+                result
+                    .headers
+                    .get(reqwest::header::CONTENT_TYPE)
+                    .and_then(|value| value.to_str().ok()),
+            );
             parse_oembed_xml(&text)
         }
     }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{ResolveContext, Resolver, ResolverResult};
+use crate::charset;
 use crate::html_parser;
 use crate::http_fetch;
 use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
@@ -39,7 +40,13 @@ impl Resolver for XkcdResolver {
                 return Ok(ResolverResult { embeds: vec![] });
             }
 
-            let html = String::from_utf8_lossy(&result.bytes);
+            let html = charset::decode_body(
+                &result.bytes,
+                result
+                    .headers
+                    .get(reqwest::header::CONTENT_TYPE)
+                    .and_then(|value| value.to_str().ok()),
+            );
             let og = html_parser::parse_opengraph(&html);
 
             let title = og.title.as_deref().map(|t| parse_text(t, 70));

@@ -8,6 +8,7 @@ import {
 	isMediaMatureContent,
 	isValidMedia,
 	mediaPropsEqual,
+	THUMBNAIL_SIZE,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {EmbedGif} from '@app/features/channel/components/embeds/media/EmbedGifv';
 import {EmbedImage} from '@app/features/channel/components/embeds/media/EmbedImage';
@@ -203,7 +204,7 @@ const InlineThumbnailRendererInner: FC<EmbedMediaRendererProps> = observer(
 	({embed, message, embedIndex, onDelete, isPreview}) => {
 		if (!embed.thumbnail || !isValidMedia(embed.thumbnail)) return null;
 		const thumbnail = embed.thumbnail;
-		const width = Math.min(80, Math.round((80 * thumbnail.width) / thumbnail.height));
+		const width = Math.min(THUMBNAIL_SIZE, Math.round((THUMBNAIL_SIZE * thumbnail.width) / thumbnail.height));
 		const thumbnailIsAnimated =
 			thumbnail.content_type === 'image/gif' ||
 			(thumbnail.flags & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
@@ -216,14 +217,14 @@ const InlineThumbnailRendererInner: FC<EmbedMediaRendererProps> = observer(
 				<EmbedImage
 					src={
 						thumbnail.content_type === 'image/gif'
-							? buildAnimatedImageProxyURL(thumbnail.proxy_url, width * 2, 160)
-							: getOptimizedMediaURL(thumbnail.proxy_url, width, 80, thumbnail.content_type)
+							? buildAnimatedImageProxyURL(thumbnail.proxy_url, width * 2, THUMBNAIL_SIZE * 2)
+							: getOptimizedMediaURL(thumbnail.proxy_url, width, THUMBNAIL_SIZE, thumbnail.content_type)
 					}
 					originalSrc={thumbnail.url}
 					naturalWidth={thumbnail.width}
 					naturalHeight={thumbnail.height}
 					width={width}
-					height={80}
+					height={THUMBNAIL_SIZE}
 					placeholder={thumbnail.placeholder}
 					constrain={true}
 					isInline={true}

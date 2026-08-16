@@ -2,6 +2,18 @@
 
 use scraper::{Html, Selector};
 
+const TEXTUAL_KEYS: [&str; 5] = [
+    "og:title",
+    "og:description",
+    "og:site_name",
+    "twitter:title",
+    "twitter:description",
+];
+
+const CLASSIFYING_CARDS: [&str; 3] = ["summary_large_image", "photo", "player"];
+
+const INERT_ELEMENTS: [&str; 4] = ["script", "style", "noscript", "template"];
+
 #[derive(Debug, Default, Clone)]
 #[allow(dead_code)]
 pub struct OgMetadata {
@@ -13,17 +25,19 @@ pub struct OgMetadata {
     pub image_alt: Option<String>,
     pub image_width: Option<u32>,
     pub image_height: Option<u32>,
-    pub video: Option<String>,
+    pub video_primary: Option<String>,
     pub audio: Option<String>,
     pub site_name: Option<String>,
     pub og_type: Option<String>,
     pub theme_color: Option<String>,
+    pub textual_keys_present: bool,
 }
 
 #[derive(Debug, Default, Clone)]
 #[allow(dead_code)]
 pub struct TwitterCardMetadata {
     pub card: Option<String>,
+    pub classifying_card: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
     pub image: Option<String>,
@@ -33,48 +47,99 @@ pub struct TwitterCardMetadata {
     pub player_height: Option<u32>,
 }
 
+struct MetaTags {
+    entries: Vec<(String, String)>,
+}
+
+impl MetaTags {
+    fn parse(doc: &Html) -> Self {
+        let mut entries = Vec::new();
+        let mut stack: Vec<_> = doc.tree.root().children().rev().collect();
+        while let Some(node) = stack.pop() {
+            let Some(element) = node.value().as_element() else {
+                continue;
+            };
+            if INERT_ELEMENTS.contains(&element.name()) {
+                continue;
+            }
+            stack.extend(node.children().rev());
+            if element.name() != "meta" {
+                continue;
+            }
+            let Some(key) = element.attr("property").or_else(|| element.attr("name")) else {
+                continue;
+            };
+            let Some(value) = element
+                .attr("content")
+                .filter(|value| !value.is_empty())
+                .or_else(|| element.attr("value").filter(|value| !value.is_empty()))
+            else {
+                continue;
+            };
+            entries.push((key.to_owned(), value.to_owned()));
+        }
+        Self { entries }
+    }
+
+    fn all<'a>(&'a self, key: &'a str) -> impl Iterator<Item = &'a str> {
+        self.entries
+            .iter()
+            .filter(move |(entry_key, _)| entry_key == key)
+            .map(|(_, value)| value.as_str())
+    }
+
+    fn first(&self, key: &str) -> Option<String> {
+        self.all(key).next().map(ToOwned::to_owned)
+    }
+}
+
 pub fn parse_opengraph(html: &str) -> OgMetadata {
     let doc = Html::parse_document(html);
+    let meta = MetaTags::parse(&doc);
 
-    let title = extract_meta(&doc, "og:title");
-    let description =
-        extract_meta(&doc, "og:description").or_else(|| extract_meta_by_name(&doc, "description"));
-    let image =
-        extract_meta(&doc, "og:image").or_else(|| extract_meta(&doc, "og:image:secure_url"));
-    let video = extract_meta(&doc, "og:video")
-        .or_else(|| extract_meta(&doc, "og:video:url"))
-        .or_else(|| extract_meta(&doc, "og:video:secure_url"))
-        .or_else(|| extract_meta_by_name(&doc, "twitter:player"))
-        .or_else(|| extract_meta_by_name(&doc, "twitter:player:stream"));
+    let description = meta
+        .first("og:description")
+        .or_else(|| meta.first("description"));
+    let image = meta
+        .first("og:image")
+        .or_else(|| meta.first("og:image:secure_url"));
+    let video_primary = meta
+        .first("og:video")
+        .or_else(|| meta.first("og:video:url"));
 
     let mut og = OgMetadata {
-        title,
+        title: meta.first("og:title"),
         description,
-        url: extract_meta(&doc, "og:url"),
+        url: meta.first("og:url"),
         image,
-        images: extract_image_urls(&doc),
-        image_alt: extract_meta(&doc, "og:image:alt")
-            .or_else(|| extract_meta_by_name(&doc, "twitter:image:alt"))
-            .or_else(|| extract_meta(&doc, "og:image:description")),
-        image_width: extract_meta(&doc, "og:image:width").and_then(|v| v.parse().ok()),
-        image_height: extract_meta(&doc, "og:image:height").and_then(|v| v.parse().ok()),
-        video,
-        audio: extract_meta(&doc, "og:audio").or_else(|| extract_meta(&doc, "og:audio:url")),
-        site_name: extract_meta(&doc, "og:site_name")
-            .or_else(|| extract_meta_by_name(&doc, "twitter:site:name"))
-            .or_else(|| extract_meta_by_name(&doc, "application-name")),
-        og_type: extract_meta(&doc, "og:type"),
-        theme_color: extract_meta_by_name(&doc, "theme-color"),
+        images: extract_image_urls(&meta),
+        image_alt: meta
+            .first("og:image:alt")
+            .or_else(|| meta.first("twitter:image:alt"))
+            .or_else(|| meta.first("og:image:description")),
+        image_width: meta.first("og:image:width").and_then(|v| v.parse().ok()),
+        image_height: meta.first("og:image:height").and_then(|v| v.parse().ok()),
+        video_primary,
+        audio: meta
+            .first("og:audio")
+            .or_else(|| meta.first("og:audio:url")),
+        site_name: meta
+            .first("og:site_name")
+            .or_else(|| meta.first("twitter:site:name"))
+            .or_else(|| meta.first("application-name")),
+        og_type: meta.first("og:type"),
+        theme_color: meta.first("theme-color"),
+        textual_keys_present: TEXTUAL_KEYS
+            .iter()
+            .any(|key| meta.all(key).next().is_some()),
     };
 
     if og.title.is_none() {
-        og.title = extract_meta_by_name(&doc, "twitter:title")
-            .or_else(|| extract_html_title(&doc))
-            .or_else(|| extract_meta_by_name(&doc, "title"));
+        og.title = meta.first("twitter:title");
     }
 
     if og.description.is_none() {
-        og.description = extract_meta_by_name(&doc, "twitter:description");
+        og.description = meta.first("twitter:description");
     }
 
     og
@@ -83,29 +148,56 @@ pub fn parse_opengraph(html: &str) -> OgMetadata {
 #[allow(dead_code)]
 pub fn parse_twitter_card(html: &str) -> TwitterCardMetadata {
     let doc = Html::parse_document(html);
+    let meta = MetaTags::parse(&doc);
 
     TwitterCardMetadata {
-        card: extract_meta_by_name(&doc, "twitter:card"),
-        title: extract_meta_by_name(&doc, "twitter:title"),
-        description: extract_meta_by_name(&doc, "twitter:description"),
-        image: extract_meta_by_name(&doc, "twitter:image")
-            .or_else(|| extract_meta_by_name(&doc, "twitter:image:src")),
-        image_alt: extract_meta_by_name(&doc, "twitter:image:alt"),
-        player: extract_meta_by_name(&doc, "twitter:player"),
-        player_width: extract_meta_by_name(&doc, "twitter:player:width")
+        card: meta.first("twitter:card"),
+        classifying_card: meta
+            .all("twitter:card")
+            .find(|value| CLASSIFYING_CARDS.contains(value))
+            .map(ToOwned::to_owned),
+        title: meta.first("twitter:title"),
+        description: meta.first("twitter:description"),
+        image: meta
+            .first("twitter:image")
+            .or_else(|| meta.first("twitter:image:src")),
+        image_alt: meta.first("twitter:image:alt"),
+        player: meta.first("twitter:player"),
+        player_width: meta
+            .first("twitter:player:width")
             .and_then(|v| v.parse().ok()),
-        player_height: extract_meta_by_name(&doc, "twitter:player:height")
+        player_height: meta
+            .first("twitter:player:height")
             .and_then(|v| v.parse().ok()),
     }
 }
 
-pub fn extract_html_title(doc: &Html) -> Option<String> {
-    let sel = Selector::parse("title").ok()?;
-    doc.select(&sel)
-        .next()
-        .map(|el| el.text().collect::<String>())
-        .filter(|s| !s.trim().is_empty())
-        .map(|s| s.trim().to_owned())
+pub fn find_rsd_url(html: &str) -> Option<String> {
+    let doc = Html::parse_document(html);
+    let sel = Selector::parse("link").ok()?;
+
+    for el in doc.select(&sel) {
+        let Some(link_type) = el.value().attr("type") else {
+            continue;
+        };
+        if !link_type.eq_ignore_ascii_case("application/rsd+xml") {
+            continue;
+        }
+        let Some(rel) = el.value().attr("rel") else {
+            continue;
+        };
+        if !rel
+            .split_whitespace()
+            .any(|token| token.eq_ignore_ascii_case("EditURI"))
+        {
+            continue;
+        }
+        if let Some(href) = el.value().attr("href").filter(|href| !href.is_empty()) {
+            return Some(href.to_owned());
+        }
+    }
+
+    None
 }
 
 pub fn find_activity_pub_link(html: &str) -> Option<String> {
@@ -113,13 +205,19 @@ pub fn find_activity_pub_link(html: &str) -> Option<String> {
     let sel = Selector::parse("link").ok()?;
 
     for el in doc.select(&sel) {
-        let rel = el.value().attr("rel")?.to_ascii_lowercase();
+        let Some(rel) = el.value().attr("rel") else {
+            continue;
+        };
+        let rel = rel.to_ascii_lowercase();
         let rel_tokens: Vec<&str> = rel.split_whitespace().collect();
         if !rel_tokens.contains(&"alternate") {
             continue;
         }
 
-        let link_type = el.value().attr("type")?.to_ascii_lowercase();
+        let Some(link_type) = el.value().attr("type") else {
+            continue;
+        };
+        let link_type = link_type.to_ascii_lowercase();
         let is_ap = link_type == "application/activity+json"
             || (link_type == "application/ld+json" && el.value().attr("href").is_some())
             || link_type.contains("application/activity+json")
@@ -164,7 +262,7 @@ pub fn find_apple_touch_icon(html: &str, base_url: &url::Url) -> Option<String> 
     None
 }
 
-fn extract_image_urls(doc: &Html) -> Vec<String> {
+fn extract_image_urls(meta: &MetaTags) -> Vec<String> {
     let properties = [
         "og:image",
         "og:image:secure_url",
@@ -175,9 +273,9 @@ fn extract_image_urls(doc: &Html) -> Vec<String> {
     let mut seen = std::collections::HashSet::new();
     let mut values = Vec::new();
 
-    for prop in &properties {
-        for val in extract_meta_values(doc, prop) {
-            let Some(normalized) = normalize_image_reference_key(&val) else {
+    for prop in properties {
+        for val in meta.all(prop) {
+            let Some(normalized) = normalize_image_reference_key(val) else {
                 continue;
             };
             if seen.insert(normalized) {
@@ -211,40 +309,6 @@ fn is_http_url(url: &url::Url) -> bool {
     matches!(url.scheme(), "http" | "https")
 }
 
-fn extract_meta_values(doc: &Html, property: &str) -> Vec<String> {
-    let twitter_property = format!(
-        "twitter:{}",
-        property.strip_prefix("og:").unwrap_or(property)
-    );
-    let selectors = [
-        format!(r#"meta[property="{property}"]"#),
-        format!(r#"meta[name="{property}"]"#),
-        format!(r#"meta[property="{twitter_property}"]"#),
-        format!(r#"meta[name="{twitter_property}"]"#),
-    ];
-    let mut values = Vec::new();
-    for selector_str in &selectors {
-        if let Ok(sel) = Selector::parse(selector_str) {
-            for el in doc.select(&sel) {
-                if let Some(content) = el.value().attr("content")
-                    && !content.is_empty()
-                {
-                    values.push(content.to_owned());
-                }
-            }
-        }
-    }
-    values
-}
-
-fn extract_meta(doc: &Html, property: &str) -> Option<String> {
-    extract_meta_values(doc, property).pop()
-}
-
-fn extract_meta_by_name(doc: &Html, name: &str) -> Option<String> {
-    extract_meta_values(doc, name).pop()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -271,7 +335,7 @@ mod tests {
     #[test]
     fn handles_missing_tags() {
         let m = og("<html><head><title>X</title></head></html>");
-        assert_eq!(m.title.as_deref(), Some("X"));
+        assert!(m.title.is_none());
         assert!(m.description.is_none() && m.image.is_none() && m.url.is_none());
     }
 
@@ -316,15 +380,19 @@ mod tests {
     }
 
     #[test]
-    fn title_fallback_chain_matches_ts() {
+    fn title_uses_open_graph_then_twitter_only() {
         let m = og(r#"<head><meta property="og:title" content="OG"></head>"#);
         assert_eq!(m.title.as_deref(), Some("OG"));
         let m = og(r#"<head><meta name="twitter:title" content="TW"></head>"#);
         assert_eq!(m.title.as_deref(), Some("TW"));
+    }
+
+    #[test]
+    fn title_never_falls_back_to_document_title() {
         let m = og(r#"<html><head><title>HTML Title</title></head></html>"#);
-        assert_eq!(m.title.as_deref(), Some("HTML Title"));
+        assert!(m.title.is_none());
         let m = og(r#"<head><meta name="title" content="Meta"></head>"#);
-        assert_eq!(m.title.as_deref(), Some("Meta"));
+        assert!(m.title.is_none());
     }
 
     #[test]
@@ -348,18 +416,17 @@ mod tests {
     }
 
     #[test]
-    fn video_url_fallback_chain_matches_ts() {
+    fn video_primary_only_accepts_og_video_and_og_video_url() {
         let m = og(r#"<head><meta property="og:video" content="https://v.com/a.mp4"></head>"#);
-        assert_eq!(m.video.as_deref(), Some("https://v.com/a.mp4"));
+        assert_eq!(m.video_primary.as_deref(), Some("https://v.com/a.mp4"));
+        let m = og(r#"<head><meta property="og:video:url" content="https://v.com/b.mp4"></head>"#);
+        assert_eq!(m.video_primary.as_deref(), Some("https://v.com/b.mp4"));
         let m = og(
-            r#"<head><meta property="og:video:secure_url" content="https://v.com/b.mp4"></head>"#,
+            r#"<head><meta property="og:video:secure_url" content="https://v.com/c.mp4"></head>"#,
         );
-        assert_eq!(m.video.as_deref(), Some("https://v.com/b.mp4"));
+        assert!(m.video_primary.is_none());
         let m = og(r#"<head><meta name="twitter:player" content="https://p.com/embed"></head>"#);
-        assert_eq!(m.video.as_deref(), Some("https://p.com/embed"));
-        let m =
-            og(r#"<head><meta name="twitter:player:stream" content="https://s.com/a.mp4"></head>"#);
-        assert_eq!(m.video.as_deref(), Some("https://s.com/a.mp4"));
+        assert!(m.video_primary.is_none());
     }
 
     #[test]
@@ -537,20 +604,150 @@ mod tests {
     }
 
     #[test]
-    fn html_title_trims_whitespace() {
-        let doc = scraper::Html::parse_document("<title>  Hello World  </title>");
-        assert_eq!(extract_html_title(&doc).as_deref(), Some("Hello World"));
-    }
-
-    #[test]
-    fn html_title_empty_returns_none() {
-        let doc = scraper::Html::parse_document("<title>   </title>");
-        assert!(extract_html_title(&doc).is_none());
-    }
-
-    #[test]
     fn empty_meta_content_is_skipped() {
         let m = og(r#"<head><meta property="og:title" content=""></head>"#);
         assert!(m.title.is_none());
+    }
+
+    #[test]
+    fn first_meta_occurrence_wins() {
+        let h = r#"<head>
+            <meta property="og:title" content="First">
+            <meta property="og:title" content="Second">
+        </head>"#;
+        assert_eq!(og(h).title.as_deref(), Some("First"));
+    }
+
+    #[test]
+    fn property_outranks_name_on_the_same_element() {
+        let h = r#"<head><meta property="og:title" name="og:description" content="P"></head>"#;
+        let m = og(h);
+        assert_eq!(m.title.as_deref(), Some("P"));
+        assert!(m.description.is_none());
+    }
+
+    #[test]
+    fn value_attribute_is_used_when_content_is_absent() {
+        let m = og(r#"<head><meta property="og:title" value="V"></head>"#);
+        assert_eq!(m.title.as_deref(), Some("V"));
+    }
+
+    #[test]
+    fn content_attribute_wins_over_value_attribute() {
+        let m = og(r#"<head><meta property="og:title" content="C" value="V"></head>"#);
+        assert_eq!(m.title.as_deref(), Some("C"));
+    }
+
+    #[test]
+    fn meta_keys_are_case_sensitive() {
+        let m = og(r#"<head><meta property="OG:TITLE" content="T"></head>"#);
+        assert!(m.title.is_none());
+        let m = og(r#"<head><meta PROPERTY="og:title" CONTENT="T"></head>"#);
+        assert_eq!(m.title.as_deref(), Some("T"));
+    }
+
+    #[test]
+    fn meta_values_are_not_trimmed() {
+        let m = og(r#"<head><meta property="og:title" content=" T "></head>"#);
+        assert_eq!(m.title.as_deref(), Some(" T "));
+    }
+
+    #[test]
+    fn og_keys_do_not_alias_to_twitter_keys() {
+        let m = og(r#"<head><meta name="twitter:url" content="https://e.com/p"></head>"#);
+        assert!(m.url.is_none());
+    }
+
+    #[test]
+    fn metas_inside_inert_elements_are_skipped() {
+        for tag in ["noscript", "template"] {
+            let h = format!(
+                r#"<head><{tag}><meta property="og:title" content="Hidden"></{tag}></head>"#
+            );
+            assert!(og(&h).title.is_none(), "{tag} content must be skipped");
+        }
+    }
+
+    #[test]
+    fn textual_keys_present_requires_a_discord_textual_key() {
+        for key in [
+            "og:title",
+            "og:description",
+            "og:site_name",
+            "twitter:title",
+            "twitter:description",
+        ] {
+            let h = format!(r#"<head><meta property="{key}" content="X"></head>"#);
+            assert!(og(&h).textual_keys_present, "{key} must satisfy the gate");
+        }
+        for key in [
+            "og:image",
+            "og:url",
+            "twitter:image",
+            "twitter:card",
+            "twitter:site",
+            "description",
+        ] {
+            let h = format!(r#"<head><meta property="{key}" content="X"></head>"#);
+            assert!(
+                !og(&h).textual_keys_present,
+                "{key} must not satisfy the gate"
+            );
+        }
+    }
+
+    #[test]
+    fn classifying_card_skips_non_assigning_values() {
+        let h = r#"<head>
+            <meta name="twitter:card" content="summary">
+            <meta name="twitter:card" content="photo">
+        </head>"#;
+        let tc = parse_twitter_card(h);
+        assert_eq!(tc.card.as_deref(), Some("summary"));
+        assert_eq!(tc.classifying_card.as_deref(), Some("photo"));
+    }
+
+    #[test]
+    fn classifying_card_is_case_sensitive_and_untrimmed() {
+        for value in ["SUMMARY_LARGE_IMAGE", "Summary_Large_Image", "photo "] {
+            let h = format!(r#"<head><meta name="twitter:card" content="{value}"></head>"#);
+            assert!(
+                parse_twitter_card(&h).classifying_card.is_none(),
+                "{value} must not classify"
+            );
+        }
+    }
+
+    #[test]
+    fn classifying_card_ignores_unknown_values() {
+        let h = r#"<head><meta name="twitter:card" content="summary"></head>"#;
+        assert!(parse_twitter_card(h).classifying_card.is_none());
+    }
+
+    #[test]
+    fn activity_pub_link_scan_continues_past_unrelated_links() {
+        let h = r#"<head>
+            <link rel="stylesheet" href="/a.css">
+            <link rel="alternate" type="application/activity+json" href="https://e.com/ap">
+        </head>"#;
+        assert_eq!(find_activity_pub_link(h), Some("https://e.com/ap".into()));
+    }
+
+    #[test]
+    fn finds_rsd_edit_uri() {
+        let h = r#"<head><link rel="EditURI" type="application/rsd+xml" href="//w.example/w/api.php?action=rsd"></head>"#;
+        assert_eq!(
+            find_rsd_url(h),
+            Some("//w.example/w/api.php?action=rsd".into())
+        );
+    }
+
+    #[test]
+    fn rsd_requires_edit_uri_rel_and_rsd_type() {
+        let h = r#"<head><link rel="alternate" type="application/rsd+xml" href="/rsd"></head>"#;
+        assert!(find_rsd_url(h).is_none());
+        let h = r#"<head><link rel="EditURI" type="application/xml" href="/rsd"></head>"#;
+        assert!(find_rsd_url(h).is_none());
+        assert!(find_rsd_url("<head></head>").is_none());
     }
 }

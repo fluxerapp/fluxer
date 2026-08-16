@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::ResolveContext;
+use crate::http_fetch;
 use crate::oembed;
+use std::borrow::Cow;
+use std::time::Duration;
 use url::Url;
+
+const MEDIAWIKI_QUERY: &str =
+    "action=query&prop=extracts&exintro=&explaintext=&format=json&titles=";
+const MEDIAWIKI_MAX_BYTES: usize = 256 * 1024;
+const MEDIAWIKI_TIMEOUT: Duration = Duration::from_secs(5);
 
 pub struct ImageCandidate {
     pub url: String,
@@ -120,6 +128,68 @@ pub async fn fetch_oembed_data(
         .ok()
 }
 
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct MediaWikiArticle {
+    pub title: Option<String>,
+    pub description: Option<String>,
+}
+
+pub async fn fetch_mediawiki_article(
+    ctx: &ResolveContext<'_>,
+    html: &str,
+) -> Option<MediaWikiArticle> {
+    let query_url = mediawiki_query_url(&ctx.url, html)?;
+    let result = http_fetch::fetch_url(
+        &ctx.http_client,
+        &query_url,
+        MEDIAWIKI_MAX_BYTES,
+        MEDIAWIKI_TIMEOUT,
+    )
+    .await
+    .ok()?;
+    if result.status != 200 {
+        return None;
+    }
+    let json = serde_json::from_slice::<serde_json::Value>(&result.bytes).ok()?;
+    let pages = json.get("query").and_then(|query| query.get("pages"))?;
+    if !pages.is_object() && !pages.is_array() {
+        return None;
+    }
+    Some(mediawiki_article(pages))
+}
+
+fn mediawiki_article(pages: &serde_json::Value) -> MediaWikiArticle {
+    let page = match pages {
+        serde_json::Value::Object(pages) => pages.values().next(),
+        serde_json::Value::Array(pages) => pages.first(),
+        _ => None,
+    };
+    MediaWikiArticle {
+        title: page.and_then(|page| mediawiki_text(page, "title")),
+        description: page.and_then(|page| mediawiki_text(page, "extract")),
+    }
+}
+
+fn mediawiki_text(page: &serde_json::Value, key: &str) -> Option<String> {
+    let value = page.get(key)?.as_str()?.trim();
+    (!value.is_empty()).then(|| value.to_owned())
+}
+
+fn mediawiki_query_url(page_url: &Url, html: &str) -> Option<String> {
+    let rsd = crate::html_parser::find_rsd_url(html)?;
+    let endpoint = page_url.join(&rsd).ok()?;
+    if !matches!(endpoint.scheme(), "http" | "https") {
+        return None;
+    }
+    let title = page_url
+        .path_segments()?
+        .rfind(|segment| !segment.is_empty())?;
+    let decoded = urlencoding::decode(title).unwrap_or(Cow::Borrowed(title));
+    let title = urlencoding::encode(&decoded);
+    let separator = if endpoint.query().is_some() { '&' } else { '?' };
+    Some(format!("{endpoint}{separator}{MEDIAWIKI_QUERY}{title}"))
+}
+
 pub fn parse_hex_color(s: &str) -> Option<u32> {
     let hex = s.trim().strip_prefix('#')?;
     let ok = (hex.len() == 6 || hex.len() == 3) && hex.chars().all(|c| c.is_ascii_hexdigit());
@@ -198,6 +268,49 @@ mod tests {
                 "https://cdn.example.com/card.png".to_owned()
             ]
         );
+    }
+
+    #[test]
+    fn mediawiki_query_url_appends_params_to_the_rsd_href() {
+        let page = url("https://w.example/wiki/Rust");
+        let html = r#"<head><link rel="EditURI" type="application/rsd+xml" href="//w.example/w/api.php?action=rsd"></head>"#;
+        assert_eq!(
+            mediawiki_query_url(&page, html).as_deref(),
+            Some(
+                "https://w.example/w/api.php?action=rsd&action=query&prop=extracts&exintro=&explaintext=&format=json&titles=Rust"
+            )
+        );
+    }
+
+    #[test]
+    fn mediawiki_query_url_uses_question_mark_when_rsd_has_no_query() {
+        let page = url("https://w.example/wiki/Rust/");
+        let html =
+            r#"<head><link rel="EditURI" type="application/rsd+xml" href="/w/api.php"></head>"#;
+        assert_eq!(
+            mediawiki_query_url(&page, html).as_deref(),
+            Some(
+                "https://w.example/w/api.php?action=query&prop=extracts&exintro=&explaintext=&format=json&titles=Rust"
+            )
+        );
+    }
+
+    #[test]
+    fn mediawiki_query_url_reencodes_the_last_path_segment() {
+        let page = url("https://w.example/wiki/Rust_%28programming_language%29");
+        let html =
+            r#"<head><link rel="EditURI" type="application/rsd+xml" href="/w/api.php"></head>"#;
+        assert!(
+            mediawiki_query_url(&page, html)
+                .unwrap()
+                .ends_with("titles=Rust_%28programming_language%29")
+        );
+    }
+
+    #[test]
+    fn mediawiki_query_url_is_none_without_rsd_link() {
+        let page = url("https://w.example/wiki/Rust");
+        assert!(mediawiki_query_url(&page, "<head></head>").is_none());
     }
 
     #[test]

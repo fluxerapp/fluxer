@@ -20,11 +20,6 @@ export const EMBED_LEFT_BORDER_WIDTH = 4;
 export const EMBED_RIGHT_BORDER_WIDTH = 1;
 export const EMBED_MEDIA_CHROME_WIDTH = EMBED_PADDING_X * 2 + EMBED_LEFT_BORDER_WIDTH + EMBED_RIGHT_BORDER_WIDTH;
 export const EMBED_MEDIA_MAX_WIDTH = 432;
-export const EMBED_MEDIA_CONTENT_WIDTH = EMBED_MEDIA_MAX_WIDTH - EMBED_MEDIA_CHROME_WIDTH;
-export const EMBED_MEDIA_FILL_CONSTRAINTS = {
-	maxWidth: EMBED_MEDIA_CONTENT_WIDTH,
-	maxHeight: EMBED_MEDIA_CONTENT_WIDTH,
-} as const;
 
 export interface EmbedProps {
 	embed: MessageEmbed;
@@ -88,11 +83,6 @@ export const SAVES_DESCRIPTOR = msg({
 	message: 'saves',
 	comment: 'Plural external-post stat label on a social post embed. Lowercase to appear after the count.',
 });
-const thumbnailCalculator = createCalculator({
-	maxWidth: THUMBNAIL_SIZE,
-	maxHeight: THUMBNAIL_SIZE,
-	forceScale: true,
-});
 const URL_CACHE_CAPACITY = 4096;
 const normalizedUrlCache = new Map<string, string | null>();
 const hostnameCache = new Map<string, string | null>();
@@ -137,19 +127,6 @@ export const calculateMediaDimensions = (media: Required<EmbedMedia>): MediaDime
 	const mediaCalculator = mediaCalculatorCache.calculator;
 	const {dimensions} = mediaCalculator.calculate({width: media.width, height: media.height});
 	return dimensions;
-};
-export const calculateEmbedImageDimensions = (media: Required<EmbedMedia>): MediaDimensions => {
-	const naturalWidth = media.width > 0 ? media.width : 1;
-	const naturalHeight = media.height > 0 ? media.height : 1;
-	const scale = Math.min(
-		1,
-		EMBED_MEDIA_FILL_CONSTRAINTS.maxWidth / naturalWidth,
-		EMBED_MEDIA_FILL_CONSTRAINTS.maxHeight / naturalHeight,
-	);
-	return {
-		width: Math.max(1, Math.round(naturalWidth * scale)),
-		height: Math.max(1, Math.round(naturalHeight * scale)),
-	};
 };
 export const getOptimizedMediaURL = (proxyURL: string, width: number, height: number, contentType?: string): string => {
 	const targetWidth = Math.round(width * 2);
@@ -198,13 +175,6 @@ export const mediaPropsEqual = <
 	if (prev.onDelete !== next.onDelete) return false;
 	if (prev.isPreview !== next.isPreview) return false;
 	return embedMediaSignature(prev.embed) === embedMediaSignature(next.embed);
-};
-export const shouldRenderAsInlineThumbnail = (media?: EmbedMedia): boolean => {
-	if (!isValidMedia(media)) return false;
-	const {dimensions: thumbnailDimensions} = thumbnailCalculator.calculate({width: media.width, height: media.height});
-	const thumbnailWidth = thumbnailDimensions.width;
-	const {width: fullWidth} = calculateEmbedImageDimensions(media);
-	return fullWidth < 300 && thumbnailWidth >= 40;
 };
 export const isMediaMatureContent = (media?: EmbedMedia): boolean => {
 	if (!media) return false;

@@ -10,7 +10,6 @@ import {
 	getBorderColor,
 	getUrlHostname,
 	isValidMedia,
-	shouldRenderAsInlineThumbnail,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {
 	EmbedMediaRenderer,
@@ -48,9 +47,8 @@ export const RichEmbed: FC<EmbedProps> = observer(
 			[galleryImages, embed, embedIndex, showGallery],
 		);
 		const shouldRenderMedia = hasAnyMedia || showGallery;
-		const isRichType = embed.type === MessageEmbedTypes.RICH;
-		const isInlineThumbnail =
-			!hasVideo && hasThumbnail && !hasImage && (isRichType || shouldRenderAsInlineThumbnail(embed.thumbnail));
+		const promotesThumbnailToImage = embed.type === MessageEmbedTypes.ARTICLE || embed.type === MessageEmbedTypes.IMAGE;
+		const isInlineThumbnail = !hasVideo && hasThumbnail && !hasImage && !promotesThumbnailToImage;
 		const shouldRenderInlineThumbnail = isInlineThumbnail && !showGallery;
 		const isYouTubeEmbed = getUrlHostname(embed.provider?.url) === 'www.youtube.com';
 		const useNarrowWidth = shouldRenderMedia && !shouldRenderInlineThumbnail;
