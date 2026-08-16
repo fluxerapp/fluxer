@@ -59,7 +59,6 @@
 .navItemDisabled {
 	cursor: not-allowed;
 	color: var(--text-tertiary-muted);
-	opacity: 0.72;
 }
 
 .navItemIcon {
