@@ -240,11 +240,6 @@ pub fn is_font_mime(mime_type: &str) -> bool {
     )
 }
 
-pub fn is_static_asset(path: &str) -> bool {
-    let filename = path.rsplit('/').next().unwrap_or(path);
-    filename.contains('.')
-}
-
 pub fn is_hashed_asset(path: &str) -> bool {
     let filename = path.rsplit('/').next().unwrap_or(path);
     let Some(last_dot) = filename.rfind('.') else {
@@ -335,18 +330,6 @@ mod tests {
     fn mime_case_insensitive() {
         assert_eq!(guess_mime("F.HTML"), "text/html; charset=utf-8");
         assert_eq!(guess_mime("F.JS"), "application/javascript; charset=utf-8");
-    }
-
-    #[test]
-    fn static_asset_with_ext() {
-        assert!(is_static_asset("/assets/app.js"));
-        assert!(is_static_asset("style.css"));
-    }
-
-    #[test]
-    fn static_asset_without_ext() {
-        assert!(!is_static_asset("/channels/me"));
-        assert!(!is_static_asset("/login"));
     }
 
     #[test]

@@ -19,9 +19,7 @@ use axum::{
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use super::spa_static::{
-    CORS_ALLOW_ANY_VALUE, guess_mime, is_font_mime, is_hashed_asset, is_static_asset,
-};
+use super::spa_static::{CORS_ALLOW_ANY_VALUE, guess_mime, is_font_mime, is_hashed_asset};
 
 const ACCEPT_CH_VALUE: &str = "DPR, Sec-CH-DPR, Sec-CH-Width, Save-Data, ECT, Downlink";
 const CRITICAL_CH_VALUE: &str = "Sec-CH-DPR, Sec-CH-Width, Save-Data";
@@ -34,11 +32,19 @@ pub async fn spa_catch_all(
 ) -> Response {
     let request_path = request.uri().path();
 
-    if is_static_asset(request_path) {
+    if is_static_root_file(request_path) {
         return serve_static_file(&state.config.static_dir, request_path).await;
     }
 
     serve_spa_index(&state, &headers, request_path).await
+}
+
+const STATIC_ROOT_FILES: &[&str] = &["/robots.txt"];
+
+fn is_static_root_file(request_path: &str) -> bool {
+    STATIC_ROOT_FILES
+        .iter()
+        .any(|candidate| request_path.eq_ignore_ascii_case(candidate))
 }
 
 async fn serve_static_file(static_dir: &str, request_path: &str) -> Response {
@@ -501,6 +507,20 @@ mod tests {
         assert!(should_cache_bust_asset_url(
             "https://example.test/web/favicon-32x32.png"
         ));
+    }
+
+    #[test]
+    fn only_declared_static_root_files_bypass_the_spa_document() {
+        assert!(is_static_root_file("/robots.txt"));
+        assert!(!is_static_root_file("/index.html"));
+        assert!(!is_static_root_file("/channels/@me"));
+    }
+
+    #[test]
+    fn spa_routes_containing_a_dot_still_render_the_document() {
+        assert!(!is_static_root_file("/theme/my.custom.theme"));
+        assert!(!is_static_root_file("/invite/abc.def"));
+        assert!(!is_static_root_file("/users/1.2.3"));
     }
 
     #[test]

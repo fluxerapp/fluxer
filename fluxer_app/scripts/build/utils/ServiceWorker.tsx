@@ -2,15 +2,11 @@
 
 import {promises as fs} from 'node:fs';
 import * as path from 'node:path';
+import type {PrecacheEntry} from '@app/features/platform/service_worker/WorkerAppShell';
 import {DIST_DIR, SRC_DIR} from '@app_scripts/build/Config';
 import * as esbuild from 'esbuild';
 
-interface PrecacheEntry {
-	url: string;
-	revision: string;
-}
-
-const PRECACHE_ROOT_FILES = ['index.html', 'manifest.json', 'browserconfig.xml', 'robots.txt', 'version.json'];
+const PRECACHE_ROOT_FILES = ['manifest.json', 'browserconfig.xml', 'robots.txt', 'version.json'];
 
 const NEVER_PRECACHED_EXTENSIONS = ['.woff', '.woff2', '.ttf', '.otf', '.eot'];
 
@@ -38,11 +34,7 @@ async function collectPrecacheManifest(): Promise<Array<PrecacheEntry>> {
 	for (const file of PRECACHE_ROOT_FILES) {
 		const filePath = path.join(DIST_DIR, file);
 		try {
-			const revision = await fileRevision(filePath);
-			entries.set(`/${file}`, revision);
-			if (file === 'index.html') {
-				entries.set('/', revision);
-			}
+			entries.set(`/${file}`, await fileRevision(filePath));
 		} catch {}
 	}
 	try {
