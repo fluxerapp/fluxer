@@ -8,10 +8,12 @@ import {
 	getActiveChangeTicketForUser,
 } from '@app/api/user/services/UserChangeChallengeUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {SsoRequiredError} from '@fluxer/errors/src/domains/auth/SsoRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ms} from 'itty-time';
 import type {ApiContext} from '../../ApiContext';
 import * as AuthPassword from '../../auth/AuthPassword';
+import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 import type {User} from '../../models/User';
 import type {PasswordChangeRepository} from '../repositories/auth/PasswordChangeRepository';
 
@@ -35,6 +37,12 @@ export class PasswordChangeService {
 	) {}
 
 	async start(user: User): Promise<StartPasswordChangeResult> {
+		if (user.traits.has('sso')) {
+			const ssoConfig = await getInstanceConfigRepository().getSsoConfig();
+			if ((ssoConfig.enabled && ssoConfig.enforced) || ssoConfig.disableAdditionalAuth) {
+				throw new SsoRequiredError();
+			}
+		}
 		const {email, rateLimit} = this.apiContext.services;
 		if (!user.email) {
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.MUST_HAVE_EMAIL_TO_CHANGE_IT);

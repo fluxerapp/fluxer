@@ -39,6 +39,7 @@ export interface InstanceGif {
 export interface InstanceSso {
 	enabled: boolean;
 	enforced: boolean;
+	disable_additional_auth: boolean;
 	display_name: string | null;
 	redirect_uri: string;
 }

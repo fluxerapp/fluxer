@@ -8,6 +8,7 @@ import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import type {Context} from 'hono';
 import * as AuthMfa from '../../auth/AuthMfa';
 import * as AuthPassword from '../../auth/AuthPassword';
+import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 import {SUDO_MODE_HEADER} from '../../middleware/SudoModeMiddleware';
 import type {User} from '../../models/User';
 import type {HonoEnv} from '../../types/HonoEnv';
@@ -31,15 +32,31 @@ export function userHasMfa(user: {authenticatorTypes?: Set<number> | null}): boo
 	);
 }
 
-export function deriveSudoMethods(user: {
-	totpSecret?: string | null;
-	authenticatorTypes?: Set<number> | null;
-}): SudoModeMethods {
+interface DeriveSudoMethodsOptions {
+	includeLocal?: boolean;
+	sso?: boolean;
+}
+
+export function deriveSudoMethods(
+	user: {
+		totpSecret?: string | null;
+		authenticatorTypes?: Set<number> | null;
+	},
+	options: DeriveSudoMethodsOptions = {},
+): SudoModeMethods {
+	const includeLocal = options.includeLocal ?? true;
 	const authenticatorTypes = user.authenticatorTypes ?? null;
-	return {
-		totp: (user.totpSecret ?? null) !== null && (authenticatorTypes?.has(UserAuthenticatorTypes.TOTP) ?? false),
-		webauthn: authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false,
+	const methods: SudoModeMethods = {
+		totp:
+			includeLocal &&
+			(user.totpSecret ?? null) !== null &&
+			(authenticatorTypes?.has(UserAuthenticatorTypes.TOTP) ?? false),
+		webauthn: includeLocal && (authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false),
 	};
+	if (options.sso) {
+		methods.sso = true;
+	}
+	return methods;
 }
 
 export interface SudoVerificationResult {
@@ -61,15 +78,23 @@ async function verifySudoMode(
 	if (user.isBot) {
 		return {verified: true, method: 'sudo_token'};
 	}
+	const ssoConfig = await getInstanceConfigRepository().getSsoConfig();
+	const ssoSudoRequired =
+		user.traits.has('sso') && ((ssoConfig.enabled && ssoConfig.enforced) || ssoConfig.disableAdditionalAuth);
+	const hasSsoOption = user.traits.has('sso') && ssoConfig.enabled;
 	const hasMfa = userHasMfa(user);
-	const issueSudoToken = options.issueSudoToken ?? hasMfa;
+	const issueSudoToken = options.issueSudoToken ?? (hasMfa || ssoSudoRequired);
 	if (hasMfa && ctx.get('sudoModeValid')) {
 		const sudoToken = ctx.get('sudoModeToken') ?? ctx.req.header(SUDO_MODE_HEADER) ?? undefined;
 		return {verified: true, method: 'sudo_token', sudoToken: issueSudoToken ? sudoToken : undefined};
 	}
 	const incomingToken = ctx.req.header(SUDO_MODE_HEADER);
-	if (!hasMfa && incomingToken && ctx.get('sudoModeValid')) {
-		return {verified: true, method: 'sudo_token', sudoToken: issueSudoToken ? incomingToken : undefined};
+	if (!hasMfa && ctx.get('sudoModeValid') && (incomingToken || ssoSudoRequired)) {
+		const sudoToken = ctx.get('sudoModeToken') ?? incomingToken ?? undefined;
+		return {verified: true, method: 'sudo_token', sudoToken: issueSudoToken ? sudoToken : undefined};
+	}
+	if (ssoSudoRequired) {
+		throw new SudoModeRequiredError(true, deriveSudoMethods(user, {includeLocal: false, sso: true}));
 	}
 	if (hasMfa && body.mfa_method) {
 		const result = await AuthMfa.verifySudoMfa(ctx.get('apiContext'), {
@@ -103,7 +128,7 @@ async function verifySudoMode(
 		}
 		return {verified: true, method: 'password'};
 	}
-	throw new SudoModeRequiredError(hasMfa, deriveSudoMethods(user));
+	throw new SudoModeRequiredError(hasMfa, deriveSudoMethods(user, {sso: hasSsoOption}));
 }
 
 function setSudoTokenHeader(

@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import {FLUXER_USER_AGENT} from '@fluxer/constants/src/Core';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {SsoRequiredError} from '@fluxer/errors/src/domains/auth/SsoRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
@@ -13,6 +14,7 @@ import {ms, seconds} from 'itty-time';
 import type {ApiContext} from '../ApiContext';
 import {createMfaTicket, createPasswordResetToken} from '../BrandedTypes';
 import {Logger} from '../Logger';
+import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
 import type {User} from '../models/User';
 import {EXTERNAL_RESPONSE_LIMITS} from '../utils/ExternalResponseLimits';
 import * as FetchUtils from '../utils/FetchUtils';
@@ -212,6 +214,12 @@ export async function forgotPassword(ctx: ApiContext, {data, request}: ForgotPas
 		return;
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
+	if (user.traits.has('sso')) {
+		const ssoConfig = await getInstanceConfigRepository().getSsoConfig();
+		if ((ssoConfig.enabled && ssoConfig.enforced) || ssoConfig.disableAdditionalAuth) {
+			throw new SsoRequiredError();
+		}
+	}
 	const token = createPasswordResetToken(await AuthUtility.generateSecureToken(ctx));
 	await users.createPasswordResetToken({
 		token_: token,
@@ -251,6 +259,12 @@ export async function resetPassword(
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
+	if (user.traits.has('sso')) {
+		const ssoConfig = await getInstanceConfigRepository().getSsoConfig();
+		if ((ssoConfig.enabled && ssoConfig.enforced) || ssoConfig.disableAdditionalAuth) {
+			throw new SsoRequiredError();
+		}
+	}
 	if (user.flags & UserFlags.DELETED) {
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
 	}

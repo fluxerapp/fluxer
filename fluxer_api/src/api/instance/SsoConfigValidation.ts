@@ -10,6 +10,7 @@ import {Config} from '../Config';
 interface SsoConfigValidationInput {
 	enabled: boolean;
 	enforced: boolean;
+	disableAdditionalAuth: boolean;
 	issuer: string | null;
 	authorizationUrl: string | null;
 	tokenUrl: string | null;
@@ -63,6 +64,10 @@ export function isTestSsoProvider(
 		config.tokenUrl === 'test' ||
 		(testModeEnabled && (config.authorizationUrl?.startsWith('test-') ?? false))
 	);
+}
+
+function normalizeSsoDisableAdditionalAuth(disableAdditionalAuth: boolean, enforced: boolean): boolean {
+	return enforced ? false : disableAdditionalAuth;
 }
 
 export function normalizeSsoAllowedEmailDomains(domains: Array<string>): Array<string> {
@@ -153,6 +158,7 @@ export async function normalizeAndValidateSsoConfig(
 ): Promise<NormalizedSsoConfigValidationResult> {
 	const baseConfig = {
 		...config,
+		disableAdditionalAuth: normalizeSsoDisableAdditionalAuth(config.disableAdditionalAuth, config.enforced),
 		issuer: normalizeOptionalSsoString(config.issuer),
 		authorizationUrl: normalizeOptionalSsoString(config.authorizationUrl),
 		tokenUrl: normalizeOptionalSsoString(config.tokenUrl),

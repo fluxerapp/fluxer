@@ -19,6 +19,7 @@ import type {
 	SsoCompleteResponse,
 	SsoStartRequest,
 	SsoStartResponse,
+	SsoSudoCompleteResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
@@ -650,6 +651,32 @@ export async function startSso({
 
 export async function completeSso({code, state}: {code: string; state: string}): Promise<SsoCompleteResponse> {
 	const response = await http.post<SsoCompleteResponse>(Endpoints.AUTH_SSO_COMPLETE, {
+		body: {code, state},
+		headers: withPlatformHeader(),
+	});
+	return response.body;
+}
+
+export async function startSsoSudo({
+	redirectTo,
+	redirectUri,
+}: {
+	redirectTo?: string;
+	redirectUri?: string;
+} = {}): Promise<SsoStartResponse> {
+	const body: SsoStartRequest = {
+		redirect_to: redirectTo,
+		redirect_uri: redirectUri,
+	};
+	const response = await http.post<SsoStartResponse>(Endpoints.AUTH_SSO_SUDO_START, {
+		body,
+		headers: withPlatformHeader(),
+	});
+	return response.body;
+}
+
+export async function completeSsoSudo({code, state}: {code: string; state: string}): Promise<SsoSudoCompleteResponse> {
+	const response = await http.post<SsoSudoCompleteResponse>(Endpoints.AUTH_SSO_SUDO_COMPLETE, {
 		body: {code, state},
 		headers: withPlatformHeader(),
 	});

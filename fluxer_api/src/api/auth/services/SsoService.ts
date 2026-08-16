@@ -49,6 +49,7 @@ import {deriveUsernameFromDisplayName} from '../../utils/UsernameSuggestionUtils
 import * as AuthSession from '../AuthSession';
 import {SsoIdentityRepository} from './SsoIdentityRepository';
 import {parseTokenEndpointResponse, sanitizeSsoRedirectTo, tryDiscoverOidcProviderMetadata} from './SsoUtils';
+import {getSudoModeService} from './SudoModeService';
 
 interface SsoStatePayload {
 	codeVerifier: string;
@@ -56,11 +57,14 @@ interface SsoStatePayload {
 	redirectTo?: string;
 	redirectUri?: string;
 	createdAt: number;
+	purpose?: 'login' | 'sudo';
+	sudoUserId?: string;
 }
 
 interface PublicSsoStatus {
 	enabled: boolean;
 	enforced: boolean;
+	disable_additional_auth: boolean;
 	display_name: string | null;
 	redirect_uri: string;
 }
@@ -255,6 +259,7 @@ export class SsoService {
 		return {
 			enabled,
 			enforced: enabled && config.enforced,
+			disable_additional_auth: config.disableAdditionalAuth,
 			display_name: config.displayName ?? null,
 			redirect_uri: config.redirectUri,
 		};
@@ -266,6 +271,40 @@ export class SsoService {
 	}
 
 	async startLogin({redirectTo, redirectUri}: {redirectTo?: string; redirectUri?: string} = {}): Promise<{
+		authorization_url: string;
+		state: string;
+		redirect_uri: string;
+	}> {
+		return this.startAuthorization({redirectTo, redirectUri, purpose: 'login'});
+	}
+
+	async startSudo({user, redirectTo, redirectUri}: {user: User; redirectTo?: string; redirectUri?: string}): Promise<{
+		authorization_url: string;
+		state: string;
+		redirect_uri: string;
+	}> {
+		if (!user.traits.has('sso')) {
+			throw new SsoRequiredError();
+		}
+		return this.startAuthorization({
+			redirectTo,
+			redirectUri,
+			purpose: 'sudo',
+			sudoUserId: user.id.toString(),
+		});
+	}
+
+	private async startAuthorization({
+		redirectTo,
+		redirectUri,
+		purpose,
+		sudoUserId,
+	}: {
+		redirectTo?: string;
+		redirectUri?: string;
+		purpose: 'login' | 'sudo';
+		sudoUserId?: string;
+	}): Promise<{
 		authorization_url: string;
 		state: string;
 		redirect_uri: string;
@@ -282,6 +321,8 @@ export class SsoService {
 			redirectTo: sanitizeSsoRedirectTo(redirectTo),
 			redirectUri: ssoRedirectUri,
 			createdAt: Date.now(),
+			purpose,
+			sudoUserId,
 		};
 		const {cache} = this.apiContext.services;
 		await cache.set(buildStateCacheKey(state), statePayload, SsoService.STATE_TTL_SECONDS);
@@ -318,6 +359,34 @@ export class SsoService {
 		user_id: string;
 		redirect_to: string;
 	}> {
+		const {config, statePayload, tokenResponse} = await this.completeAuthorization({code, state});
+		if ((statePayload.purpose ?? 'login') !== 'login') {
+			throw InputValidationError.fromCode('state', ValidationErrorCodes.INVALID_OR_EXPIRED_SSO_STATE);
+		}
+		const claims = await this.resolveClaims(tokenResponse, config, statePayload.nonce);
+		const user = await this.resolveUserFromClaims(claims, config);
+		const [token] = await AuthSession.createAuthSession(this.apiContext, {user, request});
+		return {token, user_id: user.id.toString(), redirect_to: statePayload.redirectTo ?? ''};
+	}
+
+	async completeSudo({code, state, user}: {code: string; state: string; user: User}): Promise<{
+		sudo_token: string;
+	}> {
+		const {config, statePayload, tokenResponse} = await this.completeAuthorization({code, state});
+		if (statePayload.purpose !== 'sudo' || statePayload.sudoUserId !== user.id.toString()) {
+			throw InputValidationError.fromCode('state', ValidationErrorCodes.INVALID_OR_EXPIRED_SSO_STATE);
+		}
+		const claims = await this.resolveClaims(tokenResponse, config, statePayload.nonce);
+		await this.resolveSudoUserFromClaims(user, claims, config);
+		const sudoModeService = getSudoModeService();
+		return {sudo_token: await sudoModeService.generateSudoToken(user.id)};
+	}
+
+	private async completeAuthorization({code, state}: {code: string; state: string}): Promise<{
+		config: ResolvedSsoConfig;
+		statePayload: SsoStatePayload;
+		tokenResponse: {id_token?: string; access_token?: string};
+	}> {
 		const config = await this.requireReadyConfig();
 		const {cache} = this.apiContext.services;
 		const statePayload = await cache.getAndDelete<SsoStatePayload>(buildStateCacheKey(state));
@@ -330,10 +399,29 @@ export class SsoService {
 			redirectUri: statePayload.redirectUri ?? config.redirectUri,
 			config,
 		});
-		const claims = await this.resolveClaims(tokenResponse, config, statePayload.nonce);
-		const user = await this.resolveUserFromClaims(claims, config);
-		const [token] = await AuthSession.createAuthSession(this.apiContext, {user, request});
-		return {token, user_id: user.id.toString(), redirect_to: statePayload.redirectTo ?? ''};
+		return {config, statePayload, tokenResponse};
+	}
+
+	private async resolveSudoUserFromClaims(
+		user: User,
+		claims: ResolvedSsoClaims,
+		config: ResolvedSsoConfig,
+	): Promise<User> {
+		if (!claims.emailVerified) {
+			throw InputValidationError.fromCode('email_verified', ValidationErrorCodes.INVALID_SSO_TOKEN);
+		}
+		const identityUserId = await this.ssoIdentityRepository.findUserId(config.providerId, claims.sub);
+		if (identityUserId) {
+			if (identityUserId.toString() !== user.id.toString()) {
+				throw InputValidationError.fromCode('sub', ValidationErrorCodes.SSO_IDENTITY_MISMATCH);
+			}
+			return user;
+		}
+		const boundUser = await this.bindSsoIdentity(user, claims.sub, config);
+		if (boundUser.id.toString() !== user.id.toString()) {
+			throw InputValidationError.fromCode('sub', ValidationErrorCodes.SSO_IDENTITY_MISMATCH);
+		}
+		return boundUser;
 	}
 
 	private async resolveUserFromClaims(claims: ResolvedSsoClaims, config: ResolvedSsoConfig): Promise<User> {

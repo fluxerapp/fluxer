@@ -307,6 +307,7 @@ export async function unclaimAccount(harness: ApiTestHarness, userId: string): P
 interface SsoConfig {
 	enabled: boolean;
 	enforced: boolean;
+	disable_additional_auth?: boolean;
 	authorization_url: string;
 	token_url: string;
 	client_id: string;
@@ -326,6 +327,7 @@ export async function enableSso(
 	const ssoConfig: SsoConfig = {
 		enabled: true,
 		enforced: true,
+		disable_additional_auth: false,
 		authorization_url: 'test',
 		token_url: 'test',
 		client_id: 'itest-client',

@@ -8,6 +8,13 @@ import {
 	getPendingSsoRedirectTo,
 	startSsoLogin,
 } from '@app/features/auth/state/AuthFlow';
+import {
+	clearPendingSsoSudoState,
+	completeSsoSudo,
+	getPendingSsoSudoState,
+	SSO_SUDO_COMPLETE_MESSAGE,
+	startSsoSudo,
+} from '@app/features/auth/state/SsoSudoFlow';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {BACK_TO_SIGN_IN_DESCRIPTOR, TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
@@ -40,6 +47,16 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [isProcessing, setIsProcessing] = useState(true);
 	const abortControllerRef = useRef<AbortController | null>(null);
+	const isSudoRef = useRef(false);
+	const originalStateRef = useRef<string | null>(null);
+	if (state) {
+		const parentState = window.localStorage.getItem(`fluxer:sso:sudo:parent:${state}`);
+		const resolvedState = parentState || state;
+		if (getPendingSsoSudoState(state) || parentState) {
+			isSudoRef.current = true;
+			originalStateRef.current = resolvedState;
+		}
+	}
 	const handleBackToLogin = useCallback(() => {
 		RouterUtils.replaceWith('/login');
 	}, []);
@@ -47,8 +64,16 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 		setError(null);
 		setIsProcessing(true);
 		try {
-			const {authorizationUrl} = await startSsoLogin({redirectTo: getPendingSsoRedirectTo()});
-			window.location.assign(authorizationUrl);
+			if (isSudoRef.current) {
+				const {authorizationUrl, state: newState} = await startSsoSudo({redirectTo: getPendingSsoRedirectTo()});
+				if (originalStateRef.current) {
+					window.localStorage.setItem(`fluxer:sso:sudo:parent:${newState}`, originalStateRef.current);
+				}
+				window.location.assign(authorizationUrl);
+			} else {
+				const {authorizationUrl} = await startSsoLogin({redirectTo: getPendingSsoRedirectTo()});
+				window.location.assign(authorizationUrl);
+			}
 		} catch {
 			RouterUtils.replaceWith('/login');
 		}
@@ -75,6 +100,28 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 				return;
 			}
 			try {
+				const parentState = state ? window.localStorage.getItem(`fluxer:sso:sudo:parent:${state}`) : null;
+				const pendingSudo = getPendingSsoSudoState(state);
+				if (pendingSudo || parentState) {
+					const result = await completeSsoSudo({code, state});
+					if (controller.signal.aborted) return;
+					const resolvedParentState = parentState || state;
+					if (parentState) {
+						window.localStorage.removeItem(`fluxer:sso:sudo:parent:${state}`);
+					}
+					window.opener?.postMessage(
+						{type: SSO_SUDO_COMPLETE_MESSAGE, state: resolvedParentState, sudoToken: result.sudoToken},
+						window.location.origin,
+					);
+					if (window.opener && !window.opener.closed) {
+						window.close();
+						return;
+					}
+					const redirectTo = safeRedirectTarget(pendingSudo?.redirectTo) ?? '/';
+					clearPendingSsoSudoState(state);
+					RouterUtils.replaceWith(redirectTo);
+					return;
+				}
 				const result = await completeSsoLogin({code, state});
 				if (controller.signal.aborted) return;
 				await AuthenticationCommands.completeLogin(result);
@@ -116,14 +163,25 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 					>
 						{i18n._(TRY_AGAIN_DESCRIPTOR)}
 					</button>
-					<button
-						type="button"
-						onClick={handleBackToLogin}
-						className={styles.ssoBackButton}
-						data-flx="auth.sso-callback-page.sso-back-button.back-to-login"
-					>
-						{i18n._(BACK_TO_SIGN_IN_DESCRIPTOR)}
-					</button>
+					{isSudoRef.current ? (
+						<button
+							type="button"
+							onClick={() => window.close()}
+							className={styles.ssoBackButton}
+							data-flx="auth.sso-callback-page.sso-back-button.close"
+						>
+							<Trans>Cancel</Trans>
+						</button>
+					) : (
+						<button
+							type="button"
+							onClick={handleBackToLogin}
+							className={styles.ssoBackButton}
+							data-flx="auth.sso-callback-page.sso-back-button.back-to-login"
+						>
+							{i18n._(BACK_TO_SIGN_IN_DESCRIPTOR)}
+						</button>
+					)}
 				</div>
 			</div>
 		);

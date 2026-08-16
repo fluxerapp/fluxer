@@ -3,6 +3,7 @@
 import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {PhoneAddNotEligibleError} from '@fluxer/errors/src/domains/auth/PhoneAddNotEligibleError';
+import {SsoRequiredError} from '@fluxer/errors/src/domains/auth/SsoRequiredError';
 import type {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
@@ -24,6 +25,7 @@ import * as AuthPhone from '../../auth/AuthPhone';
 import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
 import type {SudoVerificationResult} from '../../auth/services/SudoVerificationService';
 import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
+import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 import type {User} from '../../models/User';
 import type {IUserRepository} from '../IUserRepository';
 import * as UserAuth from './UserAuth';
@@ -62,6 +64,15 @@ export class UserAuthRequestService {
 		private guildRepository: IGuildRepositoryAggregate,
 	) {}
 
+	private async assertCanAddCredentials(user: User): Promise<void> {
+		if (user.traits.has('sso')) {
+			const ssoConfig = await getInstanceConfigRepository().getSsoConfig();
+			if ((ssoConfig.enabled && ssoConfig.enforced) || ssoConfig.disableAdditionalAuth) {
+				throw new SsoRequiredError();
+			}
+		}
+	}
+
 	private async assertPhoneEligible(user: User): Promise<void> {
 		if (user.hasVerifiedPhone) {
 			return;
@@ -87,6 +98,7 @@ export class UserAuthRequestService {
 		data,
 		sudoContext,
 	}: UserAuthWithSudoRequest<EnableMfaTotpRequest>): Promise<MfaBackupCodesResponse> {
+		await this.assertCanAddCredentials(user);
 		requireEmailVerified(user, 'mfa');
 		const backupCodes = await UserAuth.enableMfaTotp(this.apiContext, {
 			user,
@@ -176,12 +188,14 @@ export class UserAuthRequestService {
 	}
 
 	async generateWebAuthnRegistrationOptions(user: User): Promise<WebAuthnChallengeResponse> {
+		await this.assertCanAddCredentials(user);
 		requireEmailVerified(user, 'mfa');
 		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id);
 		return this.toWebAuthnChallengeResponse(options);
 	}
 
 	async registerWebAuthnCredential({user, data}: UserAuthWebAuthnRegisterRequest): Promise<void> {
+		await this.assertCanAddCredentials(user);
 		requireEmailVerified(user, 'mfa');
 		await AuthMfa.verifyWebAuthnRegistration(this.apiContext, user.id, data.response, data.challenge, data.name);
 	}

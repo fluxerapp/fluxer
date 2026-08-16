@@ -356,6 +356,8 @@ pub struct SsoConfigResponse {
     pub enabled: bool,
     #[serde(default)]
     pub enforced: bool,
+    #[serde(default)]
+    pub disable_additional_auth: bool,
     pub display_name: Option<String>,
     pub issuer: Option<String>,
     pub authorization_url: Option<String>,
@@ -733,6 +735,8 @@ pub struct SsoConfigUpdateRequest {
     pub enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enforced: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable_additional_auth: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]

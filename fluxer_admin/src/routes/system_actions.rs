@@ -384,6 +384,7 @@ fn build_sso_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
         sso: Some(SsoConfigUpdateRequest {
             enabled: Some(flag("sso_enabled")),
             enforced: Some(flag("sso_enforced")),
+            disable_additional_auth: Some(flag("sso_disable_additional_auth")),
             auto_provision: Some(flag("sso_auto_provision")),
             display_name: get("sso_display_name"),
             issuer: get("sso_issuer"),

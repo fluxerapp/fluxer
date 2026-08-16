@@ -754,6 +754,7 @@ function isLimitConfigSnapshot(value: unknown): value is LimitConfigSnapshot {
 export interface InstanceSsoConfig {
 	enabled: boolean;
 	enforced: boolean;
+	disableAdditionalAuth: boolean;
 	displayName: string | null;
 	issuer: string | null;
 	authorizationUrl: string | null;
@@ -1558,6 +1559,7 @@ export class InstanceConfigRepository {
 		return {
 			enabled,
 			enforced: enforcedRaw == null ? enabled : enforcedRaw === 'true',
+			disableAdditionalAuth: configs.get('sso_disable_additional_auth') === 'true',
 			displayName: read('sso_display_name'),
 			issuer: read('sso_issuer'),
 			authorizationUrl: read('sso_authorization_url'),
@@ -1600,6 +1602,7 @@ export class InstanceConfigRepository {
 		const entries: Array<[string, string]> = [
 			['sso_enabled', next.enabled ? 'true' : 'false'],
 			['sso_enforced', next.enforced ? 'true' : 'false'],
+			['sso_disable_additional_auth', next.disableAdditionalAuth ? 'true' : 'false'],
 			['sso_display_name', next.displayName ?? ''],
 			['sso_issuer', next.issuer ?? ''],
 			['sso_authorization_url', next.authorizationUrl ?? ''],

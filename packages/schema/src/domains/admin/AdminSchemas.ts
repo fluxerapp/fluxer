@@ -396,6 +396,7 @@ export type GenerateGiftCodesRequest = z.infer<typeof GenerateGiftCodesRequest>;
 const SsoConfigResponse = z.object({
 	enabled: z.boolean(),
 	enforced: z.boolean(),
+	disable_additional_auth: z.boolean(),
 	display_name: z.string().nullable(),
 	issuer: z.string().nullable(),
 	authorization_url: z.string().nullable(),
@@ -632,6 +633,7 @@ export const InstanceConfigUpdateRequest = z.object({
 		.object({
 			enabled: z.boolean().optional(),
 			enforced: z.boolean().optional(),
+			disable_additional_auth: z.boolean().optional(),
 			display_name: z.string().nullish(),
 			issuer: z.string().nullish(),
 			authorization_url: z.string().nullish(),
