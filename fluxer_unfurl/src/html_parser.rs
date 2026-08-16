@@ -135,7 +135,10 @@ pub fn parse_opengraph(html: &str) -> OgMetadata {
     };
 
     if og.title.is_none() {
-        og.title = meta.first("twitter:title");
+        og.title = meta
+            .first("twitter:title")
+            .or_else(|| document_title(&doc))
+            .or_else(|| meta.first("title"));
     }
 
     if og.description.is_none() {
@@ -143,6 +146,16 @@ pub fn parse_opengraph(html: &str) -> OgMetadata {
     }
 
     og
+}
+
+fn document_title(doc: &Html) -> Option<String> {
+    let selector = Selector::parse("title").ok()?;
+    let text = doc.select(&selector).next()?.text().collect::<String>();
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    Some(trimmed.to_owned())
 }
 
 #[allow(dead_code)]
@@ -335,7 +348,7 @@ mod tests {
     #[test]
     fn handles_missing_tags() {
         let m = og("<html><head><title>X</title></head></html>");
-        assert!(m.title.is_none());
+        assert_eq!(m.title.as_deref(), Some("X"));
         assert!(m.description.is_none() && m.image.is_none() && m.url.is_none());
     }
 
@@ -380,18 +393,34 @@ mod tests {
     }
 
     #[test]
-    fn title_uses_open_graph_then_twitter_only() {
+    fn title_fallback_chain_matches_ts() {
         let m = og(r#"<head><meta property="og:title" content="OG"></head>"#);
         assert_eq!(m.title.as_deref(), Some("OG"));
         let m = og(r#"<head><meta name="twitter:title" content="TW"></head>"#);
         assert_eq!(m.title.as_deref(), Some("TW"));
+        let m = og(r#"<html><head><title>HTML Title</title></head></html>"#);
+        assert_eq!(m.title.as_deref(), Some("HTML Title"));
+        let m = og(r#"<head><meta name="title" content="Meta"></head>"#);
+        assert_eq!(m.title.as_deref(), Some("Meta"));
     }
 
     #[test]
-    fn title_never_falls_back_to_document_title() {
-        let m = og(r#"<html><head><title>HTML Title</title></head></html>"#);
-        assert!(m.title.is_none());
-        let m = og(r#"<head><meta name="title" content="Meta"></head>"#);
+    fn title_prefers_open_graph_over_the_document_title() {
+        let m = og(
+            r#"<html><head><meta property="og:title" content="OG"><title>HTML Title</title></head></html>"#,
+        );
+        assert_eq!(m.title.as_deref(), Some("OG"));
+        let m = og(
+            r#"<html><head><meta name="twitter:title" content="TW"><title>HTML Title</title></head></html>"#,
+        );
+        assert_eq!(m.title.as_deref(), Some("TW"));
+    }
+
+    #[test]
+    fn document_title_is_trimmed_and_blank_is_ignored() {
+        let m = og(r#"<html><head><title>  Hello World  </title></head></html>"#);
+        assert_eq!(m.title.as_deref(), Some("Hello World"));
+        let m = og(r#"<html><head><title>   </title></head></html>"#);
         assert!(m.title.is_none());
     }
 

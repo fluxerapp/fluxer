@@ -197,7 +197,11 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
         open_graph_video_accepted,
     );
 
-    if embed_type == "link" && !og.textual_keys_present {
+    if embed_type == "link"
+        && !og.textual_keys_present
+        && og.title.is_none()
+        && og.description.is_none()
+    {
         return Ok(ResolverResult { embeds: vec![] });
     }
 
