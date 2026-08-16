@@ -50,7 +50,9 @@ export function GuildBaseController(app: HonoApp) {
 			if (policy.single_community_enabled) {
 				throw new SingleCommunityCannotCreateGuildsError();
 			}
-			requireEmailVerified(user, 'guild_creation');
+			if (!user.isUnclaimedAccount()) {
+				requireEmailVerified(user, 'guild_creation');
+			}
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const locale = ctx.get('requestLocale') ?? null;
 			return ctx.json(await ctx.get('guildService').data.createGuild({user, data, locale}, auditLogReason));
