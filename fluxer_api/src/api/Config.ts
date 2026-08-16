@@ -3,7 +3,7 @@
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
-import type {APIConfig, BlueskyOAuthConfig} from './config/APIConfig';
+import type {APIConfig, BlueskyOAuthConfig, TraktOAuthConfig} from './config/APIConfig';
 import type {WorkerTaskName} from './worker/WorkerLaneConfig';
 
 function extractHostname(url: string): string {
@@ -376,6 +376,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				email: master.auth.vapid.email,
 			},
 			bluesky: master.auth.bluesky as BlueskyOAuthConfig,
+			trakt: master.auth.trakt as TraktOAuthConfig,
 		},
 		cookie: master.cookie,
 		klipy: {

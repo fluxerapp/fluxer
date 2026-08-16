@@ -94,6 +94,7 @@ export const DEFAULT_INSTANCE_SERVICES: InstanceServices = {
 	gif_enabled: true,
 	youtube_enabled: false,
 	bluesky_enabled: false,
+	trakt_enabled: false,
 };
 
 export function normalizeInstanceServices(services?: InstanceServices | null): InstanceServices {
@@ -425,6 +426,7 @@ class RuntimeConfig {
 				gif_enabled: config.policy.services_resolved.gif_enabled,
 				youtube_enabled: config.policy.services_resolved.youtube_enabled,
 				bluesky_enabled: config.policy.services_resolved.bluesky_enabled,
+				trakt_enabled: config.policy.services_resolved.trakt_enabled,
 			});
 			this.appPublic = appPublic;
 		});
@@ -615,6 +617,10 @@ class RuntimeConfig {
 
 	get blueskyConnectionsEnabled(): boolean {
 		return this.services.bluesky_enabled;
+	}
+
+	get traktConnectionsEnabled(): boolean {
+		return this.services.trakt_enabled;
 	}
 
 	get marketingHost(): string {

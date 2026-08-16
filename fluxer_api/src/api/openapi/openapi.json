@@ -16818,6 +16818,73 @@
 				}
 			}
 		},
+		"/users/@me/connections/trakt/authorize": {
+			"post": {
+				"operationId": "authorize_trakt_connection",
+				"summary": "Start Trakt OAuth flow",
+				"tags": ["Connections"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/TraktAuthorizeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Start Trakt OAuth flow"}},
+				"description": "Initiates the Trakt OAuth2 authorisation flow and returns a URL to redirect the user to.",
+				"security": [{"sessionToken": []}]
+			}
+		},
 		"/users/@me/connections/verify": {
 			"post": {
 				"operationId": "verify_and_create_connection",
@@ -24939,9 +25006,13 @@
 							"bluesky_enabled": {
 								"type": "boolean",
 								"description": "Whether Bluesky profile connections are enabled for this instance"
+							},
+							"trakt_enabled": {
+								"type": "boolean",
+								"description": "Whether Trakt profile connections are enabled for this instance"
 							}
 						},
-						"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled"],
+						"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled", "trakt_enabled"],
 						"description": "Optional third-party service integrations enabled for this instance"
 					},
 					"limits": {
@@ -25133,6 +25204,11 @@
 					"BLUESKY_OAUTH_NOT_ENABLED",
 					"BLUESKY_OAUTH_SESSION_EXPIRED",
 					"BLUESKY_OAUTH_STATE_INVALID",
+					"TRAKT_OAUTH_AUTHORIZATION_FAILED",
+					"TRAKT_OAUTH_CALLBACK_FAILED",
+					"TRAKT_OAUTH_NOT_ENABLED",
+					"TRAKT_OAUTH_SESSION_EXPIRED",
+					"TRAKT_OAUTH_STATE_INVALID",
 					"ACCOUNT_SCHEDULED_FOR_DELETION",
 					"ACCOUNT_SUSPENDED_PERMANENTLY",
 					"ACCOUNT_SUSPENDED_TEMPORARILY",
@@ -25448,6 +25524,11 @@
 					"We couldn't complete the Bluesky connection. Please try again.",
 					"Bluesky connections are not enabled on this instance.",
 					"Your Bluesky session has expired. Please reconnect your account.",
+					"The authorization request has expired or is invalid. Please try again.",
+					"We couldn't start the Trakt authorisation flow. Please try again.",
+					"We couldn't complete the Trakt connection. Please try again.",
+					"Trakt connections are not enabled on this instance.",
+					"Your Trakt session has expired. Please reconnect your account.",
 					"The authorization request has expired or is invalid. Please try again.",
 					"This account is scheduled for deletion.",
 					"This account has been permanently suspended.",
@@ -34955,7 +35036,7 @@
 				"type": "object",
 				"properties": {
 					"id": {"type": "string", "description": "The unique identifier for this connection"},
-					"type": {"type": "string", "enum": ["bsky", "domain"], "description": "The type of connection"},
+					"type": {"type": "string", "enum": ["bsky", "domain", "trakt"], "description": "The type of connection"},
 					"name": {"type": "string", "description": "The display name of the connection (handle or domain)"},
 					"verified": {"type": "boolean", "description": "Whether the connection has been verified"},
 					"visibility_flags": {
@@ -34981,7 +35062,7 @@
 					"token": {"type": "string", "description": "The verification token to place in DNS or profile"},
 					"type": {
 						"type": "string",
-						"enum": ["bsky", "domain"],
+						"enum": ["bsky", "domain", "trakt"],
 						"description": "The type of connection being verified"
 					},
 					"id": {"type": "string", "description": "The connection identifier (handle or domain)"},
@@ -34993,7 +35074,11 @@
 			"CreateConnectionRequest": {
 				"type": "object",
 				"properties": {
-					"type": {"type": "string", "enum": ["bsky", "domain"], "description": "The type of connection to create"},
+					"type": {
+						"type": "string",
+						"enum": ["bsky", "domain", "trakt"],
+						"description": "The type of connection to create"
+					},
 					"identifier": {
 						"type": "string",
 						"minLength": 1,
@@ -35038,6 +35123,13 @@
 					}
 				},
 				"required": ["connection_ids"]
+			},
+			"TraktAuthorizeResponse": {
+				"type": "object",
+				"properties": {
+					"authorize_url": {"type": "string", "description": "The URL to redirect the user to for Trakt authorisation"}
+				},
+				"required": ["authorize_url"]
 			},
 			"VerifyAndCreateConnectionRequest": {
 				"type": "object",

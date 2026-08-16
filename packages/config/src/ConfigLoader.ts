@@ -169,6 +169,11 @@ function defaultConfig(): MasterConfig {
 				policy_uri: 'https://fluxer.app/privacy',
 				keys: [],
 			},
+			trakt: {
+				enabled: false,
+				client_id: '',
+				client_secret: '',
+			},
 		},
 		cookie: {
 			domain: '',

@@ -62,6 +62,7 @@ pub struct InstanceServicesOverrides {
     pub gif_enabled: Option<bool>,
     pub youtube_enabled: Option<bool>,
     pub bluesky_enabled: Option<bool>,
+    pub trakt_enabled: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -72,6 +73,7 @@ pub struct InstanceServicesResolved {
     pub youtube_enabled: bool,
     #[serde(default)]
     pub bluesky_enabled: bool,
+    pub trakt_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -82,6 +84,7 @@ pub struct InstanceServicesAvailable {
     pub youtube: bool,
     #[serde(default)]
     pub bluesky: bool,
+    pub trakt: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -96,6 +99,7 @@ pub struct InstanceIntegrationsResponse {
     pub email: InstanceEmailIntegrationResponse,
     #[serde(default)]
     pub bluesky: InstanceBlueskyIntegrationResponse,
+    pub trakt: InstanceTraktIntegrationResponse,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -168,6 +172,16 @@ pub struct InstanceBlueskyIntegrationResponse {
     pub policy_uri: Option<String>,
     #[serde(default)]
     pub key_count: u16,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct InstanceTraktIntegrationResponse {
+    pub enabled: Option<bool>,
+    #[serde(default)]
+    pub effective_enabled: bool,
+    pub client_id: Option<String>,
+    #[serde(default)]
+    pub client_secret_set: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -529,6 +543,8 @@ pub struct InstanceServicesUpdateRequest {
     pub youtube_enabled: Option<Option<bool>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bluesky_enabled: Option<Option<bool>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trakt_enabled: Option<Option<bool>>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -543,6 +559,8 @@ pub struct InstanceIntegrationsUpdateRequest {
     pub email: Option<InstanceEmailIntegrationUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bluesky: Option<InstanceBlueskyIntegrationUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trakt: Option<InstanceTraktIntegrationUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -623,6 +641,16 @@ pub struct InstanceBlueskyIntegrationUpdateRequest {
 pub struct InstanceBlueskyKeyIntegrationUpdateRequest {
     pub kid: String,
     pub private_key: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct InstanceTraktIntegrationUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_secret: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

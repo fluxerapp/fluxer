@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {BLUESKY_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {BLUESKY_PROVIDER_NAME, TRAKT_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as ConnectionCommands from '@app/features/connection/commands/ConnectionCommands';
@@ -132,6 +132,7 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 	const [hostCopied, setHostCopied] = useState(false);
 	const [valueCopied, setValueCopied] = useState(false);
 	const pendingBlueskyHandle = useRef<string | null>(null);
+	const pendingTraktConnection = useRef(false);
 	const initiateForm = useForm<InitiateFormInputs>();
 	const [isVerifySubmitting, setIsVerifySubmitting] = useState(false);
 	const connectionTypeOptions = useMemo(
@@ -139,6 +140,7 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 			...(RuntimeConfig.blueskyConnectionsEnabled
 				? [{value: ConnectionTypes.BLUESKY, label: BLUESKY_PROVIDER_NAME}]
 				: []),
+			...(RuntimeConfig.traktConnectionsEnabled ? [{value: ConnectionTypes.TRAKT, label: TRAKT_PROVIDER_NAME}] : []),
 			{value: ConnectionTypes.DOMAIN, label: i18n._(DOMAIN_DESCRIPTOR)},
 		],
 		[i18n.locale],
@@ -146,6 +148,18 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 	const handleTypeChange = useCallback((value: ConnectionType) => setType(value), []);
 	const onSubmitInitiate = useCallback(
 		async (data: InitiateFormInputs) => {
+			if (type === ConnectionTypes.TRAKT) {
+				if (UserConnection.hasConnectionByType(ConnectionTypes.TRAKT)) {
+					initiateForm.setError('identifier', {
+						type: 'validate',
+						message: i18n._(YOU_ALREADY_HAVE_THIS_CONNECTION_DESCRIPTOR),
+					});
+					return;
+				}
+				await ConnectionCommands.authorizeTraktConnection(i18n);
+				pendingTraktConnection.current = true;
+				return;
+			}
 			let identifier = data.identifier.trim();
 			if (type === ConnectionTypes.BLUESKY) {
 				identifier = identifier.replace(/^https?:\/\/bsky\.app\/profile\//i, '').replace(/^@/, '');
@@ -189,11 +203,17 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 		ConnectionTypes.BLUESKY,
 		pendingBlueskyHandle.current ?? '',
 	);
+	const hasTraktConnection = UserConnection.hasConnectionByType(ConnectionTypes.TRAKT);
 	useEffect(() => {
 		if (pendingBlueskyHandle.current && hasBlueskyConnection) {
 			ModalCommands.popByType(AddConnectionModal);
 		}
 	}, [hasBlueskyConnection]);
+	useEffect(() => {
+		if (pendingTraktConnection.current && hasTraktConnection) {
+			ModalCommands.popByType(AddConnectionModal);
+		}
+	}, [hasTraktConnection]);
 	const hostRecord = useMemo(
 		() => (verificationData?.id ? `_fluxer.${verificationData.id}` : ''),
 		[verificationData?.id],
@@ -253,15 +273,17 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 					onChange={handleTypeChange}
 					data-flx="connection.add-connection-modal.select.type-change"
 				/>
-				<Input
-					data-flx="connection.add-connection-modal.input"
-					{...initiateForm.register('identifier', {required: true})}
-					autoFocus={true}
-					error={initiateForm.formState.errors.identifier?.message}
-					label={type === ConnectionTypes.BLUESKY ? i18n._(HANDLE_DESCRIPTOR) : i18n._(DOMAIN_DESCRIPTOR)}
-					placeholder={type === ConnectionTypes.BLUESKY ? 'username.bsky.social' : 'example.com'}
-					required={true}
-				/>
+				{type !== ConnectionTypes.TRAKT && (
+					<Input
+						data-flx="connection.add-connection-modal.input"
+						{...initiateForm.register('identifier', {required: true})}
+						autoFocus={true}
+						error={initiateForm.formState.errors.identifier?.message}
+						label={type === ConnectionTypes.BLUESKY ? i18n._(HANDLE_DESCRIPTOR) : i18n._(DOMAIN_DESCRIPTOR)}
+						placeholder={type === ConnectionTypes.BLUESKY ? 'username.bsky.social' : 'example.com'}
+						required={true}
+					/>
+				)}
 			</div>
 		</Form>
 	);
@@ -380,6 +402,8 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 					>
 						{type === ConnectionTypes.BLUESKY ? (
 							i18n._(CONNECT_WITH_PROVIDER_DESCRIPTOR, {providerName: BLUESKY_PROVIDER_NAME})
+						) : type === ConnectionTypes.TRAKT ? (
+							i18n._(CONNECT_WITH_PROVIDER_DESCRIPTOR, {providerName: TRAKT_PROVIDER_NAME})
 						) : (
 							<Trans>Continue</Trans>
 						)}

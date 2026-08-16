@@ -326,7 +326,7 @@ fn service_select(name: &str, label: &str, override_value: Option<bool>, resolve
 
 fn services_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
     let available = &policy.services_available;
-    if !available.gif && !available.youtube && !available.bluesky {
+    if !available.gif && !available.youtube && !available.bluesky && !available.trakt {
         return html! {
             div class="space-y-4 border-t border-neutral-200 pt-6" {
                 h3 class="text-sm font-semibold text-neutral-900" { "Optional services" }
@@ -369,6 +369,14 @@ fn services_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) 
                                 "Bluesky embeds",
                                 policy.services.bluesky_enabled,
                                 policy.services_resolved.bluesky_enabled,
+                            ))
+                        }
+                        @if available.trakt {
+                            (service_select(
+                                "policy_service_trakt",
+                                "Trakt connections",
+                                policy.services.trakt_enabled,
+                                policy.services_resolved.trakt_enabled,
                             ))
                         }
                     }
@@ -577,6 +585,28 @@ fn integrations_config_section(
                             ))
                             (text_input("integration_bluesky_key_id", "New signing key ID", "", "atproto-key-1"))
                             (password_input("integration_bluesky_private_key", "New private key", Some("Provide this only when adding or replacing runtime Bluesky keys.")))
+                        }
+                    }
+
+                    div class="space-y-4 border-t border-neutral-200 pt-6" {
+                        div class="flex flex-wrap items-center gap-2" {
+                            h3 class="text-sm font-semibold text-neutral-900" { "Trakt OAuth" }
+                            @if integrations.trakt.effective_enabled {
+                                (badge("Effective: enabled", BadgeVariant::Success))
+                            } @else {
+                                (badge("Effective: disabled", BadgeVariant::Default))
+                            }
+                            (secret_badge("Client secret", integrations.trakt.client_secret_set))
+                        }
+                        (checkbox("integration_trakt_enabled", "true", "Enable Trakt OAuth", integrations.trakt.effective_enabled, true))
+                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                            (text_input(
+                                "integration_trakt_client_id",
+                                "Client ID",
+                                integrations.trakt.client_id.as_deref().unwrap_or(""),
+                                "your-trakt-client-id",
+                            ))
+                            (password_input("integration_trakt_client_secret", "Client secret", Some("Provide this only when adding or replacing the Trakt client secret.")))
                         }
                     }
 

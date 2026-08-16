@@ -100,12 +100,14 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 				gif_enabled: policy.gif_enabled,
 				youtube_enabled: policy.youtube_enabled,
 				bluesky_enabled: policy.bluesky_enabled,
+				trakt_enabled: policy.trakt_enabled,
 			},
 			services_resolved: resolvedServices,
 			services_available: {
 				gif: integrations.gif.effective_available,
 				youtube: integrations.youtube.effective_available,
 				bluesky: integrations.bluesky.effective_enabled,
+				trakt: integrations.trakt.effective_enabled,
 			},
 		},
 		integrations,
@@ -337,6 +339,13 @@ export function InstanceConfigAdminController(app: HonoApp) {
 								}),
 								keys: readOptionalField(data.integrations.bluesky, 'keys'),
 							}
+						: undefined,
+					trakt: data.integrations.trakt
+						? omitUndefinedFields({
+								enabled: readOptionalField(data.integrations.trakt, 'enabled'),
+								client_id: readOptionalField(data.integrations.trakt, 'client_id'),
+								client_secret: readOptionalField(data.integrations.trakt, 'client_secret'),
+							})
 						: undefined,
 				});
 			}
@@ -591,6 +600,9 @@ async function applyInstancePolicyUpdate(
 		}
 		if (policy.services.bluesky_enabled !== undefined) {
 			patch.bluesky_enabled = policy.services.bluesky_enabled ?? null;
+		}
+		if (policy.services.trakt_enabled !== undefined) {
+			patch.trakt_enabled = policy.services.trakt_enabled ?? null;
 		}
 	}
 	if (Object.keys(patch).length > 0) {

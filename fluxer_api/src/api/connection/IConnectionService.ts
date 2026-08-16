@@ -47,4 +47,10 @@ export abstract class IConnectionService {
 	}>;
 
 	abstract createOrUpdateBlueskyConnection(userId: UserID, did: string, handle: string): Promise<UserConnectionRow>;
+
+	abstract createOrUpdateTraktConnection(
+		userId: UserID,
+		traktUserId: string,
+		username: string,
+	): Promise<UserConnectionRow>;
 }

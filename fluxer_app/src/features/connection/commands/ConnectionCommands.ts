@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
-import {BLUESKY_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {BLUESKY_PROVIDER_NAME, TRAKT_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import UserConnection from '@app/features/connection/state/UserConnection';
 import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -55,6 +55,10 @@ const CONNECTIONS_REORDERED_DESCRIPTOR = msg({
 const logger = new Logger('Connections');
 
 interface BlueskyAuthorizeResponse {
+	authorize_url: string;
+}
+
+interface TraktAuthorizeResponse {
 	authorize_url: string;
 }
 
@@ -132,6 +136,20 @@ export async function authorizeBlueskyConnection(i18n: I18n, handle: string): Pr
 		showErrorModal(i18n, error, {
 			...FAILED_TO_START_AUTHORISATION_DESCRIPTOR,
 			values: {blueskyProviderName: BLUESKY_PROVIDER_NAME},
+		});
+		throw error;
+	}
+}
+
+export async function authorizeTraktConnection(i18n: I18n): Promise<void> {
+	try {
+		const response = await http.post<TraktAuthorizeResponse>(Endpoints.TRAKT_AUTHORIZE, {body: {}});
+		window.open(response.body.authorize_url, '_blank');
+	} catch (error) {
+		logger.error('Failed to start Trakt OAuth flow:', error);
+		showErrorModal(i18n, error, {
+			...FAILED_TO_START_AUTHORISATION_DESCRIPTOR,
+			values: {blueskyProviderName: TRAKT_PROVIDER_NAME},
 		});
 		throw error;
 	}

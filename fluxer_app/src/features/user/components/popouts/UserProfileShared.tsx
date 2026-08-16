@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BLUESKY_PROVIDER_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {BLUESKY_PROVIDER_NAME, PRODUCT_NAME, TRAKT_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import {AddRoleButton, RoleList} from '@app/features/guild/components/RoleManagement';
@@ -18,6 +18,7 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {BlueskyIcon} from '@app/features/ui/components/icons/BlueskyIcon';
+import {TraktIcon} from '@app/features/ui/components/icons/TraktIcon';
 import {FluxerIcon} from '@app/features/ui/components/icons/FluxerIcon';
 import {UnverifiedConnectionIcon} from '@app/features/ui/components/icons/UnverifiedConnectionIcon';
 import {VerifiedConnectionIcon} from '@app/features/ui/components/icons/VerifiedConnectionIcon';
@@ -460,7 +461,13 @@ export const UserProfileRoles: React.FC<{
 });
 
 function getConnectionUrl(type: string, name: string): string {
-	return type === ConnectionTypes.BLUESKY ? `https://bsky.app/profile/${name}` : `https://${name}`;
+	if (type === ConnectionTypes.BLUESKY) {
+		return `https://bsky.app/profile/${name}`;
+	}
+	if (type === ConnectionTypes.TRAKT) {
+		return `https://trakt.tv/users/${name}`;
+	}
+	return `https://${name}`;
 }
 
 const ConnectionCard: React.FC<{
@@ -470,12 +477,19 @@ const ConnectionCard: React.FC<{
 }> = ({connection, onLinkClick, mobile}) => {
 	const {i18n} = useLingui();
 	const url = getConnectionUrl(connection.type, connection.name);
-	const iconLabel = connection.type === ConnectionTypes.BLUESKY ? BLUESKY_PROVIDER_NAME : i18n._(DOMAIN_DESCRIPTOR);
+	const iconLabel =
+		connection.type === ConnectionTypes.BLUESKY
+			? BLUESKY_PROVIDER_NAME
+			: connection.type === ConnectionTypes.TRAKT
+				? TRAKT_PROVIDER_NAME
+				: i18n._(DOMAIN_DESCRIPTOR);
 	const icon = (
 		<Tooltip text={iconLabel} data-flx="user.user-profile-shared.connection-card.tooltip">
 			<div className={styles.connectionIcon} data-flx="user.user-profile-shared.connection-card.connection-icon">
 				{connection.type === ConnectionTypes.BLUESKY ? (
 					<BlueskyIcon size={18} data-flx="user.user-profile-shared.connection-card.bluesky-icon" />
+				) : connection.type === ConnectionTypes.TRAKT ? (
+					<TraktIcon size={18} data-flx="user.user-profile-shared.connection-card.trakt-icon" />
 				) : (
 					<GlobeSimpleIcon
 						size={remFromPx(18)}
@@ -643,6 +657,11 @@ export const UserProfileConnections: React.FC<{
 											<BlueskyIcon
 												size={16}
 												data-flx="user.user-profile-shared.user-profile-connections.bluesky-icon"
+											/>
+										) : connection.type === ConnectionTypes.TRAKT ? (
+											<TraktIcon
+												size={16}
+												data-flx="user.user-profile-shared.user-profile-connections.trakt-icon"
 											/>
 										) : (
 											<GlobeSimpleIcon

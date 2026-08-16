@@ -8,7 +8,7 @@ import {
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
 import {Config} from '../Config';
-import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '../config/APIConfig';
+import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig, TraktOAuthConfig} from '../config/APIConfig';
 import {sanitizeLimitConfigForInstance} from '../constants/LimitConfig';
 import {fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
 import type {InstanceConfigurationRow} from '../database/types/InstanceConfigTypes';
@@ -85,6 +85,7 @@ export interface InstancePolicyConfig {
 	gif_enabled: boolean | null;
 	youtube_enabled: boolean | null;
 	bluesky_enabled: boolean | null;
+	trakt_enabled: boolean | null;
 }
 
 interface InstanceCommunityPublicConfig {
@@ -97,6 +98,7 @@ interface InstanceServicesPublicConfig {
 	gif_enabled: boolean;
 	youtube_enabled: boolean;
 	bluesky_enabled: boolean;
+	trakt_enabled: boolean;
 }
 
 export type InstanceCaptchaProvider = 'hcaptcha' | 'turnstile' | 'none';
@@ -150,12 +152,19 @@ interface InstanceBlueskyIntegrationConfig {
 	keys: Array<InstanceBlueskyKeyIntegrationConfig>;
 }
 
+interface InstanceTraktIntegrationConfig {
+	enabled: boolean | null;
+	client_id: string | null;
+	client_secret: string | null;
+}
+
 interface InstanceIntegrationsConfig {
 	gif: InstanceGifIntegrationConfig;
 	youtube: InstanceYoutubeIntegrationConfig;
 	captcha: InstanceCaptchaIntegrationConfig;
 	email: InstanceEmailIntegrationConfig;
 	bluesky: InstanceBlueskyIntegrationConfig;
+	trakt: InstanceTraktIntegrationConfig;
 }
 
 interface InstanceGifEffectiveConfig {
@@ -218,6 +227,12 @@ interface InstanceIntegrationsAdminConfig {
 		policy_uri: string | null;
 		key_count: number;
 	};
+	trakt: {
+		enabled: boolean | null;
+		effective_enabled: boolean;
+		client_id: string | null;
+		client_secret_set: boolean;
+	};
 }
 
 interface InstanceAttachmentDecayConfig {
@@ -264,6 +279,7 @@ interface InstanceIntegrationsConfigPatch {
 	bluesky?: Partial<Omit<InstanceBlueskyIntegrationConfig, 'keys'>> & {
 		keys?: Array<Partial<InstanceBlueskyKeyIntegrationConfig>>;
 	};
+	trakt?: Partial<InstanceTraktIntegrationConfig>;
 }
 
 interface InstanceMediaConfigPatch {
@@ -404,6 +420,7 @@ const DEFAULT_INSTANCE_POLICY_CONFIG: InstancePolicyConfig = {
 	gif_enabled: null,
 	youtube_enabled: null,
 	bluesky_enabled: null,
+	trakt_enabled: null,
 };
 
 function isPremiumMode(value: unknown): value is InstancePremiumMode {
@@ -428,6 +445,7 @@ function normalizeInstancePolicyConfig(value: unknown): InstancePolicyConfig {
 		gif_enabled: normalizeNullableBoolean(value.gif_enabled),
 		youtube_enabled: normalizeNullableBoolean(value.youtube_enabled),
 		bluesky_enabled: normalizeNullableBoolean(value.bluesky_enabled),
+		trakt_enabled: normalizeNullableBoolean(value.trakt_enabled),
 	};
 }
 
@@ -467,6 +485,11 @@ const DEFAULT_INSTANCE_INTEGRATIONS_CONFIG: InstanceIntegrationsConfig = {
 		tos_uri: null,
 		policy_uri: null,
 		keys: [],
+	},
+	trakt: {
+		enabled: null,
+		client_id: null,
+		client_secret: null,
 	},
 };
 
@@ -543,6 +566,7 @@ function normalizeInstanceIntegrationsConfig(value: unknown): InstanceIntegratio
 	const email = isJsonRecord(value.email) ? value.email : {};
 	const smtp = isJsonRecord(email.smtp) ? email.smtp : {};
 	const bluesky = isJsonRecord(value.bluesky) ? value.bluesky : {};
+	const trakt = isJsonRecord(value.trakt) ? value.trakt : {};
 	const blueskyKeys = Array.isArray(bluesky.keys)
 		? bluesky.keys.flatMap((entry) => {
 				const normalized = normalizeBlueskyKey(entry);
@@ -585,6 +609,11 @@ function normalizeInstanceIntegrationsConfig(value: unknown): InstanceIntegratio
 			tos_uri: normalizePublicString(bluesky.tos_uri),
 			policy_uri: normalizePublicString(bluesky.policy_uri),
 			keys: blueskyKeys,
+		},
+		trakt: {
+			enabled: normalizeNullableBoolean(trakt.enabled),
+			client_id: normalizePublicString(trakt.client_id),
+			client_secret: normalizeSecretString(trakt.client_secret),
 		},
 	};
 }
@@ -1131,6 +1160,10 @@ export class InstanceConfigRepository {
 				...(config.bluesky ?? {}),
 				keys: config.bluesky?.keys ?? current.bluesky.keys,
 			},
+			trakt: {
+				...current.trakt,
+				...(config.trakt ?? {}),
+			},
 		});
 		await this.setConfig(INSTANCE_INTEGRATIONS_CONFIG_KEY, JSON.stringify(next));
 		return next;
@@ -1296,14 +1329,30 @@ export class InstanceConfigRepository {
 		};
 	}
 
+	async getEffectiveTraktConfig(): Promise<TraktOAuthConfig> {
+		const integrations = await this.getInstanceIntegrationsConfig();
+		const clientId = integrations.trakt.client_id ?? Config.auth.trakt.client_id;
+		const clientSecret = integrations.trakt.client_secret ?? Config.auth.trakt.client_secret;
+		const enabled =
+			(integrations.trakt.enabled ?? Config.auth.trakt.enabled) &&
+			clientId.trim().length > 0 &&
+			clientSecret.trim().length > 0;
+		return {
+			enabled,
+			client_id: clientId,
+			client_secret: clientSecret,
+		};
+	}
+
 	async getInstanceIntegrationsAdminConfig(): Promise<InstanceIntegrationsAdminConfig> {
-		const [integrations, gif, youtubeApiKey, captcha, email, bluesky] = await Promise.all([
+		const [integrations, gif, youtubeApiKey, captcha, email, bluesky, trakt] = await Promise.all([
 			this.getInstanceIntegrationsConfig(),
 			this.getEffectiveGifConfig(),
 			this.getEffectiveYoutubeApiKey(),
 			this.getEffectiveCaptchaConfig(),
 			this.getEffectiveEmailConfig(),
 			this.getEffectiveBlueskyConfig(),
+			this.getEffectiveTraktConfig(),
 		]);
 		return {
 			gif: {
@@ -1352,6 +1401,13 @@ export class InstanceConfigRepository {
 				policy_uri: bluesky.policy_uri || null,
 				key_count: bluesky.keys.length,
 			},
+			trakt: {
+				enabled: integrations.trakt.enabled,
+				effective_enabled: trakt.enabled,
+				client_id: trakt.client_id || null,
+				client_secret_set:
+					secretIsSet(integrations.trakt.client_secret) || secretIsSet(Config.auth.trakt.client_secret),
+			},
 		};
 	}
 
@@ -1365,16 +1421,18 @@ export class InstanceConfigRepository {
 	}
 
 	async getResolvedServicesConfig(): Promise<InstanceServicesPublicConfig> {
-		const [policy, gif, youtubeApiKey, bluesky] = await Promise.all([
+		const [policy, gif, youtubeApiKey, bluesky, trakt] = await Promise.all([
 			this.getInstancePolicyConfig(),
 			this.getEffectiveGifConfig(),
 			this.getEffectiveYoutubeApiKey(),
 			this.getEffectiveBlueskyConfig(),
+			this.getEffectiveTraktConfig(),
 		]);
 		return {
 			gif_enabled: policy.gif_enabled ?? gif.available,
 			youtube_enabled: policy.youtube_enabled ?? Boolean(youtubeApiKey),
 			bluesky_enabled: policy.bluesky_enabled ?? bluesky.enabled,
+			trakt_enabled: policy.trakt_enabled ?? trakt.enabled,
 		};
 	}
 

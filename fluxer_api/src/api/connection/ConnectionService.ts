@@ -9,11 +9,13 @@ import {
 } from '@fluxer/constants/src/ConnectionConstants';
 import type {UserID} from '../BrandedTypes';
 import type {IBlueskyOAuthService} from '../bluesky/IBlueskyOAuthService';
+import type {ITraktOAuthService} from '../trakt/ITraktOAuthService';
 import type {UserConnectionRow} from '../database/types/ConnectionTypes';
 import type {IGatewayService} from '../infrastructure/IGatewayService';
 import {mapConnectionToResponse} from './ConnectionMappers';
 import {createDomainConnectionId} from './DomainConnectionId';
 import {BlueskyOAuthNotEnabledError} from './errors/BlueskyOAuthNotEnabledError';
+import {TraktOAuthNotEnabledError} from './errors/TraktOAuthNotEnabledError';
 import {ConnectionAlreadyExistsError} from './errors/ConnectionAlreadyExistsError';
 import {ConnectionInvalidTypeError} from './errors/ConnectionInvalidTypeError';
 import {ConnectionLimitReachedError} from './errors/ConnectionLimitReachedError';
@@ -23,6 +25,7 @@ import type {IConnectionRepository, UpdateConnectionParams} from './IConnectionR
 import {IConnectionService, type InitiateConnectionResult} from './IConnectionService';
 import {BlueskyOAuthVerifier} from './verification/BlueskyOAuthVerifier';
 import {DomainConnectionVerifier} from './verification/DomainConnectionVerifier';
+import {TraktOAuthVerifier} from './verification/TraktOAuthVerifier';
 import type {IConnectionVerifier} from './verification/IConnectionVerifier';
 
 export class ConnectionService extends IConnectionService {
@@ -30,6 +33,7 @@ export class ConnectionService extends IConnectionService {
 		private readonly repository: IConnectionRepository,
 		private readonly gateway: IGatewayService,
 		private readonly blueskyOAuthService: IBlueskyOAuthService,
+		private readonly traktOAuthService: ITraktOAuthService,
 	) {
 		super();
 	}
@@ -50,6 +54,9 @@ export class ConnectionService extends IConnectionService {
 	private assertConnectionTypeCanBeCreated(type: ConnectionType): void {
 		if (type === ConnectionTypes.BLUESKY) {
 			throw new BlueskyOAuthNotEnabledError();
+		}
+		if (type === ConnectionTypes.TRAKT) {
+			throw new TraktOAuthNotEnabledError();
 		}
 		if (type !== ConnectionTypes.DOMAIN) {
 			throw new ConnectionInvalidTypeError();
@@ -143,6 +150,9 @@ export class ConnectionService extends IConnectionService {
 		if (!connection) {
 			throw new ConnectionNotFoundError();
 		}
+		if (connectionType === ConnectionTypes.TRAKT) {
+			await this.traktOAuthService.revoke(connection.identifier);
+		}
 		await this.repository.delete(userId, connectionType, connectionId);
 		await this.dispatchConnectionsUpdate(userId);
 	}
@@ -219,6 +229,44 @@ export class ConnectionService extends IConnectionService {
 		return created;
 	}
 
+	async createOrUpdateTraktConnection(
+		userId: UserID,
+		traktUserId: string,
+		username: string,
+	): Promise<UserConnectionRow> {
+		const existing = await this.repository.findByTypeAndIdentifier(userId, ConnectionTypes.TRAKT, traktUserId);
+		if (existing) {
+			const now = new Date();
+			await this.repository.update(userId, ConnectionTypes.TRAKT, existing.connection_id, {
+				name: username,
+				verified: true,
+				verified_at: existing.verified_at ?? now,
+				last_verified_at: now,
+			});
+			const updated = await this.repository.findById(userId, ConnectionTypes.TRAKT, existing.connection_id);
+			await this.dispatchConnectionsUpdate(userId);
+			return updated!;
+		}
+		const count = await this.requireAvailableConnectionSlot(userId);
+		const connectionId = randomUUID();
+		const now = new Date();
+		const created = await this.repository.create({
+			user_id: userId,
+			connection_id: connectionId,
+			connection_type: ConnectionTypes.TRAKT,
+			identifier: traktUserId,
+			name: username,
+			visibility_flags: ConnectionVisibilityFlags.EVERYONE,
+			sort_order: count,
+			verification_token: '',
+			verified: true,
+			verified_at: now,
+			last_verified_at: now,
+		});
+		await this.dispatchConnectionsUpdate(userId);
+		return created;
+	}
+
 	async revalidateConnection(connection: UserConnectionRow): Promise<{
 		isValid: boolean;
 		updateParams: UpdateConnectionParams | null;
@@ -255,6 +303,9 @@ export class ConnectionService extends IConnectionService {
 	private getVerifier(type: ConnectionType): IConnectionVerifier {
 		if (type === ConnectionTypes.BLUESKY) {
 			return new BlueskyOAuthVerifier(this.blueskyOAuthService);
+		}
+		if (type === ConnectionTypes.TRAKT) {
+			return new TraktOAuthVerifier(this.traktOAuthService);
 		}
 		if (type === ConnectionTypes.DOMAIN) {
 			return new DomainConnectionVerifier();

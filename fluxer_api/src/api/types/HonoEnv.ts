@@ -14,6 +14,7 @@ import type {DesktopHandoffService} from '../auth/services/DesktopHandoffService
 import type {SsoService} from '../auth/services/SsoService';
 import type {ApplicationID, UserID} from '../BrandedTypes';
 import type {IBlueskyOAuthService} from '../bluesky/IBlueskyOAuthService';
+import type {ITraktOAuthService} from '../trakt/ITraktOAuthService';
 import type {IChannelRepository} from '../channel/IChannelRepository';
 import type {ChannelRequestService} from '../channel/services/ChannelRequestService';
 import type {ChannelService} from '../channel/services/ChannelService';
@@ -124,6 +125,7 @@ export interface HonoEnv {
 		connectionService: ConnectionService;
 		connectionRequestService: ConnectionRequestService;
 		blueskyOAuthService: IBlueskyOAuthService;
+		traktOAuthService: ITraktOAuthService;
 		donationService: DonationService;
 		downloadService: DownloadService;
 		streamPreviewService: StreamPreviewService;

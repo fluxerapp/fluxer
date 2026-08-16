@@ -451,6 +451,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		gif: false,
 		youtube: false,
 		bluesky: false,
+		trakt: false,
 	});
 	const [premiumMode, setPremiumMode] = useState<PremiumMode>('mirror');
 	const [assets, setAssets] = useState<ReadonlyArray<BrandingAssetState>>(() =>
@@ -566,6 +567,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 			gif: next.policy.services_resolved.gif_enabled,
 			youtube: next.policy.services_resolved.youtube_enabled,
 			bluesky: next.policy.services_resolved.bluesky_enabled,
+			trakt: next.policy.services_resolved.trakt_enabled,
 		});
 		setIntegrationDraft((current) => ({
 			...current,
@@ -640,6 +642,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 					integrationDraft.blueskyEnabled &&
 					integrationDraft.blueskyKeyId.trim().length > 0 &&
 					integrationDraft.blueskyPrivateKey.trim().length > 0),
+			trakt: config?.policy.services_available.trakt ?? false,
 		}),
 		[config, integrationDraft],
 	);
@@ -773,6 +776,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 						gif_enabled: serviceAvailability.gif ? serviceSelection.gif : undefined,
 						youtube_enabled: serviceAvailability.youtube ? serviceSelection.youtube : undefined,
 						bluesky_enabled: serviceAvailability.bluesky ? serviceSelection.bluesky : undefined,
+						trakt_enabled: serviceAvailability.trakt ? serviceSelection.trakt : undefined,
 					},
 				},
 			});

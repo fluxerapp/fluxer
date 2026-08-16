@@ -59,6 +59,7 @@ import {
 	getVoiceTopology,
 	getWorkerService,
 	resolveBlueskyOAuthService,
+	resolveTraktOAuthService,
 } from '../middleware/ServiceRegistry';
 import {
 	createUserCacheService,
@@ -206,7 +207,13 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	const gatewayService = getGatewayService();
 	const instanceConfigRepository = getInstanceConfigRepository();
 	const blueskyOAuthService = await resolveBlueskyOAuthService(instanceConfigRepository);
-	const connectionService = new ConnectionService(connectionRepository, gatewayService, blueskyOAuthService);
+	const traktOAuthService = await resolveTraktOAuthService(instanceConfigRepository);
+	const connectionService = new ConnectionService(
+		connectionRepository,
+		gatewayService,
+		blueskyOAuthService,
+		traktOAuthService,
+	);
 	const mediaService = getMediaService();
 	const discriminatorService = getDiscriminatorService();
 	const ncmecSubmissionService = getNcmecSubmissionService();

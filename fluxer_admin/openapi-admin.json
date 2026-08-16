@@ -9749,6 +9749,11 @@
 					"BLUESKY_OAUTH_NOT_ENABLED",
 					"BLUESKY_OAUTH_SESSION_EXPIRED",
 					"BLUESKY_OAUTH_STATE_INVALID",
+					"TRAKT_OAUTH_AUTHORIZATION_FAILED",
+					"TRAKT_OAUTH_CALLBACK_FAILED",
+					"TRAKT_OAUTH_NOT_ENABLED",
+					"TRAKT_OAUTH_SESSION_EXPIRED",
+					"TRAKT_OAUTH_STATE_INVALID",
 					"ACCOUNT_SCHEDULED_FOR_DELETION",
 					"ACCOUNT_SUSPENDED_PERMANENTLY",
 					"ACCOUNT_SUSPENDED_TEMPORARILY",
@@ -12553,27 +12558,30 @@
 								"properties": {
 									"gif_enabled": {"nullable": true, "type": "boolean"},
 									"youtube_enabled": {"nullable": true, "type": "boolean"},
-									"bluesky_enabled": {"nullable": true, "type": "boolean"}
+									"bluesky_enabled": {"nullable": true, "type": "boolean"},
+									"trakt_enabled": {"nullable": true, "type": "boolean"}
 								},
-								"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled"]
+								"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled", "trakt_enabled"]
 							},
 							"services_resolved": {
 								"type": "object",
 								"properties": {
 									"gif_enabled": {"type": "boolean"},
 									"youtube_enabled": {"type": "boolean"},
-									"bluesky_enabled": {"type": "boolean"}
+									"bluesky_enabled": {"type": "boolean"},
+									"trakt_enabled": {"type": "boolean"}
 								},
-								"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled"]
+								"required": ["gif_enabled", "youtube_enabled", "bluesky_enabled", "trakt_enabled"]
 							},
 							"services_available": {
 								"type": "object",
 								"properties": {
 									"gif": {"type": "boolean"},
 									"youtube": {"type": "boolean"},
-									"bluesky": {"type": "boolean"}
+									"bluesky": {"type": "boolean"},
+									"trakt": {"type": "boolean"}
 								},
-								"required": ["gif", "youtube", "bluesky"]
+								"required": ["gif", "youtube", "bluesky", "trakt"]
 							}
 						},
 						"required": [
@@ -12679,9 +12687,19 @@
 									"policy_uri",
 									"key_count"
 								]
+							},
+							"trakt": {
+								"type": "object",
+								"properties": {
+									"enabled": {"nullable": true, "type": "boolean"},
+									"effective_enabled": {"type": "boolean"},
+									"client_id": {"nullable": true, "type": "string"},
+									"client_secret_set": {"type": "boolean"}
+								},
+								"required": ["enabled", "effective_enabled", "client_id", "client_secret_set"]
 							}
 						},
-						"required": ["gif", "youtube", "captcha", "email", "bluesky"]
+						"required": ["gif", "youtube", "captcha", "email", "bluesky", "trakt"]
 					},
 					"media": {
 						"type": "object",
@@ -13044,6 +13062,15 @@
 										"maxItems": 8
 									}
 								}
+							},
+							"trakt": {
+								"nullable": true,
+								"type": "object",
+								"properties": {
+									"enabled": {"nullable": true, "type": "boolean"},
+									"client_id": {"nullable": true, "type": "string", "maxLength": 255},
+									"client_secret": {"nullable": true, "type": "string", "maxLength": 4096}
+								}
 							}
 						}
 					},
@@ -13110,7 +13137,8 @@
 								"properties": {
 									"gif_enabled": {"nullable": true, "type": "boolean"},
 									"youtube_enabled": {"nullable": true, "type": "boolean"},
-									"bluesky_enabled": {"nullable": true, "type": "boolean"}
+									"bluesky_enabled": {"nullable": true, "type": "boolean"},
+									"trakt_enabled": {"nullable": true, "type": "boolean"}
 								}
 							}
 						}

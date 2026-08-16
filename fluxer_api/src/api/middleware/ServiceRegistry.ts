@@ -8,8 +8,11 @@ import {BillingRepository} from '../billing/repositories/BillingRepository';
 import {BlueskyOAuthService} from '../bluesky/BlueskyOAuthService';
 import {DisabledBlueskyOAuthService} from '../bluesky/DisabledBlueskyOAuthService';
 import type {IBlueskyOAuthService} from '../bluesky/IBlueskyOAuthService';
+import {DisabledTraktOAuthService} from '../trakt/DisabledTraktOAuthService';
+import type {ITraktOAuthService} from '../trakt/ITraktOAuthService';
+import {TraktOAuthService} from '../trakt/TraktOAuthService';
 import {Config} from '../Config';
-import type {BlueskyOAuthConfig} from '../config/APIConfig';
+import type {BlueskyOAuthConfig, TraktOAuthConfig} from '../config/APIConfig';
 import {DisabledLiveKitService} from '../infrastructure/DisabledLiveKitService';
 import {GatewayService as ProdGatewayService} from '../infrastructure/GatewayService';
 import type {IGatewayService} from '../infrastructure/IGatewayService';
@@ -248,6 +251,70 @@ export async function resolveBlueskyOAuthService(
 			});
 	}
 	return _blueskyOAuthInitializationPromise;
+}
+
+let _injectedTraktOAuthService: ITraktOAuthService | undefined;
+let _traktOAuthService: ITraktOAuthService | undefined;
+let _traktOAuthInitializationPromise: Promise<ITraktOAuthService> | null = null;
+let _traktOAuthConfigSignature: string | null = null;
+let _traktOAuthInitializationSignature: string | null = null;
+let _disabledTraktOAuthService: DisabledTraktOAuthService | undefined;
+
+export function setInjectedTraktOAuthService(service: ITraktOAuthService | undefined): void {
+	_injectedTraktOAuthService = service;
+}
+
+function getDisabledTraktOAuthService(): DisabledTraktOAuthService {
+	if (!_disabledTraktOAuthService) {
+		_disabledTraktOAuthService = new DisabledTraktOAuthService();
+	}
+	return _disabledTraktOAuthService;
+}
+
+function getTraktOAuthConfigSignature(config: TraktOAuthConfig): string {
+	return JSON.stringify(config);
+}
+
+export async function resolveTraktOAuthService(
+	instanceConfigRepository?: Pick<InstanceConfigRepository, 'getEffectiveTraktConfig'>,
+): Promise<ITraktOAuthService> {
+	if (_injectedTraktOAuthService) {
+		return _injectedTraktOAuthService;
+	}
+	const traktConfig = instanceConfigRepository
+		? await instanceConfigRepository.getEffectiveTraktConfig()
+		: Config.auth.trakt;
+	const signature = getTraktOAuthConfigSignature(traktConfig);
+	if (_traktOAuthService !== undefined && _traktOAuthConfigSignature === signature) {
+		return _traktOAuthService;
+	}
+	if (!traktConfig.enabled) {
+		_traktOAuthService = getDisabledTraktOAuthService();
+		_traktOAuthConfigSignature = signature;
+		return _traktOAuthService;
+	}
+	if (traktConfig.client_id.trim().length === 0 || traktConfig.client_secret.trim().length === 0) {
+		Logger.warn('Trakt OAuth is enabled but client credentials are missing – disabling.');
+		_traktOAuthService = getDisabledTraktOAuthService();
+		_traktOAuthConfigSignature = signature;
+		return _traktOAuthService;
+	}
+	if (!_traktOAuthInitializationPromise || _traktOAuthInitializationSignature !== signature) {
+		_traktOAuthInitializationSignature = signature;
+		_traktOAuthInitializationPromise = Promise.resolve(
+			TraktOAuthService.create(traktConfig, getKVClient(), Config.endpoints.apiPublic),
+		)
+			.then((service) => {
+				_traktOAuthService = service;
+				_traktOAuthConfigSignature = signature;
+				return service;
+			})
+			.finally(() => {
+				_traktOAuthInitializationPromise = null;
+				_traktOAuthInitializationSignature = null;
+			});
+	}
+	return _traktOAuthInitializationPromise;
 }
 
 let voiceTopology: VoiceTopology | null = null;

@@ -179,6 +179,11 @@ export interface MasterConfig {
 				private_key_path?: string;
 			}>;
 		};
+		trakt: {
+			enabled: boolean;
+			client_id: string;
+			client_secret: string;
+		};
 	};
 	cookie: {
 		domain: string;

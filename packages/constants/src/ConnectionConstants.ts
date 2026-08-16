@@ -5,6 +5,7 @@ import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 export const ConnectionTypes = {
 	BLUESKY: 'bsky',
 	DOMAIN: 'domain',
+	TRAKT: 'trakt',
 } as const;
 
 export type ConnectionType = ValueOf<typeof ConnectionTypes>;

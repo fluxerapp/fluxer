@@ -57,6 +57,15 @@ class UserConnection {
 		return false;
 	}
 
+	hasConnectionByType(type: ConnectionType): boolean {
+		for (const connection of this.connections.values()) {
+			if (connection.type === type) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	reset(): void {
 		this.connections.clear();
 		this.fetched = false;

@@ -298,6 +298,14 @@ const SERVICE_BLUESKY_DESC_DESCRIPTOR = msg({
 	message: 'Let people link their Bluesky account to their profile.',
 	comment: 'Description for the Bluesky connections service toggle in the setup wizard.',
 });
+const SERVICE_TRAKT_LABEL_DESCRIPTOR = msg({
+	message: 'Trakt connections',
+	comment: 'Label for the Trakt connections service toggle in the setup wizard.',
+});
+const SERVICE_TRAKT_DESC_DESCRIPTOR = msg({
+	message: 'Let people link their Trakt account to their profile.',
+	comment: 'Description for the Trakt connections service toggle in the setup wizard.',
+});
 
 const PREMIUM_TITLE_DESCRIPTOR = msg({
 	message: 'Choose the premium model',
@@ -812,12 +820,14 @@ export interface ServiceAvailability {
 	gif: boolean;
 	youtube: boolean;
 	bluesky: boolean;
+	trakt: boolean;
 }
 
 export interface ServiceSelection {
 	gif: boolean;
 	youtube: boolean;
 	bluesky: boolean;
+	trakt: boolean;
 }
 
 export interface MediaExpiryDraft {
@@ -1429,7 +1439,7 @@ export const ServicesStep = observer(
 		onToggle: (service: keyof ServiceSelection, value: boolean) => void;
 	}) => {
 		const {i18n} = useLingui();
-		const anyAvailable = available.gif || available.youtube || available.bluesky;
+		const anyAvailable = available.gif || available.youtube || available.bluesky || available.trakt;
 		return (
 			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.services-step">
 				<StepHeader title={i18n._(SERVICES_TITLE_DESCRIPTOR)} body={i18n._(SERVICES_BODY_DESCRIPTOR)} />
@@ -1466,6 +1476,16 @@ export const ServicesStep = observer(
 						onChange={(value) => onToggle('bluesky', value)}
 						disabled={disabled}
 						data-flx="app.self-hosted-setup-wizard-gate.service-bluesky-switch"
+					/>
+				)}
+				{available.trakt && (
+					<Switch
+						label={i18n._(SERVICE_TRAKT_LABEL_DESCRIPTOR)}
+						description={i18n._(SERVICE_TRAKT_DESC_DESCRIPTOR)}
+						value={selection.trakt}
+						onChange={(value) => onToggle('trakt', value)}
+						disabled={disabled}
+						data-flx="app.self-hosted-setup-wizard-gate.service-trakt-switch"
 					/>
 				)}
 			</section>

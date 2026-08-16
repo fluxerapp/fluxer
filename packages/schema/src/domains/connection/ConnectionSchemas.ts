@@ -18,6 +18,7 @@ const ConnectionTypeSchema = withOpenApiType(
 		[
 			[ConnectionTypes.BLUESKY, 'BLUESKY', 'Bluesky social account connection'],
 			[ConnectionTypes.DOMAIN, 'DOMAIN', 'Custom domain ownership connection'],
+			[ConnectionTypes.TRAKT, 'TRAKT', 'Trakt.tv account connection'],
 		] as const,
 		'The type of external connection',
 	),

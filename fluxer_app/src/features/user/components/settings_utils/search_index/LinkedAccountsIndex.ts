@@ -25,6 +25,10 @@ const BLUESKY_DESCRIPTOR = msg({
 	message: 'Bluesky',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
+const TRAKT_DESCRIPTOR = msg({
+	message: 'Trakt',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
 const DOMAIN_DESCRIPTOR = msg({
 	message: 'Domain',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -56,6 +60,7 @@ export const linkedAccountsIndex: Array<SearchableSettingDescriptor> = [
 			LINKED_DESCRIPTOR,
 			ACCOUNTS_DESCRIPTOR,
 			BLUESKY_DESCRIPTOR,
+			TRAKT_DESCRIPTOR,
 			DOMAIN_DESCRIPTOR,
 			VERIFY_DESCRIPTOR,
 			VERIFICATION_DESCRIPTOR,

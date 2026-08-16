@@ -517,16 +517,19 @@ const InstancePolicyResponse = z.object({
 		gif_enabled: z.boolean().nullable(),
 		youtube_enabled: z.boolean().nullable(),
 		bluesky_enabled: z.boolean().nullable(),
+		trakt_enabled: z.boolean().nullable(),
 	}),
 	services_resolved: z.object({
 		gif_enabled: z.boolean(),
 		youtube_enabled: z.boolean(),
 		bluesky_enabled: z.boolean(),
+		trakt_enabled: z.boolean(),
 	}),
 	services_available: z.object({
 		gif: z.boolean(),
 		youtube: z.boolean(),
 		bluesky: z.boolean(),
+		trakt: z.boolean(),
 	}),
 });
 
@@ -604,6 +607,12 @@ const InstanceIntegrationsResponse = z.object({
 		tos_uri: z.string().nullable(),
 		policy_uri: z.string().nullable(),
 		key_count: z.number().int().min(0),
+	}),
+	trakt: z.object({
+		enabled: z.boolean().nullable(),
+		effective_enabled: z.boolean(),
+		client_id: z.string().nullable(),
+		client_secret_set: z.boolean(),
 	}),
 });
 
@@ -704,6 +713,13 @@ export const InstanceConfigUpdateRequest = z.object({
 						.optional(),
 				})
 				.nullish(),
+			trakt: z
+				.object({
+					enabled: z.boolean().nullish(),
+					client_id: z.string().trim().max(255).nullish(),
+					client_secret: z.string().trim().max(4096).nullish(),
+				})
+				.nullish(),
 		})
 		.nullish(),
 	media: z
@@ -734,6 +750,7 @@ export const InstanceConfigUpdateRequest = z.object({
 					gif_enabled: z.boolean().nullish(),
 					youtube_enabled: z.boolean().nullish(),
 					bluesky_enabled: z.boolean().nullish(),
+					trakt_enabled: z.boolean().nullish(),
 				})
 				.nullish(),
 		})

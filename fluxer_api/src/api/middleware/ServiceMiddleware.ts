@@ -99,6 +99,7 @@ import {
 	getVoiceTopology,
 	getWorkerService,
 	resolveBlueskyOAuthService,
+	resolveTraktOAuthService,
 } from './ServiceRegistry';
 import {
 	createUserCacheService,
@@ -413,7 +414,13 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		ipInfoService,
 	});
 	const blueskyOAuthService = await resolveBlueskyOAuthService(getInstanceConfigRepository());
-	const connectionService = new ConnectionService(connectionRepository, gatewayService, blueskyOAuthService);
+	const traktOAuthService = await resolveTraktOAuthService(getInstanceConfigRepository());
+	const connectionService = new ConnectionService(
+		connectionRepository,
+		gatewayService,
+		blueskyOAuthService,
+		traktOAuthService,
+	);
 	const favoriteMemeService = new FavoriteMemeService(
 		apiContext,
 		favoriteMemeRepository,
@@ -598,6 +605,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		new ConnectionRequestService(connectionService, Config.auth.connectionInitiationSecret),
 	);
 	ctx.set('blueskyOAuthService', blueskyOAuthService);
+	ctx.set('traktOAuthService', traktOAuthService);
 	ctx.set('streamPreviewService', getStreamPreviewService());
 	ctx.set('streamService', new StreamService(cacheService, channelService, gatewayService, getStreamPreviewService()));
 	ctx.set('downloadService', getDownloadService());
