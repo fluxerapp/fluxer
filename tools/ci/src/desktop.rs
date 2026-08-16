@@ -1825,8 +1825,8 @@ const FLUXER_WINDOWS_SIGNER_COMMON_NAME: &str = "Fluxer Platform AB";
 const THIRD_PARTY_PUBLISHER_ALLOWLIST: &[&str] = &[];
 const KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY: &[&str] = &["fluxer-vulkan-layer.win32-ia32-msvc.dll"];
 const WINDOWS_NATIVE_ADDON_STEMS: &[&str] = &[
+    "hardware-encoder",
     "webauthn",
-    "webrtc-sender",
     "win-process-loopback",
     "win-clipboard",
     "win-shell",

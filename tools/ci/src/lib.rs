@@ -39,7 +39,6 @@ enum Command {
     Gateway(gateway::GatewayArgs),
     Release(release::ReleaseArgs),
     ResolveCalver(calver::ResolveCalverArgs),
-    TestWebrtcSenderRust(desktop_native::TestWebrtcSenderRustArgs),
 }
 
 pub async fn run() -> Result<()> {
@@ -59,6 +58,5 @@ pub async fn run() -> Result<()> {
         Command::Gateway(args) => gateway::run_gateway(args),
         Command::Release(args) => release::run(args).await,
         Command::ResolveCalver(args) => calver::run(args),
-        Command::TestWebrtcSenderRust(args) => desktop_native::run_test_webrtc_sender_rust(args),
     }
 }

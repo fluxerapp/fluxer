@@ -36,6 +36,7 @@
 		]
 	},
 	"optionalDependencies": {
+		"@fluxer/hardware-encoder": "file:./native/hardware-encoder",
 		"@fluxer/linux-audio-capture": "file:./native/linux-audio-capture",
 		"@fluxer/linux-evdev": "file:./native/linux-evdev",
 		"@fluxer/linux-input-hook": "file:./native/linux-input-hook",
@@ -51,7 +52,6 @@
 		"@fluxer/platform-info": "file:./native/platform-info",
 		"@fluxer/system-hunspell": "file:./native/system-hunspell",
 		"@fluxer/webauthn": "file:./native/webauthn",
-		"@fluxer/webrtc-sender": "file:./native/webrtc-sender",
 		"@fluxer/win-clipboard": "file:./native/win-clipboard",
 		"@fluxer/win-shell": "file:./native/win-shell",
 		"@fluxer/win-toast": "file:./native/win-toast",

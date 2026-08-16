@@ -19,12 +19,6 @@ pub struct BuildDesktopNativeAddonArgs {
     addon_root: Option<PathBuf>,
 }
 
-#[derive(Debug, Args, Clone)]
-pub struct TestWebrtcSenderRustArgs {
-    #[arg(long)]
-    addon_root: Option<PathBuf>,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum DesktopNativeSpecialBuild {
     None,
@@ -63,6 +57,16 @@ const LINUX_AUDIO_CAPTURE_PKG_CONFIG: &[PkgConfigRequirement] = &[PkgConfigRequi
 }];
 
 const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
+    DesktopNativeAddon {
+        package_dir: "hardware-encoder",
+        package_name: "@fluxer/hardware-encoder",
+        crate_name: "fluxer_hardware_encoder",
+        node_file_stem: "hardware-encoder",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
     DesktopNativeAddon {
         package_dir: "linux-audio-capture",
         package_name: "@fluxer/linux-audio-capture",
@@ -214,16 +218,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         special: DesktopNativeSpecialBuild::Webauthn,
     },
     DesktopNativeAddon {
-        package_dir: "webrtc-sender",
-        package_name: "@fluxer/webrtc-sender",
-        crate_name: "fluxer_webrtc_sender",
-        node_file_stem: "webrtc-sender",
-        required_platform: None,
-        features: &["camera-native"],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
         package_dir: "win-clipboard",
         package_name: "@fluxer/win-clipboard",
         crate_name: "fluxer_win_clipboard",
@@ -292,19 +286,6 @@ pub fn run_build_desktop_native_addon(args: BuildDesktopNativeAddonArgs) -> Resu
         .unwrap_or_else(|| env::current_dir().context("Failed to resolve current directory"))?;
     let addon = resolve_addon(&addon_root)?;
     build_desktop_native_addon(&addon_root, addon)
-}
-
-pub fn run_test_webrtc_sender_rust(args: TestWebrtcSenderRustArgs) -> Result<()> {
-    let addon_root = args
-        .addon_root
-        .map(Ok)
-        .unwrap_or_else(|| env::current_dir().context("Failed to resolve current directory"))?;
-    run_command(
-        CommandSpec::new(resolve_cargo_bin())
-            .args(["test", "--features", "publisher,camera-native"])
-            .env("CARGO_INCREMENTAL", "0")
-            .current_dir(addon_root),
-    )
 }
 
 fn build_desktop_native_addon(addon_root: &Path, addon: &DesktopNativeAddon) -> Result<()> {

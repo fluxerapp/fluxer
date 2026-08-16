@@ -1,9 +1,0 @@
-// vim: ft=arm
-
-{% include "arm64fp16_mmm_8h_per_col.tmpliq" label:"per_col_min", op:"fmin", mr:mr, from:from, to:to %}
-{% include "arm64fp16_mmm_8h_per_col.tmpliq" label:"per_col_max", op:"fmax", mr:mr, from:from, to:to %}
-{% include "arm64fp16_mmm_8h_per_col.tmpliq" label:"per_col_mul", op:"fmul", mr:mr, from:from, to:to %}
-{% include "arm64fp16_mmm_8h_per_col.tmpliq" label:"per_col_add", op:"fadd", mr:mr, from:from, to:to %}
-{% include "arm64fp16_mmm_8h_per_col.tmpliq" label:"per_col_sub", op:"fsub", mr:mr, from:from, to:to %}
-{% include "arm64fp16_mmm_8h_per_col.tmpliq" label:"per_col_sub_flipped", op:"fsub", mr:mr, from:from, to:to, flipped: true%}
-

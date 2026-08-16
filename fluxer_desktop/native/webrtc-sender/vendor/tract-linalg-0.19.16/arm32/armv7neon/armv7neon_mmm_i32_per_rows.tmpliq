@@ -1,8 +1,0 @@
-// vim: ft=arm
-
-{% include "armv7neon_mmm_q_per_row.tmpliq" label:"per_row_min", op:"vmin.s32", mr:mr, from:from, to:to %}
-{% include "armv7neon_mmm_q_per_row.tmpliq" label:"per_row_max", op:"vmax.s32", mr:mr, from:from, to:to %}
-{% include "armv7neon_mmm_q_per_row.tmpliq" label:"per_row_mul", op:"vmul.s32", mr:mr, from:from, to:to %}
-{% include "armv7neon_mmm_q_per_row.tmpliq" label:"per_row_add", op:"vadd.s32", mr:mr, from:from, to:to %}
-{% include "armv7neon_mmm_q_per_row.tmpliq" label:"per_row_sub", op:"vsub.s32", mr:mr, from:from, to:to %}
-{% include "armv7neon_mmm_q_per_row.tmpliq" label:"per_row_sub_flipped", op:"vsub.s32", mr:mr, from:from, to:to, flipped:true%}

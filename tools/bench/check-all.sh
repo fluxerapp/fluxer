@@ -11,11 +11,9 @@ fluxer_desktop/native/rt-thread:tick
 fluxer_desktop/native/audio-mix:mix
 fluxer_desktop/native/screen-frame-bus:staging
 fluxer_desktop/native/screen-frame-bus:frame_pool
-fluxer_desktop/native/nv12-gpu-pack:pack
 fluxer_desktop/native/encoder-ring:ring
 fluxer_desktop/native/linux-audio-capture:end_to_end
 fluxer_desktop/native/linux-screen-capture:pipewire_callback
-fluxer_desktop/native/webrtc-sender:frame_bus
 fluxer_desktop/native/rust:native_core
 ENTRIES
 )
@@ -26,7 +24,6 @@ log() { printf '[check-all] %s\n' "$*" >&2; }
 
 pass_count=0
 fail_count=0
-skip_count=0
 failed_names=()
 
 while IFS= read -r entry; do
@@ -36,11 +33,6 @@ while IFS= read -r entry; do
   esac
   crate="${entry%%:*}"
   bench="${entry##*:}"
-  if [ "${BENCH_SKIP_GPU:-0}" = "1" ] && [ "$crate" = "fluxer_desktop/native/nv12-gpu-pack" ]; then
-    log "skip (gpu): $crate $bench"
-    skip_count=$((skip_count + 1))
-    continue
-  fi
   log "==> $crate :: $bench"
   if "$SCRIPT_DIR/check-regression.sh" "$REPO_ROOT/$crate" "$bench"; then
     pass_count=$((pass_count + 1))
@@ -50,8 +42,7 @@ while IFS= read -r entry; do
   fi
 done <<< "$ENTRIES"
 
-printf '\n[check-all] summary: %d passed, %d failed, %d skipped\n' \
-  "$pass_count" "$fail_count" "$skip_count"
+printf '\n[check-all] summary: %d passed, %d failed\n' "$pass_count" "$fail_count"
 
 if [ "$fail_count" -gt 0 ]; then
   printf '[check-all] failed entries:\n'

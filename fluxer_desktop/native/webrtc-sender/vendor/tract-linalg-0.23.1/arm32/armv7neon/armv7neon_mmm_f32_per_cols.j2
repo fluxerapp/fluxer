@@ -1,9 +1,0 @@
-// vim: ft=arm
-{% from "armv7neon_mmm_q_ops.j2" import per_col %}
-
-{{ per_col("per_col_min", "vmin.f32", mr, from, to) }}
-{{ per_col("per_col_max", "vmax.f32", mr, from, to) }}
-{{ per_col("per_col_mul", "vmul.f32", mr, from, to) }}
-{{ per_col("per_col_add", "vadd.f32", mr, from, to) }}
-{{ per_col("per_col_sub", "vsub.f32", mr, from, to) }}
-{{ per_col("per_col_sub_flipped", "vsub.f32", mr, from, to, flipped=true) }}

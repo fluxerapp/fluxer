@@ -19,8 +19,6 @@ members = [
 exclude = [
 	"fluxer_marketing",
 	"packages/markdown_parser/rust/fuzz",
-	"fluxer_desktop/native/webrtc-sender/vendor/tract-linalg-0.19.16",
-	"fluxer_desktop/native/webrtc-sender/vendor/tract-linalg-0.23.1",
 ]
 resolver = "2"
 

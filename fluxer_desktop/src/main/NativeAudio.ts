@@ -27,7 +27,6 @@ import {
 	isValidTargetPid,
 	normalizeTimestampUs,
 } from './NativeAudioValidation';
-import {createScreenAudioSinkHandleForSender, hasActiveNativeEngineForSender} from './NativeVoiceEngine';
 
 const logger = createChildLogger('NativeAudio');
 const requireModule = createRequire(import.meta.url);
@@ -41,8 +40,6 @@ interface NativeCaptureInstance {
 	removeListener(event: 'closed', listener: () => void): this;
 	start(): Promise<void> | void;
 	stop(): Promise<void> | void;
-	setScreenAudioSink?: (handle: unknown) => boolean;
-	clearScreenAudioSink?: () => void;
 	routingGraph?: () => VirtmicRoutingGraph | null;
 }
 
@@ -749,8 +746,6 @@ async function startNativeAudioCapture(
 		throw new Error('Native audio addon unavailable for this platform');
 	}
 	let firstFrameLogged = false;
-	let nativeSinkAttached = false;
-	let slowPathReported = false;
 	const session: ActiveNativeAudioSession = {
 		captureId,
 		capture,
@@ -772,19 +767,6 @@ async function startNativeAudioCapture(
 				stopActiveSession(session, 'stopped').catch((error) =>
 					logger.warn('stopActiveSession failed after sender destroyed', {captureId, error}),
 				);
-				return;
-			}
-			if (nativeSinkAttached) {
-				if (!slowPathReported) {
-					slowPathReported = true;
-					logger.error(
-						'Native screen-audio fast path stopped engaging: a captured frame reached the JS bridge even though the native engine sink is attached. Failing the capture so this critical regression surfaces immediately instead of silently downgrading to the crackle-prone path.',
-						{captureId, senderId: sender.id, sampleRate: frame.sampleRate, channels: frame.channels},
-					);
-					stopActiveSession(session, 'addon-error', 'native screen-audio fast path stopped engaging').catch((error) =>
-						logger.warn('stopActiveSession failed after native fast-path regression', {captureId, error}),
-					);
-				}
 				return;
 			}
 			try {
@@ -830,25 +812,6 @@ async function startNativeAudioCapture(
 	activeSessions.set(captureId, session);
 	rememberSenderSession(sender.id, captureId);
 	try {
-		if (hasActiveNativeEngineForSender(sender.id)) {
-			if (typeof capture.setScreenAudioSink !== 'function') {
-				throw new Error(
-					`Native screen-audio fast path unavailable for capture ${captureId}: capture binding lacks setScreenAudioSink (stale native build)`,
-				);
-			}
-			const screenAudioSink = createScreenAudioSinkHandleForSender(sender.id);
-			if (!screenAudioSink) {
-				throw new Error(
-					`Native screen-audio fast path unavailable for capture ${captureId}: native voice engine produced no sink handle for the active session`,
-				);
-			}
-			if (capture.setScreenAudioSink(screenAudioSink) !== true) {
-				throw new Error(
-					`Native screen-audio fast path unavailable for capture ${captureId}: native capture binding does not implement setScreenAudioSink (stale native build)`,
-				);
-			}
-			nativeSinkAttached = true;
-		}
 		await Promise.resolve(capture.start());
 	} catch (error) {
 		logger.error('Native audio capture failed to start', {captureId, error});

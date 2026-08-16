@@ -1,9 +1,0 @@
-// vim: set syntax=asm :
-{% from "fma_mmm_ymm_ops.j2" import per_row %}
-
-{{ per_row("per_row_min", "vminps", mr, from, to, type=type) }}
-{{ per_row("per_row_max", "vmaxps", mr, from, to, type=type) }}
-{{ per_row("per_row_add", "vaddps", mr, from, to, type=type) }}
-{{ per_row("per_row_mul", "vmulps", mr, from, to, type=type) }}
-{{ per_row("per_row_sub", "vsubps", mr, from, to, type=type) }}
-{{ per_row("per_row_sub_flipped", "vsubps", mr, from, to, type=type, flipped=true) }}

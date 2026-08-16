@@ -1686,6 +1686,9 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
     optionalDependencies:
+      '@fluxer/hardware-encoder':
+        specifier: file:./native/hardware-encoder
+        version: file:fluxer_desktop/native/hardware-encoder
       '@fluxer/linux-audio-capture':
         specifier: file:./native/linux-audio-capture
         version: file:fluxer_desktop/native/linux-audio-capture
@@ -1731,9 +1734,6 @@ importers:
       '@fluxer/webauthn':
         specifier: file:./native/webauthn
         version: file:fluxer_desktop/native/webauthn
-      '@fluxer/webrtc-sender':
-        specifier: file:./native/webrtc-sender
-        version: file:fluxer_desktop/native/webrtc-sender
       '@fluxer/win-clipboard':
         specifier: file:./native/win-clipboard
         version: file:fluxer_desktop/native/win-clipboard
@@ -4441,6 +4441,10 @@ packages:
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
+  '@fluxer/hardware-encoder@file:fluxer_desktop/native/hardware-encoder':
+    resolution: {directory: fluxer_desktop/native/hardware-encoder, type: directory}
+    cpu: [x64, arm64]
+
   '@fluxer/linux-audio-capture@file:fluxer_desktop/native/linux-audio-capture':
     resolution: {directory: fluxer_desktop/native/linux-audio-capture, type: directory}
     cpu: [x64, arm64]
@@ -4513,11 +4517,6 @@ packages:
   '@fluxer/webauthn@file:fluxer_desktop/native/webauthn':
     resolution: {directory: fluxer_desktop/native/webauthn, type: directory}
     cpu: [x64, arm64]
-
-  '@fluxer/webrtc-sender@file:fluxer_desktop/native/webrtc-sender':
-    resolution: {directory: fluxer_desktop/native/webrtc-sender, type: directory}
-    cpu: [x64, arm64]
-    os: [darwin, linux, win32]
 
   '@fluxer/win-clipboard@file:fluxer_desktop/native/win-clipboard':
     resolution: {directory: fluxer_desktop/native/win-clipboard, type: directory}
@@ -13856,6 +13855,9 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@fluxer/hardware-encoder@file:fluxer_desktop/native/hardware-encoder':
+    optional: true
+
   '@fluxer/linux-audio-capture@file:fluxer_desktop/native/linux-audio-capture':
     optional: true
 
@@ -13899,9 +13901,6 @@ snapshots:
     optional: true
 
   '@fluxer/webauthn@file:fluxer_desktop/native/webauthn':
-    optional: true
-
-  '@fluxer/webrtc-sender@file:fluxer_desktop/native/webrtc-sender':
     optional: true
 
   '@fluxer/win-clipboard@file:fluxer_desktop/native/win-clipboard':
@@ -19174,7 +19173,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.0
-      undici: 7.22.0
+      undici: 7.29.0
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0

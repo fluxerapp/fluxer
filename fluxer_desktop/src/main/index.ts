@@ -61,9 +61,12 @@ import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudio
 import {initializeMainI18n} from '@electron/main/MainI18n';
 import {createApplicationMenu} from '@electron/main/Menu';
 import {cleanupNativeAudio, registerNativeAudioHandlers} from '@electron/main/NativeAudio';
+import {
+	cleanupNativeHardwareEncoderHandlers,
+	registerNativeHardwareEncoderHandlers,
+} from '@electron/main/NativeHardwareEncoder';
 import {runNativeModulePreflight} from '@electron/main/NativeModulePreflight';
 import {cleanupNativeScreenCapture, registerNativeScreenCaptureHandlers} from '@electron/main/NativeScreenCapture';
-import {cleanupNativeVoiceEngine, registerNativeVoiceEngineHandlers} from '@electron/main/NativeVoiceEngine';
 import {appendOpenH264Switches} from '@electron/main/OpenH264Manager';
 import {startRpcServer, stopRpcServer} from '@electron/main/RpcServer';
 import {cleanupLinuxChromiumSpellcheckDictionaries} from '@electron/main/Spellcheck';
@@ -386,9 +389,9 @@ if (launchConfigurationError) {
 					log.error('[Init] Failed to register native screen capture handlers:', error);
 				}
 				try {
-					runStartupPhase('native-voice-engine-handlers', registerNativeVoiceEngineHandlers);
+					runStartupPhase('native-hardware-encoder-handlers', registerNativeHardwareEncoderHandlers);
 				} catch (error: unknown) {
-					log.error('[Init] Failed to register native voice engine handlers:', error);
+					log.error('[Init] Failed to register native hardware encoder handlers:', error);
 				}
 				try {
 					runStartupPhase('application-menu', createApplicationMenu);
@@ -472,9 +475,10 @@ if (launchConfigurationError) {
 			cleanupGlobalKeyHook();
 			cleanupNativeAudio();
 			cleanupNativeScreenCapture();
+			cleanupNativeHardwareEncoderHandlers();
 			cleanupVirtmic();
 			destroyDesktopTray();
-			const asyncCleanups: Array<Promise<unknown>> = [cleanupNativeVoiceEngine(), stopRpcServer()];
+			const asyncCleanups: Array<Promise<unknown>> = [stopRpcServer()];
 			if (netLog.currentlyLogging) {
 				asyncCleanups.push(
 					netLog.stopLogging().catch((error) => {
