@@ -16,6 +16,7 @@ import {
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import {GuildResponse, GuildVanityURLResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {z} from 'zod';
+import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
 import {requireSudoMode} from '../../auth/services/SudoVerificationService';
 import {createGuildID} from '../../BrandedTypes';
 import {LoginRequired} from '../../middleware/AuthMiddleware';
@@ -49,6 +50,7 @@ export function GuildBaseController(app: HonoApp) {
 			if (policy.single_community_enabled) {
 				throw new SingleCommunityCannotCreateGuildsError();
 			}
+			requireEmailVerified(user, 'guild_creation');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const locale = ctx.get('requestLocale') ?? null;
 			return ctx.json(await ctx.get('guildService').data.createGuild({user, data, locale}, auditLogReason));
