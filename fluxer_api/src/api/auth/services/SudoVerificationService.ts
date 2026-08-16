@@ -31,6 +31,16 @@ export function userHasMfa(user: {authenticatorTypes?: Set<number> | null}): boo
 	);
 }
 
+export function hasNoVerifiableCredential(
+	user: {passwordHash: string | null; isBot: boolean},
+	hasMfa: boolean,
+): boolean {
+	if (user.isBot || hasMfa) {
+		return false;
+	}
+	return user.passwordHash === null;
+}
+
 export function deriveSudoMethods(user: {
 	totpSecret?: string | null;
 	authenticatorTypes?: Set<number> | null;
@@ -86,8 +96,7 @@ async function verifySudoMode(
 		const sudoToken = issueSudoToken ? await sudoModeService.generateSudoToken(user.id) : undefined;
 		return {verified: true, sudoToken, method: 'mfa'};
 	}
-	const isUnclaimedAccount = user.isUnclaimedAccount();
-	if (isUnclaimedAccount && !hasMfa) {
+	if (hasNoVerifiableCredential(user, hasMfa)) {
 		return {verified: true, method: 'password'};
 	}
 	if (body.password && !hasMfa) {
