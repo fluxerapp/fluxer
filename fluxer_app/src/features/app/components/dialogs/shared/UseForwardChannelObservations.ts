@@ -62,7 +62,9 @@ interface ForwardChannelObservationSelection {
 function resolveChannelDisplayName(channel: Channel, i18n: I18n): string {
 	if (channel.type === ChannelTypes.DM) {
 		const recipient = channel.recipientIds.length > 0 ? Users.getUser(channel.recipientIds[0]) : null;
-		if (recipient) return recipient.displayName;
+		if (recipient) {
+			return Relationships.getRelationship(recipient.id)?.nickname || recipient.displayName;
+		}
 	}
 	if (
 		channel.type === ChannelTypes.DM_PERSONAL_NOTES ||
