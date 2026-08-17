@@ -11,6 +11,7 @@ import {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
+import type {UnreadJumpAnchor} from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
 import Dimension from '@app/features/ui/state/Dimension';
 import Users from '@app/features/user/state/Users';
@@ -347,7 +348,12 @@ class Messages {
 	}
 
 	@action
-	handleChannelSelect(action: {guildId?: string; channelId?: string | null; messageId?: string}): boolean {
+	handleChannelSelect(action: {
+		guildId?: string;
+		channelId?: string | null;
+		messageId?: string;
+		unreadAnchor?: UnreadJumpAnchor | null;
+	}): boolean {
 		const channelId = action.channelId ?? action.guildId;
 		if (channelId == null || channelId === ME) {
 			return false;
@@ -390,6 +396,17 @@ class Messages {
 		}
 		this.commitMessages(messages.mutate({loadingMore: true}));
 		this.notifyChange();
+		const unreadAnchor = action.unreadAnchor ?? null;
+		if (unreadAnchor != null) {
+			MessageCommands.jumpToMessage({
+				channelId,
+				messageId: unreadAnchor.messageId,
+				offset: unreadAnchor.offset,
+				flash: false,
+				jumpType: JumpTypes.INSTANT,
+			});
+			return false;
+		}
 		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 		return false;
 	}

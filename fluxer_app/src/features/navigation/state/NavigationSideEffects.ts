@@ -3,6 +3,7 @@
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import ReadStates from '@app/features/read_state/state/ReadStates';
 import Notification from '@app/features/ui/state/Notification';
 import {reaction} from 'mobx';
 
@@ -40,6 +41,7 @@ class NavigationSideEffects {
 			guildId: guildId ?? undefined,
 			channelId,
 			messageId: messageId ?? undefined,
+			unreadAnchor: ReadStates.getUnreadJumpAnchor(channelId),
 		});
 		Notification.handleChannelSelect({channelId});
 	}
