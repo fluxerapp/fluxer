@@ -113,7 +113,7 @@ export class StripeRefundService {
 			const list = await this.stripe.invoices.list({
 				customer: user.stripeCustomerId,
 				limit: 5,
-				expand: ['data.payments.data.payment.payment_intent'],
+				expand: ['data.payments.data.payment'],
 			});
 			for (const invoice of list.data) {
 				if (!invoice.id || invoice.status !== 'paid' || invoice.amount_paid <= 0) {

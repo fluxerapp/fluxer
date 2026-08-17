@@ -21,7 +21,6 @@ import {mapUserToPrivateResponse} from '../../user/UserMappers';
 import type {ProductInfo, ProductRegistry} from '../ProductRegistry';
 import {
 	getFirstInvoicePaymentIntentId,
-	getFirstInvoicePaymentIntentLatestChargeId,
 	getPrimarySubscriptionItem,
 	getSubscriptionItemPeriodEnd,
 	getSubscriptionPremiumPeriodEnd,
@@ -600,11 +599,16 @@ export class StripeCheckoutWebhookHandler {
 		if (!this.stripe) return null;
 		try {
 			const subscription = await this.stripe.subscriptions.retrieve(subscriptionId, {
-				expand: ['latest_invoice.payments.data.payment.payment_intent.latest_charge'],
+				expand: ['latest_invoice.payments.data.payment'],
 			});
 			const latestInvoice =
 				typeof subscription.latest_invoice === 'string' ? null : (subscription.latest_invoice ?? null);
-			return getFirstInvoicePaymentIntentLatestChargeId(latestInvoice);
+			const paymentIntentId = getFirstInvoicePaymentIntentId(latestInvoice);
+			if (!paymentIntentId) {
+				return null;
+			}
+			const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+			return extractId(paymentIntent.latest_charge);
 		} catch (err) {
 			Logger.warn({err, subscriptionId}, 'Failed to resolve latest charge for duplicate-subscription refund');
 			return null;
@@ -739,7 +743,7 @@ export class StripeCheckoutWebhookHandler {
 		};
 		try {
 			const subscription = (await this.stripe.subscriptions.retrieve(subscriptionId, {
-				expand: ['default_payment_method', 'latest_invoice.payments.data.payment.payment_intent'],
+				expand: ['default_payment_method', 'latest_invoice.payments.data.payment'],
 			})) as StripeSubscriptionWithFallbackPaymentState;
 			const latestInvoice =
 				typeof subscription.latest_invoice === 'string' ? null : (subscription.latest_invoice ?? null);
