@@ -31,6 +31,8 @@ interface MemberListSubscriptionControl {
 type MemberListSubscriptionPhase = 'offline' | 'hydrating' | 'settled' | 'freshSession';
 
 const INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES = normalizeMemberListRanges([[0, MEMBER_LIST_RANGE_MAX_SPAN]]);
+const MEMBER_LIST_RESUBSCRIBE_DELAY_MS = 1000;
+const MEMBER_LIST_MAX_RESUBSCRIBE_ATTEMPTS = 3;
 const MEMBER_LIST_RECOVERY_DELAY_MS = 3000;
 const MEMBER_LIST_MAX_RECOVERY_ATTEMPTS = 2;
 const logger = new Logger('useMemberListSubscription');
@@ -94,6 +96,7 @@ export function useMemberListSubscription({
 		let hydrationGeneration = 0;
 		let freshSessionResetId: string | null = null;
 		let recoveryAttemptCount = 0;
+		let resubscribeAttemptCount = 0;
 		let phase: MemberListSubscriptionPhase = 'offline';
 
 		function clearRetryTimer(): void {
@@ -120,6 +123,47 @@ export function useMemberListSubscription({
 			clearRetryTimer();
 			hydrationGeneration += 1;
 			recoveryAttemptCount = 0;
+			resubscribeAttemptCount = 0;
+		}
+
+		function resendStaleSubscription(): void {
+			clearRetryTimer();
+			if (disposed || phase === 'freshSession' || !ownsSubscription()) {
+				return;
+			}
+			if (!gatewayAvailable()) {
+				phase = 'offline';
+				return;
+			}
+			resubscribeAttemptCount += 1;
+			logger.debug('Member list hydration stalled; resending the subscription', {
+				guildId,
+				channelId,
+				attempt: resubscribeAttemptCount,
+			});
+			sendDesiredRequest();
+		}
+
+		function scheduleResubscribe(): void {
+			if (retryTimer != null) {
+				return;
+			}
+			const scheduledGeneration = hydrationGeneration;
+			retryTimer = window.setTimeout(() => {
+				retryTimer = null;
+				if (scheduledGeneration !== hydrationGeneration) {
+					return;
+				}
+				resendStaleSubscription();
+			}, MEMBER_LIST_RESUBSCRIBE_DELAY_MS);
+		}
+
+		function scheduleHydrationRecovery(): void {
+			if (resubscribeAttemptCount < MEMBER_LIST_MAX_RESUBSCRIBE_ATTEMPTS) {
+				scheduleResubscribe();
+				return;
+			}
+			scheduleSessionReplacement();
 		}
 
 		function replaceStaleSession(): void {
@@ -172,13 +216,14 @@ export function useMemberListSubscription({
 			if (hasHydratedDesiredRanges()) {
 				clearRetryTimer();
 				recoveryAttemptCount = 0;
+				resubscribeAttemptCount = 0;
 				freshSessionResetId = null;
 				phase = 'settled';
 				return;
 			}
 			if (phase === 'settled' || phase === 'hydrating') {
 				phase = 'hydrating';
-				scheduleSessionReplacement();
+				scheduleHydrationRecovery();
 			}
 		}
 
