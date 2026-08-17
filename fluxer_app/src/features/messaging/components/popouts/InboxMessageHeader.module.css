@@ -7,6 +7,7 @@
 	justify-content: space-between;
 	gap: 0.75rem;
 	padding: var(--inbox-header-padding-y) 0;
+	border-bottom: 0.0625rem solid var(--message-preview-card-divider, transparent);
 }
 
 .headerLeft {

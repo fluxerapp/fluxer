@@ -320,6 +320,9 @@ export type ThemeVariableName =
 	| "--message-mention-bg-hover"
 	| "--message-mention-color"
 	| "--message-mobile-margin"
+	| "--message-preview-card-background"
+	| "--message-preview-card-border"
+	| "--message-preview-card-divider"
 	| "--message-replied-username-opacity"
 	| "--message-reply-bg"
 	| "--message-reply-color"
@@ -776,6 +779,9 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--message-mention-bg-hover", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-mention-color", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-mobile-margin", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
+	{name: "--message-preview-card-background", kind: "color", groupId: "messages", groupLabel: "Messages", source: "globals"},
+	{name: "--message-preview-card-border", kind: "color", groupId: "messages", groupLabel: "Messages", source: "globals"},
+	{name: "--message-preview-card-divider", kind: "color", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--message-replied-username-opacity", kind: "number", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-reply-bg", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
 	{name: "--message-reply-color", kind: "color", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
@@ -1233,6 +1239,9 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--message-mention-bg-hover",
 	"--message-mention-color",
 	"--message-mobile-margin",
+	"--message-preview-card-background",
+	"--message-preview-card-border",
+	"--message-preview-card-divider",
 	"--message-replied-username-opacity",
 	"--message-reply-bg",
 	"--message-reply-color",
@@ -1520,6 +1529,9 @@ export const THEME_COLOR_VARIABLES: ReadonlyArray<string> = [
 	"--message-mention-bg",
 	"--message-mention-bg-hover",
 	"--message-mention-color",
+	"--message-preview-card-background",
+	"--message-preview-card-border",
+	"--message-preview-card-divider",
 	"--message-reply-bg",
 	"--message-reply-color",
 	"--message-timestamp-color",
@@ -1878,6 +1890,9 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--message-mention-bg-hover": "rgb(234 197 50 / 0.14)",
 	"--message-mention-color": "rgb(234 197 50)",
 	"--message-mobile-margin": "0.75rem",
+	"--message-preview-card-background": "hsla(0, 0%, 100%, 0.022)",
+	"--message-preview-card-border": "hsla(0, 0%, 100%, 0.07)",
+	"--message-preview-card-divider": "hsla(0, 0%, 100%, 0.05)",
 	"--message-replied-username-opacity": "0.64",
 	"--message-reply-bg": "rgb(59 130 246 / 0.1)",
 	"--message-reply-color": "rgb(59 130 246)",
@@ -2335,6 +2350,9 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--message-mention-bg-hover": "rgb(234 197 50 / 0.14)",
 	"--message-mention-color": "rgb(234 197 50)",
 	"--message-mobile-margin": "0.75rem",
+	"--message-preview-card-background": "hsl(0, 0%, 100%)",
+	"--message-preview-card-border": "hsla(0, 0%, 0%, 0.07)",
+	"--message-preview-card-divider": "hsla(0, 0%, 0%, 0.05)",
 	"--message-replied-username-opacity": "0.64",
 	"--message-reply-bg": "rgb(59 130 246 / 0.1)",
 	"--message-reply-color": "rgb(59 130 246)",

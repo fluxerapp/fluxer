@@ -574,9 +574,10 @@ const StickerItem = observer(
 	},
 );
 export const MessageAttachments = observer(() => {
-	const {channel, message, handleDelete, previewContext, onPopoutToggle, readonlyPreview} = useMessageViewContext();
+	const {channel, message, handleDelete, previewContext, onPopoutToggle, suppressMessageActions} =
+		useMessageViewContext();
 	const isPreview = Boolean(previewContext);
-	const reactionsIsPreview = isPreview || Boolean(readonlyPreview);
+	const reactionsIsPreview = isPreview || Boolean(suppressMessageActions);
 	const reactions = useMessageReactionsSnapshot(message.id);
 	const {shouldAnimate, interactionHandlers} = useStickerAnimation();
 	const spoileredUrlEmbeds = useMemo(() => {

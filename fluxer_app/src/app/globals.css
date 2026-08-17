@@ -332,6 +332,9 @@ var {
 	--guild-members-table-row-border-width: 0.0625rem;
 
 	--form-surface-background: var(--background-tertiary);
+	--message-preview-card-background: hsla(0, 0%, 100%, 0.022);
+	--message-preview-card-border: hsla(0, 0%, 100%, 0.07);
+	--message-preview-card-divider: hsla(0, 0%, 100%, 0.05);
 	--surface-interactive-hover-bg: var(--background-modifier-hover);
 	--surface-interactive-selected-bg: var(--background-modifier-selected);
 	--surface-interactive-selected-color: var(--text-primary);
@@ -349,6 +352,9 @@ html.platform-native.platform-macos {
 .theme-light {
 	--guilds-layout-item-bg: color-mix(in srgb, var(--guild-list-foreground) 72%, var(--background-primary) 28%);
 	--form-surface-background: var(--background-primary);
+	--message-preview-card-background: hsl(0, 0%, 100%);
+	--message-preview-card-border: hsla(0, 0%, 0%, 0.07);
+	--message-preview-card-divider: hsla(0, 0%, 0%, 0.05);
 	--surface-interactive-hover-bg: var(--background-modifier-hover);
 	--surface-interactive-selected-bg: var(--background-modifier-selected);
 	--surface-interactive-selected-color: var(--text-primary);

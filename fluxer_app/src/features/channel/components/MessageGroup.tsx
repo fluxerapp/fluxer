@@ -40,7 +40,7 @@ export interface MessageGroupProps {
 	messageRowClassName?: string;
 	messageActionsClassName?: string;
 	renderMessageActions?: (message: Message) => React.ReactNode;
-	readonlyPreview?: boolean;
+	suppressMessageActions?: boolean;
 	previewContext?: keyof typeof MessagePreviewContext;
 	behaviorOverrides?: MessageBehaviorOverrides;
 	renderMessageWrapper?: (props: MessageGroupRenderWrapperProps) => React.ReactNode;
@@ -61,7 +61,7 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 		messageRowClassName,
 		messageActionsClassName,
 		renderMessageActions,
-		readonlyPreview,
+		suppressMessageActions,
 		previewContext,
 		behaviorOverrides: providedBehaviorOverrides,
 		renderMessageWrapper,
@@ -70,14 +70,13 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 	const groupId = useMemo(() => messages[0]?.id, [messages]);
 	const behaviorOverrides = useMemo(
 		() =>
-			readonlyPreview
+			suppressMessageActions
 				? {
 						...providedBehaviorOverrides,
 						disableContextMenu: true,
-						prefersReducedMotion: true,
 					}
 				: providedBehaviorOverrides,
-		[readonlyPreview, providedBehaviorOverrides],
+		[suppressMessageActions, providedBehaviorOverrides],
 	);
 	const renderedMessages = useMemo(
 		() =>
@@ -96,7 +95,7 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 							compact={messageDisplayCompact}
 							idPrefix={idPrefix}
 							behaviorOverrides={behaviorOverrides}
-							readonlyPreview={readonlyPreview}
+							suppressMessageActions={suppressMessageActions}
 							previewContext={previewContext}
 							onHeadingActivate={getMessageHeadingActivate?.(message)}
 							data-flx="channel.message-group.rendered-messages.message-component"
@@ -151,7 +150,7 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 			messageActionsClassName,
 			renderMessageActions,
 			behaviorOverrides,
-			readonlyPreview,
+			suppressMessageActions,
 			previewContext,
 			renderMessageWrapper,
 			getMessageHeadingActivate,

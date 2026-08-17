@@ -49,7 +49,7 @@ msgid "(you)"
 msgstr "(你)"
 
 #. placeholder {0}: guild.member_count
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:146
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:184
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# 位成员} other {# 位成员}}"
 
@@ -288,14 +288,14 @@ msgid "{blikPaymentMethod} does not support subscriptions in {paymentProviderNam
 msgstr "{blikPaymentMethod} 不支持在 {paymentProviderName} 结账时订阅。"
 
 #. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:35
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:37
 msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
 msgstr "{categoryLabel}，{count, plural, other {# 个社区}}"
 
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:52
-msgid "{channelHeading}, {mentionCount} mentions"
-msgstr "{channelHeading}，{mentionCount}条提及"
+msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
+msgstr "{channelHeading}，{mentionCount, plural, one {# 条提及} other {# 条提及}}"
 
 #. Short label in the channel layout. Keep it concise. Preserve {channelName}; it is inserted by code.
 #: src/features/channel/components/ChannelLayout.tsx:17
@@ -356,11 +356,11 @@ msgid "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgstr "{count, plural, one {# 条书签} other {# 条书签}}"
 
 #. Screen-reader status text in Discovery. {count} is the total number of matching communities.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:33
+#: src/features/discovery/discovery/DiscoveryPage.tsx:34
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# 个社群} other {# 个社群}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1926
+#: src/features/app/components/layout/GuildsLayout.tsx:1949
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# 个社群因时空穿梭器故障暂时不可用。} other {# 个社群因时空穿梭器故障暂时不可用。}}"
 
@@ -634,12 +634,12 @@ msgid "{deviceCount, plural, one {# device selected for sign out} other {# devic
 msgstr "已选择 {deviceCount, plural, one {# 个设备} other {# 个设备}}，将进行注销"
 
 #. Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:50
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:49
 msgid "{displayedIncomingFriendRequestCount} friend requests"
 msgstr "{displayedIncomingFriendRequestCount}个好友请求"
 
 #. Short label in the sidebar navigation fluxer button. Preserve {displayedUnreadDmCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:41
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:40
 msgid "{displayedUnreadDmCount} unread DMs"
 msgstr "{displayedUnreadDmCount} 条未读私信"
 
@@ -726,7 +726,7 @@ msgid "{fifteenMinutes} minutes"
 msgstr "{fifteenMinutes} 分钟"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:78
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:77
 msgid "{folderName} folder"
 msgstr "{folderName} 文件夹"
 
@@ -1567,7 +1567,7 @@ msgid "1 day"
 msgstr "1 天"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:46
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:45
 msgid "1 friend request"
 msgstr "1 个好友请求"
 
@@ -1622,7 +1622,7 @@ msgid "1 unread"
 msgstr "1 条未读"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:37
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:36
 msgid "1 unread DM"
 msgstr "1 条未读私信"
 
@@ -2248,13 +2248,13 @@ msgstr "激活点击"
 msgid "Active"
 msgstr "有效"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:355
-#: src/features/auth/components/accounts/AccountRow.tsx:135
+#: src/features/app/components/floating/UserAreaPopout.tsx:358
+#: src/features/auth/components/accounts/AccountRow.tsx:136
 msgid "Active account"
 msgstr "当前账号"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild list DM item.
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:64
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:66
 msgid "active call"
 msgstr "通话中"
 
@@ -2907,8 +2907,8 @@ msgstr "对齐方式控制仅在宽屏设备上可用"
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:19
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:23
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
 msgstr "全部"
@@ -2985,7 +2985,7 @@ msgid "All inputs are fully interactive, so type away."
 msgstr "所有输入框都支持互动，快来输入吧。"
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:27
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "所有语言"
 
@@ -5785,8 +5785,8 @@ msgstr "无法在此上传文件"
 #: src/features/auth/components/modals/AccountDisableModal.tsx:45
 #: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:78
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:61
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:210
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:226
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:216
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
@@ -5812,7 +5812,7 @@ msgstr "无法在此上传文件"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:627
+#: src/features/messaging/components/modals/ForwardModal.tsx:628
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
@@ -5998,12 +5998,12 @@ msgstr "通过快速的{paymentProviderName}验证后，银行卡可以保留土
 #. Heading above the category filter list in the Discovery search sidebar.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:15
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:19
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:21
 msgid "Categories"
 msgstr "分类"
 
 #. Lowercase channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:79
+#: src/features/app/components/layout/ChannelItem.tsx:84
 msgid "category"
 msgstr "类别"
 
@@ -6313,7 +6313,7 @@ msgstr "更改会立即应用于客户端。"
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:87
+#: src/features/app/components/layout/ChannelItem.tsx:92
 #: src/features/channel/components/channel_textarea/shared.ts:11
 msgid "channel"
 msgstr "频道"
@@ -6333,7 +6333,7 @@ msgid "Channel"
 msgstr "频道"
 
 #. Short label in the settings dialog forward channel selection. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardChannelObservations.ts:22
+#: src/features/app/components/dialogs/shared/UseForwardChannelObservations.ts:27
 msgid "Channel {id}"
 msgstr "频道 {id}"
 
@@ -6343,7 +6343,7 @@ msgid "Channel access"
 msgstr "频道访问"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:110
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
 msgid "Channel access denied"
 msgstr "无法访问频道"
 
@@ -6408,7 +6408,7 @@ msgstr "频道ID已复制到剪贴板"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:79
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:80
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "频道链接"
@@ -7009,7 +7009,7 @@ msgstr "认领你的账号"
 msgid "Claim your account and verify your email to send reports."
 msgstr "请先认领账号并验证邮箱，然后才能发送报告。"
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:138
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:144
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "添加邮箱和密码来认领你的帐户。我们会在完成前发送验证码来确认你的邮箱。"
 
@@ -7597,7 +7597,7 @@ msgid "Collapse"
 msgstr "收起"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:98
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:97
 msgid "Collapse {folderName}"
 msgstr "收起\"{folderName}\""
 
@@ -7641,8 +7641,8 @@ msgstr "收起\"{channelHeading}\"的未读消息"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for a collapsed category.
-#: src/features/app/components/layout/ChannelItem.tsx:95
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:86
+#: src/features/app/components/layout/ChannelItem.tsx:100
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:85
 msgid "collapsed"
 msgstr "已收起"
 
@@ -8266,7 +8266,7 @@ msgid "Connect with {providerName}"
 msgstr "连接 {providerName}"
 
 #. Lowercase state label used inside channel-list accessible text for the current voice channel.
-#: src/features/app/components/layout/ChannelItem.tsx:111
+#: src/features/app/components/layout/ChannelItem.tsx:116
 msgid "connected"
 msgstr "已连接"
 
@@ -8666,7 +8666,7 @@ msgid "Copy banner URL"
 msgstr "复制横幅网址"
 
 #. Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.
-#: src/features/app/components/floating/UserAreaPopout.tsx:711
+#: src/features/app/components/floating/UserAreaPopout.tsx:714
 #: src/features/platform/utils/DesktopLocaleBridge.ts:164
 msgid "Copy build info"
 msgstr "复制版本信息"
@@ -8898,7 +8898,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "将设置密钥复制到您的身份验证器应用程序中。"
 
 #. Developer-mode action that copies a user snowflake/ID to the clipboard.
-#: src/features/app/components/floating/UserAreaPopout.tsx:696
+#: src/features/app/components/floating/UserAreaPopout.tsx:699
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:172
 msgid "Copy user ID"
 msgstr "复制用户ID"
@@ -8923,7 +8923,7 @@ msgstr "复制视频"
 msgid "Copy video link"
 msgstr "复制视频链接"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:724
+#: src/features/app/components/floating/UserAreaPopout.tsx:727
 msgid "Copy voice diagnostics"
 msgstr "复制语音诊断"
 
@@ -11195,13 +11195,13 @@ msgstr "开发者状态"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:122
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:123
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "开发者工具"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "在频道标题栏中点击员工徽章即可使用开发者工具。"
 
@@ -11657,7 +11657,7 @@ msgid "Discovery application withdrawn"
 msgstr "发现申请已撤回"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:23
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
 msgid "Discovery categories"
 msgstr "发现类别"
 
@@ -11671,12 +11671,12 @@ msgid "Discovery navigation"
 msgstr "发现导航"
 
 #. Accessible label for the Discovery community results region.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:29
+#: src/features/discovery/discovery/DiscoveryPage.tsx:30
 msgid "Discovery results"
 msgstr "发现结果"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:31
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
 msgid "Discovery search"
 msgstr "发现搜索"
 
@@ -12366,7 +12366,7 @@ msgstr "编辑附件"
 #. Action that opens the edit-category modal.
 #. Action that opens the edit-category modal.
 #. Tooltip and accessible label for the category settings button in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:115
+#: src/features/app/components/layout/ChannelItem.tsx:120
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:85
 #: src/features/ui/action_menu/items/CategoryMenuItems.tsx:62
 msgid "Edit category"
@@ -12465,11 +12465,11 @@ msgstr "编辑或删除其他成员创建的表情和贴纸。"
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "编辑此频道中角色和成员的覆盖权限。"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:747
+#: src/features/app/components/floating/UserAreaPopout.tsx:750
 #: src/features/app/components/pages/YouPage.tsx:151
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
-#: src/features/user/components/popouts/UserProfilePopout.tsx:430
+#: src/features/user/components/popouts/UserProfilePopout.tsx:432
 msgid "Edit profile"
 msgstr "编辑个人资料"
 
@@ -12885,7 +12885,7 @@ msgid "Emoticons"
 msgstr "表情符号"
 
 #. Short label in the app layout favorites channel list content.
-#: src/features/app/components/layout/FavoritesChannelListContent.tsx:65
+#: src/features/app/components/layout/FavoritesChannelListContent.tsx:70
 msgid "Empty favorites"
 msgstr "收藏为空"
 
@@ -13465,7 +13465,7 @@ msgstr "请输入应用中显示的代码以继续。"
 msgid "Enter the code we emailed to your new address."
 msgstr "请输入我们发送到您新邮箱的验证码。"
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:175
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:181
 msgid "Enter the code we sent to your email to verify it. Your password will be set once the code is confirmed."
 msgstr "请输入我们发送到您邮箱的验证码。验证码确认后，即可设置您的密码。"
 
@@ -13802,8 +13802,8 @@ msgstr "展开 {channelHeading} 的未读消息"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for an expanded category.
-#: src/features/app/components/layout/ChannelItem.tsx:99
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:82
+#: src/features/app/components/layout/ChannelItem.tsx:104
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:81
 msgid "expanded"
 msgstr "已展开"
 
@@ -13831,7 +13831,7 @@ msgstr "过期时间"
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:348
-#: src/features/auth/components/accounts/AccountRow.tsx:18
+#: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:41
 #: src/features/invite/components/InviteListItem.tsx:30
 msgid "Expired"
@@ -13915,7 +13915,7 @@ msgid "Explicit content filter setting"
 msgstr "不雅内容过滤设置"
 
 #. Short label in the app layout discovery guild header.
-#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:10
+#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:9
 msgid "Explore"
 msgstr "探索"
 
@@ -14601,7 +14601,7 @@ msgid "Filter by join method"
 msgstr "按加入方式筛选"
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:31
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "按语言筛选"
 
@@ -14801,7 +14801,7 @@ msgstr "专注语音"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:74
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:73
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:39
 msgid "Folder"
 msgstr "文件夹"
@@ -17155,7 +17155,7 @@ msgstr "在\"操作系统\"模式下，上方列出的词典仅供参考。如�
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "在浏览器中，按住说话功能仅在 {PRODUCT_NAME} 标签页处于焦点时可用。请安装桌面应用以使用系统范围的按住说话功能。"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:725
+#: src/features/app/components/floating/UserAreaPopout.tsx:728
 msgid "In a call"
 msgstr "通话中"
 
@@ -17734,7 +17734,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "分享时隐藏邀请链接："
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
 msgid "Invite link masked while sharing"
 msgstr "共享时已隐藏邀请链接"
 
@@ -17756,7 +17756,7 @@ msgstr "邀请码遮蔽"
 #. Action label that opens the invite flow.
 #. Button or menu action label in the guild header popout. Keep it concise.
 #. Tooltip and accessible label for the invite button shown beside a channel in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:119
+#: src/features/app/components/layout/ChannelItem.tsx:124
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:58
 #: src/features/ui/action_menu/items/GuildMenuData.tsx:84
 msgid "Invite members"
@@ -18162,7 +18162,7 @@ msgid "Jump to {displayName}"
 msgstr "跳转到 {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:93
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
 msgid "Jump to {labelText}"
 msgstr "跳转到\"{labelText}\""
 
@@ -18219,12 +18219,12 @@ msgid "Jump to the current call"
 msgstr "跳转到当前通话"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
 msgid "Jump to the linked channel"
 msgstr "跳转到链接的频道"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:89
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:90
 msgid "Jump to the linked message"
 msgstr "跳转到链接消息"
 
@@ -18234,7 +18234,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "跳转到 {authorNickname} 发送的消息"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:84
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:85
 msgid "Jump to the message in {labelText}"
 msgstr "跳转到\"{labelText}\"中的消息"
 
@@ -18712,7 +18712,7 @@ msgid "Light theme"
 msgstr "浅色主题"
 
 #. Singular external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:75
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:70
 msgid "like"
 msgstr "赞"
 
@@ -18722,7 +18722,7 @@ msgid "Liked."
 msgstr "已点赞。"
 
 #. Plural external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:79
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:74
 msgid "likes"
 msgstr "赞"
 
@@ -18819,7 +18819,7 @@ msgid "Link styling"
 msgstr "链接样式"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:131
 msgid "Link unavailable"
 msgstr "链接无法打开"
 
@@ -18928,7 +18928,7 @@ msgid "Loading banned users"
 msgstr "正在加载被封禁用户"
 
 #. Screen-reader status text shown while Discovery communities are loading.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:37
+#: src/features/discovery/discovery/DiscoveryPage.tsx:38
 msgid "Loading communities"
 msgstr "正在加载社群"
 
@@ -19268,7 +19268,7 @@ msgstr "恶意软件、凭据盗窃或有害文件。"
 msgid "Manage"
 msgstr "管理"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:395
+#: src/features/app/components/floating/UserAreaPopout.tsx:398
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:78
 msgid "Manage accounts"
 msgstr "管理帐号"
@@ -20079,8 +20079,8 @@ msgstr "消息"
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
 #: src/features/user/components/modals/UserProfileModal.tsx:770
-#: src/features/user/components/popouts/UserProfilePopout.tsx:416
-#: src/features/user/components/popouts/UserProfilePopout.tsx:446
+#: src/features/user/components/popouts/UserProfilePopout.tsx:418
+#: src/features/user/components/popouts/UserProfilePopout.tsx:448
 #: src/features/user/components/profile/ProfilePreview.tsx:321
 msgid "Message"
 msgstr "发消息"
@@ -20220,7 +20220,7 @@ msgid "Message layout"
 msgstr "消息布局"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:74
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:75
 msgid "message link"
 msgstr "消息链接"
 
@@ -20665,7 +20665,7 @@ msgstr "每月赠礼"
 #. Short label in the buttons tab. Keep it concise.
 #. Short label in the channel and chat friend list item. Keep it concise.
 #. Tooltip on the overflow button in the inline message hover action bar. Opens the full action menu.
-#: src/features/auth/components/accounts/AccountRow.tsx:22
+#: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
 #: src/features/channel/components/MessageActionBar.tsx:88
@@ -21014,8 +21014,8 @@ msgstr "静音直播音频"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text when a channel is muted.
 #. Screen-reader fragment announcing that the DM list row is muted. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:107
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:60
+#: src/features/app/components/layout/ChannelItem.tsx:112
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
 #: src/features/channel/components/direct_message/DMListItem.tsx:75
 msgid "muted"
@@ -21389,7 +21389,7 @@ msgid "New"
 msgstr "新消息"
 
 #. Small badge on a new or recently added app navigation item.
-#: src/features/app/components/layout/GuildsLayout.tsx:131
+#: src/features/app/components/layout/GuildsLayout.tsx:136
 msgctxt "navigation-badge"
 msgid "New"
 msgstr "新"
@@ -21577,7 +21577,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "无 {sendMessagesPermission} 权限"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:118
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
 msgid "No access"
 msgstr "无法访问"
 
@@ -22683,7 +22683,7 @@ msgid "Open {displayName}"
 msgstr "打开 {displayName}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:101
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
 msgid "Open {labelText} in settings"
 msgstr "在设置中打开 {labelText}"
 
@@ -22803,7 +22803,7 @@ msgstr "打开\"{channelName}\"的频道详情"
 
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:123
+#: src/features/app/components/layout/ChannelItem.tsx:128
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Open chat"
 msgstr "打开聊天"
@@ -25153,12 +25153,12 @@ msgid "Quit {appName}"
 msgstr "退出 {appName}"
 
 #. Singular external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:67
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:62
 msgid "quote"
 msgstr "引用"
 
 #. Plural external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:71
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:66
 msgid "quotes"
 msgstr "引用"
 
@@ -26334,12 +26334,12 @@ msgid "Reported user tag (optional)"
 msgstr "被举报用户标签（可选）"
 
 #. Singular external-post stat label on a social post embed (e.g. Twitter/X). Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:57
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:52
 msgid "repost"
 msgstr "转帖"
 
 #. Plural external-post stat label on a social post embed (e.g. Twitter/X). Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:62
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:57
 msgid "reposts"
 msgstr "转发"
 
@@ -26470,7 +26470,7 @@ msgstr "需满足中等安全等级的所有要求，并且加入社区至少 10
 msgid "Reschedule message"
 msgstr "重新安排消息"
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:234
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:240
 #: src/features/user/components/modals/EmailChangeModal.tsx:296
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
 #: src/features/user/components/modals/PasswordChangeModal.tsx:244
@@ -26489,7 +26489,7 @@ msgstr "重新发送 ({originalSecondsRemaining}秒)"
 msgid "Resend ({resendCooldownSeconds}s)"
 msgstr "重新发送 ({resendCooldownSeconds}s)"
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:234
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:240
 msgid "Resend ({resendSecondsRemaining}s)"
 msgstr "重新发送 ({resendSecondsRemaining}秒)"
 
@@ -27250,7 +27250,7 @@ msgid "Saturation"
 msgstr "饱和度"
 
 #. Singular external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:83
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:78
 msgid "save"
 msgstr "保存"
 
@@ -27370,7 +27370,7 @@ msgid "Saved."
 msgstr "已保存。"
 
 #. Plural external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:87
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:82
 msgid "saves"
 msgstr "保存"
 
@@ -27719,7 +27719,7 @@ msgid "Search channels or DMs"
 msgstr "搜索频道或私信"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:27
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
 msgid "Search communities"
 msgstr "搜索社群"
 
@@ -27758,7 +27758,7 @@ msgstr "搜索筛选条件：{filter}"
 #. Section header in the message search popout listing available filter operators.
 #: src/features/channel/components/message_search_bar/FilterOption.tsx:14
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:17
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:15
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:17
 msgid "Search filters"
 msgstr "搜索筛选条件"
 
@@ -27852,7 +27852,7 @@ msgid "Search results"
 msgstr "搜索结果"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:35
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
 msgid "Search results for “{query}”"
 msgstr "“{query}”的搜索结果"
 
@@ -28232,8 +28232,8 @@ msgstr "可选文本"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text for the selected channel.
 #. Screen-reader suffix announcing that the DM list row is the active selection. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:91
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:52
+#: src/features/app/components/layout/ChannelItem.tsx:96
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
@@ -28365,7 +28365,7 @@ msgid "Send button"
 msgstr "发送按钮"
 
 #. Primary button in the required-action modal. Requests a verification code.
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:213
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:219
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:190
 #: src/features/user/components/modals/EmailChangeModal.tsx:318
 msgid "Send code"
@@ -28515,7 +28515,7 @@ msgid "Sending malware or dangerous links"
 msgstr "发送恶意软件或危险链接"
 
 #. Short label in the settings dialog forward channel selection.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:13
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:14
 msgid "Sending messages is disabled in this community"
 msgstr "本群已禁用发送消息功能"
 
@@ -28623,7 +28623,7 @@ msgstr "会话"
 msgid "Set {fieldNode} to {0}."
 msgstr "将 {fieldNode} 设置为 {0}."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:605
+#: src/features/app/components/floating/UserAreaPopout.tsx:608
 #: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:312
 msgid "Set a custom status"
 msgstr "设置自定义状态"
@@ -28877,7 +28877,7 @@ msgid "Settings"
 msgstr "设置"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:106
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
 msgid "settings link"
 msgstr "设置链接"
 
@@ -29848,7 +29848,7 @@ msgid "Skip this step"
 msgstr "跳过此步骤"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:75
+#: src/app/App.tsx:76
 msgid "Skip to content"
 msgstr "跳到内容"
 
@@ -29935,7 +29935,7 @@ msgid "Slowmode"
 msgstr "慢速模式"
 
 #. Short label in the settings dialog forward channel selection. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:36
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:37
 msgid "Slowmode · wait {remaining}"
 msgstr "慢速模式 · 等待 {remaining}"
 
@@ -31352,7 +31352,7 @@ msgstr "瑞典语"
 msgid "Switch account"
 msgstr "切换账号"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:681
+#: src/features/app/components/floating/UserAreaPopout.tsx:684
 msgid "Switch accounts"
 msgstr "切换账号"
 
@@ -32795,7 +32795,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "此链接频道包含成人内容，可能包含不适合某些用户观看的材料。"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
 msgid "This link is not available for your account."
 msgstr "你的帐号无法使用此链接。"
 
@@ -34716,9 +34716,9 @@ msgstr "取消置顶群聊"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text when a channel has unread messages.
 #. Screen-reader fragment announcing that the DM list row has unread messages. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:103
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:90
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:56
+#: src/features/app/components/layout/ChannelItem.tsx:108
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
 #: src/features/channel/components/direct_message/DMListItem.tsx:71
 msgid "unread"
@@ -36659,7 +36659,7 @@ msgstr "语音唤醒"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:94
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:93
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:47
 msgid "voice activity"
 msgstr "语音活动"
@@ -36716,7 +36716,7 @@ msgstr "语音通话。{statusText}."
 
 #. Generic channel-type token used inside a wider delete confirmation string.
 #. Lowercase channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:83
+#: src/features/app/components/layout/ChannelItem.tsx:88
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:79
 msgid "voice channel"
 msgstr "语音频道"
@@ -38084,7 +38084,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "您在{PREMIUM_PRODUCT_NAME}期间更改了标签。除非续订，否则您的{PREMIUM_PRODUCT_NAME}到期后，标签将随机重新生成。"
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
 msgid "You do not have access to the channel where this message was sent."
 msgstr "您无权访问发送此消息的频道。"
 
@@ -38231,12 +38231,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "您需要通过当前邮箱才能更改。如果可用，请使用手机验证，或联系客服。"
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:31
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:32
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "你需要\"{attachFilesPermissionLabel}\"权限才能在此频道中附加文件"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:26
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:27
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "你需要\"{embedLinksPermissionLabel}\"权限才能在此频道中嵌入链接"
 
@@ -38274,7 +38274,7 @@ msgid "You need the \"{permissionLabel}\" permission to use stickers from other 
 msgstr "你需要\"{permissionLabel}\"权限才能在此处使用其他社群的贴纸。"
 
 #. Forward dialog error shown when the user lacks the Send Messages permission in the target channel. Permission name is interpolated.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:21
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:22
 msgid "You need the \"{sendMessagesPermissionLabel}\" permission to send messages in this channel"
 msgstr "你需要\"{sendMessagesPermissionLabel}\"权限才能在此频道中发送消息"
 
@@ -38514,7 +38514,7 @@ msgid "You're on a legacy rate. The current price for this plan is {currentSubsc
 msgstr "您目前享受旧版价格。此套餐的当前价格为{currentSubscriptionListPriceLabel}。"
 
 #. Short label in the settings dialog forward channel selection. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:17
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:18
 msgid "You're on timeout in this community"
 msgstr "你在此社群中被禁言了"
 
@@ -38583,7 +38583,7 @@ msgstr "您已达到社群数量上限"
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:62
 #: src/features/messaging/components/pages/MessageListPage.tsx:25
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:414
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:406
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:37
 msgid "You've reached the end"
 msgstr "已到底部"
@@ -38627,7 +38627,7 @@ msgstr "你收到了一份礼物"
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "您请求的验证邮件过多。请稍候片刻再试。"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:417
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:409
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "你已查看所有近期提及。新提及会很快显示在这里。"
 

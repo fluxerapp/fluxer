@@ -4,6 +4,7 @@ import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
+import {resolveUnreadInboxVisibility} from '@app/features/user/state/UnreadInboxVisibility';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import type {ChannelId, GuildId} from '@fluxer/schema/src/branded/WireIds';
@@ -519,27 +520,17 @@ class UserGuildSettings {
 		return this.resolvedUnreadBadgesLevel(channel);
 	}
 
-	private shouldShowUnreadInboxStateAtLevel(level: number, readState: UnreadInboxReadState): boolean {
-		if (level === MessageNotifications.NO_MESSAGES) return false;
-		if (level === MessageNotifications.ONLY_MENTIONS) return readState.hasMentions;
-		return readState.hasUnread || readState.hasMentions;
-	}
-
 	shouldShowChannelInUnreadInbox(
 		channel: {id: string; guildId?: string; parentId?: string; type: number},
 		readState: UnreadInboxReadState,
 	): boolean {
 		const guildId = channel.guildId ?? null;
-		const level = this.resolvedUnreadBadgesLevel(channel);
-		if (isExplicitNotificationLevel(level)) {
-			return this.shouldShowUnreadInboxStateAtLevel(level, readState);
-		}
-		if (guildId == null) {
-			if (this.isGuildOrChannelMuted(null, channel.id)) return false;
-		} else if (this.isGuildOrCategoryOrChannelMuted(guildId, channel.id)) {
-			return false;
-		}
-		return this.shouldShowUnreadInboxStateAtLevel(this.resolvedMessageNotifications(channel), readState);
+		return resolveUnreadInboxVisibility({
+			unreadBadgesLevel: this.resolvedUnreadBadgesLevel(channel),
+			isMuted: this.isGuildOrCategoryOrChannelMuted(guildId, channel.id),
+			hasUnread: readState.hasUnread,
+			hasMentions: readState.hasMentions,
+		});
 	}
 
 	resolveUnreadSetting(channel: {id: string; guildId?: string; parentId?: string; type: number}): string {

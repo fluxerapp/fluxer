@@ -44,7 +44,6 @@ const THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR = msg({
 });
 const readonlyBehaviorOverrides = {
 	disableContextMenu: true,
-	prefersReducedMotion: true,
 };
 export const SavedMessagesContent = observer(() => {
 	const {i18n} = useLingui();
@@ -161,7 +160,7 @@ export const SavedMessagesContent = observer(() => {
 								channel={channel}
 								previewContext={MessagePreviewContext.LIST_POPOUT}
 								behaviorOverrides={readonlyBehaviorOverrides}
-								readonlyPreview
+								suppressMessageActions
 								onHeadingActivate={() => handleJumpToMessage(message.channelId, message.id)}
 								data-flx="messaging.saved-messages-content.message"
 							/>

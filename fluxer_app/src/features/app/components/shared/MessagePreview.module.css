@@ -9,8 +9,8 @@
 	-webkit-user-select: none;
 	overflow: visible;
 	flex-shrink: 0;
-	border-radius: 0.375rem;
-	border: 0.0625rem solid var(--background-header-secondary);
+	border-radius: 0.5rem;
+	border: 0.0625rem solid var(--message-preview-card-border, var(--background-header-secondary));
 	background-color: var(--message-preview-card-background, transparent);
 	padding-top: 0.5rem;
 	padding-bottom: 0.5rem;

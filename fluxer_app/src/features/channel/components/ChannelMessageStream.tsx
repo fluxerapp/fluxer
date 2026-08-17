@@ -11,6 +11,7 @@ import type {ChannelMessages} from '@app/features/messaging/state/ChannelMessage
 import {type ChannelStreamItem, ChannelStreamType} from '@app/features/messaging/utils/MessageGroupingUtils';
 import {IS_DEV} from '@app/features/platform/types/Env';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import type {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type React from 'react';
 
@@ -39,7 +40,8 @@ interface RenderChannelStreamProps {
 	messageRowClassName?: string;
 	messageActionsClassName?: string;
 	renderMessageActions?: (message: Message) => React.ReactNode;
-	readonlyPreview?: boolean;
+	suppressMessageActions?: boolean;
+	previewContext?: keyof typeof MessagePreviewContext;
 	dateDividerClassName?: string;
 	suppressUnreadIndicator?: boolean;
 	getMessageHeadingActivate?: (message: Message) => (() => void) | undefined;
@@ -58,7 +60,8 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 		messageRowClassName,
 		messageActionsClassName,
 		renderMessageActions,
-		readonlyPreview,
+		suppressMessageActions,
+		previewContext,
 		dateDividerClassName,
 		suppressUnreadIndicator,
 		getMessageHeadingActivate,
@@ -129,7 +132,8 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 				messageRowClassName={messageRowClassName}
 				messageActionsClassName={messageActionsClassName}
 				renderMessageActions={renderMessageActions}
-				readonlyPreview={readonlyPreview}
+				suppressMessageActions={suppressMessageActions}
+				previewContext={previewContext}
 				getMessageHeadingActivate={getMessageHeadingActivate}
 				data-flx="channel.channel-message-stream.flush-pending-group.message-group"
 			/>,

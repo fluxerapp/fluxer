@@ -63,7 +63,6 @@ const RECENT_MENTIONS_RETENTION_DESCRIPTOR = msg({
 });
 const readonlyBehaviorOverrides = {
 	disableContextMenu: true,
-	prefersReducedMotion: true,
 };
 const FilterMenuContent = observer(() => {
 	const {i18n} = useLingui();
@@ -189,7 +188,7 @@ const MentionMessageCard = observer(function MentionMessageCard({
 					channel={channel}
 					previewContext={MessagePreviewContext.LIST_POPOUT}
 					behaviorOverrides={readonlyBehaviorOverrides}
-					readonlyPreview
+					suppressMessageActions
 					onHeadingActivate={() => onJump(message.channelId, message.id)}
 					data-flx="messaging.recent-mentions-content.message"
 				/>
@@ -365,21 +364,13 @@ export const RecentMentionsContent = observer(
 				data-flx="messaging.recent-mentions-content.scroller"
 			>
 				{groupedMentions.map((group) => {
-					const groupHeadingId = `inbox-mentions-group-${group.key}`;
 					return (
 						<section
 							key={group.key}
 							className={styles.guildGroup}
-							aria-labelledby={groupHeadingId}
+							aria-label={group.label}
 							data-flx="messaging.recent-mentions-content.guild-group"
 						>
-							<h1
-								id={groupHeadingId}
-								className={styles.guildGroupHeading}
-								data-flx="messaging.recent-mentions-content.guild-group-heading"
-							>
-								{group.label}
-							</h1>
 							{group.mentions.map((message) => {
 								const channel = Channels.getChannel(message.channelId);
 								if (!channel) return null;

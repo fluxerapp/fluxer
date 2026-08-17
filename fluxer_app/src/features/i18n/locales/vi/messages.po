@@ -49,7 +49,7 @@ msgid "(you)"
 msgstr "(bạn)"
 
 #. placeholder {0}: guild.member_count
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:146
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:184
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# thành viên} other {# thành viên}}"
 
@@ -288,14 +288,14 @@ msgid "{blikPaymentMethod} does not support subscriptions in {paymentProviderNam
 msgstr "{blikPaymentMethod} không hỗ trợ gói đăng ký trong quy trình thanh toán của {paymentProviderName}."
 
 #. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:35
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:37
 msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
 msgstr "{categoryLabel}, {count, plural, other {# cộng đồng}}"
 
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx:52
-msgid "{channelHeading}, {mentionCount} mentions"
-msgstr "{channelHeading}, {mentionCount} lượt nhắc đến"
+msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
+msgstr "{channelHeading}, {mentionCount, plural, one {# lượt nhắc đến} other {# lượt nhắc đến}}"
 
 #. Short label in the channel layout. Keep it concise. Preserve {channelName}; it is inserted by code.
 #: src/features/channel/components/ChannelLayout.tsx:17
@@ -356,11 +356,11 @@ msgid "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgstr "{count, plural, one {# dấu trang} other {# dấu trang}}"
 
 #. Screen-reader status text in Discovery. {count} is the total number of matching communities.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:33
+#: src/features/discovery/discovery/DiscoveryPage.tsx:34
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# cộng đồng được tìm thấy} other {# cộng đồng được tìm thấy}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1926
+#: src/features/app/components/layout/GuildsLayout.tsx:1949
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# cộng đồng hiện không khả dụng do lỗi bộ biến đổi dòng chảy.} other {# cộng đồng hiện không khả dụng do lỗi bộ biến đổi dòng chảy.}}"
 
@@ -634,12 +634,12 @@ msgid "{deviceCount, plural, one {# device selected for sign out} other {# devic
 msgstr "{deviceCount, plural, one {# thiết bị đã chọn để đăng xuất} other {# thiết bị đã chọn để đăng xuất}}"
 
 #. Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:50
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:49
 msgid "{displayedIncomingFriendRequestCount} friend requests"
 msgstr "{displayedIncomingFriendRequestCount} lời mời kết bạn"
 
 #. Short label in the sidebar navigation fluxer button. Preserve {displayedUnreadDmCount}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:41
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:40
 msgid "{displayedUnreadDmCount} unread DMs"
 msgstr "{displayedUnreadDmCount} tin nhắn chưa đọc"
 
@@ -726,7 +726,7 @@ msgid "{fifteenMinutes} minutes"
 msgstr "{fifteenMinutes} phút"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:78
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:77
 msgid "{folderName} folder"
 msgstr "Thư mục {folderName}"
 
@@ -1567,7 +1567,7 @@ msgid "1 day"
 msgstr "1 ngày"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:46
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:45
 msgid "1 friend request"
 msgstr "1 lời mời kết bạn"
 
@@ -1622,7 +1622,7 @@ msgid "1 unread"
 msgstr "1 tin chưa đọc"
 
 #. Short label in the sidebar navigation fluxer button.
-#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:37
+#: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:36
 msgid "1 unread DM"
 msgstr "1 tin nhắn chưa đọc"
 
@@ -2248,13 +2248,13 @@ msgstr "Lượt nhấp kích hoạt"
 msgid "Active"
 msgstr "Đang hoạt động"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:355
-#: src/features/auth/components/accounts/AccountRow.tsx:135
+#: src/features/app/components/floating/UserAreaPopout.tsx:358
+#: src/features/auth/components/accounts/AccountRow.tsx:136
 msgid "Active account"
 msgstr "Tài khoản đang hoạt động"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild list DM item.
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:64
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:66
 msgid "active call"
 msgstr "cuộc gọi đang hoạt động"
 
@@ -2907,8 +2907,8 @@ msgstr "Điều khiển căn chỉnh chỉ có trên màn hình rộng hơn"
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:19
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:23
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
 msgstr "Tất cả"
@@ -2985,7 +2985,7 @@ msgid "All inputs are fully interactive, so type away."
 msgstr "Tất cả các trường nhập liệu đều có tính tương tác cao, bạn cứ thoải mái gõ nhé."
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:27
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "Tất cả ngôn ngữ"
 
@@ -5785,8 +5785,8 @@ msgstr "Không thể tải tệp lên đây"
 #: src/features/auth/components/modals/AccountDisableModal.tsx:45
 #: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:78
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:61
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:210
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:226
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:216
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
@@ -5812,7 +5812,7 @@ msgstr "Không thể tải tệp lên đây"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:627
+#: src/features/messaging/components/modals/ForwardModal.tsx:628
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
@@ -5998,12 +5998,12 @@ msgstr "Thẻ có thể giữ nguyên giá TRY sau khi xác minh nhanh bằng {p
 #. Heading above the category filter list in the Discovery search sidebar.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:15
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:19
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:21
 msgid "Categories"
 msgstr "Danh mục"
 
 #. Lowercase channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:79
+#: src/features/app/components/layout/ChannelItem.tsx:84
 msgid "category"
 msgstr "Danh mục"
 
@@ -6313,7 +6313,7 @@ msgstr "Các thay đổi được áp dụng ngay lập tức cho ứng dụng k
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:87
+#: src/features/app/components/layout/ChannelItem.tsx:92
 #: src/features/channel/components/channel_textarea/shared.ts:11
 msgid "channel"
 msgstr "kênh"
@@ -6333,7 +6333,7 @@ msgid "Channel"
 msgstr "Kênh"
 
 #. Short label in the settings dialog forward channel selection. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardChannelObservations.ts:22
+#: src/features/app/components/dialogs/shared/UseForwardChannelObservations.ts:27
 msgid "Channel {id}"
 msgstr "Kênh {id}"
 
@@ -6343,7 +6343,7 @@ msgid "Channel access"
 msgstr "Quyền truy cập kênh"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:110
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
 msgid "Channel access denied"
 msgstr "Không thể truy cập kênh"
 
@@ -6408,7 +6408,7 @@ msgstr "Đã sao chép ID kênh vào bảng tạm"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:79
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:80
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "liên kết kênh"
@@ -7009,7 +7009,7 @@ msgstr "Xác nhận tài khoản"
 msgid "Claim your account and verify your email to send reports."
 msgstr "Xác nhận tài khoản và email của bạn để gửi báo cáo."
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:138
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:144
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "Xác nhận tài khoản của bạn bằng cách thêm email và mật khẩu. Chúng tôi sẽ gửi mã xác minh đến email của bạn để hoàn tất."
 
@@ -7597,7 +7597,7 @@ msgid "Collapse"
 msgstr "Thu gọn"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:98
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:97
 msgid "Collapse {folderName}"
 msgstr "Thu gọn {folderName}"
 
@@ -7641,8 +7641,8 @@ msgstr "Thu gọn tin nhắn chưa đọc cho {channelHeading}"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for a collapsed category.
-#: src/features/app/components/layout/ChannelItem.tsx:95
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:86
+#: src/features/app/components/layout/ChannelItem.tsx:100
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:85
 msgid "collapsed"
 msgstr "đã thu gọn"
 
@@ -8266,7 +8266,7 @@ msgid "Connect with {providerName}"
 msgstr "Kết nối với {providerName}"
 
 #. Lowercase state label used inside channel-list accessible text for the current voice channel.
-#: src/features/app/components/layout/ChannelItem.tsx:111
+#: src/features/app/components/layout/ChannelItem.tsx:116
 msgid "connected"
 msgstr "Đã kết nối"
 
@@ -8666,7 +8666,7 @@ msgid "Copy banner URL"
 msgstr "Sao chép URL ảnh bìa"
 
 #. Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.
-#: src/features/app/components/floating/UserAreaPopout.tsx:711
+#: src/features/app/components/floating/UserAreaPopout.tsx:714
 #: src/features/platform/utils/DesktopLocaleBridge.ts:164
 msgid "Copy build info"
 msgstr "Sao chép thông tin bản dựng"
@@ -8898,7 +8898,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "Sao chép khóa thiết lập vào ứng dụng xác thực của bạn."
 
 #. Developer-mode action that copies a user snowflake/ID to the clipboard.
-#: src/features/app/components/floating/UserAreaPopout.tsx:696
+#: src/features/app/components/floating/UserAreaPopout.tsx:699
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:172
 msgid "Copy user ID"
 msgstr "Sao chép ID người dùng"
@@ -8923,7 +8923,7 @@ msgstr "Sao chép video"
 msgid "Copy video link"
 msgstr "Sao chép liên kết video"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:724
+#: src/features/app/components/floating/UserAreaPopout.tsx:727
 msgid "Copy voice diagnostics"
 msgstr "Sao chép chẩn đoán giọng nói"
 
@@ -11195,13 +11195,13 @@ msgstr "Trạng thái nhà phát triển"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:122
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:123
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Công cụ nhà phát triển"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Công cụ nhà phát triển có sẵn từ huy hiệu nhân viên trong tiêu đề kênh."
 
@@ -11657,7 +11657,7 @@ msgid "Discovery application withdrawn"
 msgstr "Đã rút đơn đăng ký khám phá"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:23
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
 msgid "Discovery categories"
 msgstr "Danh mục khám phá"
 
@@ -11671,12 +11671,12 @@ msgid "Discovery navigation"
 msgstr "Điều hướng khám phá"
 
 #. Accessible label for the Discovery community results region.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:29
+#: src/features/discovery/discovery/DiscoveryPage.tsx:30
 msgid "Discovery results"
 msgstr "Kết quả khám phá"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:31
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
 msgid "Discovery search"
 msgstr "Tìm kiếm Khám phá"
 
@@ -12366,7 +12366,7 @@ msgstr "Chỉnh sửa tệp đính kèm"
 #. Action that opens the edit-category modal.
 #. Action that opens the edit-category modal.
 #. Tooltip and accessible label for the category settings button in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:115
+#: src/features/app/components/layout/ChannelItem.tsx:120
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:85
 #: src/features/ui/action_menu/items/CategoryMenuItems.tsx:62
 msgid "Edit category"
@@ -12465,11 +12465,11 @@ msgstr "Chỉnh sửa hoặc xóa biểu tượng cảm xúc và nhãn dán do t
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Chỉnh sửa quyền của vai trò và thành viên trong kênh này."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:747
+#: src/features/app/components/floating/UserAreaPopout.tsx:750
 #: src/features/app/components/pages/YouPage.tsx:151
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
-#: src/features/user/components/popouts/UserProfilePopout.tsx:430
+#: src/features/user/components/popouts/UserProfilePopout.tsx:432
 msgid "Edit profile"
 msgstr "Sửa hồ sơ"
 
@@ -12885,7 +12885,7 @@ msgid "Emoticons"
 msgstr "Biểu tượng cảm xúc"
 
 #. Short label in the app layout favorites channel list content.
-#: src/features/app/components/layout/FavoritesChannelListContent.tsx:65
+#: src/features/app/components/layout/FavoritesChannelListContent.tsx:70
 msgid "Empty favorites"
 msgstr "Mục yêu thích trống"
 
@@ -13465,7 +13465,7 @@ msgstr "Nhập mã hiển thị trong ứng dụng để tiếp tục."
 msgid "Enter the code we emailed to your new address."
 msgstr "Nhập mã chúng tôi đã gửi đến địa chỉ email mới của bạn."
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:175
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:181
 msgid "Enter the code we sent to your email to verify it. Your password will be set once the code is confirmed."
 msgstr "Nhập mã chúng tôi đã gửi đến email của bạn để xác minh. Mật khẩu của bạn sẽ được đặt sau khi mã được xác nhận."
 
@@ -13802,8 +13802,8 @@ msgstr "Mở rộng tin nhắn chưa đọc cho {channelHeading}"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for an expanded category.
-#: src/features/app/components/layout/ChannelItem.tsx:99
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:82
+#: src/features/app/components/layout/ChannelItem.tsx:104
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:81
 msgid "expanded"
 msgstr "đã mở rộng"
 
@@ -13831,7 +13831,7 @@ msgstr "Hết hạn sau"
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:348
-#: src/features/auth/components/accounts/AccountRow.tsx:18
+#: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:41
 #: src/features/invite/components/InviteListItem.tsx:30
 msgid "Expired"
@@ -13915,7 +13915,7 @@ msgid "Explicit content filter setting"
 msgstr "Cài đặt bộ lọc nội dung nhạy cảm"
 
 #. Short label in the app layout discovery guild header.
-#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:10
+#: src/features/app/components/layout/DiscoveryGuildHeader.tsx:9
 msgid "Explore"
 msgstr "Khám phá"
 
@@ -14601,7 +14601,7 @@ msgid "Filter by join method"
 msgstr "Lọc theo cách thức tham gia"
 
 #. Short label in the discovery page. Keep it concise.
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:31
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "Lọc theo ngôn ngữ"
 
@@ -14801,7 +14801,7 @@ msgstr "Giọng nói tập trung"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:74
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:73
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:39
 msgid "Folder"
 msgstr "Thư mục"
@@ -17155,7 +17155,7 @@ msgstr "Ở chế độ \"Hệ điều hành\", các từ điển được liệ
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "Trong trình duyệt, tính năng nhấn để nói chỉ hoạt động khi tab {PRODUCT_NAME} đang được lấy nét. Hãy cài đặt ứng dụng dành cho máy tính để bàn để sử dụng tính năng nhấn để nói trên toàn hệ thống."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:725
+#: src/features/app/components/floating/UserAreaPopout.tsx:728
 msgid "In a call"
 msgstr "Trong cuộc gọi"
 
@@ -17734,7 +17734,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Liên kết mời bị ẩn khi đang chia sẻ:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
 msgid "Invite link masked while sharing"
 msgstr "Đã ẩn liên kết mời khi đang chia sẻ"
 
@@ -17756,7 +17756,7 @@ msgstr "Ẩn lời mời"
 #. Action label that opens the invite flow.
 #. Button or menu action label in the guild header popout. Keep it concise.
 #. Tooltip and accessible label for the invite button shown beside a channel in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:119
+#: src/features/app/components/layout/ChannelItem.tsx:124
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:58
 #: src/features/ui/action_menu/items/GuildMenuData.tsx:84
 msgid "Invite members"
@@ -18162,7 +18162,7 @@ msgid "Jump to {displayName}"
 msgstr "Chuyển đến {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:93
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
 msgid "Jump to {labelText}"
 msgstr "Chuyển đến {labelText}"
 
@@ -18219,12 +18219,12 @@ msgid "Jump to the current call"
 msgstr "Chuyển đến cuộc gọi hiện tại"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
 msgid "Jump to the linked channel"
 msgstr "Chuyển đến kênh được liên kết"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:89
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:90
 msgid "Jump to the linked message"
 msgstr "Đi đến tin nhắn được liên kết"
 
@@ -18234,7 +18234,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Chuyển đến tin nhắn từ {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:84
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:85
 msgid "Jump to the message in {labelText}"
 msgstr "Chuyển đến tin nhắn trong {labelText}"
 
@@ -18712,7 +18712,7 @@ msgid "Light theme"
 msgstr "Giao diện sáng"
 
 #. Singular external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:75
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:70
 msgid "like"
 msgstr "thích"
 
@@ -18722,7 +18722,7 @@ msgid "Liked."
 msgstr "Đã thích."
 
 #. Plural external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:79
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:74
 msgid "likes"
 msgstr "lượt thích"
 
@@ -18819,7 +18819,7 @@ msgid "Link styling"
 msgstr "Kiểu liên kết"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:131
 msgid "Link unavailable"
 msgstr "Liên kết không khả dụng"
 
@@ -18928,7 +18928,7 @@ msgid "Loading banned users"
 msgstr "Đang tải người dùng bị cấm"
 
 #. Screen-reader status text shown while Discovery communities are loading.
-#: src/features/discovery/discovery/DiscoveryPage.tsx:37
+#: src/features/discovery/discovery/DiscoveryPage.tsx:38
 msgid "Loading communities"
 msgstr "Đang tải cộng đồng"
 
@@ -19268,7 +19268,7 @@ msgstr "Phần mềm độc hại, đánh cắp thông tin đăng nhập hoặc 
 msgid "Manage"
 msgstr "Quản lý"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:395
+#: src/features/app/components/floating/UserAreaPopout.tsx:398
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:78
 msgid "Manage accounts"
 msgstr "Quản lý tài khoản"
@@ -20079,8 +20079,8 @@ msgstr "tin nhắn"
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
 #: src/features/user/components/modals/UserProfileModal.tsx:770
-#: src/features/user/components/popouts/UserProfilePopout.tsx:416
-#: src/features/user/components/popouts/UserProfilePopout.tsx:446
+#: src/features/user/components/popouts/UserProfilePopout.tsx:418
+#: src/features/user/components/popouts/UserProfilePopout.tsx:448
 #: src/features/user/components/profile/ProfilePreview.tsx:321
 msgid "Message"
 msgstr "Nhắn tin"
@@ -20220,7 +20220,7 @@ msgid "Message layout"
 msgstr "Bố cục tin nhắn"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:74
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:75
 msgid "message link"
 msgstr "liên kết tin nhắn"
 
@@ -20665,7 +20665,7 @@ msgstr "Quà tặng hàng tháng"
 #. Short label in the buttons tab. Keep it concise.
 #. Short label in the channel and chat friend list item. Keep it concise.
 #. Tooltip on the overflow button in the inline message hover action bar. Opens the full action menu.
-#: src/features/auth/components/accounts/AccountRow.tsx:22
+#: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
 #: src/features/channel/components/MessageActionBar.tsx:88
@@ -21014,8 +21014,8 @@ msgstr "Tắt tiếng luồng âm thanh"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text when a channel is muted.
 #. Screen-reader fragment announcing that the DM list row is muted. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:107
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:60
+#: src/features/app/components/layout/ChannelItem.tsx:112
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
 #: src/features/channel/components/direct_message/DMListItem.tsx:75
 msgid "muted"
@@ -21389,7 +21389,7 @@ msgid "New"
 msgstr "Mới"
 
 #. Small badge on a new or recently added app navigation item.
-#: src/features/app/components/layout/GuildsLayout.tsx:131
+#: src/features/app/components/layout/GuildsLayout.tsx:136
 msgctxt "navigation-badge"
 msgid "New"
 msgstr "Mới"
@@ -21577,7 +21577,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Không có quyền {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:118
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
 msgid "No access"
 msgstr "Không có quyền truy cập"
 
@@ -22683,7 +22683,7 @@ msgid "Open {displayName}"
 msgstr "Mở {displayName}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:101
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
 msgid "Open {labelText} in settings"
 msgstr "Mở {labelText} trong cài đặt"
 
@@ -22803,7 +22803,7 @@ msgstr "Mở chi tiết kênh {channelName}"
 
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:123
+#: src/features/app/components/layout/ChannelItem.tsx:128
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Open chat"
 msgstr "Mở trò chuyện"
@@ -25153,12 +25153,12 @@ msgid "Quit {appName}"
 msgstr "Thoát {appName}"
 
 #. Singular external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:67
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:62
 msgid "quote"
 msgstr "trích dẫn"
 
 #. Plural external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:71
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:66
 msgid "quotes"
 msgstr "trích dẫn"
 
@@ -26334,12 +26334,12 @@ msgid "Reported user tag (optional)"
 msgstr "Thẻ người dùng bị báo cáo (tùy chọn)"
 
 #. Singular external-post stat label on a social post embed (e.g. Twitter/X). Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:57
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:52
 msgid "repost"
 msgstr "Đăng lại"
 
 #. Plural external-post stat label on a social post embed (e.g. Twitter/X). Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:62
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:57
 msgid "reposts"
 msgstr "đăng lại"
 
@@ -26470,7 +26470,7 @@ msgstr "Yêu cầu tất cả các mục trong mức trung bình, cộng với v
 msgid "Reschedule message"
 msgstr "Dời lịch gửi tin nhắn"
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:234
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:240
 #: src/features/user/components/modals/EmailChangeModal.tsx:296
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
 #: src/features/user/components/modals/PasswordChangeModal.tsx:244
@@ -26489,7 +26489,7 @@ msgstr "Gửi lại ({originalSecondsRemaining}s)"
 msgid "Resend ({resendCooldownSeconds}s)"
 msgstr "Gửi lại ({resendCooldownSeconds}s)"
 
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:234
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:240
 msgid "Resend ({resendSecondsRemaining}s)"
 msgstr "Gửi lại ({resendSecondsRemaining}s)"
 
@@ -27250,7 +27250,7 @@ msgid "Saturation"
 msgstr "Độ bão hòa"
 
 #. Singular external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:83
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:78
 msgid "save"
 msgstr "Lưu"
 
@@ -27370,7 +27370,7 @@ msgid "Saved."
 msgstr "Đã lưu."
 
 #. Plural external-post stat label on a social post embed. Lowercase to appear after the count.
-#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:87
+#: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:82
 msgid "saves"
 msgstr "lượt lưu"
 
@@ -27719,7 +27719,7 @@ msgid "Search channels or DMs"
 msgstr "Tìm kênh hoặc tin nhắn"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:27
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
 msgid "Search communities"
 msgstr "Tìm cộng đồng"
 
@@ -27758,7 +27758,7 @@ msgstr "Bộ lọc tìm kiếm: {filter}"
 #. Section header in the message search popout listing available filter operators.
 #: src/features/channel/components/message_search_bar/FilterOption.tsx:14
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:17
-#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:15
+#: src/features/discovery/discovery/DiscoverySearchFilters.tsx:17
 msgid "Search filters"
 msgstr "Bộ lọc tìm kiếm"
 
@@ -27852,7 +27852,7 @@ msgid "Search results"
 msgstr "Kết quả tìm kiếm"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:35
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
 msgid "Search results for “{query}”"
 msgstr "Kết quả tìm kiếm cho “{query}”"
 
@@ -28232,8 +28232,8 @@ msgstr "Văn bản có thể chọn"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text for the selected channel.
 #. Screen-reader suffix announcing that the DM list row is the active selection. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:91
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:52
+#: src/features/app/components/layout/ChannelItem.tsx:96
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
@@ -28365,7 +28365,7 @@ msgid "Send button"
 msgstr "Nút gửi"
 
 #. Primary button in the required-action modal. Requests a verification code.
-#: src/features/auth/components/modals/ClaimAccountModal.tsx:213
+#: src/features/auth/components/modals/ClaimAccountModal.tsx:219
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:190
 #: src/features/user/components/modals/EmailChangeModal.tsx:318
 msgid "Send code"
@@ -28515,7 +28515,7 @@ msgid "Sending malware or dangerous links"
 msgstr "Gửi phần mềm độc hại hoặc liên kết nguy hiểm"
 
 #. Short label in the settings dialog forward channel selection.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:13
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:14
 msgid "Sending messages is disabled in this community"
 msgstr "Đã tắt tính năng gửi tin nhắn trong cộng đồng này"
 
@@ -28623,7 +28623,7 @@ msgstr "Phiên hoạt động"
 msgid "Set {fieldNode} to {0}."
 msgstr "Đặt {fieldNode} thành {0}."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:605
+#: src/features/app/components/floating/UserAreaPopout.tsx:608
 #: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:312
 msgid "Set a custom status"
 msgstr "Đặt trạng thái tùy chỉnh"
@@ -28877,7 +28877,7 @@ msgid "Settings"
 msgstr "Cài đặt"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:106
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
 msgid "settings link"
 msgstr "liên kết cài đặt"
 
@@ -29848,7 +29848,7 @@ msgid "Skip this step"
 msgstr "Bỏ qua bước này"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:75
+#: src/app/App.tsx:76
 msgid "Skip to content"
 msgstr "Bỏ qua nội dung"
 
@@ -29935,7 +29935,7 @@ msgid "Slowmode"
 msgstr "Chế độ chậm"
 
 #. Short label in the settings dialog forward channel selection. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:36
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:37
 msgid "Slowmode · wait {remaining}"
 msgstr "Chế độ chậm · chờ {remaining}"
 
@@ -31352,7 +31352,7 @@ msgstr "Tiếng Thụy Điển"
 msgid "Switch account"
 msgstr "Chuyển tài khoản"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:681
+#: src/features/app/components/floating/UserAreaPopout.tsx:684
 msgid "Switch accounts"
 msgstr "Chuyển tài khoản"
 
@@ -32795,7 +32795,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Kênh liên kết này được đánh dấu là nội dung người lớn và có thể chứa tài liệu không phù hợp với một số người dùng."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
 msgid "This link is not available for your account."
 msgstr "Liên kết này không khả dụng cho tài khoản của bạn."
 
@@ -34716,9 +34716,9 @@ msgstr "Gỡ ghim cuộc trò chuyện nhóm"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text when a channel has unread messages.
 #. Screen-reader fragment announcing that the DM list row has unread messages. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:103
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:90
-#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:56
+#: src/features/app/components/layout/ChannelItem.tsx:108
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
+#: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
 #: src/features/channel/components/direct_message/DMListItem.tsx:71
 msgid "unread"
@@ -36659,7 +36659,7 @@ msgstr "Kích hoạt giọng nói"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:94
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:93
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:47
 msgid "voice activity"
 msgstr "hoạt động thoại"
@@ -36716,7 +36716,7 @@ msgstr "Cuộc gọi thoại. {statusText}."
 
 #. Generic channel-type token used inside a wider delete confirmation string.
 #. Lowercase channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:83
+#: src/features/app/components/layout/ChannelItem.tsx:88
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:79
 msgid "voice channel"
 msgstr "Kênh thoại"
@@ -38084,7 +38084,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Bạn đã đổi thẻ tag khi đang dùng {PREMIUM_PRODUCT_NAME}. Thẻ tag sẽ được đổi ngẫu nhiên khi gói {PREMIUM_PRODUCT_NAME} của bạn hết hạn, trừ khi gói được gia hạn."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Bạn không có quyền truy cập vào kênh đã gửi tin nhắn này."
 
@@ -38231,12 +38231,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "Bạn cần truy cập email hiện tại để thay đổi email từ đây. Hãy dùng xác minh qua điện thoại (nếu có) hoặc liên hệ bộ phận hỗ trợ."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:31
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:32
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "Bạn cần có quyền \"{attachFilesPermissionLabel}\" để đính kèm tệp vào kênh này"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:26
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:27
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "Bạn cần quyền \"{embedLinksPermissionLabel}\" để nhúng liên kết vào kênh này"
 
@@ -38274,7 +38274,7 @@ msgid "You need the \"{permissionLabel}\" permission to use stickers from other 
 msgstr "Bạn cần có quyền \"{permissionLabel}\" để sử dụng nhãn dán từ các cộng đồng khác tại đây."
 
 #. Forward dialog error shown when the user lacks the Send Messages permission in the target channel. Permission name is interpolated.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:21
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:22
 msgid "You need the \"{sendMessagesPermissionLabel}\" permission to send messages in this channel"
 msgstr "Bạn cần quyền \"{sendMessagesPermissionLabel}\" để gửi tin nhắn trong kênh này"
 
@@ -38514,7 +38514,7 @@ msgid "You're on a legacy rate. The current price for this plan is {currentSubsc
 msgstr "Bạn đang dùng gói giá cũ. Giá hiện tại cho gói này là {currentSubscriptionListPriceLabel}."
 
 #. Short label in the settings dialog forward channel selection. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:17
+#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:18
 msgid "You're on timeout in this community"
 msgstr "Bạn đang bị tạm khóa trong cộng đồng này"
 
@@ -38583,7 +38583,7 @@ msgstr "Bạn đã đạt đến giới hạn cộng đồng"
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:62
 #: src/features/messaging/components/pages/MessageListPage.tsx:25
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:414
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:406
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:37
 msgid "You've reached the end"
 msgstr "Bạn đã xem hết"
@@ -38627,7 +38627,7 @@ msgstr "Bạn đã nhận được quà"
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "Bạn đã yêu cầu quá nhiều email xác minh. Vui lòng đợi một lát rồi thử lại."
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:417
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:409
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Bạn đã xem tất cả các lượt nhắc gần đây. Các lượt nhắc mới sẽ sớm xuất hiện tại đây."
 

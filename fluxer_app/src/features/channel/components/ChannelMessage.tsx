@@ -258,7 +258,6 @@ export type MessageBehaviorOverrides = Partial<{
 	mobileLayoutEnabled: boolean;
 	messageGroupSpacing: number;
 	messageDisplayCompact: boolean;
-	prefersReducedMotion: boolean;
 	isEditing: boolean;
 	isReplying: boolean;
 	isHighlight: boolean;
@@ -285,7 +284,7 @@ interface MessageProps {
 	behaviorOverrides?: MessageBehaviorOverrides;
 	compact?: boolean;
 	idPrefix?: string;
-	readonlyPreview?: boolean;
+	suppressMessageActions?: boolean;
 	onHeadingActivate?: () => void;
 }
 
@@ -304,7 +303,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		behaviorOverrides,
 		compact,
 		idPrefix = 'message',
-		readonlyPreview,
+		suppressMessageActions,
 		onHeadingActivate,
 	} = props;
 	const {i18n} = useLingui();
@@ -326,7 +325,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	const mobileLayoutEnabled = behaviorOverrides?.mobileLayoutEnabled ?? MobileLayout.isEnabled();
 	const messageDisplayCompact =
 		compact ?? behaviorOverrides?.messageDisplayCompact ?? UserSettings.getMessageDisplayCompact();
-	const prefersReducedMotion = behaviorOverrides?.prefersReducedMotion ?? Accessibility.useReducedMotion;
+	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const isEditing = behaviorOverrides?.isEditing ?? MessageEdit.isEditing(message.channelId, message.id);
 	const isReplying = behaviorOverrides?.isReplying ?? MessageReply.isReplying(message.channelId, message.id);
 	const isHighlight = behaviorOverrides?.isHighlight ?? MessageReply.isHighlight(message.id);
@@ -742,7 +741,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					}
 				: undefined,
 			onPopoutToggle: handleMessagePopoutToggle,
-			readonlyPreview,
+			suppressMessageActions,
 			onHeadingActivate,
 		}),
 		[
@@ -756,7 +755,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			previewOverrides,
 			previewMode,
 			handleMessagePopoutToggle,
-			readonlyPreview,
+			suppressMessageActions,
 			onHeadingActivate,
 		],
 	);
@@ -780,8 +779,9 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		astNodes.length === 1 &&
 		astNodes[0].type === NodeType.Link &&
 		!message.suppressEmbeds;
-	const shouldDisableHoverBackground = (prefersReducedMotion && !isEditing) || readonlyPreview;
+	const shouldDisableHoverBackground = prefersReducedMotion && !isEditing;
 	const isKeyboardFocused = keyboardModeEnabled && isFocusedWithin;
+	const isPreview = previewContext != null;
 	const shouldApplySpacing = !shouldGroup && !removeTopSpacing && previewContext !== MessagePreviewContext.LIST_POPOUT;
 	const systemFollowsSystem = Boolean(
 		shouldGroup && prevMessage && isDisplaySystemMessage(prevMessage) && isDisplaySystemMessage(message),
@@ -790,7 +790,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		() =>
 			clsx(
 				messageDisplayCompact ? styles.messageCompact : styles.message,
-				isHovering && styles.messageHovered,
+				isHovering && !isPreview && styles.messageHovered,
 				shouldDisableHoverBackground && styles.messageNoHover,
 				isEditing && styles.messageEditing,
 				!messageDisplayCompact &&
@@ -812,8 +812,8 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					!isEditing &&
 					message.isUserMessage() &&
 					styles.messageNoText,
-				isKeyboardFocused && styles.keyboardFocused,
-				isKeyboardFocused && 'keyboard-focus-active',
+				isKeyboardFocused && !isPreview && styles.keyboardFocused,
+				isKeyboardFocused && !isPreview && 'keyboard-focus-active',
 				shouldApplySpacing && previewContext && styles.messagePreviewSpacing,
 			),
 		[
@@ -836,16 +836,17 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			shouldHideContent,
 			isKeyboardFocused,
 			shouldApplySpacing,
+			isPreview,
 		],
 	);
 	const shouldShowActionBar = useMemo(
 		() =>
 			!previewContext &&
-			!readonlyPreview &&
+			!suppressMessageActions &&
 			message.state !== MessageStates.SENDING &&
 			!isEditing &&
 			!mobileLayoutEnabled,
-		[previewContext, readonlyPreview, message.state, isEditing, mobileLayoutEnabled],
+		[previewContext, suppressMessageActions, message.state, isEditing, mobileLayoutEnabled],
 	);
 	const shouldRenderInlineActionBar = useMemo(
 		() => shouldShowActionBar && (previewMode || isHovering || isKeyboardFocused || contextMenuOpen || isPopoutOpen),

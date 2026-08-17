@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {mergeFrozenUnreadOrder} from '@app/features/app/components/floating/UnreadChannelOrder';
 import styles from '@app/features/app/components/floating/UnreadChannelsContent.module.css';
 import previewStyles from '@app/features/app/components/shared/MessagePreview.module.css';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
@@ -38,6 +39,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {compare as compareSnowflakes, extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -50,7 +52,7 @@ import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const MENTIONS_DESCRIPTOR = msg({
-	message: '{channelHeading}, {mentionCount} mentions',
+	message: '{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}',
 	comment:
 		'Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.',
 });
@@ -223,13 +225,13 @@ function buildPreviewDataFromMessages(
 				oldestUnreadMessageId: plan.oldestUnreadMessageId,
 			};
 		}
-		return buildEmptyPreview(plan.channel);
 	}
 	const sorted = [...records].sort((a, b) => compareSnowflakes(a.id, b.id));
+	const latest = sorted.slice(Math.max(0, sorted.length - UNREAD_PREVIEW_MESSAGE_LIMIT));
 	return {
 		channel: plan.channel,
-		messages: sorted.slice(0, UNREAD_PREVIEW_MESSAGE_LIMIT),
-		oldestUnreadMessageId: sorted[0]?.id ?? null,
+		messages: latest,
+		oldestUnreadMessageId: latest[0]?.id ?? null,
 	};
 }
 
@@ -239,11 +241,35 @@ async function fetchPreviewBatch(plans: Array<PreviewFetchPlan>): Promise<void> 
 		body: {requests: plans.map((plan) => plan.request)},
 	});
 	const responseChannels = new Map((response.body?.channels ?? []).map((entry) => [entry.channel_id, entry.messages]));
+	const retryPlans: Array<PreviewFetchPlan> = [];
 	for (const plan of plans) {
 		const messages = responseChannels.get(plan.channel.id) ?? [];
+		const isAnchored = plan.request.around != null || plan.request.after != null;
+		if (messages.length === 0 && isAnchored) {
+			retryPlans.push({
+				channel: plan.channel,
+				cacheKey: plan.cacheKey,
+				oldestUnreadMessageId: null,
+				request: {channel_id: plan.channel.id, limit: UNREAD_PREVIEW_MESSAGE_LIMIT},
+			});
+			continue;
+		}
 		previewCache.set(plan.channel.id, {
 			cacheKey: plan.cacheKey,
 			data: buildPreviewDataFromMessages(plan, messages),
+		});
+	}
+	if (retryPlans.length === 0) return;
+	const retryResponse = await http.post<BulkPreviewResponse>(Endpoints.CHANNEL_MESSAGES_BULK, {
+		body: {requests: retryPlans.map((plan) => plan.request)},
+	});
+	const retryChannels = new Map(
+		(retryResponse.body?.channels ?? []).map((entry) => [entry.channel_id, entry.messages]),
+	);
+	for (const plan of retryPlans) {
+		previewCache.set(plan.channel.id, {
+			cacheKey: plan.cacheKey,
+			data: buildPreviewDataFromMessages(plan, retryChannels.get(plan.channel.id) ?? []),
 		});
 	}
 }
@@ -423,7 +449,8 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 			messageRowClassName: styles.messageRow,
 			messageActionsClassName: styles.messageActions,
 			renderMessageActions,
-			readonlyPreview: true,
+			suppressMessageActions: true,
+			previewContext: MessagePreviewContext.LIST_POPOUT,
 			dateDividerClassName: styles.previewDateDivider,
 			suppressUnreadIndicator: true,
 			getMessageHeadingActivate,
@@ -468,7 +495,6 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 				</h2>
 				<InboxMessageHeader
 					channel={channel}
-					className={styles.channelStickyHeader}
 					onClick={handleHeaderClick}
 					mentionCount={mentionCount}
 					leftAdornment={
@@ -627,15 +653,11 @@ export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 		frozenOrderRef.current = new Map(getUnreadChannels().map((channel, index) => [channel.id, index]));
 	}
 	const allUnreadChannels = useMemo(() => {
-		const order = frozenOrderRef.current!;
-		const current = getUnreadChannels();
-		return current
-			.filter((channel) => order.has(channel.id))
-			.sort((a, b) => {
-				const aIdx = order.get(a.id) ?? Number.POSITIVE_INFINITY;
-				const bIdx = order.get(b.id) ?? Number.POSITIVE_INFINITY;
-				return aIdx - bIdx;
-			});
+		const order = frozenOrderRef.current;
+		if (order == null) {
+			return [];
+		}
+		return mergeFrozenUnreadOrder(order, getUnreadChannels());
 	}, [readStateVersion, settingsVersion]);
 	const [loadedCount, setLoadedCount] = useState(INITIAL_VISIBLE_CHANNELS);
 	const visibleChannels = useMemo(() => allUnreadChannels.slice(0, loadedCount), [allUnreadChannels, loadedCount]);
@@ -672,6 +694,20 @@ export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 		}
 		return groups;
 	}, [visibleChannels, channelPreviews, i18n.locale]);
+	const unreadRows = useMemo(() => {
+		const rows: Array<{channel: Channel; endsGroup: boolean; groupLabel: string; key: string}> = [];
+		for (const group of groupedChannels) {
+			for (const [index, channel] of group.channels.entries()) {
+				rows.push({
+					channel,
+					endsGroup: index === group.channels.length - 1,
+					groupLabel: group.label,
+					key: channel.id,
+				});
+			}
+		}
+		return rows;
+	}, [groupedChannels]);
 	const hasMore = loadedCount < allUnreadChannels.length;
 	const handleScroll = useCallback(
 		(event: React.UIEvent<HTMLDivElement>) => {
@@ -751,34 +787,31 @@ export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 			data-message-selection-root="true"
 			data-flx="app.floating.unread-channels-content.scroller"
 		>
-			{groupedChannels.map((group) => {
-				const groupHeadingId = `inbox-unread-group-${group.key}`;
-				return (
-					<section
-						key={group.key}
-						className={styles.guildGroup}
-						aria-labelledby={groupHeadingId}
-						data-flx="app.floating.unread-channels-content.guild-group"
+			<div className={styles.list} role="list" data-flx="app.floating.unread-channels-content.list">
+				{unreadRows.map((row, rowIndex) => (
+					<div
+						key={row.key}
+						className={clsx(styles.row, row.endsGroup && styles.rowGroupEnd)}
+						role="listitem"
+						aria-posinset={rowIndex + 1}
+						aria-setsize={unreadRows.length}
+						data-flx="app.floating.unread-channels-content.row"
 					>
-						<h1
-							id={groupHeadingId}
-							className={styles.guildGroupHeading}
-							data-flx="app.floating.unread-channels-content.guild-group-heading"
+						<section
+							className={styles.guildGroup}
+							aria-label={row.groupLabel}
+							data-flx="app.floating.unread-channels-content.guild-group"
 						>
-							{group.label}
-						</h1>
-						{group.channels.map((channel) => (
 							<UnreadChannelCard
-								key={channel.id}
-								channel={channel}
-								headingId={`inbox-unread-channel-${channel.id}`}
-								previewData={channelPreviews.get(channel.id) ?? null}
+								channel={row.channel}
+								headingId={`inbox-unread-channel-${row.channel.id}`}
+								previewData={channelPreviews.get(row.channel.id) ?? null}
 								data-flx="app.floating.unread-channels-content.unread-channel-card"
 							/>
-						))}
-					</section>
-				);
-			})}
+						</section>
+					</div>
+				))}
+			</div>
 		</Scroller>
 	);
 });

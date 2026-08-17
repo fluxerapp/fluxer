@@ -34,7 +34,7 @@ export interface MessageViewContextValue {
 	previewPermissions?: MessagePreviewPermissions;
 	handleDelete: (bypassConfirm?: boolean) => void;
 	onPopoutToggle?: (isOpen: boolean) => void;
-	readonlyPreview?: boolean;
+	suppressMessageActions?: boolean;
 	onHeadingActivate?: () => void;
 }
 
