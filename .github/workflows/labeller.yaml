@@ -5,6 +5,7 @@ permissions: {}
 jobs:
   label:
     name: Label
+    if: github.repository == 'fluxerapp/fluxer'
     runs-on: ubuntu-latest
     steps:
       - name: Create token

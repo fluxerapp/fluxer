@@ -31,6 +31,7 @@ concurrency:
 jobs:
   metadata:
     name: resolve exact private build metadata
+    if: github.repository == 'fluxerapp/fluxer'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:

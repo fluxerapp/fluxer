@@ -17,6 +17,7 @@ concurrency:
 jobs:
   dispatch:
     name: Dispatch regeneration
+    if: github.repository == 'fluxerapp/fluxer'
     runs-on: ubuntu-latest
     steps:
       - name: Create token
