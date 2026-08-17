@@ -29,6 +29,7 @@ jobs:
   build:
     needs: approve
     uses: ./.github/workflows/_build-image.yaml
+    secrets: inherit
     with:
       image: fluxer-app-proxy-self-hosted
       dockerfile: fluxer_app_proxy/Dockerfile

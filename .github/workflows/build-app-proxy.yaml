@@ -187,9 +187,18 @@ jobs:
             "${IMAGE}:${VERSION}-arm64"
           docker buildx imagetools inspect "${IMAGE}:${VERSION}"
 
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-contents: write
       - name: Publish GitHub release
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
           SOURCE_SHA: ${{ github.sha }}
           VERSION: ${{ needs.meta.outputs.build_version }}
           RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}

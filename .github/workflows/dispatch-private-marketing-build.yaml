@@ -40,11 +40,20 @@ jobs:
       build_version: ${{ steps.inputs.outputs.build_version }}
       correlation_id: ${{ steps.inputs.outputs.correlation_id }}
     steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-contents: read
       - name: Resolve trusted build inputs
         id: inputs
         env:
           EVENT_AFTER: ${{ github.event.after }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
           PARENT_SHA: ${{ github.sha }}
           PUBLIC_REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
