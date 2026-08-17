@@ -533,6 +533,28 @@ export class DownloadService {
 		}
 	}
 
+	isPresignedDownloadEnabled(): boolean {
+		return Config.presignedDownloadsEnabled;
+	}
+
+	async getPresignedDownloadRedirect(params: {
+		key: string;
+		filename: string;
+		expiresIn: number;
+	}): Promise<string | null> {
+		const metadata = await this.getDownloadMetadata({key: params.key});
+		if (!metadata) {
+			return null;
+		}
+		return this.storageService.getPresignedDownloadURL({
+			bucket: Config.s3.buckets.downloads,
+			key: params.key,
+			expiresIn: params.expiresIn,
+			responseContentType: metadata.contentType ?? 'application/octet-stream',
+			responseContentDisposition: `attachment; filename="${encodeURIComponent(params.filename)}"`,
+		});
+	}
+
 	async getDownloadMetadata(params: {key: string}): Promise<{
 		contentLength: number;
 		contentType?: string | null;

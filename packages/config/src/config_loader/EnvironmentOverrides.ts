@@ -75,6 +75,10 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['services', 'api', 'presigned_attachment_uploads_enabled'],
 		parse: parseEnvValue,
 	},
+	FLUXER_API_PRESIGNED_DOWNLOADS_ENABLED: {
+		path: ['services', 'api', 'presigned_downloads_enabled'],
+		parse: parseEnvValue,
+	},
 	FLUXER_API_WORKER_MODE: {path: ['services', 'api', 'worker', 'mode']},
 	FLUXER_API_WORKER_LANE: {path: ['services', 'api', 'worker', 'lane']},
 	FLUXER_API_WORKER_TASK: {path: ['services', 'api', 'worker', 'task']},

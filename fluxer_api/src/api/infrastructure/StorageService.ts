@@ -241,14 +241,20 @@ export class StorageService implements IStorageService {
 		bucket,
 		key,
 		expiresIn = seconds('5 minutes'),
+		responseContentType,
+		responseContentDisposition,
 	}: {
 		bucket: string;
 		key: string;
 		expiresIn?: number;
+		responseContentType?: string;
+		responseContentDisposition?: string;
 	}): Promise<string> {
 		const command = new GetObjectCommand({
 			Bucket: bucket,
 			Key: key,
+			ResponseContentType: responseContentType,
+			ResponseContentDisposition: responseContentDisposition,
 		});
 		return getSignedUrl(this.presignClient, command, {expiresIn});
 	}

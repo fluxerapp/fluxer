@@ -305,7 +305,13 @@ export class MockStorageService implements IStorageService {
 		await this.deleteObject(params.sourceBucket, params.sourceKey);
 	}
 
-	async getPresignedDownloadURL(_params: {bucket: string; key: string; expiresIn?: number}): Promise<string> {
+	async getPresignedDownloadURL(_params: {
+		bucket: string;
+		key: string;
+		expiresIn?: number;
+		responseContentType?: string;
+		responseContentDisposition?: string;
+	}): Promise<string> {
 		this.getPresignedDownloadURLSpy(_params);
 		return 'https://presigned.url/test';
 	}

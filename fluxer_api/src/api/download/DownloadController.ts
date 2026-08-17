@@ -73,6 +73,8 @@ async function headArtifactResponse(
 	return new Response(null, {status: 200, headers});
 }
 
+const PRESIGNED_DOWNLOAD_TTL_SECONDS = 900;
+
 async function streamArtifactResponse(
 	ctx: Context<HonoEnv>,
 	downloadService: DownloadService,
@@ -82,6 +84,24 @@ async function streamArtifactResponse(
 ): Promise<Response> {
 	if (ctx.req.method === 'HEAD') {
 		return headArtifactResponse(ctx, downloadService, key, cacheControl, filenameOverride);
+	}
+	if (downloadService.isPresignedDownloadEnabled()) {
+		const location = await downloadService.getPresignedDownloadRedirect({
+			key,
+			filename: artifactFilename(key, filenameOverride),
+			expiresIn: PRESIGNED_DOWNLOAD_TTL_SECONDS,
+		});
+		if (!location) {
+			return ctx.text('Not Found', 404);
+		}
+		return new Response(null, {
+			status: 302,
+			headers: new Headers({
+				Location: location,
+				'Cache-Control': 'no-store',
+				'Accept-Ranges': 'bytes',
+			}),
+		});
 	}
 	const range = ctx.req.header('range') ?? undefined;
 	let result: DownloadStreamResult | null;

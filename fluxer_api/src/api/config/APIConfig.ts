@@ -327,6 +327,7 @@ export interface APIConfig {
 		testHarnessToken?: string;
 	};
 	presignedAttachmentUploadsEnabled: boolean;
+	presignedDownloadsEnabled: boolean;
 	attachmentDecayEnabled: boolean;
 	deletionGracePeriodHours: number;
 	inactivityDeletionThresholdDays?: number;

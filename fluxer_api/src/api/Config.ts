@@ -429,6 +429,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			testHarnessToken: master.dev.test_harness_token,
 		},
 		presignedAttachmentUploadsEnabled: master.services.api.presigned_attachment_uploads_enabled ?? false,
+		presignedDownloadsEnabled: master.services.api.presigned_downloads_enabled ?? false,
 		attachmentDecayEnabled: master.attachment_decay_enabled,
 		deletionGracePeriodHours: master.dev.test_mode_enabled ? 0.01 : master.deletion_grace_period_hours,
 		inactivityDeletionThresholdDays: master.inactivity_deletion_threshold_days,

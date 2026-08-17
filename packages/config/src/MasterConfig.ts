@@ -84,6 +84,7 @@ export interface MasterConfig {
 			port: number;
 			ip_ban_exempt_ips: Array<string>;
 			presigned_attachment_uploads_enabled: boolean;
+			presigned_downloads_enabled: boolean;
 			unfurl_ignored_hosts: Array<string>;
 			embeds: {
 				oembed_html_enabled: boolean;
