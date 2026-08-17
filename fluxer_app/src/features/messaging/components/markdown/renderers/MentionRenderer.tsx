@@ -119,13 +119,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 			const user = kind.id ? Users.getUser(kind.id) : null;
 			const channel = channelId ? Channels.getChannel(channelId) : undefined;
 			const resolvedGuildId = channel?.guildId || options.guildId || '';
-			let name: string | null = null;
-			if (user) {
-				name = user.displayName;
-				if (resolvedGuildId) {
-					name = NicknameUtils.getNickname(user, resolvedGuildId) || name;
-				}
-			}
+			const name = user ? NicknameUtils.getNickname(user, resolvedGuildId || null, channelId) : null;
 			const genericMention = (
 				<span key={id} className={markupStyles.mention} data-flx="messaging.markdown.renderers.mention-renderer.span">
 					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label">

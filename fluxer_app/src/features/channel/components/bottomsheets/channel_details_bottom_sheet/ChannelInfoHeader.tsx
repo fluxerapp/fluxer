@@ -35,7 +35,7 @@ export const ChannelInfoHeader: React.FC<ChannelInfoHeaderProps> = ({
 	const isDM = channel.type === ChannelTypes.DM;
 	const isPersonalNotes = channel.type === ChannelTypes.DM_PERSONAL_NOTES;
 	const isGroupDM = channel.type === ChannelTypes.GROUP_DM;
-	const recipientDisplayName = recipient ? NicknameUtils.getNickname(recipient) : '';
+	const recipientDisplayName = recipient ? NicknameUtils.getNickname(recipient, null, channel.id) : '';
 	return (
 		<div className={styles.channelInfoSection} data-flx="channel.channel-details-bottom-sheet.channel-info-section">
 			<Sheet.CloseButton
@@ -83,7 +83,7 @@ export const ChannelInfoHeader: React.FC<ChannelInfoHeaderProps> = ({
 									className={styles.channelInfoDiscriminator}
 									data-flx="channel.channel-details-bottom-sheet.channel-info-discriminator"
 								>
-									#{recipient.discriminator}
+									{NicknameUtils.formatUserTagForStreamerMode(recipient)}
 								</span>
 							</div>
 							{recipient.bot && (

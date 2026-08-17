@@ -249,7 +249,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		const isCurrentUser = lastMessage.author.id === currentUser?.id;
 		const authorPrefix = isCurrentUser
 			? `${i18n._(YOU_DESCRIPTOR)}: `
-			: `${NicknameUtils.getNickname(lastMessage.author)}: `;
+			: `${NicknameUtils.getNickname(lastMessage.author, null, channel.id)}: `;
 		if (lastMessage.type !== MessageTypes.DEFAULT && lastMessage.type !== MessageTypes.REPLY) {
 			const systemText = SystemMessageUtils.stringify(lastMessage, i18n);
 			if (systemText) {

@@ -79,6 +79,7 @@
 	display: flex;
 	min-width: 0;
 	align-items: center;
+	gap: var(--spacing-1);
 }
 
 .username {
@@ -93,10 +94,11 @@
 }
 
 .discriminator {
-	font-weight: 600;
+	flex-shrink: 0;
+	font-weight: 400;
 	color: color-mix(in srgb, var(--text-primary) 50%, transparent);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
+	font-size: 0.75rem;
+	line-height: 1rem;
 }
 
 .actions {

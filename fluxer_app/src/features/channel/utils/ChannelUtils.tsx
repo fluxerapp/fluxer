@@ -157,7 +157,7 @@ const getDirectMessageDisplayName = (channel: Channel): string => {
 		return i18n._(UNKNOWN_USER_DESCRIPTOR);
 	}
 	const recipient = Users.getUser(channel.recipientIds[0]);
-	const nickname = recipient ? NicknameUtils.getNickname(recipient) : null;
+	const nickname = recipient ? NicknameUtils.getNickname(recipient, null, channel.id) : null;
 	return nickname ?? i18n._(UNKNOWN_USER_DESCRIPTOR);
 };
 const getGroupDMDisplayName = (channel: Channel): string => {

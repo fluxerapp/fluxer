@@ -364,14 +364,8 @@ function renderMentionToPlaintext(node: MentionNode, options: PlaintextRenderOpt
 			if (!user) {
 				return `@${kind.id}`;
 			}
-			let name = user.displayName;
-			if (options.channelId) {
-				const channel = Channels.getChannel(options.channelId);
-				if (channel?.guildId) {
-					name = NicknameUtils.getNickname(user, channel.guildId) || name;
-				}
-			}
-			return `@${name}`;
+			const channel = options.channelId ? Channels.getChannel(options.channelId) : null;
+			return `@${NicknameUtils.getNickname(user, channel?.guildId ?? null, options.channelId)}`;
 		}
 		case MentionKind.Role: {
 			const channel = options.channelId ? Channels.getChannel(options.channelId) : null;

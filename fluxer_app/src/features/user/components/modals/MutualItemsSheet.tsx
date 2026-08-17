@@ -133,7 +133,7 @@ const MutualFriendsList: React.FC<{profile: Profile; onClose: () => void}> = obs
 						/>
 						<div className={styles.itemInfo} data-flx="user.mutual-items-sheet.mutual-friends-list.item-info">
 							<span className={styles.itemName} data-flx="user.mutual-items-sheet.mutual-friends-list.item-name">
-								{NicknameUtils.getNickname(friendRecord, profile.guildId ?? undefined)}
+								{NicknameUtils.getNickname(friendRecord, profile.guildId ?? null)}
 							</span>
 							<span className={styles.itemDetail} data-flx="user.mutual-items-sheet.mutual-friends-list.item-detail">
 								{NicknameUtils.formatTagForStreamerMode(friendRecord.tag)}

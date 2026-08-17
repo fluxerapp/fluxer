@@ -37,9 +37,9 @@ const OPEN_PROFILE_FOR_DESCRIPTOR = msg({
 	comment: 'Short label in the app layout grouped voice participant. Preserve {nickname}; it is inserted by code.',
 });
 
-function useOpenProfileAriaLabel(user: User) {
+function useOpenProfileAriaLabel(user: User, guildId: string) {
 	const {i18n} = useLingui();
-	const nickname = NicknameUtils.getNickname(user);
+	const nickname = NicknameUtils.getNickname(user, guildId);
 	return useMemo(() => i18n._(OPEN_PROFILE_FOR_DESCRIPTOR, {nickname}), [nickname, i18n.locale]);
 }
 
@@ -56,7 +56,7 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 	guildId,
 	anySpeaking: propAnySpeaking,
 }: GroupedVoiceParticipantProps) {
-	const openProfileAriaLabel = useOpenProfileAriaLabel(user);
+	const openProfileAriaLabel = useOpenProfileAriaLabel(user, guildId);
 	const mediaEngineVersion = useMediaEngineVersion();
 	const [isExpanded, setIsExpanded] = useState(false);
 	const currentUser = Users.getCurrentUser();
@@ -77,7 +77,7 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 				<VoiceParticipantContextMenu
 					user={user}
-					participantName={NicknameUtils.getNickname(user)}
+					participantName={NicknameUtils.getNickname(user, guildId)}
 					onClose={onClose}
 					guildId={guildId}
 					isGroupedItem={true}
@@ -244,7 +244,7 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 									)}
 									data-flx="app.grouped-voice-participant.participant-name"
 								>
-									{NicknameUtils.getNickname(user)}
+									{NicknameUtils.getNickname(user, guildId)}
 								</span>
 								<Tooltip
 									text={

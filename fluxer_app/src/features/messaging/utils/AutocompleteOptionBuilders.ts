@@ -46,7 +46,7 @@ export function getMemberDisplayName(member: GuildMember): string {
 }
 
 export function getUserDisplayName(user: User): string {
-	return firstDisplayText(user.displayName, user.username, user.id);
+	return DisplayNameUtils.getUntruncatedNickname(user, null);
 }
 
 export interface ParsedMentionQuery {

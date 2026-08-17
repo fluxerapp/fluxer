@@ -55,7 +55,7 @@ export const IARModalPreview: React.FC<IARModalPreviewProps> = ({context, curren
 						{NicknameUtils.getDisplayName(context.user)}
 					</div>
 					<div className={styles.previewSubtitle} data-flx="moderation.iar-modal-preview.preview-subtitle">
-						#{context.user.discriminator?.toString().padStart(4, '0') ?? '0000'}
+						{NicknameUtils.formatUserTagForStreamerMode(context.user)}
 					</div>
 				</div>
 			);

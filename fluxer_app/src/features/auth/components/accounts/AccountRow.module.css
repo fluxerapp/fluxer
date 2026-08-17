@@ -85,6 +85,7 @@ button.clickable:active {
 }
 
 .discriminator {
+	margin-left: 0.25rem;
 	color: var(--text-tertiary);
 	font-weight: 400;
 }

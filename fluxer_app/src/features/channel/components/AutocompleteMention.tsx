@@ -83,7 +83,7 @@ export const AutocompleteMention = observer(function AutocompleteMention({
 	const routeParams = useParams() as {guildId?: string};
 	const guildId = routeParams.guildId;
 	const guild = Guilds.getGuild(guildId == null ? '' : guildId);
-	const nicknameGuildId = guild == null ? undefined : guild.id;
+	const nicknameGuildId = guild == null ? null : guild.id;
 	const members = options.filter(isMentionMember);
 	const users = options.filter(isMentionUser);
 	const roles = options.filter(isMentionRole);

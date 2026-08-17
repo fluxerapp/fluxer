@@ -7,6 +7,7 @@ import type {Account} from '@app/features/platform/state/AuthSession';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MockAvatar} from '@app/features/ui/components/MockAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CaretRightIcon, CheckIcon, DotsThreeIcon} from '@phosphor-icons/react';
@@ -52,7 +53,10 @@ export const AccountRow = observer(
 		const {i18n} = useLingui();
 		const avatarUrl = getAccountAvatarUrl(account);
 		const displayName = getAccountDisplayName(account, '???');
-		const discriminator = account.userData?.discriminator ?? '0000';
+		const userData = account.userData;
+		const accountTag = userData
+			? NicknameUtils.formatTagForStreamerMode(`${userData.username}#${userData.discriminator}`)
+			: displayName;
 		const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 		const isContextMenuOpen = useContextMenuHoverState(menuButtonRef, Boolean(onMenuClick));
 		const handleMenuClick = useCallback(
@@ -96,7 +100,7 @@ export const AccountRow = observer(
 								>
 									{displayName}
 									<span className={styles.discriminator} data-flx="auth.accounts.account-row.discriminator">
-										#{discriminator}
+										{accountTag}
 									</span>
 								</span>
 							</div>
@@ -110,7 +114,7 @@ export const AccountRow = observer(
 										>
 											{displayName}
 											<span className={styles.discriminator} data-flx="auth.accounts.account-row.discriminator--2">
-												#{discriminator}
+												{accountTag}
 											</span>
 										</span>
 									) : (
@@ -124,10 +128,7 @@ export const AccountRow = observer(
 								</div>
 								{variant !== 'manage' ? (
 									<span className={clsx('user-text', styles.tag)} data-flx="auth.accounts.account-row.user-text--4">
-										{displayName}
-										<span className={styles.discriminator} data-flx="auth.accounts.account-row.discriminator--3">
-											#{discriminator}
-										</span>
+										{accountTag}
 									</span>
 								) : null}
 								{variant === 'manage' && isCurrent ? (

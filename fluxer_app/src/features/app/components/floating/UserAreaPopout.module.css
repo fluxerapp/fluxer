@@ -236,6 +236,8 @@
 }
 
 .accountMenuDiscriminator {
+	margin-left: 0.25rem;
+	font-size: 0.75rem;
 	color: var(--text-tertiary);
 	font-weight: 400;
 }

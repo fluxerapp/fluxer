@@ -13,6 +13,7 @@ import Relationships from '@app/features/relationship/state/Relationships';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {useNow} from '@app/features/ui/state/Tick';
 import Users from '@app/features/user/state/Users';
+import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
@@ -63,7 +64,7 @@ function resolveChannelDisplayName(channel: Channel, i18n: I18n): string {
 	if (channel.type === ChannelTypes.DM) {
 		const recipient = channel.recipientIds.length > 0 ? Users.getUser(channel.recipientIds[0]) : null;
 		if (recipient) {
-			return Relationships.getRelationship(recipient.id)?.nickname || recipient.displayName;
+			return NicknameUtils.getNickname(recipient, null);
 		}
 	}
 	if (

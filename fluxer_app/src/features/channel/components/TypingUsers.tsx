@@ -43,7 +43,7 @@ const HANDFUL_DESCRIPTOR = A_HANDFUL_OF_KEYBOARD_WARRIORS_ARE_ASSEMBLING_DESCRIP
 const SYMPHONY_DESCRIPTOR = A_SYMPHONY_OF_CLACKING_KEYS_IS_UNDERWAY_DESCRIPTOR;
 const FIESTA_DESCRIPTOR = IT_S_A_FULL_BLOWN_TYPING_FIESTA_IN_DESCRIPTOR;
 const APOCALYPSE_DESCRIPTOR = WHOA_IT_S_A_TYPING_APOCALYPSE_DESCRIPTOR;
-const getDisplayName = (user: User, guildId?: string | null) => NicknameUtils.getNickname(user, guildId ?? undefined);
+const getDisplayName = (user: User, guildId?: string | null) => NicknameUtils.getNickname(user, guildId ?? null);
 export const getTypingText = (i18n: I18n, typingUsers: ReadonlyArray<User>, channel: Channel) => {
 	const [a, b, c] = typingUsers.map((user) => {
 		const member = GuildMembers.getMember(channel.guildId ?? '', user.id);
