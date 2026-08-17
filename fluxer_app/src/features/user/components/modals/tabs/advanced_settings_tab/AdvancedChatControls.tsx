@@ -134,6 +134,10 @@ const SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR = msg({
 	message: 'Skip "Mark all as read" confirmation',
 	comment: 'Short label for an advanced inbox preference.',
 });
+const DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR = msg({
+	message: 'Edit/Reply by double clicking on message',
+	comment: 'Short label for an advanced message double click preference.',
+});
 const HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
 	message: 'Hide muted channels by default',
 	comment: 'Short label for an advanced sidebar preference.',
@@ -623,6 +627,19 @@ export const SkipMarkAllAsReadControl = observer(() => {
 			onChange={(value) => Inbox.setSkipMarkAllAsReadConfirmation(value)}
 			compact
 			data-flx="user.advanced-settings-tab.switch.skip-mark-all-as-read-confirmation"
+		/>
+	);
+});
+
+export const DoubleClickMessageActionsControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR)}
+			value={Accessibility.doubleClickMessageActions}
+			onChange={(value) => AccessibilityCommands.update({doubleClickMessageActions: value})}
+			compact
+			data-flx="user.advanced-settings-tab.switch.double-click-message-actions"
 		/>
 	);
 });

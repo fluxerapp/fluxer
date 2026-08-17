@@ -5,7 +5,12 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import {isMediaOnlyEmbed} from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import {MessageActionBar, MessageActionBarCore} from '@app/features/channel/components/MessageActionBar';
 import {MessageActionBottomSheet} from '@app/features/channel/components/MessageActionBottomSheet';
-import {requestDeleteMessage} from '@app/features/channel/components/MessageActionUtils';
+import {
+	getMessagePermissions,
+	requestDeleteMessage,
+	requestMessageReply,
+	startMessageEdit,
+} from '@app/features/channel/components/MessageActionUtils';
 import {MessageViewContextProvider} from '@app/features/channel/components/MessageViewContext';
 import type {Channel} from '@app/features/channel/models/Channel';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
@@ -266,6 +271,7 @@ export type MessageBehaviorOverrides = Partial<{
 	contextMenuOpen: boolean;
 	disableContextMenu: boolean;
 	disableContextMenuTracking: boolean;
+	disableDoubleClick: boolean;
 }>;
 
 interface MessageProps {
@@ -385,6 +391,38 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			handleAltClickEvent(event, message);
 		},
 		[message],
+	);
+	const handleDoubleClick = useCallback(
+		(event: React.MouseEvent) => {
+			if (behaviorOverrides?.disableDoubleClick || !Accessibility.doubleClickMessageActions) {
+				event.preventDefault();
+				return;
+			}
+			if (
+				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
+				message.state === MessageStates.SENDING ||
+				isEditing
+			)
+				return;
+
+			const permission = getMessagePermissions(message, channel);
+			if (!permission?.canSendMessages) return;
+			event.preventDefault();
+			if (permission?.canEditMessage && message.isCurrentUserAuthor()) {
+				startMessageEdit(message);
+				return;
+			}
+			if (!isReplying) requestMessageReply(message);
+		},
+		[
+			previewContext,
+			message,
+			channel,
+			isEditing,
+			isReplying,
+			behaviorOverrides?.disableDoubleClick,
+			Accessibility.doubleClickMessageActions,
+		],
 	);
 	const handleAltKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -898,6 +936,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					ref={messageRef}
 					onClickCapture={handleClickCapture}
 					onClick={handleAltClick}
+					onDoubleClick={handleDoubleClick}
 					onKeyDown={handleAltKeyDown}
 					onFocus={handleFocusWithin}
 					onBlur={handleBlurWithin}

@@ -432,6 +432,14 @@ const SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR = msg({
 	message: 'Skip "Mark all as read" confirmation',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
+const DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR = msg({
+	message: 'Edit/Reply by double clicking on message',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI',
+});
+const CHOOSE_WHAT_DOUBLE_CLICK_MESSAGE_DOES_DESCRIPTOR = msg({
+	message: 'Choose what happens when you double click a message',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
 const MARK_ALL_AS_READ_DESCRIPTOR = msg({
 	message: 'Mark all as read',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -719,6 +727,22 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 		description: MARK_ALL_UNREAD_INBOX_CHANNELS_AS_READ_IMMEDIATELY_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['chat', 'notifications'],
+	},
+	{
+		id: 'chat-settings-double-click-message-actions',
+		tabType: 'chat_settings',
+		sectionId: 'input',
+		label: DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR,
+		keywords: [
+			MESSAGE_HOVER_DESCRIPTOR,
+			MESSAGE_ACTION_BAR_DESCRIPTOR,
+			SENT_MESSAGES_DESCRIPTOR,
+			MORE_BUTTON_DESCRIPTOR,
+			MESSAGE_BUTTONS_DESCRIPTOR,
+		],
+		description: CHOOSE_WHAT_DOUBLE_CLICK_MESSAGE_DOES_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['chat'],
 	},
 	{
 		id: 'chat-settings-hide-muted-channels',
