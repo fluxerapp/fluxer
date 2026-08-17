@@ -51,6 +51,7 @@ export interface LexicalRichInputProps {
 	richInputRef?: React.Ref<LexicalRichInputHandle>;
 	onChange?: (display: string, segments: Array<MentionSegment>, wire: string) => void;
 	onSubmit?: () => void;
+	submitOnEnter?: boolean;
 	onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
 	onFocus?: () => void;
 	onBlur?: () => void;
@@ -85,6 +86,7 @@ export const LexicalRichInput = ({
 	richInputRef,
 	onChange,
 	onSubmit,
+	submitOnEnter,
 	onKeyDown,
 	onFocus,
 	onBlur,
@@ -226,7 +228,7 @@ export const LexicalRichInput = ({
 				emojiShortcodeResolver={emojiShortcodeResolver}
 				channelId={channel == null ? undefined : channel.id}
 				guildId={channel == null ? undefined : channel.guildId}
-				submitOnEnter={singleLine}
+				submitOnEnter={submitOnEnter ?? singleLine}
 				autocompleteOptions={autocompleteOptions}
 				autocompleteType={autocompleteType}
 				autocompleteQuery={autocompleteQuery}

@@ -513,6 +513,7 @@ export const ForwardModal = observer(
 								disabled={isCommentComposerDisabled}
 								markdown={true}
 								singleLine={false}
+								submitOnEnter={true}
 								size="form"
 								autocompleteAnchor={containerElement}
 								maxLength={user.maxMessageLength}

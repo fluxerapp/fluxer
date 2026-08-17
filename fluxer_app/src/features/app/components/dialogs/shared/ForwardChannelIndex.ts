@@ -9,6 +9,7 @@ import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants'
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {isForwardableChannelType} from './ForwardChannelEligibility';
+import {matchesForwardChannelSearch} from './ForwardChannelSearchMatch';
 
 const GUILD_MESSAGES_DISABLED_DESCRIPTOR = msg({
 	message: 'Sending messages is disabled in this community',
@@ -92,6 +93,7 @@ export interface ForwardChannelObservation {
 	readonly guildMessagesDisabled: boolean;
 	readonly guildName: string | null;
 	readonly memberTimedOut: boolean;
+	readonly searchAliases: ReadonlyArray<string>;
 	readonly slowmodeEnabled: boolean;
 	readonly slowmodeRemainingMs: number;
 }
@@ -113,6 +115,7 @@ interface IndexedForwardChannelOption extends ForwardChannelOption {
 	readonly isPersonalNotes: boolean;
 	readonly isSource: boolean;
 	readonly recentRank: number | null;
+	readonly searchAliasValues: ReadonlyArray<string>;
 }
 
 interface BuildForwardChannelIndexRequest {
@@ -194,10 +197,7 @@ export class ForwardChannelIndex {
 		readonly personalNotesSearchValue: string;
 		readonly option: IndexedForwardChannelOption;
 	}): boolean {
-		if (option.isPersonalNotes && personalNotesSearchValue.includes(normalizedQuery)) return true;
-		if (option.displayNameSearchValue.includes(normalizedQuery)) return true;
-		if (option.channelNameSearchValue.includes(normalizedQuery)) return true;
-		return option.guildNameSearchValue.includes(normalizedQuery);
+		return matchesForwardChannelSearch({normalizedQuery, personalNotesSearchValue, values: option});
 	}
 
 	private buildOption({
@@ -232,6 +232,7 @@ export class ForwardChannelIndex {
 			isPersonalNotes: observation.channel.type === ChannelTypes.DM_PERSONAL_NOTES,
 			isSource: observation.channel.id === excludedChannelId,
 			recentRank,
+			searchAliasValues: Object.freeze(observation.searchAliases.map((alias) => alias.toLowerCase())),
 			slowmodeEnabled: observation.slowmodeEnabled,
 			slowmodeRemainingMs: observation.slowmodeRemainingMs,
 		});

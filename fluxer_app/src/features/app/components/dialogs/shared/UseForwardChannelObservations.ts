@@ -9,8 +9,10 @@ import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
+import Relationships from '@app/features/relationship/state/Relationships';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {useNow} from '@app/features/ui/state/Tick';
+import Users from '@app/features/user/state/Users';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
@@ -18,6 +20,8 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {computed, type IComputedValue} from 'mobx';
 import {useMemo, useRef} from 'react';
+
+const EMPTY_SEARCH_ALIASES: ReadonlyArray<string> = Object.freeze([]);
 
 const CHANNEL_DESCRIPTOR = msg({
 	message: 'Channel {id}',
@@ -40,6 +44,7 @@ interface ForwardChannelObservationBase {
 	readonly guildMessagesDisabled: boolean;
 	readonly guildName: string | null;
 	readonly memberTimedOut: boolean;
+	readonly searchAliases: ReadonlyArray<string>;
 	readonly slowmodeEnabled: boolean;
 }
 
@@ -55,6 +60,10 @@ interface ForwardChannelObservationSelection {
 }
 
 function resolveChannelDisplayName(channel: Channel, i18n: I18n): string {
+	if (channel.type === ChannelTypes.DM) {
+		const recipient = channel.recipientIds.length > 0 ? Users.getUser(channel.recipientIds[0]) : null;
+		if (recipient) return recipient.displayName;
+	}
 	if (
 		channel.type === ChannelTypes.DM_PERSONAL_NOTES ||
 		channel.type === ChannelTypes.DM ||
@@ -64,6 +73,28 @@ function resolveChannelDisplayName(channel: Channel, i18n: I18n): string {
 	}
 	if (channel.name) return channel.name;
 	return i18n._(CHANNEL_DESCRIPTOR, {id: channel.id});
+}
+
+function collectRecipientSearchAliases(channel: Channel): ReadonlyArray<string> {
+	if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
+		return EMPTY_SEARCH_ALIASES;
+	}
+	const aliases = new Set<string>();
+	const guilds = Guilds.getGuilds();
+	for (const recipientId of channel.recipientIds) {
+		const recipient = Users.getUser(recipientId);
+		if (!recipient) continue;
+		aliases.add(recipient.username);
+		aliases.add(recipient.displayName);
+		if (recipient.globalName) aliases.add(recipient.globalName);
+		const relationshipNickname = Relationships.getRelationship(recipientId)?.nickname;
+		if (relationshipNickname) aliases.add(relationshipNickname);
+		for (const guild of guilds) {
+			const nick = GuildMembers.getMember(guild.id, recipientId)?.nick;
+			if (nick) aliases.add(nick);
+		}
+	}
+	return Object.freeze([...aliases].filter((alias) => alias.length > 0));
 }
 
 function resolveChannelCategoryName(channel: Channel): string | null {
@@ -99,6 +130,8 @@ function areForwardChannelObservationBasesEqual(
 		return false;
 	}
 	if (left.canSendMessages !== right.canSendMessages || left.canEmbedLinks !== right.canEmbedLinks) return false;
+	if (left.searchAliases.length !== right.searchAliases.length) return false;
+	if (left.searchAliases.some((alias, index) => alias !== right.searchAliases[index])) return false;
 	return left.canAttachFiles === right.canAttachFiles && left.slowmodeEnabled === right.slowmodeEnabled;
 }
 
@@ -185,6 +218,7 @@ class ForwardChannelObservationsOwner {
 				guildMessagesDisabled: false,
 				guildName: null,
 				memberTimedOut: false,
+				searchAliases: collectRecipientSearchAliases(channel),
 				slowmodeEnabled: false,
 			});
 		}
@@ -213,6 +247,7 @@ class ForwardChannelObservationsOwner {
 			guildMessagesDisabled,
 			guildName,
 			memberTimedOut: isCurrentMemberTimedOut(channel, this.request.currentUserId),
+			searchAliases: collectRecipientSearchAliases(channel),
 			slowmodeEnabled,
 		});
 	}
@@ -243,6 +278,7 @@ function buildForwardChannelObservations(
 				displayName: base.displayName,
 				guildMessagesDisabled: base.guildMessagesDisabled,
 				guildName: base.guildName,
+				searchAliases: base.searchAliases,
 				memberTimedOut: base.memberTimedOut,
 				slowmodeEnabled: base.slowmodeEnabled,
 				slowmodeRemainingMs: remainingMs === undefined ? 0 : remainingMs,
