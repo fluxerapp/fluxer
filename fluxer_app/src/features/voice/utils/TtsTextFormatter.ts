@@ -85,7 +85,7 @@ function formatUserMention(userId: string, guildId: string | null, i18n: I18n): 
 	if (!user) {
 		return i18n._(UNKNOWN_USER_DESCRIPTOR);
 	}
-	return NicknameUtils.getNickname(user, guildId ?? undefined);
+	return NicknameUtils.getNickname(user, guildId ?? null);
 }
 
 function formatRoleMention(roleId: string, guildId: string | null, i18n: I18n): string {

@@ -438,7 +438,7 @@ function handleIncomingTtsMessage(message: Message): void {
 	if (!author) {
 		return;
 	}
-	const authorName = NicknameUtils.getNickname(author, channel.guildId ?? undefined);
+	const authorName = NicknameUtils.getNickname(author, channel.guildId ?? null);
 	if (!message.content.trim()) {
 		const description = describeNonTextContent(message, localI18n);
 		if (!description) {
@@ -457,7 +457,7 @@ function handleIncomingTtsMessage(message: Message): void {
 		if (ref.message) {
 			const replyAuthor = Users.getUser(ref.message.author.id);
 			if (replyAuthor) {
-				replyAuthorName = NicknameUtils.getNickname(replyAuthor, channel.guildId ?? undefined);
+				replyAuthorName = NicknameUtils.getNickname(replyAuthor, channel.guildId ?? null);
 			}
 		}
 	}

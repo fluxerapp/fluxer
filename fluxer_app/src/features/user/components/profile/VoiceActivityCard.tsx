@@ -206,7 +206,7 @@ export const VoiceActivityCard: React.FC<VoiceActivityCardProps> = observer(({ac
 			return i18n._(PARTICIPANTS_DESCRIPTOR);
 		}
 		const names = avatarStackUsers
-			.map((user) => NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined))
+			.map((user) => NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined))
 			.join(', ');
 		return i18n._(PARTICIPANTS_2_DESCRIPTOR, {names});
 	}, [avatarStackUsers, guildId, channelId, i18n.locale]);
@@ -421,7 +421,7 @@ const VoiceActivityContext: React.FC<VoiceActivityContextProps> = observer(({cha
 		const recipientId = channel.recipientIds.find((id) => id !== voiceState.user_id);
 		const recipientUser = recipientId ? Users.getUser(recipientId) : undefined;
 		if (recipientUser) {
-			const displayName = NicknameUtils.getNickname(recipientUser);
+			const displayName = NicknameUtils.getNickname(recipientUser, null);
 			return (
 				<button
 					type="button"

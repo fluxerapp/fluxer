@@ -44,7 +44,7 @@ function getUserDisplayName(userId: string, guildId?: string | null, channelId?:
 	if (!userId) return '';
 	const user = Users.getUser(userId);
 	if (!user) return '';
-	return NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined) || '';
+	return NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined) || '';
 }
 
 function buildSnapshotFallbackDisplayName(userId: string, participantKey: string): string {

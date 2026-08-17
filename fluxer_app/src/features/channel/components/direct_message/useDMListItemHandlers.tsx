@@ -175,7 +175,7 @@ export function useDMListItemHandlers({
 		closeAllSheets();
 	}, [channel.id, closeAllSheets]);
 	const handleCloseDm = useCallback(() => {
-		const username = recipient ? NicknameUtils.getNickname(recipient) : '';
+		const username = recipient ? NicknameUtils.getNickname(recipient, null) : '';
 		const description = isGroupDM
 			? i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_THIS_DESCRIPTOR)
 			: i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR, {username});

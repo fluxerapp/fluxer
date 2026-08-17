@@ -487,7 +487,9 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 					continue;
 				}
 				const user = member.user;
-				const displayName = member.nick ?? NicknameUtils.getNickname(user, guild.id);
+				const displayName = member.nick
+					? NicknameUtils.formatNicknameForStreamerMode(member.nick)
+					: NicknameUtils.getNickname(user, guild.id);
 				const status = resolveMemberListPresence({guildId: guild.id, channelId: channel.id, userId: user.id});
 				const customStatus = resolveMemberListCustomStatus({
 					guildId: guild.id,
@@ -599,7 +601,9 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				continue;
 			}
 			const user = member.user;
-			const displayName = member.nick ?? NicknameUtils.getNickname(user, guild.id);
+			const displayName = member.nick
+				? NicknameUtils.formatNicknameForStreamerMode(member.nick)
+				: NicknameUtils.getNickname(user, guild.id);
 			const status = resolveMemberListPresence({guildId: guild.id, channelId: channel.id, userId: user.id});
 			const customStatus = resolveMemberListCustomStatus({
 				guildId: guild.id,

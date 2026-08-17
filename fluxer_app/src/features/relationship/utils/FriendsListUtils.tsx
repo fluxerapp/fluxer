@@ -63,14 +63,14 @@ const useFriendGroups = (friendIds: Array<string>, searchQuery: string) => {
 			const user = Users.getUser(userId);
 			if (!user) return false;
 			if (!searchQuery) return true;
-			const nickname = NicknameUtils.getNickname(user).toLowerCase();
+			const nickname = NicknameUtils.getNickname(user, null).toLowerCase();
 			return nickname.includes(searchQuery.toLowerCase());
 		});
 		const groups: Record<string, Array<string>> = {};
 		for (const userId of filtered) {
 			const user = Users.getUser(userId);
 			if (!user) continue;
-			const firstLetter = NicknameUtils.getNickname(user)[0].toUpperCase();
+			const firstLetter = NicknameUtils.getNickname(user, null)[0].toUpperCase();
 			if (!groups[firstLetter]) {
 				groups[firstLetter] = [];
 			}
@@ -81,7 +81,7 @@ const useFriendGroups = (friendIds: Array<string>, searchQuery: string) => {
 				const userA = Users.getUser(a);
 				const userB = Users.getUser(b);
 				if (!userA || !userB) return 0;
-				return NicknameUtils.getNickname(userA).localeCompare(NicknameUtils.getNickname(userB));
+				return NicknameUtils.getNickname(userA, null).localeCompare(NicknameUtils.getNickname(userB, null));
 			});
 		}
 		const groupArray: Array<FriendGroup> = Object.keys(groups)
@@ -143,7 +143,7 @@ const FriendItem = observer(({userId}: {userId: string}) => {
 								className={styles.friendItemName}
 								data-flx="relationship.friends-list-utils.friend-item.friend-item-name"
 							>
-								{NicknameUtils.getNickname(user)}
+								{NicknameUtils.getNickname(user, null)}
 							</div>
 							{statusLabel && (
 								<div

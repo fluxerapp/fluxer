@@ -243,7 +243,7 @@ const UserAreaInner = observer(
 			if (isDeafened) return i18n._(VOICE_UNDEAFEN_SELF_DESCRIPTOR);
 			return i18n._(VOICE_DEAFEN_SELF_DESCRIPTOR);
 		})();
-		const displayName = NicknameUtils.getNickname(user);
+		const displayName = NicknameUtils.getNickname(user, null);
 		return (
 			<section
 				className={wrapperClassName}

@@ -68,7 +68,7 @@ export const PendingFriendsView: React.FC<PendingFriendsViewProps> = observer(
 				return true;
 			}
 			const user = Users.getUser(userId);
-			const nickname = user ? NicknameUtils.getNickname(user) : '';
+			const nickname = user ? NicknameUtils.getNickname(user, null) : '';
 			const username = user?.username ?? '';
 			return `${nickname} ${username}`.toLowerCase().includes(normalizedQuery);
 		};
@@ -77,7 +77,7 @@ export const PendingFriendsView: React.FC<PendingFriendsViewProps> = observer(
 				const userA = Users.getUser(a.id);
 				const userB = Users.getUser(b.id);
 				if (!userA || !userB) return 0;
-				return NicknameUtils.getNickname(userA).localeCompare(NicknameUtils.getNickname(userB));
+				return NicknameUtils.getNickname(userA, null).localeCompare(NicknameUtils.getNickname(userB, null));
 			});
 		const visibleIncoming = sortByDisplayName(
 			hasSearch ? incomingRequests.filter((request) => matchesSearch(request.id)) : incomingRequests,

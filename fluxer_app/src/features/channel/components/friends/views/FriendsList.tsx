@@ -70,7 +70,7 @@ export const FriendsList: React.FC<FriendsListProps> = observer(({showOnlineOnly
 			return true;
 		}
 		const user = Users.getUser(userId);
-		const nickname = user ? NicknameUtils.getNickname(user) : '';
+		const nickname = user ? NicknameUtils.getNickname(user, null) : '';
 		const username = user?.username ?? '';
 		return `${nickname} ${username}`.toLowerCase().includes(normalizedQuery);
 	};
@@ -84,7 +84,7 @@ export const FriendsList: React.FC<FriendsListProps> = observer(({showOnlineOnly
 		const userA = Users.getUser(a);
 		const userB = Users.getUser(b);
 		if (!userA || !userB) return 0;
-		return NicknameUtils.getNickname(userA).localeCompare(NicknameUtils.getNickname(userB));
+		return NicknameUtils.getNickname(userA, null).localeCompare(NicknameUtils.getNickname(userB, null));
 	});
 	const reportedTab = showOnlineOnly ? SkeletonFriendsTab.ONLINE : SkeletonFriendsTab.ALL;
 	useEffect(() => {

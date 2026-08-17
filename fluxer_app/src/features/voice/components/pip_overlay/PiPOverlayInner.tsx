@@ -169,7 +169,7 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 	const {viewerUsers} = useStreamSpectators(isScreenShare ? streamKey : '', content.userId);
 	const displayName = useMemo(() => {
 		if (!participantUser) return '';
-		return NicknameUtils.getNickname(participantUser, content.guildId ?? undefined, content.channelId);
+		return NicknameUtils.getNickname(participantUser, content.guildId ?? null, content.channelId);
 	}, [participantUser, content.guildId, content.channelId]);
 	const disconnectLabel = i18n._(VOICE_DISCONNECT_DESCRIPTOR);
 	const channelName = channel?.name ?? '';

@@ -305,7 +305,7 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 					<ConfirmModal
 						title={i18n._(CLOSE_DM_DESCRIPTOR)}
 						description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR, {
-							recipientUsername: recipient ? NicknameUtils.getNickname(recipient) : '',
+							recipientUsername: recipient ? NicknameUtils.getNickname(recipient, null) : '',
 						})}
 						primaryText={i18n._(CLOSE_DM_DESCRIPTOR)}
 						primaryVariant="danger"

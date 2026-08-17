@@ -491,7 +491,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 							) : isDM && isRecipientBlocked && recipient ? (
 								<BlockedUserBarrier
 									userId={recipient.id}
-									username={NicknameUtils.getNickname(recipient)}
+									username={NicknameUtils.getNickname(recipient, null)}
 									data-flx="channel.channel-view.dm-channel-view.blocked-user-barrier"
 								/>
 							) : isCurrentUserUnclaimed && isDM && !isPersonalNotes && !isGroupDM ? (

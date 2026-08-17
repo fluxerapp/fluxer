@@ -81,7 +81,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 			return friends
 				.map((relationship) => Users.getUser(relationship.id))
 				.filter((user): user is User => Boolean(user))
-				.sort((a, b) => NicknameUtils.getNickname(a).localeCompare(NicknameUtils.getNickname(b)));
+				.sort((a, b) => NicknameUtils.getNickname(a, null).localeCompare(NicknameUtils.getNickname(b, null)));
 		}, [relationships, excludeUserIds]);
 		const activeStickyUserIds = useMemo(() => {
 			return stickyUserIds.filter((id) => selectedUserIds.includes(id));
@@ -89,13 +89,13 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 		const groupedFriends = useMemo(() => {
 			const filtered = friendUsers.filter((user) => {
 				if (!searchQuery) return true;
-				return NicknameUtils.getNickname(user).toLowerCase().includes(searchQuery.toLowerCase());
+				return NicknameUtils.getNickname(user, null).toLowerCase().includes(searchQuery.toLowerCase());
 			});
 			const stickySet = new Set(activeStickyUserIds);
 			const groups: Record<string, Array<User>> = {};
 			filtered.forEach((user) => {
 				if (stickySet.has(user.id)) return;
-				const firstLetter = NicknameUtils.getNickname(user)[0].toUpperCase();
+				const firstLetter = NicknameUtils.getNickname(user, null)[0].toUpperCase();
 				if (!groups[firstLetter]) {
 					groups[firstLetter] = [];
 				}
@@ -153,14 +153,16 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 								data-flx="app.friend-selector.render-search-input.selected-pill"
 							>
 								<Avatar user={user} size={16} data-flx="app.friend-selector.render-search-input.avatar" />
-								<span data-flx="app.friend-selector.render-search-input.span">{NicknameUtils.getNickname(user)}</span>
+								<span data-flx="app.friend-selector.render-search-input.span">
+									{NicknameUtils.getNickname(user, null)}
+								</span>
 								<FocusRing offset={-2} data-flx="app.friend-selector.render-search-input.focus-ring">
 									<button
 										type="button"
 										onClick={() => handleRemovePill(userId)}
 										className={styles.removeButton}
 										aria-label={i18n._(REMOVE_DESCRIPTOR, {
-											displayName: NicknameUtils.getNickname(user),
+											displayName: NicknameUtils.getNickname(user, null),
 										})}
 										data-flx="app.friend-selector.render-search-input.remove-button.remove-pill"
 									>
@@ -252,7 +254,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 															data-flx="app.friend-selector.status-aware-avatar"
 														/>
 														<span className={styles.friendName} data-flx="app.friend-selector.friend-name">
-															{NicknameUtils.getNickname(user)}
+															{NicknameUtils.getNickname(user, null)}
 														</span>
 													</div>
 													<div className={styles.checkboxContainer} data-flx="app.friend-selector.checkbox-container">
@@ -306,7 +308,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 																data-flx="app.friend-selector.status-aware-avatar--2"
 															/>
 															<span className={styles.friendName} data-flx="app.friend-selector.friend-name--2">
-																{NicknameUtils.getNickname(user)}
+																{NicknameUtils.getNickname(user, null)}
 															</span>
 														</div>
 														<div

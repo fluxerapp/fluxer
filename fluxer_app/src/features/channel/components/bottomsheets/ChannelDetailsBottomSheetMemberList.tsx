@@ -129,7 +129,9 @@ export const MobileMemberListItem = observer(
 		const handleLongPress = useCallback(() => {
 			onLongPress?.(member);
 		}, [member, onLongPress]);
-		const displayName = member.nick ?? NicknameUtils.getNickname(member.user, guild.id);
+		const displayName = member.nick
+			? NicknameUtils.formatNicknameForStreamerMode(member.nick)
+			: NicknameUtils.getNickname(member.user, guild.id);
 		const avatarUrl = useMemo(
 			() =>
 				AvatarUtils.getGuildMemberDisplayAvatarURL({

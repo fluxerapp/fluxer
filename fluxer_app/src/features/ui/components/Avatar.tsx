@@ -206,7 +206,7 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 		});
 		const safeHoverAvatarUrl = isAnimatedNeeded ? hoverAvatarUrl || undefined : undefined;
 		const normalizedStatusAttr = status != null ? normalizeStatus(status) : undefined;
-		const displayName = NicknameUtils.getNickname(user, guildId ?? undefined);
+		const displayName = NicknameUtils.getNickname(user, guildId ?? null);
 		const avatarRefs = useMemo(() => [ref, hoverRef], [ref, hoverRef]);
 		const mergedRef = useMergeRefs(avatarRefs);
 		return (

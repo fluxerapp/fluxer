@@ -174,7 +174,9 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 		const handleClosePopout = useCallback(() => {
 			requestClose();
 		}, [requestClose]);
-		const displayName = guildMember?.nick ?? NicknameUtils.getNickname(user, guildId);
+		const displayName = guildMember?.nick
+			? NicknameUtils.formatNicknameForStreamerMode(guildMember.nick)
+			: NicknameUtils.getNickname(user, guildId);
 		const handleMessage = async () => {
 			try {
 				requestClose();

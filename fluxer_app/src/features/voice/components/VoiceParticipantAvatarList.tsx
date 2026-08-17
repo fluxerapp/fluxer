@@ -262,7 +262,7 @@ interface VoiceParticipantPopoutRowProps {
 
 function VoiceParticipantPopoutRow({entry, guildId, channelId}: VoiceParticipantPopoutRowProps) {
 	const {i18n} = useLingui();
-	const displayName = NicknameUtils.getNickname(entry.user, guildId ?? undefined, channelId ?? undefined);
+	const displayName = NicknameUtils.getNickname(entry.user, guildId ?? null, channelId ?? undefined);
 	const participantName = displayName || i18n._(UNKNOWN_USER_DESCRIPTOR);
 	const {scheduleProfilePreload, cancelProfilePreload} = useUserProfileHoverPreload({
 		userId: entry.user.id,
@@ -405,7 +405,7 @@ export const VoiceParticipantSpeakingAvatarStack: React.FC<VoiceParticipantSpeak
 				event.stopPropagation();
 				const entry = sortedEntries[index];
 				if (!entry) return;
-				const displayName = NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined);
+				const displayName = NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
 				const participantName = displayName || i18n._(UNKNOWN_USER_DESCRIPTOR);
 				ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 					<VoiceParticipantContextMenu
@@ -554,7 +554,7 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 			(event: React.MouseEvent<HTMLElement>, entry: VoiceParticipantAvatarEntry) => {
 				event.preventDefault();
 				event.stopPropagation();
-				const displayName = NicknameUtils.getNickname(entry.user, guildId ?? undefined, channelId ?? undefined);
+				const displayName = NicknameUtils.getNickname(entry.user, guildId ?? null, channelId ?? undefined);
 				const participantName = displayName || i18n._(UNKNOWN_USER_DESCRIPTOR);
 				ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 					<VoiceParticipantContextMenu

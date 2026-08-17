@@ -518,7 +518,7 @@ export const UserAreaPopout = observer(() => {
 	const accentColor = getUserAccentColor(currentUser, profileData?.accent_color);
 	const borderColor = accentColor;
 	const bannerColor = accentColor;
-	const displayName = currentUser ? NicknameUtils.getNickname(currentUser) : '';
+	const displayName = currentUser ? NicknameUtils.getNickname(currentUser, null) : '';
 	const customStatus = currentUserId ? Presence.getCustomStatus(currentUserId) : null;
 	const hasCustomStatus = Boolean(normalizeCustomStatus(customStatus));
 	const popoutContainerRef = useRef<HTMLDivElement | null>(null);

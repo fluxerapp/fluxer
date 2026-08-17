@@ -59,7 +59,7 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 		const childArray = React.Children.toArray(children).filter(Boolean);
 		const userChildren =
 			users?.map((user, index) => {
-				const displayName = NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined);
+				const displayName = NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
 				const avatarNode = renderAvatar?.(user, size, index) ?? (
 					<Avatar user={user} size={size} guildId={guildId ?? undefined} data-flx="ui.avatars.avatar-stack.avatar" />
 				);
@@ -118,7 +118,7 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 		} as React.CSSProperties;
 		const wrapWithContextMenu = (node: React.ReactNode, user: User, index: number) => {
 			if (!onUserContextMenu) return node;
-			const displayName = NicknameUtils.getNickname(user, guildId ?? undefined, channelId ?? undefined);
+			const displayName = NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
 			return (
 				<div
 					className={styles.avatarContextMenuWrap}

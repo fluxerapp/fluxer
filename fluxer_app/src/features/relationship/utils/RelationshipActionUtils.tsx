@@ -184,7 +184,7 @@ export function showSendFriendRequestConfirmation(i18n: I18n, user: User): void 
 			<ConfirmModal
 				title={i18n._(ADD_FRIEND_DESCRIPTOR)}
 				description={i18n._(SEND_A_FRIEND_REQUEST_TO_OR_USE_THE_DESCRIPTOR, {
-					userName: NicknameUtils.getNickname(user),
+					userName: NicknameUtils.getNickname(user, null),
 				})}
 				primaryText={i18n._(ADD_FRIEND_DESCRIPTOR)}
 				onPrimary={async (staffForceAccept) => {
@@ -225,7 +225,7 @@ export function showAcceptFriendRequestConfirmation(
 			<ConfirmModal
 				title={i18n._(ACCEPT_FRIEND_REQUEST_DESCRIPTOR)}
 				description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_ACCEPT_THE_DESCRIPTOR, {
-					userName: NicknameUtils.getNickname(user),
+					userName: NicknameUtils.getNickname(user, null),
 				})}
 				primaryText={i18n._(ACCEPT_FRIEND_REQUEST_ACTION_DESCRIPTOR)}
 				primaryVariant="primary"
@@ -273,7 +273,7 @@ export function showRemoveFriendConfirmation(
 			<ConfirmModal
 				title={i18n._(REMOVE_FRIEND_DESCRIPTOR)}
 				description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_REMOVE_AS_DESCRIPTOR, {
-					userName: NicknameUtils.getNickname(user),
+					userName: NicknameUtils.getNickname(user, null),
 				})}
 				primaryText={i18n._(REMOVE_FRIEND_DESCRIPTOR)}
 				primaryVariant="danger"
@@ -307,7 +307,7 @@ export function showBlockUserConfirmation(i18n: I18n, user: User, options: Relat
 			<ConfirmModal
 				title={i18n._(BLOCK_USER_DESCRIPTOR)}
 				description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_BLOCK_THEY_DESCRIPTOR, {
-					userName: NicknameUtils.getNickname(user),
+					userName: NicknameUtils.getNickname(user, null),
 				})}
 				primaryText={i18n._(BLOCK_DESCRIPTOR)}
 				primaryVariant="danger"
@@ -345,7 +345,7 @@ export function showUnblockUserConfirmation(
 			<ConfirmModal
 				title={i18n._(UNBLOCK_USER_DESCRIPTOR)}
 				description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_UNBLOCK_DESCRIPTOR, {
-					userName: NicknameUtils.getNickname(user),
+					userName: NicknameUtils.getNickname(user, null),
 				})}
 				primaryText={i18n._(UNBLOCK_USER_ACTION_DESCRIPTOR)}
 				primaryVariant="primary"

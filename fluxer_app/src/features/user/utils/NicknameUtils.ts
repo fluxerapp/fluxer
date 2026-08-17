@@ -33,6 +33,12 @@ export function formatUserTagForStreamerMode(user: Pick<User, 'tag' | 'username'
 	return formatTagForStreamerMode(user.tag || `${user.username}#${user.discriminator}`);
 }
 
+export function formatNicknameForStreamerMode(nickname: string): string {
+	const resolved = formatNameForStreamerMode(nickname);
+	noteText(resolved);
+	return resolved;
+}
+
 export function getDisplayName(user: UserDisplayNameLike): string {
 	const name = formatNameForStreamerMode(
 		user.displayName || user.globalName || user.global_name || user.username || '',
@@ -60,7 +66,5 @@ export function getNickname(user: User, guildId?: string | null, channelId?: str
 			name = channel.nicks[user.id];
 		}
 	}
-	const resolved = formatNameForStreamerMode(name);
-	noteText(resolved);
-	return resolved;
+	return formatNicknameForStreamerMode(name);
 }

@@ -197,7 +197,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 				)),
 			);
 		}, [channel, onClose, user]);
-		const userDisplayName = NicknameUtils.getNickname(user, channel?.guildId ?? undefined, channel?.id);
+		const userDisplayName = NicknameUtils.getNickname(user, channel?.guildId ?? null, channel?.id);
 		const handleRemoveFromGroup = useCallback(() => {
 			if (!channel) return;
 			ModalCommands.pushAfterBottomSheetClose(

@@ -13,6 +13,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Users from '@app/features/user/state/Users';
+import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {extractTimestampFromSnowflakeAsDate} from '@fluxer/snowflake/src/SnowflakeUtils';
 
 export const logger = new Logger('GuildMembersPage');
@@ -27,7 +28,8 @@ export async function searchGuildMembers(guildId: string, params: SearchParams):
 export function toMemberDisplayData(searchMember: SearchableGuildMember, guildId: string): MemberDisplayData {
 	const user = Users.getUser(searchMember.user_id);
 	const member = GuildMembers.getMember(guildId, searchMember.user_id);
-	const displayName = member?.nick ?? searchMember.nickname ?? searchMember.global_name ?? searchMember.username;
+	const resolvedName = member?.nick || searchMember.nickname || searchMember.global_name || searchMember.username;
+	const displayName = NicknameUtils.formatNicknameForStreamerMode(resolvedName);
 	const tag = user ? user.tag : `${searchMember.username}#${searchMember.discriminator}`;
 	return {
 		userId: searchMember.user_id,
