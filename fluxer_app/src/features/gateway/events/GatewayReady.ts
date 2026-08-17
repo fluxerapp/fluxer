@@ -185,5 +185,5 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	MediaEngine.handleConnectionOpen(guilds);
 	Initialization.setReady(data);
 	context.setReady();
-	Messages.handleConnectionOpen();
+	Messages.handleConnectionOpen((channelId) => ReadStates.getUnreadJumpAnchor(channelId));
 }
