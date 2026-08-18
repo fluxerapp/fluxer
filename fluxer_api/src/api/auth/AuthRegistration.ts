@@ -444,7 +444,10 @@ export async function register(
 		);
 	}
 	await singleCommunityService.joinStockCommunity(userId, requestCache);
-	const [token] = await AuthSession.createAuthSession(ctx, {user, request});
+	const [token] = await AuthSession.createAuthSession(ctx, {
+		user,
+		origin: AuthSession.resolveSessionOrigin(ctx, request),
+	});
 	if (grantBootstrapAdmin) {
 		await instanceConfigRepository.markAdminBootstrapped();
 	}

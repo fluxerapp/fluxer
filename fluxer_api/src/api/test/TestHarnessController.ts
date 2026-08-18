@@ -35,6 +35,7 @@ import type {Context} from 'hono';
 import {seconds} from 'itty-time';
 import {AttachmentDecayRepository} from '../attachment/AttachmentDecayRepository';
 import type {IpAuthorizationTicketCache} from '../auth/AuthLogin';
+import {getTicketCacheKey} from '../auth/AuthLogin';
 import {
 	type ChannelID,
 	createApplicationID,
@@ -86,6 +87,7 @@ import {UserRepository} from '../user/repositories/UserRepository';
 import {processUserDeletion} from '../user/services/UserDeletionService';
 import {UserHarvestRepository} from '../user/UserHarvestRepository';
 import {getExpiryBucket} from '../utils/AttachmentDecay';
+import {parseReportedClientOs} from '../utils/SessionClientIdentity';
 import {ScheduledMessageExecutor} from '../worker/executors/ScheduledMessageExecutor';
 import {processExpiredAttachments} from '../worker/tasks/ExpireAttachments';
 import {processInactivityDeletionsCore} from '../worker/tasks/ProcessInactivityDeletions';
@@ -627,7 +629,7 @@ export function TestHarnessController(app: HonoApp) {
 			client_ip: clientIp,
 			user_agent: userAgent,
 			client_location: clientLocation,
-			platform,
+			client_properties: clientProperties,
 			resend_used: resendUsed,
 			invite_code: inviteCode,
 			created_at: createdAtInput,
@@ -649,9 +651,11 @@ export function TestHarnessController(app: HonoApp) {
 			userId: String(userId),
 			email: String(email),
 			username: String(username),
-			clientIp: String(clientIp),
-			userAgent: String(userAgent),
-			platform: platform ? String(platform) : null,
+			origin: {
+				ip: String(clientIp),
+				userAgent: userAgent ? String(userAgent) : null,
+				clientOs: parseReportedClientOs(clientProperties ? String(clientProperties) : null),
+			},
 			authToken: String(token),
 			clientLocation: String(clientLocation),
 			inviteCode: inviteCode ? String(inviteCode) : null,
@@ -659,7 +663,7 @@ export function TestHarnessController(app: HonoApp) {
 			createdAt,
 		};
 		const ttl = typeof ttlSeconds === 'number' && ttlSeconds > 0 ? ttlSeconds : seconds('15 minutes');
-		await cacheService.set(`ip-auth-ticket:${ticket}`, payload, ttl);
+		await cacheService.set(getTicketCacheKey(String(ticket)), payload, ttl);
 		await cacheService.set(`ip-auth-token:${token}`, {ticket: String(ticket)}, ttl);
 		return ctx.json(
 			{
@@ -721,7 +725,7 @@ export function TestHarnessController(app: HonoApp) {
 			return ctx.json({error: 'ticket or token is required'}, 400);
 		}
 		if (ticket) {
-			await cacheService.delete(`ip-auth-ticket:${ticket}`);
+			await cacheService.delete(getTicketCacheKey(String(ticket)));
 			await cacheService.delete(`ip-auth:${ticket}`);
 		}
 		if (token) {

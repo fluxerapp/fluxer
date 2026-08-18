@@ -26040,11 +26040,18 @@
 										"anyOf": [{"type": "string"}, {"type": "null"}],
 										"description": "The operating system of the requesting device"
 									},
+									"device": {
+										"enum": ["mobile", "desktop"],
+										"type": "string",
+										"x-enumNames": ["mobile", "desktop"],
+										"description": "Device class of the requesting device, decided by the server"
+									},
 									"location": {
 										"anyOf": [{"$ref": "#/components/schemas/AuthSessionLocation"}, {"type": "null"}],
 										"description": "The approximate location of the requesting device"
 									}
-								}
+								},
+								"required": ["device"]
 							},
 							{"type": "null"}
 						],
@@ -26288,11 +26295,18 @@
 										"anyOf": [{"type": "string"}, {"type": "null"}],
 										"description": "The browser reported by the client"
 									},
+									"device": {
+										"enum": ["mobile", "desktop"],
+										"type": "string",
+										"x-enumNames": ["mobile", "desktop"],
+										"description": "Device class of the session, decided by the server"
+									},
 									"location": {
 										"anyOf": [{"$ref": "#/components/schemas/AuthSessionLocation"}, {"type": "null"}],
 										"description": "The geolocation data sent by the client"
 									}
-								}
+								},
+								"required": ["device"]
 							},
 							{"type": "null"}
 						],

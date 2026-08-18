@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/AuthenticationCommands';
 import type {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import styles from '@app/features/auth/flow/HandoffApprovalFlow.module.css';
@@ -17,11 +16,6 @@ import {useCallback, useState} from 'react';
 const SIGN_IN_CODE_DESCRIPTOR = msg({
 	message: 'Sign-in code',
 	comment: 'Short label in the authentication handoff approval flow. Keep the tone plain and specific.',
-});
-const PRODUCT_DESKTOP_DESCRIPTOR = msg({
-	message: '{productName} Desktop',
-	comment:
-		'Display name for the product desktop client in the authentication handoff approval flow when the raw client name is Electron. Preserve {productName}; it is inserted by code.',
 });
 const CODE_LENGTH = 12;
 const VALID_CODE_PATTERN = /^[A-Za-z0-9]{12}$/;
@@ -51,10 +45,6 @@ function formatLocation(location: {
 }): string | null {
 	const parts = [location.city, location.region, location.country].filter(Boolean);
 	return parts.length > 0 ? parts.join(', ') : null;
-}
-
-function isElectronClientLabel(label: string): boolean {
-	return label.trim().toLowerCase() === 'electron';
 }
 
 interface HandoffApprovalFlowProps {
@@ -164,11 +154,6 @@ export function HandoffApprovalFlow({
 		const os = clientInfo?.os ?? null;
 		const location = clientInfo?.location ? formatLocation(clientInfo.location) : null;
 		const hasAnyDeviceInfo = Boolean(platform || os || location);
-		const platformLabel = platform
-			? isElectronClientLabel(platform)
-				? i18n._(PRODUCT_DESKTOP_DESCRIPTOR, {productName: PRODUCT_NAME})
-				: platform
-			: null;
 		return (
 			<div className={styles.container} data-flx="auth.flow.handoff-approval-flow.container--4">
 				<h1 className={styles.title} data-flx="auth.flow.handoff-approval-flow.title--3">
@@ -183,13 +168,13 @@ export function HandoffApprovalFlow({
 				</p>
 				{hasAnyDeviceInfo ? (
 					<div className={styles.deviceCard} data-flx="auth.flow.handoff-approval-flow.device-card">
-						{platformLabel ? (
+						{platform ? (
 							<div className={styles.deviceRow} data-flx="auth.flow.handoff-approval-flow.device-row">
 								<span className={styles.deviceLabel} data-flx="auth.flow.handoff-approval-flow.device-label">
 									<Trans>Platform</Trans>
 								</span>
 								<span className={styles.deviceValue} data-flx="auth.flow.handoff-approval-flow.device-value">
-									{platformLabel}
+									{platform}
 								</span>
 							</div>
 						) : null}

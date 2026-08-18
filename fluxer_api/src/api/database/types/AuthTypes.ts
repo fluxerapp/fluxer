@@ -18,9 +18,7 @@ export interface AuthSessionRow {
 	approx_last_used_at: Date;
 	client_ip: string;
 	client_user_agent: Nullish<string>;
-	client_is_desktop: Nullish<boolean>;
-	client_os?: Nullish<string>;
-	client_platform?: Nullish<string>;
+	client_os: Nullish<string>;
 	client_country: Nullish<string>;
 	version: number;
 }
@@ -32,9 +30,7 @@ export interface AuthSessionTombstoneRow {
 	approx_last_used_at: Date;
 	client_ip: string;
 	client_user_agent: Nullish<string>;
-	client_is_desktop: Nullish<boolean>;
 	client_os: Nullish<string>;
-	client_platform: Nullish<string>;
 	client_country: Nullish<string>;
 	deleted_at: Date;
 	version: number;
@@ -140,9 +136,7 @@ export const AUTH_SESSION_COLUMNS = [
 	'approx_last_used_at',
 	'client_ip',
 	'client_user_agent',
-	'client_is_desktop',
 	'client_os',
-	'client_platform',
 	'client_country',
 	'version',
 ] as const satisfies ReadonlyArray<keyof AuthSessionRow>;
@@ -153,9 +147,7 @@ export const AUTH_SESSION_TOMBSTONE_COLUMNS = [
 	'approx_last_used_at',
 	'client_ip',
 	'client_user_agent',
-	'client_is_desktop',
 	'client_os',
-	'client_platform',
 	'client_country',
 	'deleted_at',
 	'version',

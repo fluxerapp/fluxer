@@ -105,9 +105,7 @@ export interface IpAuthorizationTicketCache {
 	userId: string;
 	email: string;
 	username: string;
-	clientIp: string;
-	userAgent: string;
-	platform: string | null;
+	origin: AuthSession.SessionOrigin;
 	authToken: string;
 	clientLocation: string;
 	inviteCode?: string | null;
@@ -115,8 +113,8 @@ export interface IpAuthorizationTicketCache {
 	createdAt: number;
 }
 
-function getTicketCacheKey(ticket: string): string {
-	return `ip-auth-ticket:${ticket}`;
+export function getTicketCacheKey(ticket: string): string {
+	return `ip-auth-ticket-v2:${ticket}`;
 }
 
 function getTokenCacheKey(token: string): string {
@@ -148,7 +146,7 @@ export async function resendIpAuthorization(
 		payload.email,
 		payload.username,
 		payload.authToken,
-		payload.clientIp,
+		payload.origin.ip,
 		payload.clientLocation,
 		null,
 	);
@@ -172,7 +170,7 @@ export async function completeIpAuthorization(
 	user_id: string;
 	ticket: string;
 }> {
-	const {users, cache, config} = ctx.services;
+	const {users, cache} = ctx.services;
 	const tokenMapping = await cache.get<{
 		ticket: string;
 	}>(getTokenCacheKey(token));
@@ -193,19 +191,8 @@ export async function completeIpAuthorization(
 		throw new UnknownUserError();
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	await users.createAuthorizedIp(user.id, payload.clientIp);
-	const headers: Record<string, string> = {
-		[config.proxy.client_ip_header]: payload.clientIp,
-		'user-agent': payload.userAgent,
-	};
-	if (payload.platform) {
-		headers['x-fluxer-platform'] = payload.platform;
-	}
-	const syntheticRequest = new Request('https://api.fluxer.app/auth/ip-authorization', {
-		headers,
-		method: 'POST',
-	});
-	const [sessionToken] = await AuthSession.createAuthSession(ctx, {user, request: syntheticRequest});
+	await users.createAuthorizedIp(user.id, payload.origin.ip);
+	const [sessionToken] = await AuthSession.createAuthSession(ctx, {user, origin: payload.origin});
 	await cache.delete(cacheKey);
 	await cache.delete(getTokenCacheKey(token));
 	return {token: sessionToken, user_id: user.id.toString(), ticket: tokenMapping.ticket};
@@ -313,15 +300,11 @@ export async function login(
 				const authToken = createIpAuthorizationToken(await AuthUtility.generateSecureToken(ctx));
 				const geoipResult = await lookupGeoip(clientIp);
 				const clientLocation = formatGeoipLocation(geoipResult) ?? UNKNOWN_LOCATION;
-				const userAgent = request.headers.get('user-agent') || '';
-				const platform = request.headers.get('x-fluxer-platform');
 				const cachePayload: IpAuthorizationTicketCache = {
 					userId: currentUser.id.toString(),
 					email: currentUser.email!,
 					username: currentUser.username,
-					clientIp,
-					userAgent,
-					platform: platform ?? null,
+					origin: AuthSession.resolveSessionOrigin(ctx, request),
 					authToken,
 					clientLocation,
 					inviteCode: data.invite_code ?? null,
@@ -329,7 +312,7 @@ export async function login(
 					createdAt: Date.now(),
 				};
 				const ttlSeconds = seconds('15 minutes');
-				await cache.set<IpAuthorizationTicketCache>(`ip-auth-ticket:${ticket}`, cachePayload, ttlSeconds);
+				await cache.set<IpAuthorizationTicketCache>(getTicketCacheKey(ticket), cachePayload, ttlSeconds);
 				await cache.set<{
 					ticket: string;
 				}>(`ip-auth-token:${authToken}`, {ticket}, ttlSeconds);
@@ -364,7 +347,10 @@ export async function login(
 			Logger.warn({inviteCode: data.invite_code, error}, 'Failed to auto-join invite on login');
 		}
 	}
-	const [token] = await AuthSession.createAuthSession(ctx, {user: currentUser, request});
+	const [token] = await AuthSession.createAuthSession(ctx, {
+		user: currentUser,
+		origin: AuthSession.resolveSessionOrigin(ctx, request),
+	});
 	return {
 		user_id: currentUser.id.toString(),
 		token,
@@ -418,7 +404,10 @@ export async function loginMfaTotp(
 	await cache.delete(`mfa-ticket:${ticket}`);
 	await cache.delete(attemptsKey);
 	await cache.delete(userAttemptsKey);
-	const [token] = await AuthSession.createAuthSession(ctx, {user, request});
+	const [token] = await AuthSession.createAuthSession(ctx, {
+		user,
+		origin: AuthSession.resolveSessionOrigin(ctx, request),
+	});
 	return {user_id: user.id.toString(), token};
 }
 
@@ -438,7 +427,10 @@ export async function loginMfaWebAuthn(
 	AuthUtility.assertNonBotUser(ctx, user);
 	await AuthMfa.verifyWebAuthnAuthentication(ctx, user.id, response, challenge, 'mfa', ticket);
 	await cache.delete(`mfa-ticket:${ticket}`);
-	const [token] = await AuthSession.createAuthSession(ctx, {user, request});
+	const [token] = await AuthSession.createAuthSession(ctx, {
+		user,
+		origin: AuthSession.resolveSessionOrigin(ctx, request),
+	});
 	return {user_id: user.id.toString(), token};
 }
 

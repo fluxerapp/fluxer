@@ -50,7 +50,7 @@ import type {User} from '../../models/User';
 import type {UserGuildSettings} from '../../models/UserGuildSettings';
 import type {UserSettings} from '../../models/UserSettings';
 import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
-import {resolveSessionClientInfo} from '../../utils/UserAgentUtils';
+import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
 import {createArchiveJsonBuffer} from '../utils/ArchiveJson';
 import {appendAssetToArchive, buildHashedAssetKey, getAnimatedAssetExtension} from '../utils/AssetArchiveHelpers';
 import {ContentAddressedAttachmentCollector} from '../utils/ContentAddressedAttachmentCollector';
@@ -114,6 +114,7 @@ interface HarvestMessageResult {
 interface UserDataJsonParams {
 	user: User;
 	userId: UserID;
+	productName: string;
 	authSessions: Array<AuthSession>;
 	relationships: Array<Relationship>;
 	userNotes: Map<UserID, string>;
@@ -354,6 +355,7 @@ function buildUserDataJson(params: UserDataJsonParams) {
 	const {
 		user,
 		userId,
+		productName,
 		authSessions,
 		relationships,
 		userNotes,
@@ -412,17 +414,18 @@ function buildUserDataJson(params: UserDataJsonParams) {
 			authenticator_types: Array.from(user.authenticatorTypes),
 		},
 		auth_sessions: authSessions.map((session) => {
-			const {clientOs, clientPlatform} = resolveSessionClientInfo({
+			const clientInfo = resolveSessionClientInfo({
 				userAgent: session.clientUserAgent,
-				isDesktopClient: session.clientIsDesktop,
+				reportedOs: session.clientOs ?? null,
+				productName,
 			});
 			return {
 				created_at: session.createdAt.toISOString(),
 				approx_last_used_at: session.approximateLastUsedAt?.toISOString() ?? null,
 				client_ip: session.clientIp,
-				client_os: clientOs,
+				client_os: clientInfo.os,
 				client_user_agent: session.clientUserAgent,
-				client_platform: clientPlatform,
+				client_platform: clientInfo.platform,
 			};
 		}),
 		relationships: relationships.map((rel) => ({
@@ -872,9 +875,11 @@ const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
 		const guildSettings = await Promise.all(
 			guildIds.map((guildId: GuildID) => userRepository.findGuildSettings(userId, guildId)),
 		);
+		const {branding} = await instanceConfigRepository.getAppPublicConfig();
 		const userData = buildUserDataJson({
 			user,
 			userId,
+			productName: branding.product_name,
 			authSessions,
 			relationships,
 			userNotes,

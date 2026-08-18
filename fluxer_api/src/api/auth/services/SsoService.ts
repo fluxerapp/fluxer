@@ -332,7 +332,10 @@ export class SsoService {
 		});
 		const claims = await this.resolveClaims(tokenResponse, config, statePayload.nonce);
 		const user = await this.resolveUserFromClaims(claims, config);
-		const [token] = await AuthSession.createAuthSession(this.apiContext, {user, request});
+		const [token] = await AuthSession.createAuthSession(this.apiContext, {
+			user,
+			origin: AuthSession.resolveSessionOrigin(this.apiContext, request),
+		});
 		return {token, user_id: user.id.toString(), redirect_to: statePayload.redirectTo ?? ''};
 	}
 

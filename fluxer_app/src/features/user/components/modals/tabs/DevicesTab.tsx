@@ -8,7 +8,6 @@ import {
 	SettingsTabContent,
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {DESKTOP_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useElementOverflow} from '@app/features/app/hooks/useTextOverflow';
 import * as AuthSessionCommands from '@app/features/auth/commands/AuthSessionCommands';
 import {DeviceRevokeModal} from '@app/features/auth/components/modals/DeviceRevokeModal';
@@ -75,7 +74,6 @@ const SELECTED_DEVICES_FOR_LOGOUT_DESCRIPTOR = msg({
 	message: '{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}',
 	comment: 'Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.',
 });
-const MOBILE_DEVICE_REGEX = /iOS|Android|Windows Phone|BlackBerry|Mobile/i;
 
 const StatusDot = observer(() => (
 	<div aria-hidden={true} className={styles.statusDot} data-flx="user.devices-tab.status-dot.status-dot" />
@@ -127,8 +125,7 @@ const DeviceDetailRow = ({
 const DeviceDetailsModal = observer(({authSession, isCurrent}: {authSession: AuthSession; isCurrent: boolean}) => {
 	const {i18n} = useLingui();
 	const clientOs = authSession.clientOs ?? i18n._(UNKNOWN_DEVICE_DESCRIPTOR);
-	const clientPlatform = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
-	const platformLabel = authSession.clientPlatform === DESKTOP_PRODUCT_NAME ? DESKTOP_PRODUCT_NAME : clientPlatform;
+	const platformLabel = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
 	return (
 		<Modal.Root size="small" centered data-flx="user.devices-tab.device-details-modal.modal-root">
 			<Modal.Header title={<Trans>Device details</Trans>} data-flx="user.devices-tab.device-details-modal.header" />
@@ -196,8 +193,8 @@ const AuthSessionItem: React.FC<AuthSessionProps> = observer(
 	({authSession, isCurrent = false, isSelected, onSelect, index, selectionMode}) => {
 		const {i18n} = useLingui();
 		const clientOs = authSession.clientOs ?? i18n._(UNKNOWN_DEVICE_DESCRIPTOR);
-		const clientPlatform = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
-		const isMobile = MOBILE_DEVICE_REGEX.test(authSession.clientOs ?? '');
+		const platformLabel = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
+		const isMobile = authSession.clientDevice === 'mobile';
 		const isSelectionInteractive = Boolean(selectionMode && !isCurrent && onSelect && index !== undefined);
 		const openRevokeModal = () => {
 			ModalCommands.push(
@@ -234,7 +231,6 @@ const AuthSessionItem: React.FC<AuthSessionProps> = observer(
 			selected: isSelected,
 			onSelect,
 		});
-		const platformLabel = authSession.clientPlatform === DESKTOP_PRODUCT_NAME ? DESKTOP_PRODUCT_NAME : clientPlatform;
 		const metadataLine = [authSession.clientLocation, isCurrent ? null : formatAuthSessionLastUsed(authSession, i18n)]
 			.filter((value): value is string => Boolean(value))
 			.join(' · ');
@@ -254,9 +250,15 @@ const AuthSessionItem: React.FC<AuthSessionProps> = observer(
 					</div>
 					<div className={styles.authSessionInfo} data-flx="user.devices-tab.auth-session-item.auth-session-info">
 						<span className={styles.authSessionTitle} data-flx="user.devices-tab.auth-session-item.auth-session-title">
-							{clientOs}
-							<StatusDot data-flx="user.devices-tab.auth-session-item.status-dot" />
-							{platformLabel}
+							{authSession.clientBrowser === null ? (
+								platformLabel
+							) : (
+								<>
+									{clientOs}
+									<StatusDot data-flx="user.devices-tab.auth-session-item.status-dot" />
+									{platformLabel}
+								</>
+							)}
 						</span>
 						{metadataLine && (
 							<div

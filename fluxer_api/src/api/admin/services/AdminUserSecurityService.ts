@@ -41,10 +41,11 @@ import * as AuthUtility from '../../auth/AuthUtility';
 import {createPasswordResetToken, createUserID, type UserID} from '../../BrandedTypes';
 import type {UserRow} from '../../database/types/UserTypes';
 import {Logger} from '../../Logger';
+import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 import type {IRiskHistoryRepository} from '../../risk/HistoricalOutcomeRepository';
 import type {HistoricalOutcomeCode} from '../../risk/RiskHistoryTypes';
 import {getIpAddressReverse, getLocationLabelFromIp} from '../../utils/IpUtils';
-import {resolveSessionClientInfo} from '../../utils/UserAgentUtils';
+import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
 import {mapUserToAdminResponse} from '../models/UserTypes';
 import type {AdminAuditService} from './AdminAuditService';
 import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
@@ -749,7 +750,7 @@ export class AdminUserSecurityService {
 			approximateLastUsedAt: Date;
 			clientIp: string;
 			clientUserAgent: string | null;
-			clientIsDesktop: boolean | null;
+			clientOs: string | null;
 			deletedAt: Date | null;
 		}> = [
 			...activeSessions.map((s) => ({
@@ -758,7 +759,7 @@ export class AdminUserSecurityService {
 				approximateLastUsedAt: s.approximateLastUsedAt,
 				clientIp: s.clientIp,
 				clientUserAgent: s.clientUserAgent,
-				clientIsDesktop: s.clientIsDesktop,
+				clientOs: s.clientOs ?? null,
 				deletedAt: null as Date | null,
 			})),
 			...tombstones.map((t) => ({
@@ -767,7 +768,7 @@ export class AdminUserSecurityService {
 				approximateLastUsedAt: t.approximateLastUsedAt,
 				clientIp: t.clientIp,
 				clientUserAgent: t.clientUserAgent,
-				clientIsDesktop: t.clientIsDesktop,
+				clientOs: t.clientOs ?? null,
 				deletedAt: t.deletedAt,
 			})),
 		];
@@ -776,6 +777,8 @@ export class AdminUserSecurityService {
 			if (a.deletedAt !== null && b.deletedAt === null) return 1;
 			return b.createdAt.getTime() - a.createdAt.getTime();
 		});
+		const {branding} = await getInstanceConfigRepository().getAppPublicConfig();
+		const productName = branding.product_name;
 		const canViewIp = acls.has(AdminACLs.USER_VIEW_IP) || acls.has(AdminACLs.WILDCARD);
 		if (!canViewIp) {
 			await auditService.createAuditLog({
@@ -788,9 +791,10 @@ export class AdminUserSecurityService {
 			});
 			return {
 				sessions: entries.map((entry) => {
-					const {clientOs, clientPlatform} = resolveSessionClientInfo({
+					const clientInfo = resolveSessionClientInfo({
 						userAgent: entry.clientUserAgent,
-						isDesktopClient: entry.clientIsDesktop,
+						reportedOs: entry.clientOs,
+						productName,
 					});
 					return {
 						session_id_hash: entry.sessionIdHash.toString('base64url'),
@@ -798,8 +802,8 @@ export class AdminUserSecurityService {
 						approx_last_used_at: entry.approximateLastUsedAt.toISOString(),
 						client_ip: '[redacted]',
 						client_ip_reverse: null,
-						client_os: clientOs,
-						client_platform: clientPlatform,
+						client_os: clientInfo.os,
+						client_platform: clientInfo.platform,
 						client_location: null,
 						deleted_at: entry.deletedAt?.toISOString() ?? null,
 					};
@@ -836,9 +840,10 @@ export class AdminUserSecurityService {
 				const clientLocation = locationResult.status === 'fulfilled' ? locationResult.value : null;
 				const reverseDnsResult = reverseDnsResults[index];
 				const clientIpReverse = reverseDnsResult?.status === 'fulfilled' ? reverseDnsResult.value : null;
-				const {clientOs, clientPlatform} = resolveSessionClientInfo({
+				const clientInfo = resolveSessionClientInfo({
 					userAgent: entry.clientUserAgent,
-					isDesktopClient: entry.clientIsDesktop,
+					reportedOs: entry.clientOs,
+					productName,
 				});
 				return {
 					session_id_hash: entry.sessionIdHash.toString('base64url'),
@@ -846,8 +851,8 @@ export class AdminUserSecurityService {
 					approx_last_used_at: entry.approximateLastUsedAt.toISOString(),
 					client_ip: entry.clientIp,
 					client_ip_reverse: clientIpReverse,
-					client_os: clientOs,
-					client_platform: clientPlatform,
+					client_os: clientInfo.os,
+					client_platform: clientInfo.platform,
 					client_location: clientLocation,
 					deleted_at: entry.deletedAt?.toISOString() ?? null,
 				};

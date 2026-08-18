@@ -100,7 +100,10 @@ export async function revertEmailChange(
 		event: 'USER_UPDATE',
 		data: mapUserToPrivateResponse(updatedUser),
 	});
-	const [authToken] = await AuthSession.createAuthSession(ctx, {user: updatedUser, request});
+	const [authToken] = await AuthSession.createAuthSession(ctx, {
+		user: updatedUser,
+		origin: AuthSession.resolveSessionOrigin(ctx, request),
+	});
 	await contactChangeLog.recordDiff({
 		oldUser: user,
 		newUser: updatedUser,

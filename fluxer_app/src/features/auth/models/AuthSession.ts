@@ -7,6 +7,8 @@ export class AuthSession {
 	readonly approxLastUsedAt: Date | null;
 	readonly clientOs: string | null;
 	readonly clientPlatform: string | null;
+	readonly clientBrowser: string | null;
+	readonly clientDevice: 'mobile' | 'desktop';
 	readonly clientLocation: string | null;
 	readonly maskedIp: string | null;
 	readonly isCurrent: boolean;
@@ -18,6 +20,8 @@ export class AuthSession {
 		this.clientInfo = data.client_info ?? null;
 		this.clientOs = this.clientInfo?.os ?? null;
 		this.clientPlatform = this.clientInfo?.platform ?? null;
+		this.clientBrowser = this.clientInfo?.browser ?? null;
+		this.clientDevice = this.clientInfo?.device ?? 'desktop';
 		this.clientLocation = getLocationLabel(this.clientInfo?.location ?? null);
 		this.maskedIp = data.masked_ip ?? null;
 		this.isCurrent = data.current;

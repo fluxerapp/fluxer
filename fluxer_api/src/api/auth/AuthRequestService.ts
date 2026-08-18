@@ -33,11 +33,12 @@ import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResp
 import type {ApiContext} from '../ApiContext';
 import {createUserID, type UserID} from '../BrandedTypes';
 import type {RequestCache} from '../middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
 import type {User} from '../models/User';
 import {mapUserToPartialResponse} from '../user/UserMappers';
 import {lookupGeoip} from '../utils/IpUtils';
 import {parseJsonRecord} from '../utils/JsonBoundaryUtils';
-import {resolveSessionClientInfo} from '../utils/UserAgentUtils';
+import {resolveSessionClientInfo} from '../utils/SessionClientIdentity';
 import {generateUsernameSuggestions} from '../utils/UsernameSuggestionUtils';
 import * as AuthEmail from './AuthEmail';
 import * as AuthEmailRevert from './AuthEmailRevert';
@@ -89,7 +90,6 @@ interface AuthLogoutRequest {
 
 interface AuthHandoffCompleteRequest {
 	data: HandoffCompleteRequest;
-	request: Request;
 	clientIp: string;
 	authToken?: string;
 }
@@ -122,9 +122,7 @@ interface AuthLogoutAuthSessionsRequest {
 }
 
 interface AuthHandoffInitiateRequest {
-	userAgent?: string;
-	clientIp: string;
-	clientPlatform?: string;
+	request: Request;
 }
 
 interface AuthHandoffInfoRequest {
@@ -263,7 +261,7 @@ export class AuthRequestService {
 				user: await this.getUserPartial(parsed.user_id),
 			};
 		}
-		const ticketPayload = await cache.get(`ip-auth-ticket:${ticket}`);
+		const ticketPayload = await cache.get(AuthLogin.getTicketCacheKey(ticket));
 		if (!ticketPayload) {
 			throw InputValidationError.fromCode('ticket', ValidationErrorCodes.INVALID_OR_EXPIRED_AUTHORIZATION_TICKET);
 		}
@@ -276,7 +274,10 @@ export class AuthRequestService {
 
 	async authenticateWebAuthnDiscoverable({data, request}: AuthWebAuthnAuthenticateRequest) {
 		const user = await AuthMfa.verifyWebAuthnAuthenticationDiscoverable(this.apiContext, data.response, data.challenge);
-		const [token] = await AuthSession.createAuthSession(this.apiContext, {user, request});
+		const [token] = await AuthSession.createAuthSession(this.apiContext, {
+			user,
+			origin: AuthSession.resolveSessionOrigin(this.apiContext, request),
+		});
 		return {token, user_id: user.id.toString(), user: mapUserToPartialResponse(user)};
 	}
 
@@ -298,12 +299,9 @@ export class AuthRequestService {
 		return {suggestions: generateUsernameSuggestions(globalName)};
 	}
 
-	async initiateHandoff({
-		userAgent,
-		clientIp,
-		clientPlatform,
-	}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {
-		const result = await this.desktopHandoffService.initiateHandoff({userAgent, clientIp, clientPlatform});
+	async initiateHandoff({request}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {
+		const origin = AuthSession.resolveSessionOrigin(this.apiContext, request);
+		const result = await this.desktopHandoffService.initiateHandoff({origin});
 		return {
 			code: result.code,
 			expires_at: result.expiresAt.toISOString(),
@@ -312,19 +310,22 @@ export class AuthRequestService {
 
 	async getHandoffInfo({code, clientIp}: AuthHandoffInfoRequest): Promise<HandoffInfoResponse> {
 		const info = await this.desktopHandoffService.getHandoffInfo(code, clientIp);
-		if (info.status === 'expired' || !info.clientIp) {
+		if (info.status === 'expired' || !info.origin) {
 			return {status: info.status, client_info: null};
 		}
-		const geo = await lookupGeoip(info.clientIp);
-		const {clientOs, clientPlatform} = resolveSessionClientInfo({
-			userAgent: info.userAgent ?? null,
-			isDesktopClient: info.clientPlatform === 'desktop',
+		const geo = await lookupGeoip(info.origin.ip);
+		const {branding} = await getInstanceConfigRepository().getAppPublicConfig();
+		const resolved = resolveSessionClientInfo({
+			userAgent: info.origin.userAgent,
+			reportedOs: info.origin.clientOs,
+			productName: branding.product_name,
 		});
 		return {
 			status: 'pending',
 			client_info: {
-				platform: clientPlatform,
-				os: clientOs,
+				platform: resolved.platform,
+				os: resolved.os,
+				device: resolved.device,
 				location: {
 					city: geo.city,
 					region: geo.region,
@@ -334,18 +335,18 @@ export class AuthRequestService {
 		};
 	}
 
-	async completeHandoff({data, request, clientIp, authToken}: AuthHandoffCompleteRequest): Promise<void> {
+	async completeHandoff({data, clientIp, authToken}: AuthHandoffCompleteRequest): Promise<void> {
 		const sessionToken = data.token ?? authToken;
 		if (!sessionToken) {
 			throw new UnauthorizedError();
 		}
 		await this.desktopHandoffService.completeHandoff(
 			data.code,
-			() =>
+			(origin) =>
 				AuthSession.createAdditionalAuthSessionFromToken(this.apiContext, {
 					token: sessionToken,
 					expectedUserId: data.user_id,
-					request,
+					origin,
 				}),
 			clientIp,
 		);

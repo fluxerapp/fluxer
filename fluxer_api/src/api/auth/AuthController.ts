@@ -551,18 +551,7 @@ export function AuthController(app: HonoApp) {
 				'Start a handoff session to transfer authentication between devices. Returns a handoff code for device linking.',
 		}),
 		async (ctx) => {
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
-			const clientPlatform = ctx.req.header('x-fluxer-platform')?.trim().toLowerCase() ?? undefined;
-			return ctx.json(
-				await ctx.get('authRequestService').initiateHandoff({
-					userAgent: ctx.req.header('User-Agent'),
-					clientIp,
-					clientPlatform,
-				}),
-			);
+			return ctx.json(await ctx.get('authRequestService').initiateHandoff({request: ctx.req.raw}));
 		},
 	);
 	app.get(
@@ -611,7 +600,6 @@ export function AuthController(app: HonoApp) {
 			});
 			await ctx.get('authRequestService').completeHandoff({
 				data: ctx.req.valid('json'),
-				request: ctx.req.raw,
 				clientIp,
 				authToken: ctx.get('authToken') ?? undefined,
 			});

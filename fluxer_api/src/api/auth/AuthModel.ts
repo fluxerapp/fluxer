@@ -5,9 +5,10 @@ import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSche
 import {uint8ArrayToBase64} from 'uint8array-extras';
 import {Config} from '../Config';
 import {Logger} from '../Logger';
+import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
 import type {AuthSession} from '../models/AuthSession';
 import {getLocationLabelFromIp} from '../utils/IpUtils';
-import {resolveSessionClientInfo} from '../utils/UserAgentUtils';
+import {resolveSessionClientInfo} from '../utils/SessionClientIdentity';
 
 const DEV_FALLBACK_AUTH_SESSION_LOCATION = 'Stockholm, Stockholm County, Sweden';
 
@@ -40,30 +41,24 @@ export async function mapAuthSessionsToResponse({
 	const locationResults = await Promise.allSettled(
 		sortedSessions.map((session) => resolveAuthSessionLocation(session)),
 	);
+	const {branding} = await getInstanceConfigRepository().getAppPublicConfig();
 	return sortedSessions.map((authSession, index): AuthSessionResponse => {
 		const locationResult = locationResults[index];
 		const clientLocation = locationResult?.status === 'fulfilled' ? locationResult.value : null;
-		let clientOs: string;
-		let clientPlatform: string;
-		if (authSession.clientUserAgent) {
-			const parsed = resolveSessionClientInfo({
-				userAgent: authSession.clientUserAgent,
-				isDesktopClient: authSession.clientIsDesktop,
-			});
-			clientOs = parsed.clientOs;
-			clientPlatform = parsed.clientPlatform;
-		} else {
-			clientOs = authSession.clientOs || 'Unknown';
-			clientPlatform = authSession.clientPlatform || 'Unknown';
-		}
+		const clientInfo = resolveSessionClientInfo({
+			userAgent: authSession.clientUserAgent,
+			reportedOs: authSession.clientOs ?? null,
+			productName: branding.product_name,
+		});
 		const idHash = uint8ArrayToBase64(authSession.sessionIdHash, {urlSafe: true});
 		const isCurrent = currentSessionId ? Buffer.compare(authSession.sessionIdHash, currentSessionId) === 0 : false;
 		return {
 			id_hash: idHash,
 			client_info: {
-				platform: clientPlatform,
-				os: clientOs,
-				browser: undefined,
+				platform: clientInfo.platform,
+				os: clientInfo.os,
+				browser: clientInfo.browser,
+				device: clientInfo.device,
 				location: clientLocation
 					? {
 							city: clientLocation.split(',').at(0)?.trim() || null,

@@ -5,8 +5,9 @@ import {HandoffCodeExpiredError} from '@fluxer/errors/src/domains/auth/HandoffCo
 import {InvalidHandoffCodeError} from '@fluxer/errors/src/domains/auth/InvalidHandoffCodeError';
 import {ms, seconds} from 'itty-time';
 import type {ApiContext} from '../../ApiContext';
+import type {SessionOrigin} from '../AuthSession';
 
-const HANDOFF_CODE_PREFIX = 'desktop-handoff:';
+const HANDOFF_CODE_PREFIX = 'desktop-handoff-v2:';
 const HANDOFF_TOKEN_PREFIX = 'desktop-handoff-token:';
 const CODE_CHARACTERS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 12;
@@ -19,9 +20,7 @@ const MAX_INFO_LOOKUPS = 3;
 
 interface HandoffData {
 	createdAt: number;
-	userAgent?: string;
-	clientIp: string;
-	clientPlatform?: string;
+	origin: SessionOrigin;
 	infoLookupCount: number;
 }
 
@@ -61,7 +60,7 @@ function assertValidHandoffCode(code: string): void {
 export class DesktopHandoffService {
 	constructor(private readonly apiContext: ApiContext) {}
 
-	async initiateHandoff(args: {userAgent?: string; clientIp: string; clientPlatform?: string}): Promise<{
+	async initiateHandoff(args: {origin: SessionOrigin}): Promise<{
 		code: string;
 		expiresAt: Date;
 	}> {
@@ -70,9 +69,7 @@ export class DesktopHandoffService {
 		const normalizedCode = normalizeHandoffCode(code);
 		const handoffData: HandoffData = {
 			createdAt: Date.now(),
-			userAgent: args.userAgent,
-			clientIp: args.clientIp,
-			clientPlatform: args.clientPlatform,
+			origin: args.origin,
 			infoLookupCount: 0,
 		};
 		const expirySeconds = seconds('5 minutes');
@@ -83,7 +80,7 @@ export class DesktopHandoffService {
 
 	async completeHandoff(
 		code: string,
-		createTokenData: () => Promise<{token: string; userId: string}>,
+		createTokenData: (origin: SessionOrigin) => Promise<{token: string; userId: string}>,
 		approverIp: string,
 	): Promise<void> {
 		const {cache} = this.apiContext.services;
@@ -107,7 +104,7 @@ export class DesktopHandoffService {
 		if (remainingSeconds <= 0) {
 			throw new HandoffCodeExpiredError();
 		}
-		const {token, userId} = await createTokenData();
+		const {token, userId} = await createTokenData(handoffData.origin);
 		const tokenData: HandoffTokenData = {
 			token,
 			userId,
@@ -122,9 +119,7 @@ export class DesktopHandoffService {
 		approverIp: string,
 	): Promise<{
 		status: 'pending' | 'expired';
-		userAgent?: string;
-		clientIp?: string;
-		clientPlatform?: string;
+		origin?: SessionOrigin;
 	}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = normalizeHandoffCode(code);
@@ -149,12 +144,7 @@ export class DesktopHandoffService {
 			{approvedAt: Date.now()},
 			remainingTtl > 0 ? remainingTtl : seconds('5 minutes'),
 		);
-		return {
-			status: 'pending',
-			userAgent: handoffData.userAgent,
-			clientIp: handoffData.clientIp,
-			clientPlatform: handoffData.clientPlatform,
-		};
+		return {status: 'pending', origin: handoffData.origin};
 	}
 
 	async getHandoffStatus(

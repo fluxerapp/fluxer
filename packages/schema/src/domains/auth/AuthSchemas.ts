@@ -196,6 +196,7 @@ const AuthSessionClientInfo = z.object({
 	platform: z.string().nullish().describe('The platform reported by the client'),
 	os: z.string().nullish().describe('The operating system reported by the client'),
 	browser: z.string().nullish().describe('The browser reported by the client'),
+	device: z.enum(['mobile', 'desktop']).describe('Device class of the session, decided by the server'),
 	location: AuthSessionLocation.nullish().describe('The geolocation data sent by the client'),
 });
 
@@ -233,6 +234,7 @@ export type HandoffInitiateResponse = z.infer<typeof HandoffInitiateResponse>;
 const HandoffInfoClientInfo = z.object({
 	platform: z.string().nullish().describe('The platform of the requesting device'),
 	os: z.string().nullish().describe('The operating system of the requesting device'),
+	device: z.enum(['mobile', 'desktop']).describe('Device class of the requesting device, decided by the server'),
 	location: AuthSessionLocation.nullish().describe('The approximate location of the requesting device'),
 });
 

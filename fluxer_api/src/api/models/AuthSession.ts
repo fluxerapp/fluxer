@@ -10,9 +10,7 @@ export class AuthSession {
 	readonly approximateLastUsedAt: Date;
 	readonly clientIp: string;
 	readonly clientUserAgent: string | null;
-	readonly clientIsDesktop: boolean | null;
-	readonly clientOs?: string | null;
-	readonly clientPlatform?: string | null;
+	readonly clientOs: string | null;
 	readonly clientCountry: string | null;
 	readonly version: number;
 
@@ -23,9 +21,7 @@ export class AuthSession {
 		this.approximateLastUsedAt = row.approx_last_used_at;
 		this.clientIp = row.client_ip;
 		this.clientUserAgent = row.client_user_agent ?? null;
-		this.clientIsDesktop = row.client_is_desktop ?? null;
 		this.clientOs = row.client_os ?? null;
-		this.clientPlatform = row.client_platform ?? null;
 		this.clientCountry = row.client_country ?? null;
 		this.version = row.version;
 	}
@@ -38,9 +34,7 @@ export class AuthSession {
 			approx_last_used_at: this.approximateLastUsedAt,
 			client_ip: this.clientIp,
 			client_user_agent: this.clientUserAgent,
-			client_is_desktop: this.clientIsDesktop,
 			client_os: this.clientOs,
-			client_platform: this.clientPlatform,
 			client_country: this.clientCountry,
 			version: this.version,
 		};
@@ -54,9 +48,7 @@ export class AuthSessionTombstone {
 	readonly approximateLastUsedAt: Date;
 	readonly clientIp: string;
 	readonly clientUserAgent: string | null;
-	readonly clientIsDesktop: boolean | null;
-	readonly clientOs?: string | null;
-	readonly clientPlatform?: string | null;
+	readonly clientOs: string | null;
 	readonly clientCountry: string | null;
 	readonly deletedAt: Date;
 	readonly version: number;
@@ -68,9 +60,7 @@ export class AuthSessionTombstone {
 		this.approximateLastUsedAt = row.approx_last_used_at;
 		this.clientIp = row.client_ip;
 		this.clientUserAgent = row.client_user_agent ?? null;
-		this.clientIsDesktop = row.client_is_desktop ?? null;
 		this.clientOs = row.client_os ?? null;
-		this.clientPlatform = row.client_platform ?? null;
 		this.clientCountry = row.client_country ?? null;
 		this.deletedAt = row.deleted_at;
 		this.version = row.version;
