@@ -72,7 +72,9 @@ const applyTabIndices = (focusable: Array<HTMLElement>, activeIndex: number): vo
 	for (let i = 0; i < focusable.length; i++) {
 		const element = focusable[i];
 		const desired = i === clamped ? '0' : '-1';
-		element.setAttribute(ROVING_MANAGED_ATTR, '');
+		if (!element.hasAttribute(ROVING_MANAGED_ATTR)) {
+			element.setAttribute(ROVING_MANAGED_ATTR, '');
+		}
 		if (element.getAttribute('tabindex') !== desired) {
 			element.setAttribute('tabindex', desired);
 		}

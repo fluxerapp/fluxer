@@ -9,10 +9,6 @@ use formats::is_animated_image_bytes;
 use rgba::{TransformRequest, crop_rotate_rgba_alloc};
 use wasm_bindgen::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
-#[global_allocator]
-static WASM_ALLOCATOR: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 #[wasm_bindgen]
 #[allow(clippy::too_many_arguments)]
 pub fn crop_rotate_rgba_raw(

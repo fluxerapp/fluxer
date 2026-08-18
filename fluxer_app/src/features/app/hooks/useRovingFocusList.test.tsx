@@ -152,6 +152,38 @@ describe('useRovingFocusList', () => {
 		expect(items.map((item) => item.tabIndex)).toEqual([0, -1, -1]);
 	});
 
+	it('does not rewrite the roving-managed marker attribute on every navigation', () => {
+		act(() => {
+			root?.render(<RovingFocusProbe data-flx="app.use-roving-focus-list-test.roving-focus-probe--3" />);
+		});
+		const items = getItems(container!);
+		expect(items.every((item) => item.hasAttribute('data-roving-focus-managed'))).toBe(true);
+
+		// Observe only the marker attribute, after it has already been applied once.
+		const observer = new MutationObserver(() => {});
+		observer.observe(container!, {
+			subtree: true,
+			attributes: true,
+			attributeFilter: ['data-roving-focus-managed'],
+		});
+
+		press(items[0], 'ArrowDown');
+		press(items[1], 'ArrowDown');
+		press(items[2], 'ArrowUp');
+		press(items[1], 'ArrowUp');
+		press(items[0], 'End');
+		press(items[2], 'Home');
+
+		const records = observer.takeRecords();
+		observer.disconnect();
+
+		// The marker is write-once and only ever read via hasAttribute, so navigating
+		// must not touch it again. Rewriting it invalidates style for every list item
+		// on every keystroke, which is what drove idle style-recalc churn.
+		expect(records.length).toBe(0);
+		expect(items.every((item) => item.hasAttribute('data-roving-focus-managed'))).toBe(true);
+	});
+
 	it('can start on the container with no focused item before ArrowDown enters the list', () => {
 		act(() => {
 			root?.render(
