@@ -117,7 +117,10 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
             bunny_ip_gate::gate_middleware,
         ));
     }
-    router = router.layer(middleware::from_fn(add_security_header_middleware));
+    router = router.layer(middleware::from_fn_with_state(
+        state.cfg.mode,
+        add_security_header_middleware,
+    ));
     let app = router.with_state(state);
     let listener = TcpListener::bind(addr).await?;
     info!(%addr, "media proxy listening");
@@ -176,11 +179,16 @@ async fn add_version_header(request: Request<Body>, next: middleware::Next) -> R
 }
 
 async fn add_security_header_middleware(
+    State(mode): State<DeploymentMode>,
     request: Request<Body>,
     next: middleware::Next,
 ) -> Response {
     let mut response = next.run(request).await;
-    http_headers::add_security_headers(response.headers_mut());
+    let headers = response.headers_mut();
+    http_headers::add_security_headers(headers);
+    if mode == DeploymentMode::Static {
+        headers.remove("X-Robots-Tag");
+    }
     response
 }
 
@@ -3073,6 +3081,53 @@ fn nsfw_config(app: &AppState) -> crate::nsfw::Config {
 mod tests {
     use super::*;
     use base64::engine::general_purpose::STANDARD;
+
+    async fn robots_header_for(mode: DeploymentMode) -> Option<String> {
+        use axum::{body::Body, http::Request, routing::get};
+        let router = Router::new()
+            .route(
+                "/probe",
+                get(|| async {
+                    let mut response = Response::new(Body::empty());
+                    http_headers::add_media_headers(response.headers_mut(), 0, "text/plain", None);
+                    response
+                }),
+            )
+            .layer(middleware::from_fn_with_state(
+                mode,
+                add_security_header_middleware,
+            ));
+        let response = tower::ServiceExt::oneshot(
+            router,
+            Request::builder()
+                .uri("/probe")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+        response
+            .headers()
+            .get("X-Robots-Tag")
+            .map(|v| v.to_str().unwrap().to_owned())
+    }
+
+    #[tokio::test]
+    async fn static_mode_does_not_set_robots_tag() {
+        assert_eq!(robots_header_for(DeploymentMode::Static).await, None);
+    }
+
+    #[tokio::test]
+    async fn media_and_upload_modes_still_set_robots_tag() {
+        assert_eq!(
+            robots_header_for(DeploymentMode::Mp).await.as_deref(),
+            Some(http_headers::ROBOTS)
+        );
+        assert_eq!(
+            robots_header_for(DeploymentMode::Upload).await.as_deref(),
+            Some(http_headers::ROBOTS)
+        );
+    }
 
     fn upload_relay_test_config(
         storage_root: &std::path::Path,
