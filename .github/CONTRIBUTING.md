@@ -25,7 +25,7 @@ Closes #456
 
 You must understand every line you submit and be able to explain why the change is correct.
 
-The [LLM usage policy](LLM_USAGE_POLICY.md) defines the authorship requirements for contributors who do not have write access.
+The [LLM usage policy](https://github.com/fluxerapp/fluxer/blob/main/.github/LLM_USAGE_POLICY.md) defines the authorship requirements for contributors who do not have write access.
 
 Each contribution must contain one coherent change. Do not include unrelated fixes, refactoring or formatting changes.
 
@@ -80,15 +80,15 @@ Complete every section of the pull request template. Clearly describe:
 
 Use the [bug report form](https://github.com/fluxerapp/fluxer/issues/new?template=bug-report.yaml) to report reproducible defects.
 
-Report security vulnerabilities privately through the channels specified in the [security policy](SECURITY.md). Do not report vulnerabilities in public issues or discussions.
+Report security vulnerabilities privately through the channels specified in the [security policy](https://github.com/fluxerapp/fluxer/blob/main/.github/SECURITY.md). Do not report vulnerabilities in public issues or discussions.
 
 Use [discussions](https://github.com/orgs/fluxerapp/discussions) for feature proposals and self-hosting questions.
 
 Submit translations through [Weblate](https://weblate.fluxer.tools), not through pull requests.
 
-All repository activity is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+All repository activity is governed by the [Code of Conduct](https://github.com/fluxerapp/fluxer/blob/main/.github/CODE_OF_CONDUCT.md).
 
-Fluxer is distributed under the [GNU Affero General Public License, version 3.0 or later](../LICENSE). By adding a DCO sign-off, you certify that you have the right to submit the contribution under that licence.
+Fluxer is distributed under the [GNU Affero General Public License, version 3.0 or later](https://github.com/fluxerapp/fluxer/blob/main/LICENSE). By adding a DCO sign-off, you certify that you have the right to submit the contribution under that licence.
 
 ## Private marketing project
 
