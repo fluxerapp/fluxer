@@ -31,5 +31,5 @@
 Fluxer is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.
 
 <p align="center">
-  <img src="./fluxer_static/marketing/screenshots/desktop-1920w.png" alt="Fluxer app showcase" width="900">
+  <img src="./fluxer_static/marketing/screenshots/desktop-readme-1920w.png" alt="Fluxer app showcase" width="900">
 </p>
