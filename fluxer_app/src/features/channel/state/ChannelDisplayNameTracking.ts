@@ -9,17 +9,6 @@ export interface TrackedRecipientUser {
 	readonly globalName?: string | null;
 }
 
-/**
- * Builds the MobX tracking key for group-DM display names.
- *
- * Only the recipients of tracked group DMs are read, so the observing reaction
- * depends on those users alone rather than on the whole (unbounded) user cache.
- * Reading a recipient that is not cached yet still registers a dependency on
- * that key, so a user arriving later re-triggers the reaction.
- *
- * Kept as a standalone function rather than a class method because
- * makeAutoObservable converts methods into actions, and actions run untracked.
- */
 export const trackedRecipientNameKey = (
 	snapshots: ReadonlyMap<string, TrackedRecipientSnapshot>,
 	users: Record<string, TrackedRecipientUser | undefined>,

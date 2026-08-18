@@ -356,9 +356,9 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				() => {
 					if (!active) return;
 					setLoadedPosterSrc(posterSrc);
-					const image = ImageCacheUtils.getImage(posterSrc);
-					if (active && image && image.naturalWidth > 0 && image.naturalHeight > 0) {
-						setPosterNaturalDimensions({src: posterSrc, width: image.naturalWidth, height: image.naturalHeight});
+					const posterSize = ImageCacheUtils.getImageSize(posterSrc);
+					if (active && posterSize) {
+						setPosterNaturalDimensions({src: posterSrc, width: posterSize.width, height: posterSize.height});
 					}
 				},
 				() => {

@@ -21,6 +21,7 @@ import {
 	reduceGIFVRenderState,
 } from '@app/features/channel/components/embeds/media/GIFVRenderStateMachine';
 import {GifIndicator} from '@app/features/channel/components/embeds/media/GifIndicator';
+import {useGifViewportGate} from '@app/features/channel/components/embeds/media/GifViewportGate';
 import {getMediaButtonVisibility} from '@app/features/channel/components/embeds/media/MediaButtonUtils';
 import {MediaContainer, shouldShowOverlays} from '@app/features/channel/components/embeds/media/MediaContainer';
 import type {BaseMediaProps} from '@app/features/channel/components/embeds/media/MediaTypes';
@@ -985,9 +986,15 @@ export const EmbedGif: FC<
 		const imgRef = useRef<HTMLImageElement>(null);
 		const animatedImageRef = useRef<HTMLImageElement>(null);
 		const freezeCanvasRef = useRef<HTMLCanvasElement>(null);
-		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
-			disabled: !isMobile,
+		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
+		const {
+			ref: visibilityRef,
+			loadMedia: shouldLoadMedia,
+			animate: shouldAnimate,
+		} = useGifViewportGate<HTMLDivElement>({
+			element: containerElement,
 			rememberKey: proxyURL,
+			shouldBlur,
 		});
 		const setContainerRef = useCallback(
 			(node: HTMLDivElement | null) => {
@@ -1018,8 +1025,6 @@ export const EmbedGif: FC<
 			Math.round(displayHeight * 2),
 		);
 		const animatedImageSourceRef = useRef(optimizedAnimatedURL);
-		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
-		const shouldLoadMedia = isNearViewport && !shouldBlur;
 		const {
 			loaded,
 			error,
@@ -1049,7 +1054,7 @@ export const EmbedGif: FC<
 			status: ImageCacheUtils.hasImage(optimizedAnimatedURL) ? 'ready' : 'idle',
 		});
 		const [decoderRequested, setDecoderRequested] = useState(() => getAnimatedMediaPlaybackAllowed());
-		const shouldUseDecoder = shouldLoadMedia && hasStartedAnimating;
+		const shouldUseDecoder = shouldAnimate && hasStartedAnimating;
 		const decoderPlaying =
 			shouldUseDecoder && decoderRequested && animatedMediaPlaybackAllowed && (gifAutoPlay || isHoveredState);
 		const decoderState = useAnimatedImageDecoder({
@@ -1061,7 +1066,7 @@ export const EmbedGif: FC<
 		const useDecoder =
 			shouldUseDecoder && decoderRequested && decoderState.supported && hasStartedAnimating && !decoderState.error;
 		const decoderCanvasVisible = useDecoder && decoderState.loaded;
-		const shouldRenderFreezeFrame = !decoderCanvasVisible && (gifAutoPlay || hasStartedAnimating);
+		const shouldRenderFreezeFrame = shouldAnimate && !decoderCanvasVisible && (gifAutoPlay || hasStartedAnimating);
 		const setAnimatedImageRef = useCallback(
 			(node: HTMLImageElement | null) => {
 				animatedImageRef.current = node;
@@ -1406,7 +1411,7 @@ export const EmbedGif: FC<
 			...(aspectRatio ? {aspectRatio} : {}),
 		} as React.CSSProperties;
 		const shouldUseAnimatedImage =
-			shouldLoadMedia &&
+			shouldAnimate &&
 			animatedMediaPlaybackAllowed &&
 			!decoderCanvasVisible &&
 			(gifAutoPlay || (hasStartedAnimating && isHoveredState));

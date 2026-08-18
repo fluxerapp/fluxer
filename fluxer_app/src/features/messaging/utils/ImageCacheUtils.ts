@@ -3,8 +3,15 @@
 import {LRUCache} from 'lru-cache';
 
 interface ImageCacheEntry {
-	image: HTMLImageElement;
 	src: string;
+	naturalWidth: number;
+	naturalHeight: number;
+	pin: HTMLImageElement;
+}
+
+export interface CachedImageSize {
+	width: number;
+	height: number;
 }
 
 interface PendingImageSubscriber {
@@ -31,9 +38,7 @@ const MAX_IMAGE_SOURCE_LENGTH = 16 * 1024;
 const IMAGE_LOAD_TIMEOUT_MS = 30_000;
 const IMAGE_LOAD_ACTIVATION_TIMEOUT_MS = 10_000;
 
-const getImageByteSize = (image: HTMLImageElement): number | null => {
-	const width = image.naturalWidth;
-	const height = image.naturalHeight;
+const getDimensionByteSize = (width: number, height: number): number | null => {
 	if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0) {
 		return null;
 	}
@@ -42,10 +47,21 @@ const getImageByteSize = (image: HTMLImageElement): number | null => {
 	return byteSize;
 };
 
+const getImageByteSize = (image: HTMLImageElement): number | null =>
+	getDimensionByteSize(image.naturalWidth, image.naturalHeight);
+
 const estimateImageBytes = (entry: ImageCacheEntry): number => {
-	const byteSize = getImageByteSize(entry.image);
+	const byteSize = getDimensionByteSize(entry.naturalWidth, entry.naturalHeight);
 	if (byteSize == null) return MAX_CACHE_ENTRY_BYTES + FALLBACK_IMAGE_BYTES;
 	return byteSize;
+};
+
+const createImagePin = (src: string, image: HTMLImageElement): HTMLImageElement => {
+	if (image.parentNode == null) return image;
+	const pin = new Image();
+	pin.decoding = 'async';
+	pin.src = src;
+	return pin;
 };
 
 const imageCache = new LRUCache<string, ImageCacheEntry>({
@@ -91,7 +107,7 @@ const isCached = (src: string | null): boolean => {
 	if (!acceptsImageSource(src)) return false;
 	const entry = imageCache.get(src);
 	if (!entry) return false;
-	if (entry.src === src && imageHasSource(entry.image, src) && isLoadedImage(entry.image)) return true;
+	if (entry.src === src && entry.naturalWidth > 0 && entry.naturalHeight > 0) return true;
 	imageCache.delete(src);
 	return false;
 };
@@ -100,12 +116,13 @@ export function hasImage(src: string | null): boolean {
 	return isCached(src);
 }
 
-export function getImage(src: string | null): HTMLImageElement | undefined {
+export function getImageSize(src: string | null): CachedImageSize | undefined {
 	if (!acceptsImageSource(src)) return undefined;
 	const entry = imageCache.get(src);
 	if (!entry) return undefined;
-	const image = entry.image;
-	if (entry.src === src && imageHasSource(image, src) && isLoadedImage(image)) return image;
+	if (entry.src === src && entry.naturalWidth > 0 && entry.naturalHeight > 0) {
+		return {width: entry.naturalWidth, height: entry.naturalHeight};
+	}
 	imageCache.delete(src);
 	return undefined;
 }
@@ -118,7 +135,14 @@ export function rememberImage(src: string | null, image: HTMLImageElement): void
 		}
 		return;
 	}
-	if (isCacheableImage(image)) imageCache.set(src, {image, src});
+	if (isCacheableImage(image)) {
+		imageCache.set(src, {
+			src,
+			naturalWidth: image.naturalWidth,
+			naturalHeight: image.naturalHeight,
+			pin: createImagePin(src, image),
+		});
+	}
 	if (!currentPendingLoad) return;
 	settlePendingImageLoad(src, currentPendingLoad, true, image);
 }

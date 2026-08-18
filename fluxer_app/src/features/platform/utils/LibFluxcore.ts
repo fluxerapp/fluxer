@@ -10,7 +10,9 @@ const MAX_RETAINED_LIBFLUXCORE_WASM_MEMORY_BYTES = 64 * 1024 * 1024;
 let modulePromise: Promise<void> | null = null;
 let moduleReady = false;
 let moduleExports: InitOutput | null = null;
-let activeZstdStreamHandles = 0;
+let pendingModuleOperations = 0;
+const liveZstdStreamDecoders = new Set<number>();
+const liveZstdStreamEncoders = new Set<number>();
 
 export interface RgbaTransformResult {
 	rgba: Uint8Array;
@@ -58,6 +60,28 @@ async function loadModule(): Promise<void> {
 	await modulePromise;
 }
 
+function isLibfluxcoreModulePinned(): boolean {
+	return pendingModuleOperations > 0 || liveZstdStreamDecoders.size > 0 || liveZstdStreamEncoders.size > 0;
+}
+
+async function withPinnedLibfluxcoreModule<T>(run: () => T): Promise<T> {
+	pendingModuleOperations++;
+	try {
+		await loadModule();
+		return run();
+	} finally {
+		pendingModuleOperations--;
+		releaseLibfluxcoreMemoryIfIdle();
+	}
+}
+
+function requireLiveZstdStreamHandle(handle: number, live: Set<number>): number {
+	if (!live.has(handle)) {
+		throw new Error('libfluxcore zstd stream handle is no longer live');
+	}
+	return handle;
+}
+
 export function isLibfluxcoreReady(): boolean {
 	return moduleReady;
 }
@@ -67,7 +91,7 @@ export async function ensureLibfluxcoreReady(): Promise<void> {
 }
 
 export function releaseLibfluxcoreMemoryIfIdle(): void {
-	if (activeZstdStreamHandles > 0) return;
+	if (isLibfluxcoreModulePinned()) return;
 	if ((moduleExports?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_LIBFLUXCORE_WASM_MEMORY_BYTES) return;
 	wasm.__resetLibfluxcoreWasmForMemoryPressure();
 	modulePromise = null;
@@ -76,13 +100,7 @@ export function releaseLibfluxcoreMemoryIfIdle(): void {
 }
 
 export async function detectAnimatedImage(data: Uint8Array): Promise<boolean> {
-	await loadModule();
-	try {
-		const result = wasm.is_animated_image(data);
-		return Boolean(result);
-	} finally {
-		releaseLibfluxcoreMemoryIfIdle();
-	}
+	return withPinnedLibfluxcoreModule(() => Boolean(wasm.is_animated_image(data)));
 }
 
 export function cropAndRotateGif(
@@ -210,70 +228,70 @@ export async function cropAndRotateApng(
 	resizeWidth: number | null,
 	resizeHeight: number | null,
 ): Promise<Uint8Array> {
-	await loadModule();
-	try {
+	return withPinnedLibfluxcoreModule(() => {
 		const result = wasm.crop_and_rotate_apng(apng, x, y, width, height, rotation, resizeWidth, resizeHeight);
 		return result instanceof Uint8Array ? result : new Uint8Array(result);
-	} finally {
-		releaseLibfluxcoreMemoryIfIdle();
-	}
+	});
 }
 
 export async function decompressZstdFrame(input: Uint8Array): Promise<Uint8Array | null> {
-	await loadModule();
-	try {
+	return withPinnedLibfluxcoreModule(() => {
 		const result = wasm.decompress_zstd_frame(input);
 		return result instanceof Uint8Array ? result : new Uint8Array(result);
-	} finally {
-		releaseLibfluxcoreMemoryIfIdle();
-	}
+	});
 }
 
 export async function createZstdStreamDecoder(): Promise<number> {
-	await loadModule();
-	const decoder = wasm.create_zstd_stream_decoder();
-	activeZstdStreamHandles++;
-	return decoder;
+	return withPinnedLibfluxcoreModule(() => {
+		const decoder = wasm.create_zstd_stream_decoder();
+		liveZstdStreamDecoders.add(decoder);
+		return decoder;
+	});
 }
 
 export async function decompressZstdStreamChunk(decoder: number, input: Uint8Array): Promise<Uint8Array> {
-	await loadModule();
-	const result = wasm.decompress_zstd_stream_chunk(decoder, input);
-	return result instanceof Uint8Array ? result : new Uint8Array(result);
+	return withPinnedLibfluxcoreModule(() => {
+		const result = wasm.decompress_zstd_stream_chunk(
+			requireLiveZstdStreamHandle(decoder, liveZstdStreamDecoders),
+			input,
+		);
+		return result instanceof Uint8Array ? result : new Uint8Array(result);
+	});
 }
 
 export function freeZstdStreamDecoder(decoder: number): void {
+	if (!liveZstdStreamDecoders.delete(decoder)) return;
 	try {
 		wasm.free_zstd_stream_decoder(decoder);
 	} finally {
-		activeZstdStreamHandles = Math.max(0, activeZstdStreamHandles - 1);
 		releaseLibfluxcoreMemoryIfIdle();
 	}
 }
 
 export async function createZstdStreamEncoder(level: number): Promise<number> {
-	await loadModule();
-	const encoder = wasm.create_zstd_stream_encoder(level);
-	activeZstdStreamHandles++;
-	return encoder;
+	return withPinnedLibfluxcoreModule(() => {
+		const encoder = wasm.create_zstd_stream_encoder(level);
+		liveZstdStreamEncoders.add(encoder);
+		return encoder;
+	});
 }
 
 export function createZstdStreamEncoderSync(level: number): number {
 	const encoder = wasm.create_zstd_stream_encoder(level);
-	activeZstdStreamHandles++;
+	liveZstdStreamEncoders.add(encoder);
 	return encoder;
 }
 
 export function compressZstdStreamChunk(encoder: number, input: Uint8Array): Uint8Array {
-	const result = wasm.compress_zstd_stream_chunk(encoder, input);
+	const result = wasm.compress_zstd_stream_chunk(requireLiveZstdStreamHandle(encoder, liveZstdStreamEncoders), input);
 	return result instanceof Uint8Array ? result : new Uint8Array(result);
 }
 
 export function freeZstdStreamEncoder(encoder: number): void {
+	if (!liveZstdStreamEncoders.delete(encoder)) return;
 	try {
 		wasm.free_zstd_stream_encoder(encoder);
 	} finally {
-		activeZstdStreamHandles = Math.max(0, activeZstdStreamHandles - 1);
 		releaseLibfluxcoreMemoryIfIdle();
 	}
 }

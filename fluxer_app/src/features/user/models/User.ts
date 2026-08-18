@@ -648,6 +648,7 @@ export class User {
 			this._premiumType === other._premiumType &&
 			datesEqual(this._premiumSince, other._premiumSince) &&
 			datesEqual(this._premiumUntil, other._premiumUntil) &&
+			datesEqual(this._premiumGraceEndsAt, other._premiumGraceEndsAt) &&
 			this._premiumWillCancel === other._premiumWillCancel &&
 			this._premiumBillingCycle === other._premiumBillingCycle &&
 			this._premiumLifetimeSequence === other._premiumLifetimeSequence &&

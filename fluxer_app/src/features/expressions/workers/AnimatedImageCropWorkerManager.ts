@@ -43,6 +43,7 @@ interface BatchRequest {
 
 const PARALLEL_FRAME_THRESHOLD = 8;
 const PARALLEL_PIXEL_THRESHOLD = 1_000_000;
+const WORKER_IDLE_TIMEOUT_MS = 30_000;
 
 export class CropPipelineError extends Error {
 	readonly code: CropWorkerErrorCode;
@@ -70,6 +71,8 @@ export class AnimatedImageCropWorkerManager {
 	private readonly pendingBatchRequests = new Set<BatchRequest>();
 	private readonly maxWorkers: number;
 	private terminated = false;
+	private activeJobCount = 0;
+	private idleTerminationTimeout: NodeJS.Timeout | null = null;
 	private readonly workerTimeout: number = 30000;
 
 	private constructor() {
@@ -197,12 +200,27 @@ export class AnimatedImageCropWorkerManager {
 		if (this.terminated) {
 			throw new CropPipelineError('internal', 'Worker manager has been terminated');
 		}
+		this.beginJob();
+		return this.dispatchLibfluxcoreWorker(imageBytes, format, options, outputFormat).finally(() => {
+			this.endJob();
+		});
+	}
+
+	private dispatchLibfluxcoreWorker(
+		imageBytes: Uint8Array,
+		format: CropWorkerImageFormat,
+		options: CropParams,
+		outputFormat: CropOutputFormat | undefined,
+	): Promise<Uint8Array> {
+		if (this.terminated) {
+			return Promise.reject(new CropPipelineError('internal', 'Worker manager has been terminated'));
+		}
 		this.ensureWorkersInitialized();
 		const workerState = this.findAvailableWorker();
 		if (!workerState) {
 			return new Promise((resolve, reject) => {
 				setTimeout(() => {
-					this.runLibfluxcoreWorker(imageBytes, format, options, outputFormat).then(resolve, reject);
+					this.dispatchLibfluxcoreWorker(imageBytes, format, options, outputFormat).then(resolve, reject);
 				}, 50);
 			});
 		}
@@ -316,25 +334,30 @@ export class AnimatedImageCropWorkerManager {
 		frames: Array<NativeFrame>,
 		options: CropOptionsEx,
 	): Promise<Array<NativeFrame>> {
-		this.ensureWorkersInitialized();
-		const availableWorkers = this.workers.filter((worker) => !worker.busy);
-		if (availableWorkers.length <= 1) {
-			return frames.map((frame) => cropDecodedFrame(frame, options));
+		this.beginJob();
+		try {
+			this.ensureWorkersInitialized();
+			const availableWorkers = this.workers.filter((worker) => !worker.busy);
+			if (availableWorkers.length <= 1) {
+				return frames.map((frame) => cropDecodedFrame(frame, options));
+			}
+			const batches = createFrameBatches(frames, availableWorkers.length);
+			const results = await Promise.all(
+				batches.map((batch, index) =>
+					this.processFrameBatchWithWorker(availableWorkers[index], index + 1, batch, options),
+				),
+			);
+			const ordered: Array<NativeFrame | undefined> = new Array(frames.length);
+			for (const batch of results) {
+				for (const item of batch) ordered[item.index] = item.frame;
+			}
+			return ordered.map((frame, index) => {
+				if (!frame) throw new CropPipelineError('internal', `Missing transformed frame ${index}`);
+				return frame;
+			});
+		} finally {
+			this.endJob();
 		}
-		const batches = createFrameBatches(frames, availableWorkers.length);
-		const results = await Promise.all(
-			batches.map((batch, index) =>
-				this.processFrameBatchWithWorker(availableWorkers[index], index + 1, batch, options),
-			),
-		);
-		const ordered: Array<NativeFrame | undefined> = new Array(frames.length);
-		for (const batch of results) {
-			for (const item of batch) ordered[item.index] = item.frame;
-		}
-		return ordered.map((frame, index) => {
-			if (!frame) throw new CropPipelineError('internal', `Missing transformed frame ${index}`);
-			return frame;
-		});
 	}
 
 	private processFrameBatchWithWorker(
@@ -417,6 +440,54 @@ export class AnimatedImageCropWorkerManager {
 		return null;
 	}
 
+	private beginJob(): void {
+		this.clearIdleTermination();
+		this.activeJobCount += 1;
+	}
+
+	private endJob(): void {
+		this.activeJobCount = Math.max(0, this.activeJobCount - 1);
+		this.scheduleIdleTermination();
+	}
+
+	private isPoolIdle(): boolean {
+		return (
+			this.activeJobCount === 0 &&
+			this.pendingBatchRequests.size === 0 &&
+			this.workers.every((workerState) => !workerState.busy && workerState.currentRequest === null)
+		);
+	}
+
+	private clearIdleTermination(): void {
+		if (this.idleTerminationTimeout === null) {
+			return;
+		}
+		clearTimeout(this.idleTerminationTimeout);
+		this.idleTerminationTimeout = null;
+	}
+
+	private scheduleIdleTermination(): void {
+		this.clearIdleTermination();
+		if (this.terminated || this.workers.length === 0 || !this.isPoolIdle()) {
+			return;
+		}
+		this.idleTerminationTimeout = setTimeout(() => {
+			this.idleTerminationTimeout = null;
+			if (this.isPoolIdle()) {
+				this.terminateIdleWorkers();
+			}
+		}, WORKER_IDLE_TIMEOUT_MS);
+	}
+
+	private terminateIdleWorkers(): void {
+		for (const workerState of this.workers) {
+			try {
+				workerState.worker.terminate();
+			} catch {}
+		}
+		this.workers = [];
+	}
+
 	getActiveWorkerCount(): number {
 		return this.workers.filter((w) => w.busy).length;
 	}
@@ -430,6 +501,7 @@ export class AnimatedImageCropWorkerManager {
 			return;
 		}
 		this.terminated = true;
+		this.clearIdleTermination();
 		for (const workerState of this.workers) {
 			if (workerState.currentRequest) {
 				clearTimeout(workerState.currentRequest.timeout);
@@ -453,6 +525,7 @@ export class AnimatedImageCropWorkerManager {
 		}
 		this.terminated = false;
 		this.ensureWorkersInitialized();
+		this.scheduleIdleTermination();
 	}
 }
 
