@@ -150,18 +150,10 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
 }
 
 async fn refresh_discovery_for_spa(state: &AppState) -> Option<DiscoveryResponse> {
-    if let Err(err) = state
+    state
         .discovery_cache
-        .refresh(&state.http_client, &state.config.discovery_upstream_url)
+        .get_or_cold_start(&state.http_client, &state.config.discovery_upstream_url)
         .await
-    {
-        tracing::warn!(
-            %err,
-            url = %state.config.discovery_upstream_url,
-            "failed to refresh discovery before serving SPA; using cached discovery"
-        );
-    }
-    state.discovery_cache.get().await
 }
 
 async fn resolve_invite_meta(
