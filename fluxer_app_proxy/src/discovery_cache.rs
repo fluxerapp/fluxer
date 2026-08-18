@@ -44,10 +44,10 @@ impl DiscoveryCache {
         }
         {
             let mut last_attempt = self.cold_start_attempt.lock().await;
-            if let Some(at) = *last_attempt {
-                if at.elapsed() < COLD_START_RETRY_COOLDOWN {
-                    return None;
-                }
+            if let Some(at) = *last_attempt
+                && at.elapsed() < COLD_START_RETRY_COOLDOWN
+            {
+                return None;
             }
             *last_attempt = Some(Instant::now());
         }
