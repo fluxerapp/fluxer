@@ -49,6 +49,7 @@ export class BillingCheckoutSessionRepository {
 		cs: Stripe.Checkout.Session,
 		hints?: {
 			knownUserId?: bigint;
+			eventCreated?: number;
 		},
 	): Promise<{
 		changed: boolean;

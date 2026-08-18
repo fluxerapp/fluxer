@@ -71,6 +71,7 @@ export class BillingRefundRepository {
 			invoiceId?: string;
 			customerId?: string;
 			userId?: bigint;
+			livemode?: boolean;
 		},
 	): Promise<{
 		changed: boolean;

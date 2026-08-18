@@ -324,7 +324,7 @@ describe('mapStripeInvoiceToRow', () => {
 		const inv = stripeFixture<Stripe.Invoice>({
 			id: 'in_1',
 			customer: 'cus_1',
-			subscription: 'sub_1',
+			parent: {type: 'subscription_details', subscription_details: {subscription: 'sub_1'}},
 			status: 'paid',
 			number: 'INV-001',
 			currency: 'usd',

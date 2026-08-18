@@ -115,15 +115,3 @@ export function getFirstInvoicePaymentIntentId(invoice: Stripe.Invoice | null): 
 	}
 	return paymentIntent.id ?? null;
 }
-
-export function getFirstInvoicePaymentIntentLatestChargeId(invoice: Stripe.Invoice | null): string | null {
-	const paymentIntent = getFirstInvoicePaymentIntent(invoice);
-	if (!paymentIntent || typeof paymentIntent === 'string') {
-		return null;
-	}
-	const latestCharge = paymentIntent.latest_charge ?? null;
-	if (typeof latestCharge === 'string') {
-		return latestCharge;
-	}
-	return latestCharge?.id ?? null;
-}

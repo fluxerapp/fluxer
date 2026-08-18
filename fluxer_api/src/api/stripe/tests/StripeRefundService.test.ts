@@ -22,7 +22,7 @@ interface MockStripeInvoice {
 	id: string;
 	object: 'invoice';
 	customer: string;
-	subscription: string | null;
+	parent: {subscription_details: {subscription: string}} | null;
 	amount_due: number;
 	amount_paid: number;
 	currency: string;
@@ -66,7 +66,7 @@ function buildInvoice(opts: {
 		id: opts.id,
 		object: 'invoice',
 		customer: customerId,
-		subscription: subscriptionId,
+		parent: subscriptionId == null ? null : {subscription_details: {subscription: subscriptionId}},
 		amount_due: 2500,
 		amount_paid: 2500,
 		currency: 'usd',

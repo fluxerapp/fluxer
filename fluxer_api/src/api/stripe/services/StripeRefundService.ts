@@ -39,7 +39,6 @@ interface RefundTarget {
 
 type StripeInvoiceWithPayments = Stripe.Invoice & {
 	customer?: string | Stripe.Customer | null;
-	subscription?: string | Stripe.Subscription | null;
 	payments?: {
 		data?: Array<{
 			payment?: {
@@ -53,6 +52,10 @@ type StripeInvoiceWithPayments = Stripe.Invoice & {
 		}>;
 	} | null;
 };
+
+function resolveInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+	return extractId(invoice.parent?.subscription_details?.subscription ?? null);
+}
 
 function getInvoicePaymentRef(invoice: Stripe.Invoice): {
 	chargeId: string | null;
@@ -132,7 +135,7 @@ export class StripeRefundService {
 					chargeId: ref.chargeId,
 					paymentIntentId: ref.paymentIntentId,
 					paidAt,
-					subscriptionId: extractId((invoice as StripeInvoiceWithPayments).subscription),
+					subscriptionId: resolveInvoiceSubscriptionId(invoice),
 				};
 			}
 		} catch (error) {

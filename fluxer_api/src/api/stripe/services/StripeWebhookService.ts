@@ -150,7 +150,7 @@ export class StripeWebhookService {
 			case 'checkout.session.completed': {
 				const checkoutSession = event.data.object as Stripe.Checkout.Session;
 				await this.safeMirrorUpsert(event, () =>
-					this.billingRepository.checkoutSessions.upsertFromStripe(checkoutSession),
+					this.billingRepository.checkoutSessions.upsertFromStripe(checkoutSession, {eventCreated: event.created}),
 				);
 				if (checkoutSession.metadata?.verification_type === 'uk_age_verification' && this.ageVerificationService) {
 					await this.ageVerificationService.completeVerification(checkoutSession);
@@ -165,44 +165,48 @@ export class StripeWebhookService {
 			}
 			case 'checkout.session.async_payment_succeeded': {
 				const cs = event.data.object as Stripe.Checkout.Session;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.checkoutSessions.upsertFromStripe(cs));
+				await this.safeMirrorUpsert(event, () =>
+					this.billingRepository.checkoutSessions.upsertFromStripe(cs, {eventCreated: event.created}),
+				);
 				await this.checkoutHandler.handleAsyncPaymentSucceeded(cs);
 				break;
 			}
 			case 'checkout.session.async_payment_failed': {
 				const cs = event.data.object as Stripe.Checkout.Session;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.checkoutSessions.upsertFromStripe(cs));
+				await this.safeMirrorUpsert(event, () =>
+					this.billingRepository.checkoutSessions.upsertFromStripe(cs, {eventCreated: event.created}),
+				);
 				await this.checkoutHandler.handleAsyncPaymentFailed(cs);
 				break;
 			}
 			case 'invoice.paid':
 			case 'invoice.payment_succeeded': {
 				const inv = event.data.object as Stripe.Invoice;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.invoices.upsertFromStripe(inv));
+				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoicePaymentSucceeded(event.id, inv);
 				break;
 			}
 			case 'invoice.payment_failed': {
 				const inv = event.data.object as Stripe.Invoice;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.invoices.upsertFromStripe(inv));
+				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoicePaymentFailed(inv);
 				break;
 			}
 			case 'invoice.payment_action_required': {
 				const inv = event.data.object as Stripe.Invoice;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.invoices.upsertFromStripe(inv));
+				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoicePaymentActionRequired(inv);
 				break;
 			}
 			case 'invoice.finalization_failed': {
 				const inv = event.data.object as Stripe.Invoice;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.invoices.upsertFromStripe(inv));
+				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoiceFinalizationFailed(inv);
 				break;
 			}
 			case 'invoice.updated': {
 				const inv = event.data.object as Stripe.Invoice;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.invoices.upsertFromStripe(inv));
+				await this.mirrorInvoice(event, inv);
 				await this.subscriptionHandler.handleInvoiceUpdated(inv);
 				break;
 			}
@@ -253,11 +257,12 @@ export class StripeWebhookService {
 			case 'charge.refunded': {
 				const c = event.data.object as Stripe.Charge;
 				await this.safeMirrorUpsert(event, () => this.billingRepository.charges.upsertFromStripe(c));
-				const refunds = c.refunds?.data ?? [];
+				const refunds = await this.listChargeRefunds(c);
 				for (const r of refunds) {
 					await this.safeMirrorUpsert(event, () =>
 						this.billingRepository.refunds.upsertFromStripe(r, {
 							customerId: typeof c.customer === 'string' ? c.customer : (c.customer?.id ?? undefined),
+							livemode: event.livemode,
 						}),
 					);
 				}
@@ -324,7 +329,13 @@ export class StripeWebhookService {
 			case 'refund.updated':
 			case 'refund.failed': {
 				const r = event.data.object as Stripe.Refund;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.refunds.upsertFromStripe(r));
+				const customerId = await this.resolveRefundCustomerId(r);
+				await this.safeMirrorUpsert(event, () =>
+					this.billingRepository.refunds.upsertFromStripe(r, {
+						customerId: customerId ?? undefined,
+						livemode: event.livemode,
+					}),
+				);
 				break;
 			}
 			case 'invoice.created':
@@ -332,12 +343,14 @@ export class StripeWebhookService {
 			case 'invoice.voided':
 			case 'invoice.marked_uncollectible': {
 				const inv = event.data.object as Stripe.Invoice;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.invoices.upsertFromStripe(inv));
+				await this.mirrorInvoice(event, inv);
 				break;
 			}
 			case 'checkout.session.expired': {
 				const cs = event.data.object as Stripe.Checkout.Session;
-				await this.safeMirrorUpsert(event, () => this.billingRepository.checkoutSessions.upsertFromStripe(cs));
+				await this.safeMirrorUpsert(event, () =>
+					this.billingRepository.checkoutSessions.upsertFromStripe(cs, {eventCreated: event.created}),
+				);
 				break;
 			}
 			case 'charge.dispute.updated':
@@ -351,6 +364,54 @@ export class StripeWebhookService {
 				Logger.debug({eventType: event.type, eventId: event.id}, 'Stripe webhook event type not handled');
 			}
 		}
+	}
+
+	private async resolveRefundCustomerId(refund: Stripe.Refund): Promise<string | null> {
+		const chargeId = typeof refund.charge === 'string' ? refund.charge : (refund.charge?.id ?? null);
+		if (chargeId !== null) {
+			const chargeRow = await this.billingRepository.charges.findById(chargeId);
+			if (chargeRow?.customer_id != null) {
+				return chargeRow.customer_id;
+			}
+		}
+		const paymentIntentId =
+			typeof refund.payment_intent === 'string' ? refund.payment_intent : (refund.payment_intent?.id ?? null);
+		if (paymentIntentId !== null) {
+			const paymentIntentRow = await this.billingRepository.paymentIntents.findById(paymentIntentId);
+			if (paymentIntentRow?.customer_id != null) {
+				return paymentIntentRow.customer_id;
+			}
+		}
+		return null;
+	}
+
+	private async listChargeRefunds(charge: Stripe.Charge): Promise<Array<Stripe.Refund>> {
+		const inlined = charge.refunds?.data ?? [];
+		if (inlined.length > 0 || charge.id == null || this.stripe == null) {
+			return inlined;
+		}
+		try {
+			const listed = await this.stripe.refunds.list({charge: charge.id, limit: 100});
+			return listed.data;
+		} catch (listErr) {
+			Logger.warn({listErr, chargeId: charge.id}, 'Failed to list refunds for charge; skipping refund mirror');
+			return [];
+		}
+	}
+
+	private async mirrorInvoice(event: Stripe.Event, inv: Stripe.Invoice): Promise<void> {
+		let hydrated = inv;
+		if (inv.payments === undefined && inv.id != null && this.stripe != null) {
+			try {
+				hydrated = await this.stripe.invoices.retrieve(inv.id, {expand: ['payments.data.payment']});
+			} catch (hydrateErr) {
+				Logger.warn(
+					{hydrateErr, eventId: event.id, invoiceId: inv.id},
+					'Failed to hydrate invoice payments; mirroring invoice without payment rows',
+				);
+			}
+		}
+		await this.safeMirrorUpsert(event, () => this.billingRepository.invoices.upsertFromStripe(hydrated));
 	}
 
 	private async safeMirrorUpsert(event: Stripe.Event, fn: () => Promise<unknown>): Promise<void> {

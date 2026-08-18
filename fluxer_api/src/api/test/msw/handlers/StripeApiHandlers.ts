@@ -59,7 +59,7 @@ interface StripeApiMockConfig {
 	subscriptionsListEmpty?: boolean;
 	charges?: Record<string, Partial<MockStripeCharge>>;
 	customers?: Record<string, Partial<MockStripeCustomer>>;
-	invoices?: Record<string, Partial<MockStripeInvoice>>;
+	invoices?: Record<string, Partial<MockStripeInvoice> & {subscriptionId?: string}>;
 	paymentIntents?: Record<string, Partial<MockStripePaymentIntent>>;
 	paymentMethods?: Record<string, Partial<MockStripePaymentMethod>>;
 	setupIntents?: Record<string, Partial<MockStripeSetupIntent>>;
@@ -284,7 +284,10 @@ interface MockStripeInvoice {
 		url: string;
 	};
 	status: 'draft' | 'open' | 'paid' | 'uncollectible' | 'void' | null;
-	subscription: string | null;
+	parent: {
+		type: 'subscription_details';
+		subscription_details: {subscription: string};
+	} | null;
 }
 
 interface MockStripeValueList {
@@ -571,13 +574,14 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			});
 		}
 		for (const [invoiceId, overrides] of Object.entries(config.invoices ?? {})) {
+			const {subscriptionId, ...invoiceOverrides} = overrides;
 			const defaultInvoice = createDefaultInvoice(invoiceId, {
 				customerId: overrides.customer ?? 'cus_test_1',
-				subscriptionId: overrides.subscription ?? 'sub_test_1',
+				subscriptionId: subscriptionId ?? 'sub_test_1',
 			});
 			invoiceStore.set(invoiceId, {
 				...defaultInvoice,
-				...overrides,
+				...invoiceOverrides,
 				id: invoiceId,
 				object: 'invoice',
 				payments: overrides.payments ?? defaultInvoice.payments,
@@ -739,7 +743,10 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 				url: `/v1/invoices/${id}/payments`,
 			},
 			status: 'paid',
-			subscription: subscriptionId,
+			parent:
+				subscriptionId === null
+					? null
+					: {type: 'subscription_details', subscription_details: {subscription: subscriptionId}},
 		};
 	}
 	function getPaymentIntent(paymentIntentId: string): MockStripePaymentIntent {
@@ -838,8 +845,6 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			object: 'subscription',
 			customer: subState.customer,
 			status: subState.status,
-			current_period_start: subState.current_period_start,
-			current_period_end: subState.current_period_end,
 			latest_invoice: subState.latest_invoice ? getInvoice(subState.latest_invoice) : null,
 			trial_end: subState.trial_end,
 			items: {
@@ -1070,7 +1075,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			const limit = Number.parseInt(requestUrl.searchParams.get('limit') ?? '10', 10);
 			const sortedInvoices = [...invoiceStore.values()]
 				.filter((invoice) => !customerId || invoice.customer === customerId)
-				.filter((invoice) => !subscriptionId || invoice.subscription === subscriptionId)
+				.filter((invoice) => !subscriptionId || invoice.parent?.subscription_details?.subscription === subscriptionId)
 				.sort((left, right) => right.created - left.created);
 			const startIndex = startingAfter ? sortedInvoices.findIndex((invoice) => invoice.id === startingAfter) + 1 : 0;
 			const pagedInvoices = sortedInvoices.slice(Math.max(startIndex, 0), Math.max(startIndex, 0) + limit);
@@ -1460,7 +1465,6 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 						object: 'subscription',
 						customer,
 						status: 'active',
-						current_period_start: Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60,
 						trial_end: null,
 						items: {
 							object: 'list',
@@ -1482,6 +1486,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 										livemode: false,
 									},
 									quantity: 1,
+									current_period_start: Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60,
 									current_period_end: currentPeriodEnd,
 								},
 							],
@@ -1879,11 +1884,13 @@ export function createInvoicePaidEvent(options: {
 				id: options.invoiceId ?? `in_test_${Date.now()}`,
 				object: 'invoice',
 				customer: options.customerId ?? 'cus_test_1',
-				subscription: options.subscriptionId ?? 'sub_test_1',
+				parent: {
+					type: 'subscription_details',
+					subscription_details: {subscription: options.subscriptionId ?? 'sub_test_1'},
+				},
 				amount_paid: options.amountPaid ?? 2500,
 				currency: options.currency ?? 'usd',
 				status: 'paid',
-				paid: true,
 			},
 		},
 	};
@@ -1902,7 +1909,10 @@ export function createInvoicePaymentFailedEvent(options: {
 				id: options.invoiceId ?? `in_test_${Date.now()}`,
 				object: 'invoice',
 				customer: options.customerId ?? 'cus_test_1',
-				subscription: options.subscriptionId ?? 'sub_test_1',
+				parent: {
+					type: 'subscription_details',
+					subscription_details: {subscription: options.subscriptionId ?? 'sub_test_1'},
+				},
 				amount_due: options.amountDue ?? 2500,
 				status: 'open',
 				paid: false,
@@ -1926,7 +1936,10 @@ export function createInvoicePaymentActionRequiredEvent(options: {
 				id: options.invoiceId ?? `in_test_${Date.now()}`,
 				object: 'invoice',
 				customer: options.customerId ?? 'cus_test_1',
-				subscription: options.subscriptionId ?? 'sub_test_1',
+				parent: {
+					type: 'subscription_details',
+					subscription_details: {subscription: options.subscriptionId ?? 'sub_test_1'},
+				},
 				amount_due: options.amountDue ?? 2500,
 				status: 'open',
 				paid: false,
@@ -1950,7 +1963,10 @@ export function createInvoiceFinalizationFailedEvent(options: {
 				id: options.invoiceId ?? `in_test_${Date.now()}`,
 				object: 'invoice',
 				customer: options.customerId ?? 'cus_test_1',
-				subscription: options.subscriptionId ?? 'sub_test_1',
+				parent: {
+					type: 'subscription_details',
+					subscription_details: {subscription: options.subscriptionId ?? 'sub_test_1'},
+				},
 				status: 'draft',
 				paid: false,
 				last_finalization_error: {
@@ -1980,7 +1996,10 @@ export function createInvoiceUpdatedEvent(options: {
 				id: options.invoiceId ?? `in_test_${Date.now()}`,
 				object: 'invoice',
 				customer: options.customerId ?? 'cus_test_1',
-				subscription: options.subscriptionId ?? 'sub_test_1',
+				parent: {
+					type: 'subscription_details',
+					subscription_details: {subscription: options.subscriptionId ?? 'sub_test_1'},
+				},
 				amount_due: options.amountDue ?? 2500,
 				status: options.status ?? 'open',
 				paid: options.paid ?? false,

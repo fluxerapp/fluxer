@@ -94,28 +94,6 @@ export interface StripeSubscriptionPayload {
 	trial_start?: number | null;
 }
 
-interface StripeInvoiceCompatibility extends Stripe.Invoice {
-	subscription?: StripeExpandableId;
-	tax?: number | null;
-	application_fee_amount?: number | null;
-}
-
-interface StripePaymentIntentCompatibility extends Stripe.PaymentIntent {
-	invoice?: StripeExpandableId;
-}
-
-interface StripeChargeCompatibility extends Stripe.Charge {
-	invoice?: StripeExpandableId;
-}
-
-type StripeRefundCompatibility = Stripe.Refund & {
-	livemode?: boolean | null;
-};
-
-interface StripeCheckoutSessionCompatibility extends Stripe.Checkout.Session {
-	completed_at?: number | null;
-}
-
 function createBillingSubscriptionItemValue(
 	itemId: string,
 	priceId: string,
@@ -278,6 +256,14 @@ export function computeStripeUpdatedAt(
 	}
 	const max = Math.max(...candidates);
 	return new Date(max * 1000);
+}
+
+function sumInvoiceTotalTaxes(inv: Stripe.Invoice): bigint | null {
+	const taxes = inv.total_taxes ?? null;
+	if (taxes === null) {
+		return null;
+	}
+	return BigInt(taxes.reduce((total, tax) => total + (tax.amount ?? 0), 0));
 }
 
 function idOf(
@@ -689,9 +675,7 @@ export function mapStripeInvoiceToRow(
 		throw new BillingMappingError('Invoice is missing customer', inv.id);
 	}
 	const now = new Date();
-	const invoice = inv as StripeInvoiceCompatibility;
-	const subscriptionId =
-		idOf(invoice.subscription ?? null) ?? idOf(invoice.parent?.subscription_details?.subscription ?? null);
+	const subscriptionId = idOf(inv.parent?.subscription_details?.subscription ?? null);
 	const userIdFromMetadata = parseUserIdFromMetadata(inv.metadata);
 	const userId = hints?.knownUserId ?? userIdFromMetadata;
 	const transitions = inv.status_transitions ?? null;
@@ -718,12 +702,11 @@ export function mapStripeInvoiceToRow(
 		amount_paid: typeof inv.amount_paid === 'number' ? BigInt(inv.amount_paid) : null,
 		amount_remaining: typeof inv.amount_remaining === 'number' ? BigInt(inv.amount_remaining) : null,
 		subtotal: typeof inv.subtotal === 'number' ? BigInt(inv.subtotal) : null,
-		tax: typeof invoice.tax === 'number' ? BigInt(invoice.tax) : null,
+		tax: sumInvoiceTotalTaxes(inv),
 		total: typeof inv.total === 'number' ? BigInt(inv.total) : null,
 		starting_balance: typeof inv.starting_balance === 'number' ? BigInt(inv.starting_balance) : null,
 		ending_balance: typeof inv.ending_balance === 'number' ? BigInt(inv.ending_balance) : null,
-		application_fee_amount:
-			typeof invoice.application_fee_amount === 'number' ? BigInt(invoice.application_fee_amount) : null,
+		application_fee_amount: null,
 		attempt_count: inv.attempt_count ?? null,
 		attempted: inv.attempted ?? null,
 		auto_advance: inv.auto_advance ?? null,
@@ -818,7 +801,6 @@ export function mapStripePaymentIntentToRow(pi: Stripe.PaymentIntent): {
 		throw new BillingMappingError('PaymentIntent is missing id');
 	}
 	const now = new Date();
-	const paymentIntent = pi as StripePaymentIntentCompatibility;
 	const customerId = idOf(
 		pi.customer as
 			| string
@@ -828,7 +810,7 @@ export function mapStripePaymentIntentToRow(pi: Stripe.PaymentIntent): {
 			| null
 			| undefined,
 	);
-	const invoiceId = idOf(paymentIntent.invoice ?? null);
+	const invoiceId = null;
 	const paymentMethodId = idOf(
 		pi.payment_method as
 			| string
@@ -892,7 +874,6 @@ export function mapStripeChargeToRow(c: Stripe.Charge): {
 		throw new BillingMappingError('Charge is missing id');
 	}
 	const now = new Date();
-	const charge = c as StripeChargeCompatibility;
 	const customerId = idOf(
 		c.customer as
 			| string
@@ -911,7 +892,7 @@ export function mapStripeChargeToRow(c: Stripe.Charge): {
 			| null
 			| undefined,
 	);
-	const invoiceId = idOf(charge.invoice ?? null);
+	const invoiceId = null;
 	const paymentMethodId = c.payment_method ?? null;
 	const card = c.payment_method_details?.card ?? null;
 	const billingDetails = c.billing_details ?? null;
@@ -974,6 +955,7 @@ export function mapStripeRefundToRow(
 		invoiceId?: string;
 		customerId?: string;
 		userId?: bigint;
+		livemode?: boolean;
 	},
 ): {
 	primary: BillingRefundRow;
@@ -990,7 +972,6 @@ export function mapStripeRefundToRow(
 	const invoiceId = hints?.invoiceId ?? null;
 	const customerId = hints?.customerId ?? null;
 	const userId = hints?.userId ?? null;
-	const refund = r as StripeRefundCompatibility;
 	const primary: BillingRefundRow = {
 		provider_id: r.id,
 		charge_id: chargeId,
@@ -1005,7 +986,7 @@ export function mapStripeRefundToRow(
 		receipt_number: r.receipt_number ?? null,
 		failure_reason: r.failure_reason ?? null,
 		description: r.description ?? null,
-		livemode: refund.livemode ?? null,
+		livemode: hints?.livemode ?? null,
 		metadata: safeMetadata(r.metadata),
 		stripe_created_at: unixToDate(r.created),
 		stripe_updated_at: computeStripeUpdatedAt({created: r.created}),
@@ -1049,16 +1030,17 @@ export function mapStripeCheckoutSessionToRow(
 	cs: Stripe.Checkout.Session,
 	hints?: {
 		knownUserId?: bigint;
+		eventCreated?: number;
 	},
 ): {
 	primary: BillingCheckoutSessionRow;
 	byCustomer: BillingCheckoutSessionByCustomerRow | null;
 } {
+	const completedAt = cs.status === 'complete' ? (hints?.eventCreated ?? null) : null;
 	if (!cs.id) {
 		throw new BillingMappingError('Checkout session is missing id');
 	}
 	const now = new Date();
-	const checkoutSession = cs as StripeCheckoutSessionCompatibility;
 	const customerId = idOf(
 		cs.customer as
 			| string
@@ -1124,14 +1106,14 @@ export function mapStripeCheckoutSessionToRow(
 		amount_total: typeof cs.amount_total === 'number' ? BigInt(cs.amount_total) : null,
 		currency: cs.currency ?? null,
 		expires_at: unixToDate(cs.expires_at),
-		completed_at: unixToDate(checkoutSession.completed_at ?? null),
+		completed_at: completedAt === null ? null : unixToDate(completedAt),
 		livemode: cs.livemode ?? null,
 		client_reference_id: cs.client_reference_id ?? null,
 		metadata: safeMetadata(cs.metadata),
 		stripe_created_at: unixToDate(cs.created),
 		stripe_updated_at: computeStripeUpdatedAt({
 			created: cs.created,
-			completed_at: checkoutSession.completed_at ?? null,
+			completed_at: completedAt,
 		}),
 		mirrored_at: now,
 	} as BillingCheckoutSessionRow;

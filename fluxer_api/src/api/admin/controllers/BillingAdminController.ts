@@ -742,6 +742,9 @@ class BillingAdminControllerService {
 			refundTarget,
 			subscription,
 		});
+		if (refundDecision.amountCents !== null && !refundTarget) {
+			throw new StripeError('No paid Stripe invoice with a refundable payment was found for this subscription');
+		}
 		const intentId = await this.billingRepository.actionIntents.create({
 			userId: BigInt(syncedTargetUser.id),
 			actorAdminId: BigInt(params.adminUserId),
@@ -758,10 +761,7 @@ class BillingAdminControllerService {
 			await this.billingRepository.actionIntents.markStage(intentId, 'sub_canceled', {
 				sub_canceled_at: new Date(),
 			});
-			if (refundDecision.amountCents !== null) {
-				if (!refundTarget) {
-					throw new StripeError('No paid Stripe invoice with a refundable payment was found for this subscription');
-				}
+			if (refundDecision.amountCents !== null && refundTarget) {
 				refund = await this.stripe.refunds.create(
 					{
 						...(refundTarget.paymentIntentId

@@ -283,7 +283,7 @@ describe('Admin billing overview', () => {
 			invoices: {
 				[params.invoiceId]: {
 					customer: params.stripeCustomerId,
-					subscription: params.stripeSubscriptionId,
+					subscriptionId: params.stripeSubscriptionId,
 					amount_due: params.amountPaidCents,
 					amount_paid: params.amountPaidCents,
 					billing_reason: 'subscription_cycle',
@@ -359,7 +359,7 @@ describe('Admin billing overview', () => {
 			invoices: {
 				in_local_checkout_1: {
 					customer: stripeCustomerId,
-					subscription: 'sub_billing_target',
+					subscriptionId: 'sub_billing_target',
 					amount_due: 499,
 					amount_paid: 499,
 					billing_reason: 'subscription_create',
@@ -396,7 +396,7 @@ describe('Admin billing overview', () => {
 				},
 				in_renewal_1: {
 					customer: stripeCustomerId,
-					subscription: 'sub_billing_target',
+					subscriptionId: 'sub_billing_target',
 					amount_due: 499,
 					amount_paid: 499,
 					billing_reason: 'subscription_cycle',
@@ -545,7 +545,7 @@ describe('Admin billing overview', () => {
 			invoices: {
 				[invoiceId]: {
 					customer: stripeCustomerId,
-					subscription: stripeSubscriptionId,
+					subscriptionId: stripeSubscriptionId,
 					amount_due: 499,
 					amount_paid: 499,
 					billing_reason: 'subscription_create',
