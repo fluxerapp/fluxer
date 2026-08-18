@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
-import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {
@@ -25,14 +23,6 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useLayoutEffect, useState} from 'react';
 
-const STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Stay fully interactive when unfocused',
-	comment: 'Short label for an advanced desktop preference.',
-});
-const FIRST_CLICK_PASS_THROUGH_WHEN_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'First click pass-through when unfocused',
-	comment: 'Short label for an advanced desktop preference.',
-});
 const USE_NATIVE_TITLE_BAR_DESCRIPTOR = msg({
 	message: 'Use native title bar',
 	comment: 'Short label for an advanced desktop preference.',
@@ -127,32 +117,6 @@ function useDesktopTroubleshootingSettings() {
 		setDesktopTroubleshootingBusy,
 	};
 }
-
-export const StayInteractiveUnfocusedControl = observer(() => {
-	const {i18n} = useLingui();
-	return (
-		<Switch
-			ariaLabel={i18n._(STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR)}
-			value={Accessibility.stayInteractiveWhenUnfocused}
-			onChange={(value) => AccessibilityCommands.update({stayInteractiveWhenUnfocused: value})}
-			compact
-			data-flx="user.advanced-settings-tab.switch.stay-interactive-unfocused"
-		/>
-	);
-});
-
-export const FirstClickPassThroughControl = observer(() => {
-	const {i18n} = useLingui();
-	return (
-		<Switch
-			ariaLabel={i18n._(FIRST_CLICK_PASS_THROUGH_WHEN_UNFOCUSED_DESCRIPTOR)}
-			value={Accessibility.firstClickPassThroughWhenUnfocused}
-			onChange={(value) => AccessibilityCommands.update({firstClickPassThroughWhenUnfocused: value})}
-			compact
-			data-flx="user.advanced-settings-tab.switch.first-click-pass-through"
-		/>
-	);
-});
 
 export const NativeTitleBarControl = observer(() => {
 	const {i18n} = useLingui();

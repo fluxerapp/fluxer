@@ -342,6 +342,43 @@ const CONTROL_MIDDLE_CLICK_AUTOSCROLLING_DESCRIPTOR = msg({
 	message: 'Control Chromium middle-click autoscrolling in the desktop app',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
+const STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR = msg({
+	message: 'Stay fully interactive when unfocused',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const UNFOCUSED_DESCRIPTOR = msg({
+	message: 'Unfocused',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const WINDOW_FOCUS_DESCRIPTOR = msg({
+	message: 'Window focus',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const ANIMATIONS_WHILE_UNFOCUSED_DESCRIPTOR = msg({
+	message: 'Animations while unfocused',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const ANIMATION_PLAYBACK_DESCRIPTOR = msg({
+	message: 'Animation playback',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const HOVER_EFFECTS_DESCRIPTOR = msg({
+	message: 'Hover effects',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const TOOLTIPS_DESCRIPTOR = msg({
+	message: 'Tooltips',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const POWER_SAVING_DESCRIPTOR = msg({
+	message: 'Power saving',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_DESCRIPTOR = msg({
+	message: 'Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused.',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+
 export const accessibilityIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'accessibility-confirm-calls',
@@ -485,6 +522,24 @@ export const accessibilityIndex: Array<SearchableSettingDescriptor> = [
 			COMPOSER_FOCUS_DESCRIPTOR,
 		],
 		description: DISPLAY_A_VISIBLE_FOCUS_INDICATOR_AROUND_THE_MESSAGE_DESCRIPTOR,
+	},
+	{
+		id: 'accessibility-stay-interactive-unfocused',
+		tabType: 'accessibility',
+		sectionId: 'motion',
+		label: STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR,
+		keywords: [
+			UNFOCUSED_DESCRIPTOR,
+			WINDOW_FOCUS_DESCRIPTOR,
+			ANIMATIONS_WHILE_UNFOCUSED_DESCRIPTOR,
+			ANIMATION_PLAYBACK_DESCRIPTOR,
+			HOVER_EFFECTS_DESCRIPTOR,
+			TOOLTIPS_DESCRIPTOR,
+			POWER_SAVING_DESCRIPTOR,
+		],
+		description: KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['accessibility'],
 	},
 	{
 		id: 'accessibility-sync-reduced-motion',

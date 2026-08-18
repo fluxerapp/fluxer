@@ -32,6 +32,10 @@ const SMOOTH_SCROLLING_DESCRIPTOR = msg({
 	message: 'Smooth scrolling',
 	comment: 'Short label for an advanced desktop scrolling toggle.',
 });
+const STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR = msg({
+	message: 'Stay fully interactive when unfocused',
+	comment: 'Short label for an advanced app interaction toggle.',
+});
 const USE_AUTOSCROLLING_DESCRIPTOR = msg({
 	message: 'Use autoscrolling',
 	comment: 'Short label for an advanced desktop scrolling toggle.',
@@ -131,6 +135,19 @@ export const TextSelectionControl = observer(() => {
 			onChange={(value) => AccessibilityCommands.update({enableTextSelection: value})}
 			compact
 			data-flx="user.advanced-settings-tab.switch.text-selection"
+		/>
+	);
+});
+
+export const StayInteractiveUnfocusedControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR)}
+			value={Accessibility.stayInteractiveWhenUnfocused}
+			onChange={(value) => AccessibilityCommands.update({stayInteractiveWhenUnfocused: value})}
+			compact
+			data-flx="user.advanced-settings-tab.switch.stay-interactive-unfocused"
 		/>
 	);
 });

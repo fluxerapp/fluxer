@@ -24,10 +24,6 @@
 	contain: layout style;
 }
 
-:global(html.platform-native.window-focus-activation-guard:not(.first-click-passthrough-when-unfocused)) .container {
-	pointer-events: none;
-}
-
 .container:active {
 	cursor: grabbing;
 }

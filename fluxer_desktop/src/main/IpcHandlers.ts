@@ -62,7 +62,6 @@ import {
 import {
 	clearSavedWindowBounds,
 	closeThemeStudioPopoutWindow,
-	desktopFirstClickPassThroughPendingRestart,
 	desktopTransparencyPendingRestart,
 	desktopUseNativeTitleBarPendingRestart,
 	focusThemeStudioPopoutWindow,
@@ -122,9 +121,6 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	}
 	if (typeof value.middleClickAutoscroll === 'boolean') {
 		update.middleClickAutoscroll = value.middleClickAutoscroll;
-	}
-	if (typeof value.firstClickPassThroughWhenUnfocused === 'boolean') {
-		update.firstClickPassThroughWhenUnfocused = value.firstClickPassThroughWhenUnfocused;
 	}
 	return update;
 }
@@ -255,7 +251,6 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('desktop-window-behavior-pending-restart', (): boolean => {
 		return (
 			desktopTrayChangePendingRestart() ||
-			desktopFirstClickPassThroughPendingRestart() ||
 			desktopUseNativeTitleBarPendingRestart() ||
 			desktopTransparencyPendingRestart()
 		);

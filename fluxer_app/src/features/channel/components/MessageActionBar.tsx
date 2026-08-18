@@ -67,7 +67,6 @@ import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenu from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {canUseWindowFocusedActivationClick} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {MessageStates} from '@fluxer/constants/src/ChannelConstants';
@@ -187,14 +186,6 @@ const useShiftKey = (enabled: boolean) => {
 	}, [enabled]);
 	return useSyncExternalStore(subscribe, getSnapshot, shiftKeyManager.getServerSnapshot);
 };
-const suppressBlockedActivationClick = (event: React.SyntheticEvent): boolean => {
-	if (canUseWindowFocusedActivationClick()) {
-		return false;
-	}
-	event.preventDefault();
-	event.stopPropagation();
-	return true;
-};
 
 interface MessageActionBarButtonProps {
 	label: string;
@@ -211,9 +202,6 @@ const MessageActionBarButton = React.forwardRef<HTMLButtonElement, MessageAction
 	({label, icon, onClick, onPointerDownCapture, danger, isActive, hidden, dataAction}, ref) => {
 		const handleClick = useCallback(
 			(event: React.MouseEvent | React.KeyboardEvent) => {
-				if (suppressBlockedActivationClick(event)) {
-					return;
-				}
 				event.preventDefault();
 				event.stopPropagation();
 				onClick?.(event);
@@ -222,9 +210,6 @@ const MessageActionBarButton = React.forwardRef<HTMLButtonElement, MessageAction
 		);
 		const handlePointerDownCapture = useCallback(
 			(event: React.PointerEvent) => {
-				if (suppressBlockedActivationClick(event)) {
-					return;
-				}
 				onPointerDownCapture?.(event);
 			},
 			[onPointerDownCapture],
@@ -275,9 +260,6 @@ const QuickReactionButton = observer(
 		const {url: displayUrl} = getEmojiDisplayData(emoji);
 		const handleClick = useCallback(
 			(event: React.MouseEvent | React.KeyboardEvent) => {
-				if (suppressBlockedActivationClick(event)) {
-					return;
-				}
 				event.preventDefault();
 				event.stopPropagation();
 				EmojiPickerCommands.trackEmojiUsage(emoji);
@@ -700,7 +682,6 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										uniqueId={`emoji_picker-actionbar-${message.id}`}
 										shouldAutoUpdate={false}
 										animationType="none"
-										shouldOpenOnClick={() => canUseWindowFocusedActivationClick()}
 										onOpen={handleEmojiPickerOpen}
 										onClose={handleEmojiPickerClose}
 										data-flx="channel.message-action-bar.message-action-bar-core.popout"

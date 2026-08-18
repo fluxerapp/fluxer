@@ -31,7 +31,6 @@ interface PersistedDesktopWindowBehaviorSettings {
 	allowTransparency?: boolean;
 	smoothScrolling?: boolean;
 	middleClickAutoscroll?: boolean;
-	firstClickPassThroughWhenUnfocused?: boolean;
 }
 
 interface PersistedDesktopTroubleshootingSettings {
@@ -62,7 +61,6 @@ function getDefaultDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSetting
 		activeSmoothScrolling: true,
 		middleClickAutoscroll: false,
 		activeMiddleClickAutoscroll: false,
-		firstClickPassThroughWhenUnfocused: false,
 	};
 }
 
@@ -94,9 +92,6 @@ function sanitizePersistedDesktopWindowBehaviorSettings(
 	}
 	if (typeof value.middleClickAutoscroll === 'boolean') {
 		settings.middleClickAutoscroll = value.middleClickAutoscroll;
-	}
-	if (typeof value.firstClickPassThroughWhenUnfocused === 'boolean') {
-		settings.firstClickPassThroughWhenUnfocused = value.firstClickPassThroughWhenUnfocused;
 	}
 	const minimizeToTrayV2 = value[MINIMIZE_TO_TRAY_STORAGE_KEY_V2];
 	if (typeof minimizeToTrayV2 === 'boolean') {
@@ -238,10 +233,6 @@ function normalizeDesktopWindowBehaviorSettings(
 				: typeof normalizedSettings?.middleClickAutoscroll === 'boolean'
 					? normalizedSettings.middleClickAutoscroll
 					: defaults.middleClickAutoscroll,
-		firstClickPassThroughWhenUnfocused:
-			typeof normalizedSettings?.firstClickPassThroughWhenUnfocused === 'boolean'
-				? normalizedSettings.firstClickPassThroughWhenUnfocused
-				: defaults.firstClickPassThroughWhenUnfocused,
 	};
 	if (!normalized.showTrayIcon) {
 		normalized.minimizeToTray = false;
@@ -260,7 +251,6 @@ function serializeDesktopWindowBehaviorSettings(
 		allowTransparency: settings.allowTransparency,
 		smoothScrolling: settings.smoothScrolling,
 		middleClickAutoscroll: settings.middleClickAutoscroll,
-		firstClickPassThroughWhenUnfocused: settings.firstClickPassThroughWhenUnfocused,
 		[MINIMIZE_TO_TRAY_STORAGE_KEY_V2]: settings.minimizeToTray,
 		[CLOSE_TO_TRAY_STORAGE_KEY_V2]: settings.closeToTray,
 	};

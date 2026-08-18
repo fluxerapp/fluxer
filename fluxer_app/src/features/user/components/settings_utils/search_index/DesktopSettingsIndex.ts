@@ -7,66 +7,6 @@ import type {SearchableSettingDescriptor} from '@app/features/user/components/se
 import {BACKGROUND_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const FIRST_CLICK_PASS_THROUGH_WHEN_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'First click pass-through when unfocused',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const FIRST_CLICK_DESCRIPTOR = msg({
-	message: 'First click',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CLICK_THROUGH_DESCRIPTOR = msg({
-	message: 'Click through',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Unfocused',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const WINDOW_FOCUS_DESCRIPTOR = msg({
-	message: 'Window focus',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const FOCUS_CLICK_DESCRIPTOR = msg({
-	message: 'Focus click',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ACTIVATION_CLICK_DESCRIPTOR = msg({
-	message: 'Activation click',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const LET_THE_CLICK_THAT_FOCUSES_ALSO_ACTIVATE_THE_DESCRIPTOR = msg({
-	message: 'Let focus clicks activate controls.',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
-const STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Stay fully interactive when unfocused',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const ANIMATIONS_WHILE_UNFOCUSED_DESCRIPTOR = msg({
-	message: 'Animations while unfocused',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ANIMATION_PLAYBACK_DESCRIPTOR = msg({
-	message: 'Animation playback',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const HOVER_EFFECTS_DESCRIPTOR = msg({
-	message: 'Hover effects',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const TOOLTIPS_DESCRIPTOR = msg({
-	message: 'Tooltips',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const POWER_SAVING_DESCRIPTOR = msg({
-	message: 'Power saving',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_DESCRIPTOR = msg({
-	message: 'Keep animations, GIFs, hover, and tooltips running unfocused',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
 const HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Hardware acceleration',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
@@ -280,40 +220,6 @@ const KEEP_RUNNING_WHEN_THE_WINDOW_IS_CLOSED_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
-	{
-		id: 'first-click-pass-through',
-		tabType: 'desktop_settings',
-		label: FIRST_CLICK_PASS_THROUGH_WHEN_UNFOCUSED_DESCRIPTOR,
-		keywords: [
-			FIRST_CLICK_DESCRIPTOR,
-			CLICK_THROUGH_DESCRIPTOR,
-			UNFOCUSED_DESCRIPTOR,
-			WINDOW_FOCUS_DESCRIPTOR,
-			FOCUS_CLICK_DESCRIPTOR,
-			ACTIVATION_CLICK_DESCRIPTOR,
-		],
-		description: LET_THE_CLICK_THAT_FOCUSES_ALSO_ACTIVATE_THE_DESCRIPTOR,
-		audience: 'advanced',
-		tags: ['desktop'],
-		isVisible: isDesktop,
-	},
-	{
-		id: 'advanced-stay-interactive-unfocused',
-		tabType: 'desktop_settings',
-		label: STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR,
-		keywords: [
-			UNFOCUSED_DESCRIPTOR,
-			WINDOW_FOCUS_DESCRIPTOR,
-			ANIMATIONS_WHILE_UNFOCUSED_DESCRIPTOR,
-			ANIMATION_PLAYBACK_DESCRIPTOR,
-			HOVER_EFFECTS_DESCRIPTOR,
-			TOOLTIPS_DESCRIPTOR,
-			POWER_SAVING_DESCRIPTOR,
-		],
-		description: KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_DESCRIPTOR,
-		tags: ['desktop'],
-		isVisible: isDesktop,
-	},
 	{
 		id: 'advanced-hardware-acceleration',
 		tabType: 'desktop_settings',

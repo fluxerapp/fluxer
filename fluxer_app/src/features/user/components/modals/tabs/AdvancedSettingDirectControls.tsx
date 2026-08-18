@@ -3,6 +3,7 @@
 import {
 	MiddleClickAutoscrollControl,
 	SmoothScrollingControl,
+	StayInteractiveUnfocusedControl,
 	TextSelectionControl,
 	VideoSeekThumbnailsControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls';
@@ -34,10 +35,8 @@ import {
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls';
 import {DeveloperModeControl} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedClientDeveloperControls';
 import {
-	FirstClickPassThroughControl,
 	HardwareAccelerationControl,
 	NativeTitleBarControl,
-	StayInteractiveUnfocusedControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls';
 import {UnreadBadgeCustomizationControl} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
 import {
@@ -90,8 +89,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'voice-video-screen-share-encoder-controls',
 	'advanced-unread-badge-customization',
 	'client-developer-mode',
-	'advanced-stay-interactive-unfocused',
-	'first-click-pass-through',
+	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
 ]);
@@ -126,8 +124,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'voice-video-openh264-codec',
 	'advanced-unread-badge-customization',
 	'client-developer-mode',
-	'advanced-stay-interactive-unfocused',
-	'first-click-pass-through',
+	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
 ]);
@@ -298,13 +295,9 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 			return (
 				<DeveloperModeControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.developer-mode-control" />
 			);
-		case 'advanced-stay-interactive-unfocused':
+		case 'accessibility-stay-interactive-unfocused':
 			return (
 				<StayInteractiveUnfocusedControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.stay-interactive-unfocused-control" />
-			);
-		case 'first-click-pass-through':
-			return (
-				<FirstClickPassThroughControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.first-click-pass-through-control" />
 			);
 		case 'advanced-native-title-bar':
 			return (

@@ -32,6 +32,14 @@ const CONTENT_ANIMATIONS_STAY_IN_ANIMATION_TAB_DESCRIPTOR = msg({
 	message: 'Animated emojis, GIFs and stickers stay under your control in the Animation tab.',
 	comment: 'Extra hint shown beneath the reduce motion toggle while reduced motion is active.',
 });
+const STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR = msg({
+	message: 'Stay fully interactive when unfocused',
+	comment: 'Label in the motion tab.',
+});
+const KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_RUNNING_DESCRIPTOR = msg({
+	message: 'Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused.',
+	comment: 'Description text in the motion tab.',
+});
 export const MotionTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const syncReducedMotionWithSystem = Accessibility.syncReducedMotionWithSystem;
@@ -59,6 +67,13 @@ export const MotionTabContent: React.FC = observer(() => {
 				disabled={syncReducedMotionWithSystem}
 				onChange={(value) => AccessibilityCommands.update({reducedMotionOverride: value})}
 				data-flx="user.accessibility-tab.motion-tab.motion-tab-content.switch.update--2"
+			/>
+			<Switch
+				label={i18n._(STAY_FULLY_INTERACTIVE_WHEN_UNFOCUSED_DESCRIPTOR)}
+				description={i18n._(KEEP_ANIMATIONS_GIF_PLAYBACK_HOVER_EFFECTS_AND_TOOLTIPS_RUNNING_DESCRIPTOR)}
+				value={Accessibility.stayInteractiveWhenUnfocused}
+				onChange={(value) => AccessibilityCommands.update({stayInteractiveWhenUnfocused: value})}
+				data-flx="user.accessibility-tab.motion-tab.motion-tab-content.switch.update--3"
 			/>
 		</>
 	);
