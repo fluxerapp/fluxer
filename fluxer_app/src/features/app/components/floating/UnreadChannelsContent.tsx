@@ -3,6 +3,10 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {mergeFrozenUnreadOrder} from '@app/features/app/components/floating/UnreadChannelOrder';
 import styles from '@app/features/app/components/floating/UnreadChannelsContent.module.css';
+import {
+	BULK_PREVIEW_CHANNEL_BATCH_SIZE,
+	UNREAD_PREVIEW_MESSAGE_LIMIT,
+} from '@app/features/app/components/floating/UnreadPreviewBudget';
 import previewStyles from '@app/features/app/components/shared/MessagePreview.module.css';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {renderChannelStream} from '@app/features/channel/components/ChannelMessageStream';
@@ -131,8 +135,6 @@ interface ChannelPreviewData {
 
 const INITIAL_VISIBLE_CHANNELS = 10;
 const LOAD_MORE_CHUNK = 10;
-const UNREAD_PREVIEW_MESSAGE_LIMIT = 5;
-const BULK_PREVIEW_CHANNEL_BATCH_SIZE = 10;
 
 interface CacheEntry {
 	cacheKey: string;

@@ -27402,9 +27402,9 @@
 								"limit": {
 									"type": "integer",
 									"minimum": 1,
-									"maximum": 25,
+									"maximum": 50,
 									"format": "int32",
-									"description": "Number of messages to return for this channel (1-25)"
+									"description": "Number of messages to return for this channel (1-50)"
 								},
 								"before": {"$ref": "#/components/schemas/SnowflakeType"},
 								"after": {"$ref": "#/components/schemas/SnowflakeType"},

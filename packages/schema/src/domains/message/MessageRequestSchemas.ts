@@ -401,7 +401,7 @@ export type MessagesQuery = z.infer<typeof MessagesQuery>;
 
 const BulkMessageFetchEntryRequest = z.object({
 	channel_id: SnowflakeType.describe('The ID of the channel to fetch messages from'),
-	limit: z.number().int().min(1).max(25).describe('Number of messages to return for this channel (1-25)'),
+	limit: z.number().int().min(1).max(50).describe('Number of messages to return for this channel (1-50)'),
 	before: SnowflakeType.optional().describe('Get messages before this message ID'),
 	after: SnowflakeType.optional().describe('Get messages after this message ID'),
 	around: SnowflakeType.optional().describe('Get messages around this message ID'),
