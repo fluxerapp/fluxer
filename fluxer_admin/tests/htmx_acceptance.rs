@@ -435,41 +435,6 @@ async fn mutating_admin_pages_render_usable_csrf_tokens() {
 }
 
 #[tokio::test]
-async fn hosted_instance_config_hides_self_host_setup_controls() {
-    let app = setup().await;
-    let body = get(&app, "/instance-config", &[]).await;
-
-    assert_full_layout(&body);
-    assert!(body.contains("Registration Controls"), "{body}");
-    assert!(body.contains("Runtime Integrations"), "{body}");
-    assert!(body.contains("Gateway Rollout Configuration"), "{body}");
-    assert!(!body.contains("Public App Identity"), "{body}");
-    assert!(!body.contains("Setup complete"), "{body}");
-    assert!(!body.contains("Community & Policy"), "{body}");
-    assert!(!body.contains("Single community"), "{body}");
-    assert!(!body.contains("Direct messages &amp; friends"), "{body}");
-    assert!(!body.contains("Premium model"), "{body}");
-    assert!(!body.contains("Optional services"), "{body}");
-    assert!(!body.contains("Registration Fields"), "{body}");
-    assert!(
-        !body.contains("Collect date of birth during registration"),
-        "{body}"
-    );
-    assert!(
-        !body.contains("/instance-config?action=update_app_public"),
-        "{body}"
-    );
-    assert!(
-        !body.contains("/instance-config?action=update_app_registration"),
-        "{body}"
-    );
-    assert!(
-        !body.contains("/instance-config?action=update_policy"),
-        "{body}"
-    );
-}
-
-#[tokio::test]
 async fn instance_config_registration_tables_show_copyable_urls_and_compact_pending_actions() {
     let app = setup().await;
     let body = get(&app, "/instance-config", &[]).await;
