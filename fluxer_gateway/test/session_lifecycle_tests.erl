@@ -363,6 +363,31 @@ resume_success_state(State0) ->
     {reply, {ok, _Missed, 1}, State1} = session_lifecycle:handle_resume(0, self(), State0),
     State1.
 
+handle_resume_registers_the_session_process_with_presence_test() ->
+    SessionPid = self(),
+    Presence = spawn(fun() -> fake_presence_loop(SessionPid) end),
+    State0 = resume_test_state(#{presence_pid => Presence, seq => 1}),
+    {reply, {ok, [], 1}, _State1} = session_lifecycle:handle_resume(1, self(), State0),
+    receive
+        {presence_session_connect, Request} ->
+            ?assertEqual(SessionPid, maps:get(session_pid, Request)),
+            ?assertEqual(<<"session-resume-test">>, maps:get(session_id, Request))
+    after 2000 ->
+        ?assert(false, presence_session_connect_not_received)
+    end.
+
+fake_presence_loop(Parent) ->
+    receive
+        {'$gen_call', From, {session_connect, Request}} ->
+            Parent ! {presence_session_connect, Request},
+            gen_server:reply(From, {ok, []}),
+            fake_presence_loop(Parent);
+        _Other ->
+            fake_presence_loop(Parent)
+    after 5000 ->
+        ok
+    end.
+
 resume_test_state(Overrides) ->
     maps:merge(
         #{

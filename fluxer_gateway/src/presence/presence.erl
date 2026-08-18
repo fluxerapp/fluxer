@@ -84,11 +84,14 @@ code_change(_OldVsn, State, _Extra) ->
 -spec handle_call(term(), gen_server:from(), state()) ->
     {reply, term(), state()} | {stop, normal, ok, state()}.
 handle_call({session_connect, Request}, {Pid, _}, State) when is_map(Request), is_pid(Pid) ->
-    {reply, Reply, NewState} = presence_session:handle_session_connect(Request, Pid, State),
+    SessionPid = session_connect_pid(Request, Pid),
+    {reply, Reply, NewState} = presence_session:handle_session_connect(
+        Request, SessionPid, State
+    ),
     FinalState = presence_broadcast:publish_global_presence(
         maps:get(sessions, NewState), NewState
     ),
-    presence_broadcast:send_cached_presences_to_session(Pid, FinalState),
+    presence_broadcast:send_cached_presences_to_session(SessionPid, FinalState),
     {reply, Reply, FinalState};
 handle_call(get_current_visible_presence, _From, State) ->
     {reply, presence_broadcast:current_visible_presence(State), State};
@@ -140,6 +143,12 @@ handle_cast({sync_group_dm_recipients, RecipientsByChannel}, State) when
     {noreply, presence_broadcast:sync_group_dm_subscriptions(RecipientsByChannel, State)};
 handle_cast(Msg, State) ->
     handle_cast_guild(Msg, State).
+
+-spec session_connect_pid(map(), pid()) -> pid().
+session_connect_pid(#{session_pid := Pid}, _CallerPid) when is_pid(Pid) ->
+    Pid;
+session_connect_pid(_Request, CallerPid) ->
+    CallerPid.
 
 -spec handle_sync_friends_cast([term()], [term()], state()) -> {noreply, state()}.
 handle_sync_friends_cast(FriendIds, FlushedIds, State) ->
@@ -280,6 +289,14 @@ normalize_start_link(ignore) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+session_connect_pid_prefers_request_session_pid_test() ->
+    Caller = self(),
+    Other = spawn(fun idle_session_proc/0),
+    ?assertEqual(Other, session_connect_pid(#{session_pid => Other}, Caller)),
+    ?assertEqual(Caller, session_connect_pid(#{}, Caller)),
+    ?assertEqual(Caller, session_connect_pid(#{session_pid => undefined}, Caller)),
+    Other ! stop.
+
 presence_rejoin_notifies_all_sessions_test() ->
     Parent = self(),
     Session1 = spawn(fun() -> rejoin_check_receiver(Parent, one) end),
@@ -348,6 +365,13 @@ test_session_entry(Pid) ->
         mref => make_ref(),
         socket_pid => undefined
     }.
+
+-spec idle_session_proc() -> ok.
+idle_session_proc() ->
+    receive
+        stop -> ok
+    after 1000 -> ok
+    end.
 
 -spec rejoin_check_receiver(pid(), atom()) -> term().
 rejoin_check_receiver(Parent, Tag) ->

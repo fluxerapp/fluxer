@@ -414,21 +414,22 @@ handle_resume_offline_timeout(_Msg, State) ->
     ok.
 notify_presence_on_resume(#{presence_pid := undefined}, _Sid, _St, _Afk, _Mob) ->
     ok;
-notify_presence_on_resume(#{presence_pid := Pid}, SessionId, Status, Afk, Mobile) ->
-    spawn(fun() -> notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile) end),
+notify_presence_on_resume(#{presence_pid := Pid} = State, SessionId, Status, Afk, Mobile) ->
+    Request = #{
+        session_id => SessionId,
+        session_pid => self(),
+        socket_pid => maps:get(socket_pid, State, undefined),
+        status => Status,
+        afk => Afk,
+        mobile => Mobile
+    },
+    spawn(fun() -> notify_presence_on_resume_worker(Pid, Request) end),
     ok.
 
--spec notify_presence_on_resume_worker(pid(), session_id(), status(), boolean(), boolean()) ->
-    ok.
-notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile) ->
+-spec notify_presence_on_resume_worker(pid(), map()) -> ok.
+notify_presence_on_resume_worker(Pid, Request) ->
     try
-        gen_server:call(
-            Pid,
-            {session_connect, #{
-                session_id => SessionId, status => Status, afk => Afk, mobile => Mobile
-            }},
-            10000
-        ),
+        gen_server:call(Pid, {session_connect, Request}, 10000),
         ok
     catch
         error:_Reason -> ok;
