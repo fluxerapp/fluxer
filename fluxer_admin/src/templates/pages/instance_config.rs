@@ -103,6 +103,7 @@ pub fn instance_config_page(
                             instance_config.self_hosted,
                         ))
                         (sso_config_section(base, csrf_token, &instance_config.sso))
+                        (deferred_phone_gate_form(base, csrf_token, &instance_config.policy))
                     },
                 ))
                 @if instance_config.self_hosted {
@@ -191,7 +192,6 @@ fn policy_config_section(base: &str, csrf_token: &str, policy: &InstancePolicyRe
                 (single_community_form(base, csrf_token, policy))
                 (direct_messages_form(base, csrf_token, policy))
                 (premium_mode_form(base, csrf_token, policy))
-                (deferred_phone_gate_form(base, csrf_token, policy))
                 (services_form(base, csrf_token, policy))
             }
         },
