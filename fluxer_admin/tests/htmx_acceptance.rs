@@ -898,6 +898,7 @@ fn user(id: &str, username: &str) -> Value {
         "premium_grace_ends_at": null,
         "premium_lifetime_sequence": null,
         "suspicious_activity_flags": 0,
+        "phone_verification_deferred": false,
         "has_totp": false,
         "authenticator_types": [],
         "has_verified_phone": false,

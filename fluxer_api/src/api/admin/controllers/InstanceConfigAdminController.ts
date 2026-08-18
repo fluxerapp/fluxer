@@ -100,6 +100,11 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 				youtube_enabled: policy.youtube_enabled,
 				bluesky_enabled: policy.bluesky_enabled,
 			},
+			deferred_phone_gate: {
+				enabled: policy.deferred_phone_gate_enabled,
+				window_hours: policy.deferred_phone_gate_window_hours,
+				member_threshold: policy.deferred_phone_gate_member_threshold,
+			},
 			services_resolved: resolvedServices,
 			services_available: {
 				gif: integrations.gif.effective_available,
@@ -589,6 +594,17 @@ async function applyInstancePolicyUpdate(
 		}
 		if (policy.services.bluesky_enabled !== undefined) {
 			patch.bluesky_enabled = policy.services.bluesky_enabled ?? null;
+		}
+	}
+	if (policy.deferred_phone_gate) {
+		if (policy.deferred_phone_gate.enabled !== undefined) {
+			patch.deferred_phone_gate_enabled = policy.deferred_phone_gate.enabled;
+		}
+		if (policy.deferred_phone_gate.window_hours !== undefined) {
+			patch.deferred_phone_gate_window_hours = policy.deferred_phone_gate.window_hours;
+		}
+		if (policy.deferred_phone_gate.member_threshold !== undefined) {
+			patch.deferred_phone_gate_member_threshold = policy.deferred_phone_gate.member_threshold;
 		}
 	}
 	if (Object.keys(patch).length > 0) {

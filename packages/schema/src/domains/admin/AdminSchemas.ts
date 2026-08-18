@@ -527,6 +527,11 @@ const InstancePolicyResponse = z.object({
 		youtube: z.boolean(),
 		bluesky: z.boolean(),
 	}),
+	deferred_phone_gate: z.object({
+		enabled: z.boolean(),
+		window_hours: z.number(),
+		member_threshold: z.number(),
+	}),
 });
 
 const CaptchaProviderSchema = z.enum(['hcaptcha', 'turnstile', 'none']);
@@ -733,6 +738,13 @@ export const InstanceConfigUpdateRequest = z.object({
 					gif_enabled: z.boolean().nullish(),
 					youtube_enabled: z.boolean().nullish(),
 					bluesky_enabled: z.boolean().nullish(),
+				})
+				.nullish(),
+			deferred_phone_gate: z
+				.object({
+					enabled: z.boolean().optional(),
+					window_hours: z.number().positive().max(8760).optional(),
+					member_threshold: z.number().int().positive().max(1_000_000).optional(),
 				})
 				.nullish(),
 		})

@@ -13,6 +13,7 @@ import {sanitizeLimitConfigForInstance} from '../constants/LimitConfig';
 import {fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
 import type {InstanceConfigurationRow} from '../database/types/InstanceConfigTypes';
 import {Logger} from '../Logger';
+import {resolveDeferredPhoneGateEnabled, setCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
 import {InstanceConfiguration} from '../Tables';
 import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '../utils/AttachmentDecay';
 import {isJsonRecord, parseJsonArray, parseJsonRecord} from '../utils/JsonBoundaryUtils';
@@ -84,6 +85,9 @@ export interface InstancePolicyConfig {
 	gif_enabled: boolean | null;
 	youtube_enabled: boolean | null;
 	bluesky_enabled: boolean | null;
+	deferred_phone_gate_enabled: boolean;
+	deferred_phone_gate_window_hours: number;
+	deferred_phone_gate_member_threshold: number;
 }
 
 interface InstanceCommunityPublicConfig {
@@ -402,6 +406,9 @@ const DEFAULT_INSTANCE_POLICY_CONFIG: InstancePolicyConfig = {
 	gif_enabled: null,
 	youtube_enabled: null,
 	bluesky_enabled: null,
+	deferred_phone_gate_enabled: false,
+	deferred_phone_gate_window_hours: 6,
+	deferred_phone_gate_member_threshold: 50,
 };
 
 function isPremiumMode(value: unknown): value is InstancePremiumMode {
@@ -410,6 +417,13 @@ function isPremiumMode(value: unknown): value is InstancePremiumMode {
 
 function normalizeNullableBoolean(value: unknown): boolean | null {
 	return typeof value === 'boolean' ? value : null;
+}
+
+function normalizePositiveNumber(value: unknown, fallback: number): number {
+	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+		return fallback;
+	}
+	return value;
 }
 
 function normalizeInstancePolicyConfig(value: unknown): InstancePolicyConfig {
@@ -425,6 +439,15 @@ function normalizeInstancePolicyConfig(value: unknown): InstancePolicyConfig {
 		gif_enabled: normalizeNullableBoolean(value.gif_enabled),
 		youtube_enabled: normalizeNullableBoolean(value.youtube_enabled),
 		bluesky_enabled: normalizeNullableBoolean(value.bluesky_enabled),
+		deferred_phone_gate_enabled: value.deferred_phone_gate_enabled === true,
+		deferred_phone_gate_window_hours: normalizePositiveNumber(
+			value.deferred_phone_gate_window_hours,
+			DEFAULT_INSTANCE_POLICY_CONFIG.deferred_phone_gate_window_hours,
+		),
+		deferred_phone_gate_member_threshold: normalizePositiveNumber(
+			value.deferred_phone_gate_member_threshold,
+			DEFAULT_INSTANCE_POLICY_CONFIG.deferred_phone_gate_member_threshold,
+		),
 	};
 }
 
@@ -913,10 +936,16 @@ export class InstanceConfigRepository {
 				this.refreshRequested = false;
 				this.configCache = await this.fetchAllConfigsFromDatabase();
 			} while (this.refreshRequested);
+			this.syncDeferredPhoneGateCache(this.configCache.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		})().finally(() => {
 			this.refreshPromise = null;
 		});
 		await this.refreshPromise;
+	}
+
+	private syncDeferredPhoneGateCache(raw: string | null): void {
+		const policy = raw ? normalizeInstancePolicyConfig(parseJsonRecord(raw)) : {...DEFAULT_INSTANCE_POLICY_CONFIG};
+		setCachedDeferredPhoneGateEnabled(resolveDeferredPhoneGateEnabled(policy));
 	}
 
 	private updateCachedConfigs(entries: Array<[string, string]>): void {
@@ -1079,16 +1108,16 @@ export class InstanceConfigRepository {
 
 	async getInstancePolicyConfig(): Promise<InstancePolicyConfig> {
 		const raw = await this.getConfig(INSTANCE_POLICY_CONFIG_KEY);
-		if (!raw) {
-			return {...DEFAULT_INSTANCE_POLICY_CONFIG};
-		}
-		return normalizeInstancePolicyConfig(parseJsonRecord(raw));
+		const policy = raw ? normalizeInstancePolicyConfig(parseJsonRecord(raw)) : {...DEFAULT_INSTANCE_POLICY_CONFIG};
+		setCachedDeferredPhoneGateEnabled(resolveDeferredPhoneGateEnabled(policy));
+		return policy;
 	}
 
 	async setInstancePolicyConfig(config: Partial<InstancePolicyConfig>): Promise<InstancePolicyConfig> {
 		const current = await this.getInstancePolicyConfig();
 		const next = normalizeInstancePolicyConfig({...current, ...config});
 		await this.setConfig(INSTANCE_POLICY_CONFIG_KEY, JSON.stringify(next));
+		setCachedDeferredPhoneGateEnabled(resolveDeferredPhoneGateEnabled(next));
 		return next;
 	}
 

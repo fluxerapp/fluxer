@@ -57,6 +57,9 @@ export const UserAdminResponseSchema = z.object({
 		'Suspicious activity indicators',
 		'SuspiciousActivityFlags',
 	),
+	phone_verification_deferred: z
+		.boolean()
+		.describe('Whether a stored phone requirement is deferred until the user joins a discoverable or large community'),
 	temp_banned_until: z.string().nullable(),
 	pending_deletion_at: z.string().nullable(),
 	pending_bulk_message_deletion_at: z.string().nullable(),

@@ -12573,6 +12573,15 @@
 									"bluesky": {"type": "boolean"}
 								},
 								"required": ["gif", "youtube", "bluesky"]
+							},
+							"deferred_phone_gate": {
+								"type": "object",
+								"properties": {
+									"enabled": {"type": "boolean"},
+									"window_hours": {"type": "number"},
+									"member_threshold": {"type": "number"}
+								},
+								"required": ["enabled", "window_hours", "member_threshold"]
 							}
 						},
 						"required": [
@@ -12583,7 +12592,8 @@
 							"premium_mode",
 							"services",
 							"services_resolved",
-							"services_available"
+							"services_available",
+							"deferred_phone_gate"
 						]
 					},
 					"integrations": {
@@ -13109,6 +13119,21 @@
 									"gif_enabled": {"nullable": true, "type": "boolean"},
 									"youtube_enabled": {"nullable": true, "type": "boolean"},
 									"bluesky_enabled": {"nullable": true, "type": "boolean"}
+								}
+							},
+							"deferred_phone_gate": {
+								"nullable": true,
+								"type": "object",
+								"properties": {
+									"enabled": {"type": "boolean"},
+									"window_hours": {"type": "number", "maximum": 8760, "minimum": 0, "exclusiveMinimum": true},
+									"member_threshold": {
+										"type": "integer",
+										"maximum": 1000000,
+										"format": "int32",
+										"minimum": 0,
+										"exclusiveMinimum": true
+									}
 								}
 							}
 						}
@@ -14879,6 +14904,10 @@
 					"premium_grace_ends_at": {"nullable": true, "type": "string"},
 					"premium_lifetime_sequence": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"suspicious_activity_flags": {"$ref": "#/components/schemas/SuspiciousActivityFlags"},
+					"phone_verification_deferred": {
+						"type": "boolean",
+						"description": "Whether a stored phone requirement is deferred until the user joins a discoverable or large community"
+					},
 					"temp_banned_until": {"nullable": true, "type": "string"},
 					"pending_deletion_at": {"nullable": true, "type": "string"},
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
@@ -14919,6 +14948,7 @@
 					"premium_grace_ends_at",
 					"premium_lifetime_sequence",
 					"suspicious_activity_flags",
+					"phone_verification_deferred",
 					"temp_banned_until",
 					"pending_deletion_at",
 					"pending_bulk_message_deletion_at",

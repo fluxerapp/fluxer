@@ -191,6 +191,7 @@ fn policy_config_section(base: &str, csrf_token: &str, policy: &InstancePolicyRe
                 (single_community_form(base, csrf_token, policy))
                 (direct_messages_form(base, csrf_token, policy))
                 (premium_mode_form(base, csrf_token, policy))
+                (deferred_phone_gate_form(base, csrf_token, policy))
                 (services_form(base, csrf_token, policy))
             }
         },
@@ -277,6 +278,57 @@ fn direct_messages_form(base: &str, csrf_token: &str, policy: &InstancePolicyRes
                             (submit_button("Save direct message policy"))
                         }))
                     }
+                }
+            }
+        }
+    }
+}
+
+fn deferred_phone_gate_form(
+    base: &str,
+    csrf_token: &str,
+    policy: &InstancePolicyResponse,
+) -> Markup {
+    let gate = &policy.deferred_phone_gate;
+    let status = if gate.enabled {
+        ("Enabled", BadgeVariant::Success)
+    } else {
+        ("Disabled", BadgeVariant::Default)
+    };
+    html! {
+        div class="space-y-4 border-t border-neutral-200 pt-6" {
+            div class="flex flex-wrap items-center gap-2" {
+                h3 class="text-sm font-semibold text-neutral-900" { "Deferred phone verification" }
+                (badge(status.0, status.1))
+            }
+            p class="text-sm text-neutral-500" {
+                "When enabled, a phone requirement raised at registration is held back and only \
+                 applied if the account joins a discoverable community, or one above the member \
+                 threshold, within the window. Accounts that wait out the window are not challenged. \
+                 Inbound-SMS requirements are never deferred."
+            }
+            form method="post" action={(base) "/instance-config?action=update_policy"} {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    (select_input("policy_deferred_phone_gate_enabled", "Deferred phone verification", &[
+                        ("true", "Enabled"),
+                        ("false", "Disabled"),
+                    ], if gate.enabled { "true" } else { "false" }))
+                    (text_input(
+                        "policy_deferred_phone_gate_window_hours",
+                        "Window (hours)",
+                        &gate.window_hours.to_string(),
+                        "6",
+                    ))
+                    (text_input(
+                        "policy_deferred_phone_gate_member_threshold",
+                        "Member threshold",
+                        &gate.member_threshold.to_string(),
+                        "50",
+                    ))
+                    (form_actions(html! {
+                        (submit_button("Save deferred phone verification"))
+                    }))
                 }
             }
         }

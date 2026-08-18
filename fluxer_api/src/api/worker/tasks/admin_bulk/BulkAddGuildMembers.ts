@@ -41,6 +41,7 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		const userId = createUserID(userIdBigInt);
 		try {
 			await deps.guildService.members.addUserToGuild({
+				skipRiskGate: true,
 				userId,
 				guildId,
 				sendJoinMessage: false,

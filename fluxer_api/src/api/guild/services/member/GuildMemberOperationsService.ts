@@ -2,10 +2,17 @@
 
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {type JoinSourceType, JoinSourceTypes, SystemChannelFlags} from '@fluxer/constants/src/GuildConstants';
+import {
+	GuildFeatures,
+	type JoinSourceType,
+	JoinSourceTypes,
+	SystemChannelFlags,
+} from '@fluxer/constants/src/GuildConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
+	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	type MentionReplyPreference,
+	PHONE_REQUIREMENT_FLAGS,
 	UserNotificationSettings,
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -17,10 +24,12 @@ import {MaxGuildsError} from '@fluxer/errors/src/domains/guild/MaxGuildsError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {CommunicationDisabledError} from '@fluxer/errors/src/domains/moderation/CommunicationDisabledError';
+import {AccountSuspiciousActivityError} from '@fluxer/errors/src/domains/user/AccountSuspiciousActivityError';
 import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
 import {DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildMemberUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
 import {requireEmailVerified} from '../../../auth/EmailVerificationUtils';
@@ -38,13 +47,24 @@ import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
 import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
 import {profileSubstringBlocklistCache} from '../../../middleware/ProfileSubstringBlocklistCache';
 import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
+import type {Guild} from '../../../models/Guild';
 import type {GuildMember} from '../../../models/GuildMember';
 import type {User} from '../../../models/User';
 import type {UserGuildSettings} from '../../../models/UserGuildSettings';
 import type {UserSettings} from '../../../models/UserSettings';
+import {
+	DEFAULT_PHONE_GATE_MEMBER_THRESHOLD,
+	evaluateDeferredPhoneGate,
+	getDeferredPhoneGateConfig,
+	guildTriggersPhoneGate,
+} from '../../../risk/DeferredPhoneGate';
 import type {IUserRepository} from '../../../user/IUserRepository';
-import {isProfileSubstringExempt} from '../../../user/UserHelpers';
-import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse} from '../../../user/UserMappers';
+import {getEffectiveSuspiciousFlags, isProfileSubstringExempt} from '../../../user/UserHelpers';
+import {
+	mapUserGuildSettingsToResponse,
+	mapUserSettingsToResponse,
+	mapUserToPrivateResponse,
+} from '../../../user/UserMappers';
 import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '../../../user/utils/GuildFolderUtils';
 import type {GuildAuditLogService} from '../../GuildAuditLogService';
 import type {GuildAuditLogChange} from '../../GuildAuditLogTypes';
@@ -374,6 +394,68 @@ export class GuildMemberOperationsService {
 		await this.gatewayService.leaveGuild({userId: targetId, guildId});
 	}
 
+	private async applyDeferredPhoneGate(user: User, guild: Guild): Promise<void> {
+		if (user.hasVerifiedPhone) {
+			return;
+		}
+		const rawFlags = user.suspiciousActivityFlags ?? 0;
+		if ((rawFlags & (DEFERRED_PHONE_ON_COMMUNITY_JOIN | PHONE_REQUIREMENT_FLAGS)) === 0) {
+			return;
+		}
+		const {status, config} = await getDeferredPhoneGateConfig();
+		const logContext = {
+			userId: user.id.toString(),
+			guildId: guild.id.toString(),
+			discoverable: guild.features.has(GuildFeatures.DISCOVERABLE),
+			memberCount: guild.memberCount,
+			accountAgeMs: Date.now() - snowflakeToDate(BigInt(user.id)).getTime(),
+		};
+		if (status !== 'ok') {
+			const undeferredFlags = getEffectiveSuspiciousFlags({
+				...user,
+				suspiciousActivityFlags: rawFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN,
+			} as User);
+			if (
+				(undeferredFlags & PHONE_REQUIREMENT_FLAGS) === 0 ||
+				!guildTriggersPhoneGate(guild, DEFAULT_PHONE_GATE_MEMBER_THRESHOLD)
+			) {
+				return;
+			}
+			Logger.info(logContext, `deferred_phone_gate.enforced_while_${status}`);
+			throw new AccountSuspiciousActivityError(undeferredFlags);
+		}
+		const liveFlags = getEffectiveSuspiciousFlags(user);
+		if ((liveFlags & PHONE_REQUIREMENT_FLAGS) !== 0) {
+			if (!guildTriggersPhoneGate(guild, config.memberThreshold)) {
+				return;
+			}
+			Logger.info(logContext, 'deferred_phone_gate.blocked_unsatisfied_phone_requirement');
+			throw new AccountSuspiciousActivityError(liveFlags);
+		}
+		const outcome = evaluateDeferredPhoneGate(user, guild, config, Date.now());
+		if (!outcome.applies) {
+			Logger.info(logContext, `deferred_phone_gate.skipped_${outcome.reason}`);
+			return;
+		}
+		const promotedFlags = getEffectiveSuspiciousFlags({...user, suspiciousActivityFlags: outcome.flags} as User);
+		if (promotedFlags === 0) {
+			Logger.info(logContext, 'deferred_phone_gate.skipped_unenforceable');
+			return;
+		}
+		const updatedUser = await this.userRepository.patchUpsert(
+			user.id,
+			{suspicious_activity_flags: outcome.flags},
+			user.toRow(),
+		);
+		await this.gatewayService.dispatchPresence({
+			userId: user.id,
+			event: 'USER_UPDATE',
+			data: mapUserToPrivateResponse(updatedUser),
+		});
+		Logger.info(logContext, 'deferred_phone_gate.applied');
+		throw new AccountSuspiciousActivityError(promotedFlags);
+	}
+
 	async addUserToGuild(
 		params: {
 			userId: UserID;
@@ -381,6 +463,7 @@ export class GuildMemberOperationsService {
 			sendJoinMessage?: boolean;
 			skipGuildLimitCheck?: boolean;
 			skipBanCheck?: boolean;
+			skipRiskGate?: boolean;
 			isTemporary?: boolean;
 			joinSourceType?: JoinSourceType;
 			sourceInviteCode?: InviteCode;
@@ -398,6 +481,7 @@ export class GuildMemberOperationsService {
 				sendJoinMessage = true,
 				skipGuildLimitCheck = false,
 				skipBanCheck = false,
+				skipRiskGate = false,
 				isTemporary = false,
 				joinSourceType = JoinSourceTypes.INSTANT_INVITE,
 				sourceInviteCode = null,
@@ -417,6 +501,9 @@ export class GuildMemberOperationsService {
 			const userGuildsCount = await this.guildRepository.countUserGuilds(userId);
 			if (!skipGuildLimitCheck) {
 				await this.enforceGuildLimit(user, userGuildsCount);
+			}
+			if (!skipRiskGate && !user.isBot) {
+				await this.applyDeferredPhoneGate(user, guild);
 			}
 			const maxGuildMembers = resolveMaxGuildMembersLimit({
 				guildFeatures: guild.features,

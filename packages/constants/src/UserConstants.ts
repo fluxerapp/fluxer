@@ -195,7 +195,28 @@ export const SuspiciousActivityFlagsDescriptions: Record<keyof typeof Suspicious
 	REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE: 'Requires re-verified email or re-verified phone',
 	REQUIRE_INBOUND_PHONE_VERIFICATION: 'Requires inbound SMS verification (user must text code to platform number)',
 };
+export const ALL_SUSPICIOUS_ACTIVITY_FLAGS = Object.values(SuspiciousActivityFlags).reduce(
+	(mask, flag) => mask | flag,
+	0,
+);
+export const DEFERRED_PHONE_ON_COMMUNITY_JOIN = 1 << 16;
+export const DEFERRABLE_PHONE_FLAGS =
+	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE;
+export const NEVER_DEFERRABLE_PHONE_FLAGS = SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
+export const PHONE_REQUIREMENT_FLAGS = DEFERRABLE_PHONE_FLAGS | NEVER_DEFERRABLE_PHONE_FLAGS;
+export function imposePhoneRequirements(currentFlags: number, addedFlags: number): number {
+	const nextFlags = currentFlags | addedFlags;
+	if ((addedFlags & DEFERRABLE_PHONE_FLAGS) === 0) {
+		return nextFlags;
+	}
+	return nextFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
+}
+export const ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS =
+	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
+	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
+	SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
 export const PHONE_ADD_CLEARABLE_FLAGS =
+	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE |

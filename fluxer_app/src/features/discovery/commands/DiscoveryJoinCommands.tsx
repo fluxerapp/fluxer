@@ -7,6 +7,7 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import Users from '@app/features/user/state/Users';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
 
@@ -100,7 +101,11 @@ function resolveJoinGuildErrorContent(code: string | undefined): {title: string;
 }
 
 function showJoinGuildErrorModal(error: unknown): void {
-	const {title, message} = resolveJoinGuildErrorContent(failureCode(error));
+	const code = failureCode(error);
+	if (code === APIErrorCodes.ACCOUNT_SUSPICIOUS_ACTIVITY && (Users.currentUser?.requiredActions?.length ?? 0) > 0) {
+		return;
+	}
+	const {title, message} = resolveJoinGuildErrorContent(code);
 	ModalCommands.push(
 		modal(() => <GenericErrorModal title={title} message={message} data-flx="discovery.join.generic-error-modal" />),
 	);

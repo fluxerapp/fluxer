@@ -102,6 +102,8 @@ pub struct AdminUser {
     #[serde(default)]
     pub suspicious_activity_flags: i32,
     #[serde(default)]
+    pub phone_verification_deferred: bool,
+    #[serde(default)]
     pub has_totp: bool,
     #[serde(default)]
     pub authenticator_types: Vec<i32>,

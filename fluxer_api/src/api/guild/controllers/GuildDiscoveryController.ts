@@ -104,6 +104,7 @@ export function GuildDiscoveryController(app: HonoApp) {
 	app.post(
 		'/discovery/guilds/:guild_id/join',
 		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_JOIN),
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('param', GuildIdParam),
 		OpenAPI({

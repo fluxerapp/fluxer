@@ -174,6 +174,12 @@ function showGuildInviteAcceptFailure(
 	responseErr: HttpError | null,
 ): void {
 	const isRaidDetected = guildInviteFeatures(invite).includes(GuildFeatures.RAID_DETECTED);
+	if (
+		errorCode === APIErrorCodes.ACCOUNT_SUSPICIOUS_ACTIVITY &&
+		(Users.currentUser?.requiredActions?.length ?? 0) > 0
+	) {
+		return;
+	}
 	if (errorCode === APIErrorCodes.INVITES_DISABLED) {
 		ModalCommands.push(
 			modal(() => (

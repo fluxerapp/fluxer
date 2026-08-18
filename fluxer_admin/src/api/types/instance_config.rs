@@ -37,6 +37,28 @@ pub struct InstancePolicyResponse {
     pub services_resolved: InstanceServicesResolved,
     #[serde(default)]
     pub services_available: InstanceServicesAvailable,
+    #[serde(default)]
+    pub deferred_phone_gate: DeferredPhoneGateResponse,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DeferredPhoneGateResponse {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default)]
+    pub window_hours: f64,
+    #[serde(default)]
+    pub member_threshold: i64,
+}
+
+impl Default for DeferredPhoneGateResponse {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            window_hours: 6.0,
+            member_threshold: 50,
+        }
+    }
 }
 
 impl Default for InstancePolicyResponse {
@@ -50,6 +72,7 @@ impl Default for InstancePolicyResponse {
             services: InstanceServicesOverrides::default(),
             services_resolved: InstanceServicesResolved::default(),
             services_available: InstanceServicesAvailable::default(),
+            deferred_phone_gate: DeferredPhoneGateResponse::default(),
         }
     }
 }
@@ -516,6 +539,18 @@ pub struct InstancePolicyUpdateRequest {
     pub premium_mode: Option<PremiumMode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub services: Option<InstanceServicesUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deferred_phone_gate: Option<DeferredPhoneGateUpdateRequest>,
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct DeferredPhoneGateUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub window_hours: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub member_threshold: Option<i64>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

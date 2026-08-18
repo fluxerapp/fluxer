@@ -69,6 +69,7 @@ mod tests {
                 "premium_grace_ends_at": null,
                 "premium_lifetime_sequence": null,
                 "suspicious_activity_flags": 0,
+                "phone_verification_deferred": false,
                 "temp_banned_until": null,
                 "pending_deletion_at": null,
                 "pending_bulk_message_deletion_at": null,

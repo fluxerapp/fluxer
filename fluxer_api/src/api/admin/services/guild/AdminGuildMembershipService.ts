@@ -43,6 +43,7 @@ export class AdminGuildMembershipService {
 			throw new UnknownUserError();
 		}
 		await guildService.members.addUserToGuild({
+			skipRiskGate: true,
 			userId,
 			guildId,
 			sendJoinMessage: true,
@@ -83,6 +84,7 @@ export class AdminGuildMembershipService {
 			try {
 				const userId = createUserID(userIdBigInt);
 				await guildService.members.addUserToGuild({
+					skipRiskGate: true,
 					userId,
 					guildId,
 					sendJoinMessage: false,

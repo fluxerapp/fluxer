@@ -2,6 +2,7 @@
 
 import dns from 'node:dns';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {DEFERRED_PHONE_ON_COMMUNITY_JOIN} from '@fluxer/constants/src/UserConstants';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
@@ -82,6 +83,7 @@ export async function mapUserToAdminResponse(
 		premium_grace_ends_at: user.premiumGraceEndsAt?.toISOString() ?? null,
 		premium_lifetime_sequence: user.premiumLifetimeSequence ?? null,
 		suspicious_activity_flags: user.suspiciousActivityFlags,
+		phone_verification_deferred: ((user.suspiciousActivityFlags ?? 0) & DEFERRED_PHONE_ON_COMMUNITY_JOIN) !== 0,
 		temp_banned_until: user.tempBannedUntil?.toISOString() ?? null,
 		pending_deletion_at: user.pendingDeletionAt?.toISOString() ?? null,
 		pending_bulk_message_deletion_at: user.pendingBulkMessageDeletionAt?.toISOString() ?? null,

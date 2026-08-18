@@ -69,7 +69,8 @@ export class LimitConfigService {
 	}
 
 	async refreshCache(): Promise<void> {
-		this.premiumMode = (await this.repository.getInstancePolicyConfig()).premium_mode;
+		const policyConfig = await this.repository.getInstancePolicyConfig();
+		this.premiumMode = policyConfig.premium_mode;
 		setCachedInstancePremiumMode(this.premiumMode);
 		const currentHash = computeDefaultsHash();
 		const lockToken = await this.cacheService.acquireLock(LIMIT_CONFIG_REFRESH_LOCK_KEY, 10);

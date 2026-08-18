@@ -7,7 +7,7 @@ use crate::{
             AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
             AppSetupConfigUpdateRequest, CreateRegistrationUrlRequest,
-            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
+            DeferredPhoneGateUpdateRequest, GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
             InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
             InstanceBlueskyKeyIntegrationUpdateRequest, InstanceCaptchaIntegrationUpdateRequest,
             InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
@@ -547,6 +547,7 @@ fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
         _ => None,
     };
     let services = build_services_update(form);
+    let deferred_phone_gate = build_deferred_phone_gate_update(form);
     InstanceConfigUpdateRequest {
         gateway_rollout: None,
         registration: None,
@@ -558,10 +559,35 @@ fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
             direct_messages_disabled,
             premium_mode,
             services,
+            deferred_phone_gate,
         }),
         integrations: None,
         media: None,
     }
+}
+
+fn build_deferred_phone_gate_update(
+    form: &MultiValueForm,
+) -> Option<DeferredPhoneGateUpdateRequest> {
+    let enabled = form
+        .first("policy_deferred_phone_gate_enabled")
+        .map(|value| value == "true");
+    let window_hours = form
+        .first("policy_deferred_phone_gate_window_hours")
+        .and_then(|value| value.parse::<f64>().ok())
+        .filter(|value| *value > 0.0);
+    let member_threshold = form
+        .first("policy_deferred_phone_gate_member_threshold")
+        .and_then(|value| value.parse::<i64>().ok())
+        .filter(|value| *value > 0);
+    if enabled.is_none() && window_hours.is_none() && member_threshold.is_none() {
+        return None;
+    }
+    Some(DeferredPhoneGateUpdateRequest {
+        enabled,
+        window_hours,
+        member_threshold,
+    })
 }
 
 fn build_services_update(form: &MultiValueForm) -> Option<InstanceServicesUpdateRequest> {
@@ -712,6 +738,7 @@ fn build_single_community_update(enabled: bool) -> InstanceConfigUpdateRequest {
             direct_messages_disabled: None,
             premium_mode: None,
             services: None,
+            deferred_phone_gate: None,
         }),
         integrations: None,
         media: None,

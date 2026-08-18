@@ -291,6 +291,11 @@ fn flags_card(
                 can_update_suspicious,
                 Some(acl::USER_UPDATE_SUSPICIOUS_ACTIVITY),
             ))
+            @if user.phone_verification_deferred {
+                p class="text-sm text-amber-700 dark:text-amber-400" {
+                    "Phone verification is deferred: the requirement above is stored but not enforced until this user joins a discoverable or large community within the deferral window."
+                }
+            }
         }
     }
 }

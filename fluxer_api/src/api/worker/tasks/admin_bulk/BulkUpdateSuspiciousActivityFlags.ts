@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
+import {imposePhoneRequirements, SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
 import {AdminAuditService} from '../../../admin/services/AdminAuditService';
@@ -58,7 +58,7 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 			const user = await deps.userRepository.findUnique(userId);
 			if (!user) throw new Error('user_not_found');
 			const currentFlags = user.suspiciousActivityFlags ?? 0;
-			const newFlags = (currentFlags | addMask) & ~removeMask;
+			const newFlags = imposePhoneRequirements(currentFlags, addMask) & ~removeMask;
 			const updatedUser = await deps.userRepository.patchUpsert(
 				userId,
 				{suspicious_activity_flags: newFlags},

@@ -273,6 +273,7 @@ export class OAuth2RequestService {
 						}
 					}
 					await this.guildService.members.addUserToGuild({
+						skipRiskGate: true,
 						userId: botUserId,
 						guildId,
 						skipGuildLimitCheck: true,

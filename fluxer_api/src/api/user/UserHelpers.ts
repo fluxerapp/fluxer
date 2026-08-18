@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PremiumFlags, SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {
+	DEFERRABLE_PHONE_FLAGS,
+	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
+	PremiumFlags,
+	SuspiciousActivityFlags,
+	UserFlags,
+} from '@fluxer/constants/src/UserConstants';
 import type {RequiredAction} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ms} from 'itty-time';
 import {Config} from '../Config';
@@ -8,6 +14,7 @@ import type {UserRow} from '../database/types/UserTypes';
 import {getCachedInstancePremiumMode} from '../limits/InstancePremiumModeCache';
 import type {User} from '../models/User';
 import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
+import {getCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
 
 type ClauseAction = Exclude<RequiredAction, 'REQUIRE_INBOUND_PHONE_VERIFICATION'>;
 type VerificationChannel = 'email' | 'phone';
@@ -123,8 +130,18 @@ function getRequiredActionSortIndex(action: RequiredAction): number {
 	return index === -1 ? REQUIRED_ACTION_ORDER.length : index;
 }
 
+function suppressDeferredPhoneFlags(rawFlags: number): number {
+	if ((rawFlags & DEFERRED_PHONE_ON_COMMUNITY_JOIN) === 0) {
+		return rawFlags;
+	}
+	if (!getCachedDeferredPhoneGateEnabled()) {
+		return rawFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
+	}
+	return rawFlags & ~DEFERRABLE_PHONE_FLAGS;
+}
+
 export function getRequiredActions(user: User): ReadonlyArray<RequiredAction> {
-	const flags = user.suspiciousActivityFlags ?? 0;
+	const flags = suppressDeferredPhoneFlags(user.suspiciousActivityFlags ?? 0);
 	if (flags === 0) {
 		return [];
 	}
