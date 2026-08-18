@@ -16,9 +16,8 @@ import {
 	EDIT_MESSAGE_DESCRIPTOR,
 	EMOJIS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import Keybind from '@app/features/input/state/InputKeybind';
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
-import {doesEventMatchShortcut, useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
+import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import {applyMarkdownSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
@@ -153,16 +152,6 @@ export const EditingMessageInput = observer(
 		const handleKeyDown = useCallback(
 			(event: React.KeyboardEvent<HTMLElement>) => {
 				if (event.defaultPrevented) {
-					return;
-				}
-				const composer = composerRef.current;
-				const selection = composer == null ? null : composer.getSelection();
-				const hasSelectionRange = selection != null && selection.start !== selection.end;
-				const inboxCombo = Keybind.getByAction('chat_toggle_inbox').combo;
-				if (doesEventMatchShortcut(event, inboxCombo) && !hasSelectionRange && actualContent.trim().length === 0) {
-					event.preventDefault();
-					event.stopPropagation();
-					ComponentDispatch.dispatch('INBOX_OPEN');
 					return;
 				}
 				if (event.key === 'Escape' && !event.shiftKey && !event.defaultPrevented && !event.nativeEvent.isComposing) {

@@ -108,7 +108,8 @@ export const doesEventMatchShortcut = (event: ShortcutKeyEvent, target: Partial<
 };
 const shouldPreserveConflictingAction = (action: KeybindCommand, options: MarkdownKeybindScopeOptions): boolean => {
 	if (!options.preserveEditableFocusActions) return false;
-	return Keybind.getDefaultByAction(action)?.editableFocusBehavior === 'allow';
+	const behavior = Keybind.getDefaultByAction(action)?.editableFocusBehavior;
+	return behavior === 'allow' || behavior === 'allow_when_empty';
 };
 const getConflictingKeybindActions = (options: MarkdownKeybindScopeOptions = {}): Set<KeybindCommand> => {
 	const actions = new Set<KeybindCommand>();

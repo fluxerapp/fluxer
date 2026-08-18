@@ -662,6 +662,8 @@ const getDefaultKeybinds = (
 			action: 'chat_toggle_inbox',
 			label: i18n._(TOGGLE_THE_INBOX_DESCRIPTOR),
 			combo: {key: 'i', ctrlOrMeta: true},
+			ignoreWhileTyping: true,
+			editableFocusBehavior: 'allow_when_empty',
 			section: 'chat',
 		},
 		{

@@ -52,8 +52,7 @@ import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import GuildGuilds from '@app/features/guild/state/Guilds';
 import {CANCEL_DESCRIPTOR, CONTINUE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import Keybind from '@app/features/input/state/InputKeybind';
-import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
+import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {insertComposerEmoji} from '@app/features/lexical/composer/ComposerInsertion';
 import {LexicalComposerInput} from '@app/features/lexical/composer/LexicalComposerInput';
 import {
@@ -69,7 +68,7 @@ import {showAttachmentPermissionDeniedModal} from '@app/features/messaging/compo
 import {FileSizeTooLargeModal} from '@app/features/messaging/components/alerts/FileSizeTooLargeModal';
 import {TooManyAttachmentsModal} from '@app/features/messaging/components/alerts/TooManyAttachmentsModal';
 import {useTextareaAttachments} from '@app/features/messaging/hooks/useCloudUpload';
-import {doesEventMatchShortcut, useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
+import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
 import {type SendMessageFunction, useMessageSubmission} from '@app/features/messaging/hooks/useMessageSubmission';
 import {useTextareaDraftAndTyping} from '@app/features/messaging/hooks/useTextareaDraftAndTyping';
 import {useTextareaEditing} from '@app/features/messaging/hooks/useTextareaEditing';
@@ -848,22 +847,9 @@ export const LexicalChannelTextareaContent = observer(
 		}, [channel.guildId]);
 		const handleEditorKeyDown = useCallback(
 			(event: React.KeyboardEvent<HTMLElement>) => {
-				const handle = handleRef.current;
-				let selection: ComposerSelectionRange | null = null;
-				if (handle !== null) {
-					selection = handle.getSelection();
-				}
-				const hasSelectionRange = selection ? selection.start !== selection.end : false;
-				const inboxCombo = Keybind.getByAction('chat_toggle_inbox').combo;
-				if (doesEventMatchShortcut(event, inboxCombo) && !hasSelectionRange && value.trim().length === 0) {
-					event.preventDefault();
-					event.stopPropagation();
-					ComponentDispatch.dispatch('INBOX_OPEN');
-					return;
-				}
 				handleEscapeKey(event);
 			},
-			[handleEscapeKey, value],
+			[handleEscapeKey],
 		);
 		const handleSubmit = useCallback(() => {
 			if (!canSubmit) {
