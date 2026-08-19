@@ -33,6 +33,7 @@ import {
 	$wrapComposerSelection,
 } from '@app/features/lexical/composer/composerOffsets';
 import styles from '@app/features/lexical/composer/LexicalMessageComposer.module.css';
+import {DEFAULT_COMPOSER_MARKDOWN_FLAGS} from '@app/features/lexical/composer/markdownSpans';
 import {ComposerCommandNode} from '@app/features/lexical/composer/nodes/ComposerCommandNode';
 import {ComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {ComposerMentionNode} from '@app/features/lexical/composer/nodes/ComposerMentionNode';
@@ -263,6 +264,8 @@ const ComposerInner = ({
 	submitOnEnterRef.current = submitOnEnter;
 	const plainTextRef = useRef(plainText);
 	plainTextRef.current = plainText;
+	const markdownParserFlagsRef = useRef(markdownParserFlags ?? DEFAULT_COMPOSER_MARKDOWN_FLAGS);
+	markdownParserFlagsRef.current = markdownParserFlags ?? DEFAULT_COMPOSER_MARKDOWN_FLAGS;
 	const disabledRef = useRef(disabled);
 	disabledRef.current = disabled;
 	const onSlashCommandStateChangeRef = useRef(onSlashCommandStateChange);
@@ -607,6 +610,7 @@ const ComposerInner = ({
 			registerComposerClipboardCommands(editor, {
 				getPlainText: () => plainTextRef.current,
 				isEditable: () => !disabledRef.current && editor.isEditable(),
+				getMarkdownParserFlags: () => markdownParserFlagsRef.current,
 			}),
 		[editor],
 	);

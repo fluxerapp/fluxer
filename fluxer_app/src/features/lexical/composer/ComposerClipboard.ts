@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolvePastedLinkInsertion} from '@app/features/lexical/composer/ComposerLinkPaste';
 import {
 	$createComposerSegmentNodes,
 	$projectComposer,
@@ -8,6 +9,7 @@ import {
 import {$captureSelectionOffsets, $selectComposerOffset} from '@app/features/lexical/composer/composerOffsets';
 import {$isSlashSlotNode, type SlashSlotNode} from '@app/features/lexical/composer/nodes/SlashSlotNode';
 import {COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH} from '@app/features/lexical/composer/SlashSlotPersistence';
+import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {mergeRegister} from '@lexical/utils';
 import {
@@ -21,6 +23,7 @@ import {
 	$isNodeSelection,
 	$isRangeSelection,
 	$isTextNode,
+	COMMAND_PRIORITY_CRITICAL,
 	COMMAND_PRIORITY_NORMAL,
 	COPY_COMMAND,
 	CUT_COMMAND,
@@ -60,6 +63,7 @@ export interface ComposerClipboardSelection extends ComposerClipboardSlice {
 export interface ComposerClipboardCommandState {
 	getPlainText(): boolean;
 	isEditable(): boolean;
+	getMarkdownParserFlags(): number;
 }
 
 interface SerializedComposerClipboardPayload {
@@ -460,6 +464,34 @@ export function registerComposerClipboardCommands(
 	state: ComposerClipboardCommandState,
 ): () => void {
 	return mergeRegister(
+		editor.registerCommand(
+			PASTE_COMMAND,
+			(event) => {
+				if (!state.isEditable() || (state.getMarkdownParserFlags() & ParserFlags.ALLOW_MASKED_LINKS) === 0) {
+					return false;
+				}
+				const clipboardEvent = getClipboardEvent(event);
+				if (clipboardEvent == null || clipboardEvent.clipboardData == null) {
+					return false;
+				}
+				const selection = $getSelection();
+				if (!$isRangeSelection(selection) || selection.isCollapsed()) {
+					return false;
+				}
+				const replacement = resolvePastedLinkInsertion(
+					clipboardEvent.clipboardData.getData('text/plain'),
+					selection.getTextContent(),
+				);
+				if (replacement === null) {
+					return false;
+				}
+				selection.insertText(replacement);
+				$addUpdateTag(PASTE_TAG);
+				clipboardEvent.preventDefault();
+				return true;
+			},
+			COMMAND_PRIORITY_CRITICAL,
+		),
 		editor.registerCommand(
 			COPY_COMMAND,
 			(event) => {

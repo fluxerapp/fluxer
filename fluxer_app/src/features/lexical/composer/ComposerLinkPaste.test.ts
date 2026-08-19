@@ -6,6 +6,10 @@ import {
 	parsePastedUrl,
 	resolvePastedLinkInsertion,
 } from '@app/features/lexical/composer/ComposerLinkPaste';
+import {DEFAULT_COMPOSER_MARKDOWN_FLAGS} from '@app/features/lexical/composer/markdownSpans';
+import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
+import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {describe, expect, it} from 'vitest';
 
 describe('parsePastedUrl', () => {
@@ -85,5 +89,18 @@ describe('resolvePastedLinkInsertion', () => {
 
 	it('declines a non-web protocol so pasting cannot forge a link', () => {
 		expect(resolvePastedLinkInsertion('javascript:alert(1)', 'click me')).toBeNull();
+	});
+});
+
+describe('masked link support across composer surfaces', () => {
+	const surfaces: Array<[string, number]> = [
+		['channel composer', DEFAULT_COMPOSER_MARKDOWN_FLAGS],
+		['message edit / forward', getParserFlagsForContext(MarkdownContext.STANDARD_WITH_JUMBO)],
+		['channel topic', getParserFlagsForContext(MarkdownContext.STANDARD_WITHOUT_JUMBO)],
+		['user bio', getParserFlagsForContext(MarkdownContext.RESTRICTED_USER_BIO)],
+	];
+
+	it.each(surfaces)('%s allows masked links, so pasting a link must wrap', (_name, flags) => {
+		expect(flags & ParserFlags.ALLOW_MASKED_LINKS).not.toBe(0);
 	});
 });
