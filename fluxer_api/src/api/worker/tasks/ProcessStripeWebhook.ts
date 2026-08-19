@@ -10,6 +10,7 @@ import {AgeVerificationService} from '../../stripe/services/AgeVerificationServi
 import {StripeCheckoutService} from '../../stripe/services/StripeCheckoutService';
 import {StripeGiftService} from '../../stripe/services/StripeGiftService';
 import {StripePremiumService} from '../../stripe/services/StripePremiumService';
+import {StripeRefundService} from '../../stripe/services/StripeRefundService';
 import {StripeSubscriptionService} from '../../stripe/services/StripeSubscriptionService';
 import {StripeWebhookService} from '../../stripe/services/StripeWebhookService';
 import type {IUserRepositoryAggregate} from '../../user/repositories/IUserRepositoryAggregate';
@@ -80,6 +81,7 @@ const processStripeWebhook: WorkerTaskHandler = async (payload, helpers) => {
 	const ageVerificationService = deps.stripe
 		? new AgeVerificationService(deps.stripe, deps.userRepository, deps.gatewayService, deps.cacheService)
 		: null;
+	const refundService = new StripeRefundService(deps.stripe, deps.userRepository, subscriptionService);
 	const webhookService = new StripeWebhookService(
 		deps.stripe,
 		checkoutService,
@@ -99,6 +101,7 @@ const processStripeWebhook: WorkerTaskHandler = async (payload, helpers) => {
 		deps.adminRepository,
 		deps.snowflakeService,
 		deps.billingRepository,
+		refundService,
 	);
 	await webhookService.handleWebhook({body, signature});
 };

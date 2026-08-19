@@ -28,6 +28,7 @@ import {StripeGiftReversalHandler} from './StripeGiftReversalHandler';
 import type {StripeGiftService} from './StripeGiftService';
 import {StripePaymentFraudService} from './StripePaymentFraudService';
 import type {StripePremiumService} from './StripePremiumService';
+import type {StripeRefundService} from './StripeRefundService';
 import {StripeSubscriptionReconciler} from './StripeSubscriptionReconciler';
 import {StripeSubscriptionWebhookHandler} from './StripeSubscriptionWebhookHandler';
 
@@ -61,6 +62,7 @@ export class StripeWebhookService {
 		adminRepository: AdminRepository,
 		snowflakeService: ISnowflakeService,
 		private billingRepository: BillingRepository,
+		private refundService: StripeRefundService,
 	) {
 		this.checkoutHandler = new StripeCheckoutWebhookHandler(
 			stripe,
@@ -336,6 +338,7 @@ export class StripeWebhookService {
 						livemode: event.livemode,
 					}),
 				);
+				await this.refundService.handleRefundWebhookEvent(r);
 				break;
 			}
 			case 'invoice.created':

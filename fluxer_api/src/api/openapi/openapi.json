@@ -33253,12 +33253,20 @@
 					"payment_intent_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
 					"charge_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
 					"refund_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"refunded_amount_cents": {"type": "integer", "format": "int53"},
+					"refunded_amount_cents": {
+						"type": "integer",
+						"format": "int53",
+						"description": "Amount actually refunded so far, in the currency minor unit; 0 until the provider confirms success"
+					},
 					"invoice_amount_paid_cents": {"type": "integer", "format": "int53"},
 					"currency": {"type": "string"},
 					"subscription_id": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Subscription that was cancelled along with the refund, when applicable"
+					},
+					"status": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded"
 					}
 				},
 				"required": [
@@ -33269,7 +33277,8 @@
 					"refunded_amount_cents",
 					"invoice_amount_paid_cents",
 					"currency",
-					"subscription_id"
+					"subscription_id",
+					"status"
 				]
 			},
 			"ReadStateAckResponse": {

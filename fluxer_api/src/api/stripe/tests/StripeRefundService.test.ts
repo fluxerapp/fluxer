@@ -8,6 +8,7 @@ import type {
 import {HttpResponse, http} from 'msw';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount, type TestAccount} from '../../auth/tests/AuthTestUtils';
+import {createUserID} from '../../BrandedTypes';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {createStripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
 import {server} from '../../test/msw/server';
@@ -105,18 +106,30 @@ function invoiceListHandler(invoices: ReadonlyArray<MockStripeInvoice>) {
 	});
 }
 
-function refundCreateHandler() {
+function refundCreateHandler(opts?: {
+	status?: 'succeeded' | 'pending' | 'failed';
+	failureReason?: string;
+	onRequest?: (idempotencyKey: string | null) => void;
+}) {
 	return http.post(`${STRIPE_API_BASE}/v1/refunds`, async ({request}) => {
+		opts?.onRequest?.(request.headers.get('idempotency-key'));
 		const formData = await request.formData();
 		const params = Object.fromEntries(formData.entries());
+		const metadata: Record<string, string> = {};
+		for (const [key, value] of Object.entries(params)) {
+			const match = key.match(/^metadata\[(.+)\]$/);
+			if (match) metadata[match[1]] = value as string;
+		}
 		return HttpResponse.json({
 			id: 're_test_self_serve',
 			object: 'refund',
 			amount: Number.parseInt((params.amount as string) ?? '0', 10),
 			currency: 'usd',
-			status: 'succeeded',
+			status: opts?.status ?? 'succeeded',
+			failure_reason: opts?.failureReason ?? null,
 			payment_intent: params.payment_intent ?? null,
 			charge: params.charge ?? null,
+			metadata,
 		});
 	});
 }
@@ -273,6 +286,63 @@ describe('StripeRefundService self-serve refund', () => {
 				.post('/premium/refund-latest')
 				.expect(400, APIErrorCodes.STRIPE_NO_PURCHASE_HISTORY)
 				.execute();
+		});
+		test('does not finalize cooldown or cancel the subscription while the refund is still pending at the provider', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			server.use(
+				invoiceListHandler([buildInvoice({id: 'in_recent', paidAtSecondsAgo: SECONDS_PER_DAY})]),
+				refundCreateHandler({status: 'pending'}),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post('/premium/refund-latest')
+				.execute();
+			expect(response.status).toBe('pending');
+			expect(response.refunded_amount_cents).toBe(0);
+			expect(response.subscription_id).toBeNull();
+			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const updatedUser = await new UserRepository().findUnique(createUserID(BigInt(account.userId)));
+			expect(updatedUser!.firstRefundAt).toBeNull();
+		});
+		test('does not finalize cooldown or cancel the subscription when the refund fails at the provider', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			server.use(
+				invoiceListHandler([buildInvoice({id: 'in_recent', paidAtSecondsAgo: SECONDS_PER_DAY})]),
+				refundCreateHandler({status: 'failed', failureReason: 'unknown'}),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post('/premium/refund-latest')
+				.execute();
+			expect(response.status).toBe('failed');
+			expect(response.refunded_amount_cents).toBe(0);
+			expect(response.subscription_id).toBeNull();
+			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const updatedUser = await new UserRepository().findUnique(createUserID(BigInt(account.userId)));
+			expect(updatedUser!.firstRefundAt).toBeNull();
+		});
+		test('retries with a fresh idempotency key once a prior attempt has failed at the provider', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			server.use(invoiceListHandler([buildInvoice({id: 'in_recent', paidAtSecondsAgo: SECONDS_PER_DAY})]));
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {stripe_customer_id: MOCK_CUSTOMER_ID});
+			const idempotencyKeys: Array<string | null> = [];
+			server.use(refundCreateHandler({status: 'failed', onRequest: (key) => idempotencyKeys.push(key)}));
+			await createBuilder<SelfServeRefundResponse>(harness, account.token).post('/premium/refund-latest').execute();
+			await createBuilder<SelfServeRefundResponse>(harness, account.token).post('/premium/refund-latest').execute();
+			expect(idempotencyKeys).toHaveLength(2);
+			expect(idempotencyKeys[0]).not.toBeNull();
+			expect(idempotencyKeys[1]).not.toBeNull();
+			expect(idempotencyKeys[1]).not.toBe(idempotencyKeys[0]);
+			expect(idempotencyKeys[1]).toContain('retry-1');
 		});
 	});
 });

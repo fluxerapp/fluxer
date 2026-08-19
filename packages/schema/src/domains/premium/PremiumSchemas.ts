@@ -301,13 +301,20 @@ export const SelfServeRefundResponse = z.object({
 	payment_intent_id: z.string().nullable(),
 	charge_id: z.string().nullable(),
 	refund_id: z.string().nullable(),
-	refunded_amount_cents: z.number().int(),
+	refunded_amount_cents: z
+		.number()
+		.int()
+		.describe('Amount actually refunded so far, in the currency minor unit; 0 until the provider confirms success'),
 	invoice_amount_paid_cents: z.number().int(),
 	currency: z.string(),
 	subscription_id: z
 		.string()
 		.nullable()
 		.describe('Subscription that was cancelled along with the refund, when applicable'),
+	status: z
+		.string()
+		.nullable()
+		.describe('Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded'),
 });
 
 export type SelfServeRefundResponse = z.infer<typeof SelfServeRefundResponse>;
