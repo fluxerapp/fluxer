@@ -293,7 +293,7 @@ msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}
 msgstr "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
 
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:52
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:58
 msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{channelHeading}, {mentionCount, plural, one {# omnämning} other {# omnämningar}}"
 
@@ -535,19 +535,19 @@ msgstr "{count, plural, one {Du använder redan den enda tillåtna anslutningen 
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {Du har nått gränsen för # sparade mediaobjekt. Ta bort ett för att lägga till ett annat.} other {Du har nått gränsen för # sparade mediaobjekt. Ta bort ett för att lägga till ett annat.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:395
+#: src/features/invite/commands/InviteCommands.tsx:401
 msgid "{count, plural, one {You're at the limit of # emoji pack. Delete one to create another.} other {You're at the limit of # emoji packs. Delete one to create another.}}"
 msgstr "{count, plural, one {Du har nått gränsen för # emojipaket. Radera ett för att skapa ett nytt.} other {Du har nått gränsen för # emojipaket. Radera ett för att skapa ett nytt.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:381
+#: src/features/invite/commands/InviteCommands.tsx:387
 msgid "{count, plural, one {You're at the limit of # installed emoji pack. Remove one to add another.} other {You're at the limit of # installed emoji packs. Remove one to add another.}}"
 msgstr "{count, plural, one {Du har nått gränsen för # installerat emojipaket. Ta bort ett för att lägga till ett annat.} other {Du har nått gränsen för # installerade emojipaket. Ta bort ett för att lägga till ett annat.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:413
+#: src/features/invite/commands/InviteCommands.tsx:419
 msgid "{count, plural, one {You're at the limit of # installed sticker pack. Remove one to add another.} other {You're at the limit of # installed sticker packs. Remove one to add another.}}"
 msgstr "{count, plural, one {Du har nått gränsen för # installerade dekalpaket. Ta bort ett för att lägga till ett annat.} other {Du har nått gränsen för # installerade dekalpaket. Ta bort ett för att lägga till ett annat.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:427
+#: src/features/invite/commands/InviteCommands.tsx:433
 msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
 msgstr "{count, plural, one {Du har nått gränsen för # stickerpaket. Radera ett för att skapa ett nytt.} other {Du har nått gränsen för # stickerpaket. Radera ett för att skapa ett nytt.}}"
 
@@ -629,7 +629,7 @@ msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "{desktopChannel} Desktop {desktopVersion}"
 
 #. Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:74
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:73
 msgid "{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}"
 msgstr "{deviceCount, plural, one {# enhet vald för utloggning} other {# enheter valda för utloggning}}"
 
@@ -1019,15 +1019,19 @@ msgstr "{PRODUCT_NAME} har hittat en ny ljudingångsenhet som heter <0>{deviceNa
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} har hittat en ny ljudutgångsenhet med namnet <0>{deviceName}</0>. Vill du byta till den?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:111
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} måste startas om innan Chromiums inbyggda rullningsinställningar ändrar hur rullning fungerar."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:190
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "{PRODUCT_NAME} måste startas om för att maskinvaruaccelerationen ska börja gälla."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:192
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:144
+msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
+msgstr "{PRODUCT_NAME} behöver startas om för att ändringen av namnlisten ska börja gälla."
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} måste startas om för att inaktivera Chromiums hårdvaruacceleration. Använd detta endast om du felsöker grafikproblem eller hög GPU-användning."
 
@@ -1084,11 +1088,6 @@ msgstr "{productName} kunde inte ansluta till uppdateringstjänsten. Kontrollera
 #: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "{productName} kunde inte starta om och installera den nedladdade uppdateringen. Försök igen via uppdateringsknappen."
-
-#. Display name for the product desktop client in the authentication handoff approval flow when the raw client name is Electron. Preserve {productName}; it is inserted by code.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:21
-msgid "{productName} Desktop"
-msgstr "{productName} för datorn"
 
 #. Invite page notice shown when automated raid protection pauses invites. productName is the Fluxer product name.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:17
@@ -1233,7 +1232,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} online"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:13
+#: src/features/channel/state/ChannelDisplayName.ts:14
 msgid "{resolvedName}'s group"
 msgstr "Grupp för {resolvedName}"
 
@@ -1977,11 +1976,11 @@ msgstr "En återanvändbar komponent för tomma lägen, fel och statusmeddelande
 msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "en inbäddning eller länkförhandsvisning (inte en uppladdad fil)"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:181
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:166
 msgid "A sign-in request was made for your account. Only approve if you initiated it."
 msgstr "En inloggningsförfrågan gjordes för ditt konto. Godkänn bara om du initierade den."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:179
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:164
 msgid "A sign-in request was made from the following device. Only approve if you recognize it."
 msgstr "En inloggningsförfrågan gjordes från följande enhet. Godkänn bara om du känner igen den."
 
@@ -2036,7 +2035,7 @@ msgid "About you"
 msgstr "Om dig"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
 msgid "Acceleration"
 msgstr "Acceleration"
 
@@ -2233,11 +2232,6 @@ msgstr "Åtgärd med båda ikonerna."
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:37
 msgid "Actions"
 msgstr "Åtgärder"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
-msgid "Activation click"
-msgstr "Aktiveringsklick"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3461,13 +3455,13 @@ msgstr "Animerade emojier, GIF:ar och dekaler är under din kontroll på fliken 
 
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:80
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:81
 #: src/features/messaging/components/modals/MediaViewerModal.tsx:98
 msgid "Animated GIF"
 msgstr "Animerad GIF"
 
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:76
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:77
 msgid "Animated GIF video"
 msgstr "Animerad GIF-video"
 
@@ -3563,7 +3557,7 @@ msgid "Animation picker"
 msgstr "Animeringar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:361
 msgid "Animation playback"
 msgstr "Uppspelning av animeringar"
 
@@ -3582,7 +3576,7 @@ msgid "Animations"
 msgstr "Animationer"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:357
 msgid "Animations while unfocused"
 msgstr "Animationer när appen inte är i fokus"
 
@@ -3844,7 +3838,7 @@ msgstr "Tillämpa på alla grupper"
 msgid "Approval required"
 msgstr "Godkännande krävs"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:223
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:208
 msgid "Approve"
 msgstr "Godkänn"
 
@@ -4482,7 +4476,7 @@ msgid "Automatic message reading"
 msgstr "Automatisk meddelandeläsning"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "Automatisk start"
 
@@ -5276,7 +5270,7 @@ msgid "Boost"
 msgstr "Boosta"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
 msgid "Boot"
 msgstr "Starta om"
 
@@ -5408,7 +5402,7 @@ msgid "Bottom tooltip"
 msgstr "Nedre verktygstips"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
 msgid "Bounds"
 msgstr "Gränser"
 
@@ -7148,7 +7142,7 @@ msgstr "Rensa bilagemockar"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Rensa kommando"
@@ -7210,7 +7204,7 @@ msgstr "Rensa sökfält"
 #. Button or menu action label in the devices tab. Keep it concise.
 #: src/features/ui/components/form/FormCombobox.tsx:91
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:62
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:61
 msgid "Clear selection"
 msgstr "Rensa markering"
 
@@ -7287,11 +7281,6 @@ msgstr "Klicka på texten nedan för att redigera den direkt. Tryck på Enter f�
 msgid "Click the upload icon next to any sound to customize it with your own audio file. Max {customSoundMaxSizeLabel}."
 msgstr "Klicka på uppladdningsikonen bredvid varje ljud för att anpassa det med din egen ljudfil. Max {customSoundMaxSizeLabel}."
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
-msgid "Click through"
-msgstr "Klicka dig vidare"
-
 #. Label in the user profile modal.
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:23
 msgid "Click to add a note"
@@ -7331,7 +7320,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "Klicka för att öppna färgväljaren och välja en ny färg."
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:80
+#: src/features/channel/components/MessageActionBar.tsx:79
 msgid "Click to react"
 msgstr "Klicka för att reagera"
 
@@ -7354,7 +7343,7 @@ msgstr "Klicka för att visa spoiler"
 msgid "Click to view all reactions"
 msgstr "Klicka för att se alla reaktioner"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:146
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:143
 msgid "Client"
 msgstr "Klient"
 
@@ -7465,7 +7454,7 @@ msgstr "Stäng till menyraden"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:262
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "Stäng till aktivitetsfältet"
 
@@ -7592,7 +7581,7 @@ msgid "Codes"
 msgstr "Koder"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:61
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:67
 msgid "Collapse"
 msgstr "Fäll ihop"
 
@@ -7635,7 +7624,7 @@ msgid "Collapse inline DM list"
 msgstr "Fäll ihop DM-listan"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:69
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:75
 msgid "Collapse unread messages for {channelHeading}"
 msgstr "Fäll ihop olästa meddelanden för {channelHeading}"
 
@@ -8072,7 +8061,7 @@ msgid "Completely hide your {premiumProductName} badge from other users"
 msgstr "Dölj din {premiumProductName}-bricka helt för andra användare"
 
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:134
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:233
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:218
 msgid "Completing sign-in…"
 msgstr "Loggar in…"
 
@@ -8484,7 +8473,7 @@ msgstr "Snabbmenyer kan öppnas med vänsterklick (på knappar) eller högerklic
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:162
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:119
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
@@ -9179,7 +9168,7 @@ msgid "Couldn't join community"
 msgstr "Kunde inte gå med i communityn"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:13
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
 msgid "Couldn't join this community"
 msgstr "Kunde inte gå med i den här communityn"
 
@@ -9926,7 +9915,7 @@ msgid "Current community"
 msgstr "Aktuell community"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:428
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:430
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:27
 msgid "Current device"
 msgstr "Den här enheten"
@@ -9941,7 +9930,7 @@ msgstr "Nuvarande DM"
 msgid "Current ping:"
 msgstr "Aktuell ping:"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:177
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:174
 msgid "Current session"
 msgstr "Nuvarande session"
 
@@ -10130,7 +10119,7 @@ msgid "Custom themes"
 msgstr "Anpassade teman"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
 msgid "Custom title bar"
 msgstr "Anpassad namnlist"
 
@@ -10466,7 +10455,7 @@ msgstr "Felsök medlem"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:92
+#: src/features/channel/components/MessageActionBar.tsx:91
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -10963,7 +10952,7 @@ msgstr "Kompakt layout"
 
 #. Short label in the settings dialog permission components. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/shared/PermissionComponents.tsx:16
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:220
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:205
 msgid "Deny"
 msgstr "Neka"
 
@@ -11082,7 +11071,7 @@ msgid "Desktop notifications have been blocked. You can enable them later in you
 msgstr "Skrivbordsaviseringar har blockerats. Du kan aktivera dem senare i webbläsarinställningarna, i användarinställningarna eller i {notificationSettingsPath}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
 msgid "Desktop startup"
 msgstr "Skrivbordsstart"
 
@@ -11119,7 +11108,7 @@ msgstr "En ny version för datorn, {version}, är tillgänglig. Ladda ner instal
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Desktop window"
 msgstr "Skrivbordsfönster"
@@ -11215,7 +11204,7 @@ msgid "Development build"
 msgstr "Utvecklingsversion"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:139
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:136
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:37
 msgid "Device"
 msgstr "Enhet"
@@ -11230,7 +11219,7 @@ msgstr "Enhetsaviseringar"
 msgid "Device controls"
 msgstr "Enhetskontroller"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:134
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "Enhetsinformation"
 
@@ -11259,7 +11248,7 @@ msgstr "Enhet:"
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:528
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:62
@@ -11434,7 +11423,7 @@ msgid "Disable hardware acceleration and restart"
 msgstr "Inaktivera maskinvaruacceleration och starta om"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
 msgid "Disable hardware acceleration?"
 msgstr "Inaktivera maskinvaruacceleration?"
 
@@ -13005,7 +12994,7 @@ msgid "Enable hardware acceleration and restart"
 msgstr "Aktivera maskinvaruacceleration och starta om"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
 msgid "Enable hardware acceleration?"
 msgstr "Aktivera maskinvaruacceleration?"
 
@@ -13430,7 +13419,7 @@ msgstr "Ange den {digitCount}-siffriga koden från din autentiseringsapp."
 msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "Ange den {digitCount}-siffriga koden som skickats till {phoneNumber}."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:128
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 msgid "Enter the code"
 msgstr "Ange koden"
 
@@ -13457,7 +13446,7 @@ msgstr "Ange koden som skickats till din nuvarande e-postadress."
 msgid "Enter the code sent to your email address."
 msgstr "Ange koden som skickats till din e-postadress."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:131
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:121
 msgid "Enter the code shown in the app to continue."
 msgstr "Ange koden som visas i appen för att fortsätta."
 
@@ -13501,7 +13490,7 @@ msgstr "Ange SMS-koden"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Ange den här koden i din webbläsare för att slutföra inloggningen."
 
-#: src/features/channel/components/EditingMessageInput.tsx:366
+#: src/features/channel/components/EditingMessageInput.tsx:355
 msgid "enter to <0><1>save</1></0>"
 msgstr "tryck på retur för att <0><1>spara</1></0>"
 
@@ -13642,7 +13631,7 @@ msgstr "Escape-tangent"
 msgid "Escape key exits keyboard mode"
 msgstr "Esc-tangenten avslutar tangentbordsläget"
 
-#: src/features/channel/components/EditingMessageInput.tsx:347
+#: src/features/channel/components/EditingMessageInput.tsx:336
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "escape för att <0><1>avbryta</1></0>"
 
@@ -13736,7 +13725,7 @@ msgid "Excluded search filter: {filter}"
 msgstr "Exkluderat sökfilter: {filter}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:270
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Exit"
 msgstr "Avsluta"
 
@@ -13764,7 +13753,7 @@ msgid "Exit preview"
 msgstr "Avsluta förhandsvisning"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:57
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:63
 msgid "Expand"
 msgstr "Visa fler"
 
@@ -13796,7 +13785,7 @@ msgid "Expand or collapse compact call view"
 msgstr "Expandera eller minimera kompakt samtalsvy"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:65
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:71
 msgid "Expand unread messages for {channelHeading}"
 msgstr "Visa olästa meddelanden för {channelHeading}"
 
@@ -14707,18 +14696,6 @@ msgstr "Finska"
 msgid "First and last name"
 msgstr "För- och efternamn"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
-msgid "First click"
-msgstr "Första klicket"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
-msgid "First click pass-through when unfocused"
-msgstr "Klicka igenom när appen inte är i fokus"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "Första alternativet"
@@ -14752,11 +14729,6 @@ msgstr "Fluxer"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:179
 msgid "Focus"
 msgstr "Fokus"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
-msgid "Focus click"
-msgstr "Fokusera klick"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -15048,7 +15020,7 @@ msgstr "vidarebefordrat"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:100
+#: src/features/channel/components/MessageActionBar.tsx:99
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -15095,7 +15067,7 @@ msgid "FPS"
 msgstr "FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
 msgid "Frame"
 msgstr "Ram"
 
@@ -15870,7 +15842,7 @@ msgid "Granular selection"
 msgstr "Detaljerat urval"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
 msgid "Graphics"
 msgstr "Grafik"
 
@@ -16096,12 +16068,12 @@ msgid "Harassment or threats"
 msgstr "Trakasserier eller hot"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
 msgid "Hardware"
 msgstr "Maskinvara"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
 msgid "Hardware acceleration"
 msgstr "Maskinvaruacceleration"
 
@@ -16424,7 +16396,7 @@ msgid "Hide preview thumbnail"
 msgstr "Dölj förhandsgranskningens miniatyrbild"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:258
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "Dölj fönstret när det minimeras och öppna igen från aktivitetsfältet"
 
@@ -16444,7 +16416,7 @@ msgid "Hide Visionary ID badge ({premiumLifetimeSequenceLabel})"
 msgstr "Dölj Visionary ID-bricka ({premiumLifetimeSequenceLabel})"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:254
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
 msgid "Hide window"
 msgstr "Dölj fönster"
 
@@ -16518,7 +16490,7 @@ msgstr "Håll ned {keyboardShortcut} medan du väljer den här åtgärden för a
 msgid "Hold for instant upload"
 msgstr "Håll för direkt uppladdning"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:439
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:441
 msgid "Hold Shift and press X to mark devices for sign out. Press {selectAllShortcutLabel} to select all."
 msgstr "Håll ned Shift och tryck på X för att markera enheter för utloggning. Tryck på {selectAllShortcutLabel} för att markera alla."
 
@@ -16568,7 +16540,7 @@ msgid "Hover buttons"
 msgstr "Flytande knappar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:365
 msgid "Hover effects"
 msgstr "Hovringseffekter"
 
@@ -17247,7 +17219,7 @@ msgstr "Inkorgsflikar"
 msgid "Include {mentionType} mentions"
 msgstr "Inkludera omnämnanden av typen {mentionType}"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:127
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:126
 msgid "Include all community mentions"
 msgstr "Inkludera alla omnämningar i gruppen"
 
@@ -17945,7 +17917,7 @@ msgstr "Inbjudningar till {communityName} är för närvarande inaktiverade efte
 msgid "Invoice"
 msgstr "Faktura"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:163
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:160
 msgid "IP address"
 msgstr "IP-adress"
 
@@ -17974,7 +17946,7 @@ msgid "It may have been deleted. The name was reverted to what it was before."
 msgstr "Den kan ha raderats. Namnet återställdes till vad det var tidigare."
 
 #. Body of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:50
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:51
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "Den kan ha lämnat upptäcktsfunktionen eller stängt av nya anslutningar. Uppdatera sidan så ser du den inte igen."
 
@@ -18133,7 +18105,7 @@ msgstr "Gick med i {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:494
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:203
 msgid "Jump"
 msgstr "Hoppa till"
 
@@ -18248,7 +18220,7 @@ msgid "Just join (keep other connections)"
 msgstr "Anslut bara (behåll andra anslutningar)"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:278
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Keep {productName} running when the window is closed"
 msgstr "Behåll {productName} igång när fönstret stängs"
 
@@ -18257,10 +18229,12 @@ msgstr "Behåll {productName} igång när fönstret stängs"
 msgid "Keep all messages"
 msgstr "Behåll alla meddelanden"
 
+#. Description text in the motion tab.
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
-msgid "Keep animations, GIFs, hover, and tooltips running unfocused"
-msgstr "Låt animationer, GIF:ar, hovereffekter och verktygstips fortsätta även när fönstret inte är i fokus."
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:39
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:377
+msgid "Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused."
+msgstr "Behåll animationer, GIF-uppspelning, hovringseffekter och verktygstips aktiva när fönstret är i bakgrunden."
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:314
@@ -18277,7 +18251,7 @@ msgid "Keep Neko still"
 msgstr "Håll Neko stilla"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:266
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Keep running"
 msgstr "Fortsätt köra"
 
@@ -18296,7 +18270,7 @@ msgid "Keep transmitting briefly after release."
 msgstr "Fortsätt sända en kort stund efter att knappen släppts."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
 msgid "Keep window dimensions and placement between reloads"
 msgstr "Behåll fönstrets storlek och placering mellan omstarter"
 
@@ -18443,7 +18417,7 @@ msgstr "Senast ändrad: {0}"
 msgid "Last changed: never"
 msgstr "Senast ändrad: aldrig"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:173
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:170
 msgid "Last used"
 msgstr "Senast använt"
 
@@ -18459,11 +18433,13 @@ msgstr "Latensgraf"
 
 #. Button label that dismisses the update modal without taking action.
 #. Short confirmation button label in advanced settings.
+#. Short confirmation button label in advanced settings.
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
 msgid "Later"
 msgstr "Senare"
@@ -18476,12 +18452,12 @@ msgstr "Lettland"
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "Starta {productName} vid inloggning"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
 msgid "Launch at login"
 msgstr "Starta vid inloggning"
 
@@ -18619,11 +18595,6 @@ msgstr "Låt botar i den här communityn skicka direktmeddelanden till dig"
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:21
 msgid "Let every incoming message be spoken, regardless of which channel is open."
 msgstr "Läs upp alla inkommande meddelanden, oavsett vilken kanal som är öppen."
-
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
-msgid "Let focus clicks activate controls."
-msgstr "Låt klick aktivera kontroller när fönstret har fokus."
 
 #. Toggle label in the community privacy modal: allow DMs from non-friend members of this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
@@ -18952,7 +18923,7 @@ msgid "Loading invites..."
 msgstr "Laddar inbjudningar..."
 
 #. Placeholder text in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:72
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:73
 msgid "Loading placeholder"
 msgstr "Laddar platshållare"
 
@@ -19081,8 +19052,8 @@ msgstr "Lokaliserad utcheckning för TRY-present"
 msgid "Localized TRY subscription checkout"
 msgstr "Kassa för prenumeration i TRY"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:209
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:194
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:151
 msgid "Location"
 msgstr "Plats"
 
@@ -20048,7 +20019,7 @@ msgid "Mentions only"
 msgstr "Endast omnämnanden"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
 msgid "Menu bar"
 msgstr "Menyfält"
 
@@ -20135,7 +20106,7 @@ msgstr "Meddelandet innehåller bifogad media"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:84
+#: src/features/channel/components/MessageActionBar.tsx:83
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
@@ -20439,12 +20410,12 @@ msgid "Military time"
 msgstr "24-timmarsklocka"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:250
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
 msgid "Minimise"
 msgstr "Minimera"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:246
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
 msgid "Minimize"
 msgstr "Minimera"
 
@@ -20454,7 +20425,7 @@ msgstr "Minimera till menyraden"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:242
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Minimera till aktivitetsfältet"
 
@@ -20668,7 +20639,7 @@ msgstr "Månatlig gåva"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:88
+#: src/features/channel/components/MessageActionBar.tsx:87
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "Mer"
@@ -21274,7 +21245,7 @@ msgid "Narration"
 msgstr "Berättarröst"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
 msgid "Native title bar"
 msgstr "Inbyggd namnlist"
 
@@ -21353,7 +21324,7 @@ msgid "Network"
 msgstr "Nätverk"
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:54
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:53
 msgid "Network error"
 msgstr "Nätverksfel"
 
@@ -21876,7 +21847,7 @@ msgstr "Inga matchningar"
 msgid "No matches found"
 msgstr "Inga träffar"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:345
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:344
 msgid "No mentions yet"
 msgstr "Inga omnämnanden än"
 
@@ -22125,7 +22096,7 @@ msgid "No trusted domains"
 msgstr "Inga betrodda domäner"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:81
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:87
 msgid "No unread messages"
 msgstr "Inga olästa meddelanden"
 
@@ -22323,7 +22294,7 @@ msgid "Notification"
 msgstr "Avisering"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:234
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
 msgid "Notification area"
 msgstr "Meddelandefält"
 
@@ -22725,14 +22696,14 @@ msgstr "Öppna avancerade medieinställningar"
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:70
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:64
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:65
 msgid "Open animated GIF in full view"
 msgstr "Öppna animerad GIF i helskärm"
 
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:66
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:60
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:61
 msgid "Open animated GIF video in full view"
 msgstr "Öppna animerad GIF-video i helskärm"
 
@@ -22925,7 +22896,7 @@ msgstr "Öppna bild i webbläsare"
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #. Button or menu action label in the channel and chat embed image. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:74
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:68
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:69
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:40
 msgid "Open image in full view"
 msgstr "Öppna bild i helskärm"
@@ -23167,7 +23138,7 @@ msgstr "Öppnar sidan Medlemmar. Tryck på mellanslag eller Enter för att öppn
 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:199
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:184
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:77
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:107
 msgid "Operating system"
@@ -23273,7 +23244,7 @@ msgid "Other"
 msgstr "Annat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:433
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:435
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:31
 msgid "Other devices"
 msgstr "Andra enheter"
@@ -23754,7 +23725,7 @@ msgid "Per-window audio isn't available on this build of macOS."
 msgstr "Ljud per fönster är inte tillgängligt i den här versionen av macOS."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
 msgid "Performance"
 msgstr "Prestanda"
 
@@ -24114,7 +24085,7 @@ msgstr "Vanlig text"
 msgid "Plan"
 msgstr "Plan"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:189
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:174
 msgid "Platform"
 msgstr "Plattform"
 
@@ -24185,7 +24156,7 @@ msgstr "Spelas trots minskad rörelse."
 #. Body of the error modal shown when joining a discovery community is rate limited.
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:59
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:60
 #: src/features/theme/components/modals/ShareThemeModal.tsx:67
 msgid "Please wait a moment and try again."
 msgstr "Vänta en stund och försök igen."
@@ -24270,12 +24241,12 @@ msgid "Portuguese (Brazil)"
 msgstr "Portugisiska (Brasilien)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
 msgid "Position"
 msgstr "Position"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:373
 msgid "Power saving"
 msgstr "Strömsparläge"
 
@@ -25143,7 +25114,7 @@ msgid "Quiet"
 msgstr "Tyst"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:274
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Quit"
 msgstr "Avsluta"
 
@@ -25702,7 +25673,7 @@ msgid "Remain silent unless someone runs /tts manually."
 msgstr "Förbli tyst om inte någon kör /tts manuellt."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
 msgid "Remember size & position"
 msgstr "Kom ihåg storlek och position"
 
@@ -25711,7 +25682,7 @@ msgid "Remember this preference"
 msgstr "Kom ihåg det här valet"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
 msgid "Remember window"
 msgstr "Kom ihåg fönster"
 
@@ -26803,10 +26774,12 @@ msgid "Restart {productName} to use screen sharing"
 msgstr "Starta om {productName} för att använda skärmdelning"
 
 #. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
+#. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
 #. Confirmation prompt in the desktop settings tab. Preserve {productName}; it is inserted by code.
 #. Confirmation title after changing desktop transparency in Theme Studio.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
 msgid "Restart {productName}?"
 msgstr "Starta om {productName}?"
@@ -26816,8 +26789,8 @@ msgstr "Starta om {productName}?"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
 msgid "Restart now"
 msgstr "Starta om nu"
@@ -27005,7 +26978,7 @@ msgstr "Återkalla avstängning"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the devices tab. Keep it concise.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:46
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:45
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:59
 msgid "Revoke device"
 msgstr "Återkalla enhet"
@@ -27199,12 +27172,12 @@ msgid "Rows per page"
 msgstr "Rader per sida"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
 msgid "Run {productName} automatically when your computer starts"
 msgstr "Kör {productName} automatiskt när datorn startar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
 msgid "Run at login"
 msgstr "Kör vid inloggning"
 
@@ -29126,7 +29099,7 @@ msgid "Show {appName}"
 msgstr "Visa {appName}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:238
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
 msgid "Show a {productName} icon in the system tray or menu bar"
 msgstr "Visa en {productName}-ikon i meddelandefältet eller menyraden"
 
@@ -29527,7 +29500,7 @@ msgid "Show this role separately"
 msgstr "Visa den här rollen separat"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
 msgid "Show tray icon"
 msgstr "Visa ikon i aktivitetsfältet"
 
@@ -29626,15 +29599,15 @@ msgid "Sign out"
 msgstr "Logga ut"
 
 #. Danger button in the devices tab. Signs out the currently selected devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:70
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:69
 msgid "Sign out {deviceCount, plural, one {# device} other {# devices}}"
 msgstr "Logga ut {deviceCount, plural, one {# enhet} other {# enheter}}"
 
 #. Security modal title for revoking every saved login session except the current one.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:14
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:459
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:502
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:461
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:504
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:43
 msgid "Sign out all other devices"
 msgstr "Logga ut från alla andra enheter"
@@ -29653,12 +29626,12 @@ msgstr "Logga ut andra enheter från ditt konto"
 msgid "Sign out?"
 msgstr "Logga ut?"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:251
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:236
 msgid "Sign-in approved"
 msgstr "Inloggning godkänd"
 
 #. Short label in the authentication handoff approval flow. Keep the tone plain and specific.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:17
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:16
 msgid "Sign-in code"
 msgstr "Inloggningskod"
 
@@ -29678,7 +29651,7 @@ msgstr "Inloggningsuppgifter"
 msgid "Sign-in flow"
 msgstr "Inloggningsflöde"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:104
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:94
 msgid "Sign-in request"
 msgstr "Inloggningsförfrågan"
 
@@ -29693,7 +29666,7 @@ msgid "Signed in"
 msgstr "Inloggad"
 
 #. Settings section label for account sessions and devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:515
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:517
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Signed-in devices"
 msgstr "Inloggade enheter"
@@ -29792,7 +29765,7 @@ msgstr "Webbplatsnyckel"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:174
 msgid "Size"
 msgstr "Storlek"
@@ -29848,7 +29821,7 @@ msgid "Skip this step"
 msgstr "Hoppa över det här steget"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:76
+#: src/app/App.tsx:70
 msgid "Skip to content"
 msgstr "Hoppa till innehåll"
 
@@ -30122,7 +30095,7 @@ msgstr "något"
 
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:263
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:248
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
@@ -30231,7 +30204,7 @@ msgstr "Något gick fel."
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:17
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:18
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
@@ -30755,12 +30728,12 @@ msgid "Start voice call"
 msgstr "Starta röstsamtal"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
 msgid "Start with computer"
 msgstr "Starta med datorn"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
 msgid "Startup"
 msgstr "Start"
 
@@ -30779,7 +30752,7 @@ msgid "Status"
 msgstr "Status"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:230
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
 msgid "Status icon"
 msgstr "Statusikon"
 
@@ -30795,10 +30768,12 @@ msgstr "Statusfält"
 msgid "Status:"
 msgstr "Status:"
 
+#. Label in the motion tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
+#. Short label for an advanced app interaction toggle.
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:345
 msgid "Stay fully interactive when unfocused"
 msgstr "Förbli helt interaktiv när appen inte är i fokus"
 
@@ -31654,7 +31629,7 @@ msgid "System time format"
 msgstr "Systemets tidsformat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
 msgid "System tray"
 msgstr "Aktivitetsfältet"
 
@@ -32041,7 +32016,7 @@ msgstr "Appen kraschade"
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Appen har kraschat. Söker efter uppdateringar som kan lösa problemet…"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:254
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:239
 msgid "The app should now be signed in to your account."
 msgstr "Du bör nu vara inloggad på ditt konto i appen."
 
@@ -32514,7 +32489,7 @@ msgid "This community has reached its maximum member limit and is not accepting 
 msgstr "Den här gruppen har nått sin maxgräns för medlemmar och kan inte ta emot nya just nu."
 
 #. Body of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:25
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:26
 msgid "This community has reached its member limit, so you can't join right now."
 msgstr "Den här gruppen har nått sin medlemsgräns, så du kan inte gå med just nu."
 
@@ -32524,7 +32499,7 @@ msgid "This community is for Visionary members"
 msgstr "Den här communityn är för Visionary-medlemmar"
 
 #. Title of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:21
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:22
 msgid "This community is full"
 msgstr "Den här communityn är full"
 
@@ -32535,7 +32510,7 @@ msgid "This community is marked for mature content and may contain material that
 msgstr "Den här communityn är markerad för moget innehåll och kan innehålla material som kan vara olämpligt för vissa användare."
 
 #. Title of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:45
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:46
 msgid "This community is no longer available"
 msgstr "Den här communityn är inte längre tillgänglig"
 
@@ -33285,12 +33260,12 @@ msgid "Tip"
 msgstr "Tips"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
 msgid "Title bar"
 msgstr "Titelrad"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
 msgid "Titlebar"
 msgstr "Fält för titel"
 
@@ -33356,7 +33331,7 @@ msgid "Toggle embed suppression"
 msgstr "Växla inbäddningsundertryckning"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
 msgid "Toggle hardware acceleration"
 msgstr "Växla maskinvaruacceleration"
 
@@ -33486,7 +33461,7 @@ msgstr "Verktygsfältets genvägar"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:62
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:369
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:366
 msgid "Tooltips"
 msgstr "Verktygstips"
@@ -33592,12 +33567,12 @@ msgid "Travel & places"
 msgstr "Resor och platser"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
 msgid "Tray"
 msgstr "Fack"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
 msgid "Tray icon"
 msgstr "Meddelandeikon"
 
@@ -34306,7 +34281,7 @@ msgid "Unfocus"
 msgstr "Avfokusera"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:349
 msgid "Unfocused"
 msgstr "Ofokuserad"
 
@@ -34369,7 +34344,7 @@ msgstr "Okänd kanal"
 #. Short label in the entrance sound section. Keep it concise.
 #. Short label in the recent mentions content popout. Keep it concise.
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:77
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:83
 #: src/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds.ts:24
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:44
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:43
@@ -34386,7 +34361,7 @@ msgstr "Okänt datum"
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:43
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:66
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
 msgstr "Okänd enhet"
@@ -34649,7 +34624,7 @@ msgstr "Namnlös kanal"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:18
+#: src/features/channel/state/ChannelDisplayName.ts:19
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "Namnlös grupp"
@@ -34824,7 +34799,7 @@ msgstr "Filformatet för dekalen stöds inte"
 #. Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionBar.tsx:96
+#: src/features/channel/components/MessageActionBar.tsx:95
 #: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
@@ -35346,7 +35321,7 @@ msgstr "Använd animerade emojier"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop scrolling toggle.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:313
 msgid "Use autoscrolling"
 msgstr "Använd automatisk rullning"
@@ -35435,7 +35410,7 @@ msgid "Use global profile"
 msgstr "Använd global profil"
 
 #. Short label for an advanced desktop troubleshooting preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
 msgid "Use hardware acceleration"
 msgstr "Använd maskinvaruacceleration"
 
@@ -35481,8 +35456,8 @@ msgstr "Använd lokalt kort för att verifiera ett kort som utfärdats i ditt fa
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
 msgid "Use native title bar"
 msgstr "Använd systemets namnlist"
 
@@ -35531,7 +35506,7 @@ msgid "Use system-wide push-to-talk and shortcuts."
 msgstr "Använd systemomfattande push-to-talk och genvägar."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
 msgid "Use the operating system's window chrome"
 msgstr "Använd operativsystemets fönsterram"
 
@@ -36150,7 +36125,7 @@ msgstr "Verifiera din e-postadress för att starta direktmeddelanden."
 msgid "Verifying card"
 msgstr "Verifierar kort"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:144
 msgid "Verifying code…"
 msgstr "Verifierar kod…"
 
@@ -36351,7 +36326,7 @@ msgid "View all roles for {displayName}"
 msgstr "Visa alla roller för {displayName}"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:73
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:79
 msgid "View all unread"
 msgstr "Visa alla olästa"
 
@@ -36412,7 +36387,7 @@ msgstr "Visa communityprofil"
 #. Tooltip and accessibility label for opening a linked device details modal.
 #: src/features/guild/components/modals/guild_tabs/BannedUserActionsSheet.tsx:18
 #: src/features/ui/action_menu/BannedUserContextMenu.tsx:45
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:50
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:49
 msgid "View details"
 msgstr "Visa detaljer"
 
@@ -36940,7 +36915,7 @@ msgstr "Väntar på att du ska..."
 msgid "Warning"
 msgstr "Varning"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:175
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:160
 msgid "Was this you?"
 msgstr "Var det du?"
 
@@ -37151,7 +37126,7 @@ msgid "We'll verify your new email with a one-time code."
 msgstr "Vi verifierar din nya e-postadress med en engångskod."
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:58
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:57
 msgid "We're having trouble connecting to the space-time continuum. Check your connection and try again."
 msgstr "Vi har problem med att ansluta till rumtidskontinuumet. Kontrollera din anslutning och försök igen."
 
@@ -37565,7 +37540,7 @@ msgstr "Win"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Top-level native menu bar title (Window menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts:70
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
 msgid "Window"
 msgstr "Fönster"
 
@@ -37576,32 +37551,32 @@ msgid "Window"
 msgstr "Fönster"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
 msgid "Window chrome"
 msgstr "Fönsterram"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
 msgid "Window decorations"
 msgstr "Fönsterdekorationer"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:353
 msgid "Window focus"
 msgstr "Fönsterfokus"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
 msgid "Window position"
 msgstr "Fönsterposition"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
 msgid "Window size"
 msgstr "Fönsterstorlek"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
 msgid "Window state"
 msgstr "Fönsterläge"
 
@@ -37746,7 +37721,7 @@ msgstr "Du har redan livstidsabonnemang på {premiumProductName}"
 msgid "You already have this connection."
 msgstr "Du har redan den här anslutningen."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:107
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:97
 msgid "You are about to authorize an app to sign in to your account. Only continue if you initiated this request from a device you control."
 msgstr "Du är på väg att auktorisera en app att logga in på ditt konto. Fortsätt bara om du initierade denna begäran från en enhet du kontrollerar."
 
@@ -37939,7 +37914,7 @@ msgid "You can't install this sticker pack."
 msgstr "Du kan inte installera det här dekalpaketet."
 
 #. Title of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:37
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:38
 msgid "You can't join this community"
 msgstr "Du kan inte gå med i den här communityn"
 
@@ -38136,7 +38111,7 @@ msgid "You don't have permission to rename this emoji. The name was reverted to 
 msgstr "Du har inte behörighet att byta namn på den här emojin. Namnet återställdes till det tidigare."
 
 #. Body of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:41
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
 msgid "You have been banned from this community."
 msgstr "Du har blivit avstängd från den här communityn."
 
@@ -38352,7 +38327,7 @@ msgstr "Du får inga aviseringar på datorn"
 msgid "You'll appear offline"
 msgstr "Du visas som offline"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:462
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Du måste logga in igen på alla utloggade enheter"
 
@@ -38368,7 +38343,7 @@ msgstr "Du är på väg att sluta dela din röstaktivitet med alla dina vänner,
 
 #. Body text in the unread channels content.
 #. End-of-list text in the recent mentions page when every mention has been seen.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:85
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:91
 #: src/features/messaging/components/pages/RecentMentionsPage.tsx:40
 msgid "You're all caught up."
 msgstr "Du är ajour."
@@ -38467,7 +38442,7 @@ msgstr "Du redigerar meddelanden för snabbt"
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:9
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:23
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:55
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:56
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:76
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:148
 #: src/features/theme/components/modals/ShareThemeModal.tsx:63
@@ -38494,7 +38469,7 @@ msgid "You're in the call"
 msgstr "Du är med i samtalet"
 
 #. Body of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:33
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:34
 msgid "You're in the maximum number of communities. Leave one and try again."
 msgstr "Du är med i maximalt antal communityn. Lämna ett och försök igen."
 
@@ -38574,7 +38549,7 @@ msgid "You've got CSS!"
 msgstr "Du har CSS!"
 
 #. Title of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:29
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:30
 msgid "You've reached the community limit"
 msgstr "Du har nått gränsen för antal communityn"
 
@@ -38583,7 +38558,7 @@ msgstr "Du har nått gränsen för antal communityn"
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:62
 #: src/features/messaging/components/pages/MessageListPage.tsx:25
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:406
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:405
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:37
 msgid "You've reached the end"
 msgstr "Du har nått slutet"
@@ -38627,7 +38602,7 @@ msgstr "Du har fått en present"
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "Du har begärt för många verifieringsmejl. Vänta en stund och försök igen."
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:409
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:408
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Du har sett alla dina senaste omnämnanden. Fler kommer att visas här snart."
 

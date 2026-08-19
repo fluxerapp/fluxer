@@ -293,7 +293,7 @@ msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}
 msgstr "{categoryLabel}，{count, plural, other {# 個社群}}"
 
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:52
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:58
 msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{channelHeading}，{mentionCount, plural, one {# 則提及} other {# 則提及}}"
 
@@ -535,19 +535,19 @@ msgstr "{count, plural, one {您已在使用此語音頻道允許的一個連線
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {您已達到儲存媒體項目的上限。請移除一個以新增另一個。} other {您已達到儲存媒體項目的上限。請移除一個以新增另一個。}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:395
+#: src/features/invite/commands/InviteCommands.tsx:401
 msgid "{count, plural, one {You're at the limit of # emoji pack. Delete one to create another.} other {You're at the limit of # emoji packs. Delete one to create another.}}"
 msgstr "{count, plural, one {您已達到表情符號包的數量上限。請刪除一個以建立新的。} other {您已達到表情符號包的數量上限。請刪除一個以建立新的。}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:381
+#: src/features/invite/commands/InviteCommands.tsx:387
 msgid "{count, plural, one {You're at the limit of # installed emoji pack. Remove one to add another.} other {You're at the limit of # installed emoji packs. Remove one to add another.}}"
 msgstr "{count, plural, one {您已達到 # 個已安裝表情符號包的上限。請移除一個以新增另一個。} other {您已達到 # 個已安裝表情符號包的上限。請移除一個以新增另一個。}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:413
+#: src/features/invite/commands/InviteCommands.tsx:419
 msgid "{count, plural, one {You're at the limit of # installed sticker pack. Remove one to add another.} other {You're at the limit of # installed sticker packs. Remove one to add another.}}"
 msgstr "{count, plural, one {您已達到 # 個貼圖包的安裝上限。請移除一個以新增其他貼圖包。} other {您已達到 # 個貼圖包的安裝上限。請移除一個以新增其他貼圖包。}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:427
+#: src/features/invite/commands/InviteCommands.tsx:433
 msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
 msgstr "{count, plural, one {您已達到貼圖包數量上限。請刪除一個以建立新的。} other {您已達到貼圖包數量上限。請刪除一個以建立新的。}}"
 
@@ -629,7 +629,7 @@ msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "{desktopChannel} 電腦版 {desktopVersion}"
 
 #. Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:74
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:73
 msgid "{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}"
 msgstr "{deviceCount, plural, one {# 已選取 1 個裝置以供登出} other {# 已選取 {deviceCount} 個裝置以供登出}}"
 
@@ -1019,15 +1019,19 @@ msgstr "{PRODUCT_NAME} 偵測到新的音訊輸入裝置 <0>{deviceName}</0>。�
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} 偵測到新的音訊輸出裝置，名稱為 <0>{deviceName}</0>。要切換到這個裝置嗎？"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:111
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} 需要重新啟動，Chromium 的原生捲動設定才會變更捲動方式。"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:190
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "硬體加速功能需要重新啟動 {PRODUCT_NAME} 才會生效。"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:192
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:144
+msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
+msgstr "{PRODUCT_NAME} 需要重新啟動才能套用標題列的變更。"
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} 需要重新啟動才能停用 Chromium 的硬體加速。僅在您正在排解圖形故障或 GPU 使用率過高的問題時才使用此功能。"
 
@@ -1084,11 +1088,6 @@ msgstr "{productName} 無法連線到更新服務。請檢查您的網路連線�
 #: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "{productName} 無法重新啟動以安裝下載的更新。請從「更新」按鈕再次嘗試。"
-
-#. Display name for the product desktop client in the authentication handoff approval flow when the raw client name is Electron. Preserve {productName}; it is inserted by code.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:21
-msgid "{productName} Desktop"
-msgstr "{productName} 電腦版"
 
 #. Invite page notice shown when automated raid protection pauses invites. productName is the Fluxer product name.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:17
@@ -1233,7 +1232,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} 位在線上"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:13
+#: src/features/channel/state/ChannelDisplayName.ts:14
 msgid "{resolvedName}'s group"
 msgstr "{resolvedName} 的群組"
 
@@ -1977,11 +1976,11 @@ msgstr "用於空白狀態、錯誤和狀態訊息的可重複使用元件。"
 msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "豐富的嵌入內容或連結預覽（非上傳檔案）"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:181
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:166
 msgid "A sign-in request was made for your account. Only approve if you initiated it."
 msgstr "有人嘗試登入您的帳號。請確認是您本人操作才核准。"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:179
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:164
 msgid "A sign-in request was made from the following device. Only approve if you recognize it."
 msgstr "有裝置嘗試登入。如果這確實是您的裝置，請核准。"
 
@@ -2036,7 +2035,7 @@ msgid "About you"
 msgstr "關於你"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
 msgid "Acceleration"
 msgstr "加速"
 
@@ -2233,11 +2232,6 @@ msgstr "同時顯示圖示的動作."
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:37
 msgid "Actions"
 msgstr "動作"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
-msgid "Activation click"
-msgstr "啟用點擊"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3461,13 +3455,13 @@ msgstr "在「動畫」分頁中，您可以隨心所欲地控制動畫表情符
 
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:80
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:81
 #: src/features/messaging/components/modals/MediaViewerModal.tsx:98
 msgid "Animated GIF"
 msgstr "動畫 GIF"
 
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:76
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:77
 msgid "Animated GIF video"
 msgstr "GIF 動畫影片"
 
@@ -3563,7 +3557,7 @@ msgid "Animation picker"
 msgstr "動畫選擇器"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:361
 msgid "Animation playback"
 msgstr "動畫播放"
 
@@ -3582,7 +3576,7 @@ msgid "Animations"
 msgstr "動畫"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:357
 msgid "Animations while unfocused"
 msgstr "未聚焦時的動畫"
 
@@ -3844,7 +3838,7 @@ msgstr "套用到所有社群"
 msgid "Approval required"
 msgstr "需要核准"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:223
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:208
 msgid "Approve"
 msgstr "核准"
 
@@ -4482,7 +4476,7 @@ msgid "Automatic message reading"
 msgstr "自動朗讀訊息"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "自動啟動"
 
@@ -5276,7 +5270,7 @@ msgid "Boost"
 msgstr "加強"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
 msgid "Boot"
 msgstr "開機"
 
@@ -5408,7 +5402,7 @@ msgid "Bottom tooltip"
 msgstr "底部提示"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
 msgid "Bounds"
 msgstr "範圍"
 
@@ -7148,7 +7142,7 @@ msgstr "清除附件模擬資料"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "清除指令"
@@ -7210,7 +7204,7 @@ msgstr "清除搜尋輸入"
 #. Button or menu action label in the devices tab. Keep it concise.
 #: src/features/ui/components/form/FormCombobox.tsx:91
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:62
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:61
 msgid "Clear selection"
 msgstr "清除選取"
 
@@ -7287,11 +7281,6 @@ msgstr "點擊下方文字即可編輯。按 Enter 儲存，或按 Esc 取消。
 msgid "Click the upload icon next to any sound to customize it with your own audio file. Max {customSoundMaxSizeLabel}."
 msgstr "點擊任何音效旁邊的上傳圖示，以使用自己的音訊檔案自訂它。最大 {customSoundMaxSizeLabel}。"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
-msgid "Click through"
-msgstr "點擊查看"
-
 #. Label in the user profile modal.
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:23
 msgid "Click to add a note"
@@ -7331,7 +7320,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "點擊以開啟選色器並選擇新顏色。"
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:80
+#: src/features/channel/components/MessageActionBar.tsx:79
 msgid "Click to react"
 msgstr "點擊以回應"
 
@@ -7354,7 +7343,7 @@ msgstr "點擊顯示劇透內容"
 msgid "Click to view all reactions"
 msgstr "點擊以查看所有心情"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:146
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:143
 msgid "Client"
 msgstr "客戶端"
 
@@ -7465,7 +7454,7 @@ msgstr "關閉至選單列"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:262
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "關閉時縮到最小"
 
@@ -7592,7 +7581,7 @@ msgid "Codes"
 msgstr "代碼"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:61
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:67
 msgid "Collapse"
 msgstr "收合"
 
@@ -7635,7 +7624,7 @@ msgid "Collapse inline DM list"
 msgstr "收合內嵌的私訊列表"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:69
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:75
 msgid "Collapse unread messages for {channelHeading}"
 msgstr "收合「{channelHeading}」的未讀訊息"
 
@@ -8072,7 +8061,7 @@ msgid "Completely hide your {premiumProductName} badge from other users"
 msgstr "完全對其他使用者隱藏您的{premiumProductName}徽章"
 
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:134
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:233
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:218
 msgid "Completing sign-in…"
 msgstr "正在完成登入…"
 
@@ -8484,7 +8473,7 @@ msgstr "按一下左鍵（在按鈕上）或按一下右鍵（在其他元素上
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:162
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:119
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
@@ -9179,7 +9168,7 @@ msgid "Couldn't join community"
 msgstr "無法加入社群"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:13
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
 msgid "Couldn't join this community"
 msgstr "無法加入此社群"
 
@@ -9926,7 +9915,7 @@ msgid "Current community"
 msgstr "目前社群"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:428
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:430
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:27
 msgid "Current device"
 msgstr "目前使用的裝置"
@@ -9941,7 +9930,7 @@ msgstr "目前私訊"
 msgid "Current ping:"
 msgstr "目前 Ping："
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:177
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:174
 msgid "Current session"
 msgstr "目前的會話"
 
@@ -10130,7 +10119,7 @@ msgid "Custom themes"
 msgstr "自訂主題"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
 msgid "Custom title bar"
 msgstr "自訂標題列"
 
@@ -10466,7 +10455,7 @@ msgstr "偵錯成員"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:92
+#: src/features/channel/components/MessageActionBar.tsx:91
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -10963,7 +10952,7 @@ msgstr "緊湊模式"
 
 #. Short label in the settings dialog permission components. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/shared/PermissionComponents.tsx:16
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:220
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:205
 msgid "Deny"
 msgstr "拒絕"
 
@@ -11082,7 +11071,7 @@ msgid "Desktop notifications have been blocked. You can enable them later in you
 msgstr "桌面通知已遭到封鎖。您稍後可以在瀏覽器設定、使用者設定或{notificationSettingsPath}中啟用。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
 msgid "Desktop startup"
 msgstr "桌面版啟動"
 
@@ -11119,7 +11108,7 @@ msgstr "桌面版 {version} 已推出。下載安裝程式，然後執行以更�
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Desktop window"
 msgstr "桌面版視窗"
@@ -11215,7 +11204,7 @@ msgid "Development build"
 msgstr "開發版本"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:139
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:136
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:37
 msgid "Device"
 msgstr "裝置"
@@ -11230,7 +11219,7 @@ msgstr "裝置警示"
 msgid "Device controls"
 msgstr "裝置控制選項"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:134
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "裝置詳細資訊"
 
@@ -11259,7 +11248,7 @@ msgstr "裝置："
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:528
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:62
@@ -11434,7 +11423,7 @@ msgid "Disable hardware acceleration and restart"
 msgstr "停用硬體加速並重新啟動"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
 msgid "Disable hardware acceleration?"
 msgstr "要停用硬體加速嗎？"
 
@@ -13005,7 +12994,7 @@ msgid "Enable hardware acceleration and restart"
 msgstr "啟用硬體加速並重新啟動"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
 msgid "Enable hardware acceleration?"
 msgstr "啟用硬體加速？"
 
@@ -13430,7 +13419,7 @@ msgstr "請輸入驗證器應用程式中的 {digitCount} 位數驗證碼。"
 msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "請輸入傳送至 {phoneNumber} 的 {digitCount} 位數驗證碼。"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:128
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 msgid "Enter the code"
 msgstr "輸入驗證碼"
 
@@ -13457,7 +13446,7 @@ msgstr "請輸入傳送到您目前電子郵件的驗證碼。"
 msgid "Enter the code sent to your email address."
 msgstr "請輸入寄到您電子郵件地址的驗證碼。"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:131
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:121
 msgid "Enter the code shown in the app to continue."
 msgstr "請輸入應用程式中顯示的代碼以繼續。"
 
@@ -13501,7 +13490,7 @@ msgstr "輸入簡訊驗證碼"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "請在瀏覽器中輸入此代碼以完成登入。"
 
-#: src/features/channel/components/EditingMessageInput.tsx:366
+#: src/features/channel/components/EditingMessageInput.tsx:355
 msgid "enter to <0><1>save</1></0>"
 msgstr "按 Enter 鍵<0><1>儲存</1></0>"
 
@@ -13642,7 +13631,7 @@ msgstr "Esc 鍵"
 msgid "Escape key exits keyboard mode"
 msgstr "按下 Esc 鍵可離開鍵盤模式"
 
-#: src/features/channel/components/EditingMessageInput.tsx:347
+#: src/features/channel/components/EditingMessageInput.tsx:336
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "按 Esc 鍵<0><1>取消</1></0>"
 
@@ -13736,7 +13725,7 @@ msgid "Excluded search filter: {filter}"
 msgstr "排除的搜尋篩選條件：{filter}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:270
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Exit"
 msgstr "離開"
 
@@ -13764,7 +13753,7 @@ msgid "Exit preview"
 msgstr "離開預覽"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:57
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:63
 msgid "Expand"
 msgstr "展開"
 
@@ -13796,7 +13785,7 @@ msgid "Expand or collapse compact call view"
 msgstr "展開或收合精簡通話檢視"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:65
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:71
 msgid "Expand unread messages for {channelHeading}"
 msgstr "展開「{channelHeading}」的未讀訊息"
 
@@ -14707,18 +14696,6 @@ msgstr "芬蘭語"
 msgid "First and last name"
 msgstr "姓名"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
-msgid "First click"
-msgstr "首次點擊"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
-msgid "First click pass-through when unfocused"
-msgstr "未聚焦時首次點擊穿透"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "第一個選項"
@@ -14752,11 +14729,6 @@ msgstr "Fluxer"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:179
 msgid "Focus"
 msgstr "專注模式"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
-msgid "Focus click"
-msgstr "聚焦點擊"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -15048,7 +15020,7 @@ msgstr "轉寄"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:100
+#: src/features/channel/components/MessageActionBar.tsx:99
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -15095,7 +15067,7 @@ msgid "FPS"
 msgstr "FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
 msgid "Frame"
 msgstr "外框"
 
@@ -15870,7 +15842,7 @@ msgid "Granular selection"
 msgstr "精細選取"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
 msgid "Graphics"
 msgstr "顯示設定"
 
@@ -16096,12 +16068,12 @@ msgid "Harassment or threats"
 msgstr "騷擾或威脅"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
 msgid "Hardware"
 msgstr "硬體"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
 msgid "Hardware acceleration"
 msgstr "硬體加速"
 
@@ -16424,7 +16396,7 @@ msgid "Hide preview thumbnail"
 msgstr "隱藏預覽縮圖"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:258
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "視窗縮到最小後隱藏，並可從工具列重新開啟"
 
@@ -16444,7 +16416,7 @@ msgid "Hide Visionary ID badge ({premiumLifetimeSequenceLabel})"
 msgstr "隱藏 Visionary ID 徽章 ({premiumLifetimeSequenceLabel})"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:254
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
 msgid "Hide window"
 msgstr "隱藏視窗"
 
@@ -16518,7 +16490,7 @@ msgstr "在選擇此動作時按住 {keyboardShortcut} 鍵，即可跳過此確�
 msgid "Hold for instant upload"
 msgstr "按住即可立即上傳"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:439
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:441
 msgid "Hold Shift and press X to mark devices for sign out. Press {selectAllShortcutLabel} to select all."
 msgstr "按住 Shift 鍵並按下 X 鍵以選取要登出的裝置。按下 {selectAllShortcutLabel} 以全選。"
 
@@ -16568,7 +16540,7 @@ msgid "Hover buttons"
 msgstr "懸浮按鈕"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:365
 msgid "Hover effects"
 msgstr "懸停效果"
 
@@ -17247,7 +17219,7 @@ msgstr "收件匣分頁"
 msgid "Include {mentionType} mentions"
 msgstr "包含 {mentionType} 提及"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:127
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:126
 msgid "Include all community mentions"
 msgstr "包含所有社群提及"
 
@@ -17945,7 +17917,7 @@ msgstr "由於 {productName} 偵測到潛在的惡意攻擊，目前已停用 {c
 msgid "Invoice"
 msgstr "發票"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:163
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:160
 msgid "IP address"
 msgstr "IP 位址"
 
@@ -17974,7 +17946,7 @@ msgid "It may have been deleted. The name was reverted to what it was before."
 msgstr "表情符號可能已被刪除。名稱已還原為先前的名稱。"
 
 #. Body of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:50
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:51
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "它可能已退出探索或關閉了新加入功能。重新整理頁面後，您將不會再看到它。"
 
@@ -18133,7 +18105,7 @@ msgstr "已加入 {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:494
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:203
 msgid "Jump"
 msgstr "跳轉"
 
@@ -18248,7 +18220,7 @@ msgid "Just join (keep other connections)"
 msgstr "直接加入 (保留其他連線)"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:278
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Keep {productName} running when the window is closed"
 msgstr "關閉視窗時，讓 {productName} 保持執行"
 
@@ -18257,10 +18229,12 @@ msgstr "關閉視窗時，讓 {productName} 保持執行"
 msgid "Keep all messages"
 msgstr "保留所有訊息"
 
+#. Description text in the motion tab.
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
-msgid "Keep animations, GIFs, hover, and tooltips running unfocused"
-msgstr "即使應用程式未處於焦點狀態，也要繼續播放動畫、GIF、滑鼠懸停效果和工具提示。"
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:39
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:377
+msgid "Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused."
+msgstr "在視窗失去焦點時，仍保持動畫、GIF 播放、懸停效果和工具提示執行。"
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:314
@@ -18277,7 +18251,7 @@ msgid "Keep Neko still"
 msgstr "讓 Neko 保持不動"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:266
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Keep running"
 msgstr "繼續執行"
 
@@ -18296,7 +18270,7 @@ msgid "Keep transmitting briefly after release."
 msgstr "釋放按鈕後繼續傳輸一段時間。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
 msgid "Keep window dimensions and placement between reloads"
 msgstr "重新載入時保留視窗大小和位置"
 
@@ -18443,7 +18417,7 @@ msgstr "上次變更時間：{0}"
 msgid "Last changed: never"
 msgstr "上次變更：從未"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:173
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:170
 msgid "Last used"
 msgstr "上次使用"
 
@@ -18459,11 +18433,13 @@ msgstr "延遲圖表"
 
 #. Button label that dismisses the update modal without taking action.
 #. Short confirmation button label in advanced settings.
+#. Short confirmation button label in advanced settings.
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
 msgid "Later"
 msgstr "稍後"
@@ -18476,12 +18452,12 @@ msgstr "拉脫維亞"
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "登入時啟動 {productName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
 msgid "Launch at login"
 msgstr "登入時啟動"
 
@@ -18619,11 +18595,6 @@ msgstr "允許此社群中的機器人傳送私訊給您"
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:21
 msgid "Let every incoming message be spoken, regardless of which channel is open."
 msgstr "讓所有收到的訊息都唸出來，無論開啟哪個頻道。"
-
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
-msgid "Let focus clicks activate controls."
-msgstr "點擊時啟用控制項。"
 
 #. Toggle label in the community privacy modal: allow DMs from non-friend members of this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
@@ -18952,7 +18923,7 @@ msgid "Loading invites..."
 msgstr "正在載入邀請…"
 
 #. Placeholder text in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:72
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:73
 msgid "Loading placeholder"
 msgstr "載入中"
 
@@ -19081,8 +19052,8 @@ msgstr "當地 TRY 贈禮結帳"
 msgid "Localized TRY subscription checkout"
 msgstr "當地 TRY 訂閱結帳"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:209
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:194
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:151
 msgid "Location"
 msgstr "地點"
 
@@ -20048,7 +20019,7 @@ msgid "Mentions only"
 msgstr "只接收提及通知"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
 msgid "Menu bar"
 msgstr "選單列"
 
@@ -20135,7 +20106,7 @@ msgstr "訊息包含附加媒體"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:84
+#: src/features/channel/components/MessageActionBar.tsx:83
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
@@ -20439,12 +20410,12 @@ msgid "Military time"
 msgstr "24 小時制"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:250
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
 msgid "Minimise"
 msgstr "最小化"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:246
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
 msgid "Minimize"
 msgstr "最小化"
 
@@ -20454,7 +20425,7 @@ msgstr "最小化到選單列"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:242
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "最小化到系統匣"
 
@@ -20668,7 +20639,7 @@ msgstr "每月贈禮"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:88
+#: src/features/channel/components/MessageActionBar.tsx:87
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "更多"
@@ -21274,7 +21245,7 @@ msgid "Narration"
 msgstr "旁白"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
 msgid "Native title bar"
 msgstr "原生標題列"
 
@@ -21353,7 +21324,7 @@ msgid "Network"
 msgstr "網路"
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:54
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:53
 msgid "Network error"
 msgstr "網路錯誤"
 
@@ -21876,7 +21847,7 @@ msgstr "沒有符合項目"
 msgid "No matches found"
 msgstr "沒有找到符合的項目"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:345
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:344
 msgid "No mentions yet"
 msgstr "還沒有提及內容"
 
@@ -22125,7 +22096,7 @@ msgid "No trusted domains"
 msgstr "沒有信任的網域"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:81
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:87
 msgid "No unread messages"
 msgstr "沒有未讀訊息"
 
@@ -22323,7 +22294,7 @@ msgid "Notification"
 msgstr "通知"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:234
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
 msgid "Notification area"
 msgstr "通知區域"
 
@@ -22725,14 +22696,14 @@ msgstr "開啟進階媒體設定"
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:70
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:64
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:65
 msgid "Open animated GIF in full view"
 msgstr "以全螢幕檢視動畫 GIF"
 
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:66
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:60
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:61
 msgid "Open animated GIF video in full view"
 msgstr "以全螢幕檢視動畫 GIF 影片"
 
@@ -22925,7 +22896,7 @@ msgstr "在瀏覽器中開啟圖片"
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #. Button or menu action label in the channel and chat embed image. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:74
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:68
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:69
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:40
 msgid "Open image in full view"
 msgstr "以全螢幕檢視圖片"
@@ -23167,7 +23138,7 @@ msgstr "開啟成員頁面。按空白鍵或 Enter 鍵開啟。"
 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:199
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:184
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:77
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:107
 msgid "Operating system"
@@ -23273,7 +23244,7 @@ msgid "Other"
 msgstr "其他"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:433
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:435
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:31
 msgid "Other devices"
 msgstr "其他裝置"
@@ -23754,7 +23725,7 @@ msgid "Per-window audio isn't available on this build of macOS."
 msgstr "此 macOS 版本不支援單一視窗音訊。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
 msgid "Performance"
 msgstr "效能"
 
@@ -24114,7 +24085,7 @@ msgstr "純文字"
 msgid "Plan"
 msgstr "方案"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:189
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:174
 msgid "Platform"
 msgstr "平台"
 
@@ -24185,7 +24156,7 @@ msgstr "播放動畫，不顧「減少動態」設定。"
 #. Body of the error modal shown when joining a discovery community is rate limited.
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:59
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:60
 #: src/features/theme/components/modals/ShareThemeModal.tsx:67
 msgid "Please wait a moment and try again."
 msgstr "請稍候片刻再試一次。"
@@ -24270,12 +24241,12 @@ msgid "Portuguese (Brazil)"
 msgstr "葡萄牙文 (巴西)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
 msgid "Position"
 msgstr "職位"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:373
 msgid "Power saving"
 msgstr "省電模式"
 
@@ -25143,7 +25114,7 @@ msgid "Quiet"
 msgstr "靜音"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:274
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Quit"
 msgstr "離開"
 
@@ -25702,7 +25673,7 @@ msgid "Remain silent unless someone runs /tts manually."
 msgstr "除非有人手動執行 /tts，否則保持靜音。"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
 msgid "Remember size & position"
 msgstr "記住視窗大小與位置"
 
@@ -25711,7 +25682,7 @@ msgid "Remember this preference"
 msgstr "記住此偏好設定"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
 msgid "Remember window"
 msgstr "記住視窗"
 
@@ -26803,10 +26774,12 @@ msgid "Restart {productName} to use screen sharing"
 msgstr "重新啟動 {productName} 以使用螢幕分享功能"
 
 #. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
+#. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
 #. Confirmation prompt in the desktop settings tab. Preserve {productName}; it is inserted by code.
 #. Confirmation title after changing desktop transparency in Theme Studio.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
 msgid "Restart {productName}?"
 msgstr "要重新啟動 {productName} 嗎？"
@@ -26816,8 +26789,8 @@ msgstr "要重新啟動 {productName} 嗎？"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
 msgid "Restart now"
 msgstr "立即重新啟動"
@@ -27005,7 +26978,7 @@ msgstr "解除封鎖"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the devices tab. Keep it concise.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:46
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:45
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:59
 msgid "Revoke device"
 msgstr "撤銷裝置"
@@ -27199,12 +27172,12 @@ msgid "Rows per page"
 msgstr "每頁列數"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
 msgid "Run {productName} automatically when your computer starts"
 msgstr "電腦啟動時自動執行 {productName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
 msgid "Run at login"
 msgstr "登入時執行"
 
@@ -29126,7 +29099,7 @@ msgid "Show {appName}"
 msgstr "顯示 {appName}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:238
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
 msgid "Show a {productName} icon in the system tray or menu bar"
 msgstr "在系統匣或選單列中顯示 {productName} 圖示"
 
@@ -29527,7 +29500,7 @@ msgid "Show this role separately"
 msgstr "將此身分組單獨顯示"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
 msgid "Show tray icon"
 msgstr "顯示工具列圖示"
 
@@ -29626,15 +29599,15 @@ msgid "Sign out"
 msgstr "登出"
 
 #. Danger button in the devices tab. Signs out the currently selected devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:70
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:69
 msgid "Sign out {deviceCount, plural, one {# device} other {# devices}}"
 msgstr "登出 {deviceCount, plural, one {# 個裝置} other {# 個裝置}}"
 
 #. Security modal title for revoking every saved login session except the current one.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:14
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:459
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:502
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:461
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:504
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:43
 msgid "Sign out all other devices"
 msgstr "登出所有其他裝置"
@@ -29653,12 +29626,12 @@ msgstr "將其他裝置從你的帳號登出"
 msgid "Sign out?"
 msgstr "要登出嗎？"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:251
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:236
 msgid "Sign-in approved"
 msgstr "已核准登入"
 
 #. Short label in the authentication handoff approval flow. Keep the tone plain and specific.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:17
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:16
 msgid "Sign-in code"
 msgstr "登入驗證碼"
 
@@ -29678,7 +29651,7 @@ msgstr "登入詳細資訊"
 msgid "Sign-in flow"
 msgstr "登入流程"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:104
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:94
 msgid "Sign-in request"
 msgstr "登入要求"
 
@@ -29693,7 +29666,7 @@ msgid "Signed in"
 msgstr "已登入"
 
 #. Settings section label for account sessions and devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:515
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:517
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Signed-in devices"
 msgstr "已登入的裝置"
@@ -29792,7 +29765,7 @@ msgstr "網站金鑰"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:174
 msgid "Size"
 msgstr "大小"
@@ -29848,7 +29821,7 @@ msgid "Skip this step"
 msgstr "略過此步驟"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:76
+#: src/app/App.tsx:70
 msgid "Skip to content"
 msgstr "跳到內容"
 
@@ -30122,7 +30095,7 @@ msgstr "某個東西"
 
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:263
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:248
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
@@ -30231,7 +30204,7 @@ msgstr "發生錯誤。"
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:17
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:18
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
@@ -30755,12 +30728,12 @@ msgid "Start voice call"
 msgstr "發起語音通話"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
 msgid "Start with computer"
 msgstr "開機時啟動"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
 msgid "Startup"
 msgstr "啟動"
 
@@ -30779,7 +30752,7 @@ msgid "Status"
 msgstr "狀態"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:230
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
 msgid "Status icon"
 msgstr "狀態圖示"
 
@@ -30795,10 +30768,12 @@ msgstr "狀態"
 msgid "Status:"
 msgstr "狀態："
 
+#. Label in the motion tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
+#. Short label for an advanced app interaction toggle.
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:345
 msgid "Stay fully interactive when unfocused"
 msgstr "即使應用程式不在前景，仍保持完全互動"
 
@@ -31654,7 +31629,7 @@ msgid "System time format"
 msgstr "系統時間格式"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
 msgid "System tray"
 msgstr "系統匣"
 
@@ -32041,7 +32016,7 @@ msgstr "應用程式當機了"
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "應用程式當機了。正在檢查更新，或許能解決這個問題…"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:254
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:239
 msgid "The app should now be signed in to your account."
 msgstr "應用程式現在應該已登入您的帳號。"
 
@@ -32514,7 +32489,7 @@ msgid "This community has reached its maximum member limit and is not accepting 
 msgstr "此社群已達成員上限，目前無法接受新成員加入。"
 
 #. Body of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:25
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:26
 msgid "This community has reached its member limit, so you can't join right now."
 msgstr "此社群已達成員上限，因此您目前無法加入。"
 
@@ -32524,7 +32499,7 @@ msgid "This community is for Visionary members"
 msgstr "此社群僅限遠見者會員"
 
 #. Title of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:21
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:22
 msgid "This community is full"
 msgstr "此社群已滿"
 
@@ -32535,7 +32510,7 @@ msgid "This community is marked for mature content and may contain material that
 msgstr "此社群標示為成人內容，可能包含不適合部分使用者的內容。"
 
 #. Title of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:45
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:46
 msgid "This community is no longer available"
 msgstr "此社群已無法使用"
 
@@ -33285,12 +33260,12 @@ msgid "Tip"
 msgstr "提示"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
 msgid "Title bar"
 msgstr "標題列"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
 msgid "Titlebar"
 msgstr "標題列"
 
@@ -33356,7 +33331,7 @@ msgid "Toggle embed suppression"
 msgstr "切換嵌入內容抑制"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
 msgid "Toggle hardware acceleration"
 msgstr "切換硬體加速"
 
@@ -33486,7 +33461,7 @@ msgstr "工具欄快捷鍵"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:62
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:369
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:366
 msgid "Tooltips"
 msgstr "提示"
@@ -33592,12 +33567,12 @@ msgid "Travel & places"
 msgstr "旅行與地點"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
 msgid "Tray"
 msgstr "工具列"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
 msgid "Tray icon"
 msgstr "工具列圖示"
 
@@ -34306,7 +34281,7 @@ msgid "Unfocus"
 msgstr "取消聚焦"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:349
 msgid "Unfocused"
 msgstr "未聚焦"
 
@@ -34369,7 +34344,7 @@ msgstr "不明頻道"
 #. Short label in the entrance sound section. Keep it concise.
 #. Short label in the recent mentions content popout. Keep it concise.
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:77
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:83
 #: src/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds.ts:24
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:44
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:43
@@ -34386,7 +34361,7 @@ msgstr "未知日期"
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:43
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:66
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
 msgstr "不明裝置"
@@ -34649,7 +34624,7 @@ msgstr "未命名頻道"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:18
+#: src/features/channel/state/ChannelDisplayName.ts:19
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "未命名群組"
@@ -34824,7 +34799,7 @@ msgstr "不支援的貼圖檔案"
 #. Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionBar.tsx:96
+#: src/features/channel/components/MessageActionBar.tsx:95
 #: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
@@ -35346,7 +35321,7 @@ msgstr "使用動態表情符號"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop scrolling toggle.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:313
 msgid "Use autoscrolling"
 msgstr "使用自動捲動"
@@ -35435,7 +35410,7 @@ msgid "Use global profile"
 msgstr "使用全域個人檔案"
 
 #. Short label for an advanced desktop troubleshooting preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
 msgid "Use hardware acceleration"
 msgstr "使用硬體加速"
 
@@ -35481,8 +35456,8 @@ msgstr "在付費結帳前，請使用當地卡片驗證您帳單國家/地區�
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
 msgid "Use native title bar"
 msgstr "使用原生標題列"
 
@@ -35531,7 +35506,7 @@ msgid "Use system-wide push-to-talk and shortcuts."
 msgstr "使用全系統的通話按鍵說話和快捷鍵。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
 msgid "Use the operating system's window chrome"
 msgstr "使用作業系統的視窗外框"
 
@@ -36150,7 +36125,7 @@ msgstr "請驗證你的電子郵件以開始私訊。"
 msgid "Verifying card"
 msgstr "正在驗證卡片"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:144
 msgid "Verifying code…"
 msgstr "正在驗證代碼…"
 
@@ -36351,7 +36326,7 @@ msgid "View all roles for {displayName}"
 msgstr "查看「{displayName}」的所有角色"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:73
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:79
 msgid "View all unread"
 msgstr "查看所有未讀訊息"
 
@@ -36412,7 +36387,7 @@ msgstr "查看社群檔案"
 #. Tooltip and accessibility label for opening a linked device details modal.
 #: src/features/guild/components/modals/guild_tabs/BannedUserActionsSheet.tsx:18
 #: src/features/ui/action_menu/BannedUserContextMenu.tsx:45
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:50
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:49
 msgid "View details"
 msgstr "查看詳情"
 
@@ -36940,7 +36915,7 @@ msgstr "等你來…"
 msgid "Warning"
 msgstr "警告"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:175
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:160
 msgid "Was this you?"
 msgstr "這是你本人嗎？"
 
@@ -37151,7 +37126,7 @@ msgid "We'll verify your new email with a one-time code."
 msgstr "我們會透過一次性驗證碼來驗證你的新電子郵件。"
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:58
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:57
 msgid "We're having trouble connecting to the space-time continuum. Check your connection and try again."
 msgstr "我們無法連線到時空連續體。請檢查您的連線並再試一次。"
 
@@ -37565,7 +37540,7 @@ msgstr "Win"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Top-level native menu bar title (Window menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts:70
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
 msgid "Window"
 msgstr "視窗"
 
@@ -37576,32 +37551,32 @@ msgid "Window"
 msgstr "視窗"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
 msgid "Window chrome"
 msgstr "視窗邊框"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
 msgid "Window decorations"
 msgstr "視窗裝飾"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:353
 msgid "Window focus"
 msgstr "視窗焦點"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
 msgid "Window position"
 msgstr "視窗位置"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
 msgid "Window size"
 msgstr "視窗大小"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
 msgid "Window state"
 msgstr "視窗狀態"
 
@@ -37746,7 +37721,7 @@ msgstr "您已擁有終身版 {premiumProductName}"
 msgid "You already have this connection."
 msgstr "你已經有這個連結了。"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:107
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:97
 msgid "You are about to authorize an app to sign in to your account. Only continue if you initiated this request from a device you control."
 msgstr "您即將授權應用程式登入您的帳號。請僅在您是從受您控制的裝置發起此請求時才繼續。"
 
@@ -37939,7 +37914,7 @@ msgid "You can't install this sticker pack."
 msgstr "您無法安裝此貼圖包。"
 
 #. Title of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:37
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:38
 msgid "You can't join this community"
 msgstr "您無法加入此社群"
 
@@ -38136,7 +38111,7 @@ msgid "You don't have permission to rename this emoji. The name was reverted to 
 msgstr "您沒有重新命名此表情符號的權限。名稱已還原為先前的名稱。"
 
 #. Body of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:41
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
 msgid "You have been banned from this community."
 msgstr "您已被此社群停權。"
 
@@ -38352,7 +38327,7 @@ msgstr "您將不會在電腦版收到通知"
 msgid "You'll appear offline"
 msgstr "您會顯示為離線"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:462
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "您必須在所有已登出的裝置上重新登入"
 
@@ -38368,7 +38343,7 @@ msgstr "您即將停止與所有朋友（包括未來的朋友）分享您的語
 
 #. Body text in the unread channels content.
 #. End-of-list text in the recent mentions page when every mention has been seen.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:85
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:91
 #: src/features/messaging/components/pages/RecentMentionsPage.tsx:40
 msgid "You're all caught up."
 msgstr "你都看完了喔."
@@ -38467,7 +38442,7 @@ msgstr "您編輯訊息的速度太快了"
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:9
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:23
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:55
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:56
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:76
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:148
 #: src/features/theme/components/modals/ShareThemeModal.tsx:63
@@ -38494,7 +38469,7 @@ msgid "You're in the call"
 msgstr "您在通話中"
 
 #. Body of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:33
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:34
 msgid "You're in the maximum number of communities. Leave one and try again."
 msgstr "您已加入最多社群數。請先離開一個社群，然後再試一次。"
 
@@ -38574,7 +38549,7 @@ msgid "You've got CSS!"
 msgstr "你已擁有 CSS！"
 
 #. Title of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:29
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:30
 msgid "You've reached the community limit"
 msgstr "您已達到社群上限"
 
@@ -38583,7 +38558,7 @@ msgstr "您已達到社群上限"
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:62
 #: src/features/messaging/components/pages/MessageListPage.tsx:25
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:406
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:405
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:37
 msgid "You've reached the end"
 msgstr "你已看到底囉"
@@ -38627,7 +38602,7 @@ msgstr "您收到一份禮物"
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "您已要求傳送太多驗證電子郵件。請稍候片刻再試一次。"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:409
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:408
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "你已讀取所有最近提及你的訊息。更多訊息將會陸續顯示於此。"
 

@@ -293,7 +293,7 @@ msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}
 msgstr "{categoryLabel}, {count, plural, one {# קהילה} two {# קהילות} other {# קהילות}}"
 
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:52
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:58
 msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{channelHeading}, {mentionCount, plural, one {# אזכור} other {# אזכורים}}"
 
@@ -535,19 +535,19 @@ msgstr "{count, plural, one {אתה כבר משתמש בחיבור היחיד ה
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {הגעת למגבלה של פריט מדיה שמור אחד. הסר אחד כדי להוסיף אחר.} other {הגעת למגבלה של # פריטי מדיה שמורים. הסר אחד כדי להוסיף אחר.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:395
+#: src/features/invite/commands/InviteCommands.tsx:401
 msgid "{count, plural, one {You're at the limit of # emoji pack. Delete one to create another.} other {You're at the limit of # emoji packs. Delete one to create another.}}"
 msgstr "{count, plural, one {הגעת למגבלה של חבילת אימוג'י אחת. מחק אחת כדי ליצור אחרת.} other {הגעת למגבלה של # חבילות אימוג'י. מחק אחת כדי ליצור אחרת.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:381
+#: src/features/invite/commands/InviteCommands.tsx:387
 msgid "{count, plural, one {You're at the limit of # installed emoji pack. Remove one to add another.} other {You're at the limit of # installed emoji packs. Remove one to add another.}}"
 msgstr "{count, plural, one {הגעת למגבלה של חבילת אימוג'י אחת מותקנת. הסר אחת כדי להוסיף אחרת.} other {הגעת למגבלה של # חבילות אימוג'י מותקנות. הסר אחת כדי להוסיף אחרת.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:413
+#: src/features/invite/commands/InviteCommands.tsx:419
 msgid "{count, plural, one {You're at the limit of # installed sticker pack. Remove one to add another.} other {You're at the limit of # installed sticker packs. Remove one to add another.}}"
 msgstr "{count, plural, one {הגעת למגבלה של חבילת מדבקות אחת מותקנת. הסר אחת כדי להוסיף אחרת.} other {הגעת למגבלה של # חבילות מדבקות מותקנות. הסר אחת כדי להוסיף אחרת.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:427
+#: src/features/invite/commands/InviteCommands.tsx:433
 msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
 msgstr "{count, plural, one {הגעת למגבלה של חבילת מדבקות אחת. מחק אחת כדי ליצור אחרת.} other {הגעת למגבלה של # חבילות מדבקות. מחק אחת כדי ליצור אחרת.}}"
 
@@ -629,7 +629,7 @@ msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "{desktopChannel} למחשב {desktopVersion}"
 
 #. Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:74
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:73
 msgid "{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}"
 msgstr "{deviceCount, plural, one {# מכשיר נבחר לניתוק} other {# מכשירים נבחרו לניתוק}}"
 
@@ -1019,15 +1019,19 @@ msgstr "{PRODUCT_NAME} זיהה התקן קלט שמע חדש בשם <0>{deviceN
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} זיהה התקן פלט שמע חדש בשם <0>{deviceName}</0>. האם ברצונך לעבור אליו?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:111
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "יש להפעיל מחדש את {PRODUCT_NAME} לפני ששינוי הגדרות הגלילה המקוריות של Chromium ישנה את אופן פעולת הגלילה."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:190
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "{PRODUCT_NAME} צריך להפעיל מחדש כדי שהאצת החומרה תיכנס לתוקף."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:192
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:144
+msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
+msgstr "כדי שהשינוי בשורת הכותרת ייכנס לתוקף, יש להפעיל מחדש את {PRODUCT_NAME}."
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} צריך להפעיל מחדש כדי להשבית את האצת החומרה של Chromium. השתמשו באפשרות זו רק אם אתם פותרים בעיות של תקלות גרפיקה או שימוש גבוה במעבד הגרפי."
 
@@ -1084,11 +1088,6 @@ msgstr "לא ניתן ליצור קשר עם שירות העדכונים של {p
 #: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "לא ניתן להפעיל מחדש את {productName} עם העדכון שהורדת. נסה שוב באמצעות כפתור העדכון."
-
-#. Display name for the product desktop client in the authentication handoff approval flow when the raw client name is Electron. Preserve {productName}; it is inserted by code.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:21
-msgid "{productName} Desktop"
-msgstr "{productName} למחשב"
 
 #. Invite page notice shown when automated raid protection pauses invites. productName is the Fluxer product name.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:17
@@ -1233,7 +1232,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} מחוברים"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:13
+#: src/features/channel/state/ChannelDisplayName.ts:14
 msgid "{resolvedName}'s group"
 msgstr "הקבוצה של {resolvedName}"
 
@@ -1977,11 +1976,11 @@ msgstr "רכיב רב-פעמי למצבים ריקים, שגיאות והודע�
 msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "תצוגה מקדימה של קישור או הטמעה עשירה (לא קובץ שהועלה)"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:181
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:166
 msgid "A sign-in request was made for your account. Only approve if you initiated it."
 msgstr "התקבלה בקשת התחברות לחשבונך. אשר רק אם אתה יזמת אותה."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:179
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:164
 msgid "A sign-in request was made from the following device. Only approve if you recognize it."
 msgstr "בקשת התחברות התקבלה מהמכשיר הבא. אשר/י רק אם אתה/את מזהה/ה אותו."
 
@@ -2036,7 +2035,7 @@ msgid "About you"
 msgstr "אודותיך"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
 msgid "Acceleration"
 msgstr "האצה"
 
@@ -2233,11 +2232,6 @@ msgstr "פעולה עם שני סמלים."
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:37
 msgid "Actions"
 msgstr "פעולות"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
-msgid "Activation click"
-msgstr "לחיצת הפעלה"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3461,13 +3455,13 @@ msgstr "אמוג'י, קובצי GIF ומדבקות מונפשים נשארים �
 
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:80
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:81
 #: src/features/messaging/components/modals/MediaViewerModal.tsx:98
 msgid "Animated GIF"
 msgstr "GIF מונפש"
 
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:76
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:77
 msgid "Animated GIF video"
 msgstr "סרטון GIF מונפש"
 
@@ -3563,7 +3557,7 @@ msgid "Animation picker"
 msgstr "בורר אנימציות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:361
 msgid "Animation playback"
 msgstr "הפעלת אנימציה"
 
@@ -3582,7 +3576,7 @@ msgid "Animations"
 msgstr "אנימציות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:357
 msgid "Animations while unfocused"
 msgstr "הנפשות כשהאפליקציה לא ממוקדת"
 
@@ -3844,7 +3838,7 @@ msgstr "החל על כל הקהילות"
 msgid "Approval required"
 msgstr "אישור נדרש"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:223
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:208
 msgid "Approve"
 msgstr "אשר"
 
@@ -4482,7 +4476,7 @@ msgid "Automatic message reading"
 msgstr "קריאת הודעות אוטומטית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "הפעלה אוטומטית"
 
@@ -5276,7 +5270,7 @@ msgid "Boost"
 msgstr "בוסט"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
 msgid "Boot"
 msgstr "אתחול"
 
@@ -5408,7 +5402,7 @@ msgid "Bottom tooltip"
 msgstr "תיאור כלי תחתון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
 msgid "Bounds"
 msgstr "גבולות"
 
@@ -7148,7 +7142,7 @@ msgstr "מחיקת הדמיות קבצים מצורפים"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "נקה פקודה"
@@ -7210,7 +7204,7 @@ msgstr "נקה את שדה החיפוש"
 #. Button or menu action label in the devices tab. Keep it concise.
 #: src/features/ui/components/form/FormCombobox.tsx:91
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:62
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:61
 msgid "Clear selection"
 msgstr "נקה בחירה"
 
@@ -7287,11 +7281,6 @@ msgstr "יש ללחוץ על הטקסט למטה כדי לערוך אותו יש
 msgid "Click the upload icon next to any sound to customize it with your own audio file. Max {customSoundMaxSizeLabel}."
 msgstr "לחץ על הסמל להעלה ליד כל צליל כדי להתאים אותו אישית עם קובץ אודיו משלך. מקסימום {customSoundMaxSizeLabel}."
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
-msgid "Click through"
-msgstr "להיכנס"
-
 #. Label in the user profile modal.
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:23
 msgid "Click to add a note"
@@ -7331,7 +7320,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "יש ללחוץ כדי לפתוח את בורר הצבעים ולבחור צבע חדש."
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:80
+#: src/features/channel/components/MessageActionBar.tsx:79
 msgid "Click to react"
 msgstr "יש ללחוץ כדי להגיב"
 
@@ -7354,7 +7343,7 @@ msgstr "יש ללחוץ כדי לחשוף ספוילר"
 msgid "Click to view all reactions"
 msgstr "יש ללחוץ כדי להציג את כל התגובות"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:146
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:143
 msgid "Client"
 msgstr "לקוח"
 
@@ -7465,7 +7454,7 @@ msgstr "קרוב לשורת התפריטים"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:262
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "סגירה למגש"
 
@@ -7592,7 +7581,7 @@ msgid "Codes"
 msgstr "קודים"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:61
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:67
 msgid "Collapse"
 msgstr "כיווץ"
 
@@ -7635,7 +7624,7 @@ msgid "Collapse inline DM list"
 msgstr "כיווץ רשימת הודעות פרטיות מוטבעות"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:69
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:75
 msgid "Collapse unread messages for {channelHeading}"
 msgstr "לכווץ הודעות שלא נקראו עבור {channelHeading}"
 
@@ -8072,7 +8061,7 @@ msgid "Completely hide your {premiumProductName} badge from other users"
 msgstr "להסתיר לחלוטין את התג של {premiumProductName} ממשתמשים אחרים"
 
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:134
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:233
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:218
 msgid "Completing sign-in…"
 msgstr "משלימים את הכניסה…"
 
@@ -8484,7 +8473,7 @@ msgstr "ניתן לפתוח תפריטי הקשר בלחיצה שמאלית (ע�
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:162
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:119
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
@@ -9179,7 +9168,7 @@ msgid "Couldn't join community"
 msgstr "לא ניתן להצטרף לקהילה"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:13
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
 msgid "Couldn't join this community"
 msgstr "לא ניתן להצטרף לקהילה זו"
 
@@ -9926,7 +9915,7 @@ msgid "Current community"
 msgstr "הקהילה הנוכחית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:428
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:430
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:27
 msgid "Current device"
 msgstr "המכשיר הנוכחי"
@@ -9941,7 +9930,7 @@ msgstr "ההתכתבות הנוכחית"
 msgid "Current ping:"
 msgstr "פינג נוכחי:"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:177
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:174
 msgid "Current session"
 msgstr "הסשן הנוכחי"
 
@@ -10130,7 +10119,7 @@ msgid "Custom themes"
 msgstr "עיצובים מותאמים אישית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
 msgid "Custom title bar"
 msgstr "שורת כותרת מותאמת אישית"
 
@@ -10466,7 +10455,7 @@ msgstr "ניפוי באגים של משתמש"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:92
+#: src/features/channel/components/MessageActionBar.tsx:91
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -10963,7 +10952,7 @@ msgstr "פריסה דחוסה"
 
 #. Short label in the settings dialog permission components. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/shared/PermissionComponents.tsx:16
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:220
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:205
 msgid "Deny"
 msgstr "דחייה"
 
@@ -11082,7 +11071,7 @@ msgid "Desktop notifications have been blocked. You can enable them later in you
 msgstr "התראות שולחן עבודה נחסמו. ניתן להפעיל אותן מאוחר יותר בהגדרות הדפדפן או בהגדרות המשתמש, או ב{notificationSettingsPath}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
 msgid "Desktop startup"
 msgstr "הפעלה בשולחן העבודה"
 
@@ -11119,7 +11108,7 @@ msgstr "גרסת שולחן העבודה {version} זמינה. הורידו את
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Desktop window"
 msgstr "חלון שולחן עבודה"
@@ -11215,7 +11204,7 @@ msgid "Development build"
 msgstr "גרסת פיתוח"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:139
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:136
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:37
 msgid "Device"
 msgstr "מכשיר"
@@ -11230,7 +11219,7 @@ msgstr "התראות מכשיר"
 msgid "Device controls"
 msgstr "בקרות מכשיר"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:134
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "פרטי מכשיר"
 
@@ -11259,7 +11248,7 @@ msgstr "מכשיר:"
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:528
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:62
@@ -11434,7 +11423,7 @@ msgid "Disable hardware acceleration and restart"
 msgstr "השבתת האצת חומרה והפעלה מחדש"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
 msgid "Disable hardware acceleration?"
 msgstr "לבטל האצת חומרה?"
 
@@ -13005,7 +12994,7 @@ msgid "Enable hardware acceleration and restart"
 msgstr "הפעל האצת חומרה והפעל מחדש"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
 msgid "Enable hardware acceleration?"
 msgstr "להפעיל האצת חומרה?"
 
@@ -13430,7 +13419,7 @@ msgstr "הזן את הקוד בן {digitCount} הספרות מאפליקציית
 msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "הזן את הקוד בן {digitCount} הספרות שנשלח אל {phoneNumber}."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:128
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 msgid "Enter the code"
 msgstr "הזן את הקוד"
 
@@ -13457,7 +13446,7 @@ msgstr "הזן את הקוד שנשלח למייל הנוכחי שלך."
 msgid "Enter the code sent to your email address."
 msgstr "הזן את הקוד שנשלח לכתובת האימייל שלך."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:131
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:121
 msgid "Enter the code shown in the app to continue."
 msgstr "הזן את הקוד שמופיע באפליקציה כדי להמשיך."
 
@@ -13501,7 +13490,7 @@ msgstr "הזן את קוד ה-SMS"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "הזן קוד זה בדפדפן שלך כדי להשלים את הכניסה."
 
-#: src/features/channel/components/EditingMessageInput.tsx:366
+#: src/features/channel/components/EditingMessageInput.tsx:355
 msgid "enter to <0><1>save</1></0>"
 msgstr "Enter כדי <0><1>לשמור</1></0>"
 
@@ -13642,7 +13631,7 @@ msgstr "מקש Escape"
 msgid "Escape key exits keyboard mode"
 msgstr "מקש Escape יוצא ממצב מקלדת"
 
-#: src/features/channel/components/EditingMessageInput.tsx:347
+#: src/features/channel/components/EditingMessageInput.tsx:336
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "הקש Escape כדי <0><1>לבטל</1></0>"
 
@@ -13736,7 +13725,7 @@ msgid "Excluded search filter: {filter}"
 msgstr "מסנן חיפוש מוחרג: {filter}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:270
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Exit"
 msgstr "יציאה"
 
@@ -13764,7 +13753,7 @@ msgid "Exit preview"
 msgstr "יציאה מתצוגה מקדימה"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:57
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:63
 msgid "Expand"
 msgstr "הרחבה"
 
@@ -13796,7 +13785,7 @@ msgid "Expand or collapse compact call view"
 msgstr "הרחבה או כיווץ של תצוגת שיחה מקוצרת"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:65
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:71
 msgid "Expand unread messages for {channelHeading}"
 msgstr "הצג הודעות שלא נקראו עבור {channelHeading}"
 
@@ -14707,18 +14696,6 @@ msgstr "פינית"
 msgid "First and last name"
 msgstr "שם פרטי ושם משפחה"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
-msgid "First click"
-msgstr "לחיצה ראשונה"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
-msgid "First click pass-through when unfocused"
-msgstr "לחיצה ראשונה עוברת כשלא בפוקוס"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "אפשרות ראשונה"
@@ -14752,11 +14729,6 @@ msgstr "Fluxer"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:179
 msgid "Focus"
 msgstr "פוקוס"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
-msgid "Focus click"
-msgstr "לחיצת מיקוד"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -15048,7 +15020,7 @@ msgstr "הועבר"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:100
+#: src/features/channel/components/MessageActionBar.tsx:99
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -15095,7 +15067,7 @@ msgid "FPS"
 msgstr "FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
 msgid "Frame"
 msgstr "מסגרת"
 
@@ -15870,7 +15842,7 @@ msgid "Granular selection"
 msgstr "בחירה פרטנית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
 msgid "Graphics"
 msgstr "גרפיקה"
 
@@ -16096,12 +16068,12 @@ msgid "Harassment or threats"
 msgstr "הטרדה או איומים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
 msgid "Hardware"
 msgstr "חומרה"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
 msgid "Hardware acceleration"
 msgstr "האצת חומרה"
 
@@ -16424,7 +16396,7 @@ msgid "Hide preview thumbnail"
 msgstr "הסתר תצוגה מקדימה ממוזערת"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:258
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "הסתר את החלון כשהוא ממוזער ופתח אותו מחדש מהמגש"
 
@@ -16444,7 +16416,7 @@ msgid "Hide Visionary ID badge ({premiumLifetimeSequenceLabel})"
 msgstr "הסתר תג זיהוי Visionary ({premiumLifetimeSequenceLabel})"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:254
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
 msgid "Hide window"
 msgstr "הסתר חלון"
 
@@ -16518,7 +16490,7 @@ msgstr "החזק את {keyboardShortcut} תוך כדי בחירת פעולה ז�
 msgid "Hold for instant upload"
 msgstr "החזק להעלאה מיידית"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:439
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:441
 msgid "Hold Shift and press X to mark devices for sign out. Press {selectAllShortcutLabel} to select all."
 msgstr "החזק את Shift ולחץ על X כדי לסמן מכשירים לניתוק. לחץ על {selectAllShortcutLabel} כדי לבחור את כולם."
 
@@ -16568,7 +16540,7 @@ msgid "Hover buttons"
 msgstr "לחצני ריחוף"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:365
 msgid "Hover effects"
 msgstr "אפקטי ריחוף"
 
@@ -17247,7 +17219,7 @@ msgstr "כרטיסיות תיבת דואר נכנס"
 msgid "Include {mentionType} mentions"
 msgstr "כלול אזכורים של {mentionType}"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:127
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:126
 msgid "Include all community mentions"
 msgstr "כלול את כל האזכורים בקהילה"
 
@@ -17945,7 +17917,7 @@ msgstr "ההזמנות ל{communityName} מושבתות כרגע כי {productNa
 msgid "Invoice"
 msgstr "חשבונית"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:163
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:160
 msgid "IP address"
 msgstr "כתובת IP"
 
@@ -17974,7 +17946,7 @@ msgid "It may have been deleted. The name was reverted to what it was before."
 msgstr "ייתכן שהוא נמחק. השם שוחזר למצבו הקודם."
 
 #. Body of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:50
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:51
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "ייתכן שהקהילה יצאה מגילוי או ביטלה הצטרפות של משתמשים חדשים. רענן את הדף ולא תראה אותה שוב."
 
@@ -18133,7 +18105,7 @@ msgstr "הצטרף/ה ל-{productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:494
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:203
 msgid "Jump"
 msgstr "קפיצה"
 
@@ -18248,7 +18220,7 @@ msgid "Just join (keep other connections)"
 msgstr "הצטרף/הצטרפי עכשיו (שמור/שמרי על חיבורים אחרים)"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:278
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Keep {productName} running when the window is closed"
 msgstr "השאר את {productName} פועל כשהחלון סגור"
 
@@ -18257,10 +18229,12 @@ msgstr "השאר את {productName} פועל כשהחלון סגור"
 msgid "Keep all messages"
 msgstr "שמור את כל ההודעות"
 
+#. Description text in the motion tab.
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
-msgid "Keep animations, GIFs, hover, and tooltips running unfocused"
-msgstr "המשך הפעלת אנימציות, GIF-ים, אפקטי ריחוף וכלי עזר גם כאשר האפליקציה אינה במוקד"
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:39
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:377
+msgid "Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused."
+msgstr "שמור על הפעלת אנימציות, קובצי GIF, אפקטי ריחוף וטיפים בזמן שהחלון אינו ממוקד."
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:314
@@ -18277,7 +18251,7 @@ msgid "Keep Neko still"
 msgstr "השאר את ניקו במקום"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:266
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Keep running"
 msgstr "המשך לפעול"
 
@@ -18296,7 +18270,7 @@ msgid "Keep transmitting briefly after release."
 msgstr "המשך שידור לתקופה קצרה לאחר שחרור."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
 msgid "Keep window dimensions and placement between reloads"
 msgstr "שמור מימדי חלון ומיקום בין טעינות מחדש"
 
@@ -18443,7 +18417,7 @@ msgstr "שונה לאחרונה: {0}"
 msgid "Last changed: never"
 msgstr "שונה לאחרונה: אף פעם"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:173
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:170
 msgid "Last used"
 msgstr "נעשה בו שימוש לאחרונה"
 
@@ -18459,11 +18433,13 @@ msgstr "גרף השהיה"
 
 #. Button label that dismisses the update modal without taking action.
 #. Short confirmation button label in advanced settings.
+#. Short confirmation button label in advanced settings.
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
 msgid "Later"
 msgstr "אחר כך"
@@ -18476,12 +18452,12 @@ msgstr "לטביה"
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "הפעל את {productName} בעת ההתחברות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
 msgid "Launch at login"
 msgstr "הפעלה בעת התחברות"
 
@@ -18619,11 +18595,6 @@ msgstr "אפשר לבוטים בקהילה זו לשלוח לך הודעות פ�
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:21
 msgid "Let every incoming message be spoken, regardless of which channel is open."
 msgstr "הקראת כל הודעה נכנסת, ללא קשר לערוץ הפתוח."
-
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
-msgid "Let focus clicks activate controls."
-msgstr "אפשר שלחיצות על פריטים יפעילו את הפקדים."
 
 #. Toggle label in the community privacy modal: allow DMs from non-friend members of this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
@@ -18952,7 +18923,7 @@ msgid "Loading invites..."
 msgstr "טוען הזמנות..."
 
 #. Placeholder text in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:72
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:73
 msgid "Loading placeholder"
 msgstr "טוען מציין מיקום"
 
@@ -19081,8 +19052,8 @@ msgstr "תשלום עבור מתנת TRY מותאמת לשוק המקומי"
 msgid "Localized TRY subscription checkout"
 msgstr "תשלום עבור מנוי ב-TRY מקומי"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:209
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:194
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:151
 msgid "Location"
 msgstr "מיקום"
 
@@ -20048,7 +20019,7 @@ msgid "Mentions only"
 msgstr "אזכורים בלבד"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
 msgid "Menu bar"
 msgstr "סרגל תפריטים"
 
@@ -20135,7 +20106,7 @@ msgstr "ההודעה כוללת מדיה מצורפת"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:84
+#: src/features/channel/components/MessageActionBar.tsx:83
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
@@ -20439,12 +20410,12 @@ msgid "Military time"
 msgstr "שעון 24 שעות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:250
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
 msgid "Minimise"
 msgstr "מזער"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:246
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
 msgid "Minimize"
 msgstr "מזער"
 
@@ -20454,7 +20425,7 @@ msgstr "מזעור לשורת התפריטים"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:242
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "מזעור למגש המערכת"
 
@@ -20668,7 +20639,7 @@ msgstr "מתנה חודשית"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:88
+#: src/features/channel/components/MessageActionBar.tsx:87
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "עוד"
@@ -21274,7 +21245,7 @@ msgid "Narration"
 msgstr "קריינות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
 msgid "Native title bar"
 msgstr "שורת כותרת מקורית"
 
@@ -21353,7 +21324,7 @@ msgid "Network"
 msgstr "רשת"
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:54
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:53
 msgid "Network error"
 msgstr "שגיאת רשת"
 
@@ -21876,7 +21847,7 @@ msgstr "אין התאמות"
 msgid "No matches found"
 msgstr "לא נמצאו התאמות"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:345
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:344
 msgid "No mentions yet"
 msgstr "אין אזכורים עדיין"
 
@@ -22125,7 +22096,7 @@ msgid "No trusted domains"
 msgstr "אין דומיינים מהימנים"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:81
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:87
 msgid "No unread messages"
 msgstr "אין הודעות שלא נקראו"
 
@@ -22323,7 +22294,7 @@ msgid "Notification"
 msgstr "התראה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:234
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
 msgid "Notification area"
 msgstr "אזור התראות"
 
@@ -22725,14 +22696,14 @@ msgstr "פתח הגדרות מדיה מתקדמות"
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:70
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:64
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:65
 msgid "Open animated GIF in full view"
 msgstr "הצג GIF מונפש בתצוגה מלאה"
 
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:66
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:60
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:61
 msgid "Open animated GIF video in full view"
 msgstr "פתיחת סרטון GIF מונפש בתצוגה מלאה"
 
@@ -22925,7 +22896,7 @@ msgstr "פתח תמונה בדפדפן"
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #. Button or menu action label in the channel and chat embed image. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:74
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:68
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:69
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:40
 msgid "Open image in full view"
 msgstr "הצג תמונה בתצוגה מלאה"
@@ -23167,7 +23138,7 @@ msgstr "פותח את דף החברים. לחץ על מקש רווח או Enter 
 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:199
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:184
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:77
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:107
 msgid "Operating system"
@@ -23273,7 +23244,7 @@ msgid "Other"
 msgstr "אחר"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:433
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:435
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:31
 msgid "Other devices"
 msgstr "מכשירים אחרים"
@@ -23754,7 +23725,7 @@ msgid "Per-window audio isn't available on this build of macOS."
 msgstr "שמע לכל חלון אינו זמין בגרסת macOS זו."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
 msgid "Performance"
 msgstr "ביצועים"
 
@@ -24114,7 +24085,7 @@ msgstr "טקסט רגיל"
 msgid "Plan"
 msgstr "תוכנית"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:189
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:174
 msgid "Platform"
 msgstr "פלטפורמה"
 
@@ -24185,7 +24156,7 @@ msgstr "מופעל למרות תנועה מופחתת."
 #. Body of the error modal shown when joining a discovery community is rate limited.
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:59
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:60
 #: src/features/theme/components/modals/ShareThemeModal.tsx:67
 msgid "Please wait a moment and try again."
 msgstr "יש להמתין רגע ולנסות שוב."
@@ -24270,12 +24241,12 @@ msgid "Portuguese (Brazil)"
 msgstr "פורטוגזית (ברזיל)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
 msgid "Position"
 msgstr "מיקום"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:373
 msgid "Power saving"
 msgstr "חיסכון בחשמל"
 
@@ -25143,7 +25114,7 @@ msgid "Quiet"
 msgstr "שקט"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:274
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Quit"
 msgstr "יציאה"
 
@@ -25702,7 +25673,7 @@ msgid "Remain silent unless someone runs /tts manually."
 msgstr "הישאר שקט אלא אם מישהו מפעיל /tts באופן ידני."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
 msgid "Remember size & position"
 msgstr "זכור גודל ומיקום"
 
@@ -25711,7 +25682,7 @@ msgid "Remember this preference"
 msgstr "זכור העדפה זו"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
 msgid "Remember window"
 msgstr "זכור חלון"
 
@@ -26803,10 +26774,12 @@ msgid "Restart {productName} to use screen sharing"
 msgstr "הפעל מחדש את {productName} כדי להשתמש בשיתוף מסך"
 
 #. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
+#. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
 #. Confirmation prompt in the desktop settings tab. Preserve {productName}; it is inserted by code.
 #. Confirmation title after changing desktop transparency in Theme Studio.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
 msgid "Restart {productName}?"
 msgstr "להפעיל מחדש את {productName}?"
@@ -26816,8 +26789,8 @@ msgstr "להפעיל מחדש את {productName}?"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
 msgid "Restart now"
 msgstr "הפעל מחדש עכשיו"
@@ -27005,7 +26978,7 @@ msgstr "בטל חסימה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the devices tab. Keep it concise.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:46
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:45
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:59
 msgid "Revoke device"
 msgstr "ביטול הרשאת מכשיר"
@@ -27199,12 +27172,12 @@ msgid "Rows per page"
 msgstr "שורות לעמוד"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
 msgid "Run {productName} automatically when your computer starts"
 msgstr "הפעל את {productName} באופן אוטומטי כשהמחשב שלך מופעל"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
 msgid "Run at login"
 msgstr "הפעלה בעת התחברות"
 
@@ -29126,7 +29099,7 @@ msgid "Show {appName}"
 msgstr "הצג את {appName}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:238
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
 msgid "Show a {productName} icon in the system tray or menu bar"
 msgstr "הצג סמל של {productName} במגש המערכת או בשורת התפריטים"
 
@@ -29527,7 +29500,7 @@ msgid "Show this role separately"
 msgstr "הצג תפקיד זה בנפרד"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
 msgid "Show tray icon"
 msgstr "הצג סמל במגש"
 
@@ -29626,15 +29599,15 @@ msgid "Sign out"
 msgstr "התנתקות"
 
 #. Danger button in the devices tab. Signs out the currently selected devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:70
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:69
 msgid "Sign out {deviceCount, plural, one {# device} other {# devices}}"
 msgstr "התנתק מ-{deviceCount, plural, one {# מכשיר} other {# מכשירים}}"
 
 #. Security modal title for revoking every saved login session except the current one.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:14
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:459
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:502
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:461
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:504
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:43
 msgid "Sign out all other devices"
 msgstr "יציאה מכל המכשירים האחרים"
@@ -29653,12 +29626,12 @@ msgstr "יציאה מהחשבון במכשירים אחרים"
 msgid "Sign out?"
 msgstr "לצאת?"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:251
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:236
 msgid "Sign-in approved"
 msgstr "הכניסה אושרה"
 
 #. Short label in the authentication handoff approval flow. Keep the tone plain and specific.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:17
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:16
 msgid "Sign-in code"
 msgstr "קוד כניסה"
 
@@ -29678,7 +29651,7 @@ msgstr "פרטי כניסה"
 msgid "Sign-in flow"
 msgstr "תהליך ההתחברות"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:104
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:94
 msgid "Sign-in request"
 msgstr "בקשת התחברות"
 
@@ -29693,7 +29666,7 @@ msgid "Signed in"
 msgstr "מחובר"
 
 #. Settings section label for account sessions and devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:515
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:517
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Signed-in devices"
 msgstr "מכשירים מחוברים"
@@ -29792,7 +29765,7 @@ msgstr "מפתח אתר"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:174
 msgid "Size"
 msgstr "גודל"
@@ -29848,7 +29821,7 @@ msgid "Skip this step"
 msgstr "דלג על שלב זה"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:76
+#: src/app/App.tsx:70
 msgid "Skip to content"
 msgstr "דלג לתוכן"
 
@@ -30122,7 +30095,7 @@ msgstr "משהו"
 
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:263
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:248
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
@@ -30231,7 +30204,7 @@ msgstr "משהו השתבש."
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:17
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:18
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
@@ -30755,12 +30728,12 @@ msgid "Start voice call"
 msgstr "התחלת שיחה קולית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
 msgid "Start with computer"
 msgstr "התחלה עם המחשב"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
 msgid "Startup"
 msgstr "הפעלה"
 
@@ -30779,7 +30752,7 @@ msgid "Status"
 msgstr "סטטוס"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:230
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
 msgid "Status icon"
 msgstr "סמל סטטוס"
 
@@ -30795,10 +30768,12 @@ msgstr "סטטוס"
 msgid "Status:"
 msgstr "סטטוס:"
 
+#. Label in the motion tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
+#. Short label for an advanced app interaction toggle.
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:345
 msgid "Stay fully interactive when unfocused"
 msgstr "הישאר אינטראקטיבי לחלוטין גם כשאינך ממוקד"
 
@@ -31654,7 +31629,7 @@ msgid "System time format"
 msgstr "פורמט שעת המערכת"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
 msgid "System tray"
 msgstr "מגש המערכת"
 
@@ -32041,7 +32016,7 @@ msgstr "האפליקציה קרסה"
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "האפליקציה קרסה. בודקים אם יש עדכונים שעשויים לפתור את הבעיה…"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:254
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:239
 msgid "The app should now be signed in to your account."
 msgstr "האפליקציה אמורה להיות מחוברת כעת לחשבון שלך."
 
@@ -32514,7 +32489,7 @@ msgid "This community has reached its maximum member limit and is not accepting 
 msgstr "הקהילה הזו הגיעה למגבלת החברים המקסימלית שלה ואינה מקבלת חברים חדשים כרגע."
 
 #. Body of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:25
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:26
 msgid "This community has reached its member limit, so you can't join right now."
 msgstr "הקהילה הזו הגיעה למגבלת החברים שלה, כך שאינך יכול/ה להצטרף כרגע."
 
@@ -32524,7 +32499,7 @@ msgid "This community is for Visionary members"
 msgstr "קהילה זו מיועדת לחברי Visionary"
 
 #. Title of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:21
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:22
 msgid "This community is full"
 msgstr "הקהילה הזו מלאה"
 
@@ -32535,7 +32510,7 @@ msgid "This community is marked for mature content and may contain material that
 msgstr "הקהילה הזו מסומנת כבעלת תוכן למבוגרים ועשויה להכיל חומר שאינו הולם עבור משתמשים מסוימים."
 
 #. Title of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:45
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:46
 msgid "This community is no longer available"
 msgstr "הקהילה הזו אינה זמינה עוד"
 
@@ -33285,12 +33260,12 @@ msgid "Tip"
 msgstr "טיפ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
 msgid "Title bar"
 msgstr "שורת כותרת"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
 msgid "Titlebar"
 msgstr "שורת כותרת"
 
@@ -33356,7 +33331,7 @@ msgid "Toggle embed suppression"
 msgstr "החלף דיכוי הטמעה"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
 msgid "Toggle hardware acceleration"
 msgstr "הפעל/השבת האצת חומרה"
 
@@ -33486,7 +33461,7 @@ msgstr "קיצורי דרך"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:62
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:369
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:366
 msgid "Tooltips"
 msgstr "תיאורי כלים"
@@ -33592,12 +33567,12 @@ msgid "Travel & places"
 msgstr "נסיעות ומקומות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
 msgid "Tray"
 msgstr "מגש"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
 msgid "Tray icon"
 msgstr "סמל מגש"
 
@@ -34306,7 +34281,7 @@ msgid "Unfocus"
 msgstr "הסר מיקוד"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:349
 msgid "Unfocused"
 msgstr "לא ממוקד"
 
@@ -34369,7 +34344,7 @@ msgstr "ערוץ לא ידוע"
 #. Short label in the entrance sound section. Keep it concise.
 #. Short label in the recent mentions content popout. Keep it concise.
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:77
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:83
 #: src/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds.ts:24
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:44
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:43
@@ -34386,7 +34361,7 @@ msgstr "תאריך לא ידוע"
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:43
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:66
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
 msgstr "מכשיר לא ידוע"
@@ -34649,7 +34624,7 @@ msgstr "ערוץ ללא שם"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:18
+#: src/features/channel/state/ChannelDisplayName.ts:19
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "קבוצה ללא שם"
@@ -34824,7 +34799,7 @@ msgstr "קובץ מדבקה לא נתמך"
 #. Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionBar.tsx:96
+#: src/features/channel/components/MessageActionBar.tsx:95
 #: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
@@ -35346,7 +35321,7 @@ msgstr "שימוש באימוג'י מונפשים"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop scrolling toggle.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:313
 msgid "Use autoscrolling"
 msgstr "שימוש בגלילה אוטומטית"
@@ -35435,7 +35410,7 @@ msgid "Use global profile"
 msgstr "השתמש בפרופיל גלובלי"
 
 #. Short label for an advanced desktop troubleshooting preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
 msgid "Use hardware acceleration"
 msgstr "השתמש/י בהאצת חומרה"
 
@@ -35481,8 +35456,8 @@ msgstr "השתמשו בכרטיס מקומי כדי לאמת כרטיס שהונ
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
 msgid "Use native title bar"
 msgstr "השתמשו בשורת כותרת מקורית"
 
@@ -35531,7 +35506,7 @@ msgid "Use system-wide push-to-talk and shortcuts."
 msgstr "השתמש ב-push-to-talk ובקיצורי דרך בכל מערכת ההפעלה."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
 msgid "Use the operating system's window chrome"
 msgstr "השתמש בעיטור החלון של מערכת ההפעלה"
 
@@ -36150,7 +36125,7 @@ msgstr "יש לאמת את כתובת האימייל שלך כדי להתחיל 
 msgid "Verifying card"
 msgstr "מאמתים את הכרטיס"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:144
 msgid "Verifying code…"
 msgstr "מאמת קוד…"
 
@@ -36351,7 +36326,7 @@ msgid "View all roles for {displayName}"
 msgstr "הצגת כל התפקידים של {displayName}"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:73
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:79
 msgid "View all unread"
 msgstr "הצג את כל ההודעות שלא נקראו"
 
@@ -36412,7 +36387,7 @@ msgstr "הצגת פרופיל קהילה"
 #. Tooltip and accessibility label for opening a linked device details modal.
 #: src/features/guild/components/modals/guild_tabs/BannedUserActionsSheet.tsx:18
 #: src/features/ui/action_menu/BannedUserContextMenu.tsx:45
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:50
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:49
 msgid "View details"
 msgstr "הצגת פרטים"
 
@@ -36940,7 +36915,7 @@ msgstr "מחכה שת..."
 msgid "Warning"
 msgstr "אזהרה"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:175
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:160
 msgid "Was this you?"
 msgstr "האם זו היית/ה את/ה?"
 
@@ -37151,7 +37126,7 @@ msgid "We'll verify your new email with a one-time code."
 msgstr "נאמת את האימייל החדש שלך באמצעות קוד חד-פעמי."
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:58
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:57
 msgid "We're having trouble connecting to the space-time continuum. Check your connection and try again."
 msgstr "אנחנו מתקשים להתחבר לרצף הזמן-חלל. בדוק את החיבור שלך ונסה שוב."
 
@@ -37565,7 +37540,7 @@ msgstr "Win"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Top-level native menu bar title (Window menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts:70
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
 msgid "Window"
 msgstr "חלון"
 
@@ -37576,32 +37551,32 @@ msgid "Window"
 msgstr "חלון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
 msgid "Window chrome"
 msgstr "חלון יישום"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
 msgid "Window decorations"
 msgstr "עיטורי חלון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:353
 msgid "Window focus"
 msgstr "מיקוד חלון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
 msgid "Window position"
 msgstr "מיקום חלון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
 msgid "Window size"
 msgstr "גודל חלון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
 msgid "Window state"
 msgstr "מצב חלון"
 
@@ -37746,7 +37721,7 @@ msgstr "כבר יש לך {premiumProductName} לכל החיים"
 msgid "You already have this connection."
 msgstr "חיבור זה כבר קיים אצלך."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:107
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:97
 msgid "You are about to authorize an app to sign in to your account. Only continue if you initiated this request from a device you control."
 msgstr "אתה עומד לאשר לאפליקציה להיכנס לחשבונך. המשך רק אם יזמת בקשה זו ממכשיר שבשליטתך."
 
@@ -37939,7 +37914,7 @@ msgid "You can't install this sticker pack."
 msgstr "אינך יכול/ה להתקין חבילת מדבקות זו."
 
 #. Title of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:37
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:38
 msgid "You can't join this community"
 msgstr "אינך יכול/ה להצטרף לקהילה זו"
 
@@ -38136,7 +38111,7 @@ msgid "You don't have permission to rename this emoji. The name was reverted to 
 msgstr "אין לך הרשאה לשנות את שם האימוג'י הזה. השם שוחזר לשם הקודם."
 
 #. Body of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:41
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
 msgid "You have been banned from this community."
 msgstr "נאסר עליך להשתמש בקהילה זו."
 
@@ -38352,7 +38327,7 @@ msgstr "לא תקבל התראות בשולחן העבודה"
 msgid "You'll appear offline"
 msgstr "תופיע/י במצב לא מקוון"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:462
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "יהיה עלייך להתחבר מחדש בכל המכשירים המנותקים"
 
@@ -38368,7 +38343,7 @@ msgstr "אתה עומד להפסיק לשתף את פעילותך הקולית �
 
 #. Body text in the unread channels content.
 #. End-of-list text in the recent mentions page when every mention has been seen.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:85
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:91
 #: src/features/messaging/components/pages/RecentMentionsPage.tsx:40
 msgid "You're all caught up."
 msgstr "הכול סודר."
@@ -38467,7 +38442,7 @@ msgstr "אתה עורך הודעות מהר מדי"
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:9
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:23
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:55
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:56
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:76
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:148
 #: src/features/theme/components/modals/ShareThemeModal.tsx:63
@@ -38494,7 +38469,7 @@ msgid "You're in the call"
 msgstr "אתה בשיחה"
 
 #. Body of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:33
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:34
 msgid "You're in the maximum number of communities. Leave one and try again."
 msgstr "הגעת למספר הקהילות המקסימלי. עזוב קהילה אחת ונסה שוב."
 
@@ -38574,7 +38549,7 @@ msgid "You've got CSS!"
 msgstr "יש לך CSS!"
 
 #. Title of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:29
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:30
 msgid "You've reached the community limit"
 msgstr "הגעת למספר הקהילות המקסימלי"
 
@@ -38583,7 +38558,7 @@ msgstr "הגעת למספר הקהילות המקסימלי"
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:62
 #: src/features/messaging/components/pages/MessageListPage.tsx:25
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:406
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:405
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:37
 msgid "You've reached the end"
 msgstr "הגעת לקצה"
@@ -38627,7 +38602,7 @@ msgstr "קיבלת מתנה"
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "שלחת יותר מדי הודעות אימייל לאימות. המתן רגע ונסה שוב."
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:409
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:408
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "ראית את כל האזכורים האחרונים שלך. נוספים יופיעו כאן בקרוב."
 

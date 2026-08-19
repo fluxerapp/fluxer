@@ -293,7 +293,7 @@ msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}
 msgstr "{categoryLabel}, {count, plural, one {# κοινότητα} other {# κοινότητες}}"
 
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:52
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:58
 msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{channelHeading}, {mentionCount, plural, one {# αναφορά} other {# αναφορές}}"
 
@@ -535,19 +535,19 @@ msgstr "{count, plural, one {Χρησιμοποιείτε ήδη τη μοναδ
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {Έχετε φτάσει το όριο του # αποθηκευμένου στοιχείου πολυμέσων. Αφαιρέστε ένα για να προσθέσετε άλλο.} other {Έχετε φτάσει το όριο των # αποθηκευμένων στοιχείων πολυμέσων. Αφαιρέστε ένα για να προσθέσετε άλλο.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:395
+#: src/features/invite/commands/InviteCommands.tsx:401
 msgid "{count, plural, one {You're at the limit of # emoji pack. Delete one to create another.} other {You're at the limit of # emoji packs. Delete one to create another.}}"
 msgstr "{count, plural, one {Έχετε φτάσει το όριο του # πακέτου emoji. Διαγράψτε ένα για να δημιουργήσετε άλλο.} other {Έχετε φτάσει το όριο των # πακέτων emoji. Διαγράψτε ένα για να δημιουργήσετε άλλο.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:381
+#: src/features/invite/commands/InviteCommands.tsx:387
 msgid "{count, plural, one {You're at the limit of # installed emoji pack. Remove one to add another.} other {You're at the limit of # installed emoji packs. Remove one to add another.}}"
 msgstr "{count, plural, one {Έχετε φτάσει το όριο του # εγκατεστημένου πακέτου emoji. Αφαιρέστε ένα για να προσθέσετε άλλο.} other {Έχετε φτάσει το όριο των # εγκατεστημένων πακέτων emoji. Αφαιρέστε ένα για να προσθέσετε άλλο.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:413
+#: src/features/invite/commands/InviteCommands.tsx:419
 msgid "{count, plural, one {You're at the limit of # installed sticker pack. Remove one to add another.} other {You're at the limit of # installed sticker packs. Remove one to add another.}}"
 msgstr "{count, plural, one {Έχετε φτάσει το όριο του # εγκατεστημένου πακέτου αυτοκόλλητων. Αφαιρέστε ένα για να προσθέσετε άλλο.} other {Έχετε φτάσει το όριο των # εγκατεστημένων πακέτων αυτοκόλλητων. Αφαιρέστε ένα για να προσθέσετε άλλο.}}"
 
-#: src/features/invite/commands/InviteCommands.tsx:427
+#: src/features/invite/commands/InviteCommands.tsx:433
 msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
 msgstr "{count, plural, one {Έχετε φτάσει το όριο του # πακέτου αυτοκόλλητων. Διαγράψτε ένα για να δημιουργήσετε άλλο.} other {Έχετε φτάσει το όριο των # πακέτων αυτοκόλλητων. Διαγράψτε ένα για να δημιουργήσετε άλλο.}}"
 
@@ -629,7 +629,7 @@ msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "Επιφάνεια εργασίας {desktopChannel} {desktopVersion}"
 
 #. Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:74
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:73
 msgid "{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}"
 msgstr "{deviceCount, plural, one {# συσκευή επιλέχθηκε για αποσύνδεση} other {# συσκευές επιλέχθηκαν για αποσύνδεση}}"
 
@@ -1019,15 +1019,19 @@ msgstr "Το {PRODUCT_NAME} βρήκε μια νέα συσκευή εισόδο
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "Το {PRODUCT_NAME} βρήκε μια νέα συσκευή εξόδου ήχου με όνομα <0>{deviceName}</0>. Θέλετε να μεταβείτε σε αυτήν;"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:111
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "Το {PRODUCT_NAME} πρέπει να επανεκκινηθεί πριν οι εγγενείς ρυθμίσεις κύλισης του Chromium αλλάξουν τον τρόπο λειτουργίας της κύλισης."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:190
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "Το {PRODUCT_NAME} πρέπει να επανεκκινηθεί για να εφαρμοστεί η επιτάχυνση υλικού."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:192
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:144
+msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
+msgstr "Το {PRODUCT_NAME} χρειάζεται επανεκκίνηση για να εφαρμοστεί η αλλαγή στη γραμμή τίτλου."
+
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "Το {PRODUCT_NAME} πρέπει να επανεκκινηθεί για να απενεργοποιήσει την επιτάχυνση υλικού του Chromium. Χρησιμοποιήστε το μόνο εάν αντιμετωπίζετε προβλήματα με γραφικά ή υψηλή χρήση GPU."
 
@@ -1084,11 +1088,6 @@ msgstr "Το {productName} δεν μπόρεσε να επικοινωνήσει
 #: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "Το {productName} δεν μπόρεσε να επανεκκινηθεί στην ενημερωμένη έκδοση που έγινε λήψη. Επαναλάβετε τη διαδικασία από το κουμπί ενημέρωσης."
-
-#. Display name for the product desktop client in the authentication handoff approval flow when the raw client name is Electron. Preserve {productName}; it is inserted by code.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:21
-msgid "{productName} Desktop"
-msgstr "Επιφάνεια εργασίας {productName}"
 
 #. Invite page notice shown when automated raid protection pauses invites. productName is the Fluxer product name.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:17
@@ -1233,7 +1232,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} στο διαδίκτυο"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:13
+#: src/features/channel/state/ChannelDisplayName.ts:14
 msgid "{resolvedName}'s group"
 msgstr "Ομάδα του/της {resolvedName}"
 
@@ -1977,11 +1976,11 @@ msgstr "Ένα επαναχρησιμοποιήσιμο στοιχείο για 
 msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "μια εμπλουτισμένη ενσωμάτωση ή προεπισκόπηση συνδέσμου (όχι ένα μεταφορτωμένο αρχείο)"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:181
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:166
 msgid "A sign-in request was made for your account. Only approve if you initiated it."
 msgstr "Έγινε αίτημα σύνδεσης για τον λογαριασμό σας. Εγκρίνετε μόνο αν το ξεκινήσατε εσείς."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:179
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:164
 msgid "A sign-in request was made from the following device. Only approve if you recognize it."
 msgstr "Έγινε αίτημα σύνδεσης από την παρακάτω συσκευή. Εγκρίνετε μόνο αν την αναγνωρίζετε."
 
@@ -2036,7 +2035,7 @@ msgid "About you"
 msgstr "Σχετικά με εσάς"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
 msgid "Acceleration"
 msgstr "Επιτάχυνση"
 
@@ -2233,11 +2232,6 @@ msgstr "Ενέργεια με τα δύο εικονίδια."
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:37
 msgid "Actions"
 msgstr "Ενέργειες"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
-msgid "Activation click"
-msgstr "Κλικ ενεργοποίησης"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -3461,13 +3455,13 @@ msgstr "Τα κινούμενα emoji, τα GIF και τα αυτοκόλλητ
 
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:80
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:81
 #: src/features/messaging/components/modals/MediaViewerModal.tsx:98
 msgid "Animated GIF"
 msgstr "Κινούμενο GIF"
 
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:76
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:77
 msgid "Animated GIF video"
 msgstr "Κινούμενο βίντεο GIF"
 
@@ -3563,7 +3557,7 @@ msgid "Animation picker"
 msgstr "Επιλογή κινούμενων σχεδίων"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:361
 msgid "Animation playback"
 msgstr "Αναπαραγωγή κινούμενων σχεδίων"
 
@@ -3582,7 +3576,7 @@ msgid "Animations"
 msgstr "Κινούμενα σχέδια"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:357
 msgid "Animations while unfocused"
 msgstr "Κινούμενα σχέδια όταν δεν είναι σε εστίαση"
 
@@ -3844,7 +3838,7 @@ msgstr "Εφαρμογή σε όλες τις κοινότητες"
 msgid "Approval required"
 msgstr "Απαιτείται έγκριση"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:223
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:208
 msgid "Approve"
 msgstr "Έγκριση"
 
@@ -4482,7 +4476,7 @@ msgid "Automatic message reading"
 msgstr "Αυτόματη ανάγνωση μηνυμάτων"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "Αυτόματη εκκίνηση"
 
@@ -5276,7 +5270,7 @@ msgid "Boost"
 msgstr "Ενίσχυση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
 msgid "Boot"
 msgstr "Εκκίνηση"
 
@@ -5408,7 +5402,7 @@ msgid "Bottom tooltip"
 msgstr "Εργαλειοθήκη κάτω μέρους"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
 msgid "Bounds"
 msgstr "Όρια"
 
@@ -7148,7 +7142,7 @@ msgstr "Εκκαθάριση εικονικών συνημμένων"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Εκκαθάριση εντολής"
@@ -7210,7 +7204,7 @@ msgstr "Εκκαθάριση πεδίου αναζήτησης"
 #. Button or menu action label in the devices tab. Keep it concise.
 #: src/features/ui/components/form/FormCombobox.tsx:91
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:62
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:61
 msgid "Clear selection"
 msgstr "Κατάργηση επιλογής"
 
@@ -7287,11 +7281,6 @@ msgstr "Κάντε κλικ στο παρακάτω κείμενο για να �
 msgid "Click the upload icon next to any sound to customize it with your own audio file. Max {customSoundMaxSizeLabel}."
 msgstr "Κάντε κλικ στο εικονίδιο μεταφόρτωσης δίπλα σε οποιονδήποτε ήχο για να τον προσαρμόσετε με το δικό σας αρχείο ήχου. Μέγιστο {customSoundMaxSizeLabel}."
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:18
-msgid "Click through"
-msgstr "Μετάβαση"
-
 #. Label in the user profile modal.
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:23
 msgid "Click to add a note"
@@ -7331,7 +7320,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "Πατήστε για να ανοίξετε την επιλογή χρώματος και να διαλέξετε ένα νέο χρώμα."
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:80
+#: src/features/channel/components/MessageActionBar.tsx:79
 msgid "Click to react"
 msgstr "Πατήστε για αντίδραση"
 
@@ -7354,7 +7343,7 @@ msgstr "Πατήστε για αποκάλυψη spoiler"
 msgid "Click to view all reactions"
 msgstr "Κάντε κλικ για να δείτε όλες τις αντιδράσεις"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:146
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:143
 msgid "Client"
 msgstr "Πελάτης"
 
@@ -7465,7 +7454,7 @@ msgstr "Κλείσιμο στην μπάρα μενού"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:262
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "Κλείσιμο στο tray"
 
@@ -7592,7 +7581,7 @@ msgid "Codes"
 msgstr "Κωδικοί"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:61
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:67
 msgid "Collapse"
 msgstr "Σύμπτυξη"
 
@@ -7635,7 +7624,7 @@ msgid "Collapse inline DM list"
 msgstr "Σύμπτυξη λίστας προσωπικών μηνυμάτων"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:69
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:75
 msgid "Collapse unread messages for {channelHeading}"
 msgstr "Σύμπτυξη μη αναγνωσμένων μηνυμάτων για {channelHeading}"
 
@@ -8072,7 +8061,7 @@ msgid "Completely hide your {premiumProductName} badge from other users"
 msgstr "Απόκρυψη της κονκάρδας {premiumProductName} από τους άλλους χρήστες"
 
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:134
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:233
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:218
 msgid "Completing sign-in…"
 msgstr "Ολοκλήρωση σύνδεσης…"
 
@@ -8484,7 +8473,7 @@ msgstr "Τα μενού περιβάλλοντος μπορούν να ανοί�
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:162
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:119
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
@@ -9179,7 +9168,7 @@ msgid "Couldn't join community"
 msgstr "Δεν ήταν δυνατή η είσοδος στην κοινότητα"
 
 #. Title of the generic fallback error modal shown when joining a discovery community fails.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:13
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:14
 msgid "Couldn't join this community"
 msgstr "Αδυναμία συμμετοχής σε αυτήν την κοινότητα"
 
@@ -9926,7 +9915,7 @@ msgid "Current community"
 msgstr "Τρέχουσα κοινότητα"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:428
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:430
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:27
 msgid "Current device"
 msgstr "Τρέχουσα συσκευή"
@@ -9941,7 +9930,7 @@ msgstr "Τρέχουσα συνομιλία"
 msgid "Current ping:"
 msgstr "Τρέχον ping:"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:177
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:174
 msgid "Current session"
 msgstr "Τρέχουσα συνεδρία"
 
@@ -10130,7 +10119,7 @@ msgid "Custom themes"
 msgstr "Προσαρμοσμένα θέματα"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
 msgid "Custom title bar"
 msgstr "Προσαρμοσμένη γραμμή τίτλου"
 
@@ -10466,7 +10455,7 @@ msgstr "Εντοπισμός σφαλμάτων μέλους"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:92
+#: src/features/channel/components/MessageActionBar.tsx:91
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -10963,7 +10952,7 @@ msgstr "Συμπαγής διάταξη"
 
 #. Short label in the settings dialog permission components. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/shared/PermissionComponents.tsx:16
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:220
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:205
 msgid "Deny"
 msgstr "Άρνηση"
 
@@ -11082,7 +11071,7 @@ msgid "Desktop notifications have been blocked. You can enable them later in you
 msgstr "Οι ειδοποιήσεις στην επιφάνεια εργασίας έχουν αποκλειστεί. Μπορείτε να τις ενεργοποιήσετε αργότερα στις ρυθμίσεις του προγράμματος περιήγησης ή στις ρυθμίσεις χρήστη, ή στις {notificationSettingsPath}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:50
 msgid "Desktop startup"
 msgstr "Εκκίνηση στην επιφάνεια εργασίας"
 
@@ -11119,7 +11108,7 @@ msgstr "Η έκδοση για επιτραπέζιο υπολογιστή {vers
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Desktop window"
 msgstr "Παράθυρο εφαρμογής υπολογιστή"
@@ -11215,7 +11204,7 @@ msgid "Development build"
 msgstr "Έκδοση ανάπτυξης"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:139
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:136
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:37
 msgid "Device"
 msgstr "Συσκευή"
@@ -11230,7 +11219,7 @@ msgstr "Ειδοποιήσεις συσκευής"
 msgid "Device controls"
 msgstr "Έλεγχος συσκευής"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:134
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "Λεπτομέρειες συσκευής"
 
@@ -11259,7 +11248,7 @@ msgstr "Συσκευή:"
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:528
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:62
@@ -11434,7 +11423,7 @@ msgid "Disable hardware acceleration and restart"
 msgstr "Απενεργοποίηση επιτάχυνσης υλικού και επανεκκίνηση"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
 msgid "Disable hardware acceleration?"
 msgstr "Απενεργοποίηση επιτάχυνσης υλικού;"
 
@@ -13005,7 +12994,7 @@ msgid "Enable hardware acceleration and restart"
 msgstr "Ενεργοποίηση επιτάχυνσης υλικού και επανεκκίνηση"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
 msgid "Enable hardware acceleration?"
 msgstr "Ενεργοποίηση επιτάχυνσης υλικού;"
 
@@ -13430,7 +13419,7 @@ msgstr "Εισαγάγετε τον {digitCount}-ψήφιο κωδικό από 
 msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "Εισαγάγετε τον κωδικό {digitCount} ψηφίων που στάλθηκε στο {phoneNumber}."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:128
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 msgid "Enter the code"
 msgstr "Εισαγάγετε τον κωδικό"
 
@@ -13457,7 +13446,7 @@ msgstr "Εισάγετε τον κωδικό που στάλθηκε στο τρ
 msgid "Enter the code sent to your email address."
 msgstr "Εισάγετε τον κωδικό που στάλθηκε στη διεύθυνση email σας."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:131
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:121
 msgid "Enter the code shown in the app to continue."
 msgstr "Εισαγάγετε τον κωδικό που εμφανίζεται στην εφαρμογή για να συνεχίσετε."
 
@@ -13501,7 +13490,7 @@ msgstr "Εισαγάγετε τον κωδικό SMS"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Πληκτρολογήστε αυτόν τον κωδικό στο πρόγραμμα περιήγησής σας για να ολοκληρώσετε τη σύνδεση."
 
-#: src/features/channel/components/EditingMessageInput.tsx:366
+#: src/features/channel/components/EditingMessageInput.tsx:355
 msgid "enter to <0><1>save</1></0>"
 msgstr "πατήστε enter για <0><1>αποθήκευση</1></0>"
 
@@ -13642,7 +13631,7 @@ msgstr "Πλήκτρο Esc"
 msgid "Escape key exits keyboard mode"
 msgstr "Το πλήκτρο Esc βγαίνει από τη λειτουργία πληκτρολογίου"
 
-#: src/features/channel/components/EditingMessageInput.tsx:347
+#: src/features/channel/components/EditingMessageInput.tsx:336
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "πατήστε escape για <0><1>ακύρωση</1></0>"
 
@@ -13736,7 +13725,7 @@ msgid "Excluded search filter: {filter}"
 msgstr "Αποκλεισμός φίλτρου αναζήτησης: {filter}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:270
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Exit"
 msgstr "Έξοδος"
 
@@ -13764,7 +13753,7 @@ msgid "Exit preview"
 msgstr "Έξοδος από την προεπισκόπηση"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:57
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:63
 msgid "Expand"
 msgstr "Ανάπτυξη"
 
@@ -13796,7 +13785,7 @@ msgid "Expand or collapse compact call view"
 msgstr "Ανάπτυξη ή σύμπτυξη της συμπαγούς προβολής κλήσης"
 
 #. Short label in the unread channels content. Preserve {channelHeading}; it is inserted by code.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:65
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:71
 msgid "Expand unread messages for {channelHeading}"
 msgstr "Ανάπτυξη μη αναγνωσμένων μηνυμάτων για {channelHeading}"
 
@@ -14707,18 +14696,6 @@ msgstr "Φινλανδικά"
 msgid "First and last name"
 msgstr "Όνομα και επίθετο"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
-msgid "First click"
-msgstr "Πρώτο κλικ"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
-msgid "First click pass-through when unfocused"
-msgstr "Πρώτο κλικ διαπερατό όταν δεν είναι εστιασμένο"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "Πρώτη επιλογή"
@@ -14752,11 +14729,6 @@ msgstr "Fluxer"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:179
 msgid "Focus"
 msgstr "Εστίαση"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
-msgid "Focus click"
-msgstr "Εστίαση με κλικ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -15048,7 +15020,7 @@ msgstr "προώθηση"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:100
+#: src/features/channel/components/MessageActionBar.tsx:99
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -15095,7 +15067,7 @@ msgid "FPS"
 msgstr "FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
 msgid "Frame"
 msgstr "Κορνίζα"
 
@@ -15870,7 +15842,7 @@ msgid "Granular selection"
 msgstr "Επιλογή λεπτομερειών"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
 msgid "Graphics"
 msgstr "Γραφικά"
 
@@ -16096,12 +16068,12 @@ msgid "Harassment or threats"
 msgstr "Παρενόχληση ή απειλές"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:14
 msgid "Hardware"
 msgstr "Υλικό"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:10
 msgid "Hardware acceleration"
 msgstr "Επιτάχυνση υλικού"
 
@@ -16424,7 +16396,7 @@ msgid "Hide preview thumbnail"
 msgstr "Απόκρυψη μικρογραφίας προεπισκόπησης"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:258
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "Απόκρυψη του παραθύρου όταν ελαχιστοποιείται και επανεκκίνηση από το εικονίδιο"
 
@@ -16444,7 +16416,7 @@ msgid "Hide Visionary ID badge ({premiumLifetimeSequenceLabel})"
 msgstr "Απόκρυψη σήματος Visionary ID ({premiumLifetimeSequenceLabel})"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:254
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
 msgid "Hide window"
 msgstr "Απόκρυψη παραθύρου"
 
@@ -16518,7 +16490,7 @@ msgstr "Κρατήστε πατημένο το πλήκτρο {keyboardShortcut}
 msgid "Hold for instant upload"
 msgstr "Κρατήστε πατημένο για άμεση μεταφόρτωση"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:439
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:441
 msgid "Hold Shift and press X to mark devices for sign out. Press {selectAllShortcutLabel} to select all."
 msgstr "Κρατήστε πατημένο το Shift και πατήστε το X για να επισημάνετε τις συσκευές για αποσύνδεση. Πατήστε {selectAllShortcutLabel} για να επιλέξετε όλα."
 
@@ -16568,7 +16540,7 @@ msgid "Hover buttons"
 msgstr "Κουμπιά επικάλυψης"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:365
 msgid "Hover effects"
 msgstr "Εφέ κατάδειξης"
 
@@ -17247,7 +17219,7 @@ msgstr "Καρτέλες εισερχομένων"
 msgid "Include {mentionType} mentions"
 msgstr "Συμπερίληψη αναφορών {mentionType}"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:127
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:126
 msgid "Include all community mentions"
 msgstr "Να συμπεριλαμβάνονται όλες οι αναφορές κοινότητας"
 
@@ -17945,7 +17917,7 @@ msgstr "Οι προσκλήσεις στην κοινότητα {communityName} 
 msgid "Invoice"
 msgstr "Τιμολόγιο"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:163
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:160
 msgid "IP address"
 msgstr "Διεύθυνση IP"
 
@@ -17974,7 +17946,7 @@ msgid "It may have been deleted. The name was reverted to what it was before."
 msgstr "Ενδέχεται να έχει διαγραφεί. Το όνομα επανήλθε στην προηγούμενη κατάστασή του."
 
 #. Body of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:50
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:51
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "Ενδέχεται να έχει καταργηθεί από την ανακάλυψη ή να έχει απενεργοποιήσει τις νέες συμμετοχές. Ανανεώστε τη σελίδα και δεν θα το ξαναδείτε."
 
@@ -18133,7 +18105,7 @@ msgstr "Έγινε μέλος στο {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:494
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:203
 msgid "Jump"
 msgstr "Μετάβαση"
 
@@ -18248,7 +18220,7 @@ msgid "Just join (keep other connections)"
 msgstr "Απλά μπες (διατήρηση άλλων συνδέσεων)"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:278
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Keep {productName} running when the window is closed"
 msgstr "Να παραμένει το {productName} σε λειτουργία όταν το παράθυρο είναι κλειστό"
 
@@ -18257,10 +18229,12 @@ msgstr "Να παραμένει το {productName} σε λειτουργία ό�
 msgid "Keep all messages"
 msgstr "Διατήρηση όλων των μηνυμάτων"
 
+#. Description text in the motion tab.
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
-msgid "Keep animations, GIFs, hover, and tooltips running unfocused"
-msgstr "Διατηρεί τις κινούμενες εικόνες, τα GIF, την εναλλαγή με το ποντίκι και τις συμβουλές εργαλείων σε λειτουργία ακόμα και όταν η εφαρμογή δεν είναι στο προσκήνιο"
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:39
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:377
+msgid "Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused."
+msgstr "Διατήρηση κινούμενων εικόνων, αναπαραγωγής GIF, εφέ κατά την τοποθέτηση του δείκτη του ποντικιού και συμβουλών εργαλείων όταν το παράθυρο δεν είναι εστιασμένο."
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:314
@@ -18277,7 +18251,7 @@ msgid "Keep Neko still"
 msgstr "Κράτα το Neko ακίνητο"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:266
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Keep running"
 msgstr "Συνέχισε να τρέχεις"
 
@@ -18296,7 +18270,7 @@ msgid "Keep transmitting briefly after release."
 msgstr "Συνεχίζει τη μετάδοση για λίγο μετά την απελευθέρωση."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
 msgid "Keep window dimensions and placement between reloads"
 msgstr "Διατήρηση διαστάσεων και θέσης παραθύρου μεταξύ των ανανεώσεων"
 
@@ -18443,7 +18417,7 @@ msgstr "Τελευταία αλλαγή: {0}"
 msgid "Last changed: never"
 msgstr "Τελευταία αλλαγή: ποτέ"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:173
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:170
 msgid "Last used"
 msgstr "Τελευταία χρήση"
 
@@ -18459,11 +18433,13 @@ msgstr "Γράφημα καθυστέρησης"
 
 #. Button label that dismisses the update modal without taking action.
 #. Short confirmation button label in advanced settings.
+#. Short confirmation button label in advanced settings.
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
 msgid "Later"
 msgstr "Αργότερα"
@@ -18476,12 +18452,12 @@ msgstr "Λετονία"
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "Εκκίνηση του {productName} κατά τη σύνδεση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
 msgid "Launch at login"
 msgstr "Εκκίνηση κατά την είσοδο"
 
@@ -18619,11 +18595,6 @@ msgstr "Να επιτρέπονται τα DM από bot αυτής της κο�
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:21
 msgid "Let every incoming message be spoken, regardless of which channel is open."
 msgstr "Να διαβάζεται κάθε εισερχόμενο μήνυμα, ανεξάρτητα από το ποιο κανάλι είναι ανοιχτό."
-
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
-msgid "Let focus clicks activate controls."
-msgstr "Επιτρέπει την ενεργοποίηση των στοιχείων ελέγχου με κλικ όταν έχουν την εστίαση."
 
 #. Toggle label in the community privacy modal: allow DMs from non-friend members of this community.
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
@@ -18952,7 +18923,7 @@ msgid "Loading invites..."
 msgstr "Φόρτωση προσκλήσεων..."
 
 #. Placeholder text in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:72
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:73
 msgid "Loading placeholder"
 msgstr "Φόρτωση"
 
@@ -19081,8 +19052,8 @@ msgstr "Ολοκλήρωση αγοράς δώρου σε TRY"
 msgid "Localized TRY subscription checkout"
 msgstr "Ολοκλήρωση αγοράς συνδρομής σε TRY"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:209
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:194
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:151
 msgid "Location"
 msgstr "Τοποθεσία"
 
@@ -20048,7 +20019,7 @@ msgid "Mentions only"
 msgstr "Μόνο αναφορές"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:166
 msgid "Menu bar"
 msgstr "Γραμμή μενού"
 
@@ -20135,7 +20106,7 @@ msgstr "Το μήνυμα περιέχει συνημμένα πολυμέσα"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:84
+#: src/features/channel/components/MessageActionBar.tsx:83
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
@@ -20439,12 +20410,12 @@ msgid "Military time"
 msgstr "Στρατιωτική ώρα"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:250
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
 msgid "Minimise"
 msgstr "Ελαχιστοποίηση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:246
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
 msgid "Minimize"
 msgstr "Ελαχιστοποίηση"
 
@@ -20454,7 +20425,7 @@ msgstr "Ελαχιστοποίηση στη γραμμή μενού"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:242
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Ελαχιστοποίηση στο tray"
 
@@ -20668,7 +20639,7 @@ msgstr "Μηνιαίο δώρο"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:88
+#: src/features/channel/components/MessageActionBar.tsx:87
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "Περισσότερα"
@@ -21274,7 +21245,7 @@ msgid "Narration"
 msgstr "Αφήγηση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
 msgid "Native title bar"
 msgstr "Εγγενής γραμμή τίτλου"
 
@@ -21353,7 +21324,7 @@ msgid "Network"
 msgstr "Δίκτυο"
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:54
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:53
 msgid "Network error"
 msgstr "Σφάλμα δικτύου"
 
@@ -21876,7 +21847,7 @@ msgstr "Δεν βρέθηκαν αντιστοιχίες"
 msgid "No matches found"
 msgstr "Δεν βρέθηκαν αποτελέσματα"
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:345
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:344
 msgid "No mentions yet"
 msgstr "Δεν υπάρχουν αναφορές ακόμα"
 
@@ -22125,7 +22096,7 @@ msgid "No trusted domains"
 msgstr "Δεν υπάρχουν αξιόπιστοι τομείς"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:81
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:87
 msgid "No unread messages"
 msgstr "Δεν υπάρχουν μη αναγνωσμένα μηνύματα"
 
@@ -22323,7 +22294,7 @@ msgid "Notification"
 msgstr "Ειδοποίηση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:234
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
 msgid "Notification area"
 msgstr "Περιοχή ειδοποιήσεων"
 
@@ -22725,14 +22696,14 @@ msgstr "Άνοιγμα προηγμένων ρυθμίσεων πολυμέσω�
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:70
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:64
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:65
 msgid "Open animated GIF in full view"
 msgstr "Άνοιγμα κινούμενου GIF σε πλήρη προβολή"
 
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:66
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:60
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:61
 msgid "Open animated GIF video in full view"
 msgstr "Άνοιγμα κινούμενου βίντεο GIF σε πλήρη προβολή"
 
@@ -22925,7 +22896,7 @@ msgstr "Άνοιγμα εικόνας στο πρόγραμμα περιήγησ
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #. Button or menu action label in the channel and chat embed image. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:74
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:68
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:69
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:40
 msgid "Open image in full view"
 msgstr "Άνοιγμα εικόνας σε πλήρη προβολή"
@@ -23167,7 +23138,7 @@ msgstr "Ανοίγει τη σελίδα Μέλη. Πατήστε κενό ή En
 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:199
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:184
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:77
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:107
 msgid "Operating system"
@@ -23273,7 +23244,7 @@ msgid "Other"
 msgstr "Άλλο"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:433
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:435
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:31
 msgid "Other devices"
 msgstr "Άλλες συσκευές"
@@ -23754,7 +23725,7 @@ msgid "Per-window audio isn't available on this build of macOS."
 msgstr "Ο ήχος ανά παράθυρο δεν είναι διαθέσιμος σε αυτήν την έκδοση του macOS."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
 msgid "Performance"
 msgstr "Απόδοση"
 
@@ -24114,7 +24085,7 @@ msgstr "Απλό κείμενο"
 msgid "Plan"
 msgstr "Πρόγραμμα"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:189
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:174
 msgid "Platform"
 msgstr "Πλατφόρμα"
 
@@ -24185,7 +24156,7 @@ msgstr "Αναπαραγωγή παρά την περιορισμένη κίνη
 #. Body of the error modal shown when joining a discovery community is rate limited.
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:59
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:60
 #: src/features/theme/components/modals/ShareThemeModal.tsx:67
 msgid "Please wait a moment and try again."
 msgstr "Παρακαλώ περιμένετε λίγο και δοκιμάστε ξανά."
@@ -24270,12 +24241,12 @@ msgid "Portuguese (Brazil)"
 msgstr "Πορτογαλικά (Βραζιλία)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:102
 msgid "Position"
 msgstr "Θέση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:373
 msgid "Power saving"
 msgstr "Εξοικονόμηση ενέργειας"
 
@@ -25143,7 +25114,7 @@ msgid "Quiet"
 msgstr "Αθόρυβη λειτουργία"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:274
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Quit"
 msgstr "Έξοδος"
 
@@ -25702,7 +25673,7 @@ msgid "Remain silent unless someone runs /tts manually."
 msgstr "Να παραμένει σιωπηλό, εκτός αν κάποιος εκτελέσει το /tts χειροκίνητα."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:70
 msgid "Remember size & position"
 msgstr "Απομνημόνευση μεγέθους και θέσης"
 
@@ -25711,7 +25682,7 @@ msgid "Remember this preference"
 msgstr "Να θυμάμαι αυτήν την προτίμηση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
 msgid "Remember window"
 msgstr "Αποθήκευση παραθύρου"
 
@@ -26803,10 +26774,12 @@ msgid "Restart {productName} to use screen sharing"
 msgstr "Επανεκκινήστε το {productName} για να χρησιμοποιήσετε την κοινή χρήση οθόνης"
 
 #. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
+#. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
 #. Confirmation prompt in the desktop settings tab. Preserve {productName}; it is inserted by code.
 #. Confirmation title after changing desktop transparency in Theme Studio.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
 msgid "Restart {productName}?"
 msgstr "Επανεκκίνηση του {productName};"
@@ -26816,8 +26789,8 @@ msgstr "Επανεκκίνηση του {productName};"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
 msgid "Restart now"
 msgstr "Επανεκκίνηση τώρα"
@@ -27005,7 +26978,7 @@ msgstr "Ανάκληση απαγόρευσης"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the devices tab. Keep it concise.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:46
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:45
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:59
 msgid "Revoke device"
 msgstr "Ανάκληση συσκευής"
@@ -27199,12 +27172,12 @@ msgid "Rows per page"
 msgstr "Σειρές ανά σελίδα"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:126
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
 msgid "Run {productName} automatically when your computer starts"
 msgstr "Αυτόματη εκκίνηση του {productName} με τον υπολογιστή σας"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:54
 msgid "Run at login"
 msgstr "Εκτέλεση κατά την είσοδο"
 
@@ -29126,7 +29099,7 @@ msgid "Show {appName}"
 msgstr "Εμφάνιση {appName}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:238
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
 msgid "Show a {productName} icon in the system tray or menu bar"
 msgstr "Εμφάνιση εικονιδίου {productName} στην περιοχή ειδοποιήσεων ή στη γραμμή μενού"
 
@@ -29527,7 +29500,7 @@ msgid "Show this role separately"
 msgstr "Εμφάνιση αυτού του ρόλου ξεχωριστά"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:150
 msgid "Show tray icon"
 msgstr "Εμφάνιση εικονιδίου στη γραμμή εργασιών"
 
@@ -29626,15 +29599,15 @@ msgid "Sign out"
 msgstr "Αποσύνδεση"
 
 #. Danger button in the devices tab. Signs out the currently selected devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:70
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:69
 msgid "Sign out {deviceCount, plural, one {# device} other {# devices}}"
 msgstr "Αποσύνδεση {deviceCount, plural, one {# συσκευής} other {# συσκευών}}"
 
 #. Security modal title for revoking every saved login session except the current one.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:14
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:459
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:502
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:461
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:504
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:43
 msgid "Sign out all other devices"
 msgstr "Αποσύνδεση από όλες τις άλλες συσκευές"
@@ -29653,12 +29626,12 @@ msgstr "Αποσύνδεση άλλων συσκευών από τον λογα�
 msgid "Sign out?"
 msgstr "Αποσύνδεση;"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:251
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:236
 msgid "Sign-in approved"
 msgstr "Η σύνδεση εγκρίθηκε"
 
 #. Short label in the authentication handoff approval flow. Keep the tone plain and specific.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:17
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:16
 msgid "Sign-in code"
 msgstr "Κωδικός σύνδεσης"
 
@@ -29678,7 +29651,7 @@ msgstr "Στοιχεία σύνδεσης"
 msgid "Sign-in flow"
 msgstr "Ροή σύνδεσης"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:104
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:94
 msgid "Sign-in request"
 msgstr "Αίτημα σύνδεσης"
 
@@ -29693,7 +29666,7 @@ msgid "Signed in"
 msgstr "Συνδεδεμένος"
 
 #. Settings section label for account sessions and devices.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:515
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:517
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Signed-in devices"
 msgstr "Συνδεδεμένες συσκευές"
@@ -29792,7 +29765,7 @@ msgstr "Αναγνωριστικό ιστότοπου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:174
 msgid "Size"
 msgstr "Μέγεθος"
@@ -29848,7 +29821,7 @@ msgid "Skip this step"
 msgstr "Παράλειψη αυτού του βήματος"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:76
+#: src/app/App.tsx:70
 msgid "Skip to content"
 msgstr "Μετάβαση στο περιεχόμενο"
 
@@ -30122,7 +30095,7 @@ msgstr "κάτι"
 
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:263
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:248
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
@@ -30231,7 +30204,7 @@ msgstr "Κάτι πήγε στραβά."
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:17
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:18
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
@@ -30755,12 +30728,12 @@ msgid "Start voice call"
 msgstr "Έναρξη φωνητικής κλήσης"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
 msgid "Start with computer"
 msgstr "Εκκίνηση με τον υπολογιστή"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:46
 msgid "Startup"
 msgstr "Εκκίνηση"
 
@@ -30779,7 +30752,7 @@ msgid "Status"
 msgstr "Κατάσταση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:230
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:170
 msgid "Status icon"
 msgstr "Εικονίδιο κατάστασης"
 
@@ -30795,10 +30768,12 @@ msgstr "Κατάσταση"
 msgid "Status:"
 msgstr "Κατάσταση:"
 
+#. Label in the motion tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:42
+#. Short label for an advanced app interaction toggle.
+#: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:345
 msgid "Stay fully interactive when unfocused"
 msgstr "Να παραμένει πλήρως διαδραστικό όταν δεν είναι σε εστίαση"
 
@@ -31654,7 +31629,7 @@ msgid "System time format"
 msgstr "Μορφή ώρας συστήματος"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:162
 msgid "System tray"
 msgstr "Περιοχή ειδοποιήσεων"
 
@@ -32041,7 +32016,7 @@ msgstr "Η εφαρμογή έκλεισε απροσδόκητα"
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Η εφαρμογή έχει κρασάρει. Αναζητούμε ενημερώσεις που μπορεί να διορθώσουν αυτό το πρόβλημα…"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:254
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:239
 msgid "The app should now be signed in to your account."
 msgstr "Η εφαρμογή θα πρέπει τώρα να έχει συνδεθεί στον λογαριασμό σας."
 
@@ -32514,7 +32489,7 @@ msgid "This community has reached its maximum member limit and is not accepting 
 msgstr "Αυτή η κοινότητα έχει φτάσει το μέγιστο όριο μελών της και δεν δέχεται νέα μέλη αυτή τη στιγμή."
 
 #. Body of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:25
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:26
 msgid "This community has reached its member limit, so you can't join right now."
 msgstr "Αυτή η κοινότητα έχει φτάσει το όριο μελών της, οπότε δεν μπορείτε να συμμετάσχετε αυτήν τη στιγμή."
 
@@ -32524,7 +32499,7 @@ msgid "This community is for Visionary members"
 msgstr "Αυτή η κοινότητα είναι για μέλη Visionary"
 
 #. Title of the error modal shown when a discovery community has reached its member limit.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:21
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:22
 msgid "This community is full"
 msgstr "Αυτή η κοινότητα είναι πλήρης"
 
@@ -32535,7 +32510,7 @@ msgid "This community is marked for mature content and may contain material that
 msgstr "Αυτή η κοινότητα έχει επισημανθεί για ενήλικο περιεχόμενο και ενδέχεται να περιέχει υλικό που μπορεί να είναι ακατάλληλο για ορισμένους χρήστες."
 
 #. Title of the error modal shown when a discovery community is no longer joinable (delisted, invites off, or discovery disabled).
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:45
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:46
 msgid "This community is no longer available"
 msgstr "Αυτή η κοινότητα δεν είναι πλέον διαθέσιμη"
 
@@ -33285,12 +33260,12 @@ msgid "Tip"
 msgstr "Συμβουλή"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:118
 msgid "Title bar"
 msgstr "Γραμμή τίτλου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:122
 msgid "Titlebar"
 msgstr "Γραμμή τίτλου"
 
@@ -33356,7 +33331,7 @@ msgid "Toggle embed suppression"
 msgstr "Εναλλαγή καταστολής ενσωματώσεων"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:30
 msgid "Toggle hardware acceleration"
 msgstr "Εναλλαγή επιτάχυνσης υλικού"
 
@@ -33486,7 +33461,7 @@ msgstr "Συντομεύσεις εργαλείων"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:62
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:369
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:366
 msgid "Tooltips"
 msgstr "Επεξηγήσεις"
@@ -33592,12 +33567,12 @@ msgid "Travel & places"
 msgstr "Ταξίδια και μέρη"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:154
 msgid "Tray"
 msgstr "Δίσκος"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:158
 msgid "Tray icon"
 msgstr "Εικονίδιο δίσκου"
 
@@ -34306,7 +34281,7 @@ msgid "Unfocus"
 msgstr "Αποεστίαση"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:349
 msgid "Unfocused"
 msgstr "Χωρίς εστίαση"
 
@@ -34369,7 +34344,7 @@ msgstr "Άγνωστο κανάλι"
 #. Short label in the entrance sound section. Keep it concise.
 #. Short label in the recent mentions content popout. Keep it concise.
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:77
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:83
 #: src/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds.ts:24
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:44
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:43
@@ -34386,7 +34361,7 @@ msgstr "Άγνωστη ημερομηνία"
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
 #: src/features/app/components/layout/VoiceParticipantItem.tsx:43
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:66
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
 msgstr "Άγνωστη συσκευή"
@@ -34649,7 +34624,7 @@ msgstr "Κανάλι χωρίς όνομα"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:18
+#: src/features/channel/state/ChannelDisplayName.ts:19
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "Ομάδα χωρίς όνομα"
@@ -34824,7 +34799,7 @@ msgstr "Μη υποστηριζόμενο αρχείο αυτοκόλλητου"
 #. Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionBar.tsx:96
+#: src/features/channel/components/MessageActionBar.tsx:95
 #: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
@@ -35346,7 +35321,7 @@ msgstr "Χρήση κινούμενων emoji"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop scrolling toggle.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:35
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:313
 msgid "Use autoscrolling"
 msgstr "Χρήση αυτόματης κύλισης"
@@ -35435,7 +35410,7 @@ msgid "Use global profile"
 msgstr "Χρήση καθολικού προφίλ"
 
 #. Short label for an advanced desktop troubleshooting preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:40
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:32
 msgid "Use hardware acceleration"
 msgstr "Χρήση επιτάχυνσης υλικού"
 
@@ -35481,8 +35456,8 @@ msgstr "Χρησιμοποιήστε την τοπική κάρτα για να 
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:36
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:174
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:28
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:114
 msgid "Use native title bar"
 msgstr "Χρήση γραμμής τίτλου συστήματος"
 
@@ -35531,7 +35506,7 @@ msgid "Use system-wide push-to-talk and shortcuts."
 msgstr "Χρήση push-to-talk και συντομεύσεων σε όλο το σύστημα."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
 msgid "Use the operating system's window chrome"
 msgstr "Χρήση του πλαισίου παραθύρου του λειτουργικού συστήματος"
 
@@ -36150,7 +36125,7 @@ msgstr "Επαληθεύστε το email σας για να ξεκινήσετ�
 msgid "Verifying card"
 msgstr "Επαλήθευση κάρτας"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:154
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:144
 msgid "Verifying code…"
 msgstr "Επαλήθευση κωδικού…"
 
@@ -36351,7 +36326,7 @@ msgid "View all roles for {displayName}"
 msgstr "Προβολή όλων των ρόλων για τον/την {displayName}"
 
 #. Short label in the unread channels content.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:73
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:79
 msgid "View all unread"
 msgstr "Προβολή όλων των μη αναγνωσμένων"
 
@@ -36412,7 +36387,7 @@ msgstr "Προβολή προφίλ κοινότητας"
 #. Tooltip and accessibility label for opening a linked device details modal.
 #: src/features/guild/components/modals/guild_tabs/BannedUserActionsSheet.tsx:18
 #: src/features/ui/action_menu/BannedUserContextMenu.tsx:45
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:50
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:49
 msgid "View details"
 msgstr "Προβολή λεπτομερειών"
 
@@ -36940,7 +36915,7 @@ msgstr "Σε περιμένουμε να..."
 msgid "Warning"
 msgstr "Προσοχή"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:175
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:160
 msgid "Was this you?"
 msgstr "Ήσουν εσύ;"
 
@@ -37151,7 +37126,7 @@ msgid "We'll verify your new email with a one-time code."
 msgstr "Θα επαληθεύσουμε το νέο σου email με έναν κωδικό μιας χρήσης."
 
 #. Error message in the devices tab.
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:58
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:57
 msgid "We're having trouble connecting to the space-time continuum. Check your connection and try again."
 msgstr "Αντιμετωπίζουμε πρόβλημα σύνδεσης με το χωροχρονικό συνεχές. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά."
 
@@ -37565,7 +37540,7 @@ msgstr "Win"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Top-level native menu bar title (Window menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts:70
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
 msgid "Window"
 msgstr "Παράθυρο"
 
@@ -37576,32 +37551,32 @@ msgid "Window"
 msgstr "Παράθυρο"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:130
 msgid "Window chrome"
 msgstr "Περίγραμμα παραθύρου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:194
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:134
 msgid "Window decorations"
 msgstr "Διακοσμήσεις παραθύρου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:353
 msgid "Window focus"
 msgstr "Εστίαση παραθύρου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
 msgid "Window position"
 msgstr "Θέση παραθύρου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:82
 msgid "Window size"
 msgstr "Μέγεθος παραθύρου"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:138
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:78
 msgid "Window state"
 msgstr "Κατάσταση παραθύρου"
 
@@ -37746,7 +37721,7 @@ msgstr "Έχετε ήδη το {premiumProductName} εφ' όρου ζωής"
 msgid "You already have this connection."
 msgstr "Έχετε ήδη αυτήν τη σύνδεση."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:107
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:97
 msgid "You are about to authorize an app to sign in to your account. Only continue if you initiated this request from a device you control."
 msgstr "Πρόκειται να εξουσιοδοτήσετε μια εφαρμογή να συνδεθεί στον λογαριασμό σας. Συνεχίστε μόνο αν ξεκινήσατε αυτό το αίτημα από μια συσκευή που ελέγχετε."
 
@@ -37939,7 +37914,7 @@ msgid "You can't install this sticker pack."
 msgstr "Δεν μπορείτε να εγκαταστήσετε αυτό το πακέτο αυτοκόλλητων."
 
 #. Title of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:37
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:38
 msgid "You can't join this community"
 msgstr "Δεν μπορείτε να μπείτε σε αυτήν την κοινότητα"
 
@@ -38136,7 +38111,7 @@ msgid "You don't have permission to rename this emoji. The name was reverted to 
 msgstr "Δεν έχετε δικαίωμα να μετονομάσετε αυτό το emoji. Το όνομα επανήλθε στην προηγούμενη του κατάσταση."
 
 #. Body of the error modal shown when the user is banned from a discovery community.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:41
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
 msgid "You have been banned from this community."
 msgstr "Έχετε αποκλειστεί από αυτήν την κοινότητα."
 
@@ -38352,7 +38327,7 @@ msgstr "Δεν θα λαμβάνεις ειδοποιήσεις στην επι�
 msgid "You'll appear offline"
 msgstr "Θα εμφανίζεστε εκτός σύνδεσης"
 
-#: src/features/user/components/modals/tabs/DevicesTab.tsx:462
+#: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Θα πρέπει να συνδεθείτε ξανά σε όλες τις συσκευές από τις οποίες αποσυνδεθήκατε"
 
@@ -38368,7 +38343,7 @@ msgstr "Πρόκειται να σταματήσετε να μοιράζεστε
 
 #. Body text in the unread channels content.
 #. End-of-list text in the recent mentions page when every mention has been seen.
-#: src/features/app/components/floating/UnreadChannelsContent.tsx:85
+#: src/features/app/components/floating/UnreadChannelsContent.tsx:91
 #: src/features/messaging/components/pages/RecentMentionsPage.tsx:40
 msgid "You're all caught up."
 msgstr "Είσαι ενήμερος."
@@ -38467,7 +38442,7 @@ msgstr "Επεξεργάζεστε μηνύματα πολύ γρήγορα"
 #. Title of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:9
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:23
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:55
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:56
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:76
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:148
 #: src/features/theme/components/modals/ShareThemeModal.tsx:63
@@ -38494,7 +38469,7 @@ msgid "You're in the call"
 msgstr "Είστε στην κλήση"
 
 #. Body of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:33
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:34
 msgid "You're in the maximum number of communities. Leave one and try again."
 msgstr "Έχετε φτάσει τον μέγιστο αριθμό κοινοτήτων. Αποχωρήστε από μία και δοκιμάστε ξανά."
 
@@ -38574,7 +38549,7 @@ msgid "You've got CSS!"
 msgstr "Έχεις CSS!"
 
 #. Title of the error modal shown when the user is already in the maximum number of communities.
-#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:29
+#: src/features/discovery/commands/DiscoveryJoinCommands.tsx:30
 msgid "You've reached the community limit"
 msgstr "Έχετε φτάσει το όριο κοινοτήτων"
 
@@ -38583,7 +38558,7 @@ msgstr "Έχετε φτάσει το όριο κοινοτήτων"
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:62
 #: src/features/messaging/components/pages/MessageListPage.tsx:25
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:406
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:405
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:37
 msgid "You've reached the end"
 msgstr "Έφτασες στο τέλος"
@@ -38627,7 +38602,7 @@ msgstr "Έλαβες ένα δώρο"
 msgid "You've requested too many verification emails. Please wait a moment and try again."
 msgstr "Έχετε ζητήσει πάρα πολλά email επαλήθευσης. Περιμένετε λίγο και δοκιμάστε ξανά."
 
-#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:409
+#: src/features/messaging/components/popouts/RecentMentionsContent.tsx:408
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Έχεις δει όλες τις πρόσφατες αναφορές σου. Σύντομα θα εμφανιστούν κι άλλες εδώ."
 

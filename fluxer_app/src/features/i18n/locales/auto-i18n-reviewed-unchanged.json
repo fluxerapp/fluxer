@@ -1744,6 +1744,9 @@
         "msgid": "online"
       },
       {
+        "msgid": "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
+      },
+      {
         "msgid": "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
       },
       {
