@@ -44,8 +44,7 @@ if (targetNativeArch === 'universal' && targetPlatform !== 'darwin') {
 	throw new Error(`ELECTRON_ARCH=universal is only supported for macOS builds, received platform ${targetPlatform}`);
 }
 
-const targetArchs =
-	electronArch && electronArch !== 'universal' ? [electronArch] : supportedTargetArchs;
+const targetArchs = electronArch && electronArch !== 'universal' ? [electronArch] : supportedTargetArchs;
 const macTargetArchs = targetNativeArch ? [targetNativeArch] : supportedTargetArchs;
 const winTargets = [
 	{
@@ -1257,7 +1256,7 @@ module.exports = {
 		artifactName: '${productName}-${version}-portable-${os}-${arch}.${ext}',
 	},
 	linux: {
-		icon: `build_resources/${iconDir}/icon.png`,
+		icon: `build_resources/${iconDir}/1024x1024.png`,
 		category: 'Network;InstantMessaging;Chat;',
 		target: [
 			{
