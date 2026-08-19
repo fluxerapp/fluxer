@@ -4,6 +4,7 @@ import {
 	buildMaskedLink,
 	canWrapSelectionAsLink,
 	parsePastedUrl,
+	resolvePastedLinkInsertion,
 } from '@app/features/lexical/composer/ComposerLinkPaste';
 import {describe, expect, it} from 'vitest';
 
@@ -58,5 +59,31 @@ describe('buildMaskedLink', () => {
 		expect(buildMaskedLink('wiki', 'https://en.wikipedia.org/wiki/Foo_(bar)')).toBe(
 			'[wiki](<https://en.wikipedia.org/wiki/Foo_(bar)>)',
 		);
+	});
+});
+
+describe('resolvePastedLinkInsertion', () => {
+	it('wraps a selection when a bare url is pasted over it', () => {
+		expect(resolvePastedLinkInsertion('https://fluxer.app/download', 'the download page')).toBe(
+			'[the download page](<https://fluxer.app/download>)',
+		);
+	});
+
+	it('wraps a message link the same way a plain url is wrapped', () => {
+		const messageLink = 'https://fluxer.app/channels/1234567890/9876543210/1122334455';
+		expect(resolvePastedLinkInsertion(messageLink, 'this message')).toBe(`[this message](<${messageLink}>)`);
+	});
+
+	it('declines when the pasted text is not a url', () => {
+		expect(resolvePastedLinkInsertion('just some text', 'selected')).toBeNull();
+	});
+
+	it('declines when the selection cannot be wrapped', () => {
+		expect(resolvePastedLinkInsertion('https://fluxer.app', '   ')).toBeNull();
+		expect(resolvePastedLinkInsertion('https://fluxer.app', 'https://example.test')).toBeNull();
+	});
+
+	it('declines a non-web protocol so pasting cannot forge a link', () => {
+		expect(resolvePastedLinkInsertion('javascript:alert(1)', 'click me')).toBeNull();
 	});
 });

@@ -13,6 +13,7 @@ import {
 	parseComposerClipboardSlice,
 } from '@app/features/lexical/composer/ComposerClipboard';
 import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
+import {resolvePastedLinkInsertion} from '@app/features/lexical/composer/ComposerLinkPaste';
 import {showAttachmentPermissionDeniedModal} from '@app/features/messaging/components/alerts/AttachmentPermissionDeniedModal';
 import {FileSizeTooLargeModal} from '@app/features/messaging/components/alerts/FileSizeTooLargeModal';
 import {TooManyAttachmentsModal} from '@app/features/messaging/components/alerts/TooManyAttachmentsModal';
@@ -32,7 +33,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import Users from '@app/features/user/state/Users';
-import {COMMAND_PRIORITY_HIGH, PASTE_COMMAND} from 'lexical';
+import {$getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH, PASTE_COMMAND} from 'lexical';
 import type React from 'react';
 import {useCallback, useEffect} from 'react';
 
@@ -66,6 +67,19 @@ function createComposerPasteSlice(pastedText: string, segments: ReadonlyArray<Me
 	}
 	displayParts.push(pastedText.slice(sourceCursor));
 	return {display: displayParts.join(''), segments: projectedSegments};
+}
+
+function $insertLinkAroundSelection(pastedText: string): boolean {
+	const selection = $getSelection();
+	if (!$isRangeSelection(selection) || selection.isCollapsed()) {
+		return false;
+	}
+	const replacement = resolvePastedLinkInsertion(pastedText, selection.getTextContent());
+	if (replacement === null) {
+		return false;
+	}
+	selection.insertText(replacement);
+	return true;
 }
 
 export function useChannelComposerPaste({
@@ -228,6 +242,10 @@ export function useChannelComposerPaste({
 			if (pastedText.length > maxMessageLength) {
 				event.preventDefault();
 				void handlePasteExceedsLimit(pastedText);
+				return true;
+			}
+			if ($insertLinkAroundSelection(pastedText)) {
+				event.preventDefault();
 				return true;
 			}
 			if (!insertPastedText(pastedText)) {

@@ -43,3 +43,11 @@ export function canWrapSelectionAsLink(selectedText: string): boolean {
 export function buildMaskedLink(selectedText: string, url: string): string {
 	return `[${selectedText}](<${url}>)`;
 }
+
+export function resolvePastedLinkInsertion(pastedText: string, selectedText: string): string | null {
+	const url = parsePastedUrl(pastedText);
+	if (url === null || !canWrapSelectionAsLink(selectedText)) {
+		return null;
+	}
+	return buildMaskedLink(selectedText, url);
+}
