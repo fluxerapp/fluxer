@@ -93,19 +93,7 @@ export class MessageEditService {
 			assertGuildMemberCanCommunicate(member);
 		}
 		if (data.message_snapshots !== undefined) {
-			const isAuthor = message.authorId === userId;
-			const canManage = isAuthor ? true : await hasPermission(Permissions.MANAGE_MESSAGES);
-			if (!isAuthor && !canManage) {
-				throw new MissingPermissionsError();
-			}
-			const updatedMessage = await this.withMessageLock(channelId, messageId, () =>
-				this.deps.persistenceService.updateSnapshotAttachments({
-					message,
-					snapshotEdits: data.message_snapshots ?? [],
-				}),
-			);
-			await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
-			return updatedMessage;
+			throw new MissingPermissionsError();
 		}
 		const user = await this.deps.userRepository.findUnique(userId);
 		this.deps.validationService.validateMessageEditable(message);

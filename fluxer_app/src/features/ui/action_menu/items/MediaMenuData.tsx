@@ -570,6 +570,7 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 	const canManageMessages = Permission.can(Permissions.MANAGE_MESSAGES, {channelId: message.channelId});
 	const canEditAltText = useMemo(() => {
 		if (!attachmentId) return false;
+		if (snapshotIndex !== undefined || message.messageSnapshots) return false;
 		const attachmentSource = snapshotAttachments ?? message.attachments;
 		const attachment = attachmentSource.find((att) => att.id === attachmentId);
 		const mimeType = attachment?.content_type?.toLowerCase() ?? '';
@@ -577,7 +578,7 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 		if (!canEditMedia) return false;
 		const isMessageAuthor = currentUserId === message.author?.id;
 		return isMessageAuthor || canManageMessages;
-	}, [attachmentId, canManageMessages, currentUserId, message, snapshotAttachments]);
+	}, [attachmentId, canManageMessages, currentUserId, message, snapshotAttachments, snapshotIndex]);
 	const handleAddToFavorites = useCallback(() => {
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
