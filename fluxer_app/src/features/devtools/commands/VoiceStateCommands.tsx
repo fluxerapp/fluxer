@@ -125,7 +125,8 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 	}
 	const room = MediaEngine.room;
 	const connectedChannelId = MediaEngine.channelId;
-	const currentMute = LocalVoiceState.getSelfMute();
+	const microphoneFailureLatched = MediaEngine.isMicrophoneFailureLatched();
+	const currentMute = LocalVoiceState.getSelfMute() || microphoneFailureLatched;
 	const currentDeaf = LocalVoiceState.getSelfDeaf();
 	const willUndeafen = currentDeaf;
 	const willUnmute = currentMute;
@@ -139,6 +140,7 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 	logger.info('toggleSelfMute', {
 		currentMute,
 		currentDeaf,
+		microphoneFailureLatched,
 		willUnmute,
 		willUndeafen,
 		willMute,
@@ -158,6 +160,7 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 			handleMicrophonePermissionBlocked();
 			return;
 		}
+		MediaEngine.clearMicrophoneFailureLatch();
 		if (!MediaPermission.isMicrophoneGranted()) {
 			logger.info('Microphone permission not granted, requesting permission');
 			const permissionGranted = room?.localParticipant
@@ -174,6 +177,11 @@ export async function toggleSelfMute(_guildId: string | null = null): Promise<vo
 				SoundCommands.playSound(SoundType.Unmute);
 				return;
 			}
+		}
+		if (!LocalVoiceState.getSelfMute() && !LocalVoiceState.getSelfDeaf()) {
+			logger.debug('Unmute intent only had to clear the microphone failure latch');
+			SoundCommands.playSound(SoundType.Unmute);
+			return;
 		}
 	}
 	LocalVoiceState.toggleSelfMute();

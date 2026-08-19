@@ -43,6 +43,29 @@ function getRoomAudioContext(room: Room): SinkableAudioContext | null {
 	return isSinkableAudioContext(audioContext) ? audioContext : null;
 }
 
+function isRoomWebAudioMixEnabled(room: Room): boolean {
+	const options: unknown = Reflect.get(room, 'options');
+	if (typeof options !== 'object' || options === null) return false;
+	return Boolean((options as {webAudioMix?: unknown}).webAudioMix);
+}
+
+function supportsMediaElementSetSinkId(): boolean {
+	if (typeof HTMLMediaElement === 'undefined') return false;
+	return 'setSinkId' in HTMLMediaElement.prototype;
+}
+
+function canRoomSwitchAudioOutput(room: Room): boolean {
+	if (!isRoomWebAudioMixEnabled(room)) return supportsMediaElementSetSinkId();
+	const audioContext = getRoomAudioContext(room);
+	if (!audioContext) return true;
+	return typeof audioContext.setSinkId === 'function';
+}
+
+function resolveLiveKitSwitchDeviceId(room: Room, deviceId: string): string {
+	if (isRoomWebAudioMixEnabled(room)) return deviceId;
+	return normalizeSinkIdForBrowserApi(deviceId);
+}
+
 function isSinkableMediaElement(value: unknown): value is SinkableMediaElement {
 	if (typeof HTMLMediaElement === 'undefined') return false;
 	return value instanceof HTMLMediaElement;
@@ -125,12 +148,19 @@ async function applyOutputDeviceToAttachedElements(room: Room, deviceId: string)
 	}
 }
 
-async function applyOutputDeviceToRoom(room: Room, deviceId: string): Promise<void> {
+export async function applyOutputDeviceToRoom(room: Room, deviceId: string): Promise<void> {
 	const resolvedDeviceId = await resolveAvailableOutputDeviceId(deviceId);
-	try {
-		await room.switchActiveDevice('audiooutput', resolvedDeviceId);
-	} catch (error) {
-		logger.warn('LiveKit failed to apply audio output device', {deviceId: resolvedDeviceId, error});
+	if (canRoomSwitchAudioOutput(room)) {
+		try {
+			await room.switchActiveDevice('audiooutput', resolveLiveKitSwitchDeviceId(room, resolvedDeviceId));
+		} catch (error) {
+			logger.warn('LiveKit failed to apply audio output device', {deviceId: resolvedDeviceId, error});
+		}
+	} else {
+		logger.warn('Audio output selection is unavailable: this browser cannot move the voice playback sink', {
+			deviceId: resolvedDeviceId,
+			webAudioMix: isRoomWebAudioMixEnabled(room),
+		});
 	}
 	try {
 		await applyOutputDeviceToWebAudioMixer(room, resolvedDeviceId);

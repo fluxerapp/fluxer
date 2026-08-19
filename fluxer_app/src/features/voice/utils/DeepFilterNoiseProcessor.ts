@@ -2,11 +2,13 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {createVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {DeepFilterNoiseFilterProcessor} from 'deepfilternet3-noise-filter';
 import type {LocalAudioTrack} from 'livekit-client';
 
 const logger = new Logger('DeepFilterNoiseProcessor');
+const DEEP_FILTER_MODEL_SAMPLE_RATE = 48000;
 const DEFAULT_SUPPRESSION_LEVEL = 80;
 const HIGH_PASS_FREQUENCY_HZ = 60;
 const HIGH_PASS_Q = Math.SQRT1_2;
@@ -24,13 +26,39 @@ export function createDeepFilterProcessor(
 ): DeepFilterNoiseFilterProcessor {
 	const clampedNoiseReductionLevel = Math.max(0, Math.min(100, noiseReductionLevel));
 	return new DeepFilterNoiseFilterProcessor({
-		sampleRate: 48000,
+		sampleRate: DEEP_FILTER_MODEL_SAMPLE_RATE,
 		noiseReductionLevel: clampedNoiseReductionLevel,
 		enabled: true,
 		assetConfig: {
 			cdnUrl: `${RuntimeConfig.staticCdnEndpoint}/libs/deepfilternet3`,
 		},
 	});
+}
+
+export function resolveDeepFilterAudioContext(
+	sourceContext: AudioContext,
+	feedTrack: MediaStreamTrack,
+): AudioContext | null {
+	const modelRateContext = createVoiceAudioContext({
+		latencyHint: 'interactive',
+		sampleRate: DEEP_FILTER_MODEL_SAMPLE_RATE,
+	});
+	if (!modelRateContext) return null;
+	if (modelRateContext.sampleRate === sourceContext.sampleRate) return modelRateContext;
+	try {
+		modelRateContext.createMediaStreamSource(new MediaStream([feedTrack])).disconnect();
+		return modelRateContext;
+	} catch (error) {
+		logger.info('DeepFilter cannot read the capture graph at the model rate; running it at the capture rate', {
+			modelSampleRate: modelRateContext.sampleRate,
+			captureSampleRate: sourceContext.sampleRate,
+			error,
+		});
+	}
+	void modelRateContext.close().catch((error) => {
+		logger.debug('Failed to close the rejected DeepFilter AudioContext', error);
+	});
+	return createVoiceAudioContext({latencyHint: 'interactive', sampleRate: sourceContext.sampleRate});
 }
 
 export interface DeepFilterAudioChain {
@@ -85,6 +113,7 @@ export async function buildDeepFilterAudioChain(opts: {
 		throw new Error('buildDeepFilterAudioChain: missing DeepFilter feed track');
 	}
 	const processor = createDeepFilterProcessor(noiseReductionLevel);
+	processor.audioContext = resolveDeepFilterAudioContext(audioContext, deepFilterFeedTrack);
 	const disposeDeepFilterInputGraph = () => {
 		safeDisconnect(inputDestination);
 		safeDisconnect(hpfSource);

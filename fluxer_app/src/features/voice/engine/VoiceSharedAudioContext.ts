@@ -17,6 +17,17 @@ function resolveAudioContextConstructor(): AudioContextConstructor | null {
 	return ctor ?? null;
 }
 
+export function createVoiceAudioContext(options: AudioContextOptions): AudioContext | null {
+	const ctor = resolveAudioContextConstructor();
+	if (!ctor) return null;
+	try {
+		return new ctor(options);
+	} catch (error) {
+		logger.warn('Failed to construct voice AudioContext', {options, error});
+		return null;
+	}
+}
+
 function installResumeOnUserGesture(context: AudioContext): void {
 	if (typeof window === 'undefined') return;
 	if (!window.document?.body) return;
@@ -41,15 +52,8 @@ export function getSharedVoiceAudioContext(): AudioContext | null {
 	if (sharedAudioContext && sharedAudioContext.state !== 'closed') {
 		return sharedAudioContext;
 	}
-	const ctor = resolveAudioContextConstructor();
-	if (!ctor) return null;
-	try {
-		sharedAudioContext = new ctor({latencyHint: 'interactive'});
-	} catch (error) {
-		logger.warn('Failed to construct shared voice AudioContext', {error});
-		sharedAudioContext = null;
-		return null;
-	}
+	sharedAudioContext = createVoiceAudioContext({latencyHint: 'interactive'});
+	if (!sharedAudioContext) return null;
 	assert.notEqual(sharedAudioContext.state, 'closed', 'shared voice AudioContext must not start closed');
 	if (sharedAudioContext.state === 'suspended') {
 		void sharedAudioContext.resume().catch((error) => {

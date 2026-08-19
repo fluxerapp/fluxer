@@ -18,6 +18,14 @@ import {Store} from '@app/features/voice/engine/Store';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import type {EffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
+import {
+	createVoiceMicrophoneFailureLatchSnapshot,
+	isVoiceMicrophoneFailureLatchActive,
+	selectVoiceLocalAudioEffectiveSelfMute,
+	selectVoiceMicrophoneFailureCount,
+	transitionVoiceMicrophoneFailureLatchSnapshot,
+	type VoiceMicrophoneFailureLatchEvent,
+} from '@app/features/voice/engine/VoiceLocalAudioReconcilePolicy';
 import {resolveLocalSpeakingOverrideState} from '@app/features/voice/engine/VoiceLocalSpeakingGate';
 import {
 	getRoomFromMediaEngine,
@@ -151,10 +159,36 @@ function getVoiceEngineV2AudioModeFromAppState(): VoiceEngineV2AudioMode {
 	return 'voiceActivity';
 }
 
+let microphoneFailureLatchSnapshot = createVoiceMicrophoneFailureLatchSnapshot();
+
+function applyMicrophoneFailureLatchEvent(event: VoiceMicrophoneFailureLatchEvent): boolean {
+	const wasLatched = isVoiceMicrophoneFailureLatchActive(microphoneFailureLatchSnapshot);
+	microphoneFailureLatchSnapshot = transitionVoiceMicrophoneFailureLatchSnapshot(microphoneFailureLatchSnapshot, event);
+	const isLatched = isVoiceMicrophoneFailureLatchActive(microphoneFailureLatchSnapshot);
+	if (wasLatched === isLatched) return false;
+	logger.info('Microphone failure self-mute latch changed', {
+		event: event.type,
+		latched: isLatched,
+		failureCount: selectVoiceMicrophoneFailureCount(microphoneFailureLatchSnapshot),
+	});
+	return true;
+}
+
+export function isMicrophoneEnableFailureLatched(): boolean {
+	return isVoiceMicrophoneFailureLatchActive(microphoneFailureLatchSnapshot);
+}
+
+function getLatchedLocalSelfMute(): boolean {
+	return selectVoiceLocalAudioEffectiveSelfMute({
+		localSelfMute: LocalVoiceState.getSelfMute(),
+		microphoneFailureLatched: isMicrophoneEnableFailureLatched(),
+	});
+}
+
 function getVoiceEngineV2AudioControlsFromAppState(): VoiceEngineV2AudioControls {
 	return {
 		mode: getVoiceEngineV2AudioModeFromAppState(),
-		locallyMuted: LocalVoiceState.getSelfMute(),
+		locallyMuted: getLatchedLocalSelfMute(),
 		preferredLocallyMuted: LocalVoiceState.getSelfMute(),
 		locallyDeafened: LocalVoiceState.getSelfDeaf(),
 		mutedByPermission: LocalVoiceState.getMutedByPermission(),
@@ -248,6 +282,31 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		if (!binding) return;
 		binding.cleanup();
 		this.cameraLifecycleBinding = null;
+	}
+
+	isMicrophoneFailureLatched(): boolean {
+		return isMicrophoneEnableFailureLatched();
+	}
+
+	resetMicrophoneFailureLatch(): void {
+		this.transitionMicrophoneFailureLatch({type: 'latch.reset'});
+	}
+
+	noteUserMuteIntentChanged(): void {
+		this.transitionMicrophoneFailureLatch({type: 'mute.userIntentChanged'});
+	}
+
+	private transitionMicrophoneFailureLatch(event: VoiceMicrophoneFailureLatchEvent): void {
+		if (!applyMicrophoneFailureLatchEvent(event)) return;
+		this.emitChange();
+	}
+
+	private observeMicrophoneFailureLatchScope(channelId: string | null): void {
+		this.transitionMicrophoneFailureLatch({
+			type: 'scope.observed',
+			channelId,
+			inputDeviceId: VoiceSettings.getInputDeviceId(),
+		});
 	}
 
 	private isSpeakPermissionDenied(channelId: string | null): boolean {
@@ -356,6 +415,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 	async ensureMicrophone(room: Room, channelId: string): Promise<void> {
 		assertObjectLike<Room>(room, 'ensureMicrophone.room');
 		assertNonEmptyString(channelId, 'ensureMicrophone.channelId');
+		this.observeMicrophoneFailureLatchScope(channelId);
 		if (this.isSpeakPermissionDenied(channelId)) {
 			logger.debug('Skipping microphone: speak permission denied');
 			await this.enforceSpeakPermissionMute(room);
@@ -425,10 +485,12 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			logger.debug('Skipping audio-state reconciliation: no local participant');
 			return;
 		}
+		this.observeMicrophoneFailureLatchScope(params.channelId);
 		const permissionMuted = this.isSpeakPermissionDenied(params.channelId);
 		const audioState = this.getEffectiveAudioState({
 			serverMute: params.serverMute || permissionMuted,
 			serverDeaf: params.serverDeaf,
+			selfMute: getLatchedLocalSelfMute(),
 		});
 		logger.info('Reconciling local media after voice state update', {
 			channelId: params.channelId,
@@ -577,6 +639,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 	async refreshMicrophone(room: Room | null, options: RefreshMicrophoneOptions = {}): Promise<void> {
 		assertNullableObjectLike<Room>(room, 'refreshMicrophone.room');
 		assertObjectLike<RefreshMicrophoneOptions>(options, 'refreshMicrophone.options');
+		this.observeMicrophoneFailureLatchScope(this.getActiveChannelId());
 		const refresh = async () => this.refreshMicrophoneNow(room, options);
 		const pendingRefresh = this.microphoneRefreshQueue.then(refresh, refresh);
 		this.microphoneRefreshQueue = pendingRefresh.catch(() => {});
@@ -762,6 +825,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		if (this.hasMicrophonePublication(room)) {
 			if (this.hasLiveMicrophonePublication(room)) {
 				logger.debug('Microphone track already published, skipping duplicate publish');
+				this.transitionMicrophoneFailureLatch({type: 'microphone.enableSucceeded'});
 				return;
 			}
 			logger.warn('Existing microphone publication has an ended track; unpublishing before reacquire');
@@ -781,8 +845,14 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			this.attachLocalSpeakingDetectorForPublish(ctx, state);
 			MediaPermission.updateMicrophonePermissionGranted();
 			this.transitionMediaState({type: 'microphone.enable.success'});
+			this.transitionMicrophoneFailureLatch({type: 'microphone.enableSucceeded'});
 			logger.info('Successfully enabled microphone');
 		} catch (e: unknown) {
+			this.transitionMicrophoneFailureLatch({
+				type: 'microphone.enableFailed',
+				channelId: ctx.channelId ?? this.getActiveChannelId(),
+				inputDeviceId: VoiceSettings.getInputDeviceId(),
+			});
 			await this.rollbackMicrophoneEnable(ctx, state, e);
 			throw e;
 		}
@@ -1411,7 +1481,11 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		return (micPublication?.track as LocalAudioTrack) ?? null;
 	}
 
-	private getEffectiveAudioState(override?: {serverMute?: boolean; serverDeaf?: boolean}): EffectiveAudioState {
+	private getEffectiveAudioState(override?: {
+		serverMute?: boolean;
+		serverDeaf?: boolean;
+		selfMute?: boolean;
+	}): EffectiveAudioState {
 		return getEffectiveAudioState(override);
 	}
 

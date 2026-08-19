@@ -130,6 +130,16 @@ import {
 	noteLocalVoiceActivity,
 	noteLocalVoiceActivityFromSnapshot,
 } from '@app/features/voice/engine/VoiceIdleActivityBridge';
+import {
+	createVoiceLocalAudioReconcileCoalescerSnapshot,
+	selectVoiceLocalAudioEffectiveSelfMute,
+	selectVoiceLocalAudioReconcileCoalescedCount,
+	selectVoiceLocalAudioReconcileRunReasons,
+	shouldStartVoiceLocalAudioReconcileRun,
+	shouldWarnAboutVoiceLocalAudioReconcileFollowUpRuns,
+	transitionVoiceLocalAudioReconcileCoalescerSnapshot,
+	type VoiceLocalAudioReconcileCoalescerSnapshot,
+} from '@app/features/voice/engine/VoiceLocalAudioReconcilePolicy';
 import {normalizeVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {startVoiceMediaGraphTimerScheduler} from '@app/features/voice/engine/VoiceMediaGraphTimerScheduler';
 import {bindOutputDeviceSync} from '@app/features/voice/engine/VoiceOutputDeviceSync';
@@ -748,6 +758,9 @@ class MediaEngineFacade extends Store {
 	private videoCodecDecodeCapResyncDisposer: (() => void) | null = null;
 	private videoCodecPublishOverrideSyncDisposer: (() => void) | null = null;
 	private localStreamCodecReconcileScheduled = false;
+	private localAudioReconcileCoalescer: VoiceLocalAudioReconcileCoalescerSnapshot =
+		createVoiceLocalAudioReconcileCoalescerSnapshot();
+	private applyingGatewayVoiceStateEcho = false;
 	private previousWatchedStreamCodecGossip = new Map<
 		string,
 		{identity: string; source: VoiceEngineV2LocalStreamSource}
@@ -1349,9 +1362,40 @@ class MediaEngineFacade extends Store {
 	}
 
 	private reconcileLocalAudioStateInBackground(reason: string): void {
-		void this.reconcileLocalAudioState(reason).catch((error) => {
-			logger.warn('Local audio reconciliation failed', {reason, error});
-		});
+		const previous = this.localAudioReconcileCoalescer;
+		const next = transitionVoiceLocalAudioReconcileCoalescerSnapshot(previous, {type: 'run.requested', reason});
+		this.localAudioReconcileCoalescer = next;
+		if (!shouldStartVoiceLocalAudioReconcileRun(previous, next)) return;
+		void this.drainLocalAudioReconcile();
+	}
+
+	private async drainLocalAudioReconcile(): Promise<void> {
+		try {
+			for (;;) {
+				const reasons = selectVoiceLocalAudioReconcileRunReasons(this.localAudioReconcileCoalescer);
+				try {
+					await this.reconcileLocalAudioState(reasons.join(' + '));
+				} catch (error) {
+					logger.warn('Local audio reconciliation failed', {reasons, error});
+				}
+				const previous = this.localAudioReconcileCoalescer;
+				const next = transitionVoiceLocalAudioReconcileCoalescerSnapshot(previous, {type: 'run.settled'});
+				this.localAudioReconcileCoalescer = next;
+				if (!shouldStartVoiceLocalAudioReconcileRun(previous, next)) return;
+				if (
+					shouldWarnAboutVoiceLocalAudioReconcileFollowUpRuns(next) &&
+					!shouldWarnAboutVoiceLocalAudioReconcileFollowUpRuns(previous)
+				) {
+					logger.warn('Local audio reconciliation keeps re-queueing itself', {
+						reasons: selectVoiceLocalAudioReconcileRunReasons(next),
+						coalescedCount: selectVoiceLocalAudioReconcileCoalescedCount(previous),
+					});
+				}
+			}
+		} catch (error) {
+			logger.error('Local audio reconciliation loop aborted; resetting the coalescer', {error});
+			this.localAudioReconcileCoalescer = createVoiceLocalAudioReconcileCoalescerSnapshot();
+		}
 	}
 
 	private clearNativeVoiceTransportReconnect(): void {
@@ -1601,7 +1645,11 @@ class MediaEngineFacade extends Store {
 				previousState,
 				currentState,
 			});
+			const unmutedLocally = previousState.selfMute && !currentState.selfMute && !this.applyingGatewayVoiceStateEcho;
 			previousState = currentState;
+			if (unmutedLocally) {
+				voiceEngineV2AppMediaExecutionAdapter.noteUserMuteIntentChanged();
+			}
 			this.syncVoiceEngineV2AudioControlsFromAppState();
 			this.reconcileLocalAudioStateInBackground('local audio state change');
 		});
@@ -2110,6 +2158,7 @@ class MediaEngineFacade extends Store {
 		SoundCommands.playSound(SoundType.VoiceDisconnect);
 		VoiceCallLayout.reset();
 		voiceEngineV2AppMediaStateAdapter.resetLocalMediaState('disconnect');
+		voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 		this.resetLocalMediaAndScreenShareTracking();
 		this.voiceEngineV2Participants.clear();
 		if (connectionId) {
@@ -2148,6 +2197,7 @@ class MediaEngineFacade extends Store {
 		}
 		VoiceCallLayout.reset();
 		voiceEngineV2AppMediaStateAdapter.resetLocalMediaState('disconnect');
+		voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 		this.resetLocalMediaAndScreenShareTracking();
 		this.voiceEngineV2Participants.clear();
 		if (reason === 'user' && connectionId) {
@@ -2208,7 +2258,10 @@ class MediaEngineFacade extends Store {
 	private syncVoiceEngineV2AudioControlsFromAppState(): void {
 		this.voiceEngineV2Controller.setAudioControls({
 			mode: this.getVoiceEngineV2AudioMode(),
-			locallyMuted: LocalVoiceState.getSelfMute(),
+			locallyMuted: selectVoiceLocalAudioEffectiveSelfMute({
+				localSelfMute: LocalVoiceState.getSelfMute(),
+				microphoneFailureLatched: voiceEngineV2AppMediaExecutionAdapter.isMicrophoneFailureLatched(),
+			}),
 			preferredLocallyMuted: LocalVoiceState.getSelfMute(),
 			locallyDeafened: LocalVoiceState.getSelfDeaf(),
 			mutedByPermission: LocalVoiceState.getMutedByPermission(),
@@ -2341,6 +2394,7 @@ class MediaEngineFacade extends Store {
 		}
 		void ScreenShareCodecNegotiation.publishLocalCapabilitiesNative('connected');
 		this.restoreNativeLocalMediaStateInBackground('native voice engine connected');
+		voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 		this.reconcileLocalAudioStateInBackground('native voice engine connected');
 	}
 
@@ -3111,6 +3165,7 @@ class MediaEngineFacade extends Store {
 					this.statsHostAdapter.startStatsTracking();
 					void ScreenShareCodecNegotiation.publishLocalCapabilitiesNative('reconnected');
 					this.restoreNativeLocalMediaStateInBackground('native voice engine reconnected');
+					voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 					this.reconcileLocalAudioStateInBackground('native voice engine reconnected');
 					break;
 				default:
@@ -3246,6 +3301,7 @@ class MediaEngineFacade extends Store {
 							if (shouldApplyPendingSessionRestore) {
 								await this.restorePendingSessionMedia();
 							}
+							voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 							await this.reconcileLocalAudioState('voice room connected');
 						},
 						onDisconnected: () => {
@@ -3266,6 +3322,7 @@ class MediaEngineFacade extends Store {
 							this.statsHostAdapter.incrementReconnectionCount();
 							this.statsHostAdapter.startLatencyTracking();
 							this.statsHostAdapter.startStatsTracking();
+							voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 							this.reconcileLocalAudioStateInBackground('voice room reconnected');
 						},
 					},
@@ -3320,6 +3377,7 @@ class MediaEngineFacade extends Store {
 				if (guildId && channelId) {
 					VoiceEngineV2AppPermissionAdapter.syncWithPermissionState(guildId, channelId, newRoom);
 				}
+				voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 				this.reconcileLocalAudioStateInBackground('region hot-swap complete');
 			},
 			(_guildId, _channelId, _connectionId, _attemptId, error) => {
@@ -3471,13 +3529,18 @@ class MediaEngineFacade extends Store {
 				const pttActive = this.isPushToTalkActive();
 				const applyServerState = shouldApplyIncomingLocalState;
 				shouldApplyCurrentServerState = applyServerState;
-				LocalVoiceState.syncConnectionState(voiceState.connection_id, {
-					selfMute: ptmActive || pttActive || !applyServerState ? undefined : voiceState.self_mute,
-					selfDeaf: applyServerState ? voiceState.self_deaf : undefined,
-					selfVideo: applyServerState ? voiceState.self_video : undefined,
-					selfStream: applyServerState ? voiceState.self_stream : undefined,
-					viewerStreamKeys: applyServerState ? incomingViewerStreamKeys : undefined,
-				});
+				this.applyingGatewayVoiceStateEcho = true;
+				try {
+					LocalVoiceState.syncConnectionState(voiceState.connection_id, {
+						selfMute: ptmActive || pttActive || !applyServerState ? undefined : voiceState.self_mute,
+						selfDeaf: applyServerState ? voiceState.self_deaf : undefined,
+						selfVideo: applyServerState ? voiceState.self_video : undefined,
+						selfStream: applyServerState ? voiceState.self_stream : undefined,
+						viewerStreamKeys: applyServerState ? incomingViewerStreamKeys : undefined,
+					});
+				} finally {
+					this.applyingGatewayVoiceStateEcho = false;
+				}
 				if (applyServerState) {
 					replaceWatchedStreamKeys([...incomingViewerStreamKeys], {sync: false});
 				}
@@ -3667,11 +3730,13 @@ class MediaEngineFacade extends Store {
 	}
 
 	syncLocalVoiceStateWithServer(partial?: VoiceStateSyncPartial): void {
-		LocalVoiceState.ensurePermissionMute();
-		const {guildId, channelId, connectionId} = voiceEngineV2AppConnectionHostAdapter.connectionState;
-		if (!channelId || !connectionId) return;
 		const devicePermission = VoiceDevicePermissionState.getState().permissionStatus;
 		const micGranted = MediaPermission.isMicrophoneGranted() || devicePermission === 'granted';
+		if (!micGranted || LocalVoiceState.getMutedByPermission()) {
+			LocalVoiceState.ensurePermissionMute();
+		}
+		const {guildId, channelId, connectionId} = voiceEngineV2AppConnectionHostAdapter.connectionState;
+		if (!channelId || !connectionId) return;
 		const selfMute = resolveVoiceStateSelfMute({
 			guildId,
 			channelId,
@@ -4669,6 +4734,17 @@ class MediaEngineFacade extends Store {
 
 	getMuteReason(voiceState: VoiceState | null): VoiceMuteReason {
 		return voiceEngineV2AppMediaExecutionAdapter.getMuteReason(voiceState, this.guildId, this.channelId);
+	}
+
+	isMicrophoneFailureLatched(): boolean {
+		return voiceEngineV2AppMediaExecutionAdapter.isMicrophoneFailureLatched();
+	}
+
+	clearMicrophoneFailureLatch(): void {
+		if (!voiceEngineV2AppMediaExecutionAdapter.isMicrophoneFailureLatched()) return;
+		voiceEngineV2AppMediaExecutionAdapter.noteUserMuteIntentChanged();
+		this.syncVoiceEngineV2AudioControlsFromAppState();
+		this.reconcileLocalAudioStateInBackground('microphone failure latch cleared');
 	}
 
 	async toggleCameraFromKeybind(): Promise<void> {
