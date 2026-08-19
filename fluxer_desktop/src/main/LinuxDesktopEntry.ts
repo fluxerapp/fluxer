@@ -61,6 +61,24 @@ function findSystemDesktopEntry(): string | null {
 	return null;
 }
 
+function findThirdPartyDesktopEntry(execPath: string): string | null {
+	const applicationsDir = getUserApplicationsDir();
+	let entries: Array<string>;
+	try {
+		entries = fs.readdirSync(applicationsDir);
+	} catch {
+		return null;
+	}
+	for (const entry of entries) {
+		if (!entry.endsWith('.desktop') || entry === DESKTOP_FILE_BASENAME) continue;
+		const candidate = path.join(applicationsDir, entry);
+		try {
+			if (fs.readFileSync(candidate, 'utf8').includes(execPath)) return candidate;
+		} catch {}
+	}
+	return null;
+}
+
 function escapeDesktopValue(value: string): string {
 	return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/\r/g, '\\r');
 }
@@ -105,7 +123,7 @@ function buildDesktopActionEntries(execPath: string): Array<string> {
 	return entries;
 }
 
-function buildDesktopFileContents(execPath: string): string {
+function buildDesktopFileContents(execPath: string, hidden: boolean): string {
 	const execLine = `${quoteExecArg(execPath)} %U`;
 	return [
 		'[Desktop Entry]',
@@ -124,6 +142,7 @@ function buildDesktopFileContents(execPath: string): string {
 		`StartupWMClass=${WM_CLASS}`,
 		'SingleMainWindow=true',
 		'StartupNotify=true',
+		...(hidden ? ['NoDisplay=true'] : []),
 		...buildDesktopActionEntries(execPath),
 		'',
 	].join('\n');
@@ -171,9 +190,15 @@ export function ensureLinuxProtocolDesktopEntry(): void {
 	const applicationsDir = getUserApplicationsDir();
 	const filePath = getDesktopFilePath();
 	installHicolorIcons();
-	const desired = buildDesktopFileContents(execPath);
-	let needsWrite = true;
 	const existing = readExistingDesktopFile(filePath);
+	const thirdPartyEntry = findThirdPartyDesktopEntry(execPath);
+	if (thirdPartyEntry) {
+		logger.debug('Third-party .desktop entry manages the app menu entry; keeping ours hidden', {
+			thirdPartyEntry,
+		});
+	}
+	const desired = buildDesktopFileContents(execPath, thirdPartyEntry !== null);
+	let needsWrite = true;
 	if (existing === null) {
 		const systemEntry = findSystemDesktopEntry();
 		if (systemEntry) {
