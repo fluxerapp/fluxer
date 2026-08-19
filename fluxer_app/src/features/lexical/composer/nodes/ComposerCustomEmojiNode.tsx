@@ -152,8 +152,8 @@ export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
 		return true;
 	}
 
-	override isKeyboardSelectable(): boolean {
-		return true;
+	override isKeyboardSelectable(): false {
+		return false;
 	}
 
 	override decorate(): JSX.Element {
