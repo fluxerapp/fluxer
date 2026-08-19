@@ -29,7 +29,13 @@ export function useThemeCssVariables({
 }: ThemeCssVariablesOptions): void {
 	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
-		htmlNode.classList.add(`theme-${effectiveTheme}`);
+		const themeClass = `theme-${effectiveTheme}`;
+		for (const existingClass of Array.from(htmlNode.classList)) {
+			if (existingClass.startsWith('theme-') && existingClass !== themeClass) {
+				htmlNode.classList.remove(existingClass);
+			}
+		}
+		htmlNode.classList.add(themeClass);
 		htmlNode.style.setProperty('--saturation-factor', saturationFactor.toString());
 		htmlNode.style.setProperty('--user-select', enableTextSelection ? 'auto' : 'none');
 		htmlNode.style.setProperty('--font-size', remFromPx(fontSize));
@@ -47,7 +53,7 @@ export function useThemeCssVariables({
 			htmlNode.style.removeProperty('--markup-strikethrough-color');
 		}
 		return () => {
-			htmlNode.classList.remove(`theme-${effectiveTheme}`);
+			htmlNode.classList.remove(themeClass);
 			htmlNode.style.removeProperty('--saturation-factor');
 			htmlNode.style.removeProperty('--link-decoration');
 			htmlNode.style.removeProperty('--markup-strikethrough-color');
