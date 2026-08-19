@@ -404,3 +404,26 @@ proptest::proptest! {
         prop_assert!(serialized.starts_with('['));
     }
 }
+
+#[test]
+fn native_parser_starts_a_table_directly_after_a_text_line() {
+    let input =
+        "intro text\r\n| Framework | Type |\r\n| --------- | ---- |\r\n| React | UI library |";
+    let parsed = parse(input, ParserFlags::ALL, "");
+    let nodes = parsed["nodes"].as_array().expect("nodes array");
+    assert!(
+        nodes.iter().any(|node| node["type"] == "Table"),
+        "expected a Table node, got {parsed}"
+    );
+}
+
+#[test]
+fn native_parser_still_requires_a_delimiter_row_for_a_table() {
+    let input = "intro text\n| not | a | table |\njust more text";
+    let parsed = parse(input, ParserFlags::ALL, "");
+    let nodes = parsed["nodes"].as_array().expect("nodes array");
+    assert!(
+        !nodes.iter().any(|node| node["type"] == "Table"),
+        "pipes alone must not form a table, got {parsed}"
+    );
+}

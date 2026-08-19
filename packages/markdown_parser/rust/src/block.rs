@@ -1170,6 +1170,29 @@ pub(crate) fn is_block_start(line: &str, flags: u32) -> bool {
         || is_blockquote_start(line, flags)
 }
 
+pub(crate) fn is_table_start(lines: &[Line], index: usize, flags: u32) -> bool {
+    if !ParserFlags::has(flags, ParserFlags::ALLOW_TABLES) || index + 2 >= lines.len() {
+        return false;
+    }
+    let header_line = trim_table_line(&lines[index]);
+    let align_line = trim_table_line(&lines[index + 1]);
+    if !header_line.text.contains('|') || !align_line.text.contains('|') {
+        return false;
+    }
+    let header_cells = split_table_cells(&header_line);
+    if header_cells.is_empty() || !cells_have_content(&header_cells) {
+        return false;
+    }
+    let Some(alignments) = parse_alignments(&split_table_cells(&align_line)) else {
+        return false;
+    };
+    if header_cells.len() != alignments.len() {
+        return false;
+    }
+    let body_line = trim_table_line(&lines[index + 2]);
+    body_line.text.contains('|') && !is_table_block_break(&body_line.text)
+}
+
 pub(crate) fn is_heading_start(line: &str, flags: u32) -> bool {
     if !ParserFlags::has(flags, ParserFlags::ALLOW_HEADINGS) || !starts_with(line, "#") {
         return false;
