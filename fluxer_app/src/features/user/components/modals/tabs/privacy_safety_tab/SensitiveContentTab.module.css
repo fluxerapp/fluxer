@@ -1,25 +1,22 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .container {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(14rem, min(max-content, 55%));
+	align-items: center;
+	column-gap: 1rem;
+	row-gap: 1.5rem;
 }
 
 .row {
-	display: flex;
-	min-height: 2.75rem;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-	padding: 0.25rem 0;
+	display: contents;
 }
 
 .label {
 	display: flex;
+	min-height: 2.25rem;
 	min-width: 0;
 	max-width: 100%;
-	flex: 1 1 0%;
 	align-items: center;
 	gap: 0.5rem;
 	font-weight: 500;
@@ -34,13 +31,14 @@
 }
 
 .choiceWrap {
-	flex: 0 0 14rem;
-	width: 14rem;
+	width: 100%;
 }
 
 .choiceGroup {
 	position: relative;
-	display: flex;
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(0, 1fr);
 	width: 100%;
 	height: 2.125rem;
 	border-radius: 0.5rem;
@@ -57,7 +55,6 @@
 .choiceButton {
 	position: relative;
 	z-index: 1;
-	flex: 1 1 0;
 	min-width: 0;
 	border: 0;
 	border-radius: 0.375rem;
@@ -69,6 +66,8 @@
 	line-height: 1rem;
 	text-align: center;
 	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	cursor: pointer;
 	transition: color 150ms ease;
 }
@@ -101,13 +100,22 @@
 }
 
 @media (max-width: 520px) {
-	.row {
+	.container {
+		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
+		gap: 1rem;
 	}
 
-	.choiceWrap {
-		flex: none;
-		width: min(100%, 14rem);
+	.row {
+		display: flex;
+		min-height: 2.75rem;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.25rem 0;
+	}
+
+	.label {
+		min-height: 0;
 	}
 }
