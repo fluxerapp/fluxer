@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	buildMaskedLink,
+	canWrapSelectionAsLink,
+	parsePastedUrl,
+} from '@app/features/lexical/composer/ComposerLinkPaste';
+import {
 	$createComposerSegmentNodes,
 	$projectComposer,
 	isValidComposerSegment,
@@ -460,6 +465,35 @@ export function registerComposerClipboardCommands(
 	state: ComposerClipboardCommandState,
 ): () => void {
 	return mergeRegister(
+		editor.registerCommand(
+			PASTE_COMMAND,
+			(event) => {
+				if (!state.isEditable() || state.getPlainText()) {
+					return false;
+				}
+				const clipboardEvent = getClipboardEvent(event);
+				if (clipboardEvent == null || clipboardEvent.clipboardData == null) {
+					return false;
+				}
+				const url = parsePastedUrl(clipboardEvent.clipboardData.getData('text/plain'));
+				if (url == null) {
+					return false;
+				}
+				const selection = $getSelection();
+				if (!$isRangeSelection(selection) || selection.isCollapsed()) {
+					return false;
+				}
+				const selectedText = selection.getTextContent();
+				if (!canWrapSelectionAsLink(selectedText)) {
+					return false;
+				}
+				selection.insertText(buildMaskedLink(selectedText, url));
+				$addUpdateTag(PASTE_TAG);
+				clipboardEvent.preventDefault();
+				return true;
+			},
+			COMMAND_PRIORITY_NORMAL,
+		),
 		editor.registerCommand(
 			COPY_COMMAND,
 			(event) => {
