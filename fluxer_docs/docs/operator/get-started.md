@@ -277,6 +277,14 @@ The `fluxer-static` image is part of the default stack, so static asset updates 
 
 To pin a specific release, set `FLUXER_IMAGE_TAG` in `.env` to the release tag you want, then pull and restart.
 
+Each upgrade leaves the previous images behind, which adds up to a few gigabytes over time. To reclaim that space:
+
+```bash
+docker image prune -f
+```
+
+This removes only the untagged images the upgrade replaced. `docker system prune -a` reclaims more, but it also deletes every image not currently used by a running container, including ones unrelated to Fluxer.
+
 ## Getting help
 
 - File issues and follow development on [GitHub](https://github.com/fluxerapp/fluxer).
