@@ -574,10 +574,8 @@ msgstr "Исходный код"
 #. Body copy in the locale picker inviting translation contributions through Weblate. Preserve the {weblate} and {product_name} placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.weblate_note
 msgctxt "company_and_resources.source_and_contribution.translation.weblate_note"
-msgid ""
-"A translation should sound natural to someone who speaks the language. Correct a phrase or start a new locale on {weblate}, and we will include it in {product_name}."
-msgstr ""
-"Перевод должен звучать естественно для того, кто говорит на этом языке. Исправь формулировку или начни новую локаль на {weblate}, и мы добавим её в {product_name}."
+msgid "Help translate {product_name} into your language on {weblate}."
+msgstr "Помогите перевести {product_name} на ваш язык на {weblate}."
 
 #. Department or policy category label on content pages. Translate as a compact noun phrase, not as a sentence.
 #: fluxer_marketing/generated:content.labels.community
@@ -2391,8 +2389,8 @@ msgstr "Значок подписчика в профиле"
 #. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.saved_media
 msgctxt "pricing_and_tiers.plutonium.perks.saved_media"
-msgid "Media items you can save"
-msgstr "Медиафайлы, которые можно сохранить"
+msgid "Media items you can save for later"
+msgstr "Медиафайлы, которые можно сохранить на потом"
 
 #. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.use_animated_emojis
