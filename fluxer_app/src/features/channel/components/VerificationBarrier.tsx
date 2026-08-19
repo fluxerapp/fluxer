@@ -32,14 +32,18 @@ export const VerificationBarrier = observer(({channel}: Props) => {
 		case VerificationFailureReason.ACCOUNT_TOO_NEW:
 			return (
 				<AccountTooNewBarrier
-					initialTimeRemaining={verificationStatus.timeRemaining || 0}
+					initialTimeRemaining={
+						verificationStatus.verificationEndsAt ? Math.max(0, verificationStatus.verificationEndsAt - Date.now()) : 0
+					}
 					data-flx="channel.verification-barrier.account-too-new-barrier"
 				/>
 			);
 		case VerificationFailureReason.NOT_MEMBER_LONG_ENOUGH:
 			return (
 				<NotMemberLongEnoughBarrier
-					initialTimeRemaining={verificationStatus.timeRemaining || 0}
+					initialTimeRemaining={
+						verificationStatus.verificationEndsAt ? Math.max(0, verificationStatus.verificationEndsAt - Date.now()) : 0
+					}
 					data-flx="channel.verification-barrier.not-member-long-enough-barrier"
 				/>
 			);
@@ -50,7 +54,9 @@ export const VerificationBarrier = observer(({channel}: Props) => {
 		case VerificationFailureReason.TIMED_OUT:
 			return (
 				<TimeoutBarrier
-					initialTimeRemaining={verificationStatus.timeRemaining || 0}
+					initialTimeRemaining={
+						verificationStatus.verificationEndsAt ? Math.max(0, verificationStatus.verificationEndsAt - Date.now()) : 0
+					}
 					data-flx="channel.verification-barrier.timeout-barrier"
 				/>
 			);
