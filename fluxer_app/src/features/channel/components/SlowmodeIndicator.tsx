@@ -74,7 +74,11 @@ export function formatSlowmodeDuration(ms: number, locale: string): string {
 		return formatDurationPart(totalSeconds, 'second', locale);
 	}
 	if (totalSeconds < SECONDS_PER_HOUR) {
-		return formatDurationPart(Math.round(totalSeconds / SECONDS_PER_MINUTE), 'minute', locale);
+		const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE);
+		const remainingSeconds = totalSeconds % SECONDS_PER_MINUTE;
+		const minutePart = formatDurationPart(minutes, 'minute', locale);
+		if (remainingSeconds === 0) return minutePart;
+		return `${minutePart} ${formatDurationPart(remainingSeconds, 'second', locale)}`;
 	}
 	if (totalSeconds < SECONDS_PER_DAY) {
 		const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
