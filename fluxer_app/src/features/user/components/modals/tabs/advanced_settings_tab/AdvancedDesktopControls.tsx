@@ -13,7 +13,9 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {
 	getCachedDesktopWindowBehaviorSettings,
+	getDesktopWindowBehaviorPendingRestart,
 	getDesktopWindowBehaviorSettings,
+	relaunchDesktopApp,
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -41,6 +43,14 @@ const DISABLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 });
 const RESTART_NOW_DESCRIPTOR = msg({
 	message: 'Restart now',
+	comment: 'Short confirmation button label in advanced settings.',
+});
+const RESTART_PRODUCT_DESCRIPTOR = msg({
+	message: 'Restart {productName}?',
+	comment: 'Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.',
+});
+const LATER_DESCRIPTOR = msg({
+	message: 'Later',
 	comment: 'Short confirmation button label in advanced settings.',
 });
 
@@ -122,14 +132,36 @@ export const NativeTitleBarControl = observer(() => {
 	const {i18n} = useLingui();
 	const {desktopWindowBehavior, desktopWindowBehaviorBusy, updateDesktopWindowBehavior} =
 		useDesktopWindowBehaviorSettings();
+	const handleChange = useCallback(
+		(value: boolean) => {
+			void updateDesktopWindowBehavior({useNativeTitleBar: value}).then(async () => {
+				const pending = await getDesktopWindowBehaviorPendingRestart();
+				if (!pending) return;
+				ModalCommands.push(
+					modal(() => (
+						<ConfirmModal
+							title={i18n._(RESTART_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+							description={<Trans>{PRODUCT_NAME} needs to restart for the title bar change to take effect.</Trans>}
+							primaryText={i18n._(RESTART_NOW_DESCRIPTOR)}
+							primaryVariant="primary"
+							secondaryText={i18n._(LATER_DESCRIPTOR)}
+							onPrimary={async () => {
+								await relaunchDesktopApp();
+							}}
+							data-flx="user.advanced-settings-tab.native-title-bar.confirm-modal"
+						/>
+					)),
+				);
+			});
+		},
+		[i18n, updateDesktopWindowBehavior],
+	);
 	return (
 		<Switch
 			ariaLabel={i18n._(USE_NATIVE_TITLE_BAR_DESCRIPTOR)}
 			value={desktopWindowBehavior?.useNativeTitleBar ?? false}
 			disabled={desktopWindowBehaviorBusy || desktopWindowBehavior === null}
-			onChange={(value) => {
-				void updateDesktopWindowBehavior({useNativeTitleBar: value});
-			}}
+			onChange={handleChange}
 			compact
 			data-flx="user.advanced-settings-tab.switch.native-title-bar"
 		/>
