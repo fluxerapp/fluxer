@@ -16225,6 +16225,10 @@ msgstr "도움말"
 msgid "Help center"
 msgstr "고객센터"
 
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:360
+msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
+msgstr "{PRODUCT_NAME}을(를) 귀하의 언어로 번역하는 데 참여해 주세요. <0>{I18N_WEBLATE_DOMAIN}</0>에서 가능합니다."
+
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
 msgid "Helps the browser choose motion, detail, or text handling."
@@ -33555,10 +33559,6 @@ msgstr "번역"
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:35
 msgid "Translation provider"
 msgstr "번역 서비스 제공자"
-
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:360
-msgid "Translations are automated. Help improve localization by emailing <0>{I18N_EMAIL}</0>."
-msgstr "번역은 자동입니다. <0>{I18N_EMAIL}</0>로 이메일을 보내 현지화 개선에 도움을 주세요."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247

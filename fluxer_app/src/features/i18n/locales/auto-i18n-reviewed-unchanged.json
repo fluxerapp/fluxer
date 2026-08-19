@@ -1411,6 +1411,9 @@
         "msgid": "Granted"
       },
       {
+        "msgid": "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
+      },
+      {
         "msgid": "How much of the member's recent message history to delete."
       },
       {

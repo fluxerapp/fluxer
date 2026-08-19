@@ -9,7 +9,7 @@ import {
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {I18N_EMAIL, I18N_EMAIL_MAILTO, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {I18N_WEBLATE_DOMAIN, I18N_WEBLATE_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import type {SpellcheckEngine} from '@app/features/platform/types/Electron';
@@ -358,9 +358,9 @@ const LanguageTab = observer(() => {
 						<div className={styles.notice} data-flx="user.language-tab.notice">
 							<p className={styles.noticeText} data-flx="user.language-tab.notice-text">
 								<Trans>
-									Translations are automated. Help improve localization by emailing{' '}
-									<ExternalLink href={I18N_EMAIL_MAILTO} className={styles.link} data-flx="user.language-tab.link">
-										{I18N_EMAIL}
+									Help translate {PRODUCT_NAME} into your language on{' '}
+									<ExternalLink href={I18N_WEBLATE_URL} className={styles.link} data-flx="user.language-tab.link">
+										{I18N_WEBLATE_DOMAIN}
 									</ExternalLink>
 									.
 								</Trans>

@@ -16225,6 +16225,10 @@ msgstr "Help"
 msgid "Help center"
 msgstr "Helpcentrum"
 
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:360
+msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
+msgstr "Help {PRODUCT_NAME} vertalen naar jouw taal op <0>{I18N_WEBLATE_DOMAIN}</0>."
+
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
 msgid "Helps the browser choose motion, detail, or text handling."
@@ -33555,10 +33559,6 @@ msgstr "Vertaling"
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:35
 msgid "Translation provider"
 msgstr "Vertaalservice"
-
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:360
-msgid "Translations are automated. Help improve localization by emailing <0>{I18N_EMAIL}</0>."
-msgstr "Vertalingen zijn geautomatiseerd. Help de lokalisatie te verbeteren door een e-mail te sturen naar <0>{I18N_EMAIL}</0>."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
