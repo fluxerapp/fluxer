@@ -47,6 +47,7 @@ export const DiscoveryLanguageButton = observer(() => {
 	return (
 		<ChannelHeaderIcon
 			icon={TranslateIcon}
+			iconWeight="bold"
 			label={
 				activeLanguage == null
 					? i18n._(FILTER_BY_LANGUAGE_DESCRIPTOR)
