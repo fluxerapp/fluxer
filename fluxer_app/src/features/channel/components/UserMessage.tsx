@@ -770,8 +770,46 @@ export const UserMessage = observer(() => {
 								/>
 							</Tooltip>
 						)}
+						{(message.editedTimestamp || message.isEditing) &&
+							(message.isEditing ? (
+								<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--3">
+									{' '}
+									{i18n._(EDITED_DESCRIPTOR)}
+								</span>
+							) : (
+								<TimestampWithTooltip
+									date={message.editedTimestamp!}
+									className={styles.editedTimestamp}
+									data-flx="channel.user-message.edited-timestamp--2"
+								>
+									<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--4">
+										{' '}
+										{i18n._(EDITED_DESCRIPTOR)}
+									</span>
+								</TimestampWithTooltip>
+							))}
 					</AuthorHeading>
 				)}
+				{((!message.content && !isEditing) || (shouldHideContent && !isEditing)) &&
+					shouldGroup &&
+					(message.editedTimestamp || message.isEditing) &&
+					(message.isEditing ? (
+						<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--5">
+							{' '}
+							{i18n._(EDITED_DESCRIPTOR)}
+						</span>
+					) : (
+						<TimestampWithTooltip
+							date={message.editedTimestamp!}
+							className={styles.editedTimestamp}
+							data-flx="channel.user-message.edited-timestamp--3"
+						>
+							<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--6">
+								{' '}
+								{i18n._(EDITED_DESCRIPTOR)}
+							</span>
+						</TimestampWithTooltip>
+					))}
 				<MessageAttachments data-flx="channel.user-message.message-attachments--3" />
 				{renderFailedFooter()}
 			</div>
