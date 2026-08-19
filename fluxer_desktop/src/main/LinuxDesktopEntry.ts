@@ -148,6 +148,31 @@ function buildDesktopFileContents(execPath: string, hidden: boolean): string {
 	].join('\n');
 }
 
+function readDesktopEntryValue(contents: string, key: string): string | null {
+	for (const line of contents.split('\n')) {
+		const trimmed = line.trim();
+		if (trimmed.startsWith('[Desktop Action ')) break;
+		if (trimmed.startsWith(`${key}=`)) return trimmed.slice(key.length + 1).trim();
+	}
+	return null;
+}
+
+function isExecutableFile(candidate: string): boolean {
+	try {
+		if (!fs.statSync(candidate).isFile()) return false;
+		fs.accessSync(candidate, fs.constants.X_OK);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+function isStaleDesktopFile(contents: string): boolean {
+	const tryExec = readDesktopEntryValue(contents, 'TryExec');
+	if (tryExec === null || !tryExec.startsWith('/')) return false;
+	return !isExecutableFile(tryExec);
+}
+
 function readExistingDesktopFile(filePath: string): string | null {
 	try {
 		return fs.readFileSync(filePath, 'utf8');
@@ -213,10 +238,29 @@ export function ensureLinuxProtocolDesktopEntry(): void {
 	}
 	if (existing !== null) {
 		if (!existing.includes(GENERATED_MARKER)) {
-			logger.debug('Linux .desktop entry was hand-edited; leaving untouched', {filePath});
-			return;
+			if (!isStaleDesktopFile(existing)) {
+				logger.debug('Linux .desktop entry was hand-edited; leaving untouched', {filePath});
+				return;
+			}
+			const systemEntry = findSystemDesktopEntry();
+			if (systemEntry) {
+				try {
+					fs.unlinkSync(filePath);
+					logger.info('Removed stale .desktop entry shadowing the system entry', {filePath, systemEntry});
+				} catch (error) {
+					logger.warn('Failed to remove stale .desktop entry', {filePath, error});
+				}
+				try {
+					app.setAsDefaultProtocolClient(APP_PROTOCOL);
+				} catch (error) {
+					logger.warn('Failed to register protocol client', {error});
+				}
+				return;
+			}
+			logger.info('Rewriting stale .desktop entry whose TryExec no longer resolves', {filePath});
+		} else {
+			needsWrite = existing !== desired;
 		}
-		needsWrite = existing !== desired;
 	}
 	if (!needsWrite) {
 		logger.debug('Linux .desktop entry already up to date', {filePath});
