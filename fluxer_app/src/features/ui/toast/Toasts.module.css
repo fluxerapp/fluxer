@@ -20,11 +20,11 @@
 	left: 50%;
 }
 
-:global(html.platform-native:not(.platform-macos) #toast-portal-root) .containerDesktop {
+:global(html.platform-native #toast-portal-root) .containerDesktop {
 	top: calc(1.5rem + env(safe-area-inset-top, 0px) + var(--native-titlebar-height, 0px));
 }
 
-:global(html.platform-native:not(.platform-macos) #toast-portal-root) .containerMobile {
+:global(html.platform-native #toast-portal-root) .containerMobile {
 	top: calc(1rem + env(safe-area-inset-top, 0px) + var(--native-titlebar-height, 0px));
 }
 
