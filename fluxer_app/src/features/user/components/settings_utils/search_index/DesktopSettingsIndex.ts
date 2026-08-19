@@ -2,7 +2,7 @@
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, getNativePlatformSync, isDesktop, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {BACKGROUND_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
@@ -283,7 +283,7 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		],
 		description: USE_THE_OPERATING_SYSTEM_S_WINDOW_CHROME_DESCRIPTOR,
 		tags: ['desktop', 'appearance'],
-		isVisible: isDesktop,
+		isVisible: () => isDesktop() && !isNativeMacOS(getNativePlatformSync()),
 	},
 	{
 		id: 'advanced-tray-icon',

@@ -156,6 +156,7 @@ export const NativeTitleBarControl = observer(() => {
 		},
 		[i18n, updateDesktopWindowBehavior],
 	);
+	if (getElectronAPI()?.platform === 'darwin') return null;
 	return (
 		<Switch
 			ariaLabel={i18n._(USE_NATIVE_TITLE_BAR_DESCRIPTOR)}

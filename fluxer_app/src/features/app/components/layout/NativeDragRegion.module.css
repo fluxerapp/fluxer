@@ -3,7 +3,3 @@
 .nativeDragRegion {
 	-webkit-app-region: none;
 }
-
-:global(html.platform-native.platform-macos) .nativeDragRegion {
-	-webkit-app-region: drag;
-}
