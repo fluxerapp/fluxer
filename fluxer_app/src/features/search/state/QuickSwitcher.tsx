@@ -19,6 +19,7 @@ import {
 	generateQueryModeResults,
 	resolveTransformedMember,
 } from '@app/features/search/state/QuickSwitcherResultGenerators';
+import {resolveRecomputedSelectedIndex} from '@app/features/search/state/QuickSwitcherSelection';
 import type {
 	CandidateSets,
 	ComputeResultsForQueryResult,
@@ -404,10 +405,11 @@ class QuickSwitcher {
 		if (options.invalidateCandidates ?? true) {
 			this.invalidateCandidateSets();
 		}
+		const previous = this.results[this.selectedIndex];
 		const {queryMode, results, selectedIndex} = this.computeResultsForQuery(this.query);
 		this.queryMode = queryMode;
 		this.results = results;
-		this.selectedIndex = selectedIndex;
+		this.selectedIndex = resolveRecomputedSelectedIndex(previous, results, selectedIndex);
 	}
 
 	private computeResultsForQuery(query: string): ComputeResultsForQueryResult {
