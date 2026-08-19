@@ -37,10 +37,10 @@ export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({autho
 	if (!author) return null;
 	return (
 		<div className={styles.embedAuthor} data-flx="channel.embeds.embed.embed-author-component.embed-author">
-			{iconSrc && iconLoaded && (
+			{iconSrc && (
 				<img
 					alt=""
-					className={styles.embedAuthorIcon}
+					className={clsx(styles.embedAuthorIcon, !iconLoaded && styles.embedIconPending)}
 					src={iconSrc}
 					width={24}
 					height={24}
@@ -190,10 +190,10 @@ export const EmbedFooterComponent: FC<{
 			className={clsx(styles.embedFooter, footer?.proxy_icon_url && styles.hasThumbnail)}
 			data-flx="channel.embeds.embed.embed-footer-component.embed-footer"
 		>
-			{iconSrc && iconLoaded && (
+			{iconSrc && (
 				<img
 					alt=""
-					className={styles.embedFooterIcon}
+					className={clsx(styles.embedFooterIcon, !iconLoaded && styles.embedIconPending)}
 					src={iconSrc}
 					width={20}
 					height={20}
