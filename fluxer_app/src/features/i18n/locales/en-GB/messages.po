@@ -1023,16 +1023,15 @@ msgstr "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:187
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 
-# auto-i18n: reviewed unchanged
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:144
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:189
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 
@@ -2902,7 +2901,7 @@ msgstr "Alignment controls are only available on wider screens"
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:21
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
@@ -2979,7 +2978,9 @@ msgstr "All friends"
 msgid "All inputs are fully interactive, so type away."
 msgstr "All inputs are fully interactive, so type away."
 
+#. Option in the discovery language filter that clears the filter. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageDropdown.tsx:14
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "All languages"
@@ -11647,7 +11648,7 @@ msgid "Discovery application withdrawn"
 msgstr "Discovery application withdrawn"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:25
 msgid "Discovery categories"
 msgstr "Discovery categories"
 
@@ -11666,7 +11667,7 @@ msgid "Discovery results"
 msgstr "Discovery results"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:33
 msgid "Discovery search"
 msgstr "Discovery search"
 
@@ -14590,7 +14591,9 @@ msgstr "Filter by content"
 msgid "Filter by join method"
 msgstr "Filter by join method"
 
+#. Label for the discovery language filter button. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:16
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "Filter by language"
@@ -14631,6 +14634,12 @@ msgstr "Filter mentions"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:192
 msgid "Filtering"
 msgstr "Filtering"
+
+# auto-i18n: reviewed unchanged
+#. Label for the discovery language filter button once a language is chosen. Preserve {language}; it is inserted by code.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:20
+msgid "Filtering by {language}"
+msgstr "Filtering by {language}"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:912
 msgid "Finalizing camera..."
@@ -15745,7 +15754,7 @@ msgid "Go to home"
 msgstr "Go to home"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:40
 msgid "Go to message"
 msgstr "Go to message"
 
@@ -27693,7 +27702,7 @@ msgid "Search channels or DMs"
 msgstr "Search channels or DMs"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
 msgid "Search communities"
 msgstr "Search communities"
 
@@ -27826,7 +27835,7 @@ msgid "Search results"
 msgstr "Search results"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:37
 msgid "Search results for “{query}”"
 msgstr "Search results for “{query}”"
 

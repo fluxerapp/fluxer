@@ -1023,7 +1023,7 @@ msgstr "{PRODUCT_NAME} a găsit un nou dispozitiv de ieșire audio numit <0>{dev
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} trebuie să repornească înainte ca setările native de derulare ale Chromium să schimbe modul în care funcționează derularea."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:187
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "{PRODUCT_NAME} trebuie să repornească pentru ca accelerarea hardware să aibă efect."
 
@@ -1031,7 +1031,7 @@ msgstr "{PRODUCT_NAME} trebuie să repornească pentru ca accelerarea hardware s
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "{PRODUCT_NAME} trebuie repornit pentru ca modificarea barei de titlu să aibă efect."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:189
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} trebuie să repornească pentru a dezactiva accelerarea hardware a Chromium. Folosește această opțiune doar dacă depanezi erori grafice sau o utilizare ridicată a GPU-ului."
 
@@ -2901,7 +2901,7 @@ msgstr "Comenzile de aliniere sunt disponibile doar pe ecrane mai late"
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:21
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
@@ -2978,7 +2978,9 @@ msgstr "Toți prietenii"
 msgid "All inputs are fully interactive, so type away."
 msgstr "Toate câmpurile sunt complet interactive, așa că poți scrie fără probleme."
 
+#. Option in the discovery language filter that clears the filter. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageDropdown.tsx:14
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "Toate limbile"
@@ -11646,7 +11648,7 @@ msgid "Discovery application withdrawn"
 msgstr "Cererea de descoperire a fost retrasă"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:25
 msgid "Discovery categories"
 msgstr "Categorii de descoperire"
 
@@ -11665,7 +11667,7 @@ msgid "Discovery results"
 msgstr "Rezultatele descoperirilor"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:33
 msgid "Discovery search"
 msgstr "Căutare Discovery"
 
@@ -14589,7 +14591,9 @@ msgstr "Filtrați după conținut"
 msgid "Filter by join method"
 msgstr "Filtrează după metoda de înscriere"
 
+#. Label for the discovery language filter button. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:16
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "Filtrați după limbă"
@@ -14630,6 +14634,11 @@ msgstr "Filtrează mențiunile"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:192
 msgid "Filtering"
 msgstr "Filtrare"
+
+#. Label for the discovery language filter button once a language is chosen. Preserve {language}; it is inserted by code.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:20
+msgid "Filtering by {language}"
+msgstr "Filtrare după {language}"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:912
 msgid "Finalizing camera..."
@@ -15744,7 +15753,7 @@ msgid "Go to home"
 msgstr "Mergi la pagina principală"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:40
 msgid "Go to message"
 msgstr "Mergi la mesaj"
 
@@ -27692,7 +27701,7 @@ msgid "Search channels or DMs"
 msgstr "Căutați canale sau mesaje directe"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
 msgid "Search communities"
 msgstr "Caută comunități"
 
@@ -27825,7 +27834,7 @@ msgid "Search results"
 msgstr "Rezultatele căutării"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:37
 msgid "Search results for “{query}”"
 msgstr "Rezultatele căutării pentru „{query}”"
 

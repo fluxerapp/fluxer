@@ -1023,7 +1023,7 @@ msgstr "{PRODUCT_NAME}が<0>{deviceName}</0>という新しい音声出力デバ
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME}を再起動すると、Chromiumのネイティブスクロール設定がスクロールの動作に適用されます。"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:187
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "ハードウェアアクセラレーションを有効にするには、{PRODUCT_NAME}を再起動する必要があります。"
 
@@ -1031,7 +1031,7 @@ msgstr "ハードウェアアクセラレーションを有効にするには、
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "{PRODUCT_NAME} を再起動して、タイトルバーの変更を有効にする必要があります。"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:189
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME}を再起動して、Chromiumのハードウェアアクセラレーションを無効にする必要があります。この機能は、グラフィックの不具合やGPU使用率が高い場合のトラブルシューティングにのみ使用してください。"
 
@@ -2901,7 +2901,7 @@ msgstr "配置調整は、画面幅が広い場合のみ利用できます"
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:21
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
@@ -2978,7 +2978,9 @@ msgstr "すべての友達"
 msgid "All inputs are fully interactive, so type away."
 msgstr "すべての入力項目は操作可能です。自由に入力してください。"
 
+#. Option in the discovery language filter that clears the filter. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageDropdown.tsx:14
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "すべての言語"
@@ -11646,7 +11648,7 @@ msgid "Discovery application withdrawn"
 msgstr "発見タブへの掲載申請を取り下げました"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:25
 msgid "Discovery categories"
 msgstr "見つけるカテゴリ"
 
@@ -11665,7 +11667,7 @@ msgid "Discovery results"
 msgstr "見つかったコミュニティ"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:33
 msgid "Discovery search"
 msgstr "Discovery検索"
 
@@ -14589,7 +14591,9 @@ msgstr "コンテンツで絞り込む"
 msgid "Filter by join method"
 msgstr "参加方法で絞り込む"
 
+#. Label for the discovery language filter button. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:16
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "言語で絞り込む"
@@ -14630,6 +14634,11 @@ msgstr "メンションを絞り込む"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:192
 msgid "Filtering"
 msgstr "フィルター"
+
+#. Label for the discovery language filter button once a language is chosen. Preserve {language}; it is inserted by code.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:20
+msgid "Filtering by {language}"
+msgstr "{language}で絞り込み中"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:912
 msgid "Finalizing camera..."
@@ -15744,7 +15753,7 @@ msgid "Go to home"
 msgstr "ホームへ"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:40
 msgid "Go to message"
 msgstr "メッセージへ移動"
 
@@ -27692,7 +27701,7 @@ msgid "Search channels or DMs"
 msgstr "チャンネルまたはDMを検索"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
 msgid "Search communities"
 msgstr "コミュニティを検索"
 
@@ -27825,7 +27834,7 @@ msgid "Search results"
 msgstr "検索結果"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:37
 msgid "Search results for “{query}”"
 msgstr "「{query}」の検索結果"
 

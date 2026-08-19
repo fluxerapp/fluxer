@@ -1023,7 +1023,7 @@ msgstr "{PRODUCT_NAME} को <0>{deviceName}</0> नाम का एक नय
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} को रीस्टार्ट करने की ज़रूरत है, इससे पहले कि क्रोमियम की नेटिव स्क्रोलिंग सेटिंग्स स्क्रोलिंग के काम करने के तरीके को बदल दें।"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:187
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "हार्डवेयर एक्सीलरेशन को प्रभावी होने के लिए {PRODUCT_NAME} को रीस्टार्ट करना होगा।"
 
@@ -1031,7 +1031,7 @@ msgstr "हार्डवेयर एक्सीलरेशन को प्
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "{PRODUCT_NAME} को रीस्टार्ट करने की आवश्यकता है ताकि टाइटल बार में किया गया बदलाव लागू हो सके।"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:189
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} को क्रोमियम के हार्डवेयर एक्सेलेरेशन को अक्षम करने के लिए रीस्टार्ट करने की आवश्यकता है। इसका उपयोग तभी करें जब आप ग्राफ़िक्स की समस्याओं या उच्च GPU उपयोग का निवारण कर रहे हों।"
 
@@ -2901,7 +2901,7 @@ msgstr "अलाइनमेंट कंट्रोल केवल चौड
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:21
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
@@ -2978,7 +2978,9 @@ msgstr "सभी दोस्त"
 msgid "All inputs are fully interactive, so type away."
 msgstr "सभी इनपुट पूरी तरह से इंटरैक्टिव हैं, तो टाइप करना शुरू करें।"
 
+#. Option in the discovery language filter that clears the filter. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageDropdown.tsx:14
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "सभी भाषाएं"
@@ -11646,7 +11648,7 @@ msgid "Discovery application withdrawn"
 msgstr "डिस्कवरी आवेदन वापस ले लिया गया"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:25
 msgid "Discovery categories"
 msgstr "डिस्कवरी श्रेणियां"
 
@@ -11665,7 +11667,7 @@ msgid "Discovery results"
 msgstr "डिस्कवरी के नतीजे"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:33
 msgid "Discovery search"
 msgstr "डिस्कवरी सर्च"
 
@@ -14589,7 +14591,9 @@ msgstr "कंटेंट के हिसाब से फ़िल्टर �
 msgid "Filter by join method"
 msgstr "शामिल होने के तरीके से फ़िल्टर करें"
 
+#. Label for the discovery language filter button. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:16
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "भाषा के अनुसार फ़िल्टर करें"
@@ -14630,6 +14634,11 @@ msgstr "मेंशन फ़िल्टर करें"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:192
 msgid "Filtering"
 msgstr "फ़िल्टरिंग"
+
+#. Label for the discovery language filter button once a language is chosen. Preserve {language}; it is inserted by code.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:20
+msgid "Filtering by {language}"
+msgstr "{language} द्वारा फ़िल्टर किया जा रहा है"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:912
 msgid "Finalizing camera..."
@@ -15744,7 +15753,7 @@ msgid "Go to home"
 msgstr "होम पर जाएं"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:40
 msgid "Go to message"
 msgstr "मैसेज पर जाएं"
 
@@ -27692,7 +27701,7 @@ msgid "Search channels or DMs"
 msgstr "चैनल या DM खोजें"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
 msgid "Search communities"
 msgstr "कम्युनिटी खोजें"
 
@@ -27825,7 +27834,7 @@ msgid "Search results"
 msgstr "खोज के नतीजे"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:37
 msgid "Search results for “{query}”"
 msgstr "“{query}” के लिए खोज परिणाम"
 

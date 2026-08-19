@@ -4,6 +4,7 @@ import {reportSkeletonDiscoveryCategoryTabs} from '@app/features/app/components/
 import {measureSkeletonWidthPx, useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
 import searchBarStyles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
+import {DiscoveryLanguageButton} from '@app/features/discovery/discovery/DiscoveryLanguageButton';
 import styles from '@app/features/discovery/discovery/DiscoveryNavbar.module.css';
 import {DiscoveryMotionKind, DiscoveryTransition} from '@app/features/discovery/discovery/DiscoveryTransition';
 import Discovery from '@app/features/discovery/state/Discovery';
@@ -251,51 +252,54 @@ export const DiscoveryNavbar = observer(function DiscoveryNavbar({
 					)}
 				</DiscoveryTransition>
 			</div>
-			<form
-				className={styles.searchForm}
-				role="search"
-				aria-label={i18n._(DISCOVERY_SEARCH_DESCRIPTOR)}
-				onSubmit={handleSubmit}
-				data-flx="discovery.discovery.discovery-navbar.search-form.submit"
-			>
-				<div className={searchBarStyles.inputContainer} data-flx="discovery.discovery.discovery-navbar.div">
-					<MagnifyingGlassIcon
-						className={clsx(searchBarStyles.searchIcon, styles.searchIcon)}
-						weight="bold"
-						aria-hidden
-						data-flx="discovery.discovery.discovery-navbar.search-icon"
-					/>
-					<input
-						ref={searchInputRef}
-						className={styles.searchInput}
-						type="search"
-						aria-label={i18n._(SEARCH_COMMUNITIES_DESCRIPTOR)}
-						aria-controls={resultsRegionId}
-						placeholder={i18n._(SEARCH_COMMUNITIES_DESCRIPTOR)}
-						value={draftQuery}
-						onChange={(event) => setDraftQuery(event.target.value)}
-						data-flx="discovery.discovery.discovery-navbar.search-input.set-draft-query"
-					/>
-					{draftQuery.length > 0 && (
-						<FocusRing offset={-2} data-flx="discovery.discovery.discovery-navbar.focus-ring">
-							<button
-								type="button"
-								className={searchBarStyles.clearButton}
-								aria-label={i18n._(CLEAR_SEARCH_DESCRIPTOR)}
-								onClick={handleClear}
-								data-flx="discovery.discovery.discovery-navbar.button.clear"
-							>
-								<XIcon
-									weight="bold"
-									className={searchBarStyles.optionMetaIcon}
-									aria-hidden
-									data-flx="discovery.discovery.discovery-navbar.x-icon"
-								/>
-							</button>
-						</FocusRing>
-					)}
-				</div>
-			</form>
+			<div className={styles.searchArea} data-flx="discovery.discovery.discovery-navbar.search-area">
+				<form
+					className={styles.searchForm}
+					role="search"
+					aria-label={i18n._(DISCOVERY_SEARCH_DESCRIPTOR)}
+					onSubmit={handleSubmit}
+					data-flx="discovery.discovery.discovery-navbar.search-form.submit"
+				>
+					<div className={searchBarStyles.inputContainer} data-flx="discovery.discovery.discovery-navbar.div">
+						<MagnifyingGlassIcon
+							className={clsx(searchBarStyles.searchIcon, styles.searchIcon)}
+							weight="bold"
+							aria-hidden
+							data-flx="discovery.discovery.discovery-navbar.search-icon"
+						/>
+						<input
+							ref={searchInputRef}
+							className={styles.searchInput}
+							type="search"
+							aria-label={i18n._(SEARCH_COMMUNITIES_DESCRIPTOR)}
+							aria-controls={resultsRegionId}
+							placeholder={i18n._(SEARCH_COMMUNITIES_DESCRIPTOR)}
+							value={draftQuery}
+							onChange={(event) => setDraftQuery(event.target.value)}
+							data-flx="discovery.discovery.discovery-navbar.search-input.set-draft-query"
+						/>
+						{draftQuery.length > 0 && (
+							<FocusRing offset={-2} data-flx="discovery.discovery.discovery-navbar.focus-ring">
+								<button
+									type="button"
+									className={searchBarStyles.clearButton}
+									aria-label={i18n._(CLEAR_SEARCH_DESCRIPTOR)}
+									onClick={handleClear}
+									data-flx="discovery.discovery.discovery-navbar.button.clear"
+								>
+									<XIcon
+										weight="bold"
+										className={searchBarStyles.optionMetaIcon}
+										aria-hidden
+										data-flx="discovery.discovery.discovery-navbar.x-icon"
+									/>
+								</button>
+							</FocusRing>
+						)}
+					</div>
+				</form>
+				<DiscoveryLanguageButton data-flx="discovery.discovery.discovery-navbar.discovery-language-button" />
+			</div>
 		</div>
 	);
 });

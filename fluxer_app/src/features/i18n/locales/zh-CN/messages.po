@@ -1023,7 +1023,7 @@ msgstr "{PRODUCT_NAME} 检测到新的音频输出设备：<0>{deviceName}</0>�
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} 需要重启，然后 Chromium 的原生滚动设置才会更改滚动方式。"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:187
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "{PRODUCT_NAME} 需要重启才能使硬件加速生效。"
 
@@ -1031,7 +1031,7 @@ msgstr "{PRODUCT_NAME} 需要重启才能使硬件加速生效。"
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "{PRODUCT_NAME} 需要重启才能使标题栏更改生效。"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:189
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} 需要重启才能禁用 Chromium 的硬件加速。仅在排查图形故障或 GPU 占用过高时使用此功能。"
 
@@ -2901,7 +2901,7 @@ msgstr "对齐方式控制仅在宽屏设备上可用"
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:21
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
@@ -2978,7 +2978,9 @@ msgstr "所有朋友"
 msgid "All inputs are fully interactive, so type away."
 msgstr "所有输入框都支持互动，快来输入吧。"
 
+#. Option in the discovery language filter that clears the filter. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageDropdown.tsx:14
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "所有语言"
@@ -11646,7 +11648,7 @@ msgid "Discovery application withdrawn"
 msgstr "发现申请已撤回"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:25
 msgid "Discovery categories"
 msgstr "发现类别"
 
@@ -11665,7 +11667,7 @@ msgid "Discovery results"
 msgstr "发现结果"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:33
 msgid "Discovery search"
 msgstr "发现搜索"
 
@@ -14589,7 +14591,9 @@ msgstr "按内容筛选"
 msgid "Filter by join method"
 msgstr "按加入方式筛选"
 
+#. Label for the discovery language filter button. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:16
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "按语言筛选"
@@ -14630,6 +14634,11 @@ msgstr "筛选提及"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:192
 msgid "Filtering"
 msgstr "筛选"
+
+#. Label for the discovery language filter button once a language is chosen. Preserve {language}; it is inserted by code.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:20
+msgid "Filtering by {language}"
+msgstr "按 {language} 筛选"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:912
 msgid "Finalizing camera..."
@@ -15744,7 +15753,7 @@ msgid "Go to home"
 msgstr "前往首页"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:40
 msgid "Go to message"
 msgstr "前往消息"
 
@@ -27692,7 +27701,7 @@ msgid "Search channels or DMs"
 msgstr "搜索频道或私信"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
 msgid "Search communities"
 msgstr "搜索社群"
 
@@ -27825,7 +27834,7 @@ msgid "Search results"
 msgstr "搜索结果"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:37
 msgid "Search results for “{query}”"
 msgstr "“{query}”的搜索结果"
 

@@ -1023,7 +1023,7 @@ msgstr "{PRODUCT_NAME} telah menemukan perangkat output audio baru bernama <0>{d
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} perlu dimulai ulang sebelum setelan pengguliran asli Chromium mengubah cara kerja pengguliran."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:187
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "{PRODUCT_NAME} perlu dimulai ulang agar akselerasi perangkat keras dapat diterapkan."
 
@@ -1031,7 +1031,7 @@ msgstr "{PRODUCT_NAME} perlu dimulai ulang agar akselerasi perangkat keras dapat
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "{PRODUCT_NAME} perlu dimulai ulang agar perubahan bilah judul berlaku."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:189
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} perlu dimulai ulang untuk menonaktifkan akselerasi hardware Chromium. Gunakan ini hanya jika Anda memecahkan masalah gangguan grafis atau penggunaan GPU yang tinggi."
 
@@ -2901,7 +2901,7 @@ msgstr "Kontrol perataan hanya tersedia di layar yang lebih lebar"
 #: src/features/channel/components/MobileMemesPicker.tsx:40
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:20
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:21
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:25
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:131
 msgid "All"
@@ -2978,7 +2978,9 @@ msgstr "Semua teman"
 msgid "All inputs are fully interactive, so type away."
 msgstr "Semua input sepenuhnya interaktif, jadi silakan ketik."
 
+#. Option in the discovery language filter that clears the filter. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageDropdown.tsx:14
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:29
 msgid "All languages"
 msgstr "Semua bahasa"
@@ -11646,7 +11648,7 @@ msgid "Discovery application withdrawn"
 msgstr "Aplikasi penemuan ditarik"
 
 #. Accessible label for the category tabs in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:24
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:25
 msgid "Discovery categories"
 msgstr "Kategori penemuan"
 
@@ -11665,7 +11667,7 @@ msgid "Discovery results"
 msgstr "Hasil penemuan"
 
 #. Accessible label for the search form in the Discovery navigation bar.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:32
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:33
 msgid "Discovery search"
 msgstr "Pencarian Discovery"
 
@@ -14589,7 +14591,9 @@ msgstr "Filter berdasarkan konten"
 msgid "Filter by join method"
 msgstr "Filter berdasarkan metode gabung"
 
+#. Label for the discovery language filter button. Keep it concise.
 #. Short label in the discovery page. Keep it concise.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:16
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:33
 msgid "Filter by language"
 msgstr "Filter berdasarkan bahasa"
@@ -14630,6 +14634,11 @@ msgstr "Filter sebutan"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:192
 msgid "Filtering"
 msgstr "Memfilter"
+
+#. Label for the discovery language filter button once a language is chosen. Preserve {language}; it is inserted by code.
+#: src/features/discovery/discovery/DiscoveryLanguageButton.tsx:20
+msgid "Filtering by {language}"
+msgstr "Menyaring berdasarkan {language}"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:912
 msgid "Finalizing camera..."
@@ -15744,7 +15753,7 @@ msgid "Go to home"
 msgstr "Ke beranda"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:40
 msgid "Go to message"
 msgstr "Buka pesan"
 
@@ -27692,7 +27701,7 @@ msgid "Search channels or DMs"
 msgstr "Cari channel atau DM"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:28
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
 msgid "Search communities"
 msgstr "Cari komunitas"
 
@@ -27825,7 +27834,7 @@ msgid "Search results"
 msgstr "Hasil pencarian"
 
 #. Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.
-#: src/features/discovery/discovery/DiscoveryNavbar.tsx:36
+#: src/features/discovery/discovery/DiscoveryNavbar.tsx:37
 msgid "Search results for “{query}”"
 msgstr "Hasil pencarian untuk “{query}”"
 

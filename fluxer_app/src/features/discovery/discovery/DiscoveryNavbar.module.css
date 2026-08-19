@@ -114,6 +114,14 @@
 	}
 }
 
+.searchArea {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex: 0 0 auto;
+	min-width: 0;
+}
+
 .searchForm {
 	display: flex;
 	align-items: center;
