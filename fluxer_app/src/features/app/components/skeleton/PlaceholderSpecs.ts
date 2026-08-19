@@ -19,10 +19,12 @@ export interface PlaceholderMessageGroup {
 	readonly usernameWidth: number;
 	readonly timestampWidth: number;
 	readonly attachment: PlaceholderAttachmentSize | null;
+	readonly height: number;
 }
 
 interface MutablePlaceholderMessageGroup extends PlaceholderMessageGroup {
 	attachment: PlaceholderAttachmentSize | null;
+	height: number;
 }
 
 export interface PlaceholderSpecs {
@@ -100,20 +102,20 @@ function generatePlaceholderSpecs(options: PlaceholderGenerationOptions): Placeh
 		for (let line = 0; line < lineCount; line++) {
 			lineWidths.push(LINE_WIDTH_MIN + random() * LINE_WIDTH_RANGE);
 		}
+		const groupHeight = compact
+			? MESSAGE_HEIGHT_COMPACT * lineCount
+			: COZY_LEAD_MESSAGE_HEIGHT + COZY_GROUPED_MESSAGE_HEIGHT * (lineCount - 1);
 		groups.push({
 			lineWidths,
 			usernameWidth: USERNAME_WIDTH_MIN + random() * USERNAME_WIDTH_RANGE,
 			timestampWidth: TIMESTAMP_WIDTH_MIN + random() * TIMESTAMP_WIDTH_RANGE,
 			attachment: null,
+			height: groupHeight,
 		});
 		if (index > 0) {
 			totalHeight += groupSpacing;
 		}
-		if (compact) {
-			totalHeight += MESSAGE_HEIGHT_COMPACT * lineCount;
-		} else {
-			totalHeight += COZY_LEAD_MESSAGE_HEIGHT + COZY_GROUPED_MESSAGE_HEIGHT * (lineCount - 1);
-		}
+		totalHeight += groupHeight;
 	}
 	const availableGroupIndices = Array.from(Array(groups.length).keys());
 	for (let index = 0; index < attachments && availableGroupIndices.length > 0; index++) {
@@ -123,6 +125,7 @@ function generatePlaceholderSpecs(options: PlaceholderGenerationOptions): Placeh
 			height: randomInRange(random, ATTACHMENT_HEIGHT_MIN, ATTACHMENT_HEIGHT_MAX),
 		};
 		groups[groupIndex].attachment = attachment;
+		groups[groupIndex].height += attachment.height + ATTACHMENT_MARGIN;
 		totalHeight += attachment.height + ATTACHMENT_MARGIN;
 	}
 	return {compact, compactAvatarsVisible, groups, totalHeight, groupSpacing};

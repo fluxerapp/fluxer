@@ -183,7 +183,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	GuildReadState.handleConnectionOpen();
 	Presence.handleConnectionOpen(data.user, guilds, data.presences);
 	MediaEngine.handleConnectionOpen(guilds);
-	Initialization.setReady(data);
+	Initialization.setReady();
 	context.setReady();
 	Messages.handleConnectionOpen((channelId) => ReadStates.getUnreadJumpAnchor(channelId));
 }

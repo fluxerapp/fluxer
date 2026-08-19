@@ -27,7 +27,6 @@ export function startMediaDeviceStartupPreload(): () => void {
 			logger.debug('Failed to preload media devices', {error});
 		});
 	};
-	preloadDevices();
 	const disposePermissionListener = MediaPermission.addChangeListener(preloadDevices);
 	return () => {
 		stopped = true;

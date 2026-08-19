@@ -16,7 +16,6 @@ class Initialization {
 	state: InitializationState = InitializationState.LOADING;
 	hasCompletedInitialLoad = false;
 	error: string | null = null;
-	readyPayload: unknown = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -46,29 +45,25 @@ class Initialization {
 	setLoading(): void {
 		this.state = InitializationState.LOADING;
 		this.error = null;
-		this.readyPayload = null;
 	}
 
 	@action
 	setConnecting(): void {
 		this.state = InitializationState.CONNECTING;
 		this.error = null;
-		this.readyPayload = null;
 	}
 
 	@action
-	setReady(payload: unknown): void {
+	setReady(): void {
 		this.state = InitializationState.READY;
 		this.hasCompletedInitialLoad = true;
 		this.error = null;
-		this.readyPayload = payload;
 	}
 
 	@action
 	setError(error: string): void {
 		this.state = InitializationState.ERROR;
 		this.error = error;
-		this.readyPayload = null;
 	}
 
 	@action
@@ -76,7 +71,6 @@ class Initialization {
 		this.state = InitializationState.LOADING;
 		this.hasCompletedInitialLoad = false;
 		this.error = null;
-		this.readyPayload = null;
 	}
 }
 
