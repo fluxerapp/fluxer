@@ -80,10 +80,19 @@ interface PendingScreenShareStopRequest {
 	readonly room: Room | null;
 	readonly sendUpdate: boolean;
 	readonly playSound: boolean;
-	readonly reason: string | null;
 	operationIds: ReadonlyArray<number>;
 	verbSettled: boolean;
 	failure: unknown;
+}
+
+function createScreenShareCaptureId(): string {
+	const cryptoPort = globalThis.crypto;
+	if (!cryptoPort || typeof cryptoPort.randomUUID !== 'function') {
+		throw new Error('Screen-share capture ID generation requires crypto.randomUUID');
+	}
+	const captureId = cryptoPort.randomUUID();
+	assert.ok(captureId.length > 0, 'crypto.randomUUID must return a non-empty capture ID');
+	return captureId;
 }
 
 function buildScreenSharePublishInactiveError(): Error {
@@ -226,7 +235,7 @@ export class VoiceEngineV2AppScreenShareControllerRouting {
 		}
 		this.ensurePublishRequestCapacity();
 		const request: PendingScreenSharePublishRequest = {
-			captureId: this.adapter.captureCoordinator.createCaptureId(),
+			captureId: createScreenShareCaptureId(),
 			room,
 			options,
 			publishOptions,
@@ -296,7 +305,6 @@ export class VoiceEngineV2AppScreenShareControllerRouting {
 			room,
 			sendUpdate: options?.sendUpdate ?? true,
 			playSound: options?.playSound ?? true,
-			reason: options?.reason ?? null,
 			operationIds: [],
 			verbSettled: false,
 			failure: null,
@@ -442,45 +450,6 @@ export class VoiceEngineV2AppScreenShareControllerRouting {
 			await this.adapter.liveKitFlows.setEnabled(room, false, {
 				sendUpdate: request?.sendUpdate ?? true,
 				playSound: request?.playSound ?? true,
-			});
-		} catch (error) {
-			if (request !== null) request.failure = error;
-			throw error;
-		}
-	}
-
-	async publishViaNativeCapture(options: VoiceEngineV2ScreenOptions): Promise<void> {
-		assert.ok(options.captureId.length > 0, 'native screen publish requires a captureId');
-		const request = this.takePublishRequest(options.captureId);
-		if (request === null) {
-			await this.adapter.captureCoordinator.publishControllerScreen(options);
-			return;
-		}
-		try {
-			await this.adapter.executeNativeControllerScreenSharePublish(
-				request.captureId,
-				request.options,
-				request.publishOptions,
-			);
-		} catch (error) {
-			request.failure = error;
-			throw error;
-		}
-		if (!LocalVoiceState.getSelfStream()) {
-			request.settledInactive = true;
-			throw buildScreenSharePublishInactiveError();
-		}
-	}
-
-	async unpublishViaNativeCapture(): Promise<void> {
-		const request = this.takeStopRequest(this.executingScreenOperationId());
-		const fallbackReason =
-			request !== null ? 'native-engine-screen-share-disabled' : 'voice-engine-v2-controller-unpublish';
-		try {
-			await this.adapter.captureCoordinator.stopCaptureDirect({
-				sendUpdate: request?.sendUpdate ?? true,
-				playSound: request?.playSound ?? true,
-				reason: request?.reason ?? fallbackReason,
 			});
 		} catch (error) {
 			if (request !== null) request.failure = error;

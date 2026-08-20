@@ -4,7 +4,6 @@ import PiP from '@app/features/ui/state/PiP';
 import {PiPOverlayInner} from '@app/features/voice/components/pip_overlay/PiPOverlayInner';
 import {pipOverlayLogger} from '@app/features/voice/components/pip_overlay/shared';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
-import {isVoiceEngineV2NativeProjectionActiveFromMediaEngine} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import type {Room} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useState} from 'react';
@@ -19,7 +18,7 @@ export const PiPOverlay = observer(function PiPOverlay() {
 	useEffect(() => {
 		if (room) setActiveRoom(room);
 	}, [room]);
-	const renderRoom = isVoiceEngineV2NativeProjectionActiveFromMediaEngine() ? room : activeRoom;
+	const renderRoom = activeRoom;
 	const portalRoot = typeof document === 'undefined' ? null : document.body;
 	const blockReason = !portalRoot
 		? 'missing-portal-root'

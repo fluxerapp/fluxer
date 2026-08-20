@@ -8,24 +8,45 @@ import {
 import {createVoiceMediaGraphSnapshot, transitionVoiceMediaGraph} from '@app/features/voice/engine/VoiceMediaGraph';
 import {
 	type VoiceMediaGraphStatsView,
-	voiceMediaGraphStatsObservationsFromNativeStats,
 	voiceMediaGraphStatsObservationsFromPerTrackStats,
 } from '@app/features/voice/engine/VoiceMediaGraphStats';
+import type {VoiceMediaGraphStatsTrackObservation} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import type {VoiceEngineV2PerTrackStats, VoiceEngineV2Stats} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
 import {describe, expect, it} from 'vitest';
 
-function nativeStats(overrides: Partial<VoiceEngineV2Stats>): VoiceEngineV2Stats {
-	return {rttMs: null, outbound: [], inbound: [], ...overrides};
+function observation(overrides: Partial<VoiceMediaGraphStatsTrackObservation>): VoiceMediaGraphStatsTrackObservation {
+	return {
+		trackSid: null,
+		trackIdentifier: null,
+		mediaSourceId: null,
+		mid: null,
+		rid: null,
+		ssrc: null,
+		participantIdentity: null,
+		participantSid: null,
+		source: null,
+		direction: 'recv',
+		kind: 'video',
+		fps: null,
+		width: null,
+		height: null,
+		sourceFps: null,
+		sourceWidth: null,
+		sourceHeight: null,
+		...overrides,
+	};
 }
 
-function graphViewWithNativeStats(stats: VoiceEngineV2Stats): VoiceMediaGraphStatsView {
+function graphViewWithObservations(
+	tracks: ReadonlyArray<VoiceMediaGraphStatsTrackObservation>,
+): VoiceMediaGraphStatsView {
 	return transitionVoiceMediaGraph(createVoiceMediaGraphSnapshot(), {
 		type: 'stats.observed',
 		at: 1000,
 		connectionId: 'conn-1',
-		platform: 'native',
-		tracks: voiceMediaGraphStatsObservationsFromNativeStats(stats),
+		platform: 'web',
+		tracks,
 	});
 }
 
@@ -60,24 +81,17 @@ describe('mergeStreamTrackInfo', () => {
 });
 
 describe('resolveStreamTrackStatsInfo', () => {
-	it('resolves native screen-share info from the graph by trackSid', () => {
-		const view = graphViewWithNativeStats(
-			nativeStats({
-				outbound: [
-					{
-						trackSid: 'TR_screen',
-						source: 'screen_share',
-						kind: 'video',
-						bitrateKbps: 2000,
-						packetsLost: 0,
-						width: 2560,
-						height: 1440,
-						fps: 30,
-						effectiveFps: 59.6,
-					},
-				],
+	it('resolves screen-share info from the graph by trackSid', () => {
+		const view = graphViewWithObservations([
+			observation({
+				trackSid: 'TR_screen',
+				source: 'screen_share',
+				direction: 'send',
+				width: 2560,
+				height: 1440,
+				fps: 59.6,
 			}),
-		);
+		]);
 
 		expect(
 			resolveStreamTrackStatsInfo(view, {
@@ -88,25 +102,18 @@ describe('resolveStreamTrackStatsInfo', () => {
 		).toEqual({width: 2560, height: 1440, fps: 59.6});
 	});
 
-	it('resolves remote native screen-share info via the participantIdentity fallback', () => {
-		const view = graphViewWithNativeStats(
-			nativeStats({
-				inbound: [
-					{
-						participantSid: 'PA_1',
-						participantIdentity: 'user_2_connection_2',
-						trackSid: 'TR_remote_screen',
-						source: 'screen_share',
-						kind: 'video',
-						bitrateKbps: 4200,
-						packetsLost: 0,
-						width: 3840,
-						height: 2160,
-						fps: 24.7,
-					},
-				],
+	it('resolves remote screen-share info via the participantIdentity fallback', () => {
+		const view = graphViewWithObservations([
+			observation({
+				participantSid: 'PA_1',
+				participantIdentity: 'user_2_connection_2',
+				trackSid: 'TR_remote_screen',
+				source: 'screen_share',
+				width: 3840,
+				height: 2160,
+				fps: 24.7,
 			}),
-		);
+		]);
 
 		expect(
 			resolveStreamTrackStatsInfo(view, {

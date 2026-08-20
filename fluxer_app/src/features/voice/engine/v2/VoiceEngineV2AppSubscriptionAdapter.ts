@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import type {VoiceEngine} from '@app/features/voice/engine/native_voice_engine/VoiceEngine';
 import {ScreenShareSubscriptionManager} from '@app/features/voice/engine/ScreenShareSubscriptionManager';
 import {Store} from '@app/features/voice/engine/Store';
 import {VideoSubscriptionManager} from '@app/features/voice/engine/VideoSubscriptionManager';
 import type {
-	VoiceMediaGraphRemoteSubscriptionCommand,
-	VoiceMediaGraphRemoteTrackSubscriptionController,
 	VoiceMediaGraphSubscriptionContext,
 	VoiceMediaGraphVideoQuality,
 } from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
-import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import {ScreenShareWatchErrorCode, ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
+import {isScreenShareAudioPublicationLike, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import type {
 	VoiceEngineV2ParticipantVolumeOptions,
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
@@ -43,40 +39,10 @@ function screenShareContextForQuality(quality: VideoQualityLevel | undefined): V
 	return quality === 'high' ? 'focused' : 'carousel';
 }
 
-function nativeSubscriptionErrorMessage(error: unknown): string {
-	if (error instanceof Error) return error.message;
-	return String(error);
-}
-
-function isMissingNativeSubscriptionTarget(error: unknown): boolean {
-	const message = nativeSubscriptionErrorMessage(error);
-	if (message.includes('remote track subscription participant not found')) return true;
-	return message.includes('remote track subscription publication not found');
-}
-
-function isExpectedNativeCameraPublicationRace(
-	options: VoiceMediaGraphRemoteSubscriptionCommand,
-	error: unknown,
-): boolean {
-	if (!options.subscribed) return false;
-	if (options.source !== VoiceTrackSource.Camera) return false;
-	return isMissingNativeSubscriptionTarget(error);
-}
-
-function isExpectedNativeScreenShareAudioPublicationRace(
-	options: VoiceMediaGraphRemoteSubscriptionCommand,
-	error: unknown,
-): boolean {
-	if (!options.subscribed) return false;
-	if (options.source !== VoiceTrackSource.ScreenShareAudio) return false;
-	return isMissingNativeSubscriptionTarget(error);
-}
-
 class VoiceEngineV2AppSubscriptionAdapter extends Store {
 	private room: Room | null = null;
 	private videoManager = new VideoSubscriptionManager();
 	private screenShareManager = new ScreenShareSubscriptionManager();
-	private nativeController: VoiceMediaGraphRemoteTrackSubscriptionController | null = null;
 
 	constructor() {
 		super();
@@ -90,9 +56,6 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		if (this.room) {
 			this.cleanup();
 		}
-		if (room) {
-			this.setNativeEngine(null);
-		}
 		this.update(() => {
 			this.room = room;
 		});
@@ -105,77 +68,17 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		}
 	}
 
-	setNativeEngine(engine: Pick<VoiceEngine, 'setRemoteTrackSubscription'> | null): void {
-		this.update(() => {
-			this.nativeController = engine ? this.createNativeController(engine) : null;
-		});
-		this.videoManager.setNativeController(this.nativeController);
-		this.screenShareManager.setNativeController(this.nativeController);
-	}
-
-	private createNativeController(
-		engine: Pick<VoiceEngine, 'setRemoteTrackSubscription'>,
-	): VoiceMediaGraphRemoteTrackSubscriptionController {
-		return {
-			setRemoteTrackSubscription: (options) => {
-				void engine.setRemoteTrackSubscription(options).then(
-					() => this.reportNativeSubscriptionApplied(options),
-					(error: unknown) => this.reportNativeSubscriptionFailed(options, error),
-				);
-			},
-		};
-	}
-
-	private reportNativeSubscriptionApplied(options: VoiceMediaGraphRemoteSubscriptionCommand): void {
-		voiceMediaGraphStore.transition({
-			type: 'subscription.actualChanged',
-			participantIdentity: options.participantIdentity,
-			source: options.source,
-			at: voiceMediaGraphStore.nowMs(),
-			subscribed: options.subscribed,
-			...(options.enabled !== undefined ? {enabled: options.enabled} : {}),
-			...(options.quality !== undefined ? {quality: options.quality} : {}),
-		});
-	}
-
-	private reportNativeSubscriptionFailed(options: VoiceMediaGraphRemoteSubscriptionCommand, error: unknown): void {
-		const logData = {
-			participantIdentity: options.participantIdentity,
-			source: options.source,
-			subscribed: options.subscribed,
-			error,
-		};
-		if (isExpectedNativeCameraPublicationRace(options, error)) {
-			logger.debug('Native remote camera subscription target missing; will retry after publish', logData);
-		} else if (isExpectedNativeScreenShareAudioPublicationRace(options, error)) {
-			logger.debug('Native remote screen-share audio subscription target missing; will retry after publish', logData);
-			return;
-		} else {
-			logger.warn('Native remote track subscription update failed', logData);
-		}
-		voiceMediaGraphStore.transition({
-			type: 'subscription.commandFailed',
-			participantIdentity: options.participantIdentity,
-			source: options.source,
-			at: voiceMediaGraphStore.nowMs(),
-			code: ScreenShareWatchErrorCode.NativeSubscriptionCommandFailed,
-			reason: 'native-subscription-command-failed',
-		});
-		if (options.subscribed && options.source === VoiceTrackSource.ScreenShare) {
-			ScreenShareWatchFailures.reportFailure({
-				participantIdentity: options.participantIdentity,
-				source: options.source,
-				code: ScreenShareWatchErrorCode.NativeSubscriptionCommandFailed,
-				reason: 'native-subscription-command-failed',
-				error,
-			});
-		}
-	}
-
 	async setParticipantVolume(options: VoiceEngineV2ParticipantVolumeOptions): Promise<void> {
 		const participant = this.room?.remoteParticipants.get(options.participantIdentity);
 		if (!participant) return;
 		participant.audioTrackPublications.forEach((publication) => {
+			if (isScreenShareAudioPublicationLike(publication)) {
+				logger.debug('Skipping screen share audio publication in participant volume update', {
+					participantIdentity: options.participantIdentity,
+					trackSid: publication.trackSid,
+				});
+				return;
+			}
 			const track = publication.audioTrack;
 			if (track && 'setVolume' in track && typeof track.setVolume === 'function') {
 				track.setVolume(options.volume);
@@ -227,7 +130,6 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		logger.debug('Cleaning up all subscriptions');
 		this.videoManager.cleanup();
 		this.screenShareManager.cleanup();
-		this.setNativeEngine(null);
 		this.update(() => {
 			this.room = null;
 		});

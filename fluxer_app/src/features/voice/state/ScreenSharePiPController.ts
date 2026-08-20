@@ -9,7 +9,6 @@ import PiP from '@app/features/ui/state/PiP';
 import Users from '@app/features/user/state/Users';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {isVoiceEngineV2NativeProjectionActiveFromMediaEngine} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {selectVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -100,30 +99,6 @@ function pickRemoteScreenShareFromSnapshots(channelId: string): ScreenSharePiPSc
 	return null;
 }
 
-function pickRemoteScreenShareFromVoiceStates(channelId: string): ScreenSharePiPScreenShare | null {
-	const connectionVoiceStates = MediaEngine.connectionVoiceStates;
-	const localConnectionId = MediaEngine.connectionId;
-	for (const connectionKey in connectionVoiceStates) {
-		const voiceState = connectionVoiceStates[connectionKey];
-		if (!voiceState) continue;
-		if (!voiceState.self_stream) continue;
-		if (voiceState.channel_id !== channelId) continue;
-		const connectionId = voiceState.connection_id ?? null;
-		if (!connectionId || connectionId === localConnectionId) continue;
-		const userId = voiceState.user_id ?? null;
-		if (!userId) continue;
-		return buildScreenShare(
-			{
-				participantIdentity: buildVoiceParticipantIdentity(userId, connectionId),
-				userId,
-				connectionId,
-			},
-			'voice-state',
-		);
-	}
-	return null;
-}
-
 function pickLocalSelfShare(channelId: string): ScreenSharePiPScreenShare | null {
 	if (!LocalVoiceState.getSelfStream()) return null;
 	const localConnectionId = MediaEngine.connectionId;
@@ -152,9 +127,6 @@ function detectActiveScreenShare(channelId: string | null): ScreenSharePiPScreen
 	}
 	const fromSnapshots = pickRemoteScreenShareFromSnapshots(channelId);
 	if (fromSnapshots) return fromSnapshots;
-	if (isVoiceEngineV2NativeProjectionActiveFromMediaEngine()) {
-		return pickRemoteScreenShareFromVoiceStates(channelId);
-	}
 	return null;
 }
 

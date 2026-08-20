@@ -494,43 +494,6 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		);
 	}
 
-	acceptNativeVoiceServerUpdate(raw: VoiceServerUpdateData): boolean {
-		assertVoiceServerUpdateShape(raw, 'acceptNativeVoiceServerUpdate.raw');
-		const decision = selectVoiceConnectionServerUpdateDecision(this.connectionSnapshot, raw);
-		if (decision.type === 'ignore') {
-			logger.warn('Native voice engine ignoring VOICE_SERVER_UPDATE', {
-				reason: decision.reason,
-				expectedGuildId: decision.expectedGuildId,
-				incomingGuildId: decision.incomingGuildId,
-				expectedChannelId: decision.expectedChannelId,
-				incomingChannelId: decision.incomingChannelId,
-				attemptId: decision.attemptId,
-			});
-			return false;
-		}
-		this.clearVoiceServerTimeout();
-		this.update(() => {
-			this.transitionConnection({
-				type: 'voiceServer.accepted',
-				guildId: decision.guildId,
-				channelId: decision.resolvedChannelId,
-				endpoint: decision.endpoint,
-				connectionId: decision.connectionId,
-				isChannelMove: decision.isChannelMove,
-			});
-		});
-		this.throttle.setInFlightConnect(true);
-		logger.info('Native voice engine accepted VOICE_SERVER_UPDATE', {
-			guildId: decision.guildId,
-			channelId: decision.resolvedChannelId,
-			endpoint: decision.endpoint,
-			connectionId: decision.connectionId,
-			isChannelMove: decision.isChannelMove,
-			isRegionChange: decision.isRegionChange,
-		});
-		return true;
-	}
-
 	private async handleVoiceServerUpdateAsync(
 		raw: VoiceServerUpdateData,
 		onRoomCreated: (room: Room, attemptId: number, guildId: string | null, channelId: string) => void,

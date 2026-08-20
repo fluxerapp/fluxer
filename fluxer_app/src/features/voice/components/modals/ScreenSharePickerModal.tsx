@@ -27,13 +27,11 @@ import {screenRecordingPermissionAllowsPickerSources} from '@app/features/voice/
 import {
 	DESKTOP_SOURCE_LIST_POLL_INTERVAL_MS,
 	desktopSourceIdentitiesMatch,
-	findNativeCaptureSourceForDesktopSource,
 	getDesktopSourceThumbnailStateKey,
 	hasDesktopSourcesMissingThumbnails,
 	isDisplaySource,
 	isUsableImageDataUrl,
 	isWindowSource,
-	LINUX_GAME_CAPTURE_SELECTION_ID,
 	logger,
 	mergeDesktopSources,
 	NATIVE_DISPLAY_SELECTION_ID,
@@ -54,17 +52,13 @@ import {
 } from '@app/features/voice/components/modals/screen_share_picker_modal/useScreenSharePickerDisplayPermission';
 import {StreamSettingsMenuContent} from '@app/features/voice/components/StreamSettingsMenuContent';
 import MediaEngine, {useVoiceEngineV2Model} from '@app/features/voice/engine/MediaEngineFacade';
-import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import {selectVoiceEngineV2AppConnection} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
-import {isNativeScreenCaptureAvailable} from '@app/features/voice/engine/voice_screen_share_manager/DisplayMediaCapture';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import VoiceSettings, {
 	type LastScreenShareSource,
 	type LastScreenShareSourceKind,
 } from '@app/features/voice/state/VoiceSettings';
-import {shouldUseNativeScreenCaptureForScreenShareCodec} from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getNativeAudioAvailabilityCached} from '@app/features/voice/utils/NativeAudioCaptureBridge';
-import {getNativeScreenCaptureApi} from '@app/features/voice/utils/native_screen_capture_bridge/shared';
 import {
 	getDisplayShareEnvironment,
 	shouldShowDesktopDownloadCta,
@@ -75,17 +69,14 @@ import {
 	normaliseDeviceScreenShareSettings,
 	startConfiguredDeviceScreenShare,
 	startConfiguredDisplayScreenShare,
-	startConfiguredNativeDisplayScreenShare,
 	switchConfiguredDeviceScreenShare,
 	switchConfiguredDisplayScreenShare,
-	switchConfiguredNativeDisplayScreenShare,
 } from '@app/features/voice/utils/ScreenShareStartFlow';
 import {formatFallbackCameraLabel} from '@app/features/voice/utils/VoiceMessageDescriptors';
-import type {DesktopSource, NativeAudioAvailability, NativeScreenCaptureSource} from '@app/types/electron.d';
+import type {DesktopSource, NativeAudioAvailability} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {AppWindowIcon, GearIcon, InfoIcon, MonitorIcon, VideoCameraIcon} from '@phosphor-icons/react';
-import type {VideoCodec} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import {
 	type MouseEvent as ReactMouseEvent,
@@ -161,10 +152,6 @@ const OPEN_BROWSER_PICKER_DESCRIPTOR = msg({
 const OPEN_SYSTEM_PICKER_DESCRIPTOR = msg({
 	message: 'Open system picker',
 	comment: 'Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.',
-});
-const GAME_CAPTURE_DESCRIPTOR = msg({
-	message: 'Game capture',
-	comment: 'Button label that starts native Linux game capture through the OBS-compatible hook path.',
 });
 const CHANGE_STREAM_SOURCE_DESCRIPTOR = msg({
 	message: 'Change stream source',
@@ -306,33 +293,6 @@ function getDesktopSourceDimensions(source: DesktopSource): {width: number; heig
 		: undefined;
 }
 
-function canUseNativeCaptureForLastSourceCodec(nativeScreenShareCodec: VideoCodec): boolean {
-	const preferredScreenShareCodecPreference = VoiceSettings.getPreferredScreenShareCodec();
-	return (
-		preferredScreenShareCodecPreference === 'auto' ||
-		shouldUseNativeScreenCaptureForScreenShareCodec(nativeScreenShareCodec)
-	);
-}
-
-async function findNativeCaptureSourceForLastDesktopSource(
-	source: DesktopSource,
-	kind: LastScreenShareSourceKind,
-): Promise<NativeScreenCaptureSource | undefined> {
-	const nativeScreenShareCodec = ScreenShareCodecNegotiation.selectNativeScreenShareCodec(
-		VoiceSettings.getPreferredScreenShareCodec(),
-	);
-	if (!canUseNativeCaptureForLastSourceCodec(nativeScreenShareCodec)) return undefined;
-	if (kind !== 'app' && kind !== 'display') return undefined;
-	if (!(await isNativeScreenCaptureAvailable().catch(() => false))) return undefined;
-	const nativeSourceApi = getNativeScreenCaptureApi();
-	if (!nativeSourceApi) return undefined;
-	const nativeSources = await nativeSourceApi.listSources().catch((error) => {
-		logger.warn('Failed to list native sources for last screen-share source', {error});
-		return [];
-	});
-	return findNativeCaptureSourceForDesktopSource(source, nativeSources);
-}
-
 async function tryStartLastDesktopScreenShareSource(lastSource: LastScreenShareSource): Promise<boolean> {
 	const preload = await preloadScreenSharePickerSources();
 	if (usesNativeDisplaySharePicker(preload.displayShareEnvironment)) return false;
@@ -340,25 +300,11 @@ async function tryStartLastDesktopScreenShareSource(lastSource: LastScreenShareS
 	const source = findLastDesktopSource(lastSource, desktopSources);
 	if (!source) return false;
 	const preferredDisplaySurface = lastSource.kind === 'app' ? 'window' : 'monitor';
-	const nativeSource = await findNativeCaptureSourceForLastDesktopSource(source, lastSource.kind);
-	let didStart: boolean;
-	if (nativeSource) {
-		const preferredScreenShareCodecPreference = VoiceSettings.getPreferredScreenShareCodec();
-		const nativeScreenShareCodec = ScreenShareCodecNegotiation.selectNativeScreenShareCodec(
-			preferredScreenShareCodecPreference,
-		);
-		didStart = await startConfiguredNativeDisplayScreenShare(nativeSource, {
-			desktopSourceId: source.id,
-			isOwnWindow: source.isOwnWindow,
-			...(preferredScreenShareCodecPreference !== 'auto' ? {videoCodec: nativeScreenShareCodec} : {}),
-		});
-	} else {
-		didStart = await startConfiguredDisplayScreenShare(source.id, {
-			sourceDimensions: getDesktopSourceDimensions(source),
-			preferredDisplaySurface,
-			isOwnWindow: source.isOwnWindow === true,
-		});
-	}
+	const didStart = await startConfiguredDisplayScreenShare(source.id, {
+		sourceDimensions: getDesktopSourceDimensions(source),
+		preferredDisplaySurface,
+		isOwnWindow: source.isOwnWindow === true,
+	});
 	if (didStart) {
 		recordLastScreenShareSource(lastSource.kind, source.id, source.name || lastSource.title);
 	}
@@ -374,24 +320,6 @@ async function tryStartLastDeviceScreenShareSource(lastSource: LastScreenShareSo
 	return didStart;
 }
 
-async function tryStartLastGameScreenShareSource(lastSource: LastScreenShareSource): Promise<boolean> {
-	const electronApi = getElectronAPI();
-	if (electronApi?.platform !== 'linux') return false;
-	if (!(await isNativeScreenCaptureAvailable().catch(() => false))) return false;
-	const source: NativeScreenCaptureSource = {
-		kind: 'game',
-		id: lastSource.sourceId ?? 'obs-vkcapture',
-		name: lastSource.title,
-		width: 1920,
-		height: 1080,
-	};
-	const didStart = await startConfiguredNativeDisplayScreenShare(source);
-	if (didStart) {
-		recordLastScreenShareSource('game', source.id, source.name);
-	}
-	return didStart;
-}
-
 export async function tryStartLastScreenShareSource(): Promise<boolean> {
 	const lastSource = VoiceSettings.getLastScreenShareSource();
 	if (!lastSource) return false;
@@ -399,9 +327,6 @@ export async function tryStartLastScreenShareSource(): Promise<boolean> {
 	try {
 		if (lastSource.kind === 'device') {
 			return await tryStartLastDeviceScreenShareSource(lastSource);
-		}
-		if (lastSource.kind === 'game') {
-			return await tryStartLastGameScreenShareSource(lastSource);
 		}
 		return await tryStartLastDesktopScreenShareSource(lastSource);
 	} catch (error) {
@@ -772,10 +697,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 		const [pendingSelectionId, setPendingSelectionId] = useState<string | null>(null);
 		const [invalidThumbnailIds, setInvalidThumbnailIds] = useState<ReadonlySet<string>>(() => new Set());
 		const [nativeAudioAvailability, setNativeAudioAvailability] = useState<NativeAudioAvailability | null>(null);
-		const [nativeScreenAvailable, setNativeScreenAvailable] = useState<boolean | null>(null);
-		const [nativeSources, setNativeSources] = useState<Array<NativeScreenCaptureSource>>([]);
-		const [hasLoadedNativeSources, setHasLoadedNativeSources] = useState(false);
-		const nativeSourcesRef = useRef<Array<NativeScreenCaptureSource>>([]);
 		const loadRequestIdRef = useRef(0);
 		const desktopSourcesRef = useRef(desktopSources);
 		const desktopSourceRefreshInFlightRef = useRef(false);
@@ -785,9 +706,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 			desktopSourcesRef.current = desktopSources;
 		}, [desktopSources]);
 		useEffect(() => {
-			nativeSourcesRef.current = nativeSources;
-		}, [nativeSources]);
-		useEffect(() => {
 			let cancelled = false;
 			void getNativeAudioAvailabilityCached().then((availability) => {
 				if (!cancelled) setNativeAudioAvailability(availability);
@@ -796,53 +714,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 				cancelled = true;
 			};
 		}, []);
-		useEffect(() => {
-			let cancelled = false;
-			const platform = getElectronAPI()?.platform;
-			const canMapDesktopSourcesToNativeCapture = platform === 'darwin' || platform === 'win32';
-			const canProbeNativeCaptureWithoutSourceList = platform === 'linux';
-			if (!canMapDesktopSourcesToNativeCapture && !canProbeNativeCaptureWithoutSourceList) {
-				setNativeScreenAvailable(false);
-				setNativeSources([]);
-				setHasLoadedNativeSources(true);
-				return () => {
-					cancelled = true;
-				};
-			}
-			void isNativeScreenCaptureAvailable().then((available) => {
-				if (cancelled) return;
-				setNativeScreenAvailable(available);
-				if (!available) {
-					setHasLoadedNativeSources(true);
-					return;
-				}
-				if (usesNativeDisplayPicker || !canMapDesktopSourcesToNativeCapture) {
-					setNativeSources([]);
-					setHasLoadedNativeSources(true);
-					return;
-				}
-				const api = getNativeScreenCaptureApi();
-				if (!api) {
-					setHasLoadedNativeSources(true);
-					return;
-				}
-				api
-					.listSources()
-					.then((sources) => {
-						if (cancelled) return;
-						setNativeSources(sources);
-						setHasLoadedNativeSources(true);
-					})
-					.catch((error) => {
-						logger.warn('Failed to load native screen capture source list', {error});
-						if (cancelled) return;
-						setHasLoadedNativeSources(true);
-					});
-			});
-			return () => {
-				cancelled = true;
-			};
-		}, [usesNativeDisplayPicker]);
 		const platform = getElectronAPI()?.platform;
 		const displayPermission = useScreenSharePickerDisplayPermission({
 			activeTab,
@@ -968,15 +839,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 			},
 			[],
 		);
-		const canUseNativeCapture = nativeScreenAvailable === true && hasLoadedNativeSources;
-		const preferredScreenShareCodecPreference = VoiceSettings.getPreferredScreenShareCodec();
-		const nativeScreenShareCodec = useMemo(
-			() => ScreenShareCodecNegotiation.selectNativeScreenShareCodec(preferredScreenShareCodecPreference),
-			[preferredScreenShareCodecPreference],
-		);
-		const canUseNativeCaptureForCodec =
-			preferredScreenShareCodecPreference === 'auto' ||
-			shouldUseNativeScreenCaptureForScreenShareCodec(nativeScreenShareCodec);
 		const activeDesktopSourceThumbnailStateKey = useMemo(() => {
 			if (activeTab === 'devices') {
 				return null;
@@ -1100,41 +962,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 				}
 				setPendingSelectionId(cardId);
 				try {
-					if (cardId === LINUX_GAME_CAPTURE_SELECTION_ID) {
-						const source: NativeScreenCaptureSource = {
-							kind: 'game',
-							id: 'obs-vkcapture',
-							name: i18n._(GAME_CAPTURE_DESCRIPTOR),
-							width: 1920,
-							height: 1080,
-						};
-						const didSelect =
-							mode === 'switch'
-								? await switchConfiguredNativeDisplayScreenShare(source)
-								: await startConfiguredNativeDisplayScreenShare(source);
-						if (didSelect) {
-							recordLastScreenShareSource('game', source.id, source.name);
-							ModalCommands.pop();
-						}
-						return;
-					}
 					const selectedSource = desktopSourcesRef.current.find((source) => source.id === cardId);
-					const canUseNativeSource =
-						canUseNativeCaptureForCodec &&
-						canUseNativeCapture &&
-						selectedSource != null &&
-						((activeTab === 'apps' && isWindowSource(selectedSource)) ||
-							(activeTab === 'displays' && isDisplaySource(selectedSource)));
-					const nativeSource = canUseNativeSource
-						? findNativeCaptureSourceForDesktopSource(selectedSource, nativeSourcesRef.current)
-						: undefined;
-					const nativeSelectionOptions = selectedSource
-						? {
-								desktopSourceId: selectedSource.id,
-								isOwnWindow: selectedSource.isOwnWindow,
-								...(preferredScreenShareCodecPreference !== 'auto' ? {videoCodec: nativeScreenShareCodec} : {}),
-							}
-						: undefined;
 					const sourceDimensions =
 						selectedSource?.nativeWidth && selectedSource.nativeHeight
 							? {width: selectedSource.nativeWidth, height: selectedSource.nativeHeight}
@@ -1145,11 +973,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 							mode === 'switch'
 								? await switchConfiguredDeviceScreenShare(cardId)
 								: await startConfiguredDeviceScreenShare(cardId);
-					} else if (nativeSource) {
-						didSelect =
-							mode === 'switch'
-								? await switchConfiguredNativeDisplayScreenShare(nativeSource, nativeSelectionOptions)
-								: await startConfiguredNativeDisplayScreenShare(nativeSource, nativeSelectionOptions);
 					} else {
 						const selectedDisplaySourceId = usesNativeDisplayPicker ? null : cardId;
 						const preferredDisplaySurface: 'window' | 'monitor' | undefined =
@@ -1191,19 +1014,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 					setPendingSelectionId(null);
 				}
 			},
-			[
-				activeTab,
-				canUseNativeCapture,
-				canUseNativeCaptureForCodec,
-				i18n,
-				loadDesktopSources,
-				mode,
-				nativeScreenShareCodec,
-				pendingSelectionId,
-				platform,
-				tabCards,
-				usesNativeDisplayPicker,
-			],
+			[activeTab, loadDesktopSources, mode, pendingSelectionId, platform, tabCards, usesNativeDisplayPicker],
 		);
 		const handleSettingsClick = useCallback(
 			(event: ReactMouseEvent<HTMLButtonElement>) => {
@@ -1255,9 +1066,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 				? i18n._(OPEN_BROWSER_PICKER_DESCRIPTOR)
 				: i18n._(OPEN_SYSTEM_PICKER_DESCRIPTOR);
 		const nativeDisplayPending = pendingSelectionId === NATIVE_DISPLAY_SELECTION_ID;
-		const linuxGameCapturePending = pendingSelectionId === LINUX_GAME_CAPTURE_SELECTION_ID;
-		const showLinuxGameCaptureAction =
-			platform === 'linux' && activeTab === 'displays' && nativeScreenAvailable === true && canUseNativeCaptureForCodec;
 		const nativePickerCopy = useNativePickerCopy(activeTab, displayShareEnvironment);
 		const deviceEmptyStateCopy = useDeviceEmptyStateCopy(displayShareEnvironment);
 		return (
@@ -1300,13 +1108,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 							pickerActionLabel={pickerActionLabel}
 							onPickerAction={() => void handleStartSelection(NATIVE_DISPLAY_SELECTION_ID)}
 							pickerActionPending={nativeDisplayPending}
-							secondaryActionLabel={showLinuxGameCaptureAction ? i18n._(GAME_CAPTURE_DESCRIPTOR) : undefined}
-							onSecondaryAction={
-								showLinuxGameCaptureAction
-									? () => void handleStartSelection(LINUX_GAME_CAPTURE_SELECTION_ID)
-									: undefined
-							}
-							secondaryActionPending={linuxGameCapturePending}
 							showDesktopDownloadCta={showDesktopDownloadCta}
 							data-flx="voice.screen-share-picker-modal.screen-share-picker-modal-loaded-content.native-display-picker-state"
 						/>

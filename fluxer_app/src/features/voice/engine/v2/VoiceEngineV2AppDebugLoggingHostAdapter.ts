@@ -18,7 +18,6 @@ import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/V
 import {getNativeAudioCaptureDiagnosticState} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import type {DesktopVoiceDebugEventSinkEntry, ElectronAPI} from '@app/types/electron.d';
 import type {VoiceDebugLoggingStatusResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {VoiceEngineV2BridgeVideoFrame} from '@fluxer/voice_engine_v2/bridge';
 import type {
 	LocalTrackPublication,
 	Participant,
@@ -43,20 +42,11 @@ const MAX_QUEUED_EVENTS = 1000;
 const MAX_UPLOAD_BATCH_EVENTS = 200;
 export const VOICE_ENGINE_V2_APP_DEBUG_EVENT_SINK_MAX_ENTRIES = 1000;
 export const VOICE_ENGINE_V2_APP_DEBUG_EVENT_SINK_MAX_LINE_CHARS = 262_144;
-const MAX_NATIVE_VIDEO_FIRST_FRAME_EVENTS = 64;
 const SNAPSHOT_INTERVAL_MS = 10000;
 const MAX_DEVICE_SNAPSHOT_AUDIO_TARGETS = 200;
 const MAX_DEVICE_SNAPSHOT_PIPEWIRE_GRAPH_RECORDS = 500;
 const SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC = 'fluxer.rtc.codec-negotiation.v1';
 const TEXT_DECODER = new TextDecoder();
-export const VOICE_DEBUG_EXCLUDED_NATIVE_ENGINE_EVENT_TYPES: ReadonlySet<string> = new Set([
-	'activeSpeakers',
-	'audioLevel',
-	'audioLevels',
-	'speakingChanged',
-	'stats',
-]);
-
 class BoundedRing<T> {
 	private readonly items: Array<T | null>;
 	private readonly capacity: number;
@@ -344,27 +334,6 @@ function summarizeRemoteTrack(track: RemoteTrack): Record<string, unknown> {
 	};
 }
 
-function summarizeNativeVideoFrame(frame: VoiceEngineV2BridgeVideoFrame): Record<string, unknown> {
-	assertNonNullObject(frame, 'native video frame');
-	assertNonNullObject(frame.meta, 'native video frame metadata');
-	assertString(frame.meta.participantSid, 'native video frame participantSid');
-	assertString(frame.meta.trackSid, 'native video frame trackSid');
-	assertFiniteNumber(frame.meta.width, 'native video frame width');
-	assertFiniteNumber(frame.meta.height, 'native video frame height');
-	assertFiniteNumber(frame.meta.timestampUs, 'native video frame timestampUs');
-	return {
-		participantSid: frame.meta.participantSid,
-		participantIdentity: frame.meta.participantIdentity,
-		trackSid: frame.meta.trackSid,
-		trackName: frame.meta.trackName,
-		source: frame.meta.source,
-		width: frame.meta.width,
-		height: frame.meta.height,
-		timestampUs: frame.meta.timestampUs,
-		byteLength: frame.data.byteLength,
-	};
-}
-
 function getRtpCapabilities(kind: 'audio' | 'video'): Record<string, unknown> {
 	const sender =
 		typeof RTCRtpSender !== 'undefined' && typeof RTCRtpSender.getCapabilities === 'function'
@@ -635,8 +604,6 @@ export class VoiceEngineV2AppDebugLoggingHostAdapter extends Store {
 	private eventSinkSequence = 0;
 	private eventSinkForwardFailureCount = 0;
 	private lastSnapshotAtMs = 0;
-	private readonly nativeVideoFirstFrameTrackSids = new Set<string>();
-	private nativeVideoFirstFrameOverflowRecorded = false;
 
 	constructor(options: VoiceEngineV2AppDebugLoggingHostAdapterOptions = {}) {
 		super();
@@ -711,8 +678,6 @@ export class VoiceEngineV2AppDebugLoggingHostAdapter extends Store {
 			this.participantIdentity = options.room?.localParticipant?.identity ?? null;
 			this.collectSnapshot = options.collectSnapshot;
 		});
-		this.nativeVideoFirstFrameTrackSids.clear();
-		this.nativeVideoFirstFrameOverflowRecorded = false;
 		if (options.room) {
 			this.bindRoom(options.room);
 		}
@@ -746,8 +711,6 @@ export class VoiceEngineV2AppDebugLoggingHostAdapter extends Store {
 		this.roomDisposer?.();
 		this.roomDisposer = null;
 		this.queue.clear();
-		this.nativeVideoFirstFrameTrackSids.clear();
-		this.nativeVideoFirstFrameOverflowRecorded = false;
 		this.update(() => {
 			this.active = false;
 			this.sessionId = null;
@@ -788,43 +751,6 @@ export class VoiceEngineV2AppDebugLoggingHostAdapter extends Store {
 				this.toggleInFlight = false;
 			});
 		}
-	}
-
-	recordNativeEngineEvent(event: {type: string; payload?: unknown}): void {
-		assertNonNullObject(event, 'event');
-		assertString(event.type, 'event.type');
-		if (VOICE_DEBUG_EXCLUDED_NATIVE_ENGINE_EVENT_TYPES.has(event.type)) return;
-		if (this.channelId === null) return;
-		this.record(`native.engine.${event.type}`, {payload: event.payload ?? null});
-	}
-
-	recordNativeVideoDiagnostic(type: string, data?: Record<string, unknown>): void {
-		assertString(type, 'native video diagnostic type');
-		if (this.channelId === null) return;
-		this.record(`native.video.${type}`, data);
-	}
-
-	recordNativeVideoFrame(frame: VoiceEngineV2BridgeVideoFrame): void {
-		if (this.channelId === null) return;
-		const summary = summarizeNativeVideoFrame(frame);
-		const trackSid = frame.meta.trackSid;
-		if (this.nativeVideoFirstFrameTrackSids.has(trackSid)) return;
-		if (this.nativeVideoFirstFrameTrackSids.size >= MAX_NATIVE_VIDEO_FIRST_FRAME_EVENTS) {
-			this.recordNativeVideoFirstFrameOverflow(trackSid);
-			return;
-		}
-		this.nativeVideoFirstFrameTrackSids.add(trackSid);
-		this.recordNativeVideoDiagnostic('frame.first', summary);
-	}
-
-	private recordNativeVideoFirstFrameOverflow(trackSid: string): void {
-		assertString(trackSid, 'native video overflow trackSid');
-		if (this.nativeVideoFirstFrameOverflowRecorded) return;
-		this.nativeVideoFirstFrameOverflowRecorded = true;
-		this.recordNativeVideoDiagnostic('frame.first_overflow', {
-			trackSid,
-			cap: MAX_NATIVE_VIDEO_FIRST_FRAME_EVENTS,
-		});
 	}
 
 	private buildRoomEventBindings(room: Room): Array<VoiceDebugRoomEventBinding> {

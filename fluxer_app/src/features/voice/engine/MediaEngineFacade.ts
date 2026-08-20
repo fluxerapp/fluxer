@@ -18,7 +18,6 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import {SoundType, setSoundOutputDeviceIdResolver} from '@app/features/notification/utils/SoundUtils';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import * as BackgroundImageDB from '@app/features/theme/utils/BackgroundImageDB';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import Idle from '@app/features/ui/state/Idle';
@@ -30,11 +29,9 @@ import {voiceStatsDB} from '@app/features/voice/diagnostics/VoiceStatsDB';
 import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import {
 	createMediaEngineFacadeSnapshot,
-	hasPlayedNativeVoiceReadySounds,
 	type MediaEngineFacadeEvent,
 	type MediaEngineFacadePendingSessionRestore,
 	type MediaEngineFacadeSnapshot,
-	rememberNativeVoiceReadySounds,
 	selectMediaEngineConnectPreflightDecision,
 	selectMediaEngineConnectRequestDecision,
 	selectMediaEngineGatewayErrorDecision,
@@ -44,7 +41,6 @@ import {
 	shouldRunMediaEngineDeferredDisconnect,
 	transitionMediaEngineFacadeSnapshot,
 } from '@app/features/voice/engine/MediaEngineFacadeStateMachine';
-import {NativeVoiceStatsSession} from '@app/features/voice/engine/media_engine_facade/NativeVoiceStatsSession';
 import {
 	AFK_CHECK_INTERVAL_MS,
 	CLAIM_YOUR_ACCOUNT_TO_JOIN_THIS_VOICE_CHANNEL_DESCRIPTOR,
@@ -63,56 +59,12 @@ import {
 	saveCurrentVoiceSessionRestoreSnapshot,
 	type VoiceSessionRestoreSyncHandle,
 } from '@app/features/voice/engine/media_engine_facade/VoiceSessionRestoreSync';
-import {
-	isNativeVoiceEngineSelected,
-	isNativeVoiceEngineSelectionPending,
-	requireNativeVoiceEngine,
-	shouldUseNativeVoiceEngine,
-} from '@app/features/voice/engine/native_voice_engine/getVoiceEngine';
-import {
-	type NativeAudioDeviceModuleStatus,
-	nativeAudioDeviceModuleState,
-} from '@app/features/voice/engine/native_voice_engine/NativeAudioDeviceModuleState';
-import {NativeCameraPreviewStartGate} from '@app/features/voice/engine/native_voice_engine/NativeCameraPreviewStartGate';
-import {
-	type NativeCameraPreviewParticipant,
-	selectNativeCameraLocalPreviewTrack,
-} from '@app/features/voice/engine/native_voice_engine/NativeCameraPreviewTrackSelection';
-import {shouldSuppressNativeLocalTrackStateDuringReconnect} from '@app/features/voice/engine/native_voice_engine/NativeLocalMediaReconnectPolicy';
-import NativeVideoTileManager, {
-	type NativeInboundVideoTrack,
-} from '@app/features/voice/engine/native_voice_engine/NativeVideoTileManager';
-import {shouldRetryNativeVoiceConnectTimeout} from '@app/features/voice/engine/native_voice_engine/NativeVoiceConnectRetryPolicy';
-import {bindNativeVoiceDeviceSync} from '@app/features/voice/engine/native_voice_engine/NativeVoiceDeviceSync';
-import NativeVoiceE2EEStore from '@app/features/voice/engine/native_voice_engine/NativeVoiceE2EEStore';
-import {
-	awaitNativeVoiceEngineReadiness,
-	getNativeVoiceEngineCapabilitiesSnapshot,
-	refreshNativeVoiceEngineCapabilitiesSnapshot,
-} from '@app/features/voice/engine/native_voice_engine/NativeVoiceEngineSelection';
-import {NativeVoiceFrameStatsBatcher} from '@app/features/voice/engine/native_voice_engine/NativeVoiceFrameStatsBatcher';
-import NativeVoiceStatsStore from '@app/features/voice/engine/native_voice_engine/NativeVoiceStatsStore';
-import {
-	applyNativeVoiceEngineConnectedRoster,
-	collectNativeVoiceEngineConnectedRosterPublishedTracks,
-	getNativeVoiceEngineConnectionEventAction,
-	ingestNativeVoiceEngineV2BridgeStats,
-	isFacadeOwnedConnectionEvent,
-	mapNativeVoiceEngineV2BridgeEvent,
-	type NativeVoiceEngineLocalTrackParticipant,
-	type NativeVoiceEngineLocalTrackPublication,
-	type NativeVoiceEngineV2BridgeEventManagers,
-} from '@app/features/voice/engine/native_voice_engine/nativeVoiceEngineEventMapper';
-import type {VoiceEngine} from '@app/features/voice/engine/native_voice_engine/VoiceEngine';
 import {getScreenShareCaptureDiagnosticSnapshot} from '@app/features/voice/engine/ScreenShareCaptureDiagnostics';
 import ScreenShareCodecNegotiation, {
 	buildLocalCodecAdvertisements,
 	getScreenShareCodecPreferenceOrder,
-	SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC,
 } from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import ScreenSharePublicationMigration, {
-	SCREEN_SHARE_PUBLICATION_MIGRATION_TOPIC,
-} from '@app/features/voice/engine/ScreenSharePublicationMigration';
+import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {Store, useStoreVersion} from '@app/features/voice/engine/Store';
 import {shouldMoveToAfkOnTick} from '@app/features/voice/engine/VoiceAfkTracking';
 import {
@@ -145,7 +97,6 @@ import {startVoiceMediaGraphTimerScheduler} from '@app/features/voice/engine/Voi
 import {bindOutputDeviceSync} from '@app/features/voice/engine/VoiceOutputDeviceSync';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {bindRoomEvents, type RoomEventDependencies} from '@app/features/voice/engine/VoiceRoomEventBinder';
-import {playSelfJoinChimeOnce} from '@app/features/voice/engine/VoiceSelfJoinChime';
 import type {VoiceStateSyncPartial, VoiceStateSyncPayload} from '@app/features/voice/engine/VoiceStateSyncTypes';
 import {
 	deferStopWatchingStreamKey,
@@ -153,20 +104,8 @@ import {
 	replaceWatchedStreamKeys,
 	stopWatchingStreamKey,
 } from '@app/features/voice/engine/VoiceStreamWatchState';
-import {
-	asVoiceTrackSource,
-	type VoiceConnectionQuality,
-	VoiceTrackSource,
-} from '@app/features/voice/engine/VoiceTrackSource';
+import {type VoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {bindVoiceEngineV2AppAudioPreferencesSync} from '@app/features/voice/engine/v2/VoiceEngineV2AppAudioPreferencesSyncBinding';
-import {
-	createVoiceEngineV2AppAudioSettingsSnapshot,
-	hasVoiceEngineV2InputProcessorSettingsChanged,
-	hasVoiceEngineV2MicrophoneCaptureSettingsChanged,
-} from '@app/features/voice/engine/v2/VoiceEngineV2AppAudioSettingsSync';
-import {buildVoiceEngineV2AppCameraPermissionDeniedError} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraPermissionDeniedError';
-import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
-import {runCameraTransition} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraTransition';
 import {getLocalDecodableVideoCodecs} from '@app/features/voice/engine/v2/VoiceEngineV2AppCodecCapability';
 import {
 	computeVoiceEngineV2WatchedStreamGossip,
@@ -186,29 +125,10 @@ import type {VoiceEngineV2AppLifecycleDisposable} from '@app/features/voice/engi
 import voiceEngineV2AppMediaExecutionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppMediaExecutionAdapter';
 import voiceEngineV2AppMediaStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppMediaStateAdapter';
 import {
-	resolveVoiceEngineV2NativeCameraDeviceId,
-	type VoiceEngineV2NativeCameraDeviceResolution,
-} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeCameraDeviceMapping';
-import {VoiceEngineV2AppNativeCaptureExecutionAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeCaptureExecutionAdapter';
-import {applyVoiceEngineV2NativeScreenShareAudioState} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeLocalTrackStateSync';
-import {
-	resolveVoiceEngineV2NativeMicrophoneMaxBitrateBps,
-	resolveVoiceEngineV2NativeMicrophonePublishOptions,
-	type VoiceEngineV2NativeMicrophonePublishOptions,
-} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeMicrophoneSettings';
-import {
-	type VoiceEngineV2AppNativeVoiceConnectAttempt,
-	VoiceEngineV2AppNativeVoiceConnectionLifecycle,
-	type VoiceEngineV2AppNativeVoiceConnectReason,
-} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeVoiceConnectionLifecycle';
-import {VoiceEngineV2AppNativeVoiceLiveKitMediaAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeVoiceLiveKitMediaAdapter';
-import {
 	createVoiceEngineV2AppParticipantAdapter,
 	type VoiceEngineV2AppParticipantAdapter,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppParticipantAdapter';
-import VoiceEngineV2AppPermissionAdapter, {
-	type VoiceEngineV2AppNativePermissionEnforcement,
-} from '@app/features/voice/engine/v2/VoiceEngineV2AppPermissionAdapter';
+import VoiceEngineV2AppPermissionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppPermissionAdapter';
 import {createVoiceEngineV2AppProductionHostPorts} from '@app/features/voice/engine/v2/VoiceEngineV2AppProductionHostPorts';
 import {
 	createVoiceEngineV2AppProjectionStore,
@@ -218,16 +138,13 @@ import VoiceEngineV2AppRemoteSpeakingAdapter from '@app/features/voice/engine/v2
 import type {VoiceEngineV2AppScreenShareControllerGateway} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareControllerRouting';
 import voiceEngineV2AppScreenShareExecutionAdapter, {
 	type DeviceScreenShareCaptureOptions,
-	type NativeScreenShareReconnectSnapshot,
 	type ScreenShareReconnectSnapshot,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
-import {resolveVoiceEngineV2AppSelectedMediaMode} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectedMediaMode';
 import {selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
 import {VoiceEngineV2AppStatsHostAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppStatsHostAdapter';
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
 import voiceEngineV2AppVoiceStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
-import type {NativeScreenShareOptions} from '@app/features/voice/engine/voice_screen_share_manager/DisplayMediaCapture';
 import type {VoiceStateAckPayload} from '@app/features/voice/events/VoiceStateAck';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import {type ChannelE2EEStatus, computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
@@ -235,7 +152,7 @@ import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import VoiceSessionRestore, {type VoiceSessionRestoreSnapshot} from '@app/features/voice/state/VoiceSessionRestore';
-import VoiceSettings, {BLUR_BACKGROUND_ID, NONE_BACKGROUND_ID} from '@app/features/voice/state/VoiceSettings';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {type CodecPreference, getCodecCapabilityReport} from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getGpuEncoderReportSync, loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {
@@ -244,17 +161,13 @@ import {
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {getOpenH264StatusSync, loadOpenH264Status} from '@app/features/voice/utils/OpenH264Status';
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
-import {VideoBackgroundFramePump} from '@app/features/voice/utils/VideoBackgroundFramePump';
 import {
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
-import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
-import {voiceDeviceManager} from '@app/features/voice/utils/VoiceDeviceManager';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {
 	isVoiceServerMuteActive,
-	isVoiceSpeakPermissionDenied,
 	resolveVoiceStateSelfMute,
 	shouldPrepareMicrophoneForVoiceConnect,
 } from '@app/features/voice/utils/VoicePermissionUtils';
@@ -276,7 +189,6 @@ import type {
 	VoiceEngineV2Model,
 	VoiceEngineV2PerTrackStats,
 	VoiceEngineV2Snapshot,
-	VoiceEngineV2Stats,
 	VoiceEngineV2StatsSample,
 	VoiceEngineV2TransportInfo,
 	VoiceEngineV2VideoCodec,
@@ -287,11 +199,6 @@ import {
 	shouldApplyGatewayVoiceStateEcho,
 	VOICE_ENGINE_V2_CODEC_GOSSIP_TOPIC,
 } from '@fluxer/voice_engine_v2';
-import {
-	translateVoiceEngineV2BridgeEventToEvents,
-	type VoiceEngineV2BridgeEvent,
-	type VoiceEngineV2BridgeVideoFrame,
-} from '@fluxer/voice_engine_v2/bridge';
 import {type I18n, i18n as linguiI18n, type MessageDescriptor} from '@lingui/core';
 import {
 	type ConnectionQuality as LiveKitConnectionQuality,
@@ -305,126 +212,8 @@ import {
 import {makeObservable, observable} from 'mobx';
 
 const logger = new Logger('MediaEngineFacade');
-const voiceEngineV2AppNativeCaptureExecutionAdapter = new VoiceEngineV2AppNativeCaptureExecutionAdapter();
 const MAX_DIAGNOSTIC_LINUX_AUDIO_TARGETS = 200;
 const MAX_DIAGNOSTIC_PIPEWIRE_GRAPH_RECORDS = 500;
-
-class TimeoutError extends Error {
-	constructor(message: string) {
-		super(message);
-		this.name = 'TimeoutError';
-	}
-}
-
-const NATIVE_VOICE_ENGINE_CONNECT_TIMEOUT_MS = 2_000;
-const NATIVE_VOICE_ENGINE_CONNECT_RETRY_BACKOFF_BASE_MS = 25;
-const NATIVE_VOICE_ENGINE_CONNECT_RETRY_BACKOFF_CEILING_MS = 100;
-const NATIVE_VOICE_ENGINE_CONNECT_MAX_LOCAL_RETRIES = 1;
-
-function getNativeVoiceEngineConnectRetryDelayMs(retryAttempt: number): number {
-	const exponentialDelayMs = NATIVE_VOICE_ENGINE_CONNECT_RETRY_BACKOFF_BASE_MS * 2 ** Math.max(0, retryAttempt - 1);
-	return Math.min(exponentialDelayMs, NATIVE_VOICE_ENGINE_CONNECT_RETRY_BACKOFF_CEILING_MS);
-}
-
-type LinuxAudioRoutingRule = NonNullable<NativeAudioStartOptions['linuxRule']>;
-
-function areVirtmicNodesEqual(left: Record<string, string>, right: Record<string, string>): boolean {
-	const leftKeys = Object.keys(left).sort();
-	const rightKeys = Object.keys(right).sort();
-	if (!areOrderedStringArraysEqual(leftKeys, rightKeys)) return false;
-	return leftKeys.every((key) => left[key] === right[key]);
-}
-
-function areVirtmicNodeListsEqual(
-	left: Array<Record<string, string>> | undefined,
-	right: Array<Record<string, string>> | undefined,
-): boolean {
-	const leftNodes = left ?? [];
-	const rightNodes = right ?? [];
-	if (leftNodes.length !== rightNodes.length) return false;
-	return leftNodes.every((node, index) => areVirtmicNodesEqual(node, rightNodes[index]));
-}
-
-function areLinuxAudioRoutingRulesEqual(left: LinuxAudioRoutingRule, right: LinuxAudioRoutingRule): boolean {
-	return (
-		left.workaround === right.workaround &&
-		left.ignoreDevices === right.ignoreDevices &&
-		left.ignoreInputMedia === right.ignoreInputMedia &&
-		left.ignoreVirtual === right.ignoreVirtual &&
-		left.onlySpeakers === right.onlySpeakers &&
-		left.onlyDefaultSpeakers === right.onlyDefaultSpeakers &&
-		areVirtmicNodeListsEqual(left.include, right.include) &&
-		areVirtmicNodeListsEqual(left.exclude, right.exclude)
-	);
-}
-const NATIVE_VOICE_ENGINE_TRANSPORT_RECONNECT_DELAY_MS = 1250;
-function encodeVoiceEngineE2EEKey(key: string | null | undefined): ArrayBuffer | null {
-	if (!key) return null;
-	const encoded = new TextEncoder().encode(key);
-	return encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength);
-}
-
-function nativeCameraDeviceIdFromResolution(resolution: VoiceEngineV2NativeCameraDeviceResolution): string | undefined {
-	assert.ok(resolution !== null && typeof resolution === 'object', 'camera device resolution must be an object');
-	switch (resolution.status) {
-		case 'default':
-			return undefined;
-		case 'direct':
-			assert.ok(resolution.deviceId, 'direct camera device resolution must carry a native device id');
-			logger.debug('Using native camera device id directly', {
-				requestedDeviceId: resolution.requestedDeviceId,
-				nativeLabel: resolution.nativeLabel,
-			});
-			return resolution.deviceId;
-		case 'mapped':
-			assert.ok(resolution.deviceId, 'mapped camera device resolution must carry a native device id');
-			logger.info('Mapped browser camera device to native camera device', {
-				browserLabel: resolution.browserLabel,
-				nativeLabel: resolution.nativeLabel,
-				nativeDeviceId: resolution.deviceId,
-			});
-			return resolution.deviceId;
-		case 'ambiguous':
-			logger.warn('Native camera device mapping is ambiguous; falling back to default camera', {
-				browserLabel: resolution.browserLabel,
-				matchCount: resolution.matchCount,
-			});
-			return undefined;
-		case 'unmapped':
-			logger.warn('Native camera device mapping failed; falling back to default camera', {
-				browserLabel: resolution.browserLabel,
-				requestedDeviceId: resolution.requestedDeviceId,
-				nativeDeviceCount: resolution.nativeDeviceCount,
-			});
-			return undefined;
-		case 'unavailable':
-			logger.warn('Native camera enumeration returned no devices; falling back to default camera', {
-				requestedDeviceId: resolution.requestedDeviceId,
-			});
-			return undefined;
-	}
-}
-
-async function resolveNativeCameraDeviceId(deviceId?: string): Promise<string | undefined> {
-	if (!deviceId || deviceId === 'default') return undefined;
-	const trimmedDeviceId = deviceId.trim();
-	try {
-		const nativeEngine = requireNativeVoiceEngine();
-		const [browserDeviceState, nativeDevices] = await Promise.all([
-			voiceDeviceManager.ensureDevices({requestPermissions: false, forceRefresh: true}),
-			nativeEngine.listCameraDevices(),
-		]);
-		const resolution = resolveVoiceEngineV2NativeCameraDeviceId({
-			requestedDeviceId: trimmedDeviceId,
-			browserDevices: browserDeviceState.videoDevices,
-			nativeDevices,
-		});
-		return nativeCameraDeviceIdFromResolution(resolution);
-	} catch (error) {
-		logger.warn('Failed to map browser camera device to native camera device', {deviceId, error});
-		return undefined;
-	}
-}
 
 function isCameraPermissionDeniedCommandFailure(error: unknown): boolean {
 	if (!(error instanceof Error)) return false;
@@ -442,42 +231,6 @@ function buildCameraCommandOptions(options?: {deviceId?: string; sendUpdate?: bo
 		commandOptions.sendUpdate = false;
 	}
 	return commandOptions;
-}
-
-function buildScreenEncodingCaptureOptions(options: {
-	width: number;
-	height: number;
-	frameRate?: number;
-}): ScreenShareCaptureOptions {
-	const resolution: NonNullable<ScreenShareCaptureOptions['resolution']> = {
-		width: options.width,
-		height: options.height,
-	};
-	if (options.frameRate !== undefined) {
-		resolution.frameRate = options.frameRate;
-	}
-	return {resolution};
-}
-
-function buildScreenEncodingPublishOptions(options: {
-	codec?: '' | 'vp8' | 'vp9' | 'h264' | 'h265' | 'av1';
-	frameRate?: number;
-	maxBitrateBps?: number;
-}): TrackPublishOptions | undefined {
-	const publishOptions: TrackPublishOptions = {};
-	if (options.codec) {
-		publishOptions.videoCodec = options.codec;
-	}
-	if (options.maxBitrateBps !== undefined) {
-		const screenShareEncoding: {maxBitrate: number; maxFramerate?: number} = {
-			maxBitrate: options.maxBitrateBps,
-		};
-		if (options.frameRate !== undefined) {
-			screenShareEncoding.maxFramerate = options.frameRate;
-		}
-		publishOptions.screenShareEncoding = screenShareEncoding;
-	}
-	return Object.keys(publishOptions).length > 0 ? publishOptions : undefined;
 }
 
 function buildRoomEventDependencies(facade: {
@@ -574,18 +327,6 @@ function voiceDiagnosticError(error: unknown): Record<string, unknown> {
 		};
 	}
 	return {message: String(error)};
-}
-
-function withTimeout<T>(task: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-	let timeoutId: NodeJS.Timeout | null = null;
-	const timeout = new Promise<T>((_resolve, reject) => {
-		timeoutId = setTimeout(() => reject(new TimeoutError(message)), timeoutMs);
-	});
-	return Promise.race([task, timeout]).finally(() => {
-		if (timeoutId !== null) {
-			clearTimeout(timeoutId);
-		}
-	});
 }
 
 function limitLinuxAudioTargets(result: unknown): unknown {
@@ -721,20 +462,7 @@ interface ConnectDirectlyOptions {
 
 type TerminalUnloadVoiceDisconnectReason = 'pagehide' | 'beforeunload' | 'unload';
 
-interface NativeLocalMediaReconnectSnapshot {
-	connectionId: string | null;
-	restoreVideo: boolean;
-	restoreStream: boolean;
-	screenShare: NativeScreenShareReconnectSnapshot | null;
-	screenShareRelease: Promise<void> | null;
-}
-
 type VoiceMuteReason = 'guild' | 'permission' | 'voice_push_to_talk' | 'self' | null;
-
-interface ConnectViaNativeEngineOptions {
-	forceReconnect?: boolean;
-	reason?: VoiceEngineV2AppNativeVoiceConnectReason;
-}
 
 export interface VoiceEngineConnectionContext {
 	guildId: string | null;
@@ -770,35 +498,7 @@ class MediaEngineFacade extends Store {
 	private pendingServerDisconnectTimeout: NodeJS.Timeout | null = null;
 	private facadeSnapshot: MediaEngineFacadeSnapshot = createMediaEngineFacadeSnapshot();
 	private disconnectPromise: Promise<void> | null = null;
-	private nativeVoiceEngineV2BridgeEventDisposer: (() => void) | null = null;
-	private nativeVoiceDeviceSyncDisposer: (() => void) | null = null;
-	private nativeVoiceDataProtocolDisposer: (() => void) | null = null;
-	private nativeVoiceConnectRetryTimeoutId: number | null = null;
-	private nativeVoiceConnectRetryCounts = new Map<string, number>();
-	private readonly nativeVoiceConnectionLifecycle = new VoiceEngineV2AppNativeVoiceConnectionLifecycle();
-	private nativeVoiceTransportReconnectTimeoutId: number | null = null;
-	private readonly nativeVoiceStatsSession = new NativeVoiceStatsSession({
-		ingestStats: (stats, timestampMs) => this.ingestNativeVoiceStats(stats, timestampMs),
-	});
-	private readonly nativeVoiceFrameStatsBatcher = new NativeVoiceFrameStatsBatcher({
-		dispatch: (event) => {
-			this.voiceEngineV2Host.dispatch(event);
-		},
-		onDroppedUpdates: (droppedUpdatesCount) => {
-			logger.warn('Native inbound video frame stats dropped updates at the track cap', {droppedUpdatesCount});
-			voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic('frame_stats.dropped_updates', {
-				droppedUpdatesCount,
-			});
-		},
-	});
-	private lastNativeVoiceServerUpdate: VoiceServerUpdateData | null = null;
-	private nativeVoiceReadySoundConnectionIds = new Set<string>();
-	private pendingNativeLocalMediaReconnect: NativeLocalMediaReconnectSnapshot | null = null;
 	private terminalUnloadVoiceDisconnectSent = false;
-	private nativeCameraPreviewTrackSid: string | null = null;
-	private nativeCameraPreviewSessionTrackSid: string | null = null;
-	private readonly nativeCameraPreviewStartGate = new NativeCameraPreviewStartGate();
-	private videoBackgroundFramePump: VideoBackgroundFramePump | null = null;
 	private voiceEngineV2EstablishedConnectionKey: string | null = null;
 	private lastVoiceConnectFailed = false;
 
@@ -806,28 +506,6 @@ class MediaEngineFacade extends Store {
 		super();
 		this.statsHostAdapter = new VoiceEngineV2AppStatsHostAdapter();
 		const voiceEngineV2Ingestion = createVoiceEngineV2AppIngestionPort();
-		const nativeVoiceMedia = new VoiceEngineV2AppNativeVoiceLiveKitMediaAdapter({
-			getEngine: requireNativeVoiceEngine,
-			camera: {
-				publishCamera: (options) => this.setCameraEnabledViaEngine(true, options),
-				updateCameraEncoding: (options) =>
-					this.updateActiveCameraCapture(options.deviceId ? {deviceId: options.deviceId} : undefined),
-				unpublishCamera: (options) => this.setCameraEnabledViaEngine(false, options),
-			},
-			screen: {
-				publishScreen: (options) =>
-					voiceEngineV2AppScreenShareExecutionAdapter.publishControllerScreenViaNativeCapture(options),
-				updateScreenEncoding: async (options) => {
-					await voiceEngineV2AppScreenShareExecutionAdapter.updateActiveScreenShareSettings(
-						null,
-						buildScreenEncodingCaptureOptions(options),
-						buildScreenEncodingPublishOptions(options),
-					);
-				},
-				unpublishScreen: () => voiceEngineV2AppScreenShareExecutionAdapter.unpublishControllerScreenViaNativeCapture(),
-			},
-			logger,
-		});
 		this.voiceEngineV2Host = createVoiceEngineV2AppControllerHost({
 			eventLogSpillSink: createVoiceEngineV2AppEventLogSpillLoggerSink({logger}),
 			ports: createVoiceEngineV2AppProductionHostPorts({
@@ -868,9 +546,6 @@ class MediaEngineFacade extends Store {
 						VoiceSettings.updateSettings({outputDeviceId: deviceId});
 					},
 				},
-				nativeMedia: voiceEngineV2AppNativeCaptureExecutionAdapter,
-				nativeVoiceMedia,
-				getSelectedMediaMode: resolveVoiceEngineV2AppSelectedMediaMode,
 				ingestion: voiceEngineV2Ingestion,
 				subscriptions: VoiceEngineV2AppSubscriptionAdapter,
 				stats: this.statsHostAdapter,
@@ -902,7 +577,7 @@ class MediaEngineFacade extends Store {
 		this.initializeTerminalUnloadVoiceDisconnect();
 		Sound.setSelfDeafenedResolver(() => getEffectiveAudioState().effectiveDeaf);
 		setSoundOutputDeviceIdResolver(() => VoiceSettings.getOutputDeviceId());
-		this.prewarmNativeVoiceEngineInBackground('startup');
+		this.prewarmVoiceEngineV2InBackground('startup');
 		(
 			window as typeof window & {
 				_mediaEngine?: MediaEngineFacade;
@@ -938,32 +613,8 @@ class MediaEngineFacade extends Store {
 					VoiceEngineV2AppRemoteSpeakingAdapter.clear();
 					VoiceEngineV2AppSubscriptionAdapter.cleanup();
 					VoiceEngineV2AppPermissionAdapter.reset();
-					this.nativeVoiceFrameStatsBatcher.teardown();
-					NativeVideoTileManager.clear();
 					this.resetLocalMediaAndScreenShareTracking();
 					this.voiceEngineV2Participants.clear();
-				},
-			},
-			{
-				name: 'native-voice-runtime-state',
-				dispose: async () => {
-					this.clearNativeVoiceConnectSession();
-					this.clearPendingNativeLocalMediaReconnect();
-					this.stopNativeVoiceStatsSession();
-					this.lastNativeVoiceServerUpdate = null;
-				},
-			},
-			{
-				name: 'native-voice-timers',
-				dispose: async () => {
-					this.clearNativeVoiceTransportReconnect();
-					this.clearNativeVoiceConnectRetry();
-				},
-			},
-			{
-				name: 'native-voice-bindings',
-				dispose: async () => {
-					this.disposeNativeVoiceEngineBindings();
 				},
 			},
 		];
@@ -975,7 +626,7 @@ class MediaEngineFacade extends Store {
 		});
 	}
 
-	private prewarmNativeVoiceEngineInBackground(reason: string): void {
+	private prewarmVoiceEngineV2InBackground(reason: string): void {
 		void this.voiceEngineV2Host
 			.runAndWait(
 				() => {
@@ -1000,9 +651,6 @@ class MediaEngineFacade extends Store {
 		voiceEngineV2AppConnectionHostAdapter.subscribe(forwardChange);
 		voiceEngineV2AppVoiceStateAdapter.subscribe(forwardChange);
 		this.statsHostAdapter.subscribe(forwardChange);
-		NativeVoiceStatsStore.subscribe(forwardChange);
-		NativeVideoTileManager.subscribe(forwardChange);
-		NativeVoiceE2EEStore.subscribe(forwardChange);
 		AdaptiveScreenShareEngine.subscribe(forwardChange);
 		voiceEngineV2AppMediaExecutionAdapter.subscribe(forwardChange);
 		voiceEngineV2AppScreenShareExecutionAdapter.subscribe(forwardChange);
@@ -1192,30 +840,11 @@ class MediaEngineFacade extends Store {
 		};
 	}
 
-	private get nativeVoiceStatsActive(): boolean {
-		if (this.room) return false;
-		if (!isNativeVoiceEngineSelected()) return false;
-		return (
-			voiceEngineV2AppConnectionHostAdapter.connected ||
-			voiceEngineV2AppConnectionHostAdapter.reconnecting ||
-			NativeVoiceStatsStore.stats != null ||
-			NativeVoiceStatsStore.currentLatency != null
-		);
-	}
-
-	private get nativeVoiceParticipantCount(): number {
-		const participantCount = Object.keys(this.voiceEngineV2Participants.participants).length;
-		return Math.max(participantCount, this.connected ? 1 : 0);
-	}
-
 	get participants(): Readonly<Record<string, LivekitParticipantSnapshot>> {
 		return this.voiceEngineV2Participants.participants;
 	}
 
 	get localConnectionQuality(): VoiceConnectionQuality | LiveKitConnectionQuality {
-		if (this.nativeVoiceStatsActive) {
-			return this.voiceEngineV2Participants.getLocalParticipant()?.connectionQuality ?? 'unknown';
-		}
 		return this.room?.localParticipant?.connectionQuality ?? 'unknown';
 	}
 
@@ -1224,44 +853,34 @@ class MediaEngineFacade extends Store {
 	}
 
 	get currentLatency(): number | null {
-		if (this.nativeVoiceStatsActive) return NativeVoiceStatsStore.currentLatency;
 		return this.statsHostAdapter.currentLatency;
 	}
 
 	get averageLatency(): number | null {
-		if (this.nativeVoiceStatsActive) return NativeVoiceStatsStore.averageLatency;
 		return this.statsHostAdapter.averageLatency;
 	}
 
 	get latencyHistory(): Array<VoiceEngineV2LatencyDataPoint> {
-		if (this.nativeVoiceStatsActive) return NativeVoiceStatsStore.latencyHistory;
 		return this.statsHostAdapter.latencyHistory;
 	}
 
 	get voiceStats(): VoiceEngineV2VoiceStats {
-		if (this.nativeVoiceStatsActive) {
-			return NativeVoiceStatsStore.getVoiceStats({participantCount: this.nativeVoiceParticipantCount});
-		}
 		return this.statsHostAdapter.voiceStats;
 	}
 
 	get perTrackStats(): Array<VoiceEngineV2PerTrackStats> {
-		if (this.nativeVoiceStatsActive) return NativeVoiceStatsStore.perTrackStats;
 		return this.statsHostAdapter.perTrackStats;
 	}
 
 	get statsTimeSeries(): Array<VoiceEngineV2StatsSample> {
-		if (this.nativeVoiceStatsActive) return NativeVoiceStatsStore.statsTimeSeries;
 		return this.statsHostAdapter.statsTimeSeries;
 	}
 
 	get publisherTransport(): VoiceEngineV2TransportInfo | null {
-		if (this.nativeVoiceStatsActive) return null;
 		return this.statsHostAdapter.publisherTransport;
 	}
 
 	get subscriberTransport(): VoiceEngineV2TransportInfo | null {
-		if (this.nativeVoiceStatsActive) return null;
 		return this.statsHostAdapter.subscriberTransport;
 	}
 
@@ -1285,13 +904,6 @@ class MediaEngineFacade extends Store {
 	}
 
 	private async refreshMicrophoneFromCurrentEngine(): Promise<void> {
-		if (await shouldUseNativeVoiceEngine()) {
-			if (this.voiceEngineV2Snapshot.microphone.published == null) {
-				return;
-			}
-			await this.refreshNativeMicrophoneFromSettings();
-			return;
-		}
 		await voiceEngineV2AppMediaExecutionAdapter.refreshMicrophone(this.room, {forceRepublish: true});
 	}
 
@@ -1302,20 +914,6 @@ class MediaEngineFacade extends Store {
 	}
 
 	private async refreshCameraBackgroundFromCurrentEngine(): Promise<void> {
-		if (await shouldUseNativeVoiceEngine()) {
-			if (!this.readNativeCameraActualEnabled()) {
-				this.syncVideoBackgroundFramePumpInBackground('camera-background-refresh');
-				return;
-			}
-			try {
-				await requireNativeVoiceEngine().updateCameraCapture(await this.getNativeCameraPublishParams());
-			} catch (error) {
-				logger.warn('Native camera capture hot update failed; falling back to camera republish', {error});
-				await this.setCameraEnabledViaEngine(true, {sendUpdate: false});
-			}
-			this.syncVideoBackgroundFramePumpInBackground('camera-background-refresh');
-			return;
-		}
 		await voiceEngineV2AppMediaExecutionAdapter.refreshCameraBackground();
 	}
 
@@ -1326,33 +924,12 @@ class MediaEngineFacade extends Store {
 	}
 
 	private async refreshCameraCaptureFromCurrentEngine(): Promise<void> {
-		if (await shouldUseNativeVoiceEngine()) {
-			if (!this.readNativeCameraActualEnabled()) {
-				return;
-			}
-			await this.republishNativeCameraForCaptureChange();
-			return;
-		}
 		await voiceEngineV2AppMediaExecutionAdapter.refreshCameraCapture();
-	}
-
-	private async republishNativeCameraForCaptureChange(): Promise<void> {
-		this.clearNativeCameraLocalPreview();
-		try {
-			await requireNativeVoiceEngine().unpublishCamera();
-			await this.publishNativeCameraFromSettings();
-		} catch (error) {
-			logger.warn('Native camera resolution republish failed; attempting to restore camera', {error});
-			await this.setCameraEnabledViaEngine(true, {sendUpdate: false});
-		}
-		this.syncVideoBackgroundFramePumpInBackground('camera-resolution-refresh');
 	}
 
 	async refreshActiveScreenShareCodecNegotiation(): Promise<void> {
 		const room = this.room;
-		const selection = isNativeVoiceEngineSelected()
-			? await ScreenShareCodecNegotiation.publishLocalCapabilitiesNative('manual')
-			: await ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'manual', {});
+		const selection = await ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'manual', {});
 		const codec =
 			selection?.codec ??
 			ScreenShareCodecNegotiation.selectScreenShareCodec(VoiceSettings.getPreferredScreenShareCodec());
@@ -1396,151 +973,6 @@ class MediaEngineFacade extends Store {
 			logger.error('Local audio reconciliation loop aborted; resetting the coalescer', {error});
 			this.localAudioReconcileCoalescer = createVoiceLocalAudioReconcileCoalescerSnapshot();
 		}
-	}
-
-	private clearNativeVoiceTransportReconnect(): void {
-		if (this.nativeVoiceTransportReconnectTimeoutId !== null) {
-			window.clearTimeout(this.nativeVoiceTransportReconnectTimeoutId);
-			this.nativeVoiceTransportReconnectTimeoutId = null;
-		}
-	}
-
-	private clearNativeVoiceConnectRetryTimeout(): void {
-		if (this.nativeVoiceConnectRetryTimeoutId !== null) {
-			window.clearTimeout(this.nativeVoiceConnectRetryTimeoutId);
-			this.nativeVoiceConnectRetryTimeoutId = null;
-		}
-	}
-
-	private clearNativeVoiceConnectRetry(): void {
-		this.clearNativeVoiceConnectRetryTimeout();
-		this.nativeVoiceConnectRetryCounts.clear();
-	}
-
-	private clearNativeVoiceConnectSession(): void {
-		this.nativeVoiceConnectionLifecycle.clearSession();
-	}
-
-	private isVoiceConnectionCurrentForNativeAttempt(attempt: VoiceEngineV2AppNativeVoiceConnectAttempt): boolean {
-		return this.nativeVoiceConnectionLifecycle.isCurrentAttemptForConnection(
-			attempt,
-			voiceEngineV2AppConnectionHostAdapter.connectionState,
-		);
-	}
-
-	private isDuplicateNativeVoiceServerUpdate({
-		guildId,
-		channelId,
-		connectionId,
-		endpoint,
-		token,
-	}: {
-		guildId: string | null;
-		channelId: string;
-		connectionId: string | null;
-		endpoint: string;
-		token: string;
-	}): boolean {
-		return this.nativeVoiceConnectionLifecycle.isDuplicateServerUpdate(
-			{guildId, channelId, connectionId, endpoint, token},
-			voiceEngineV2AppConnectionHostAdapter.connectionState,
-			this.lastNativeVoiceServerUpdate?.token ?? null,
-		);
-	}
-
-	private clearPendingNativeLocalMediaReconnect(): void {
-		this.pendingNativeLocalMediaReconnect = null;
-	}
-
-	private prepareNativeLocalMediaReconnect(reason: string): void {
-		const previous = this.pendingNativeLocalMediaReconnect;
-		const restoreVideo = previous?.restoreVideo === true || LocalVoiceState.getSelfVideo();
-		const restoreStream = previous?.restoreStream === true || LocalVoiceState.getSelfStream();
-		const screenShare =
-			previous?.screenShare ??
-			(restoreStream ? voiceEngineV2AppScreenShareExecutionAdapter.prepareNativeScreenShareReconnect() : null);
-		const screenShareRelease =
-			previous?.screenShareRelease ??
-			(screenShare
-				? voiceEngineV2AppScreenShareExecutionAdapter
-						.releaseNativeScreenShareForReconnect(screenShare)
-						.catch((error) => {
-							logger.warn('Failed to release native screen share before reconnect restore', {reason, error});
-						})
-				: null);
-		if (!restoreVideo && !restoreStream && !screenShare) {
-			return;
-		}
-		this.pendingNativeLocalMediaReconnect = {
-			connectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-			restoreVideo,
-			restoreStream,
-			screenShare,
-			screenShareRelease,
-		};
-		logger.debug('Prepared native local media reconnect restore', {
-			reason,
-			connectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-			restoreVideo,
-			restoreStream,
-			hasScreenShareSnapshot: screenShare !== null,
-		});
-	}
-
-	private getPendingNativeLocalTrackRestoreIntent(): {restoreVideo: boolean; restoreStream: boolean} {
-		const pending = this.pendingNativeLocalMediaReconnect;
-		return {
-			restoreVideo: pending?.restoreVideo === true,
-			restoreStream: pending?.restoreStream === true,
-		};
-	}
-
-	private shouldSuppressNativeLocalTrackState(source: VoiceTrackSource, enabled: boolean): boolean {
-		const {restoreVideo, restoreStream} = this.getPendingNativeLocalTrackRestoreIntent();
-		return shouldSuppressNativeLocalTrackStateDuringReconnect({
-			source,
-			enabled,
-			reconnecting:
-				voiceEngineV2AppConnectionHostAdapter.reconnecting || this.pendingNativeLocalMediaReconnect !== null,
-			restoreVideo,
-			restoreStream,
-		});
-	}
-
-	private restoreNativeLocalMediaStateInBackground(reason: string): void {
-		void this.restoreNativeLocalMediaState(reason).catch((error) => {
-			logger.warn('Native local media reconnect restore failed', {reason, error});
-		});
-	}
-
-	private async restoreNativeLocalMediaState(reason: string): Promise<void> {
-		const snapshot = this.pendingNativeLocalMediaReconnect;
-		if (!snapshot) return;
-		if (snapshot.connectionId && voiceEngineV2AppConnectionHostAdapter.connectionId !== snapshot.connectionId) {
-			logger.debug('Dropping stale native local media reconnect restore', {
-				reason,
-				snapshotConnectionId: snapshot.connectionId,
-				currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-			});
-			this.clearPendingNativeLocalMediaReconnect();
-			return;
-		}
-		this.clearPendingNativeLocalMediaReconnect();
-		await snapshot.screenShareRelease;
-		const screenShareSnapshot = snapshot.screenShare;
-		await this.restoreLocalMedia({
-			reason,
-			room: this.room,
-			restoreCamera: snapshot.restoreVideo && LocalVoiceState.getSelfVideo(),
-			restoreStream: snapshot.restoreStream && LocalVoiceState.getSelfStream(),
-			restoreStreamFromSnapshot: screenShareSnapshot
-				? () => voiceEngineV2AppScreenShareExecutionAdapter.restoreNativeScreenShareReconnect(screenShareSnapshot)
-				: null,
-			streamSnapshotFallback: true,
-			streamPlaySound: false,
-			settleStreamStateWhenNotRestored: true,
-			toastWhenStreamNotRestored: true,
-		});
 	}
 
 	private async restoreLocalMedia(args: {
@@ -1598,34 +1030,6 @@ class MediaEngineFacade extends Store {
 				children: this.i18n._(RECONNECT_SUCCEEDED_PICK_A_SCREEN_AGAIN_IF_YOU_DESCRIPTOR),
 			});
 		}
-	}
-
-	private disposeNativeVoiceEngineBindings(clearStats = true): void {
-		this.clearNativeCameraLocalPreview();
-		this.nativeVoiceEngineV2BridgeEventDisposer?.();
-		this.nativeVoiceEngineV2BridgeEventDisposer = null;
-		this.nativeVoiceDeviceSyncDisposer?.();
-		this.nativeVoiceDeviceSyncDisposer = null;
-		this.nativeVoiceDataProtocolDisposer?.();
-		this.nativeVoiceDataProtocolDisposer = null;
-		VoiceEngineV2AppSubscriptionAdapter.cleanup();
-		this.nativeVoiceFrameStatsBatcher.teardown();
-		NativeVideoTileManager.clear();
-		NativeVoiceE2EEStore.clear();
-		this.stopNativeVoiceStatsSession(clearStats);
-		this.clearNativeVoiceConnectSession();
-	}
-
-	private isGatewayVoiceStateActiveForConnection(
-		connectionId: string,
-		guildId: string | null,
-		channelId: string,
-	): boolean {
-		const voiceState = voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(connectionId);
-		if (!voiceState?.channel_id) return false;
-		const expectedGuildId = guildId ?? ME;
-		const actualGuildId = voiceState.guild_id ?? ME;
-		return voiceState.channel_id === channelId && actualGuildId === expectedGuildId;
 	}
 
 	private initializeLocalAudioStateSync(): void {
@@ -1708,9 +1112,6 @@ class MediaEngineFacade extends Store {
 
 	private discardVoiceConnection(connectionId: string, options: {clearLocalState?: boolean} = {}): void {
 		voiceEngineV2AppVoiceStateAdapter.removeVoiceStateConnection(connectionId);
-		for (const trackSid of NativeVideoTileManager.unregisterConnection(connectionId)) {
-			this.nativeVoiceFrameStatsBatcher.removeTrack(trackSid);
-		}
 		this.voiceEngineV2Participants.discardConnection(connectionId);
 		if (options.clearLocalState) {
 			LocalVoiceState.clearConnectionState(connectionId);
@@ -1771,11 +1172,6 @@ class MediaEngineFacade extends Store {
 			hasRoom: room != null,
 			hasVoiceTransport,
 		});
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
-		this.clearPendingNativeLocalMediaReconnect();
-		this.stopNativeVoiceStatsSession();
 		voiceEngineV2AppScreenShareExecutionAdapter.stopNativeScreenShareForTerminalUnload();
 		const hasSpecificConnection = connectionId != null;
 		GatewayConnection.sendTerminalVoiceDisconnect(
@@ -2016,8 +1412,6 @@ class MediaEngineFacade extends Store {
 			});
 			await this.disconnectForChannelMove('user');
 		}
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
 		if (!voiceEngineV2AppConnectionHostAdapter.startConnection(guildId, channelId)) return;
 		const initialViewerStreamKeys = replaceWatchedStreamKeys(options.initialViewerStreamKeys ?? [], {
 			sync: false,
@@ -2083,11 +1477,7 @@ class MediaEngineFacade extends Store {
 	}
 
 	private async stopActiveScreenShareForTeardown(context: 'disconnect' | 'channel_move'): Promise<void> {
-		if (
-			!LocalVoiceState.getSelfStream() &&
-			!voiceEngineV2AppScreenShareExecutionAdapter.hasActiveScreenShareResources()
-		)
-			return;
+		if (!LocalVoiceState.getSelfStream()) return;
 		try {
 			await voiceEngineV2AppScreenShareExecutionAdapter.setScreenShareEnabled(this.room, false, {
 				sendUpdate: false,
@@ -2115,37 +1505,15 @@ class MediaEngineFacade extends Store {
 	}
 
 	private async runDisconnectFromVoiceChannel(reason: 'user' | 'error' | 'server'): Promise<void> {
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
-		this.clearPendingNativeLocalMediaReconnect();
-		this.stopNativeVoiceStatsSession();
-		this.lastNativeVoiceServerUpdate = null;
 		const {guildId, connectionId, connected, connecting, channelId} =
 			voiceEngineV2AppConnectionHostAdapter.connectionState;
 		if (!connected && !connecting && !channelId) {
-			if (this.nativeVoiceEngineV2BridgeEventDisposer) {
-				this.disposeNativeVoiceEngineBindings();
-				try {
-					await requireNativeVoiceEngine().disconnect();
-				} catch (error) {
-					logger.warn('Native voice engine disconnect failed', {error, reason});
-				}
-			}
 			return;
 		}
 		logger.debug('Voice teardown starting', {guildId, channelId, reason});
 		this.cancelPendingServerDisconnect();
 		this.transitionFacadeState({type: 'disconnect.cleanupStarted', reason});
 		await this.stopActiveScreenShareForTeardown('disconnect');
-		if (this.nativeVoiceEngineV2BridgeEventDisposer) {
-			this.disposeNativeVoiceEngineBindings();
-			try {
-				await requireNativeVoiceEngine().disconnect();
-			} catch (error) {
-				logger.warn('Native voice engine disconnect failed', {error, reason});
-			}
-		}
 		this.clearViewerStreamKeys();
 		this.stopTracking();
 		this.statsHostAdapter.reset();
@@ -2176,12 +1544,6 @@ class MediaEngineFacade extends Store {
 	}
 
 	private async disconnectForChannelMove(reason: 'user' | 'server'): Promise<void> {
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
-		this.clearPendingNativeLocalMediaReconnect();
-		this.stopNativeVoiceStatsSession();
-		this.lastNativeVoiceServerUpdate = null;
 		const {guildId, connectionId, connected, connecting, channelId} =
 			voiceEngineV2AppConnectionHostAdapter.connectionState;
 		if (!connected && !connecting && !channelId) return;
@@ -2321,913 +1683,9 @@ class MediaEngineFacade extends Store {
 		}
 	}
 
-	private finalizeNativeVoiceConnection(
-		guildId: string | null,
-		channelId: string,
-		connectionId: string | null,
-		source: 'connect-promise' | 'native-event',
-		attempt: VoiceEngineV2AppNativeVoiceConnectAttempt,
-	): void {
-		if (!this.nativeVoiceConnectionLifecycle.isActiveAttempt(attempt)) {
-			logger.debug('Ignoring stale native voice engine connection finalization from replaced attempt', {
-				source,
-				connectionId,
-				attemptId: attempt.id,
-				activeAttemptId: this.nativeVoiceConnectionLifecycle.activeAttemptId,
-			});
-			return;
-		}
-		if (connectionId && voiceEngineV2AppConnectionHostAdapter.connectionId !== connectionId) {
-			logger.warn('Ignoring stale native voice engine connection finalization', {
-				source,
-				connectionId,
-				currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-			});
-			return;
-		}
-		const alreadyReady =
-			this.nativeVoiceConnectionLifecycle.readyConnectionId === connectionId &&
-			voiceEngineV2AppConnectionHostAdapter.connected &&
-			!voiceEngineV2AppConnectionHostAdapter.connecting;
-		const suppressSelfJoinSound = this.pendingUserMove !== null;
-		if (
-			!voiceEngineV2AppConnectionHostAdapter.connected ||
-			voiceEngineV2AppConnectionHostAdapter.connecting ||
-			voiceEngineV2AppConnectionHostAdapter.reconnecting
-		) {
-			voiceEngineV2AppConnectionHostAdapter.markConnected();
-		}
-		this.transitionFacadeState({type: 'connection.connected', guildId, channelId});
-		if (alreadyReady) return;
-		this.nativeVoiceConnectionLifecycle.setReadyConnectionId(connectionId);
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		startVoiceMediaGraphTimerScheduler();
-		this.startNativeVoiceStatsSession();
-		void voiceEngineV2AppDebugLoggingHostAdapter.start({
-			guildId,
-			channelId,
-			connectionId,
-			room: null,
-			collectSnapshot: () => this.createVoiceDiagnosticsSnapshot(),
-		});
-		this.audioPreferencesSyncDisposer?.();
-		this.audioPreferencesSyncDisposer = this.bindNativeAudioPreferencesSync();
-		this.videoCodecDecodeCapResyncDisposer?.();
-		this.videoCodecDecodeCapResyncDisposer = this.bindVideoDecodeCapResync();
-		this.videoCodecPublishOverrideSyncDisposer?.();
-		this.videoCodecPublishOverrideSyncDisposer = this.bindVideoCodecPublishOverrideSync();
-		VoiceEngineV2AppPermissionAdapter.syncWithNativePermissionState(
-			guildId,
-			channelId,
-			this.createNativePermissionEnforcement(),
-		);
-		this.seedNativeParticipantsFromChannelVoiceStates(guildId, channelId);
-		this.navigateToVoiceChannel(guildId, channelId);
-		logger.info('Native voice engine connection ready', {guildId, channelId, connectionId, source});
-		if (!hasPlayedNativeVoiceReadySounds(this.nativeVoiceReadySoundConnectionIds, connectionId)) {
-			rememberNativeVoiceReadySounds(this.nativeVoiceReadySoundConnectionIds, connectionId);
-			if (!suppressSelfJoinSound) {
-				playSelfJoinChimeOnce(connectionId, 'native-ready');
-			}
-			void voiceEngineV2AppMediaExecutionAdapter.playEntranceSound();
-		}
-		void ScreenShareCodecNegotiation.publishLocalCapabilitiesNative('connected');
-		this.restoreNativeLocalMediaStateInBackground('native voice engine connected');
-		voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
-		this.reconcileLocalAudioStateInBackground('native voice engine connected');
-	}
-
-	private getNativeVoiceConnectRetryKey(guildId: string | null, channelId: string, connectionId: string): string {
-		return `${guildId ?? 'dm'}:${channelId}:${connectionId}`;
-	}
-
-	private async retryNativeVoiceEngineConnectAfterTimeout(
-		error: unknown,
-		raw: VoiceServerUpdateData,
-		guildId: string | null,
-		channelId: string,
-		connectionId: string | null,
-		attempt: VoiceEngineV2AppNativeVoiceConnectAttempt,
-	): Promise<boolean> {
-		if (!(error instanceof TimeoutError) || !connectionId) return false;
-		if (!this.isVoiceConnectionCurrentForNativeAttempt(attempt)) {
-			logger.debug('Skipping native voice engine connect timeout from stale attempt', {
-				guildId,
-				channelId,
-				connectionId,
-				attemptId: attempt.id,
-				activeAttemptId: this.nativeVoiceConnectionLifecycle.activeAttemptId,
-				currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-				currentChannelId: voiceEngineV2AppConnectionHostAdapter.channelId,
-			});
-			return true;
-		}
-		const voiceState = voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(connectionId);
-		if (
-			!shouldRetryNativeVoiceConnectTimeout({
-				connectionId,
-				guildId,
-				channelId,
-				voiceState,
-				connectionState: voiceEngineV2AppConnectionHostAdapter.connectionState,
-			})
-		) {
-			logger.warn('Native voice engine connect timeout not retried because voice connection is inactive', {
-				guildId,
-				channelId,
-				connectionId,
-				hasGatewayVoiceState: voiceState != null,
-				currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-				currentChannelId: voiceEngineV2AppConnectionHostAdapter.channelId,
-				connecting: voiceEngineV2AppConnectionHostAdapter.connecting,
-				connected: voiceEngineV2AppConnectionHostAdapter.connected,
-				reconnecting: voiceEngineV2AppConnectionHostAdapter.reconnecting,
-				error,
-			});
-			return false;
-		}
-		const retryKey = this.getNativeVoiceConnectRetryKey(guildId, channelId, connectionId);
-		const retryAttempt = (this.nativeVoiceConnectRetryCounts.get(retryKey) ?? 0) + 1;
-		if (retryAttempt > NATIVE_VOICE_ENGINE_CONNECT_MAX_LOCAL_RETRIES) {
-			logger.warn('Native voice engine connect timeout retry budget exhausted', {
-				guildId,
-				channelId,
-				connectionId,
-				retryAttempt: retryAttempt - 1,
-				maxRetries: NATIVE_VOICE_ENGINE_CONNECT_MAX_LOCAL_RETRIES,
-				error,
-			});
-			return false;
-		}
-		this.nativeVoiceConnectRetryCounts.set(retryKey, retryAttempt);
-		const retryDelayMs = getNativeVoiceEngineConnectRetryDelayMs(retryAttempt);
-		logger.warn('Native voice engine connect timed out; retrying local connect', {
-			guildId,
-			channelId,
-			connectionId,
-			retryAttempt,
-			maxRetries: NATIVE_VOICE_ENGINE_CONNECT_MAX_LOCAL_RETRIES,
-			retryDelayMs,
-			timeoutMs: NATIVE_VOICE_ENGINE_CONNECT_TIMEOUT_MS,
-			error,
-		});
-		this.clearNativeVoiceTransportReconnect();
-		this.disposeNativeVoiceEngineBindings(false);
-		try {
-			await requireNativeVoiceEngine().disconnect();
-		} catch (disconnectError) {
-			logger.warn('Native voice engine disconnect before connect retry failed; retrying anyway', {
-				guildId,
-				channelId,
-				connectionId,
-				retryAttempt,
-				disconnectError,
-			});
-		}
-		if (voiceEngineV2AppConnectionHostAdapter.connectionId !== connectionId) {
-			logger.debug('Skipping native voice engine connect retry after connection changed', {
-				guildId,
-				channelId,
-				connectionId,
-				currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-			});
-			return true;
-		}
-		this.clearNativeVoiceConnectRetryTimeout();
-		this.nativeVoiceConnectRetryTimeoutId = window.setTimeout(() => {
-			this.nativeVoiceConnectRetryTimeoutId = null;
-			if (voiceEngineV2AppConnectionHostAdapter.connectionId !== connectionId) {
-				logger.debug('Skipping stale native voice engine connect retry', {
-					guildId,
-					channelId,
-					connectionId,
-					currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-				});
-				return;
-			}
-			this.connectViaNativeEngine(raw, {forceReconnect: true, reason: 'connect-timeout-retry'});
-		}, retryDelayMs);
-		return true;
-	}
-
-	private async handleNativeVoiceEngineConnectFailure(
-		error: unknown,
-		guildId: string | null,
-		channelId: string,
-		connectionId: string | null,
-		raw: VoiceServerUpdateData,
-		attempt: VoiceEngineV2AppNativeVoiceConnectAttempt,
-	): Promise<void> {
-		if (!this.nativeVoiceConnectionLifecycle.isActiveAttempt(attempt)) {
-			logger.warn('Ignoring native voice engine connect failure from replaced attempt', {
-				guildId,
-				channelId,
-				connectionId,
-				attemptId: attempt.id,
-				activeAttemptId: this.nativeVoiceConnectionLifecycle.activeAttemptId,
-				error,
-			});
-			return;
-		}
-		if (
-			connectionId &&
-			this.nativeVoiceConnectionLifecycle.readyConnectionId === connectionId &&
-			voiceEngineV2AppConnectionHostAdapter.connected &&
-			!voiceEngineV2AppConnectionHostAdapter.connecting
-		) {
-			logger.warn('Ignoring native voice engine connect failure after connection was already finalized', {
-				guildId,
-				channelId,
-				connectionId,
-				error,
-			});
-			return;
-		}
-		if (connectionId && voiceEngineV2AppConnectionHostAdapter.connectionId !== connectionId) {
-			logger.warn('Ignoring stale native voice engine connect failure', {
-				guildId,
-				channelId,
-				connectionId,
-				currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-				error,
-			});
-			return;
-		}
-		if (await this.retryNativeVoiceEngineConnectAfterTimeout(error, raw, guildId, channelId, connectionId, attempt)) {
-			return;
-		}
-		logger.error('Native voice engine connect failed', {guildId, channelId, connectionId, error});
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
-		this.clearPendingNativeLocalMediaReconnect();
-		this.disposeNativeVoiceEngineBindings();
-		this.stopTracking();
-		this.statsHostAdapter.reset();
-		this.voiceEngineV2Participants.clear();
-		if (connectionId) {
-			this.discardVoiceConnection(connectionId, {clearLocalState: true});
-			sendVoiceStateDisconnect(guildId, connectionId);
-		}
-		try {
-			await requireNativeVoiceEngine().disconnect();
-		} catch (disconnectError) {
-			logger.warn('Native voice engine disconnect after connect failure failed', {disconnectError});
-		}
-		voiceEngineV2AppConnectionHostAdapter.markDisconnected('error');
-	}
-
-	private scheduleNativeVoiceTransportReconnect(
-		raw: VoiceServerUpdateData,
-		connectionId: string,
-		attempt: VoiceEngineV2AppNativeVoiceConnectAttempt,
-	): void {
-		this.clearNativeVoiceTransportReconnect();
-		this.nativeVoiceTransportReconnectTimeoutId = window.setTimeout(() => {
-			this.nativeVoiceTransportReconnectTimeoutId = null;
-			if (
-				!this.nativeVoiceConnectionLifecycle.isActiveAttempt(attempt) ||
-				voiceEngineV2AppConnectionHostAdapter.connectionId !== connectionId ||
-				!voiceEngineV2AppConnectionHostAdapter.reconnecting ||
-				!this.isGatewayVoiceStateActiveForConnection(
-					connectionId,
-					raw.guild_id ?? null,
-					raw.channel_id ?? voiceEngineV2AppConnectionHostAdapter.channelId ?? '',
-				)
-			) {
-				logger.debug('Skipping stale native voice engine transport reconnect', {
-					connectionId,
-					attemptId: attempt.id,
-					activeAttemptId: this.nativeVoiceConnectionLifecycle.activeAttemptId,
-					currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-					reconnecting: voiceEngineV2AppConnectionHostAdapter.reconnecting,
-				});
-				return;
-			}
-			this.connectViaNativeEngine(raw, {forceReconnect: true, reason: 'transport-reconnect'});
-		}, NATIVE_VOICE_ENGINE_TRANSPORT_RECONNECT_DELAY_MS);
-	}
-
-	private handleNativeVoiceEngineDisconnected(
-		guildId: string | null,
-		channelId: string,
-		attempt: VoiceEngineV2AppNativeVoiceConnectAttempt,
-	): void {
-		if (!this.nativeVoiceConnectionLifecycle.isActiveAttempt(attempt)) {
-			logger.debug('Ignoring native voice engine disconnect from replaced attempt', {
-				guildId,
-				channelId,
-				attemptId: attempt.id,
-				activeAttemptId: this.nativeVoiceConnectionLifecycle.activeAttemptId,
-			});
-			return;
-		}
-		const connectionId = voiceEngineV2AppConnectionHostAdapter.connectionId;
-		const lastServerUpdate = this.lastNativeVoiceServerUpdate;
-		if (
-			connectionId &&
-			lastServerUpdate?.connection_id === connectionId &&
-			this.isGatewayVoiceStateActiveForConnection(connectionId, guildId, channelId)
-		) {
-			logger.warn('Native voice engine transport disconnected while gateway voice state is still active', {
-				guildId,
-				channelId,
-				connectionId,
-			});
-			this.prepareNativeLocalMediaReconnect('native voice engine transport disconnected');
-			AdaptiveScreenShareEngine.stop();
-			voiceEngineV2AppConnectionHostAdapter.markReconnecting();
-			this.scheduleNativeVoiceTransportReconnect(lastServerUpdate, connectionId, attempt);
-			return;
-		}
-		void this.disconnectFromVoiceChannel('server');
-	}
-
-	private connectViaNativeEngine(raw: VoiceServerUpdateData, options: ConnectViaNativeEngineOptions = {}): void {
-		const reason = options.reason ?? 'server-update';
-		const guildId = raw.guild_id ?? null;
-		const channelId = raw.channel_id ?? null;
-		const endpoint = raw.endpoint ?? null;
-		const token = raw.token ?? null;
-		const connectionId = raw.connection_id ?? null;
-		if (!endpoint || !token || !channelId) {
-			logger.warn('Native voice engine: ignoring VOICE_SERVER_UPDATE missing endpoint/token/channel', {
-				hasEndpoint: !!endpoint,
-				hasToken: !!token,
-				hasChannel: !!channelId,
-			});
-			return;
-		}
-		if (this.voiceEngineV2Participants.isConnectionDiscarded(connectionId)) {
-			logger.warn('Native voice engine: ignoring VOICE_SERVER_UPDATE for discarded connection', {
-				guildId,
-				channelId,
-				connectionId,
-			});
-			return;
-		}
-		if (
-			!options.forceReconnect &&
-			this.isDuplicateNativeVoiceServerUpdate({guildId, channelId, connectionId, endpoint, token})
-		) {
-			logger.debug('Native voice engine: ignoring duplicate VOICE_SERVER_UPDATE for active connection', {
-				guildId,
-				channelId,
-				connectionId,
-				endpoint,
-				connecting: voiceEngineV2AppConnectionHostAdapter.connecting,
-				connected: voiceEngineV2AppConnectionHostAdapter.connected,
-				reconnecting: voiceEngineV2AppConnectionHostAdapter.reconnecting,
-				activeAttemptId: this.nativeVoiceConnectionLifecycle.activeAttemptId,
-			});
-			return;
-		}
-		this.seedLocalVoiceStateFromServerUpdate(raw);
-		if (!voiceEngineV2AppConnectionHostAdapter.acceptNativeVoiceServerUpdate(raw)) {
-			return;
-		}
-		this.lastNativeVoiceServerUpdate = raw;
-		this.clearNativeVoiceTransportReconnect();
-		const attempt = this.nativeVoiceConnectionLifecycle.createAttempt({
-			guildId,
-			channelId,
-			connectionId,
-			endpoint,
-			reason,
-		});
-		try {
-			const currentVoiceState = raw.connection_id
-				? voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(raw.connection_id)
-				: null;
-			if (currentVoiceState) {
-				this.seedNativeParticipantFromVoiceState(guildId, currentVoiceState);
-			}
-			const engine = requireNativeVoiceEngine();
-			VoiceEngineV2AppSubscriptionAdapter.cleanup();
-			VoiceEngineV2AppSubscriptionAdapter.setNativeEngine(engine);
-			this.nativeVoiceEngineV2BridgeEventDisposer?.();
-			this.nativeVoiceEngineV2BridgeEventDisposer = engine.onEvent((event) => {
-				this.handleNativeVoiceEngineV2BridgeEvent(event, guildId, channelId, connectionId, attempt);
-			});
-			this.bindNativeVoiceDataProtocols(engine);
-			this.startNativeVideoTileFrameSubscription('native-connect');
-			this.nativeVoiceDeviceSyncDisposer?.();
-			this.nativeVoiceDeviceSyncDisposer = bindNativeVoiceDeviceSync({
-				engine,
-				getParticipants: () => this.voiceEngineV2Participants.participants,
-				subscribeParticipants: (listener) => this.voiceEngineV2ProjectionStore.subscribe(listener),
-			});
-			logger.info('Native voice engine connect issuing', {
-				guildId,
-				channelId,
-				connectionId,
-				attemptId: attempt.id,
-				reason,
-				hasE2EE: !!raw.e2ee_key,
-				timeoutMs: NATIVE_VOICE_ENGINE_CONNECT_TIMEOUT_MS,
-			});
-			void (async (): Promise<void> => {
-				const readiness = await awaitNativeVoiceEngineReadiness();
-				if (!readiness.ready) {
-					logger.warn('Native voice engine readiness was not confirmed before connect; dialing anyway', {
-						guildId,
-						channelId,
-						connectionId,
-						attemptId: attempt.id,
-						readinessReason: readiness.reason ?? null,
-					});
-				}
-				const audioDeviceModuleStatus = await nativeAudioDeviceModuleState.ensureStatus();
-				this.dispatchNativeAudioDeviceModuleStatus(audioDeviceModuleStatus);
-				await withTimeout(
-					engine.connect({url: endpoint, token, e2eeKey: encodeVoiceEngineE2EEKey(raw.e2ee_key)}),
-					NATIVE_VOICE_ENGINE_CONNECT_TIMEOUT_MS,
-					`Native voice engine connect timed out after ${NATIVE_VOICE_ENGINE_CONNECT_TIMEOUT_MS}ms`,
-				);
-			})()
-				.then(() => {
-					this.finalizeNativeVoiceConnection(guildId, channelId, connectionId, 'connect-promise', attempt);
-				})
-				.catch((error) => {
-					void this.handleNativeVoiceEngineConnectFailure(error, guildId, channelId, connectionId, raw, attempt);
-				});
-		} catch (error) {
-			void this.handleNativeVoiceEngineConnectFailure(error, guildId, channelId, connectionId, raw, attempt);
-		}
-	}
-
-	private applyNativeLocalTrackState(
-		source: VoiceTrackSource,
-		enabled: boolean,
-		eventName: string,
-		trackSid?: string,
-		participant?: NativeVoiceEngineLocalTrackParticipant,
-		publication?: NativeVoiceEngineLocalTrackPublication,
-	): void {
-		const suppressed = this.shouldSuppressNativeLocalTrackState(source, enabled);
-		if (source === VoiceTrackSource.Camera) {
-			this.recordNativeVideoDiagnostic('local_track_state.received', {
-				source,
-				enabled,
-				eventName,
-				trackSid: trackSid ?? null,
-				participantSid: participant?.participantSid ?? null,
-				participantIdentity: participant?.participantIdentity ?? null,
-				publicationTrackSid: publication?.trackSid ?? null,
-				suppressed,
-			});
-		}
-		if (suppressed) {
-			if (source === VoiceTrackSource.Camera) {
-				this.recordNativeVideoDiagnostic('local_track_state.suppressed', {
-					source,
-					enabled,
-					eventName,
-					trackSid: trackSid ?? null,
-				});
-			}
-			logger.debug('Suppressing native local track state during reconnect restore', {
-				source,
-				enabled,
-				eventName,
-			});
-			return;
-		}
-		if (source === VoiceTrackSource.ScreenShare) {
-			voiceEngineV2AppScreenShareExecutionAdapter.syncNativeEngineScreenSharePublishedTrackSidInternal(
-				enabled,
-				trackSid,
-				publication,
-			);
-			voiceEngineV2AppMediaStateAdapter.applyScreenShareState(enabled, {sendUpdate: false});
-		} else if (source === VoiceTrackSource.Camera) {
-			const cameraTrackSid = trackSid ?? publication?.trackSid;
-			if (enabled) {
-				this.registerNativeCameraLocalPreviewTrack(cameraTrackSid, participant);
-			} else {
-				this.clearNativeCameraLocalPreview(cameraTrackSid);
-			}
-			voiceEngineV2AppMediaStateAdapter.applyCameraState(enabled, {sendUpdate: false});
-			this.syncVideoBackgroundFramePumpInBackground('native-camera-track-state');
-		} else if (source === VoiceTrackSource.ScreenShareAudio) {
-			applyVoiceEngineV2NativeScreenShareAudioState(enabled);
-		} else {
-			logger.debug(`Native engine ${eventName}`, {source});
-		}
-	}
-
-	private readNativeCameraActualEnabled(): boolean {
-		try {
-			const enabled = requireNativeVoiceEngine().isPublishingCamera();
-			assert.equal(typeof enabled, 'boolean', 'native camera publication state must be a boolean');
-			return enabled;
-		} catch (error) {
-			logger.warn('Failed to read native camera publication state; falling back to local voice state', {error});
-			return LocalVoiceState.getSelfVideo();
-		}
-	}
-
-	private get nativeVoiceEngineV2BridgeEventManagers(): NativeVoiceEngineV2BridgeEventManagers {
-		return {
-			participants: {
-				upsertParticipantFromNative: (fields) => this.voiceEngineV2Participants.upsertParticipantFromNative(fields),
-				patchParticipantTrackFlags: (identity, flags) =>
-					this.voiceEngineV2Participants.patchParticipantTrackFlags(identity, flags),
-				setConnectionQualityForNative: (sid, quality) =>
-					this.voiceEngineV2Participants.setConnectionQualityForNative(sid, quality),
-				updateActiveSpeakersBySid: (sids) => this.voiceEngineV2Participants.updateActiveSpeakersBySid(sids),
-				applyNativeSpeakingSample: (sample, nowMs) =>
-					this.voiceEngineV2Participants.applyNativeSpeakingSample(sample, nowMs),
-				sweepNativeSpeakingHeartbeats: (nowMs) => this.voiceEngineV2Participants.sweepNativeSpeakingHeartbeats(nowMs),
-				removeParticipant: (identity) => this.voiceEngineV2Participants.removeParticipant(identity),
-				removeParticipantBySid: (sid) => this.voiceEngineV2Participants.removeParticipantBySid(sid),
-			},
-			inboundVideo: {
-				registerTrack: (participantSid, trackSid, source, participantIdentity) => {
-					voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic('track.register_requested', {
-						participantSid,
-						participantIdentity,
-						trackSid,
-						source,
-						reason: 'native-track-subscribed',
-					});
-					NativeVideoTileManager.registerTrack(participantSid, trackSid, source, participantIdentity);
-					const registered = NativeVideoTileManager.tracks[trackSid] ?? null;
-					voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic(
-						registered ? 'track.registered' : 'track.register_refused',
-						{
-							participantSid,
-							participantIdentity,
-							trackSid,
-							source,
-							reason: 'native-track-subscribed',
-							registeredWidth: registered?.width ?? null,
-							registeredHeight: registered?.height ?? null,
-						},
-					);
-				},
-				unregisterTrack: (trackSid) => {
-					voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic('track.unregister_requested', {
-						trackSid,
-						reason: 'native-track-unsubscribed',
-					});
-					this.nativeVoiceFrameStatsBatcher.removeTrack(trackSid);
-					NativeVideoTileManager.unregisterTrack(trackSid);
-				},
-				unregisterParticipant: (participantSid) => {
-					voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic('participant.unregister_requested', {
-						participantSid,
-					});
-					for (const track of NativeVideoTileManager.getTracksForParticipant(participantSid)) {
-						this.nativeVoiceFrameStatsBatcher.removeTrack(track.trackSid);
-					}
-					NativeVideoTileManager.unregisterParticipant(participantSid);
-				},
-			},
-			localMedia: {
-				onLocalTrackPublished: (source, trackSid, participant, publication) =>
-					this.applyNativeLocalTrackState(source, true, 'localTrackPublished', trackSid, participant, publication),
-				onLocalTrackUnpublished: (source, trackSid, participant, publication) =>
-					this.applyNativeLocalTrackState(source, false, 'localTrackUnpublished', trackSid, participant, publication),
-				onLocalTrackRepublished: (source, trackSid, participant, publication) =>
-					this.applyNativeLocalTrackState(source, true, 'localTrackRepublished', trackSid, participant, publication),
-			},
-			e2ee: {
-				setState: (sid, raw) => NativeVoiceE2EEStore.setState(sid, raw),
-				remove: (sid) => NativeVoiceE2EEStore.remove(sid),
-			},
-			stats: {
-				setStats: (stats, timestampMs = Date.now()) =>
-					NativeVoiceStatsStore.setStats(stats, timestampMs, {mergeSparseTrackStats: true}),
-			},
-		};
-	}
-
-	private getNativeRemoteParticipantIdentities(): Array<string> {
-		const identities: Array<string> = [];
-		const participants = this.voiceEngineV2Participants.participants;
-		for (const participantIdentity in participants) {
-			const participant = participants[participantIdentity];
-			if (!participant || participant.isLocal) continue;
-			identities.push(participant.identity);
-		}
-		return identities;
-	}
-
-	private bindNativeVoiceDataProtocols(engine: VoiceEngine): void {
-		this.nativeVoiceDataProtocolDisposer?.();
-		const codecDisposer = ScreenShareCodecNegotiation.bindNative(
-			{
-				publishData: (params) => engine.publishData(params),
-				getRemoteParticipantIdentities: () => this.getNativeRemoteParticipantIdentities(),
-			},
-			{
-				onSelectedCodecChanged: (selection) => {
-					void voiceEngineV2AppScreenShareExecutionAdapter
-						.renegotiateActiveScreenShareCodec(null, selection.codec, selection.reason)
-						.catch((error) => {
-							logger.warn('Failed to apply negotiated native screen share codec', {
-								error,
-								codec: selection.codec,
-								reason: selection.reason,
-							});
-						});
-				},
-			},
-		);
-		this.nativeVoiceDataProtocolDisposer = () => {
-			codecDisposer();
-			ScreenShareCodecNegotiation.dispose();
-			ScreenSharePublicationMigration.dispose();
-		};
-	}
-
-	private stopNativeVoiceStatsSession(clearStats: boolean = true): void {
-		this.nativeVoiceStatsSession.stop(clearStats);
-	}
-
-	private startNativeVoiceStatsSession(): void {
-		this.nativeVoiceStatsSession.start();
-	}
-
-	private ingestNativeVoiceStats(stats: VoiceEngineV2Stats, timestampMs: number): void {
-		ingestNativeVoiceEngineV2BridgeStats(stats, this.nativeVoiceEngineV2BridgeEventManagers, timestampMs);
-	}
-
-	private recordNativeVideoDiagnostic(type: string, data?: Record<string, unknown>): void {
-		voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic(type, data);
-	}
-
-	private recordNativeVideoFrame(frame: VoiceEngineV2BridgeVideoFrame): void {
-		voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoFrame(frame);
-		this.nativeVoiceFrameStatsBatcher.recordFrame(frame);
-	}
-
-	private startNativeVideoTileFrameSubscription(reason: string): boolean {
-		assert.ok(reason.length > 0, 'native video frame subscription reason must be non-empty');
-		if (NativeVideoTileManager.isFrameSubscriptionActive) {
-			voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic('frame_subscription.already_active', {
-				reason,
-			});
-			return true;
-		}
-		const bridge = window.electron?.voiceEngine;
-		if (!bridge) {
-			voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic('frame_subscription.bridge_missing', {
-				reason,
-			});
-			logger.warn('Cannot subscribe to native video frames; bridge unavailable', {reason});
-			return false;
-		}
-		NativeVideoTileManager.start(bridge, {
-			onFrame: (frame) => this.recordNativeVideoFrame(frame),
-		});
-		voiceEngineV2AppDebugLoggingHostAdapter.recordNativeVideoDiagnostic('frame_subscription.started', {reason});
-		return true;
-	}
-
-	private seedNativeParticipantsFromChannelVoiceStates(guildId: string | null, channelId: string): void {
-		if (!isNativeVoiceEngineSelected()) return;
-		const channelVoiceStates = voiceEngineV2AppVoiceStateAdapter.getAllVoiceStatesInChannel(guildId ?? ME, channelId);
-		for (const connectionId in channelVoiceStates) {
-			const voiceState = channelVoiceStates[connectionId];
-			if (!voiceState) continue;
-			this.seedNativeParticipantFromVoiceState(guildId, {
-				...voiceState,
-				viewer_stream_keys: [...voiceState.viewer_stream_keys],
-			});
-		}
-	}
-
-	private seedNativeParticipantFromVoiceState(guildId: string | null, voiceState: VoiceState): void {
-		if (!isNativeVoiceEngineSelected()) return;
-		if (!voiceState.connection_id) return;
-		if (this.voiceEngineV2Participants.isConnectionDiscarded(voiceState.connection_id)) return;
-		const identity = buildVoiceParticipantIdentity(voiceState.user_id, voiceState.connection_id);
-		const rawIncomingGuildId = guildId ?? voiceState.guild_id ?? null;
-		const incomingGuildId = rawIncomingGuildId === ME ? null : rawIncomingGuildId;
-		const isCurrentVoiceContext =
-			voiceState.channel_id === voiceEngineV2AppConnectionHostAdapter.channelId &&
-			incomingGuildId === (voiceEngineV2AppConnectionHostAdapter.guildId ?? null);
-		if (!voiceState.channel_id || !isCurrentVoiceContext) {
-			if (this.voiceEngineV2Participants.getParticipant(identity)) {
-				this.voiceEngineV2Participants.removeParticipant(identity);
-			}
-			return;
-		}
-		const isLocal =
-			voiceState.user_id === Users.getCurrentUser()?.id &&
-			voiceState.connection_id === voiceEngineV2AppConnectionHostAdapter.connectionId;
-		this.voiceEngineV2Participants.upsertParticipantFromNative({
-			identity,
-			sid: this.voiceEngineV2Participants.getParticipant(identity)?.sid ?? '',
-			isLocal,
-			isMicrophoneEnabled: !voiceState.self_mute && !voiceState.mute,
-			isCameraEnabled: voiceState.self_video,
-			isScreenShareEnabled: voiceState.self_stream,
-		});
-	}
-
-	private bytesFromNativeDataPayload(payload: Record<string, unknown>): Uint8Array | null {
-		const bytes = payload.payloadBytes;
-		if (!Array.isArray(bytes)) return null;
-		const output = new Uint8Array(bytes.length);
-		for (let i = 0; i < bytes.length; i++) {
-			const value = bytes[i];
-			if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 255) return null;
-			output[i] = value;
-		}
-		return output;
-	}
-
-	private getNativeVoiceEventConnectionId(event: VoiceEngineV2BridgeEvent): string | null {
-		const payload = event.payload as Record<string, unknown>;
-		const identity =
-			typeof payload.identity === 'string'
-				? payload.identity
-				: typeof payload.participantIdentity === 'string'
-					? payload.participantIdentity
-					: null;
-		return identity ? this.voiceEngineV2Participants.extractConnectionId(identity) : null;
-	}
-
-	private shouldIgnoreNativeVoiceEventForDiscardedConnection(event: VoiceEngineV2BridgeEvent): boolean {
-		const connectionId = this.getNativeVoiceEventConnectionId(event);
-		if (!this.voiceEngineV2Participants.isConnectionDiscarded(connectionId)) return false;
-		logger.debug('Ignoring native voice engine event for discarded connection', {type: event.type, connectionId});
-		return true;
-	}
-
-	private handleNativeDataReceivedEvent(event: VoiceEngineV2BridgeEvent): boolean {
-		if (event.type !== 'dataReceived') return false;
-		const payload = event.payload as Record<string, unknown>;
-		const participantIdentity = typeof payload.identity === 'string' ? payload.identity : null;
-		const topic = typeof payload.topic === 'string' ? payload.topic : null;
-		const bytes = this.bytesFromNativeDataPayload(payload);
-		if (!participantIdentity || !topic || !bytes) return true;
-		if (topic === SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC) {
-			ScreenShareCodecNegotiation.handleNativeDataMessage(participantIdentity, bytes);
-		} else if (topic === SCREEN_SHARE_PUBLICATION_MIGRATION_TOPIC) {
-			ScreenSharePublicationMigration.handleNativeDataMessage(participantIdentity, bytes);
-		} else if (topic === VOICE_ENGINE_V2_CODEC_GOSSIP_TOPIC) {
-			ingestVoiceEngineV2CodecGossip(this.voiceEngineV2Controller, participantIdentity, bytes);
-		}
-		return true;
-	}
-
-	private handleNativeParticipantProtocolEvent(event: VoiceEngineV2BridgeEvent): void {
-		const payload = event.payload as Record<string, unknown>;
-		const identity = typeof payload.identity === 'string' ? payload.identity : null;
-		if (event.type === 'participantJoined') {
-			ScreenShareCodecNegotiation.handleNativeParticipantConnected();
-		} else if (event.type === 'participantLeft' && identity) {
-			ScreenShareCodecNegotiation.handleNativeParticipantDisconnected(identity);
-		}
-	}
-
-	private handleNativeRemoteTrackPublicationEvent(event: VoiceEngineV2BridgeEvent): void {
-		if (event.type !== 'trackPublished') return;
-		const payload = event.payload as Record<string, unknown>;
-		const identity = typeof payload.identity === 'string' ? payload.identity : null;
-		if (!identity) return;
-		const source = asVoiceTrackSource(payload.source);
-		if (source === VoiceTrackSource.Camera) {
-			VoiceEngineV2AppSubscriptionAdapter.reattachVideoAfterPublish(identity);
-		} else if (source === VoiceTrackSource.ScreenShare || source === VoiceTrackSource.ScreenShareAudio) {
-			VoiceEngineV2AppSubscriptionAdapter.reattachScreenShareAfterPublish(identity);
-		}
-	}
-
-	private reattachNativeRemoteTrackSubscriptionsFromConnectedRoster(payload: Record<string, unknown>): void {
-		for (const track of collectNativeVoiceEngineConnectedRosterPublishedTracks(payload)) {
-			if (track.source === VoiceTrackSource.Camera) {
-				VoiceEngineV2AppSubscriptionAdapter.reattachVideoAfterPublish(track.identity);
-			} else if (track.source === VoiceTrackSource.ScreenShare || track.source === VoiceTrackSource.ScreenShareAudio) {
-				VoiceEngineV2AppSubscriptionAdapter.reattachScreenShareAfterPublish(track.identity);
-			}
-		}
-	}
-
-	private handleNativeVoiceEngineV2BridgeEvent(
-		event: VoiceEngineV2BridgeEvent,
-		guildId: string | null,
-		channelId: string,
-		connectionId: string | null,
-		attempt: VoiceEngineV2AppNativeVoiceConnectAttempt,
-	): void {
-		if (!this.nativeVoiceConnectionLifecycle.isActiveAttempt(attempt)) {
-			logger.debug('Ignoring native voice engine event from replaced attempt', {
-				type: event.type,
-				connectionId,
-				attemptId: attempt.id,
-				activeAttemptId: this.nativeVoiceConnectionLifecycle.activeAttemptId,
-			});
-			return;
-		}
-		voiceEngineV2AppDebugLoggingHostAdapter.recordNativeEngineEvent(event);
-		if (isFacadeOwnedConnectionEvent(event.type)) {
-			if (connectionId && voiceEngineV2AppConnectionHostAdapter.connectionId !== connectionId) {
-				logger.debug('Ignoring stale native voice engine connection event', {
-					type: event.type,
-					connectionId,
-					currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-				});
-				return;
-			}
-			const action = getNativeVoiceEngineConnectionEventAction(event);
-			switch (action) {
-				case 'connected':
-					applyNativeVoiceEngineConnectedRoster(
-						event.payload as Record<string, unknown>,
-						this.nativeVoiceEngineV2BridgeEventManagers,
-					);
-					this.reattachNativeRemoteTrackSubscriptionsFromConnectedRoster(event.payload as Record<string, unknown>);
-					this.finalizeNativeVoiceConnection(guildId, channelId, connectionId, 'native-event', attempt);
-					break;
-				case 'disconnected':
-					this.handleNativeVoiceEngineDisconnected(guildId, channelId, attempt);
-					break;
-				case 'reconnecting':
-					this.prepareNativeLocalMediaReconnect('native voice engine reconnecting');
-					AdaptiveScreenShareEngine.stop();
-					this.statsHostAdapter.stopLatencyTracking();
-					this.statsHostAdapter.stopStatsTracking();
-					voiceEngineV2AppConnectionHostAdapter.markReconnecting();
-					break;
-				case 'reconnected':
-					this.clearNativeVoiceTransportReconnect();
-					this.clearNativeVoiceConnectRetry();
-					this.nativeVoiceConnectionLifecycle.setReadyConnectionId(connectionId);
-					voiceEngineV2AppConnectionHostAdapter.markReconnected();
-					this.statsHostAdapter.incrementReconnectionCount();
-					this.statsHostAdapter.startLatencyTracking();
-					this.statsHostAdapter.startStatsTracking();
-					void ScreenShareCodecNegotiation.publishLocalCapabilitiesNative('reconnected');
-					this.restoreNativeLocalMediaStateInBackground('native voice engine reconnected');
-					voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
-					this.reconcileLocalAudioStateInBackground('native voice engine reconnected');
-					break;
-				default:
-					logger.debug('Native voice engine connection event ignored', {
-						type: event.type,
-						state: (event.payload as Record<string, unknown>).state,
-					});
-					break;
-			}
-			return;
-		}
-		if (this.shouldIgnoreNativeVoiceEventForDiscardedConnection(event)) return;
-		if (this.handleNativeDataReceivedEvent(event)) return;
-		this.dispatchNativeVoiceEngineV2BridgeEvent(event);
-		mapNativeVoiceEngineV2BridgeEvent(event, this.nativeVoiceEngineV2BridgeEventManagers);
-		this.handleNativeParticipantProtocolEvent(event);
-		this.handleNativeRemoteTrackPublicationEvent(event);
-	}
-
-	private dispatchNativeVoiceEngineV2BridgeEvent(event: VoiceEngineV2BridgeEvent): void {
-		const translatedEvents = translateVoiceEngineV2BridgeEventToEvents(event);
-		const eventCount = translatedEvents.length;
-		for (let eventIndex = 0; eventIndex < eventCount; eventIndex += 1) {
-			const translatedEvent = translatedEvents[eventIndex];
-			if (!translatedEvent) continue;
-			this.voiceEngineV2Host.dispatch(translatedEvent);
-		}
-	}
-
-	private dispatchNativeAudioDeviceModuleStatus(status: NativeAudioDeviceModuleStatus): void {
-		assert.equal(typeof status, 'string', 'native audio device module status must be a string');
-		this.voiceEngineV2Host.dispatch({
-			type: 'nativeAudioDeviceModule.statusChanged',
-			status,
-		});
-	}
-
 	handleVoiceServerUpdate(raw: VoiceServerUpdateData): void {
 		if (raw.connection_id && raw.connection_id === this.pendingServerDisconnectConnectionId) {
 			this.cancelPendingServerDisconnect();
-		}
-		if (isNativeVoiceEngineSelected()) {
-			this.connectViaNativeEngine(raw);
-			return;
-		}
-		if (isNativeVoiceEngineSelectionPending()) {
-			void this.handleVoiceServerUpdateAfterNativeProbe(raw);
-			return;
-		}
-		this.handleVoiceServerUpdateViaJs(raw);
-	}
-
-	private async handleVoiceServerUpdateAfterNativeProbe(raw: VoiceServerUpdateData): Promise<void> {
-		try {
-			if (await shouldUseNativeVoiceEngine()) {
-				this.connectViaNativeEngine(raw);
-				return;
-			}
-		} catch (error) {
-			logger.warn('Native voice engine probe failed while handling VOICE_SERVER_UPDATE', {error});
-			voiceEngineV2AppConnectionHostAdapter.resetConnectionState();
-			return;
 		}
 		this.handleVoiceServerUpdateViaJs(raw);
 	}
@@ -3409,7 +1867,6 @@ class MediaEngineFacade extends Store {
 				guild_id: voiceState.guild_id ?? guildId,
 			};
 			voiceEngineV2AppVoiceStateAdapter.handleGatewayVoiceStateUpdate(guildId, stateWithGuild);
-			this.seedNativeParticipantFromVoiceState(guildId, stateWithGuild);
 		}
 	}
 
@@ -3485,7 +1942,6 @@ class MediaEngineFacade extends Store {
 					}
 				: voiceState;
 		voiceEngineV2AppVoiceStateAdapter.handleGatewayVoiceStateUpdate(guildId, projectedVoiceState);
-		this.seedNativeParticipantFromVoiceState(guildId, projectedVoiceState);
 		if (!isLocalConnection && voiceEngineV2AppConnectionHostAdapter.connected && voiceState.channel_id) {
 			if (!areOrderedStringArraysEqual(previousViewerStreamKeys, incomingViewerStreamKeys)) {
 				this.playSpectatorSounds(previousViewerStreamKeys, incomingViewerStreamKeys);
@@ -3787,11 +2243,6 @@ class MediaEngineFacade extends Store {
 			channelId,
 		);
 		const serverDeaf = serverVoiceState?.deaf ?? false;
-		if (await shouldUseNativeVoiceEngine()) {
-			await this.reconcileNativeEngineMicState({channelId, serverMute, serverDeaf});
-			this.syncLocalVoiceStateWithServer();
-			return;
-		}
 		await voiceEngineV2AppMediaExecutionAdapter.reconcileEffectiveAudioState(
 			voiceEngineV2AppConnectionHostAdapter.room,
 			{
@@ -3801,38 +2252,6 @@ class MediaEngineFacade extends Store {
 			},
 		);
 		this.syncLocalVoiceStateWithServer();
-	}
-
-	private createNativePermissionEnforcement(): VoiceEngineV2AppNativePermissionEnforcement {
-		return {
-			revokeMicrophone: () => this.reconcileLocalAudioState('speak permission revoked'),
-			revokeCamera: () => this.setCameraEnabled(false, {sendUpdate: true}),
-			revokeScreenShare: () => this.setScreenShareEnabled(false, {sendUpdate: true, playSound: false}),
-		};
-	}
-
-	private async reconcileNativeEngineMicState(params: {
-		channelId: string;
-		serverMute: boolean;
-		serverDeaf: boolean;
-	}): Promise<void> {
-		const permissionMuted = isVoiceSpeakPermissionDenied(
-			voiceEngineV2AppConnectionHostAdapter.guildId,
-			params.channelId,
-		);
-		const audioState = getEffectiveAudioState({
-			serverMute: params.serverMute || permissionMuted,
-			serverDeaf: params.serverDeaf,
-		});
-		const pttActive = this.isPushToTalkActive();
-		const ptmActive = this.isPushToMuteActive();
-		const effectiveMute =
-			audioState.effectiveDeaf ||
-			audioState.serverMute ||
-			audioState.selfMute ||
-			(pttActive && !Keybind.pushToTalkHeld) ||
-			(ptmActive && Keybind.pushToMuteHeld);
-		await this.setMicEnabledViaEngine(!effectiveMute);
 	}
 
 	getParticipantByUserIdAndConnectionId(
@@ -3891,571 +2310,14 @@ class MediaEngineFacade extends Store {
 	async refreshMicrophonePublishSettingsForChannel(channelId: string): Promise<void> {
 		assert.ok(channelId.length > 0, 'microphone publish settings refresh requires a channelId');
 		if (channelId !== voiceEngineV2AppConnectionHostAdapter.channelId) return;
-		if (await shouldUseNativeVoiceEngine()) {
-			await this.refreshNativeMicrophonePublishSettingsForChannel(channelId);
-			return;
-		}
 		await voiceEngineV2AppMediaExecutionAdapter.refreshMicrophonePublishSettings(
 			voiceEngineV2AppConnectionHostAdapter.room,
 			channelId,
 		);
 	}
 
-	private async refreshNativeMicrophonePublishSettingsForChannel(channelId: string): Promise<void> {
-		assert.ok(channelId.length > 0, 'native microphone publish settings refresh requires a channelId');
-		assert.equal(
-			channelId,
-			voiceEngineV2AppConnectionHostAdapter.channelId,
-			'native microphone publish settings refresh requires the active voice channel',
-		);
-		const microphone = this.voiceEngineV2Snapshot.microphone;
-		if (microphone.status !== 'published') {
-			logger.debug('Skipping native microphone bitrate refresh because the microphone is not published', {
-				channelId,
-				status: microphone.status,
-			});
-			return;
-		}
-		const publishedOptions = microphone.published as VoiceEngineV2NativeMicrophonePublishOptions | null;
-		const publishedMaxBitrateBps = publishedOptions?.maxBitrateBps;
-		const nextMaxBitrateBps = resolveVoiceEngineV2NativeMicrophoneMaxBitrateBps(
-			Channels.getChannel(channelId)?.bitrate ?? null,
-		);
-		if (nextMaxBitrateBps === publishedMaxBitrateBps) {
-			logger.debug('Skipping native microphone bitrate refresh because the effective bitrate is unchanged', {
-				channelId,
-				maxBitrateBps: publishedMaxBitrateBps ?? null,
-			});
-			return;
-		}
-		logger.info('Refreshing native microphone publish settings for channel bitrate change', {
-			channelId,
-			previousMaxBitrateBps: publishedMaxBitrateBps ?? null,
-			nextMaxBitrateBps: nextMaxBitrateBps ?? null,
-		});
-		await this.refreshNativeMicrophoneFromSettings();
-	}
-
-	private async getNativeCameraPublishParams(options?: {deviceId?: string}): Promise<{
-		deviceId?: string;
-		width: number;
-		height: number;
-		frameRate: number;
-		mirror?: boolean;
-		backgroundMode?: 'none' | 'blur' | 'custom';
-		backgroundCustomMediaPath?: string;
-		backgroundCustomMediaKind?: 'static' | 'animated' | 'video';
-		backgroundBlurStrength: number;
-	}> {
-		const preset = getCameraCaptureDimensions(VoiceSettings.getCameraResolution());
-		const deviceId = options?.deviceId ?? VoiceSettings.getVideoDeviceId();
-		const nativeDeviceId = await resolveNativeCameraDeviceId(deviceId);
-		const backgroundImageId = areVoiceBackgroundsAvailable()
-			? VoiceSettings.getBackgroundImageId()
-			: NONE_BACKGROUND_ID;
-		const backgroundMode =
-			backgroundImageId === BLUR_BACKGROUND_ID ? 'blur' : backgroundImageId === NONE_BACKGROUND_ID ? 'none' : 'custom';
-		const customMedia =
-			backgroundMode === 'custom' ? await BackgroundImageDB.getNativeBackgroundMediaSource(backgroundImageId) : null;
-		if (backgroundMode === 'custom' && !customMedia) {
-			throw new Error(`Selected native camera background media is missing: ${backgroundImageId}`);
-		}
-		return {
-			...preset,
-			mirror: VoiceSettings.getMirrorCamera(),
-			backgroundMode: customMedia || backgroundMode !== 'custom' ? backgroundMode : 'none',
-			...(customMedia
-				? {
-						backgroundCustomMediaPath: customMedia.path,
-						backgroundCustomMediaKind: customMedia.mediaKind,
-					}
-				: {}),
-			...(nativeDeviceId ? {deviceId: nativeDeviceId} : {}),
-			backgroundBlurStrength: VoiceSettings.getBackgroundBlurStrength(),
-		};
-	}
-
-	private async getNativeDeviceScreenShareCaptureOptions(
-		options?: DeviceScreenShareCaptureOptions,
-	): Promise<DeviceScreenShareCaptureOptions> {
-		const nativeVideoDeviceId = await resolveNativeCameraDeviceId(options?.videoDeviceId);
-		const {videoDeviceId: _videoDeviceId, ...rest} = options ?? {};
-		return {
-			...rest,
-			...(options?.videoDeviceId ? {previewVideoDeviceId: options.videoDeviceId} : {}),
-			...(nativeVideoDeviceId ? {videoDeviceId: nativeVideoDeviceId} : {}),
-		};
-	}
-
-	private clearNativeCameraLocalPreviewTrack(trackSid: string): void {
-		assert.ok(trackSid.length > 0, 'native camera preview trackSid must be non-empty before clearing');
-		this.recordNativeVideoDiagnostic('camera_preview.local_cleared', {
-			trackSid,
-		});
-		this.nativeVoiceFrameStatsBatcher.removeTrack(trackSid);
-		NativeVideoTileManager.unregisterTrack(trackSid);
-	}
-
-	private clearNativeCameraLocalPreview(trackSidHint?: string): void {
-		const trackSid = this.nativeCameraPreviewTrackSid;
-		assert.ok(trackSid === null || trackSid.length > 0, 'native camera preview trackSid must be null or non-empty');
-		this.nativeCameraPreviewTrackSid = null;
-		if (trackSid) {
-			this.clearNativeCameraLocalPreviewTrack(trackSid);
-		}
-		if (trackSidHint && trackSidHint !== trackSid && trackSidHint !== this.nativeCameraPreviewSessionTrackSid) {
-			this.clearNativeCameraLocalPreviewTrack(trackSidHint);
-		}
-		assert.equal(this.nativeCameraPreviewTrackSid, null, 'native camera preview must be cleared');
-	}
-
-	private shouldAcceptNativeCameraPreviewParticipant(identity: string | undefined): boolean {
-		if (!identity) return true;
-		const connectionId = this.voiceEngineV2Participants.extractConnectionId(identity);
-		if (this.voiceEngineV2Participants.isConnectionDiscarded(connectionId)) return false;
-		const currentConnectionId = voiceEngineV2AppConnectionHostAdapter.connectionId;
-		if (!connectionId || !currentConnectionId) return true;
-		return connectionId === currentConnectionId;
-	}
-
-	private resolveNativeCameraPreviewParticipant(
-		participant?: NativeVoiceEngineLocalTrackParticipant,
-	): NativeCameraPreviewParticipant | null {
-		if (!this.shouldAcceptNativeCameraPreviewParticipant(participant?.participantIdentity)) {
-			logger.debug('Ignoring native camera preview participant from stale connection', {
-				participantIdentity: participant?.participantIdentity,
-				currentConnectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-			});
-			return null;
-		}
-		if (participant?.participantSid) {
-			return {
-				...(participant.participantIdentity ? {identity: participant.participantIdentity} : {}),
-				sid: participant.participantSid,
-			};
-		}
-		if (participant?.participantIdentity) {
-			return {
-				identity: participant.participantIdentity,
-				sid: participant.participantIdentity,
-			};
-		}
-		const localParticipant = this.voiceEngineV2Participants.getLocalParticipant();
-		if (localParticipant?.identity) {
-			return {
-				identity: localParticipant.identity,
-				sid: localParticipant.sid || localParticipant.identity,
-			};
-		}
-		const currentUserId = Users.getCurrentUser()?.id;
-		const connectionId = voiceEngineV2AppConnectionHostAdapter.connectionId;
-		if (!currentUserId || !connectionId) return null;
-		const identity = buildVoiceParticipantIdentity(currentUserId, connectionId);
-		return {
-			identity,
-			sid: identity,
-		};
-	}
-
-	private recordNativeCameraPreviewLocalRegisterRequest(
-		trackSid: string | undefined,
-		participant?: NativeVoiceEngineLocalTrackParticipant,
-	): void {
-		this.recordNativeVideoDiagnostic('camera_preview.local_register_requested', {
-			trackSid: trackSid ?? null,
-			participantSid: participant?.participantSid ?? null,
-			participantIdentity: participant?.participantIdentity ?? null,
-		});
-	}
-
-	private recordNativeCameraPreviewLocalRegisterRefused(
-		reason: string,
-		trackSid: string | null,
-		details: Record<string, unknown> = {},
-	): void {
-		this.recordNativeVideoDiagnostic('camera_preview.local_register_refused', {
-			trackSid,
-			reason,
-			...details,
-		});
-	}
-
-	private isNativeCameraPreviewLocalTrackCurrent(
-		trackSid: string,
-		localParticipant: NativeCameraPreviewParticipant,
-		registered: NativeInboundVideoTrack | undefined,
-	): registered is NativeInboundVideoTrack {
-		return (
-			this.nativeCameraPreviewTrackSid === trackSid &&
-			registered != null &&
-			registered.participantSid === localParticipant.sid &&
-			registered.participantIdentity === localParticipant.identity
-		);
-	}
-
-	private isNativeCameraPreviewTrackOwner(
-		registered: NativeInboundVideoTrack,
-		localParticipant: NativeCameraPreviewParticipant,
-	): boolean {
-		return (
-			registered.participantSid === localParticipant.sid && registered.participantIdentity === localParticipant.identity
-		);
-	}
-
-	private registerNativeCameraPreviewTrackWithTileManager(
-		trackSid: string,
-		localParticipant: NativeCameraPreviewParticipant,
-	): NativeInboundVideoTrack | null {
-		this.clearNativeCameraLocalPreview();
-		NativeVideoTileManager.registerTrack(
-			localParticipant.sid,
-			trackSid,
-			VoiceTrackSource.Camera,
-			localParticipant.identity,
-		);
-		return NativeVideoTileManager.tracks[trackSid] ?? null;
-	}
-
-	private recordNativeCameraPreviewLocalRegistered(
-		trackSid: string,
-		localParticipant: NativeCameraPreviewParticipant,
-		registered: NativeInboundVideoTrack,
-	): void {
-		this.recordNativeVideoDiagnostic('camera_preview.local_registered', {
-			trackSid,
-			participantSid: localParticipant.sid,
-			participantIdentity: localParticipant.identity,
-			width: registered.width,
-			height: registered.height,
-		});
-	}
-
-	private registerNativeCameraLocalPreviewTrack(
-		trackSid: string | undefined,
-		participant?: NativeVoiceEngineLocalTrackParticipant,
-	): void {
-		this.recordNativeCameraPreviewLocalRegisterRequest(trackSid, participant);
-		if (!trackSid) {
-			this.recordNativeCameraPreviewLocalRegisterRefused('missing-track-sid', null);
-			logger.warn('Cannot attach native camera preview without native track SID');
-			return;
-		}
-		assert.ok(trackSid.length > 0, 'native camera preview trackSid must be non-empty');
-		const localParticipant = this.resolveNativeCameraPreviewParticipant(participant);
-		if (!localParticipant) {
-			this.recordNativeCameraPreviewLocalRegisterRefused('missing-local-participant', trackSid);
-			logger.warn('Cannot attach native camera preview without local participant');
-			return;
-		}
-		assert.ok(localParticipant.sid.length > 0, 'native camera preview participant sid must be non-empty');
-		const registered = NativeVideoTileManager.tracks[trackSid];
-		if (this.isNativeCameraPreviewLocalTrackCurrent(trackSid, localParticipant, registered)) {
-			this.recordNativeVideoDiagnostic('camera_preview.local_already_registered', {
-				trackSid,
-				participantSid: localParticipant.sid,
-				participantIdentity: localParticipant.identity,
-				width: registered.width,
-				height: registered.height,
-			});
-			return;
-		}
-		const confirmed = this.registerNativeCameraPreviewTrackWithTileManager(trackSid, localParticipant);
-		if (confirmed == null) {
-			this.recordNativeCameraPreviewLocalRegisterRefused('tile-manager-refused', trackSid, {
-				participantSid: localParticipant.sid,
-				participantIdentity: localParticipant.identity,
-			});
-			logger.warn('Native camera preview registration was refused', {trackSid});
-			return;
-		}
-		if (!this.isNativeCameraPreviewTrackOwner(confirmed, localParticipant)) {
-			this.recordNativeCameraPreviewLocalRegisterRefused('owner-conflict', trackSid, {
-				participantSid: localParticipant.sid,
-				participantIdentity: localParticipant.identity,
-				registeredParticipantSid: confirmed.participantSid,
-				registeredParticipantIdentity: confirmed.participantIdentity,
-			});
-			logger.warn('Native camera preview registration conflicted with an existing track owner', {
-				trackSid,
-				registeredParticipantSid: confirmed.participantSid,
-				registeredParticipantIdentity: confirmed.participantIdentity,
-				expectedParticipantSid: localParticipant.sid,
-				expectedParticipantIdentity: localParticipant.identity,
-			});
-			return;
-		}
-		this.nativeCameraPreviewTrackSid = trackSid;
-		this.recordNativeCameraPreviewLocalRegistered(trackSid, localParticipant, confirmed);
-		assert.equal(this.nativeCameraPreviewTrackSid, trackSid, 'native camera preview must record the registered track');
-	}
-
-	private async publishNativeCameraFromSettings(options?: {deviceId?: string}): Promise<void> {
-		await requireNativeVoiceEngine().publishCamera(await this.getNativeCameraPublishParams(options));
-	}
-
 	async updateActiveCameraCapture(options?: {deviceId?: string}): Promise<void> {
-		if (!(await shouldUseNativeVoiceEngine()) || !this.readNativeCameraActualEnabled()) {
-			await this.setCameraEnabled(true, options);
-			return;
-		}
-		try {
-			await requireNativeVoiceEngine().updateCameraCapture(await this.getNativeCameraPublishParams(options));
-		} catch (error) {
-			logger.warn('Native camera device hot update failed; falling back to camera republish', {error});
-			await this.setCameraEnabled(true, options);
-		}
-		this.syncVideoBackgroundFramePumpInBackground('camera-capture-update');
-	}
-
-	private getVideoBackgroundFramePump(): VideoBackgroundFramePump | null {
-		if (this.videoBackgroundFramePump) return this.videoBackgroundFramePump;
-		const bridge = window.electron?.voiceEngine;
-		if (!bridge) return null;
-		this.videoBackgroundFramePump = new VideoBackgroundFramePump({
-			bridge,
-			getCaptureDimensions: () => getCameraCaptureDimensions(VoiceSettings.getCameraResolution()),
-		});
-		return this.videoBackgroundFramePump;
-	}
-
-	private getSelectedVideoBackgroundId(): string | null {
-		if (!areVoiceBackgroundsAvailable()) return null;
-		const backgroundImageId = VoiceSettings.getBackgroundImageId();
-		if (backgroundImageId === NONE_BACKGROUND_ID || backgroundImageId === BLUR_BACKGROUND_ID) return null;
-		const image = VoiceSettings.getBackgroundImages().find((entry) => entry.id === backgroundImageId);
-		return image?.mediaKind === 'video' ? backgroundImageId : null;
-	}
-
-	private shouldRunVideoBackgroundFramePump(): boolean {
-		if (!isNativeVoiceEngineSelected()) return false;
-		const cameraActive = this.readNativeCameraActualEnabled() || this.nativeCameraPreviewSessionTrackSid !== null;
-		if (!cameraActive) return false;
-		return this.getSelectedVideoBackgroundId() !== null;
-	}
-
-	private async syncVideoBackgroundFramePump(reason: string): Promise<void> {
-		const pump = this.getVideoBackgroundFramePump();
-		if (!pump) return;
-		const backgroundId = this.shouldRunVideoBackgroundFramePump() ? this.getSelectedVideoBackgroundId() : null;
-		if (backgroundId) {
-			const started = await pump.start(backgroundId);
-			if (!started) {
-				logger.warn('Video background frame pump could not start', {reason, backgroundId});
-			}
-			return;
-		}
-		if (pump.isRunning()) {
-			await pump.stop();
-		}
-	}
-
-	private syncVideoBackgroundFramePumpInBackground(reason: string): void {
-		void this.syncVideoBackgroundFramePump(reason).catch((error) => {
-			logger.warn('Failed to sync video background frame pump', {reason, error});
-		});
-	}
-
-	isNativeCameraPreviewSessionAvailable(): boolean {
-		if (!isNativeVoiceEngineSelected()) return false;
-		const capabilities = getNativeVoiceEngineCapabilitiesSnapshot();
-		if (capabilities == null) return true;
-		return capabilities.cameraCapture === true;
-	}
-
-	private async resolveNativeCameraPreviewCapability(): Promise<boolean> {
-		if (!isNativeVoiceEngineSelected()) return false;
-		const cached = getNativeVoiceEngineCapabilitiesSnapshot();
-		if (cached != null) return cached.cameraCapture === true;
-		try {
-			const live = await refreshNativeVoiceEngineCapabilitiesSnapshot();
-			return live?.cameraCapture === true;
-		} catch (error) {
-			logger.warn('Failed to query native voice engine capabilities for camera preview', {error});
-			return false;
-		}
-	}
-
-	private ensureNativeVideoTileFrameSubscription(): void {
-		this.startNativeVideoTileFrameSubscription('camera-preview');
-	}
-
-	private registerNativeCameraPreviewSessionTrack(trackSid: string): boolean {
-		assert.ok(trackSid.length > 0, 'native camera preview session trackSid must be non-empty');
-		this.recordNativeVideoDiagnostic('camera_preview.session_register_requested', {trackSid});
-		const previousTrackSid = this.nativeCameraPreviewSessionTrackSid;
-		if (previousTrackSid && previousTrackSid !== trackSid) {
-			this.recordNativeVideoDiagnostic('camera_preview.session_previous_cleared', {
-				trackSid: previousTrackSid,
-				nextTrackSid: trackSid,
-			});
-			this.nativeVoiceFrameStatsBatcher.removeTrack(previousTrackSid);
-			NativeVideoTileManager.unregisterTrack(previousTrackSid);
-		}
-		NativeVideoTileManager.registerTrack(trackSid, trackSid, VoiceTrackSource.Camera);
-		const registered = NativeVideoTileManager.tracks[trackSid];
-		if (!registered) {
-			this.recordNativeVideoDiagnostic('camera_preview.session_register_refused', {
-				trackSid,
-				reason: 'tile-manager-refused',
-			});
-			logger.warn('Native camera preview session registration was refused', {trackSid});
-			return false;
-		}
-		if (registered.participantSid !== trackSid || registered.source !== VoiceTrackSource.Camera) {
-			this.recordNativeVideoDiagnostic('camera_preview.session_register_refused', {
-				trackSid,
-				reason: 'owner-conflict',
-				registeredParticipantSid: registered.participantSid,
-				registeredSource: registered.source,
-			});
-			logger.warn('Native camera preview session registration resolved to a conflicting track', {
-				trackSid,
-				registeredParticipantSid: registered.participantSid,
-				registeredSource: registered.source,
-			});
-			return false;
-		}
-		this.nativeCameraPreviewSessionTrackSid = trackSid;
-		assert.equal(
-			this.nativeCameraPreviewSessionTrackSid,
-			trackSid,
-			'native camera preview session must record the registered track',
-		);
-		this.recordNativeVideoDiagnostic('camera_preview.session_registered', {
-			trackSid,
-			width: registered.width,
-			height: registered.height,
-		});
-		return true;
-	}
-
-	private async startNativeCameraPreviewSessionNow(
-		options: {deviceId?: string} | undefined,
-		generation: number,
-	): Promise<string | null> {
-		assert.ok(
-			this.nativeCameraPreviewStartGate.isCurrent(generation),
-			'native camera preview start must begin on the current generation',
-		);
-		if (!(await this.resolveNativeCameraPreviewCapability())) {
-			return null;
-		}
-		const engine = requireNativeVoiceEngine();
-		const params = await this.getNativeCameraPublishParams(options);
-		if (!this.nativeCameraPreviewStartGate.isCurrent(generation)) {
-			return null;
-		}
-		const info = await engine.startCameraPreview(params);
-		assert.ok(info.trackSid.length > 0, 'native camera preview session trackSid must be non-empty');
-		if (!this.nativeCameraPreviewStartGate.isCurrent(generation)) {
-			await engine.stopCameraPreview().catch((error) => {
-				logger.warn('Failed to stop superseded native camera preview session', {error});
-			});
-			return null;
-		}
-		this.ensureNativeVideoTileFrameSubscription();
-		if (!this.registerNativeCameraPreviewSessionTrack(info.trackSid)) {
-			await engine.stopCameraPreview().catch((error) => {
-				logger.warn('Failed to stop unregistered native camera preview session', {error});
-			});
-			return null;
-		}
-		this.syncVideoBackgroundFramePumpInBackground('camera-preview-session-start');
-		return info.trackSid;
-	}
-
-	async startNativeCameraPreviewSession(options?: {deviceId?: string}): Promise<string | null> {
-		const generation = this.nativeCameraPreviewStartGate.nextGeneration();
-		return this.nativeCameraPreviewStartGate.runLatest(generation, () =>
-			this.startNativeCameraPreviewSessionNow(options, generation),
-		);
-	}
-
-	async stopNativeCameraPreviewSession(): Promise<void> {
-		this.nativeCameraPreviewStartGate.invalidate();
-		const trackSid = this.nativeCameraPreviewSessionTrackSid;
-		this.nativeCameraPreviewSessionTrackSid = null;
-		this.syncVideoBackgroundFramePumpInBackground('camera-preview-session-stop');
-		if (trackSid) {
-			this.recordNativeVideoDiagnostic('camera_preview.session_cleared', {trackSid});
-		}
-		if (isNativeVoiceEngineSelected()) {
-			try {
-				await requireNativeVoiceEngine().stopCameraPreview();
-			} catch (error) {
-				logger.warn('Failed to stop native camera preview session', {error});
-			}
-		}
-		if (trackSid) {
-			this.nativeVoiceFrameStatsBatcher.removeTrack(trackSid);
-			NativeVideoTileManager.unregisterTrack(trackSid);
-		}
-	}
-
-	getNativeCameraPreviewSessionStream(): MediaStream | null {
-		const trackSid = this.nativeCameraPreviewSessionTrackSid;
-		if (!trackSid) return null;
-		return NativeVideoTileManager.tracks[trackSid]?.stream ?? null;
-	}
-
-	private getNativeCameraLocalPreviewTrack(
-		localParticipant?: NativeCameraPreviewParticipant | null,
-	): NativeInboundVideoTrack | null {
-		return selectNativeCameraLocalPreviewTrack({
-			currentTrackSid: this.nativeCameraPreviewTrackSid,
-			localParticipant: localParticipant ?? this.resolveNativeCameraPreviewParticipant(),
-			sessionTrackSid: this.nativeCameraPreviewSessionTrackSid,
-			tracks: NativeVideoTileManager.tracks,
-		});
-	}
-
-	getNativeCameraLocalPreviewStream(localParticipant?: NativeCameraPreviewParticipant | null): MediaStream | null {
-		return this.getNativeCameraLocalPreviewTrack(localParticipant)?.stream ?? null;
-	}
-
-	isNativeCameraPublished(): boolean {
-		if (!isNativeVoiceEngineSelected()) return false;
-		return this.readNativeCameraActualEnabled();
-	}
-
-	private async setCameraEnabledViaEngine(
-		enabled: boolean,
-		options?: {
-			deviceId?: string;
-			sendUpdate?: boolean;
-		},
-	): Promise<void> {
-		const sendUpdate = options?.sendUpdate ?? true;
-		const outcome = await runCameraTransition({
-			enabled,
-			sendUpdate,
-			publish: async () => {
-				if (enabled) {
-					await this.publishNativeCameraFromSettings(options);
-				} else {
-					this.clearNativeCameraLocalPreview();
-					await requireNativeVoiceEngine().unpublishCamera();
-				}
-			},
-			readActualEnabled: () => this.readNativeCameraActualEnabled(),
-			onPermissionDenied: () => {
-				voiceEngineV2AppMediaStateAdapter.applyCameraState(false, {sendUpdate});
-			},
-			onSuccessSettled: null,
-			onFailure: (_actual, error) => {
-				logger.warn('Native voice engine camera state update failed', {enabled, error});
-				this.clearNativeCameraLocalPreview();
-			},
-			rethrowOnFailure: true,
-		});
-		this.syncVideoBackgroundFramePumpInBackground('camera-state-transition');
-		if (outcome === 'denied') {
-			logger.warn('Native voice engine camera state update denied by permission', {enabled});
-			throw buildVoiceEngineV2AppCameraPermissionDeniedError();
-		}
-		if (outcome === 'applied') {
-			logger.info('Native voice engine camera state updated', {enabled});
-		}
+		await this.setCameraEnabled(true, options);
 	}
 
 	async setScreenShareEnabled(
@@ -4479,18 +2341,7 @@ class MediaEngineFacade extends Store {
 		options?: DeviceScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
-		if (!isNativeVoiceEngineSelected()) {
-			await voiceEngineV2AppScreenShareExecutionAdapter.startDeviceScreenShare(this.room, options, publishOptions);
-			return;
-		}
-		await voiceEngineV2AppScreenShareExecutionAdapter.startNativeDeviceScreenShare(
-			await this.getNativeDeviceScreenShareCaptureOptions(options),
-			{
-				sendUpdate: options?.sendUpdate,
-				playSound: options?.playSound,
-			},
-			publishOptions,
-		);
+		await voiceEngineV2AppScreenShareExecutionAdapter.startDeviceScreenShare(this.room, options, publishOptions);
 	}
 
 	private createScreenShareControllerGateway(): VoiceEngineV2AppScreenShareControllerGateway {
@@ -4542,53 +2393,12 @@ class MediaEngineFacade extends Store {
 		};
 	}
 
-	private getNativeMicrophonePublishOptions(
-		options: VoiceEngineV2NativeMicrophonePublishOptions = {},
-	): VoiceEngineV2NativeMicrophonePublishOptions {
-		const channelId = voiceEngineV2AppConnectionHostAdapter.channelId;
-		const channelBitrateBps = channelId ? (Channels.getChannel(channelId)?.bitrate ?? null) : null;
-		return resolveVoiceEngineV2NativeMicrophonePublishOptions(VoiceSettings, options, channelBitrateBps);
-	}
-
-	private async refreshNativeMicrophoneFromSettings(): Promise<void> {
-		await this.voiceEngineV2Host.runAndWait(
-			() => {
-				this.voiceEngineV2Controller.publishMicrophone(this.getNativeMicrophonePublishOptions());
-			},
-			{description: 'refresh microphone settings'},
-		);
-	}
-
-	async setMicEnabledViaEngine(enabled: boolean): Promise<void> {
-		assert.equal(typeof enabled, 'boolean', 'setMicEnabledViaEngine enabled must be a boolean');
-		if (enabled) {
-			await this.voiceEngineV2Host.runAndWait(
-				() => {
-					this.voiceEngineV2Controller.publishMicrophone(this.getNativeMicrophonePublishOptions());
-				},
-				{description: 'publish microphone', staleCompletion: 'resolve'},
-			);
-		}
-		await this.voiceEngineV2Host.runAndWait(
-			() => {
-				this.voiceEngineV2Controller.setMicrophoneEnabled(enabled);
-			},
-			{description: 'set microphone enabled', staleCompletion: 'resolve'},
-		);
-	}
-
 	async replaceActiveDisplayScreenShare(
 		options?: ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
-		if (!isNativeVoiceEngineSelected()) {
-			return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveDisplayScreenShare(
-				this.room,
-				options,
-				publishOptions,
-			);
-		}
-		return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveNativeDisplayScreenShareFromActiveSource(
+		return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveDisplayScreenShare(
+			this.room,
 			options,
 			publishOptions,
 		);
@@ -4598,40 +2408,8 @@ class MediaEngineFacade extends Store {
 		options?: DeviceScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
-		if (!isNativeVoiceEngineSelected()) {
-			return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveDeviceScreenShare(
-				this.room,
-				options,
-				publishOptions,
-			);
-		}
-		return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveNativeDeviceScreenShare(
-			await this.getNativeDeviceScreenShareCaptureOptions(options),
-			publishOptions,
-		);
-	}
-
-	async startNativeDisplayScreenShare(
-		nativeOptions: NativeScreenShareOptions,
-		options?: {sendUpdate?: boolean; playSound?: boolean},
-		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		await voiceEngineV2AppScreenShareExecutionAdapter.startNativeDisplayScreenShare(
+		return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveDeviceScreenShare(
 			this.room,
-			nativeOptions,
-			options,
-			publishOptions,
-		);
-	}
-
-	async replaceActiveNativeDisplayScreenShare(
-		nativeOptions: NativeScreenShareOptions,
-		options?: ScreenShareCaptureOptions,
-		publishOptions?: TrackPublishOptions,
-	): Promise<boolean> {
-		return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveNativeDisplayScreenShare(
-			this.room,
-			nativeOptions,
 			options,
 			publishOptions,
 		);
@@ -4641,49 +2419,11 @@ class MediaEngineFacade extends Store {
 		linuxRule?: NonNullable<NativeAudioStartOptions['linuxRule']>,
 		options?: {includeSelfWindowAudio?: boolean; replaceExisting?: boolean},
 	): Promise<boolean> {
-		if (isNativeVoiceEngineSelected()) {
-			return this.ensureNativeLinuxScreenShareAudioPublication(linuxRule);
-		}
 		return voiceEngineV2AppScreenShareExecutionAdapter.ensureLinuxScreenShareAudioPublication(
 			this.room,
 			linuxRule,
 			options,
 		);
-	}
-
-	private async ensureNativeLinuxScreenShareAudioPublication(
-		linuxRule?: NonNullable<NativeAudioStartOptions['linuxRule']>,
-	): Promise<boolean> {
-		assert.ok(isNativeVoiceEngineSelected(), 'native Linux screen-share audio link requires the native engine');
-		if (!linuxRule) return false;
-		const adapter = voiceEngineV2AppScreenShareExecutionAdapter;
-		const currentOptions = adapter.captureCoordinator.activeCaptureOptions;
-		if (!adapter.captureCoordinator.activeCaptureId || !currentOptions) {
-			logger.debug('Skipping native Linux screen-share audio link without an active native screen share');
-			return false;
-		}
-		if (adapter.isScreenSharePending) {
-			logger.warn('Skipping native Linux screen-share audio link while a screen-share operation is pending');
-			return false;
-		}
-		const activeRule = currentOptions.nativeAudioLinuxRule ?? null;
-		const ruleUnchanged = activeRule != null && areLinuxAudioRoutingRulesEqual(activeRule, linuxRule);
-		if (adapter.nativeEngineScreenShareAudioPump && ruleUnchanged) {
-			logger.debug('Native Linux screen-share audio link already matches the requested routing rule');
-			return true;
-		}
-		const {audioTrack: _audioTrack, ...restOptions} = currentOptions;
-		const nextOptions: NativeScreenShareOptions = {...restOptions, nativeAudioLinuxRule: linuxRule};
-		const published = await adapter.audioPump.startAudio(nextOptions);
-		if (!published) {
-			logger.warn('Native Linux screen-share audio link failed to adopt the requested routing rule');
-			return false;
-		}
-		adapter.adoptNativeEngineScreenShareOptionsInternal(nextOptions);
-		LocalVoiceState.updateSelfStreamAudio(true);
-		assert.ok(adapter.nativeEngineScreenShareAudioPump != null, 'native screen-share audio pump must be active');
-		logger.info('Native Linux screen-share audio link adopted new routing rule');
-		return true;
 	}
 
 	setScreenShareAudioMuted(muted: boolean): void {
@@ -4828,7 +2568,6 @@ class MediaEngineFacade extends Store {
 				voiceServerEndpoint: voiceEngineV2AppConnectionHostAdapter.voiceServerEndpoint,
 				regionHotSwapInProgress: voiceEngineV2AppConnectionHostAdapter.regionHotSwapInProgress,
 				reconnectAttempts: voiceEngineV2AppConnectionHostAdapter.reconnectAttempts,
-				nativeVoiceEngineSelected: isNativeVoiceEngineSelected(),
 			},
 			localVoiceState: {
 				selfMute: LocalVoiceState.getSelfMute(),
@@ -4994,39 +2733,12 @@ class MediaEngineFacade extends Store {
 		this.voiceEngineV2Controller.registerLocalStreamCodec(source, streamIdentity, codec);
 	}
 
-	private bindNativeAudioPreferencesSync(): () => void {
-		assert.ok(this.voiceEngineV2Host != null, 'native audio preferences sync requires the v2 host');
-		let previous = createVoiceEngineV2AppAudioSettingsSnapshot();
-		const sync = (): void => {
-			const current = createVoiceEngineV2AppAudioSettingsSnapshot();
-			const captureChanged = hasVoiceEngineV2MicrophoneCaptureSettingsChanged(previous, current);
-			const processorChanged = hasVoiceEngineV2InputProcessorSettingsChanged(previous, current);
-			previous = current;
-			if (!captureChanged && !processorChanged) return;
-			if (this.voiceEngineV2Snapshot.microphone.published == null) return;
-			void this.refreshNativeMicrophoneFromSettings().catch((error) => {
-				logger.warn('Failed to refresh native microphone after audio settings change', {error});
-			});
-		};
-		const disposers = [VoiceSettings.subscribe(sync), VoiceDevicePermissionState.subscribe(sync)];
-		assert.equal(disposers.length, 2, 'native audio preferences sync must subscribe to both settings stores');
-		return () => {
-			for (const dispose of disposers) {
-				dispose();
-			}
-		};
-	}
-
 	private bindAudioPreferencesSync(room: Room): () => void {
 		return bindVoiceEngineV2AppAudioPreferencesSync(
 			room,
 			{
 				refreshMicrophone: async () => this.refreshMicrophoneFromCurrentEngine(),
 				refreshLocalVoiceInputProcessor: async () => {
-					if (await shouldUseNativeVoiceEngine()) {
-						await this.refreshNativeMicrophoneFromSettings();
-						return;
-					}
 					await voiceEngineV2AppMediaExecutionAdapter.refreshLocalVoiceInputProcessor(room);
 				},
 				applyLocalInputVolume: () => voiceEngineV2AppMediaExecutionAdapter.applyLocalInputVolume(room),
@@ -5245,12 +2957,6 @@ class MediaEngineFacade extends Store {
 	async handleLogout(): Promise<void> {
 		this.terminalUnloadVoiceDisconnectSent = false;
 		this.cancelPendingServerDisconnect();
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
-		this.clearPendingNativeLocalMediaReconnect();
-		this.stopNativeVoiceStatsSession();
-		this.lastNativeVoiceServerUpdate = null;
 		this.transitionFacadeState({type: 'cleanup.logoutStarted'});
 		this.clearViewerStreamKeys();
 		this.stopTracking();
@@ -5317,13 +3023,6 @@ class MediaEngineFacade extends Store {
 	cleanup(): void {
 		this.terminalUnloadVoiceDisconnectSent = false;
 		this.cancelPendingServerDisconnect();
-		this.syncVideoBackgroundFramePumpInBackground('facade-cleanup');
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
-		this.clearPendingNativeLocalMediaReconnect();
-		this.stopNativeVoiceStatsSession();
-		this.lastNativeVoiceServerUpdate = null;
 		this.transitionFacadeState({type: 'cleanup.cleanupStarted'});
 		this.clearViewerStreamKeys();
 		this.stopTracking();
@@ -5341,12 +3040,6 @@ class MediaEngineFacade extends Store {
 	reset(): void {
 		this.terminalUnloadVoiceDisconnectSent = false;
 		this.cancelPendingServerDisconnect();
-		this.clearNativeVoiceTransportReconnect();
-		this.clearNativeVoiceConnectRetry();
-		this.clearNativeVoiceConnectSession();
-		this.clearPendingNativeLocalMediaReconnect();
-		this.stopNativeVoiceStatsSession();
-		this.lastNativeVoiceServerUpdate = null;
 		this.clearViewerStreamKeys();
 		this.statsHostAdapter.reset();
 		this.transitionFacadeState({type: 'cleanup.reset'});

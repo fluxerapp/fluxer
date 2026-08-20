@@ -3,7 +3,6 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {isNativeVoiceEngineSelected} from '@app/features/voice/engine/native_voice_engine/getVoiceEngine';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import CallState, {type Call} from '@app/features/voice/state/CallState';
 
@@ -40,9 +39,7 @@ export function useCallHeaderState(channel?: Channel | null): CallHeaderState {
 	const matchesConnectionContext = Boolean(
 		channelId && MediaEngine.channelId === channelId && (MediaEngine.guildId ?? null) === normalizedGuildId,
 	);
-	const isDeviceInRoomForChannelCall = Boolean(
-		matchesConnectionContext && (MediaEngine.room || (isNativeVoiceEngineSelected() && MediaEngine.connected)),
-	);
+	const isDeviceInRoomForChannelCall = Boolean(matchesConnectionContext && MediaEngine.room);
 	const isDeviceConnectingToChannelCall =
 		matchesConnectionContext && (MediaEngine.connecting || (MediaEngine.connected && !isDeviceInRoomForChannelCall));
 	const controlsVariant: CallHeaderControlsVariant = !callExistsAndOngoing

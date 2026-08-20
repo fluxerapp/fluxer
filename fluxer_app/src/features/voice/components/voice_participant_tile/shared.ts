@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {VoiceTrackKind, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {msg} from '@lingui/core/macro';
 import type {TrackReferenceOrPlaceholder} from '@livekit/components-react';
 import type React from 'react';
@@ -125,16 +125,6 @@ export interface VoiceParticipantTileInnerProps {
 
 export function isCameraSource(source: unknown) {
 	return source === VoiceTrackSource.Camera;
-}
-
-export function isAudioTrackWithVolume(track: unknown): track is {kind: string; setVolume: (volume: number) => void} {
-	return (
-		track != null &&
-		typeof track === 'object' &&
-		'kind' in track &&
-		(track as {kind: string}).kind === VoiceTrackKind.Audio &&
-		'setVolume' in track
-	);
 }
 
 export function getSourceDataAttr(source: unknown) {

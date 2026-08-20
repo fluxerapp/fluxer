@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import i18n from '@app/app/I18n';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -8,9 +7,6 @@ import {getElectronAPI, supportsDesktopScreenShareAudioCapture} from '@app/featu
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {isVoiceEngineV2AppNativeScreenShareAudioBridgeAvailable} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeBridge';
-import {resolveVoiceEngineV2AppSelectedMediaMode} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectedMediaMode';
-import {isNativeScreenCaptureAvailable} from '@app/features/voice/engine/voice_screen_share_manager/DisplayMediaCapture';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {clearDesktopSourceIntent, setDesktopSourceIntent} from '@app/features/voice/state/DesktopSourceIntent';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -28,11 +24,9 @@ import {
 	armNativeAudioForLinuxRouting,
 	armNativeAudioForNextCapture,
 	armNativeSystemAudioForNextCapture,
-	captureNativeAudioTrackForLinuxRouting,
 	disarmNativeAudio,
 	disarmPendingNativeAudio,
 	getLastNativeAudioArmFailure,
-	type NativeAudioFramePumpSource,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import type {ScreenShareAudioCaptureDebugInfo} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import {
@@ -52,27 +46,10 @@ import {
 	ScreenSharePortalUnavailableError,
 } from '@app/features/voice/utils/ScreenSharePortalUnavailableError';
 import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
-import type {NativeAudioStartOptions, NativeScreenCaptureSource, VirtmicNode} from '@app/types/electron.d';
-import {msg} from '@lingui/core/macro';
-import type {ScreenShareCaptureOptions, TrackPublishOptions, VideoCodec} from 'livekit-client';
+import type {NativeAudioStartOptions, VirtmicNode} from '@app/types/electron.d';
+import type {ScreenShareCaptureOptions, VideoCodec} from 'livekit-client';
 
 const logger = new Logger('ScreenShareStartFlow');
-
-async function hasVoiceEngineV2NativeScreenShareAudioBridge(): Promise<boolean> {
-	try {
-		return await isVoiceEngineV2AppNativeScreenShareAudioBridgeAvailable();
-	} catch (error) {
-		logger.warn('Failed to resolve voice engine v2 native screen-share audio bridge capability', {error});
-		return false;
-	}
-}
-
-const GAME_WINDOW_DXGI_FALLBACK_DESCRIPTOR = msg({
-	message: 'Game window (DXGI fallback)',
-	comment:
-		'Fallback display name for a window screen-share source when browser display capture fails and native DXGI capture is attempted.',
-	context: 'screen-share',
-});
 
 type LinuxNativeAudioRule = NonNullable<NativeAudioStartOptions['linuxRule']>;
 
@@ -148,11 +125,6 @@ export async function reconfigureActiveLinuxScreenShareAudioLink(): Promise<bool
 		disarmVirtmic();
 		disarmNativeAudio();
 		await virtmicApi?.stop();
-		if (resolveVoiceEngineV2AppSelectedMediaMode() === 'native') {
-			await MediaEngine.updateActiveScreenShareSettings({audio: false}).catch((error) => {
-				logger.warn('Failed to stop native-engine screen-share audio for source mode none', {error});
-			});
-		}
 		return true;
 	}
 	const nativeRule = buildLinuxNativeAudioRule(sourceMode, userIncludeSources, userExcludeSources);
@@ -275,10 +247,6 @@ function degradeAudioToVideoOnly(
 	removeAudioFromCaptureOptions(captureOptions);
 }
 
-function logRequiredNativeAudioUnavailable(debugInfo: ScreenShareAudioCaptureDebugInfo): void {
-	logger.warn('Native screen-share audio unavailable; aborting screen share because audio was requested', debugInfo);
-}
-
 function cleanupNativeAudioAfterCaptureDidNotStart(mode: 'start' | 'switch'): void {
 	if (mode === 'switch') {
 		disarmPendingNativeAudio();
@@ -383,7 +351,6 @@ async function runConfiguredDisplayScreenShare(
 			}
 			await MediaEngine.setScreenShareEnabled(false, {sendUpdate: false, playSound: false});
 		}
-		const nativeScreenShareAudioBridgeAvailable = await hasVoiceEngineV2NativeScreenShareAudioBridge();
 		let nativeAudioArmed = false;
 		const isOwnWindowShare = options?.isOwnWindow === true && sourceId?.startsWith('window:');
 		if (isOwnWindowShare && requestedAudio) {
@@ -408,13 +375,6 @@ async function runConfiguredDisplayScreenShare(
 			requestedDesktopAudio &&
 			(electronApi.platform === 'darwin' || electronApi.platform === 'win32') &&
 			sourceId?.startsWith('screen:');
-		const requestedNativeWindowAudio =
-			requestedAudio &&
-			!isOwnWindowShare &&
-			(electronApi.platform === 'darwin' || electronApi.platform === 'win32') &&
-			sourceId?.startsWith('window:') === true;
-		const nativeEngineWillCaptureAudioDirectly =
-			nativeScreenShareAudioBridgeAvailable && (requestedNativeDesktopAudio || requestedNativeWindowAudio);
 		const requestedNativePickerAudioOnLinux = requestedAudio && electronApi.platform === 'linux' && useWaylandPortal;
 		const linuxDesktopAudioSourceMode =
 			electronApi.platform === 'linux' && (requestedDesktopAudio || requestedNativePickerAudioOnLinux)
@@ -438,7 +398,7 @@ async function runConfiguredDisplayScreenShare(
 					}),
 				);
 			}
-		} else if (requestedNativeDesktopAudio && !nativeEngineWillCaptureAudioDirectly) {
+		} else if (requestedNativeDesktopAudio) {
 			try {
 				nativeAudioArmed = await armNativeSystemAudioForNextCapture();
 			} catch (error) {
@@ -490,27 +450,25 @@ async function runConfiguredDisplayScreenShare(
 			sourceId?.startsWith('window:') &&
 			(electronApi.platform === 'darwin' || electronApi.platform === 'win32')
 		) {
-			if (!nativeEngineWillCaptureAudioDirectly) {
-				try {
-					nativeAudioArmed = await armNativeAudioForNextCapture(sourceId);
-				} catch (error) {
-					logger.warn('Failed to arm native per-window audio capture', {
-						sourceId,
-						error,
-					});
-				}
-				if (!nativeAudioArmed) {
-					const debugInfo = buildAudioCaptureFailureDebug({
-						sourceId,
-						reason: getLastNativeAudioArmFailure()?.reason ?? 'native-window-audio-route-unavailable',
-					});
-					logger.warn('Per-window audio unavailable; aborting screen share because audio was requested', {
-						sourceId,
-						platform: electronApi.platform,
-						reason: debugInfo.reason,
-					});
-					degradeAudioToVideoOnly(captureOptions, debugInfo);
-				}
+			try {
+				nativeAudioArmed = await armNativeAudioForNextCapture(sourceId);
+			} catch (error) {
+				logger.warn('Failed to arm native per-window audio capture', {
+					sourceId,
+					error,
+				});
+			}
+			if (!nativeAudioArmed) {
+				const debugInfo = buildAudioCaptureFailureDebug({
+					sourceId,
+					reason: getLastNativeAudioArmFailure()?.reason ?? 'native-window-audio-route-unavailable',
+				});
+				logger.warn('Per-window audio unavailable; aborting screen share because audio was requested', {
+					sourceId,
+					platform: electronApi.platform,
+					reason: debugInfo.reason,
+				});
+				degradeAudioToVideoOnly(captureOptions, debugInfo);
 			}
 		}
 		if (
@@ -531,11 +489,7 @@ async function runConfiguredDisplayScreenShare(
 				}),
 			);
 		}
-		if (
-			requestedAudio &&
-			!nativeEngineWillCaptureAudioDirectly &&
-			(nativeAudioArmed || electronApi.platform === 'linux')
-		) {
+		if (requestedAudio && (nativeAudioArmed || electronApi.platform === 'linux')) {
 			removeAudioFromCaptureOptions(captureOptions);
 		}
 		try {
@@ -604,28 +558,6 @@ async function runConfiguredDisplayScreenShare(
 			if (!capturedAfterError) {
 				ActiveScreenShareSource.clear();
 			}
-			if (
-				!capturedAfterError &&
-				error instanceof Error &&
-				error.name === 'NotReadableError' &&
-				sourceId &&
-				electronApi.platform === 'win32' &&
-				mode !== 'switch'
-			) {
-				const fallbackResult = await attemptDxgiFallbackCapture(
-					sourceId,
-					options?.sourceDimensions,
-					captureOptions,
-					publishOptions,
-					options?.isOwnWindow === true,
-				).catch((fallbackError) => {
-					logger.warn('DXGI fallback capture also failed', {fallbackError});
-					return false;
-				});
-				if (fallbackResult) {
-					return true;
-				}
-			}
 			if (useWaylandPortal && !capturedAfterError && mode !== 'switch') {
 				logger.warn('Wayland screen share portal capture failed to start', {
 					sourceId,
@@ -648,46 +580,6 @@ async function runConfiguredDisplayScreenShare(
 		operationSucceeded = didScreenShareStart();
 	}
 	return mode === 'switch' ? operationSucceeded : didScreenShareStart();
-}
-
-async function attemptDxgiFallbackCapture(
-	sourceId: string,
-	sourceDimensions: {width: number; height: number} | undefined,
-	_captureOptions: ScreenShareCaptureOptions,
-	publishOptions: TrackPublishOptions | undefined,
-	isOwnWindow: boolean,
-): Promise<boolean> {
-	if (sourceId.startsWith('screen:')) {
-		logger.debug('Skipping DXGI fallback for monitor share; monitor capture must not route through game capture', {
-			sourceId,
-		});
-		return false;
-	}
-	const available = await isNativeScreenCaptureAvailable();
-	if (!available) {
-		logger.debug('DXGI fallback unavailable: native screen capture not supported');
-		return false;
-	}
-	const source: NativeScreenCaptureSource = {
-		kind: 'window',
-		id: sourceId,
-		name: i18n._(GAME_WINDOW_DXGI_FALLBACK_DESCRIPTOR),
-		width: sourceDimensions?.width ?? 1920,
-		height: sourceDimensions?.height ?? 1080,
-	};
-	logger.info('Attempting DXGI fallback for NotReadableError', {sourceId});
-	const nativeShareOptions = {
-		source,
-		resolution: _captureOptions.resolution ?? undefined,
-		contentHint: _captureOptions.contentHint,
-	};
-	await MediaEngine.startNativeDisplayScreenShare(nativeShareOptions, undefined, publishOptions);
-	const succeeded = didScreenShareStart();
-	if (succeeded) {
-		ActiveScreenShareSource.setSourceId(sourceId, {isOwnWindow});
-		logger.info('DXGI fallback capture succeeded', {sourceId});
-	}
-	return succeeded;
 }
 
 export async function startConfiguredDisplayScreenShare(
@@ -758,182 +650,4 @@ export async function switchConfiguredDeviceScreenShare(videoDeviceId: string): 
 		});
 		return false;
 	}
-}
-
-export interface ConfiguredNativeDisplayScreenShareOptions {
-	desktopSourceId?: string | null;
-	isOwnWindow?: boolean;
-	videoCodec?: VideoCodec;
-}
-
-async function runConfiguredNativeDisplayScreenShare(
-	source: NativeScreenCaptureSource,
-	mode: 'start' | 'switch',
-	options: ConfiguredNativeDisplayScreenShareOptions = {},
-): Promise<boolean> {
-	const electronApi = getElectronAPI();
-	const displayShareEnvironment = await getDisplayShareEnvironment();
-	const desktopSourceId = options.desktopSourceId ?? null;
-	const {
-		captureOptions,
-		publishOptions,
-		includeAudio: requestedAudio,
-	} = getConfiguredScreenShareOptions(
-		'display',
-		displayShareEnvironment,
-		source.width && source.height ? {width: source.width, height: source.height} : undefined,
-		desktopSourceId,
-		source.kind === 'window' ? 'window' : 'monitor',
-		options.videoCodec,
-	);
-	const linuxAudioSourceMode = electronApi?.platform === 'linux' ? VoiceSettings.getScreenShareAudioSourceMode() : null;
-	const requestedNativeAudio = requestedAudio && linuxAudioSourceMode !== 'none';
-	const nativeScreenShareAudioBridgeAvailable = await hasVoiceEngineV2NativeScreenShareAudioBridge();
-	disarmPendingNativeAudio();
-	let audioTrack: MediaStreamTrack | null = null;
-	let nativeAudioFramePump: NativeAudioFramePumpSource | null = null;
-	let nativeAudioLinuxRule: LinuxNativeAudioRule | null = null;
-	if (requestedNativeAudio && electronApi) {
-		if (source.kind === 'screen' || source.kind === 'game') {
-			if (electronApi.platform === 'darwin' || electronApi.platform === 'win32') {
-				nativeAudioFramePump = {kind: 'system'};
-			} else if (electronApi.platform === 'linux') {
-				const sourceMode = linuxAudioSourceMode ?? 'system';
-				const userIncludeSources = VoiceSettings.getScreenShareAudioIncludeSources().map((entry) => ({...entry}));
-				const userExcludeSources = VoiceSettings.getScreenShareAudioExcludeSources().map((entry) => ({...entry}));
-				const linuxRule = buildLinuxNativeAudioRule(sourceMode, userIncludeSources, userExcludeSources);
-				try {
-					if (nativeScreenShareAudioBridgeAvailable) {
-						nativeAudioLinuxRule = linuxRule;
-					} else {
-						audioTrack = await captureNativeAudioTrackForLinuxRouting(linuxRule);
-					}
-				} catch (error) {
-					logger.warn('Failed to capture native Linux audio track for screen share', {error});
-				}
-			}
-		} else if (source.kind === 'window') {
-			if (options.isOwnWindow) {
-				logger.warn('Fluxer-owned native window audio is excluded from screen share capture', {
-					sourceId: desktopSourceId,
-					platform: electronApi.platform,
-				});
-			} else if (
-				electronApi.platform === 'darwin' ||
-				electronApi.platform === 'win32' ||
-				electronApi.platform === 'linux'
-			) {
-				const resolvedPid =
-					desktopSourceId && electronApi.nativeAudio
-						? await electronApi.nativeAudio.resolveAudioRootPidForSource(desktopSourceId).catch((error) => {
-								logger.warn('Failed to resolve native window audio PID from desktop source', {
-									desktopSourceId,
-									platform: electronApi.platform,
-									error,
-								});
-								return null;
-							})
-						: null;
-				const targetPid =
-					typeof resolvedPid === 'number' && resolvedPid > 0
-						? resolvedPid
-						: typeof source.targetPid === 'number' && source.targetPid > 0
-							? source.targetPid
-							: null;
-				if (targetPid) {
-					nativeAudioFramePump = {kind: 'window', targetPid};
-				}
-			}
-		}
-		if (requestedNativeAudio && !audioTrack && !nativeAudioFramePump && !nativeAudioLinuxRule) {
-			logRequiredNativeAudioUnavailable({
-				platform: electronApi.platform,
-				sourceId: desktopSourceId,
-				sourceMode: linuxAudioSourceMode ?? (source.kind === 'window' ? 'specific' : 'system'),
-				sourceKind: source.kind,
-				reason: getLastNativeAudioArmFailure()?.reason ?? null,
-			});
-			ActiveScreenShareSource.clear();
-			return false;
-		}
-	}
-	removeAudioFromCaptureOptions(captureOptions);
-	const resolution = captureOptions.resolution ?? undefined;
-	const nativeShareOptions = {
-		source,
-		...(desktopSourceId ? {desktopCaptureSourceId: desktopSourceId} : {}),
-		resolution,
-		contentHint: captureOptions.contentHint,
-		...(audioTrack ? {audioTrack} : {}),
-		...(nativeAudioFramePump ? {nativeAudioFramePump} : {}),
-		...(nativeAudioLinuxRule ? {nativeAudioLinuxRule} : {}),
-	};
-	try {
-		let succeeded: boolean;
-		if (mode === 'switch') {
-			succeeded = await MediaEngine.replaceActiveNativeDisplayScreenShare(
-				nativeShareOptions,
-				captureOptions,
-				publishOptions,
-			);
-		} else {
-			await MediaEngine.startNativeDisplayScreenShare(nativeShareOptions, undefined, publishOptions);
-			succeeded = didScreenShareStart();
-		}
-		if (!succeeded && audioTrack) {
-			try {
-				audioTrack.stop();
-			} catch (stopError) {
-				logger.warn('Failed to stop native screen-share audio track after unsuccessful start', {
-					sourceKind: source.kind,
-					error: stopError,
-				});
-			}
-		}
-		if (succeeded && desktopSourceId) {
-			ActiveScreenShareSource.setSourceId(desktopSourceId, {isOwnWindow: options.isOwnWindow === true});
-		} else if (!succeeded) {
-			ActiveScreenShareSource.clear();
-		}
-		return succeeded;
-	} catch (error) {
-		if (audioTrack) {
-			try {
-				audioTrack.stop();
-			} catch (stopError) {
-				logger.warn('Failed to stop native screen-share audio track after start failure', {
-					sourceKind: source.kind,
-					error: stopError,
-				});
-			}
-		}
-		logger.error('Failed to start native display screen share', {
-			error,
-			sourceKind: source.kind,
-		});
-		ActiveScreenShareSource.clear();
-		return false;
-	}
-}
-
-export async function startConfiguredNativeDisplayScreenShare(
-	source: NativeScreenCaptureSource,
-	options?: ConfiguredNativeDisplayScreenShareOptions,
-): Promise<boolean> {
-	let didStart = false;
-	await executeScreenShareOperation(async () => {
-		didStart = await runConfiguredNativeDisplayScreenShare(source, 'start', options);
-	});
-	return didStart;
-}
-
-export async function switchConfiguredNativeDisplayScreenShare(
-	source: NativeScreenCaptureSource,
-	options?: ConfiguredNativeDisplayScreenShareOptions,
-): Promise<boolean> {
-	let didSwitch = false;
-	await executeScreenShareOperation(async () => {
-		didSwitch = await runConfiguredNativeDisplayScreenShare(source, 'switch', options);
-	});
-	return didSwitch;
 }

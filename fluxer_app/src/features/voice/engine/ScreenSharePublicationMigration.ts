@@ -643,28 +643,6 @@ class ScreenSharePublicationMigration extends Store {
 		}
 	}
 
-	handleNativeDataMessage(participantIdentity: string, payload: Uint8Array): void {
-		const message = parseScreenShareMigrationMessage(payload);
-		if (!message) return;
-		switch (message.op) {
-			case BREAK_OP:
-				this.applyBreak(participantIdentity, message.d);
-				break;
-			case CANDIDATE_OP:
-				this.applyCandidate(participantIdentity, message.d);
-				break;
-			case READY_OP:
-				this.applyReady(participantIdentity, message.d);
-				break;
-			case COMMIT_OP:
-				this.applyCommit(participantIdentity, message.d);
-				break;
-			case ABORT_OP:
-				this.applyAbort(participantIdentity, message.d);
-				break;
-		}
-	}
-
 	private applyCandidate(participantIdentity: string, message: ScreenShareMigrationCandidateMessage['d']): void {
 		this.commitRemoteMigrationState(participantIdentity, {
 			type: 'migration.candidate',

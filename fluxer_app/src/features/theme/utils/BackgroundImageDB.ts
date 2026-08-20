@@ -53,9 +53,3 @@ export async function getBackgroundImageURL(id: string): Promise<string | null> 
 	if (!media?.dataUrl) return null;
 	return dataUrlToObjectUrl(media.dataUrl);
 }
-
-export async function getNativeBackgroundMediaSource(id: string): Promise<NativeBackgroundMediaSource | null> {
-	const resolveVoiceBackgroundMedia = getElectronAPI()?.resolveVoiceBackgroundMedia;
-	if (!resolveVoiceBackgroundMedia) return null;
-	return resolveVoiceBackgroundMedia(id);
-}

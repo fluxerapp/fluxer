@@ -3,7 +3,6 @@
 import type {
 	DevicePort,
 	GatewayPort,
-	LiveKitMediaPort,
 	NativeMediaPort,
 	StatsPort,
 	SubscriptionPort,
@@ -30,10 +29,6 @@ import {
 	type VoiceEngineV2AppLiveKitMediaDelegate,
 	type VoiceEngineV2AppLiveKitScreenShareDelegate,
 } from './VoiceEngineV2AppLiveKitExecutionAdapter';
-import {
-	VoiceEngineV2AppSelectedMediaExecutionAdapter,
-	type VoiceEngineV2AppSelectedMediaMode,
-} from './VoiceEngineV2AppSelectedMediaExecutionAdapter';
 import {createVoiceEngineV2AppTimerAdapter, type VoiceEngineV2AppTimerScheduler} from './VoiceEngineV2AppTimerAdapter';
 
 export interface VoiceEngineV2AppProductionHostPortsLogger {
@@ -59,8 +54,6 @@ export interface VoiceEngineV2AppProductionHostPortsOptions {
 	clock?: VoiceEngineV2ClockPort;
 	devices?: DevicePort;
 	nativeMedia?: NativeMediaPort;
-	nativeVoiceMedia?: LiveKitMediaPort;
-	getSelectedMediaMode?: () => VoiceEngineV2AppSelectedMediaMode;
 	ingestion?: VoiceEngineV2AppIngestionPort;
 	passthrough?: VoiceEngineV2HostPorts;
 	lifecycle?: VoiceEngineV2AppLifecycleAdapter;
@@ -84,15 +77,7 @@ export function createVoiceEngineV2AppProductionHostPorts(
 		getActiveGuildId: options.getActiveGuildId,
 		getActiveChannelId: options.getActiveChannelId,
 	});
-	const media =
-		options.nativeVoiceMedia && options.getSelectedMediaMode
-			? new VoiceEngineV2AppSelectedMediaExecutionAdapter({
-					jsMedia: liveKit,
-					nativeMedia: options.nativeVoiceMedia,
-					getMode: options.getSelectedMediaMode,
-					logger: options.logger,
-				})
-			: liveKit;
+	const media = liveKit;
 	const ingestion = options.ingestion ?? createVoiceEngineV2AppIngestionPort();
 	const lifecycle =
 		options.lifecycle ??

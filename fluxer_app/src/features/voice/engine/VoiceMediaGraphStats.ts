@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {
-	asVoiceEngineV2StatsTrackSource,
-	type VoiceEngineV2InboundStats,
-	type VoiceEngineV2OutboundStats,
-	type VoiceEngineV2PerTrackStats,
-	type VoiceEngineV2Stats,
-	VoiceEngineV2StatsTrackSource,
-} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
 import {
 	type VoiceMediaGraphStatsEntry,
 	type VoiceMediaGraphStatsKind,
@@ -18,7 +11,7 @@ import {
 	voiceMediaGraphStatsObservationMatchesTarget,
 	voiceMediaGraphStatsTrackKey,
 } from './VoiceMediaGraphStatsObservations';
-import {asVoiceTrackSource, type VoiceTrackSource, VoiceTrackSource as VoiceTrackSourceValue} from './VoiceTrackSource';
+import type {VoiceTrackSource} from './VoiceTrackSource';
 
 const VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT = 1024;
 
@@ -56,62 +49,6 @@ function isPositiveFrameRate(value: number | undefined): value is number {
 function normalizeId(value: string | null | undefined): string | null {
 	const trimmed = value?.trim();
 	return trimmed ? trimmed : null;
-}
-
-function isScreenShareStatsSource(source: unknown): boolean {
-	return asVoiceEngineV2StatsTrackSource(source) === VoiceEngineV2StatsTrackSource.ScreenShare;
-}
-
-function nativeTrackMatches(
-	track: VoiceEngineV2OutboundStats | VoiceEngineV2InboundStats,
-	target: VoiceMediaGraphNativeStatsTarget,
-): boolean {
-	const targetTrackSid = normalizeId(target.nativeTrackSid);
-	if (targetTrackSid && normalizeId(track.trackSid) === targetTrackSid) return true;
-	const targetIdentity = normalizeId(target.participantIdentity);
-	if ('participantIdentity' in track && targetIdentity && normalizeId(track.participantIdentity) === targetIdentity) {
-		return true;
-	}
-	return !targetTrackSid && !targetIdentity;
-}
-
-function nativeStatsTrackToInfo(
-	track: VoiceEngineV2OutboundStats | VoiceEngineV2InboundStats,
-): VoiceMediaGraphTrackInfo | null {
-	const width = track.width ?? track.sourceWidth;
-	const height = track.height ?? track.sourceHeight;
-	if (!isPositiveDimension(width)) return null;
-	if (!isPositiveDimension(height)) return null;
-	const fps = 'effectiveFps' in track && track.effectiveFps !== undefined ? track.effectiveFps : track.fps;
-	return {width, height, fps: Math.round(fps ?? 0)};
-}
-
-function resolveVoiceMediaGraphNativeTrackInfoFromTracks(
-	tracks: ReadonlyArray<VoiceEngineV2OutboundStats | VoiceEngineV2InboundStats>,
-	target: VoiceMediaGraphNativeStatsTarget,
-): VoiceMediaGraphTrackInfo | null {
-	assert.ok(tracks.length <= VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT, 'native stats track list exceeded graph limit');
-	for (const track of tracks) {
-		if (!isScreenShareStatsSource(track.source)) continue;
-		if (!nativeTrackMatches(track, target)) continue;
-		const info = nativeStatsTrackToInfo(track);
-		if (info) return info;
-	}
-	return null;
-}
-
-export function resolveVoiceMediaGraphNativeTrackInfo(
-	stats: VoiceEngineV2Stats | null,
-	target: VoiceMediaGraphNativeStatsTarget,
-): VoiceMediaGraphTrackInfo | null {
-	if (!stats) return null;
-	if (target.nativeSource != null && asVoiceTrackSource(target.nativeSource) !== VoiceTrackSourceValue.ScreenShare) {
-		return null;
-	}
-	return (
-		resolveVoiceMediaGraphNativeTrackInfoFromTracks(stats.outbound, target) ??
-		resolveVoiceMediaGraphNativeTrackInfoFromTracks(stats.inbound, target)
-	);
 }
 
 function perTrackStatIdentifiers(track: VoiceEngineV2PerTrackStats): Array<string> {
@@ -188,76 +125,6 @@ export interface VoiceMediaGraphStatsView {
 
 function positiveOrNull(value: number | null | undefined): number | null {
 	return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
-}
-
-function statsSourceOrNull(source: unknown): string | null {
-	return typeof source === 'string' ? normalizeId(source) : null;
-}
-
-function nativeOutboundStatsToObservation(
-	track: VoiceEngineV2OutboundStats,
-	localParticipantIdentity: string | null,
-): VoiceMediaGraphStatsTrackObservation {
-	const source = statsSourceOrNull(track.source);
-	const participantIdentity =
-		isScreenShareStatsSource(track.source) && track.kind === 'video' ? normalizeId(localParticipantIdentity) : null;
-	return {
-		trackSid: normalizeId(track.trackSid),
-		trackIdentifier: null,
-		mediaSourceId: null,
-		mid: null,
-		rid: null,
-		ssrc: null,
-		participantIdentity,
-		participantSid: null,
-		source,
-		direction: 'send',
-		kind: track.kind,
-		fps: positiveOrNull(track.effectiveFps ?? track.fps),
-		width: positiveOrNull(track.width),
-		height: positiveOrNull(track.height),
-		sourceFps: null,
-		sourceWidth: positiveOrNull(track.sourceWidth),
-		sourceHeight: positiveOrNull(track.sourceHeight),
-	};
-}
-
-function nativeInboundStatsToObservation(track: VoiceEngineV2InboundStats): VoiceMediaGraphStatsTrackObservation {
-	return {
-		trackSid: normalizeId(track.trackSid),
-		trackIdentifier: null,
-		mediaSourceId: null,
-		mid: null,
-		rid: null,
-		ssrc: null,
-		participantIdentity: normalizeId(track.participantIdentity),
-		participantSid: normalizeId(track.participantSid),
-		source: statsSourceOrNull(track.source),
-		direction: 'recv',
-		kind: track.kind,
-		fps: positiveOrNull(track.fps),
-		width: positiveOrNull(track.width),
-		height: positiveOrNull(track.height),
-		sourceFps: null,
-		sourceWidth: positiveOrNull(track.sourceWidth),
-		sourceHeight: positiveOrNull(track.sourceHeight),
-	};
-}
-
-export function voiceMediaGraphStatsObservationsFromNativeStats(
-	stats: VoiceEngineV2Stats,
-	localParticipantIdentity: string | null = null,
-): Array<VoiceMediaGraphStatsTrackObservation> {
-	assert.ok(stats.outbound.length <= VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT, 'native outbound stats exceeded graph limit');
-	assert.ok(stats.inbound.length <= VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT, 'native inbound stats exceeded graph limit');
-	const observations: Array<VoiceMediaGraphStatsTrackObservation> = [];
-	for (const track of stats.outbound) {
-		observations.push(nativeOutboundStatsToObservation(track, localParticipantIdentity));
-	}
-	for (const track of stats.inbound) {
-		observations.push(nativeInboundStatsToObservation(track));
-	}
-	return observations;
 }
 
 function perTrackStatsKindOrNull(kind: VoiceEngineV2PerTrackStats['kind']): VoiceMediaGraphStatsKind | null {

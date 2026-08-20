@@ -136,13 +136,6 @@ export interface VoiceEngineV2ScreenEncodingUpdateFromMediaEngine {
 	maxBitrateBps?: number;
 }
 
-export function isVoiceEngineV2NativeProjectionActiveFromMediaEngine(): boolean {
-	const store = getMediaEngine();
-	if (!store) return false;
-	if (store.room) return false;
-	return store.connected === true || store.voiceEngineV2Model?.connection.connected === true;
-}
-
 function getVoiceEngineV2ActiveScreenCaptureId(controller: VoiceEngineV2Controller): string | null {
 	return controller.snapshot.screen.desired?.captureId ?? controller.snapshot.screen.published?.captureId ?? null;
 }

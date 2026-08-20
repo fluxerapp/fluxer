@@ -32,12 +32,9 @@ import {
 	voiceMediaGraphWatchAttemptDeadlineKey,
 	WATCH_ATTEMPT_TIMEOUT_MS,
 } from '@app/features/voice/engine/VoiceMediaGraph';
-import {
-	resolveVoiceMediaGraphNativeTrackInfo,
-	resolveVoiceMediaGraphPerTrackInfo,
-} from '@app/features/voice/engine/VoiceMediaGraphStats';
+import {resolveVoiceMediaGraphPerTrackInfo} from '@app/features/voice/engine/VoiceMediaGraphStats';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import type {VoiceEngineV2PerTrackStats, VoiceEngineV2Stats} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
 import {describe, expect, it} from 'vitest';
 
 function failure(overrides: Partial<VoiceMediaGraphFailure>): VoiceMediaGraphFailure {
@@ -48,10 +45,6 @@ function failure(overrides: Partial<VoiceMediaGraphFailure>): VoiceMediaGraphFai
 		source: 'screen_share',
 		...overrides,
 	};
-}
-
-function nativeStats(overrides: Partial<VoiceEngineV2Stats>): VoiceEngineV2Stats {
-	return {rttMs: null, outbound: [], inbound: [], ...overrides};
 }
 
 const STREAM_A = 'dm:channel-a:connection-a';
@@ -1051,30 +1044,6 @@ describe('VoiceMediaGraph stats observations', () => {
 });
 
 describe('VoiceMediaGraph stats selectors', () => {
-	it('uses inbound native screen-share dimensions for the matching participant identity', () => {
-		const info = resolveVoiceMediaGraphNativeTrackInfo(
-			nativeStats({
-				inbound: [
-					{
-						participantSid: 'PA_1',
-						participantIdentity: 'user_2_connection_2',
-						trackSid: 'TR_remote_screen',
-						source: 'screen_share',
-						kind: 'video',
-						bitrateKbps: 4200,
-						packetsLost: 0,
-						width: 3840,
-						height: 2160,
-						fps: 24.7,
-					},
-				],
-			}),
-			{nativeSource: VoiceTrackSource.ScreenShare, participantIdentity: 'user_2_connection_2'},
-		);
-
-		expect(info).toEqual({width: 3840, height: 2160, fps: 25});
-	});
-
 	it('matches web stats by media track id and can return fps-only observations', () => {
 		const tracks: Array<VoiceEngineV2PerTrackStats> = [
 			{

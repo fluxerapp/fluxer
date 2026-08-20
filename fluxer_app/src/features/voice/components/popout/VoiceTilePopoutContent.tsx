@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/voice/components/popout/VoicePopoutHost.module.css';
-import {buildNativeVoiceCallTrackRefForParticipant} from '@app/features/voice/components/useVoiceCallTracksAndLayout';
 import {VoiceParticipantTile} from '@app/features/voice/components/VoiceParticipantTile';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
-import NativeVideoTileManager from '@app/features/voice/engine/native_voice_engine/NativeVideoTileManager';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {useStoreVersion} from '@app/features/voice/engine/Store';
-import {isVoiceEngineV2NativeProjectionActiveFromMediaEngine} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import PopoutWindowManager, {type VoiceTilePopoutDescriptor} from '@app/features/voice/state/PopoutWindowManager';
 import {
@@ -80,20 +77,6 @@ const VoiceTilePopoutContentBase = observer(function VoiceTilePopoutContentBase(
 	trackRef,
 }: VoiceTilePopoutContentBaseProps) {
 	useMediaEngineVersion();
-	useStoreVersion(NativeVideoTileManager);
-	const isNativeEngine = isVoiceEngineV2NativeProjectionActiveFromMediaEngine();
-	const participantSnapshots = MediaEngine.participants;
-	const nativeTracks = NativeVideoTileManager.tracks;
-	const nativeTrackRef = useMemo(() => {
-		if (!isNativeEngine) return null;
-		return buildNativeVoiceCallTrackRefForParticipant({
-			participantIdentity: descriptor.participantIdentity,
-			source: getDescriptorTrackSource(descriptor),
-			participantSnapshots,
-			nativeTracks,
-		});
-	}, [descriptor, isNativeEngine, participantSnapshots, nativeTracks]);
-	const effectiveTrackRef = trackRef ?? nativeTrackRef;
 	const connectionParticipant = MediaEngine.getParticipantByUserIdAndConnectionId(
 		descriptor.userId,
 		descriptor.connectionId,
@@ -108,9 +91,9 @@ const VoiceTilePopoutContentBase = observer(function VoiceTilePopoutContentBase(
 	}, [isTrackLive, descriptor.key]);
 	return (
 		<div className={styles.tileContent} data-flx="voice.voice-tile-popout-content.tile-content">
-			{effectiveTrackRef && (
+			{trackRef && (
 				<VoiceParticipantTile
-					trackRef={effectiveTrackRef}
+					trackRef={trackRef}
 					guildId={descriptor.guildId ?? undefined}
 					channelId={descriptor.channelId}
 					showFocusIndicator={false}

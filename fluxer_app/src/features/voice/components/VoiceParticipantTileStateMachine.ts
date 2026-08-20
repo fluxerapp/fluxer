@@ -33,12 +33,10 @@ export interface VoiceParticipantTileCameraBufferingSignals {
 
 export interface VoiceParticipantTileCameraActiveSignals {
 	isCameraTile: boolean;
-	isNativeEngine: boolean;
 	isOwnContent: boolean;
 	isCameraPublicationActive: boolean;
 	isParticipantCameraActive: boolean;
 	isLocalCameraRequested: boolean;
-	hasNativeVideo: boolean;
 }
 
 type VoiceParticipantTileEvent = {
@@ -153,14 +151,10 @@ export function shouldShowCameraBuffering(signals: VoiceParticipantTileCameraBuf
 
 export function selectVoiceParticipantTileCameraActive(signals: VoiceParticipantTileCameraActiveSignals): boolean {
 	if (!signals.isCameraTile) return false;
-	if (signals.isNativeEngine && signals.isOwnContent) {
-		if (signals.isLocalCameraRequested) return true;
-		return signals.hasNativeVideo;
-	}
 	if (signals.isCameraPublicationActive) return true;
 	if (signals.isParticipantCameraActive) return true;
 	if (signals.isLocalCameraRequested) return true;
-	return signals.hasNativeVideo;
+	return false;
 }
 
 export const voiceParticipantTileStateMachine = setup({

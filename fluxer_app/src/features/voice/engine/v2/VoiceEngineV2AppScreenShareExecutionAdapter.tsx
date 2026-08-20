@@ -9,8 +9,6 @@ import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
-import type {NativeVoiceEngineLocalTrackPublication} from '@app/features/voice/engine/native_voice_engine/nativeVoiceEngineEventMapper';
-import {markScreenShareCaptureEnded} from '@app/features/voice/engine/ScreenShareCaptureDiagnostics';
 import type {NegotiationReason} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import {Store} from '@app/features/voice/engine/Store';
@@ -31,31 +29,19 @@ import {
 	getLocalScreenShareVideoPublications,
 	unpublishLocalMediaPublications,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
-import {isVoiceEngineV2AppNativeScreenShareBridgeAvailable} from '@app/features/voice/engine/v2/VoiceEngineV2AppNativeBridge';
-import {VoiceEngineV2AppScreenShareAudioPump} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
-import {VoiceEngineV2AppScreenShareCaptureCoordinator} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareCaptureCoordinator';
 import {VoiceEngineV2AppScreenShareCodecMigration} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareCodecMigration';
 import {
 	selectVoiceEngineV2AppScreenShareSetEnabledOptions,
 	type VoiceEngineV2AppScreenShareControllerGateway,
 	VoiceEngineV2AppScreenShareControllerRouting,
-	type VoiceEngineV2AppScreenShareSetEnabledSelection,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareControllerRouting';
 import {VoiceEngineV2AppScreenShareLiveKitFlows} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareLiveKitFlows';
-import {VoiceEngineV2AppScreenSharePreviewTracking} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenSharePreviewTracking';
-import {
-	type NativeScreenShareReconnectSnapshot,
-	VoiceEngineV2AppScreenShareReconnect,
-} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareReconnect';
 import {
 	applyVoiceEngineV2AppScreenShareState,
 	type VoiceScreenShareStateOptions,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareStateSync';
 import {VoiceEngineV2AppScreenShareTrackPlumbing} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareTrackPlumbing';
-import {routeVoiceEngineV2AppSelectedMedia} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectedMediaMode';
 import type {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
-import type {NativeScreenShareOptions} from '@app/features/voice/engine/voice_screen_share_manager/DisplayMediaCapture';
-import type {NativeEngineAudioTrackFrame} from '@app/features/voice/engine/voice_screen_share_manager/NativeEngineAudioTrackPump';
 import {
 	captureScreenSharePublicationCleanup,
 	type DeviceScreenShareCaptureOptions,
@@ -85,7 +71,6 @@ import {
 	captureNativeAudioTrackForLinuxRouting,
 	commitNativeAudioBridgeReplacement,
 	disarmNativeAudio,
-	type NativeAudioFramePump,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
 import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2';
@@ -102,7 +87,6 @@ import {
 	type VideoCodec,
 } from 'livekit-client';
 
-export type {NativeScreenShareReconnectSnapshot} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareReconnect';
 export type {DeviceScreenShareCaptureOptions} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 
 const SCREEN_SHARE_ENDED_MODAL_KEY = 'voice-screen-share-ended';
@@ -126,19 +110,6 @@ export interface ScreenShareReconnectSnapshot {
 	contentSource: ScreenShareContentSource;
 }
 
-type ScreenShareSetEnabledSelection = VoiceEngineV2AppScreenShareSetEnabledSelection;
-
-interface ScreenShareStartControls {
-	sendUpdate: boolean;
-	playSound: boolean;
-}
-
-function buildNativeScreenSharePublicationError(message: string): Error {
-	const error = new Error(message);
-	error.name = 'VoiceEngineV2AppNativeScreenSharePublicationError';
-	return error;
-}
-
 const selectScreenShareSetEnabledOptions = selectVoiceEngineV2AppScreenShareSetEnabledOptions;
 
 class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
@@ -146,20 +117,11 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	private readonly trackPlumbing: VoiceEngineV2AppScreenShareTrackPlumbing;
 	private activeScreenShareEndListener: (() => void) | null = null;
 	private endedScreenShareStopInFlight: Promise<void> | null = null;
-	nativeEngineScreenSharePreviewTrackSid: string | null = null;
-	nativeEngineScreenSharePreviewStartToken = 0;
-	nativeEngineScreenShareAudioPump: NativeAudioFramePump | null = null;
 	encoderVerificationTimer: NodeJS.Timeout | null = null;
 	screenShareMigrationGeneration = 0;
-	nativeEngineScreenShareEndDisposer: (() => void) | null = null;
-	nativeEngineScreenShareLifecycleBoundCaptureId: string | null = null;
 	sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null = null;
 
-	readonly audioPump: VoiceEngineV2AppScreenShareAudioPump;
-	readonly previewTracking: VoiceEngineV2AppScreenSharePreviewTracking;
-	readonly captureCoordinator: VoiceEngineV2AppScreenShareCaptureCoordinator;
 	readonly codecMigration: VoiceEngineV2AppScreenShareCodecMigration;
-	readonly reconnect: VoiceEngineV2AppScreenShareReconnect;
 	readonly liveKitFlows: VoiceEngineV2AppScreenShareLiveKitFlows;
 	readonly controllerRouting: VoiceEngineV2AppScreenShareControllerRouting;
 
@@ -169,11 +131,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		this.trackPlumbing = new VoiceEngineV2AppScreenShareTrackPlumbing({
 			getActiveContentSource: () => this.getActiveScreenShareContentSourceInternal(),
 		});
-		this.audioPump = new VoiceEngineV2AppScreenShareAudioPump(this);
-		this.previewTracking = new VoiceEngineV2AppScreenSharePreviewTracking(this);
-		this.captureCoordinator = new VoiceEngineV2AppScreenShareCaptureCoordinator(this);
 		this.codecMigration = new VoiceEngineV2AppScreenShareCodecMigration(this);
-		this.reconnect = new VoiceEngineV2AppScreenShareReconnect(this);
 		this.liveKitFlows = new VoiceEngineV2AppScreenShareLiveKitFlows(this);
 		this.controllerRouting = new VoiceEngineV2AppScreenShareControllerRouting(this);
 	}
@@ -194,55 +152,11 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		return this.isScreenSharePending;
 	}
 
-	syncNativeEngineScreenSharePublishedTrackSidInternal(
-		enabled: boolean,
-		trackSid: string | undefined,
-		publication?: NativeVoiceEngineLocalTrackPublication,
-	): void {
-		assert.equal(typeof enabled, 'boolean');
-		if (enabled && trackSid) {
-			this.captureCoordinator.recordPublishedTrackSid(trackSid, publication);
-		}
-		if (!enabled && (!trackSid || this.captureCoordinator.activeCapturePublishedTrackSid === trackSid)) {
-			this.captureCoordinator.activeCapturePublishedTrackSid = null;
-		}
-	}
-
-	adoptNativeEngineScreenShareOptionsInternal(nextOptions: NativeScreenShareOptions): void {
-		assert.ok(nextOptions, 'nextOptions is required');
-		assert.ok(nextOptions.source, 'nextOptions.source is required');
-		this.captureCoordinator.activeCaptureOptions = nextOptions;
-	}
-
 	setSourceLifecycleBridge(bridge: VoiceEngineV2AppSourceLifecycleBridge | null): void {
 		this.sourceLifecycleBridge = bridge;
 	}
 
-	hasActiveScreenShareResources(): boolean {
-		return Boolean(
-			this.captureCoordinator.activeCaptureId ||
-				this.captureCoordinator.deviceCaptureActive ||
-				this.nativeEngineScreenShareAudioPump ||
-				this.nativeEngineScreenSharePreviewTrackSid,
-		);
-	}
-
 	stopNativeScreenShareForTerminalUnload(): void {
-		const captureId = this.captureCoordinator.activeCaptureId;
-		this.captureCoordinator.activeCaptureId = null;
-		this.captureCoordinator.activeCapturePublishedTrackSid = null;
-		if (captureId) {
-			try {
-				void getElectronAPI()
-					?.nativeScreenCapture?.stop(captureId)
-					?.catch((error) => {
-						logger.warn('Failed to stop native screen capture during terminal unload', {captureId, error});
-					});
-			} catch (error) {
-				logger.warn('Failed to stop native screen capture during terminal unload', {captureId, error});
-			}
-			markScreenShareCaptureEnded('terminal-unload');
-		}
 		if (this.streamingPriorityHeld) {
 			this.transitionScreenShareLifecycleInternal({type: 'share.streamingPriority.set', active: false});
 			try {
@@ -344,10 +258,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		const contentSource = this.getActiveScreenShareContentSourceInternal();
 		if (contentSource === 'device') return 'device';
 		return 'display';
-	}
-
-	getNativeScreenShareSourceType(nativeOptions: NativeScreenShareOptions): VoiceScreenShareSourceType {
-		return nativeOptions.source.kind === 'window' ? 'native-app' : 'native-display';
 	}
 
 	getScreenShareSourceTypeForContentSourceInternal(
@@ -632,14 +542,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		snapshot: ScreenShareReconnectSnapshot,
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
-		return routeVoiceEngineV2AppSelectedMedia({
-			js: () => this.liveKitFlows.restoreReconnect(room, snapshot, publishOptions),
-			native: async () => {
-				throw buildNativeScreenSharePublicationError(
-					'Native voice engine selected; refusing browser screen-share reconnect publication',
-				);
-			},
-		});
+		return this.liveKitFlows.restoreReconnect(room, snapshot, publishOptions);
 	}
 
 	async cleanupLingeringScreenShareTracks(
@@ -808,21 +711,17 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	): Promise<void> {
 		assert.equal(typeof enabled, 'boolean');
 		const selection = selectScreenShareSetEnabledOptions(options);
-		await routeVoiceEngineV2AppSelectedMedia({
-			js: () =>
-				this.liveKitFlows.setEnabled(
-					room,
-					enabled,
-					{
-						...selection.captureOptions,
-						sendUpdate: selection.sendUpdate,
-						playSound: selection.playSound,
-						restartIfEnabled: selection.restartIfEnabled,
-					},
-					publishOptions,
-				),
-			native: () => this.setNativeSelectedScreenShareEnabled(enabled, selection, publishOptions),
-		});
+		await this.liveKitFlows.setEnabled(
+			room,
+			enabled,
+			{
+				...selection.captureOptions,
+				sendUpdate: selection.sendUpdate,
+				playSound: selection.playSound,
+				restartIfEnabled: selection.restartIfEnabled,
+			},
+			publishOptions,
+		);
 	}
 
 	async startDeviceScreenShare(
@@ -830,14 +729,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		options?: DeviceScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
-		await routeVoiceEngineV2AppSelectedMedia({
-			js: () => this.liveKitFlows.startDeviceScreenShare(room, options, publishOptions),
-			native: async () => {
-				const {sendUpdate = true, playSound = true} = options || {};
-				await this.assertNativeScreenShareBridgeAvailable('device screen-share capture');
-				await this.captureCoordinator.startDeviceCapture(options, {sendUpdate, playSound}, publishOptions);
-			},
-		});
+		await this.liveKitFlows.startDeviceScreenShare(room, options, publishOptions);
 	}
 
 	async replaceActiveDisplayScreenShare(
@@ -845,13 +737,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		options?: ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
-		return routeVoiceEngineV2AppSelectedMedia({
-			js: () => this.liveKitFlows.replaceActiveDisplayShare(room, options, publishOptions),
-			native: async () => {
-				await this.assertNativeScreenShareBridgeAvailable('desktop screen-share source switch');
-				return this.captureCoordinator.replaceActiveDisplayFromActiveSource(options, publishOptions);
-			},
-		});
+		return this.liveKitFlows.replaceActiveDisplayShare(room, options, publishOptions);
 	}
 
 	async replaceActiveDeviceScreenShare(
@@ -859,77 +745,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		options?: DeviceScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
-		return routeVoiceEngineV2AppSelectedMedia({
-			js: () => this.liveKitFlows.replaceActiveDeviceShare(room, options, publishOptions),
-			native: async () => {
-				await this.assertNativeScreenShareBridgeAvailable('device screen-share source switch');
-				return this.captureCoordinator.replaceActiveDeviceCapture(options, publishOptions);
-			},
-		});
-	}
-
-	private async assertNativeScreenShareBridgeAvailable(context: string): Promise<void> {
-		assert.equal(typeof context, 'string');
-		if (await isVoiceEngineV2AppNativeScreenShareBridgeAvailable()) return;
-		logger.error('Native voice engine selected without native screen-share bridge support', {context});
-		throw buildNativeScreenSharePublicationError(
-			`Native voice engine selected but native screen-share bridge is unavailable for ${context}`,
-		);
-	}
-
-	private async setNativeSelectedScreenShareEnabled(
-		enabled: boolean,
-		selection: ScreenShareSetEnabledSelection,
-		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		assert.equal(typeof enabled, 'boolean');
-		assert.ok(selection.captureOptions !== null && typeof selection.captureOptions === 'object');
-		assert.equal(typeof selection.restartIfEnabled, 'boolean');
-		if (!enabled) {
-			await this.captureCoordinator.stopCapture({
-				sendUpdate: selection.sendUpdate,
-				playSound: selection.playSound,
-				reason: selection.reason ?? 'native-engine-screen-share-disabled',
-			});
-			return;
-		}
-		await this.startNativeSelectedScreenShare(this.captureCoordinator.createCaptureId(), selection, publishOptions);
-	}
-
-	private async startNativeSelectedScreenShare(
-		captureId: string,
-		selection: ScreenShareSetEnabledSelection,
-		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		assert.ok(captureId.length > 0, 'native screen-share enable requires a captureId');
-		assert.ok(selection.captureOptions !== null && typeof selection.captureOptions === 'object');
-		const controls: ScreenShareStartControls = {
-			sendUpdate: selection.sendUpdate,
-			playSound: selection.playSound,
-		};
-		await this.assertNativeScreenShareBridgeAvailable('desktop screen-share capture');
-		const nativeOptions = await this.captureCoordinator.resolveOptionsFromActiveSource(selection.captureOptions);
-		if (!nativeOptions) {
-			logger.warn('Native voice engine selected without a desktop source for screen-share enable');
-			throw buildNativeScreenSharePublicationError(
-				'Native voice engine selected but no desktop source is selected for screen-share capture',
-			);
-		}
-		await this.captureCoordinator.startCapture({...nativeOptions, captureId}, controls, publishOptions);
-	}
-
-	async executeNativeControllerScreenSharePublish(
-		captureId: string,
-		options?: ScreenShareCaptureOptions & {
-			sendUpdate?: boolean;
-			playSound?: boolean;
-			restartIfEnabled?: boolean;
-			reason?: string;
-		},
-		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		assert.ok(captureId.length > 0, 'native controller screen-share publish requires a captureId');
-		await this.startNativeSelectedScreenShare(captureId, selectScreenShareSetEnabledOptions(options), publishOptions);
+		return this.liveKitFlows.replaceActiveDeviceShare(room, options, publishOptions);
 	}
 
 	async applyPendingScreenShareRequestsForRoom(room: Room | null): Promise<void> {
@@ -938,63 +754,8 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		await this.applyPendingScreenShareRequestsInternal(room, participant);
 	}
 
-	async releaseNativeEngineScreenShareResourcesInternal(args: {
-		reason: string;
-		preserveRestoreState?: boolean;
-		releaseStreamingPriority?: boolean;
-		unpublishRemote?: boolean;
-		preserveStreamStateOnUnpublish?: boolean;
-	}): Promise<void> {
-		await this.captureCoordinator.releaseResources(args);
-	}
-
-	async startNativeEngineScreenShareInternal(
-		nativeOptions: NativeScreenShareOptions,
-		options?: {sendUpdate?: boolean; playSound?: boolean},
-		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		await this.captureCoordinator.startCapture(nativeOptions, options, publishOptions);
-	}
-
-	async stopNativeEngineScreenShareInternal(options?: {
-		sendUpdate?: boolean;
-		playSound?: boolean;
-		reason?: string;
-	}): Promise<void> {
-		await this.captureCoordinator.stopCapture(options);
-	}
-
 	stopMediaTrackInternal(track: MediaStreamTrack | undefined): void {
 		stopMediaTrack(track);
-	}
-
-	prepareNativeScreenShareReconnect(): NativeScreenShareReconnectSnapshot | null {
-		return this.reconnect.prepare();
-	}
-
-	async releaseNativeScreenShareForReconnect(snapshot: NativeScreenShareReconnectSnapshot): Promise<void> {
-		await this.reconnect.release(snapshot);
-	}
-
-	async restoreNativeScreenShareReconnect(snapshot: NativeScreenShareReconnectSnapshot): Promise<boolean> {
-		return this.reconnect.restore(snapshot);
-	}
-
-	async startNativeDeviceScreenShare(
-		options?: DeviceScreenShareCaptureOptions,
-		startOptions?: {sendUpdate?: boolean; playSound?: boolean},
-		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		await this.captureCoordinator.startDeviceCapture(options, startOptions, publishOptions);
-	}
-
-	async startNativeDisplayScreenShare(
-		room: Room | null,
-		nativeOptions: NativeScreenShareOptions,
-		options?: {sendUpdate?: boolean; playSound?: boolean},
-		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		await this.captureCoordinator.startDisplayCapture(room, nativeOptions, options, publishOptions);
 	}
 
 	async publishControllerScreenViaLiveKitFlows(room: Room | null, options: VoiceEngineV2ScreenOptions): Promise<void> {
@@ -1006,40 +767,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	async unpublishControllerScreenViaLiveKitFlows(room: Room | null): Promise<void> {
 		await this.controllerRouting.unpublishViaLiveKitFlows(room);
-	}
-
-	async publishControllerScreenViaNativeCapture(options: VoiceEngineV2ScreenOptions): Promise<void> {
-		if (typeof options.captureId !== 'string' || options.captureId.length === 0) {
-			throw new Error('Controller screen-share publish requires a captureId');
-		}
-		await this.controllerRouting.publishViaNativeCapture(options);
-	}
-
-	async unpublishControllerScreenViaNativeCapture(): Promise<void> {
-		await this.controllerRouting.unpublishViaNativeCapture();
-	}
-
-	async replaceActiveNativeDisplayScreenShare(
-		room: Room | null,
-		nativeOptions: NativeScreenShareOptions,
-		options?: ScreenShareCaptureOptions,
-		publishOptions?: TrackPublishOptions,
-	): Promise<boolean> {
-		return this.captureCoordinator.replaceActiveDisplayCapture(room, nativeOptions, options, publishOptions);
-	}
-
-	async replaceActiveNativeDisplayScreenShareFromActiveSource(
-		options?: ScreenShareCaptureOptions,
-		publishOptions?: TrackPublishOptions,
-	): Promise<boolean> {
-		return this.captureCoordinator.replaceActiveDisplayFromActiveSource(options, publishOptions);
-	}
-
-	async replaceActiveNativeDeviceScreenShare(
-		options?: DeviceScreenShareCaptureOptions,
-		publishOptions?: TrackPublishOptions,
-	): Promise<boolean> {
-		return this.captureCoordinator.replaceActiveDeviceCapture(options, publishOptions);
 	}
 
 	async updateActiveScreenShareSettings(
@@ -1061,24 +788,15 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	setScreenShareAudioMuted(room: Room | null, muted: boolean): void {
 		assert.equal(typeof muted, 'boolean');
-		void routeVoiceEngineV2AppSelectedMedia({
-			js: async () => {
-				const participant = room?.localParticipant;
-				if (!participant) return;
-				const publication = participant.getTrackPublication(Track.Source.ScreenShareAudio);
-				if (!publication) return;
-				const operation = muted ? publication.mute() : publication.unmute();
-				operation.catch((error) => {
-					logger.warn('Failed to apply immediate screen share audio mute', {error, muted});
-				});
-				this.syncLocalScreenShareAudioStateInternal(participant, !muted);
-			},
-			native: async () => {
-				await this.captureCoordinator.updateActiveSettings(room, {audio: !muted}).catch((error) => {
-					logger.warn('Failed to apply native-engine screen share audio mute', {error, muted});
-				});
-			},
+		const participant = room?.localParticipant;
+		if (!participant) return;
+		const publication = participant.getTrackPublication(Track.Source.ScreenShareAudio);
+		if (!publication) return;
+		const operation = muted ? publication.mute() : publication.unmute();
+		operation.catch((error) => {
+			logger.warn('Failed to apply immediate screen share audio mute', {error, muted});
 		});
+		this.syncLocalScreenShareAudioStateInternal(participant, !muted);
 	}
 
 	async toggleScreenShareFromKeybind(room: Room | null): Promise<void> {
@@ -1087,13 +805,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	}
 
 	resetStreamTracking(): void {
-		void this.captureCoordinator
-			.releaseResources({
-				reason: 'native-engine-screen-share-reset',
-			})
-			.catch((error) => {
-				logger.warn('Failed to release native-engine screen-share resources during reset', {error});
-			});
 		this.clearScreenShareKeepAliveSinkInternal();
 		this.setStreamingPriorityInternal(false);
 		this.transitionScreenShareLifecycleInternal({type: 'share.reset'});
@@ -1108,5 +819,3 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 export {VoiceEngineV2AppScreenShareExecutionAdapter};
 
 export default new VoiceEngineV2AppScreenShareExecutionAdapter();
-
-export type {NativeEngineAudioTrackFrame};

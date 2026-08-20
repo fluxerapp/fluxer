@@ -22,7 +22,6 @@ interface UseScreenShareWatchFailureOptions {
 	hasPublication: boolean;
 	isPublicationDesired: boolean;
 	hasSubscribedVideo: boolean;
-	hasNativeFrame: boolean;
 	operationKey?: string | number | null;
 	videoRef: React.RefObject<HTMLVideoElement | null>;
 }
@@ -69,7 +68,6 @@ export function useScreenShareWatchFailure({
 	participantIdentity,
 	participantSid,
 	trackSid,
-	hasNativeFrame,
 	operationKey,
 	videoRef,
 }: UseScreenShareWatchFailureOptions): ScreenShareWatchFailureState {
@@ -107,7 +105,7 @@ export function useScreenShareWatchFailure({
 		if (!attemptEnabled || !attemptKey) return;
 		if (isOperationBuffering) return;
 		if (hasRenderedVideoFrame) return;
-		if (hasNativeFrame || videoElementHasRenderedFrame(videoRef.current)) {
+		if (videoElementHasRenderedFrame(videoRef.current)) {
 			ScreenShareWatchFailures.markRenderedVideoFrame(target, attemptKey);
 			return;
 		}
@@ -117,7 +115,7 @@ export function useScreenShareWatchFailure({
 				ScreenShareWatchFailures.markRenderedVideoFrame(target, attemptKey);
 			},
 		});
-	}, [attemptEnabled, attemptKey, hasNativeFrame, hasRenderedVideoFrame, isOperationBuffering, target, videoRef]);
+	}, [attemptEnabled, attemptKey, hasRenderedVideoFrame, isOperationBuffering, target, videoRef]);
 
 	return {
 		failure,

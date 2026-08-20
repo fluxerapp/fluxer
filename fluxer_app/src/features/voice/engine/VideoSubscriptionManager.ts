@@ -3,10 +3,7 @@
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Store} from '@app/features/voice/engine/Store';
 import {
-	buildVoiceMediaGraphNativeCameraQualityCommand,
-	buildVoiceMediaGraphNativeCameraSubscriptionCommand,
 	selectVoiceMediaGraphSubscriptionEntry,
-	type VoiceMediaGraphRemoteTrackSubscriptionController,
 	type VoiceMediaGraphSubscriptionCommand,
 	type VoiceMediaGraphSubscriptionEntry,
 	type VoiceMediaGraphSubscriptionEvent,
@@ -32,7 +29,6 @@ const qualityMap: Record<VoiceMediaGraphVideoQuality, VideoQuality> = {
 
 export class VideoSubscriptionManager extends Store {
 	private room: Room | null = null;
-	private nativeController: VoiceMediaGraphRemoteTrackSubscriptionController | null = null;
 	private observers = new Map<string, IntersectionObserver>();
 	private readonly intersectionOptions: IntersectionObserverInit = {
 		root: null,
@@ -46,12 +42,6 @@ export class VideoSubscriptionManager extends Store {
 		});
 	}
 
-	setNativeController(controller: VoiceMediaGraphRemoteTrackSubscriptionController | null): void {
-		this.update(() => {
-			this.nativeController = controller;
-		});
-	}
-
 	cleanup(): void {
 		this.transition({type: 'subscription.cleanup', source: VoiceTrackSource.Camera});
 	}
@@ -61,20 +51,18 @@ export class VideoSubscriptionManager extends Store {
 		element: HTMLElement | null,
 		initialQuality: VoiceMediaGraphVideoQuality = 'low',
 	): void {
-		if (!this.room && !this.nativeController) {
+		if (!this.room) {
 			logger.warn('No room available');
 			return;
 		}
-		const participant = this.room?.remoteParticipants.get(participantIdentity) ?? null;
+		const participant = this.room.remoteParticipants.get(participantIdentity) ?? null;
 		if (!participant) {
-			if (!this.nativeController) {
-				logger.warn('Participant not found', {participantIdentity});
-				return;
-			}
+			logger.warn('Participant not found', {participantIdentity});
+			return;
 		}
 		logger.info('Subscribing to video', {participantIdentity, quality: initialQuality});
 		const cameraPublication = this.findCameraPublication(participant);
-		if (!cameraPublication && !this.nativeController) {
+		if (!cameraPublication) {
 			logger.debug('No camera publication found', {participantIdentity});
 		}
 		const existingState = this.getSubscriptionEntry(participantIdentity);
@@ -82,7 +70,7 @@ export class VideoSubscriptionManager extends Store {
 			type: 'subscription.subscribe',
 			participantIdentity,
 			source: VoiceTrackSource.Camera,
-			hasPublication: this.nativeController != null || cameraPublication != null,
+			hasPublication: cameraPublication != null,
 			observedElement: element,
 			quality: existingState ? undefined : initialQuality,
 		});
@@ -147,7 +135,7 @@ export class VideoSubscriptionManager extends Store {
 
 	reattachAfterPublish(participantIdentity: string): void {
 		const state = this.getSubscriptionEntry(participantIdentity);
-		if (!state?.subscribed || (!this.room && !this.nativeController)) return;
+		if (!state?.subscribed || !this.room) return;
 		this.transition({
 			type: 'subscription.reattachAfterPublish',
 			participantIdentity,
@@ -171,7 +159,7 @@ export class VideoSubscriptionManager extends Store {
 	}
 
 	private hasCameraPublicationForIdentity(participantIdentity: string): boolean {
-		return this.nativeController != null || this.findCameraPublicationForIdentity(participantIdentity) != null;
+		return this.findCameraPublicationForIdentity(participantIdentity) != null;
 	}
 
 	private runPublicationOperation(
@@ -345,17 +333,6 @@ export class VideoSubscriptionManager extends Store {
 		enabled: boolean,
 		quality: VoiceMediaGraphVideoQuality,
 	): void {
-		if (this.nativeController) {
-			this.nativeController.setRemoteTrackSubscription(
-				buildVoiceMediaGraphNativeCameraSubscriptionCommand({
-					participantIdentity,
-					subscribed: true,
-					enabled,
-					quality,
-				}),
-			);
-			return;
-		}
 		const publication = this.findCameraPublicationForIdentity(participantIdentity);
 		if (!publication) {
 			this.transition({type: 'subscription.publicationMissing', participantIdentity, source: VoiceTrackSource.Camera});
@@ -380,12 +357,6 @@ export class VideoSubscriptionManager extends Store {
 	}
 
 	private unsubscribePublication(participantIdentity: string): void {
-		if (this.nativeController) {
-			this.nativeController.setRemoteTrackSubscription(
-				buildVoiceMediaGraphNativeCameraSubscriptionCommand({participantIdentity, subscribed: false}),
-			);
-			return;
-		}
 		const publication = this.findCameraPublicationForIdentity(participantIdentity);
 		if (!publication) return;
 		const applied = this.runPublicationOperation(participantIdentity, publication, 'setSubscribed', () => {
@@ -397,12 +368,6 @@ export class VideoSubscriptionManager extends Store {
 	}
 
 	private setPublicationEnabled(participantIdentity: string, enabled: boolean): void {
-		if (this.nativeController) {
-			this.nativeController.setRemoteTrackSubscription(
-				buildVoiceMediaGraphNativeCameraSubscriptionCommand({participantIdentity, subscribed: true, enabled}),
-			);
-			return;
-		}
 		const publication = this.findCameraPublicationForIdentity(participantIdentity);
 		if (!publication) {
 			this.transition({type: 'subscription.publicationMissing', participantIdentity, source: VoiceTrackSource.Camera});
@@ -417,12 +382,6 @@ export class VideoSubscriptionManager extends Store {
 	}
 
 	private setPublicationQuality(participantIdentity: string, quality: VoiceMediaGraphVideoQuality): void {
-		if (this.nativeController) {
-			this.nativeController.setRemoteTrackSubscription(
-				buildVoiceMediaGraphNativeCameraQualityCommand({participantIdentity, quality}),
-			);
-			return;
-		}
 		const publication = this.findCameraPublicationForIdentity(participantIdentity);
 		if (!publication) {
 			this.transition({type: 'subscription.publicationMissing', participantIdentity, source: VoiceTrackSource.Camera});

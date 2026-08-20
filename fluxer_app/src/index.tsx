@@ -28,7 +28,6 @@ import {
 } from '@app/features/platform/utils/ClientInfo';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {scheduleNonLatinScriptFaces} from '@app/features/theme/fonts/ScriptFontLoader';
-import {initializeNativeVoiceEngineSelectionForStartup} from '@app/features/voice/engine/native_voice_engine/NativeVoiceEngineSelection';
 import {i18n} from '@lingui/core';
 import {I18nProvider} from '@lingui/react';
 import {configure} from 'mobx';
@@ -98,7 +97,6 @@ async function bootstrapThemeStudio(): Promise<void> {
 }
 
 async function bootstrapApp(): Promise<void> {
-	await initializeNativeVoiceEngineSelectionForStartup();
 	const [
 		{App},
 		{setupHttp},

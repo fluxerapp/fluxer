@@ -4,12 +4,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {Store} from '@app/features/voice/engine/Store';
 import {
-	buildVoiceMediaGraphNativeScreenShareEnabledCommand,
-	buildVoiceMediaGraphNativeScreenShareQualityCommand,
-	buildVoiceMediaGraphNativeScreenShareSubscriptionCommands,
 	selectVoiceMediaGraphSubscriptionEntry,
-	type VoiceMediaGraphRemoteSubscriptionCommand,
-	type VoiceMediaGraphRemoteTrackSubscriptionController,
 	type VoiceMediaGraphSubscriptionCommand,
 	type VoiceMediaGraphSubscriptionContext,
 	type VoiceMediaGraphSubscriptionEntry,
@@ -37,7 +32,6 @@ const qualityMap: Record<VoiceMediaGraphVideoQuality, VideoQuality> = {
 
 export class ScreenShareSubscriptionManager extends Store {
 	private room: Room | null = null;
-	private nativeController: VoiceMediaGraphRemoteTrackSubscriptionController | null = null;
 	private observers = new Map<string, IntersectionObserver>();
 	private reattachPublicationTargets = new Map<string, RemoteTrackPublication>();
 	private resubscribePulseTokens = new Map<string, number>();
@@ -55,12 +49,6 @@ export class ScreenShareSubscriptionManager extends Store {
 		});
 	}
 
-	setNativeController(controller: VoiceMediaGraphRemoteTrackSubscriptionController | null): void {
-		this.update(() => {
-			this.nativeController = controller;
-		});
-	}
-
 	cleanup(): void {
 		this.transition({type: 'subscription.cleanup', source: VoiceTrackSource.ScreenShare});
 	}
@@ -70,27 +58,25 @@ export class ScreenShareSubscriptionManager extends Store {
 		element: HTMLElement | null,
 		context: VoiceMediaGraphSubscriptionContext = 'carousel',
 	): void {
-		if (!this.room && !this.nativeController) {
+		if (!this.room) {
 			logger.warn('No room available');
 			return;
 		}
-		const participant = this.room?.remoteParticipants.get(participantIdentity) ?? null;
+		const participant = this.room.remoteParticipants.get(participantIdentity) ?? null;
 		if (!participant) {
-			if (!this.nativeController) {
-				logger.warn('Participant not found', {participantIdentity});
-				return;
-			}
+			logger.warn('Participant not found', {participantIdentity});
+			return;
 		}
 		logger.info('Subscribing to screen share', {participantIdentity, context});
 		const screenSharePublication = this.findScreenSharePublication(participant);
-		if (!screenSharePublication && !this.nativeController) {
+		if (!screenSharePublication) {
 			logger.debug('No screen share publication found', {participantIdentity});
 		}
 		this.transition({
 			type: 'subscription.subscribe',
 			participantIdentity,
 			source: VoiceTrackSource.ScreenShare,
-			hasPublication: this.nativeController != null || screenSharePublication != null,
+			hasPublication: screenSharePublication != null,
 			observedElement: element,
 			context,
 		});
@@ -136,7 +122,7 @@ export class ScreenShareSubscriptionManager extends Store {
 
 	reattachAfterPublish(participantIdentity: string, publication?: RemoteTrackPublication): void {
 		const state = this.getSubscriptionEntry(participantIdentity);
-		if (!state?.subscribed || (!this.room && !this.nativeController)) return;
+		if (!state?.subscribed || !this.room) return;
 		logger.info('Reattaching screen share subscription after republish', {
 			participantIdentity,
 			context: state.context,
@@ -151,10 +137,7 @@ export class ScreenShareSubscriptionManager extends Store {
 				type: 'subscription.reattachAfterPublish',
 				participantIdentity,
 				source: VoiceTrackSource.ScreenShare,
-				hasPublication:
-					this.nativeController != null ||
-					publication != null ||
-					this.hasScreenSharePublicationForIdentity(participantIdentity),
+				hasPublication: publication != null || this.hasScreenSharePublicationForIdentity(participantIdentity),
 				forceResubscribe: true,
 			});
 		} finally {
@@ -181,7 +164,7 @@ export class ScreenShareSubscriptionManager extends Store {
 	}
 
 	private hasScreenSharePublicationForIdentity(participantIdentity: string): boolean {
-		return this.nativeController != null || this.findScreenSharePublicationForIdentity(participantIdentity) != null;
+		return this.findScreenSharePublicationForIdentity(participantIdentity) != null;
 	}
 
 	private getParticipant(participantIdentity: string): RemoteParticipant | null {
@@ -412,13 +395,6 @@ export class ScreenShareSubscriptionManager extends Store {
 		}
 	}
 
-	private applyNativeSubscriptionCommands(commands: ReadonlyArray<VoiceMediaGraphRemoteSubscriptionCommand>): void {
-		if (!this.nativeController) return;
-		for (const command of commands) {
-			this.nativeController.setRemoteTrackSubscription(command);
-		}
-	}
-
 	private applySubscribeOperations(
 		participantIdentity: string,
 		publication: RemoteTrackPublication,
@@ -442,17 +418,6 @@ export class ScreenShareSubscriptionManager extends Store {
 	): void {
 		if (this.pendingResubscribePulses.has(participantIdentity)) {
 			logger.debug('Skipping subscribe while resubscribe pulse is pending', {participantIdentity});
-			return;
-		}
-		if (this.nativeController) {
-			this.applyNativeSubscriptionCommands(
-				buildVoiceMediaGraphNativeScreenShareSubscriptionCommands({
-					participantIdentity,
-					subscribed: true,
-					enabled,
-					quality,
-				}),
-			);
 			return;
 		}
 		this.withActiveScreenSharePublications(participantIdentity, (publications, participant) => {
@@ -480,20 +445,6 @@ export class ScreenShareSubscriptionManager extends Store {
 		enabled: boolean,
 		quality: VoiceMediaGraphVideoQuality,
 	): void {
-		if (this.nativeController) {
-			this.applyNativeSubscriptionCommands(
-				buildVoiceMediaGraphNativeScreenShareSubscriptionCommands({participantIdentity, subscribed: false}),
-			);
-			this.applyNativeSubscriptionCommands(
-				buildVoiceMediaGraphNativeScreenShareSubscriptionCommands({
-					participantIdentity,
-					subscribed: true,
-					enabled,
-					quality,
-				}),
-			);
-			return;
-		}
 		const publications = this.getTargetScreenSharePublications(
 			participantIdentity,
 			this.getParticipant(participantIdentity),
@@ -574,12 +525,6 @@ export class ScreenShareSubscriptionManager extends Store {
 	private unsubscribePublication(participantIdentity: string): void {
 		this.resubscribePulseTokens.delete(participantIdentity);
 		this.pendingResubscribePulses.delete(participantIdentity);
-		if (this.nativeController) {
-			this.applyNativeSubscriptionCommands(
-				buildVoiceMediaGraphNativeScreenShareSubscriptionCommands({participantIdentity, subscribed: false}),
-			);
-			return;
-		}
 		const publications = this.getAllScreenSharePublications(this.getParticipant(participantIdentity));
 		let applied = publications.length > 0;
 		for (const publication of publications) {
@@ -594,12 +539,6 @@ export class ScreenShareSubscriptionManager extends Store {
 	}
 
 	private setPublicationEnabled(participantIdentity: string, enabled: boolean): void {
-		if (this.nativeController) {
-			this.applyNativeSubscriptionCommands([
-				buildVoiceMediaGraphNativeScreenShareEnabledCommand({participantIdentity, enabled}),
-			]);
-			return;
-		}
 		this.withActiveScreenSharePublications(participantIdentity, (publications) => {
 			let applied = true;
 			for (const publication of publications) {
@@ -615,16 +554,6 @@ export class ScreenShareSubscriptionManager extends Store {
 	}
 
 	private setPublicationQuality(participantIdentity: string, quality: VoiceMediaGraphVideoQuality): void {
-		if (this.nativeController) {
-			const state = this.getSubscriptionEntry(participantIdentity);
-			const command = buildVoiceMediaGraphNativeScreenShareQualityCommand({
-				participantIdentity,
-				enabled: state?.enabled ?? false,
-				quality,
-			});
-			if (command) this.applyNativeSubscriptionCommands([command]);
-			return;
-		}
 		this.withActiveScreenSharePublications(participantIdentity, (publications) => {
 			let applied = true;
 			for (const publication of publications) {

@@ -5,9 +5,6 @@ import {describe, expect, it} from 'vitest';
 import {
 	createMediaEngineFacadeSnapshot,
 	getMediaEngineFacadeStateValue,
-	hasPlayedNativeVoiceReadySounds,
-	NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT,
-	rememberNativeVoiceReadySounds,
 	selectMediaEngineConnectPreflightDecision,
 	selectMediaEngineConnectRequestDecision,
 	selectMediaEngineGatewayErrorDecision,
@@ -370,36 +367,6 @@ describe('MediaEngineFacadeStateMachine', () => {
 				channelLimitAllowed: true,
 			}),
 		).toEqual({type: 'navigate-channel-gate'});
-	});
-
-	it('suppresses ready sounds for connection ids that already played them', () => {
-		const playedConnectionIds = new Set<string>();
-		expect(hasPlayedNativeVoiceReadySounds(playedConnectionIds, 'conn-1')).toBe(false);
-		rememberNativeVoiceReadySounds(playedConnectionIds, 'conn-1');
-		expect(hasPlayedNativeVoiceReadySounds(playedConnectionIds, 'conn-1')).toBe(true);
-		expect(hasPlayedNativeVoiceReadySounds(playedConnectionIds, 'conn-2')).toBe(false);
-	});
-
-	it('never suppresses ready sounds for a null connection id', () => {
-		const playedConnectionIds = new Set<string>();
-		rememberNativeVoiceReadySounds(playedConnectionIds, null);
-		expect(playedConnectionIds.size).toBe(0);
-		expect(hasPlayedNativeVoiceReadySounds(playedConnectionIds, null)).toBe(false);
-	});
-
-	it('bounds ready sound memory by evicting the oldest connection ids', () => {
-		const playedConnectionIds = new Set<string>();
-		for (let i = 0; i < NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT + 4; i++) {
-			rememberNativeVoiceReadySounds(playedConnectionIds, `conn-${i}`);
-		}
-		expect(playedConnectionIds.size).toBe(NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT);
-		expect(hasPlayedNativeVoiceReadySounds(playedConnectionIds, 'conn-0')).toBe(false);
-		expect(
-			hasPlayedNativeVoiceReadySounds(
-				playedConnectionIds,
-				`conn-${NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT + 3}`,
-			),
-		).toBe(true);
 	});
 
 	it('notifies only for rejected voice state acks carrying the camera user limit error code', () => {

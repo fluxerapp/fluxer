@@ -19,7 +19,6 @@ export const ScreenShareWatchErrorCode = {
 	SubscriptionEmitTrackUpdateFailed: -2104,
 	ObserverAttachFailed: -2105,
 	ObserverDetachFailed: -2106,
-	NativeSubscriptionCommandFailed: -2201,
 	RemoteTrackSubscriptionFailed: -2202,
 	PublicationMissingTimeout: -2301,
 	SubscriptionAttachTimeout: -2302,
@@ -37,7 +36,6 @@ export type ScreenShareWatchFailureReason =
 	| 'subscription-emit-track-update-failed'
 	| 'observer-attach-failed'
 	| 'observer-detach-failed'
-	| 'native-subscription-command-failed'
 	| 'remote-track-subscription-failed'
 	| 'publication-missing-timeout'
 	| 'subscription-attach-timeout'

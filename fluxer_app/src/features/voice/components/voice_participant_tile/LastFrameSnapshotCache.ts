@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {videoElementHasRenderedFrame} from '@app/features/voice/components/VideoElementFrameState';
-import {i420VideoFrameLayout} from '@app/features/voice/engine/native_voice_engine/createInboundVideoBridge';
-import type {NativeRetainedVideoFrame} from '@app/features/voice/engine/native_voice_engine/NativeVideoTileManager';
 import {Store} from '@app/features/voice/engine/Store';
-import {getVideoFrameCtor} from '@app/features/voice/utils/native_screen_capture_bridge/shared';
 
 export const LAST_FRAME_SNAPSHOTS_MAX = 8;
 export const LAST_FRAME_SNAPSHOT_WIDTH_MAX = 1280;
@@ -71,31 +68,6 @@ class LastFrameSnapshotCache extends Store {
 		const dataUrl = drawSourceToDataUrl(renderedVideo, renderedVideo.videoWidth, renderedVideo.videoHeight);
 		if (!dataUrl) return;
 		this.retainSnapshot(key, dataUrl);
-	}
-
-	captureFromNativeFrame(key: string, frame: NativeRetainedVideoFrame | undefined): void {
-		if (!key || !frame) return;
-		const VideoFrameImpl = getVideoFrameCtor();
-		if (!VideoFrameImpl) return;
-		try {
-			const videoFrame = new VideoFrameImpl(new Uint8Array(frame.data), {
-				format: 'I420',
-				codedWidth: frame.width,
-				codedHeight: frame.height,
-				timestamp: frame.timestampUs,
-				layout: i420VideoFrameLayout(frame.width, frame.height),
-			});
-			try {
-				const dataUrl = drawSourceToDataUrl(videoFrame as unknown as CanvasImageSource, frame.width, frame.height);
-				if (dataUrl) {
-					this.retainSnapshot(key, dataUrl);
-				}
-			} finally {
-				videoFrame.close();
-			}
-		} catch {
-			return;
-		}
 	}
 
 	release(key: string): void {

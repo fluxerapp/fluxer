@@ -34,12 +34,6 @@ const logger = new Logger('VoiceEngineV2AppPermissionAdapter');
 
 export type VoiceEngineV2AppPermissionTrackSource = 'audio' | 'video' | 'screenShare';
 
-export interface VoiceEngineV2AppNativePermissionEnforcement {
-	revokeMicrophone: () => Promise<void>;
-	revokeCamera: () => Promise<void>;
-	revokeScreenShare: () => Promise<void>;
-}
-
 type RemotePublicationAdapter = {
 	isDesired?: boolean;
 	setEnabled?: (enabled: boolean) => void;
@@ -49,11 +43,10 @@ type RemotePublicationAdapter = {
 class VoiceEngineV2AppPermissionAdapter extends Store {
 	private snapshot: VoicePermissionSnapshot = createVoicePermissionSnapshot();
 	private currentRoom: Room | null = null;
-	private nativeEnforcement: VoiceEngineV2AppNativePermissionEnforcement | null = null;
 	private permissionDisposer: (() => void) | null = null;
 
 	private hasEnforceableMediaSession(): boolean {
-		return this.currentRoom != null || this.nativeEnforcement != null;
+		return this.currentRoom != null;
 	}
 
 	private sendPermissionEvent(
@@ -131,41 +124,11 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 	}
 
 	private revokePermissionForRoom(source: VoiceEngineV2AppPermissionTrackSource, room: Room | null | undefined): void {
-		const nativeEnforcement = this.nativeEnforcement;
-		if (nativeEnforcement) {
-			void this.handleNativePermissionRevoked(source, nativeEnforcement);
-			return;
-		}
 		if (!room) {
 			logger.debug('No active room, skipping permission enforcement', {source});
 			return;
 		}
 		void this.handlePermissionRevoked(source, room);
-	}
-
-	private async handleNativePermissionRevoked(
-		source: VoiceEngineV2AppPermissionTrackSource,
-		enforcement: VoiceEngineV2AppNativePermissionEnforcement,
-	): Promise<void> {
-		assert.ok(source === 'audio' || source === 'video' || source === 'screenShare', 'unknown permission track source');
-		assert.equal(enforcement, this.nativeEnforcement, 'native permission revocation requires the active enforcement');
-		logger.info('Revoking permission via native session', {source});
-		try {
-			switch (source) {
-				case 'audio':
-					await enforcement.revokeMicrophone();
-					break;
-				case 'video':
-					await enforcement.revokeCamera();
-					break;
-				case 'screenShare':
-					await enforcement.revokeScreenShare();
-					break;
-			}
-			logger.info('Successfully revoked permission via native session', {source});
-		} catch (error) {
-			logger.error('Failed to revoke permission via native session', {source, error});
-		}
 	}
 
 	private buildRemotePublicationInputs(room: Room): {
@@ -203,28 +166,9 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 		this.sendPermissionEvent({type: 'permission.watch.stop'});
 		this.update(() => {
 			this.currentRoom = room;
-			this.nativeEnforcement = null;
 		});
 		this.beginPermissionWatch(guildId, channelId);
 		logger.info('Started permission watching', {guildId, channelId});
-	}
-
-	syncWithNativePermissionState(
-		guildId: string | null,
-		channelId: string,
-		enforcement: VoiceEngineV2AppNativePermissionEnforcement,
-	): void {
-		assert.ok(channelId.length > 0, 'native permission watch requires a channelId');
-		assert.equal(typeof enforcement.revokeMicrophone, 'function', 'native enforcement requires revokeMicrophone');
-		assert.equal(typeof enforcement.revokeCamera, 'function', 'native enforcement requires revokeCamera');
-		assert.equal(typeof enforcement.revokeScreenShare, 'function', 'native enforcement requires revokeScreenShare');
-		this.sendPermissionEvent({type: 'permission.watch.stop'});
-		this.update(() => {
-			this.currentRoom = null;
-			this.nativeEnforcement = enforcement;
-		});
-		this.beginPermissionWatch(guildId, channelId);
-		logger.info('Started native permission watching', {guildId, channelId});
 	}
 
 	private beginPermissionWatch(guildId: string | null, channelId: string): void {
@@ -272,7 +216,7 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 
 	handlePermissionChange(permission: 'speak' | 'stream' | 'video', allowed: boolean): void {
 		const room = this.currentRoom;
-		if (!room && !this.nativeEnforcement) {
+		if (!room) {
 			logger.warn('No active media session');
 			return;
 		}
@@ -426,7 +370,6 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 		this.sendPermissionEvent({type: 'permission.reset'});
 		this.update(() => {
 			this.currentRoom = null;
-			this.nativeEnforcement = null;
 		});
 		logger.debug('Permissions reset to defaults');
 	}

@@ -2,9 +2,6 @@
 
 import styles from '@app/features/voice/components/VoiceE2EEIndicator.module.css';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
-import NativeVoiceE2EEStore from '@app/features/voice/engine/native_voice_engine/NativeVoiceE2EEStore';
-import {useStoreVersion} from '@app/features/voice/engine/Store';
-import {isVoiceEngineV2NativeProjectionActiveFromMediaEngine} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import {
 	VOICE_CALL_E2EE_BROKEN_DESCRIPTOR,
@@ -28,14 +25,9 @@ export const VoiceE2EEIndicator = observer(function VoiceE2EEIndicator({
 }: VoiceE2EEIndicatorProps) {
 	const {i18n} = useLingui();
 	useMediaEngineVersion();
-	useStoreVersion(NativeVoiceE2EEStore);
 	void MediaEngine.getAllVoiceStates();
 	const gatewayStatus = computeChannelE2EEStatus(guildId, channelId, {emptyChannelStatus: 'encrypted'});
-	const nativeAggregate = NativeVoiceE2EEStore.aggregateStatus();
-	const status =
-		isVoiceEngineV2NativeProjectionActiveFromMediaEngine() && nativeAggregate !== 'none'
-			? nativeAggregate
-			: gatewayStatus;
+	const status = gatewayStatus;
 	if (status === 'none') return null;
 	const isEncrypted = status === 'encrypted';
 	const descriptor = isEncrypted

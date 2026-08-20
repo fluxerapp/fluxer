@@ -9,11 +9,9 @@ import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platf
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
-import NativeVoiceStatsStore from '@app/features/voice/engine/native_voice_engine/NativeVoiceStatsStore';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
 } from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {isVoiceEngineV2NativeProjectionActiveFromMediaEngine} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {getScreenShareAudioPumpDiagnostics} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getNativeAudioCaptureDiagnosticState} from '@app/features/voice/utils/NativeAudioCaptureBridge';
@@ -187,7 +185,7 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 		stats: MediaEngine.voiceStats,
 		perTrackStats: MediaEngine.perTrackStats,
 		statsTimeSeries: MediaEngine.statsTimeSeries,
-		nativeStats: isVoiceEngineV2NativeProjectionActiveFromMediaEngine() ? NativeVoiceStatsStore.stats : null,
+		nativeStats: null,
 		publisherTransport: MediaEngine.publisherTransport,
 		subscriberTransport: MediaEngine.subscriberTransport,
 		localParticipant,

@@ -69,12 +69,10 @@ function cameraActiveSignals(
 ): VoiceParticipantTileCameraActiveSignals {
 	return {
 		isCameraTile: true,
-		isNativeEngine: false,
 		isOwnContent: false,
 		isCameraPublicationActive: false,
 		isParticipantCameraActive: false,
 		isLocalCameraRequested: false,
-		hasNativeVideo: false,
 		...overrides,
 	};
 }
@@ -99,33 +97,19 @@ describe('VoiceParticipantTileStateMachine camera buffering state', () => {
 });
 
 describe('VoiceParticipantTileStateMachine camera active state', () => {
-	it('keeps stale participant camera flags from holding a stopped own native camera active', () => {
-		expect(
-			selectVoiceParticipantTileCameraActive(
-				cameraActiveSignals({
-					isNativeEngine: true,
-					isOwnContent: true,
-					isParticipantCameraActive: true,
-				}),
-			),
-		).toBe(false);
-	});
-
-	it('treats own native camera as active while local capture is requested or native video exists', () => {
-		expect(
-			selectVoiceParticipantTileCameraActive(
-				cameraActiveSignals({isNativeEngine: true, isOwnContent: true, isLocalCameraRequested: true}),
-			),
-		).toBe(true);
-		expect(
-			selectVoiceParticipantTileCameraActive(
-				cameraActiveSignals({isNativeEngine: true, isOwnContent: true, hasNativeVideo: true}),
-			),
-		).toBe(true);
-	});
-
 	it('preserves participant camera flags for remote camera tiles', () => {
 		expect(selectVoiceParticipantTileCameraActive(cameraActiveSignals({isParticipantCameraActive: true}))).toBe(true);
+	});
+
+	it('treats a local capture request as an active own camera tile', () => {
+		expect(
+			selectVoiceParticipantTileCameraActive(cameraActiveSignals({isOwnContent: true, isLocalCameraRequested: true})),
+		).toBe(true);
+	});
+
+	it('keeps a camera tile inactive without a publication, participant flag, or local request', () => {
+		expect(selectVoiceParticipantTileCameraActive(cameraActiveSignals())).toBe(false);
+		expect(selectVoiceParticipantTileCameraActive(cameraActiveSignals({isCameraTile: false}))).toBe(false);
 	});
 });
 

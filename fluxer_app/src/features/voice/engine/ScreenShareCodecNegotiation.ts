@@ -135,16 +135,6 @@ interface BindOptions {
 	onSelectedCodecChanged?: (selection: CodecNegotiationSelection) => void | Promise<void>;
 }
 
-interface NativeCodecNegotiationAdapter {
-	publishData: (params: {
-		payload: Uint8Array;
-		reliable?: boolean;
-		topic?: string;
-		destinationIdentities?: Array<string>;
-	}) => Promise<void>;
-	getRemoteParticipantIdentities: () => ReadonlyArray<string>;
-}
-
 function createId(prefix: string): string {
 	const cryptoObject = globalThis.crypto as Crypto | undefined;
 	if (typeof cryptoObject?.randomUUID === 'function') return `${prefix}_${cryptoObject.randomUUID()}`;
@@ -478,7 +468,6 @@ function parseMessage(payload: Uint8Array): FluxerCodecNegotiationMessage | null
 
 class ScreenShareCodecNegotiation {
 	private room: Room | null = null;
-	private nativeAdapter: NativeCodecNegotiationAdapter | null = null;
 	private bindDisposer: (() => void) | null = null;
 	private selectedCodec: VideoCodec | null = null;
 	private localCodecs: Array<FluxerCodecAdvertisement> = [];
@@ -559,25 +548,6 @@ class ScreenShareCodecNegotiation {
 		return {knownRemoteCodecs, unknownParticipants};
 	}
 
-	private getNativeRemoteCodecInputs(): {
-		knownRemoteCodecs: Array<Array<FluxerCodecAdvertisement>>;
-		unknownParticipants: number;
-		remoteParticipants: number;
-	} {
-		const identities = this.nativeAdapter?.getRemoteParticipantIdentities() ?? [];
-		const knownRemoteCodecs: Array<Array<FluxerCodecAdvertisement>> = [];
-		let unknownParticipants = 0;
-		for (const identity of identities) {
-			const codecs = this.remoteCodecsByIdentity.get(identity);
-			if (codecs) {
-				knownRemoteCodecs.push(codecs);
-			} else {
-				unknownParticipants++;
-			}
-		}
-		return {knownRemoteCodecs, unknownParticipants, remoteParticipants: identities.length};
-	}
-
 	bind(room: Room, options: BindOptions = {}): () => void {
 		this.dispose();
 		this.room = room;
@@ -615,21 +585,10 @@ class ScreenShareCodecNegotiation {
 		return this.bindDisposer;
 	}
 
-	bindNative(adapter: NativeCodecNegotiationAdapter, options: BindOptions = {}): () => void {
-		this.dispose();
-		this.nativeAdapter = adapter;
-		this.bindOptions = options;
-		this.bindDisposer = () => {
-			this.nativeAdapter = null;
-		};
-		return this.bindDisposer;
-	}
-
 	dispose(): void {
 		this.bindDisposer?.();
 		this.bindDisposer = null;
 		this.room = null;
-		this.nativeAdapter = null;
 		this.selectedCodec = null;
 		this.localCodecs = [];
 		this.bindOptions = {};
@@ -669,35 +628,6 @@ class ScreenShareCodecNegotiation {
 		return await this.updateSelection(room, reason, options);
 	}
 
-	async publishLocalCapabilitiesNative(
-		reason: NegotiationReason = 'manual',
-		options: BindOptions = this.bindOptions,
-	): Promise<CodecNegotiationSelection | null> {
-		if (typeof window === 'undefined') return null;
-		if (!this.nativeAdapter) return null;
-		await Promise.allSettled([
-			loadGpuEncoderReport(),
-			loadNativeHardwareEncoderCapabilities(),
-			loadVideoDecoderExclusions(),
-			loadOpenH264Status(),
-		]);
-		this.localCodecs = buildLocalCodecAdvertisements();
-		const message: FluxerSelectProtocolMessage = {
-			op: SELECT_PROTOCOL_OP,
-			d: {
-				protocol: 'livekit',
-				data: {
-					mode: 'livekit-sfu',
-				},
-				codecs: this.localCodecs,
-				rtc_connection_id: this.rtcConnectionId,
-				experiments: ['fixed_keyframe_interval', 'maintain_framerate', 'opus_red', 'transport_cc', 'loss_based_bwe_v2'],
-			},
-		};
-		await this.publishNativeMessage(message);
-		return await this.updateNativeSelection(reason, options);
-	}
-
 	private handleDataMessage(room: Room, participant: Participant, payload: Uint8Array, options: BindOptions): void {
 		const message = parseMessage(payload);
 		if (!message) return;
@@ -714,37 +644,6 @@ class ScreenShareCodecNegotiation {
 			});
 			void this.updateSelection(room, 'data', options);
 		}
-	}
-
-	handleNativeDataMessage(
-		participantIdentity: string,
-		payload: Uint8Array,
-		options: BindOptions = this.bindOptions,
-	): void {
-		const message = parseMessage(payload);
-		if (!message) return;
-		if (message.op === SELECT_PROTOCOL_OP) {
-			this.remoteCodecsByIdentity.set(participantIdentity, message.d.codecs);
-			void this.updateNativeSelection('data', options);
-		} else if (message.op === SESSION_UPDATE_OP) {
-			this.remoteCodecsByIdentity.set(participantIdentity, message.d.codecs);
-			logger.debug('Received native remote codec session update', {
-				participantIdentity,
-				videoCodec: message.d.video_codec,
-				mediaSessionId: message.d.media_session_id,
-				reason: message.d.reason,
-			});
-			void this.updateNativeSelection('data', options);
-		}
-	}
-
-	handleNativeParticipantConnected(): void {
-		void this.publishLocalCapabilitiesNative('participant-connected', this.bindOptions);
-	}
-
-	handleNativeParticipantDisconnected(participantIdentity: string): void {
-		this.remoteCodecsByIdentity.delete(participantIdentity);
-		void this.updateNativeSelection('participant-disconnected', this.bindOptions);
 	}
 
 	private async updateSelection(
@@ -781,39 +680,6 @@ class ScreenShareCodecNegotiation {
 		return selection;
 	}
 
-	private async updateNativeSelection(
-		reason: NegotiationReason,
-		options: BindOptions,
-	): Promise<CodecNegotiationSelection | null> {
-		if (!this.nativeAdapter) return null;
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
-		const {knownRemoteCodecs, unknownParticipants, remoteParticipants} = this.getNativeRemoteCodecInputs();
-		if (reason === 'participant-disconnected' && remoteParticipants === 0 && this.selectedCodec) {
-			logger.debug('Keeping active native screen share codec after last viewer disconnected', {
-				codec: this.selectedCodec,
-			});
-			return null;
-		}
-		const previousCodec = this.selectedCodec;
-		this.negotiationSnapshot = transitionScreenShareCodecNegotiationSnapshot(this.negotiationSnapshot, {
-			type: 'negotiation.evaluate',
-			localCodecs: this.localCodecs,
-			remoteCodecs: knownRemoteCodecs,
-			unknownParticipants,
-			reason,
-			codecPreference: getScreenShareCodecPreferenceOrder(),
-		});
-		const selection = this.negotiationSnapshot.context.selection;
-		if (!selection) return null;
-		this.selectedCodec = selection.codec;
-		if (selection.codec === previousCodec) return selection;
-		this.mediaSessionId = createId('media');
-		logger.info('Selected native screen share codec from XState capability intersection', selection);
-		await this.publishNativeSessionUpdate(selection);
-		await options.onSelectedCodecChanged?.(selection);
-		return selection;
-	}
-
 	private async publishSessionUpdate(room: Room, selection: CodecNegotiationSelection): Promise<void> {
 		const message: FluxerSessionUpdateMessage = {
 			op: SESSION_UPDATE_OP,
@@ -835,31 +701,6 @@ class ScreenShareCodecNegotiation {
 			});
 		} catch (error) {
 			logger.debug('Failed to publish codec negotiation message', {error, op: message.op});
-		}
-	}
-
-	private async publishNativeSessionUpdate(selection: CodecNegotiationSelection): Promise<void> {
-		const message: FluxerSessionUpdateMessage = {
-			op: SESSION_UPDATE_OP,
-			d: {
-				video_codec: VIDEO_CODEC_NAMES[selection.codec],
-				media_session_id: this.mediaSessionId,
-				reason: selection.reason,
-				codecs: this.localCodecs,
-			},
-		};
-		await this.publishNativeMessage(message);
-	}
-
-	private async publishNativeMessage(message: FluxerCodecNegotiationMessage): Promise<void> {
-		try {
-			await this.nativeAdapter?.publishData({
-				payload: TEXT_ENCODER.encode(JSON.stringify(message)),
-				reliable: true,
-				topic: PROTOCOL_TOPIC,
-			});
-		} catch (error) {
-			logger.debug('Failed to publish native codec negotiation message', {error, op: message.op});
 		}
 	}
 }

@@ -36,13 +36,8 @@ import {
 import {useFindTrackRef} from '@app/features/voice/components/pip_overlay/useFindTrackRef';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {useStreamSpectators} from '@app/features/voice/components/useStreamSpectators';
-import {buildNativeVoiceCallTrackRefForParticipant} from '@app/features/voice/components/useVoiceCallTracksAndLayout';
 import {VoiceParticipantTile} from '@app/features/voice/components/VoiceParticipantTile';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
-import NativeVideoTileManager from '@app/features/voice/engine/native_voice_engine/NativeVideoTileManager';
-import {useStoreVersion} from '@app/features/voice/engine/Store';
-import {isVoiceEngineV2NativeProjectionActiveFromMediaEngine} from '@app/features/voice/engine/VoiceMediaEngineBridge';
-import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {VOICE_DISCONNECT_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg} from '@lingui/core/macro';
@@ -51,7 +46,7 @@ import {isTrackReference, type TrackReferenceOrPlaceholder} from '@livekit/compo
 import {clsx} from 'clsx';
 import type {AnimationPlaybackControls} from 'framer-motion';
 import {animate, motion, useMotionValue} from 'framer-motion';
-import type {Room, Track} from 'livekit-client';
+import type {Room} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
@@ -123,26 +118,9 @@ interface PiPOverlayInnerBaseProps extends PiPOverlayInnerProps {
 const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room, trackRef}: PiPOverlayInnerBaseProps) {
 	const {i18n} = useLingui();
 	useMediaEngineVersion();
-	useStoreVersion(NativeVideoTileManager);
 	const corner = PiP.getEffectiveCorner();
 	const isScreenShare = content.type === 'stream';
-	const isNativeEngine = isVoiceEngineV2NativeProjectionActiveFromMediaEngine();
-	const nativeTrackRef = useMemo(() => {
-		if (!isNativeEngine) return null;
-		return buildNativeVoiceCallTrackRefForParticipant({
-			participantIdentity: content.participantIdentity,
-			source: (isScreenShare ? VoiceTrackSource.ScreenShare : VoiceTrackSource.Camera) as Track.Source,
-			participantSnapshots: MediaEngine.participants,
-			nativeTracks: NativeVideoTileManager.tracks,
-		});
-	}, [
-		content.participantIdentity,
-		isNativeEngine,
-		isScreenShare,
-		MediaEngine.participants,
-		NativeVideoTileManager.tracks,
-	]);
-	const effectiveTrackRef = trackRef ?? nativeTrackRef;
+	const effectiveTrackRef = trackRef;
 	const trackRefSummary = useMemo(() => {
 		if (!effectiveTrackRef) return null;
 		const summary = {
@@ -621,9 +599,8 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 			roomLocalParticipantIdentity: room?.localParticipant.identity ?? null,
 			remoteParticipantCount: room?.remoteParticipants.size ?? 0,
 			trackRef: trackRefSummary,
-			usesNativeTrackRef: trackRef == null && nativeTrackRef != null,
 		});
-	}, [content, nativeTrackRef, room, trackRef, trackRefSummary]);
+	}, [content, room, trackRef, trackRefSummary]);
 	return (
 		<motion.div
 			className={clsx(

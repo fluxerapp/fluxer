@@ -24,10 +24,6 @@ import {
 	type VideoCodec,
 } from 'livekit-client';
 
-function isVideoCodecValue(value: unknown): value is VideoCodec {
-	return value === 'av1' || value === 'h265' || value === 'h264' || value === 'vp9' || value === 'vp8';
-}
-
 interface MigrationContext {
 	readonly room: Room;
 	readonly participant: LocalParticipant;
@@ -114,9 +110,6 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 		if (Platform.OS !== 'web') {
 			logger.warn('Screen share updates are not supported on native');
 			return false;
-		}
-		if (this.adapter.captureCoordinator.activeCaptureId != null) {
-			return this.adapter.captureCoordinator.updateActiveSettings(room, options, publishOptions);
 		}
 		const participant = room?.localParticipant;
 		if (!participant || !participant.isScreenShareEnabled) return false;
@@ -527,45 +520,6 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 		return nextPublishOptions;
 	}
 
-	private async renegotiateNativeActiveCodec(
-		room: Room | null,
-		codec: VideoCodec,
-		reason: NegotiationReason,
-		options: {force?: boolean},
-	): Promise<boolean> {
-		if (!this.adapter.captureCoordinator.activeCaptureId) return false;
-		if (this.adapter.isScreenSharePending) {
-			this.adapter.queuePendingCodecRepublishRequestInternal(codec, reason, options);
-			return false;
-		}
-		const previousOptions = this.adapter.captureCoordinator.activeCapturePublishOptions ?? {};
-		const currentCodec = isVideoCodecValue(previousOptions.videoCodec) ? previousOptions.videoCodec : undefined;
-		const decision = selectScreenShareCodecRepublishDecision({
-			currentCodec,
-			nextCodec: codec,
-			reason,
-			force: options.force,
-			allowLiveRepublish: options.force === true,
-		});
-		if (decision.action === 'noop') return false;
-		if (decision.action === 'defer') {
-			this.adapter.deferActiveCodecRepublishRequestInternal(codec, reason, options);
-			logger.info('Deferring negotiated native screen share codec change until the next share start', {
-				currentCodec,
-				codec,
-				reason,
-			});
-			return false;
-		}
-		const nextPublishOptions = this.buildCodecRenegotiationPublishOptions(
-			previousOptions,
-			codec,
-			currentCodec,
-			options.force === true,
-		);
-		return this.adapter.captureCoordinator.updateActiveSettings(room, undefined, nextPublishOptions);
-	}
-
 	async renegotiateActiveCodec(
 		room: Room | null,
 		codec: VideoCodec,
@@ -575,9 +529,6 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 		assert.equal(typeof codec, 'string');
 		assert.ok(reason !== undefined, 'reason required');
 		if (Platform.OS !== 'web') return false;
-		if (this.adapter.captureCoordinator.activeCaptureId != null) {
-			return this.renegotiateNativeActiveCodec(room, codec, reason, options);
-		}
 		const participant = room?.localParticipant;
 		if (!room) return false;
 		if (!participant) return false;

@@ -125,26 +125,6 @@ export interface MediaEngineFacadeServerVoiceStateRemovalInput {
 	connecting: boolean;
 }
 
-export const NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT = 16;
-
-export function hasPlayedNativeVoiceReadySounds(
-	playedConnectionIds: ReadonlySet<string>,
-	connectionId: string | null,
-): boolean {
-	if (!connectionId) return false;
-	return playedConnectionIds.has(connectionId);
-}
-
-export function rememberNativeVoiceReadySounds(playedConnectionIds: Set<string>, connectionId: string | null): void {
-	if (!connectionId) return;
-	playedConnectionIds.add(connectionId);
-	while (playedConnectionIds.size > NATIVE_VOICE_READY_SOUND_CONNECTION_MEMORY_LIMIT) {
-		const oldest = playedConnectionIds.values().next().value;
-		if (oldest === undefined) break;
-		playedConnectionIds.delete(oldest);
-	}
-}
-
 export function createInitialMediaEngineFacadeContext(): MediaEngineFacadeMachineContext {
 	return {
 		activeConnection: null,
