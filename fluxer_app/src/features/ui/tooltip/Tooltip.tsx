@@ -3,6 +3,7 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
@@ -77,8 +78,8 @@ export const useTooltipPortalRoot = (enabled = true, targetDocument?: Document):
 	return scopedPortalHost ?? root;
 };
 const MAX_WIDTH_MAP = {
-	default: 190,
-	xl: 350,
+	default: remFromPx(190),
+	xl: remFromPx(350),
 	none: 'none' as const,
 };
 const TooltipPositionToStyle: Record<TooltipPosition, string> = {
