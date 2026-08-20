@@ -335,6 +335,7 @@ fn replace_image_extension(filename: &str, ext: AssetExtension) -> String {
     }
 }
 
+#[allow(clippy::result_large_err)]
 async fn rasterize_metadata_svg(
     app: &Arc<AppState>,
     input: InputData,

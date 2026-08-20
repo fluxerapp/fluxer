@@ -112,6 +112,7 @@ fn is_urlencoded_form(request: &Request) -> bool {
         })
 }
 
+#[allow(clippy::result_large_err)]
 async fn extract_csrf_from_form_body(
     request: Request,
 ) -> Result<(Request, Option<String>), Response> {

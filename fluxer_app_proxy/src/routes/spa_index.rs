@@ -231,6 +231,7 @@ fn discovery_endpoint(discovery: &DiscoveryResponse, key: &str) -> Option<String
         .map(ToOwned::to_owned)
 }
 
+#[allow(clippy::result_large_err)]
 async fn load_spa_index_html(state: &AppState) -> Result<String, Response> {
     if let Some(index_upstream_url) = &state.config.index_upstream_url {
         let response = state
