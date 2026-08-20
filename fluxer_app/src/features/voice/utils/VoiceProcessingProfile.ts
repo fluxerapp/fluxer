@@ -50,13 +50,12 @@ export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): R
 				contentHint: 'music',
 			};
 		case 'custom': {
-			const autoGain = settings.deepFilterNoiseSuppression ? false : settings.autoGainControl;
 			const browserNs = settings.noiseSuppression && !settings.deepFilterNoiseSuppression;
 			return {
 				mode: 'custom',
 				echoCancellation: settings.echoCancellation,
 				browserNoiseSuppression: browserNs,
-				autoGainControl: autoGain,
+				autoGainControl: settings.autoGainControl,
 				deepFilter: settings.deepFilterNoiseSuppression,
 				deepFilterNoiseReductionLevel: settings.deepFilterNoiseSuppression
 					? clampDeepFilterNoiseReductionLevel(settings.deepFilterNoiseSuppressionLevel)
@@ -69,7 +68,7 @@ export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): R
 				mode: 'voice',
 				echoCancellation: true,
 				browserNoiseSuppression: false,
-				autoGainControl: false,
+				autoGainControl: settings.autoGainControl,
 				deepFilter: true,
 				deepFilterNoiseReductionLevel: FOCUSED_VOICE_DEEP_FILTER_NOISE_REDUCTION_LEVEL,
 				contentHint: 'speech',

@@ -70,8 +70,8 @@ const STOPS_YOUR_SPEAKERS_FROM_LOOPING_BACK_INTO_YOUR_DESCRIPTOR = msg({
 	comment: 'Description for the echo cancellation toggle in the custom voice processing settings.',
 });
 const AUTO_GAIN_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Evens out your mic volume. Off when enhanced suppression is on.',
-	comment: 'Description for the automatic gain control toggle in the custom voice processing settings.',
+	message: 'Evens out your mic volume so you are not too quiet.',
+	comment: 'Description for the automatic gain control toggle in the voice processing settings.',
 });
 const DEEP_FILTER_STRENGTH_DESCRIPTOR = msg({
 	message: 'Suppression strength',
@@ -183,7 +183,6 @@ export const AudioProcessingModal = observer(() => {
 								label={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
 								description={i18n._(AUTO_GAIN_DESCRIPTION_DESCRIPTOR)}
 								value={VoiceSettings.autoGainControl}
-								disabled={deepFilterEnabled}
 								onChange={(checked) => VoiceSettingsCommands.update({autoGainControl: checked})}
 								compact
 								data-flx="voice.voice-connection-status.audio-processing-modal.switch.update--2"

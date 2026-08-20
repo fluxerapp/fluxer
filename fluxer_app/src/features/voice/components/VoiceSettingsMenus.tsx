@@ -359,8 +359,7 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 													data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon--2"
 												/>
 											}
-											checked={voiceSettings.autoGainControl && !deepFilterEnabled}
-											disabled={deepFilterEnabled}
+											checked={voiceSettings.autoGainControl}
 											onCheckedChange={(checked) => VoiceSettingsCommands.update({autoGainControl: checked})}
 											data-flx="voice.voice-settings-menus.voice-audio-settings-menu.checkbox-item--2"
 										>

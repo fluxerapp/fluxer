@@ -169,8 +169,8 @@ const resolvePushToTalkReleaseDelayInput = (
 	).value;
 };
 const AUTO_GAIN_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Evens out your mic volume. Off when enhanced suppression is on.',
-	comment: 'Description for the automatic gain control toggle in the custom voice processing settings.',
+	message: 'Evens out your mic volume so you are not too quiet.',
+	comment: 'Description for the automatic gain control toggle in the voice processing settings.',
 });
 const INPUT_AND_OUTPUT_DESCRIPTOR = msg({
 	message: 'Input and output',
@@ -293,7 +293,6 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		},
 	];
 	const noiseSuppressionMethod = resolveNoiseSuppressionMethod(deepFilterNoiseSuppression, noiseSuppression);
-	const effectiveAutoGainControl = !deepFilterNoiseSuppression && autoGainControl;
 	const noiseSuppressionOptions: Array<ComboboxOption<NoiseSuppressionMethod>> = [
 		{value: 'enhanced', label: i18n._(NOISE_SUPPRESSION_ENHANCED_DESCRIPTOR)},
 		{value: 'standard', label: i18n._(NOISE_SUPPRESSION_STANDARD_DESCRIPTOR)},
@@ -449,6 +448,16 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			)}
 		</>
 	);
+	const renderAutoGainControlSwitch = () => (
+		<Switch
+			label={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
+			description={i18n._(AUTO_GAIN_DESCRIPTION_DESCRIPTOR)}
+			value={autoGainControl}
+			onChange={(value) => VoiceSettingsCommands.update({autoGainControl: value})}
+			ariaLabel={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
+			data-flx="user.voice-tab.render-auto-gain-control-switch.switch.update-auto-gain-control"
+		/>
+	);
 	const renderCustomProfile = () => (
 		<div className={styles.profileSubSection} data-flx="user.voice-tab.render-custom-profile.profile-sub-section">
 			{renderPttControls()}
@@ -507,15 +516,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 				ariaLabel={i18n._(VOICE_ECHO_CANCELLATION_DESCRIPTOR)}
 				data-flx="user.voice-tab.render-custom-profile.switch.update--2"
 			/>
-			<Switch
-				label={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
-				description={i18n._(AUTO_GAIN_DESCRIPTION_DESCRIPTOR)}
-				value={effectiveAutoGainControl}
-				disabled={deepFilterNoiseSuppression}
-				onChange={(value) => VoiceSettingsCommands.update({autoGainControl: value})}
-				ariaLabel={i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
-				data-flx="user.voice-tab.render-custom-profile.switch.update-auto-gain-control"
-			/>
+			{renderAutoGainControlSwitch()}
 		</div>
 	);
 	return (
@@ -662,6 +663,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						{voiceProcessingMode === 'voice' && (
 							<div className={styles.profileSubSection} data-flx="user.voice-tab.profile-sub-section">
 								{renderPttControls()}
+								{renderAutoGainControlSwitch()}
 							</div>
 						)}
 						{voiceProcessingMode === 'studio' && pttCombo?.key && isPushToTalk && (
@@ -682,7 +684,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						outputVolume,
 						echoCancellation,
 						noiseSuppression,
-						autoGainControl: effectiveAutoGainControl,
+						autoGainControl,
 						deepFilterNoiseSuppression,
 						deepFilterNoiseSuppressionLevel,
 						voiceProcessingMode,

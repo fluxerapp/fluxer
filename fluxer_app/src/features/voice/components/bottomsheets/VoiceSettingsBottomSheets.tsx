@@ -281,7 +281,6 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 					/>
 				),
 				label: i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR),
-				disabled: deepFilterEnabled,
 				onClick: () => {
 					VoiceSettingsCommands.update({autoGainControl: !voiceSettings.autoGainControl});
 				},
