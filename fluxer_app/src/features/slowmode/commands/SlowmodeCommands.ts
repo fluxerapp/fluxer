@@ -25,10 +25,12 @@ export function recordPendingMessageSend(channelId: string): PendingMessageSend 
 	return {previousSendTimestamp, pendingSendTimestamp};
 }
 
-export function confirmMessageSend(channelId: string, sentAt: string): void {
+export function confirmMessageSend(channelId: string, sentAt: string, pending?: PendingMessageSend): void {
 	const timestamp = Date.parse(sentAt);
 	if (!Number.isFinite(timestamp)) return;
-	Slowmode.updateSlowmodeTimestamp(channelId, timestamp);
+	const floor = pending?.pendingSendTimestamp;
+	const anchored = floor == null ? timestamp : Math.max(timestamp, floor);
+	Slowmode.updateSlowmodeTimestamp(channelId, anchored);
 }
 
 export function discardPendingMessageSend(channelId: string, pending: PendingMessageSend): void {

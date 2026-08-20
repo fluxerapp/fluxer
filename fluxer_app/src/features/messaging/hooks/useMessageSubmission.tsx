@@ -145,7 +145,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			})
 				.then((sentMessage) => {
 					if (sentMessage) {
-						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp);
+						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp, pendingSend);
 						return;
 					}
 					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
@@ -218,7 +218,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			})
 				.then((sentMessage) => {
 					if (sentMessage) {
-						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp);
+						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp, pendingSend);
 						return;
 					}
 					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);

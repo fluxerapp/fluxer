@@ -168,3 +168,39 @@ describe('slowmode while an earlier send is still pending', () => {
 		expect(shownRemainingMs()).toBe(0);
 	});
 });
+
+describe('clock skew on the send anchor', () => {
+	const CHANNEL_ID = '900000000000000001';
+	const RATE_LIMIT_SECONDS = 5;
+
+	beforeEach(() => {
+		vi.useFakeTimers();
+		Slowmode.clearChannel(CHANNEL_ID);
+	});
+
+	afterEach(() => {
+		Slowmode.clearChannel(CHANNEL_ID);
+		vi.useRealTimers();
+	});
+
+	const remainingAfterAck = (clientAheadMs: number): number => {
+		vi.setSystemTime(new Date(1_000_000));
+		const pending = SlowmodeCommands.recordPendingMessageSend(CHANNEL_ID);
+		const serverAcceptedAt = new Date(1_000_000 - clientAheadMs).toISOString();
+		vi.setSystemTime(new Date(1_000_450));
+		SlowmodeCommands.confirmMessageSend(CHANNEL_ID, serverAcceptedAt, pending);
+		return Slowmode.getSlowmodeRemaining(CHANNEL_ID, RATE_LIMIT_SECONDS);
+	};
+
+	it('does not shorten the window when the client clock runs ahead of the server', () => {
+		for (const aheadMs of [0, 250, 1_000, 2_500, 4_800, 30_000, 3_600_000]) {
+			expect(remainingAfterAck(aheadMs)).toBe(4_550);
+		}
+	});
+
+	it('never lets the local guard reach zero while the window is live', () => {
+		for (const aheadMs of [4_800, 30_000, 3_600_000]) {
+			expect(remainingAfterAck(aheadMs)).toBeGreaterThan(0);
+		}
+	});
+});
