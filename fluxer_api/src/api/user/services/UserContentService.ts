@@ -6,6 +6,7 @@ import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownCha
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {MaxBookmarksError} from '@fluxer/errors/src/domains/core/MaxBookmarksError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {HarvestExpiredError} from '@fluxer/errors/src/domains/moderation/HarvestExpiredError';
 import {HarvestFailedError} from '@fluxer/errors/src/domains/moderation/HarvestFailedError';
 import {HarvestNotReadyError} from '@fluxer/errors/src/domains/moderation/HarvestNotReadyError';
@@ -94,6 +95,13 @@ function normalizeProviderEnvironment(
 	return platform === 'ios_apns' ? DEFAULT_APNS_PROVIDER_ENVIRONMENT : null;
 }
 
+const isUnreachableEntityError = (error: unknown): boolean =>
+	error instanceof MissingPermissionsError ||
+	error instanceof UnknownChannelError ||
+	error instanceof UnknownGuildError;
+
+export const UserContentServiceTestHooks = {isUnreachableEntityError};
+
 export class UserContentService {
 	private readonly updatePropagator: BaseUserUpdatePropagator;
 	private readonly userRepository: UserContentRepository;
@@ -138,11 +146,7 @@ export class UserContentService {
 					messageId: mention.messageId,
 				});
 			} catch (error) {
-				if (
-					error instanceof UnknownMessageError ||
-					error instanceof MissingPermissionsError ||
-					error instanceof UnknownChannelError
-				) {
+				if (error instanceof UnknownMessageError || isUnreachableEntityError(error)) {
 					return null;
 				}
 				throw error;
@@ -188,7 +192,7 @@ export class UserContentService {
 					await this.userRepository.deleteSavedMessage(userId, savedMessage.messageId);
 					return null;
 				}
-				if (error instanceof MissingPermissionsError || error instanceof UnknownChannelError) {
+				if (isUnreachableEntityError(error)) {
 					status = 'missing_permissions';
 				} else {
 					throw error;
