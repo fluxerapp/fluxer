@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {createVoiceSoftClipNode} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {buildDeepFilterAudioChain, type DeepFilterAudioChain} from '@app/features/voice/utils/DeepFilterNoiseProcessor';
 
 const logger = new Logger('MicTestAudioGraph');
@@ -11,6 +12,8 @@ export interface MicTestAudioGraph {
 	inputGain: GainNode;
 	delay: DelayNode;
 	outputGain: GainNode;
+	softClipInput: GainNode;
+	softClipOutput: AudioNode;
 	playbackTarget: AudioNode;
 	dispose: () => Promise<void>;
 }
@@ -80,10 +83,14 @@ export async function createMicTestAudioGraph({
 	analyser.smoothingTimeConstant = 0.2;
 	delay.delayTime.value = playbackDelaySeconds;
 	outputGainNode.gain.value = outputGain;
+	const softClip = createVoiceSoftClipNode(audioContext);
+	const softClipInput = softClip?.input ?? outputGainNode;
+	const softClipOutput: AudioNode = softClip?.output ?? outputGainNode;
 	inputGainNode.connect(analyser);
 	analyser.connect(delay);
 	delay.connect(outputGainNode);
-	outputGainNode.connect(playbackTarget);
+	if (softClip) outputGainNode.connect(softClip.input);
+	softClipOutput.connect(playbackTarget);
 
 	const dispose = async () => {
 		source.disconnect();
@@ -91,6 +98,8 @@ export async function createMicTestAudioGraph({
 		inputGainNode.disconnect();
 		delay.disconnect();
 		outputGainNode.disconnect();
+		softClipInput.disconnect();
+		softClipOutput.disconnect();
 		passthroughDestination?.disconnect();
 		passthroughDestination?.stream.getTracks().forEach((track) => track.stop());
 		if (deepFilterChain) {
@@ -106,6 +115,8 @@ export async function createMicTestAudioGraph({
 		inputGain: inputGainNode,
 		delay,
 		outputGain: outputGainNode,
+		softClipInput,
+		softClipOutput,
 		playbackTarget,
 		dispose,
 	};

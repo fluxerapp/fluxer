@@ -244,7 +244,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 				playbackDestination.disconnect();
 				playbackDestination.stream.getTracks().forEach((track) => track.stop());
 				playbackDestinationRef.current = null;
-				graphRef.current.outputGain.disconnect();
+				graphRef.current.softClipOutput.disconnect();
 				playbackTarget = audioContext.destination;
 				const sinkableAudioContext = audioContext as SinkableAudioContext;
 				if (settings.outputDeviceId !== 'default' && sinkableAudioContext.setSinkId) {
@@ -254,7 +254,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 						logger.warn('Failed to set mic test AudioContext output device', sinkError);
 					}
 				}
-				graphRef.current.outputGain.connect(playbackTarget);
+				graphRef.current.softClipOutput.connect(playbackTarget);
 				graphRef.current.playbackTarget = playbackTarget;
 			}
 			setIsTesting(true);

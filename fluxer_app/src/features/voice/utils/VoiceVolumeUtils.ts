@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const VOICE_VOLUME_MAX_PERCENT = 200;
+export const VOICE_VOLUME_MAX_GAIN = 4;
+export const VOICE_TRACK_MAX_TOTAL_GAIN = 12;
+export const VOICE_VOLUME_MAX_SLIDER_VOLUME = VOICE_VOLUME_MAX_PERCENT / 100;
 const UNITY_GAIN_PERCENT = 100;
 const QUIET_RANGE_EXPONENT = 1.2;
 
@@ -27,5 +30,16 @@ export function boostedVoiceVolumePercentToTrackVolume(value: number): number {
 	if (clamped <= UNITY_GAIN_PERCENT) {
 		return 10 ** (((clamped - UNITY_GAIN_PERCENT) / UNITY_GAIN_PERCENT) * QUIET_RANGE_EXPONENT);
 	}
-	return 2 ** ((clamped - UNITY_GAIN_PERCENT) / (VOICE_VOLUME_MAX_PERCENT - UNITY_GAIN_PERCENT));
+	return VOICE_VOLUME_MAX_GAIN ** ((clamped - UNITY_GAIN_PERCENT) / (VOICE_VOLUME_MAX_PERCENT - UNITY_GAIN_PERCENT));
+}
+
+export function composeVoiceVolumeGain(...volumePercents: Array<number>): number {
+	return volumePercents.reduce((gain, percent) => gain * boostedVoiceVolumePercentToTrackVolume(percent), 1);
+}
+
+export function clampVoiceTrackTotalGain(gain: number): number {
+	if (!Number.isFinite(gain)) {
+		return 1;
+	}
+	return Math.max(0, Math.min(VOICE_TRACK_MAX_TOTAL_GAIN, gain));
 }

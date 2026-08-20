@@ -234,6 +234,17 @@ function applyStreamingModeDefaultMigrationV1(parsed: Record<string, unknown>): 
 	return true;
 }
 
+function applyOutputVolumeRecalibrationMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.outputVolumeRecalibratedV1 === true) {
+		return false;
+	}
+	if (typeof parsed.outputVolume === 'number' && parsed.outputVolume > 100) {
+		parsed.outputVolume = 100;
+	}
+	parsed.outputVolumeRecalibratedV1 = true;
+	return true;
+}
+
 function validateBackgroundImages(images: unknown): Array<BackgroundImage> {
 	if (!Array.isArray(images)) return [];
 	const validated: Array<BackgroundImage> = [];
@@ -279,6 +290,7 @@ class VoiceSettings {
 	shareDeviceAudio = false;
 	screenShareAudioDeviceId = 'default';
 	screenShareAudioConsentMigratedV1 = false;
+	outputVolumeRecalibratedV1 = false;
 	backgroundImageId = NONE_BACKGROUND_ID;
 	backgroundImages: Array<BackgroundImage> = [];
 	backgroundBlurStrength = CAMERA_EFFECT_STRENGTH_DEFAULT;
@@ -413,9 +425,11 @@ class VoiceSettings {
 			changed = applyAdaptiveScreenShareQualityMigrationV2(parsed) || changed;
 			changed = applyScreenShareAudioConsentMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
+			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
 			if (changed) {
 				AppStorage.setItem('VoiceSettings', JSON.stringify(parsed));
 			}
+			this.outputVolumeRecalibratedV1 = parsed.outputVolumeRecalibratedV1 === true;
 		} catch (error) {
 			logger.warn('Failed to migrate persisted voice settings:', error);
 		}
@@ -449,6 +463,7 @@ class VoiceSettings {
 			'shareDeviceAudio',
 			'screenShareAudioDeviceId',
 			'screenShareAudioConsentMigratedV1',
+			'outputVolumeRecalibratedV1',
 			'backgroundImageId',
 			'backgroundImages',
 			'backgroundBlurStrength',
