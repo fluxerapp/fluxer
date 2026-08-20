@@ -106,10 +106,10 @@ jobs:
 
       - name: upload assets to S3 static bucket
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          S3_ENDPOINT: https://ewr1.vultrobjects.com
-          STATIC_BUCKET: fluxer-static
+          AWS_ACCESS_KEY_ID: ${{ secrets.STATIC_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STATIC_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
+          S3_ENDPOINT: ${{ vars.STATIC_S3_ENDPOINT }}
+          STATIC_BUCKET: ${{ vars.STATIC_S3_BUCKET }}
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
           --step upload_assets

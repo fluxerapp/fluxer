@@ -139,10 +139,10 @@ jobs:
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
       S3_DESKTOP_PREFIX: ${{ needs.meta.outputs.s3_prefix }}
       DESKTOP_HANDOFF_PREFIX: _handoff/desktop/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      S3_ENDPOINT: https://ewr1.vultrobjects.com
-      S3_BUCKET: fluxer-downloads
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      S3_ENDPOINT: ${{ vars.DOWNLOADS_S3_ENDPOINT }}
+      S3_BUCKET: ${{ vars.DOWNLOADS_S3_BUCKET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DOWNLOADS_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DOWNLOADS_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
       DESKTOP_PLATFORM: ${{ matrix.platform }}
       DESKTOP_ARCH: ${{ matrix.arch }}
       DESKTOP_VARIANT: ${{ matrix.desktop_variant }}
@@ -524,11 +524,11 @@ jobs:
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
       S3_DESKTOP_PREFIX: ${{ needs.meta.outputs.s3_prefix }}
       DESKTOP_HANDOFF_PREFIX: _handoff/desktop/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      S3_ENDPOINT: https://ewr1.vultrobjects.com
-      S3_BUCKET: fluxer-downloads
+      S3_ENDPOINT: ${{ vars.DOWNLOADS_S3_ENDPOINT }}
+      S3_BUCKET: ${{ vars.DOWNLOADS_S3_BUCKET }}
       PUBLIC_DL_BASE: https://api.fluxer.app/dl
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DOWNLOADS_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DOWNLOADS_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
