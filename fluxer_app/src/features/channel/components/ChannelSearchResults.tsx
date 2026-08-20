@@ -28,6 +28,10 @@ import {
 	SearchIndexingState,
 } from '@app/features/channel/components/channel_search_results/SearchResultsStateViews';
 import type {MessageGroupRenderWrapperProps} from '@app/features/channel/components/MessageGroup';
+import {
+	buildSearchResultGroups,
+	buildSearchResultGroupsByMessageId,
+} from '@app/features/channel/components/SearchResultGrouping';
 import {SearchResultMessageList} from '@app/features/channel/components/SearchResultMessageList';
 import {areSegmentsEqual} from '@app/features/channel/components/SearchResultsUtils';
 import {DEFAULT_SCOPE_VALUE, getScopeOptionsForChannel} from '@app/features/channel/components/SearchScopeOptions';
@@ -134,35 +138,27 @@ export const ChannelSearchResults = observer(
 			() => new Map(successChannels.map((searchChannel) => [searchChannel.id, searchChannel])),
 			[successChannels],
 		);
-		const messagesByChannel = useMemo(() => {
-			const grouped = new Map<string, Array<Message>>();
-			for (const message of successResults) {
-				if (!grouped.has(message.channelId)) {
-					grouped.set(message.channelId, []);
-				}
-				grouped.get(message.channelId)!.push(message);
-			}
-			return grouped;
-		}, [successResults]);
+		const resultGroups = useMemo(() => buildSearchResultGroups(successResults), [successResults]);
+		const resultGroupsByMessageId = useMemo(() => buildSearchResultGroupsByMessageId(resultGroups), [resultGroups]);
 		const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(successResults);
 		const spammerOverrideVersion = LocalUserSpamOverride.version;
 		const collapsedMessageVisibility = useMemo(
 			() => ({
 				isMessageRevealed: (message: Message) => {
-					const channelMessages = messagesByChannel.get(message.channelId);
-					if (!channelMessages) return false;
+					const resultGroup = resultGroupsByMessageId.get(message.id);
+					if (!resultGroup) return false;
 					const messageChannel = searchChannelsById.get(message.channelId) ?? Channels.getChannel(message.channelId);
 					if (!messageChannel) return false;
 					const groupKey = getCollapsedMessageGroupKey({
 						channel: messageChannel,
-						messages: channelMessages,
+						messages: resultGroup.messages,
 						messageId: message.id,
 						treatSpam: true,
 					});
 					return groupKey != null && revealedGroupKeys.has(groupKey);
 				},
 			}),
-			[messagesByChannel, revealedGroupKeys, searchChannelsById, spammerOverrideVersion],
+			[resultGroupsByMessageId, revealedGroupKeys, searchChannelsById, spammerOverrideVersion],
 		);
 		const handleCollapsedGroupRevealChange = useCallback((groupKey: string, revealed: boolean) => {
 			setRevealedGroupKeys((current) => {
@@ -606,9 +602,9 @@ export const ChannelSearchResults = observer(
 								data-message-selection-root="true"
 								data-flx="channel.channel-search-results.render-content.results-scroller"
 							>
-								{Array.from(messagesByChannel.entries()).map(([resultChannelId, messages]) => {
+								{resultGroups.map((resultGroup) => {
 									const renderData = getSearchResultChannelRenderData(
-										resultChannelId,
+										resultGroup.channelId,
 										searchChannelsById,
 										(activeScope ?? DEFAULT_SCOPE_VALUE) as MessageSearchScope,
 									);
@@ -649,7 +645,7 @@ export const ChannelSearchResults = observer(
 										</div>
 									);
 									return (
-										<React.Fragment key={resultChannelId}>
+										<React.Fragment key={resultGroup.key}>
 											<MessageContextPrefix
 												channel={messageChannel}
 												showGuildMeta={showGuildMeta}
@@ -660,7 +656,7 @@ export const ChannelSearchResults = observer(
 											/>
 											<SearchResultMessageList
 												channel={messageChannel}
-												messages={messages}
+												messages={resultGroup.messages}
 												revealedGroupKeys={revealedGroupKeys}
 												onGroupRevealChange={handleCollapsedGroupRevealChange}
 												collapsedGroupClassName={styles.collapsedMessageGroup}
@@ -725,7 +721,7 @@ export const ChannelSearchResults = observer(
 			handlePaginationJump,
 			onCopySelectedMessages,
 			collapsedMessageVisibility,
-			messagesByChannel,
+			resultGroups,
 			searchChannelsById,
 			revealedGroupKeys,
 			handleCollapsedGroupRevealChange,
