@@ -332,6 +332,7 @@ export const GuildListItemPresentation = forwardRef<
 			role="button"
 			tabIndex={0}
 			data-guild-list-focus-item="true"
+			data-guild-id={guild.id}
 			onLongPress={onLongPress}
 			disabled={false}
 			data-flx="app.sidebar-nav.guild-list-item-presentation.guild-list-item.click"
