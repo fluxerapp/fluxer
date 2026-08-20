@@ -5,7 +5,6 @@ use std::time::Duration;
 use url::Url;
 
 const METADATA_TIMEOUT: Duration = Duration::from_secs(5);
-const EXTERNAL_PROXY_VERSION_PREFIX: &str = "v2/";
 
 pub struct MediaProxyClient {
     http_client: reqwest::Client,
@@ -120,28 +119,12 @@ impl MediaProxyClient {
             return Some(input_url.to_owned());
         }
         let parsed = Url::parse(input_url).ok()?;
-        let encoded = base64::Engine::encode(
-            &base64::engine::general_purpose::URL_SAFE_NO_PAD,
+        fluxer_common::external_media_path::build_external_media_proxy_url(
+            &self.public_endpoint,
             parsed.as_str(),
-        );
-        let path = format!("{EXTERNAL_PROXY_VERSION_PREFIX}{encoded}");
-        let signature = create_signature(&path, &self.secret_key);
-        Some(format!(
-            "{}/external/{}/{}",
-            self.public_endpoint, signature, path
-        ))
+            self.secret_key.as_bytes(),
+        )
     }
-}
-
-fn create_signature(input: &str, secret: &str) -> String {
-    use hmac::{Hmac, KeyInit, Mac};
-    let mut mac =
-        Hmac::<sha2::Sha256>::new_from_slice(secret.as_bytes()).expect("hmac accepts any key size");
-    mac.update(input.as_bytes());
-    base64::Engine::encode(
-        &base64::engine::general_purpose::URL_SAFE_NO_PAD,
-        mac.finalize().into_bytes(),
-    )
 }
 
 #[cfg(test)]
@@ -178,7 +161,7 @@ mod tests {
     }
 
     #[test]
-    fn external_proxy_url_uses_public_endpoint_and_v2_path() {
+    fn external_proxy_url_uses_public_endpoint_and_plain_path() {
         let client = reqwest::Client::new();
         let mp = MediaProxyClient::new_with_public_endpoint(
             "http://media-proxy:8080/",
@@ -191,15 +174,18 @@ mod tests {
             .expect("proxy url");
 
         assert!(proxy.starts_with("https://media.example.test/external/"));
-        assert!(proxy.contains("/v2/"));
+        assert!(proxy.contains("/https/"));
 
-        let encoded = proxy.rsplit('/').next().expect("encoded path segment");
-        let decoded =
-            base64::Engine::decode(&base64::engine::general_purpose::URL_SAFE_NO_PAD, encoded)
-                .expect("valid base64");
+        let path = proxy
+            .split_once("/external/")
+            .expect("external segment")
+            .1
+            .split_once('/')
+            .expect("signature segment")
+            .1;
         assert_eq!(
-            String::from_utf8(decoded).expect("utf8"),
-            "https://pbs.twimg.com/media/a.jpg?name=orig"
+            "https://pbs.twimg.com/media/a.jpg?name=orig",
+            fluxer_common::external_media_path::reconstruct_original_url(path).expect("decodes")
         );
         assert_eq!(
             mp.external_proxy_url("https://media.example.test/external/already"),

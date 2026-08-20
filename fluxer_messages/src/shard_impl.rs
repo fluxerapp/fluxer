@@ -15,13 +15,11 @@ use crate::types::{
     MessageSnapshot, MessageStickerItem,
 };
 use crate::udt;
-use base64::Engine;
 use chrono::{DateTime, Utc};
 use fluxer_svc::shard::ShardService;
 use fluxer_svc::transport::NatsTransport;
 use fluxer_svc::{postgres, postgres::BigIntBound, postgres::KeyPart};
 use futures::stream::{self, StreamExt};
-use hmac::{Hmac, KeyInit, Mac};
 #[cfg(feature = "scylla")]
 use scylla::DeserializeRow;
 #[cfg(feature = "scylla")]
@@ -31,7 +29,6 @@ use scylla::response::query_result::QueryRowsResult;
 #[cfg(feature = "scylla")]
 use scylla::statement::prepared::PreparedStatement;
 use serde::Deserialize;
-use sha2::Sha256;
 use std::collections::{HashMap, HashSet};
 #[cfg(feature = "scylla")]
 use std::sync::Arc;
@@ -2796,23 +2793,12 @@ fn external_media_proxy_url(input_url: &str, options: &ResponseBuildOptions) -> 
         Ok(url) => url,
         Err(_) => return input_url.to_owned(),
     };
-    let encoded =
-        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(parsed_url.as_str().as_bytes());
-    let path = format!("v2/{encoded}");
-    let signature = create_signature(&path, &options.media_proxy_secret_key);
-    format!(
-        "{}/external/{}/{}",
+    fluxer_common::external_media_path::build_external_media_proxy_url(
         options.media_endpoint.trim_end_matches('/'),
-        signature,
-        path
+        parsed_url.as_str(),
+        options.media_proxy_secret_key.as_bytes(),
     )
-}
-
-fn create_signature(input: &str, secret: &str) -> String {
-    let mut mac =
-        Hmac::<Sha256>::new_from_slice(secret.as_bytes()).expect("hmac accepts any key size");
-    mac.update(input.as_bytes());
-    base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes())
+    .unwrap_or_else(|| input_url.to_owned())
 }
 
 fn dt_to_epoch_millis(dt: &DateTime<Utc>) -> i64 {

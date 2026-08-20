@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use base64::prelude::*;
-use hmac::{Hmac, KeyInit, Mac};
-use sha2::Sha256;
 use url::Url;
-
-const V2_PATH_PREFIX: &str = "v2/";
 
 #[derive(Clone)]
 pub struct MediaProxyUrlBuilder {
@@ -66,26 +61,12 @@ impl MediaProxyUrlBuilder {
             return Some(input_url.to_owned());
         }
 
-        let proxy_path = build_external_media_proxy_path(parsed.as_str());
-        let signature = create_signature(&proxy_path, &self.secret_key);
-        Some(format!(
-            "{}/external/{signature}/{proxy_path}",
-            self.endpoint
-        ))
+        fluxer_common::external_media_path::build_external_media_proxy_url(
+            &self.endpoint,
+            parsed.as_str(),
+            self.secret_key.as_bytes(),
+        )
     }
-}
-
-fn build_external_media_proxy_path(input_url: &str) -> String {
-    format!(
-        "{V2_PATH_PREFIX}{}",
-        BASE64_URL_SAFE_NO_PAD.encode(input_url)
-    )
-}
-
-fn create_signature(input: &str, secret: &str) -> String {
-    let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes()).expect("HMAC accepts any key");
-    mac.update(input.as_bytes());
-    BASE64_URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes())
 }
 
 #[cfg(test)]
@@ -153,7 +134,7 @@ mod tests {
             .expect("proxy url");
 
         assert!(url.starts_with("https://media.example.test/external/"));
-        assert!(url.contains("/v2/"));
+        assert!(url.contains("/https/"));
         assert_eq!(
             builder.external_proxy_url("https://media.example.test/external/existing"),
             Some("https://media.example.test/external/existing".to_owned())

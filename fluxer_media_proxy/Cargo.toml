@@ -18,6 +18,7 @@ name = "core"
 harness = false
 
 [dependencies]
+fluxer_common = { path = "../fluxer_common" }
 anyhow = "1.0.102"
 axum = {version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"]}
 base64 = "0.22.1"

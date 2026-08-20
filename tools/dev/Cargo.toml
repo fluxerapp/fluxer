@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+fluxer_common = { path = "../../fluxer_common" }
 anyhow = "1.0.102"
 axum = "0.8.9"
 base64 = "0.22.1"
