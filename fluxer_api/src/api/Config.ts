@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
@@ -237,6 +238,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			cacheMinTtlSeconds: master.services.api.embeds.cache_min_ttl_seconds,
 			cacheRespectRemoteTtl: master.services.api.embeds.cache_respect_remote_ttl,
 		},
+		s3Downloads: resolveDownloadsProvider(master),
 		s3: {
 			endpoint: s3Config.endpoint,
 			presignedUrlBase: s3Config.presigned_url_base,

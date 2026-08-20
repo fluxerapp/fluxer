@@ -187,3 +187,26 @@ describe('StorageService.copyObjectWithMetadataStripping', () => {
 		]);
 	});
 });
+
+describe('provider selection', () => {
+	interface ClientProbe {
+		client: {config: {region: () => Promise<string>; endpoint?: () => Promise<{hostname: string}>}};
+	}
+
+	it('defaults to the shared S3 configuration', async () => {
+		const service = new StorageService() as unknown as ClientProbe;
+		expect(await service.client.config.region()).toBe(Config.s3.region);
+	});
+
+	it('uses an explicitly supplied provider instead of the shared one', async () => {
+		const service = new StorageService({
+			endpoint: 'https://downloads.example.net',
+			forcePathStyle: false,
+			region: 'eu-central-9',
+			accessKeyId: 'DL_KEY',
+			secretAccessKey: 'DL_SECRET',
+		}) as unknown as ClientProbe;
+		expect(await service.client.config.region()).toBe('eu-central-9');
+		expect(await service.client.config.region()).not.toBe(Config.s3.region);
+	});
+});

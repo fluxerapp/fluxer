@@ -60,7 +60,7 @@ import {KVActivityTracker} from '../infrastructure/KVActivityTracker';
 import {KVBulkMessageDeletionQueueService} from '../infrastructure/KVBulkMessageDeletionQueueService';
 import {NatsUnfurlerService} from '../infrastructure/NatsUnfurlerService';
 import {PremiumStateReconciliationQueueService} from '../infrastructure/PremiumStateReconciliationQueueService';
-import {createStorageService} from '../infrastructure/StorageServiceFactory';
+import {createDownloadsStorageService, createStorageService} from '../infrastructure/StorageServiceFactory';
 import {UserCacheService} from '../infrastructure/UserCacheService';
 import {createUsersServiceClient} from '../infrastructure/UsersServiceClient';
 import {VirusScanService} from '../infrastructure/VirusScanService';
@@ -193,6 +193,10 @@ export const getStorageService: () => IStorageService = (() => {
 	const fallback = singleton(() => createStorageService());
 	return () => _injectedStorageService ?? fallback();
 })();
+const getDownloadsStorageService: () => IStorageService = (() => {
+	const override = singleton(() => createDownloadsStorageService());
+	return () => override() ?? getStorageService();
+})();
 export const getErrorI18nService = singleton(() => new ErrorI18nService());
 export const getLimitConfigService = singleton(
 	() => new LimitConfigService(getInstanceConfigRepository(), getCacheService(), getKVClient()),
@@ -262,7 +266,7 @@ export function getKVAccountDeletionQueue(): KVAccountDeletionQueueService {
 	return accountDeletionQueue;
 }
 
-export const getDownloadService = singleton(() => new DownloadService(getStorageService()));
+export const getDownloadService = singleton(() => new DownloadService(getDownloadsStorageService()));
 export const getThemeService = singleton(() => new ThemeService(getStorageService()));
 const getNcmecReporter = singleton(() => new NcmecReporter({config: createNcmecApiConfig(), fetch}));
 const getNcmecRepository = singleton(() => new NcmecRepository());

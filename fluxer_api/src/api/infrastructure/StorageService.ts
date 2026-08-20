@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {S3ProviderSettings} from '@fluxer/config/src/S3DownloadsProvider';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import fs from 'node:fs';
@@ -105,27 +106,36 @@ function extractStreamFromGet(out: GetObjectCommandOutput): Readable {
 export class StorageService implements IStorageService {
 	private readonly client: S3Client;
 	private readonly presignClient: S3Client;
+	private readonly provider: S3ProviderSettings;
 
-	constructor() {
-		this.client = buildPooledS3Client({
+	constructor(provider?: S3ProviderSettings) {
+		this.provider = provider ?? {
 			endpoint: Config.s3.endpoint,
+			presignedUrlBase: Config.s3.presignedUrlBase,
+			forcePathStyle: Config.s3.forcePathStyle,
 			region: Config.s3.region,
 			accessKeyId: Config.s3.accessKeyId,
 			secretAccessKey: Config.s3.secretAccessKey,
+		};
+		this.client = buildPooledS3Client({
+			endpoint: this.provider.endpoint,
+			region: this.provider.region,
+			accessKeyId: this.provider.accessKeyId,
+			secretAccessKey: this.provider.secretAccessKey,
 			forcePathStyle: true,
 		});
 		this.presignClient = buildPooledS3Client({
 			endpoint: this.resolvePresignEndpoint(),
-			region: Config.s3.region,
-			accessKeyId: Config.s3.accessKeyId,
-			secretAccessKey: Config.s3.secretAccessKey,
-			forcePathStyle: Config.s3.forcePathStyle,
+			region: this.provider.region,
+			accessKeyId: this.provider.accessKeyId,
+			secretAccessKey: this.provider.secretAccessKey,
+			forcePathStyle: this.provider.forcePathStyle,
 		});
 	}
 
 	private resolvePresignEndpoint(): string {
-		const fallbackEndpoint = Config.s3.endpoint;
-		const configuredEndpoint = Config.s3.presignedUrlBase;
+		const fallbackEndpoint = this.provider.endpoint;
+		const configuredEndpoint = this.provider.presignedUrlBase;
 		if (!configuredEndpoint) {
 			return fallbackEndpoint;
 		}

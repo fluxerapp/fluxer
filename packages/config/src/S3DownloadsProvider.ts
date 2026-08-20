@@ -2,7 +2,7 @@
 
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 
-interface S3ProviderSettings {
+export interface S3ProviderSettings {
 	endpoint: string;
 	presignedUrlBase?: string;
 	forcePathStyle: boolean;
@@ -11,7 +11,7 @@ interface S3ProviderSettings {
 	secretAccessKey: string;
 }
 
-interface ResolvedDownloadsProvider {
+export interface ResolvedDownloadsProvider {
 	settings: S3ProviderSettings;
 	isOverridden: boolean;
 }
