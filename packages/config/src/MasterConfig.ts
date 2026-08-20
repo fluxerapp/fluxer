@@ -79,6 +79,14 @@ export interface MasterConfig {
 			static: string;
 		};
 	};
+	s3_downloads?: {
+		endpoint: string;
+		presigned_url_base?: string;
+		force_path_style?: boolean;
+		region?: string;
+		access_key_id?: string;
+		secret_access_key?: string;
+	};
 	services: {
 		api: {
 			port: number;
