@@ -8,6 +8,7 @@ import {
 import type {Participant, Room} from 'livekit-client';
 import {describe, expect, it} from 'vitest';
 import {
+	__TEST__,
 	createLivekitParticipantSnapshot,
 	createLivekitParticipantSnapshotsFromRoom,
 	createVoiceParticipantSnapshot,
@@ -57,6 +58,48 @@ function room(localParticipant: Participant | null, remoteParticipants: Readonly
 
 function commandsOf(snapshot: VoiceRemoteSpeakingSnapshot): ReadonlyArray<VoiceRemoteSpeakingCommand> {
 	return snapshot.context.commands;
+}
+
+const LEVELLER_IDENTITY = 'user_1_a';
+const LEVELLER_TICK_MS = 50;
+
+function attachedRemoteSnapshot(): VoiceRemoteSpeakingSnapshot {
+	const attached = transitionVoiceRemoteSpeakingSnapshot(createVoiceRemoteSpeakingSnapshot(), {
+		type: 'remote.attach',
+		identity: LEVELLER_IDENTITY,
+		track: {},
+	});
+	return transitionVoiceRemoteSpeakingSnapshot(attached, {type: 'remote.clearCommands'});
+}
+
+function runRemoteTicks(
+	snapshot: VoiceRemoteSpeakingSnapshot,
+	options: {rms: number; threshold: number; ticks: number; startMs: number},
+): {snapshot: VoiceRemoteSpeakingSnapshot; commands: Array<VoiceRemoteSpeakingCommand>; endMs: number} {
+	let next = snapshot;
+	let nowMs = options.startMs;
+	const commands: Array<VoiceRemoteSpeakingCommand> = [];
+	for (let i = 0; i < options.ticks; i++) {
+		next = transitionVoiceRemoteSpeakingSnapshot(next, {
+			type: 'remote.tick',
+			identity: LEVELLER_IDENTITY,
+			rms: options.rms,
+			threshold: options.threshold,
+			nowMs,
+		});
+		commands.push(...commandsOf(next));
+		next = transitionVoiceRemoteSpeakingSnapshot(next, {type: 'remote.clearCommands'});
+		nowMs += LEVELLER_TICK_MS;
+	}
+	return {snapshot: next, commands, endMs: nowMs};
+}
+
+function playbackBoostOf(snapshot: VoiceRemoteSpeakingSnapshot): number {
+	return snapshot.context.analysers.get(LEVELLER_IDENTITY)?.playbackBoost ?? Number.NaN;
+}
+
+function appliedBoostOf(snapshot: VoiceRemoteSpeakingSnapshot): number {
+	return snapshot.context.analysers.get(LEVELLER_IDENTITY)?.appliedBoost ?? Number.NaN;
 }
 
 describe('VoiceParticipantStateMachine participants', () => {
@@ -304,43 +347,86 @@ describe('VoiceParticipantStateMachine remote speaking', () => {
 		expect(commandsOf(snapshot)).toEqual([{type: 'rehydrateRemoteAnalysers'}]);
 	});
 
-	it('resets playback boost after quiet audio and on detach', () => {
-		let snapshot = createVoiceRemoteSpeakingSnapshot();
-		snapshot = transitionVoiceRemoteSpeakingSnapshot(snapshot, {
+	it('holds the playback boost through silence and releases it back to unity', () => {
+		let snapshot = transitionVoiceRemoteSpeakingSnapshot(createVoiceRemoteSpeakingSnapshot(), {
 			type: 'remote.attach',
-			identity: 'user_1_a',
+			identity: LEVELLER_IDENTITY,
 			track: {},
 		});
-		expect(commandsOf(snapshot)).toEqual([{type: 'setPlaybackBoost', identity: 'user_1_a', boost: 1}]);
+		expect(commandsOf(snapshot)).toEqual([{type: 'setPlaybackBoost', identity: LEVELLER_IDENTITY, boost: 1}]);
+		expect(playbackBoostOf(snapshot)).toBe(1);
+		expect(appliedBoostOf(snapshot)).toBe(1);
 		snapshot = transitionVoiceRemoteSpeakingSnapshot(snapshot, {type: 'remote.clearCommands'});
 
-		snapshot = transitionVoiceRemoteSpeakingSnapshot(snapshot, {
-			type: 'remote.tick',
-			identity: 'user_1_a',
-			rms: 0.006,
-			threshold: 1,
-			nowMs: 10,
+		const settled = runRemoteTicks(snapshot, {rms: 0.03, threshold: 0.006, ticks: 60, startMs: 0});
+		expect(playbackBoostOf(settled.snapshot)).toBeGreaterThan(2.5);
+		expect(settled.commands.some((command) => command.type === 'setPlaybackBoost')).toBe(true);
+
+		const settledBoost = playbackBoostOf(settled.snapshot);
+		const held = runRemoteTicks(settled.snapshot, {rms: 0, threshold: 0.006, ticks: 60, startMs: settled.endMs});
+		expect(held.endMs - settled.endMs).toBe(__TEST__.REMOTE_PLAYBACK_SILENCE_HOLD_MS);
+		expect(playbackBoostOf(held.snapshot)).toBe(settledBoost);
+		expect(held.commands.some((command) => command.type === 'clearPlaybackBoost')).toBe(false);
+
+		const released = runRemoteTicks(held.snapshot, {rms: 0, threshold: 0.006, ticks: 700, startMs: held.endMs});
+		expect(released.commands.filter((command) => command.type === 'clearPlaybackBoost')).toHaveLength(1);
+		expect(playbackBoostOf(released.snapshot)).toBe(1);
+		expect(appliedBoostOf(released.snapshot)).toBe(1);
+
+		snapshot = transitionVoiceRemoteSpeakingSnapshot(released.snapshot, {
+			type: 'remote.detach',
+			identity: LEVELLER_IDENTITY,
 		});
-		expect(commandsOf(snapshot)[0]).toMatchObject({type: 'setPlaybackBoost', identity: 'user_1_a'});
-		expect(snapshot.context.analysers.get('user_1_a')?.playbackBoost).toBeGreaterThan(1);
-		snapshot = transitionVoiceRemoteSpeakingSnapshot(snapshot, {type: 'remote.clearCommands'});
-
-		snapshot = transitionVoiceRemoteSpeakingSnapshot(snapshot, {
-			type: 'remote.tick',
-			identity: 'user_1_a',
-			rms: 0,
-			threshold: 1,
-			nowMs: 20,
-		});
-		expect(commandsOf(snapshot)).toEqual([{type: 'clearPlaybackBoost', identity: 'user_1_a'}]);
-		expect(snapshot.context.analysers.get('user_1_a')?.playbackBoost).toBe(1);
-
-		snapshot = transitionVoiceRemoteSpeakingSnapshot(snapshot, {type: 'remote.clearCommands'});
-		snapshot = transitionVoiceRemoteSpeakingSnapshot(snapshot, {type: 'remote.detach', identity: 'user_1_a'});
 		expect(commandsOf(snapshot)).toEqual([
-			{type: 'setAudioLevelSpeaking', identity: 'user_1_a', speaking: false},
-			{type: 'clearPlaybackBoost', identity: 'user_1_a'},
+			{type: 'setAudioLevelSpeaking', identity: LEVELLER_IDENTITY, speaking: false},
+			{type: 'clearPlaybackBoost', identity: LEVELLER_IDENTITY},
 		]);
+	});
+
+	it('holds the boost through an inter-syllabic pause instead of pumping', () => {
+		const settled = runRemoteTicks(attachedRemoteSnapshot(), {rms: 0.02, threshold: 0.006, ticks: 120, startMs: 0});
+		expect(playbackBoostOf(settled.snapshot)).toBeCloseTo(__TEST__.REMOTE_PLAYBACK_MAX_BOOST, 2);
+
+		const settledBoost = playbackBoostOf(settled.snapshot);
+		const paused = runRemoteTicks(settled.snapshot, {rms: 0.002, threshold: 0.006, ticks: 4, startMs: settled.endMs});
+		expect(Math.abs(playbackBoostOf(paused.snapshot) - settledBoost)).toBeLessThan(settledBoost * 0.01);
+		expect(paused.commands).toHaveLength(0);
+	});
+
+	it('integrates steps the emit guard suppresses', () => {
+		const settled = runRemoteTicks(attachedRemoteSnapshot(), {rms: 0.086, threshold: 0.006, ticks: 200, startMs: 0});
+		expect(playbackBoostOf(settled.snapshot)).toBeCloseTo(1.0465, 4);
+		expect(appliedBoostOf(settled.snapshot)).toBeLessThan(playbackBoostOf(settled.snapshot));
+	});
+
+	it('targets roughly -21 dBFS of playback level', () => {
+		const settled = runRemoteTicks(attachedRemoteSnapshot(), {rms: 0.045, threshold: 0.006, ticks: 200, startMs: 0});
+		expect(playbackBoostOf(settled.snapshot)).toBeCloseTo(2, 4);
+		expect(playbackBoostOf(settled.snapshot) * 0.045).toBeCloseTo(__TEST__.REMOTE_PLAYBACK_TARGET_RMS, 4);
+	});
+
+	it('never integrates on a zero threshold', () => {
+		const settled = runRemoteTicks(attachedRemoteSnapshot(), {rms: 0, threshold: 0, ticks: 10, startMs: 0});
+		expect(playbackBoostOf(settled.snapshot)).toBe(1);
+		expect(settled.commands.some((command) => command.type === 'setPlaybackBoost')).toBe(false);
+	});
+
+	it('clears a stale boost when reattaching a different track', () => {
+		const settled = runRemoteTicks(attachedRemoteSnapshot(), {rms: 0.02, threshold: 0.006, ticks: 60, startMs: 0});
+		expect(appliedBoostOf(settled.snapshot)).toBeGreaterThan(1);
+
+		const reattached = transitionVoiceRemoteSpeakingSnapshot(settled.snapshot, {
+			type: 'remote.attach',
+			identity: LEVELLER_IDENTITY,
+			track: {},
+		});
+		expect(commandsOf(reattached)).toEqual([
+			{type: 'setAudioLevelSpeaking', identity: LEVELLER_IDENTITY, speaking: false},
+			{type: 'clearPlaybackBoost', identity: LEVELLER_IDENTITY},
+			{type: 'setPlaybackBoost', identity: LEVELLER_IDENTITY, boost: 1},
+		]);
+		expect(playbackBoostOf(reattached)).toBe(1);
+		expect(appliedBoostOf(reattached)).toBe(1);
 	});
 
 	it('clears stale speaking flags after detach and clear', () => {
