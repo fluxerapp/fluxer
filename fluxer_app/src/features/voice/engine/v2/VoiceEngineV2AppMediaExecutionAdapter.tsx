@@ -51,7 +51,11 @@ import {
 	getLocalMicrophonePublications,
 	getPrimaryLocalMicrophonePublication,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
-import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {
+	asVoiceTrackSource,
+	isScreenShareAudioPublicationLike,
+	VoiceTrackSource,
+} from '@app/features/voice/engine/VoiceTrackSource';
 import {
 	assertBoolean,
 	assertNonEmptyString,
@@ -1286,6 +1290,15 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		assertNonEmptyString(userId, 'applyLocalAudioPreferencesForUser.userId');
 		assertNullableObjectLike<Room>(room, 'applyLocalAudioPreferencesForUser.room');
 		if (!room) {
+			const connection = getVoiceConnectionContextFromMediaEngine();
+			logger.warn(`Skipped audio preferences for user ${userId} because no room was attached`, {
+				userId,
+				guildId: connection?.guildId ?? null,
+				channelId: connection?.channelId ?? null,
+				connectionId: connection?.connectionId ?? null,
+				connecting: connection?.connecting ?? false,
+				reconnecting: connection?.reconnecting ?? false,
+			});
 			return;
 		}
 		room.remoteParticipants.forEach((participant) => {
@@ -1496,8 +1509,16 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		});
 		room.remoteParticipants.forEach((participant) => {
 			participant.audioTrackPublications.forEach((publication) => {
-				if (asVoiceTrackSource(publication.source) !== VoiceTrackSource.Microphone) return;
+				const isScreenShareAudio = isScreenShareAudioPublicationLike(publication);
+				const isMicrophone = asVoiceTrackSource(publication.source) === VoiceTrackSource.Microphone;
+				if (!isScreenShareAudio && !isMicrophone) return;
 				try {
+					if (isScreenShareAudio) {
+						if (deafened && publication.isDesired) {
+							publication.setEnabled(false);
+						}
+						return;
+					}
 					if (deafened) {
 						if (publication.isDesired) {
 							publication.setEnabled(false);
@@ -1508,10 +1529,11 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 					publication.setSubscribed(true);
 					publication.setEnabled(true);
 				} catch (error) {
-					logger.error('Failed to apply deaf state to remote microphone publication', {
+					logger.error('Failed to apply deaf state to remote audio publication', {
 						error,
 						deafened,
 						identity: participant.identity,
+						isScreenShareAudio,
 						trackSid: publication.trackSid,
 					});
 				}
