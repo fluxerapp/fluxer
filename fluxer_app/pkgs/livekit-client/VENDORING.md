@@ -52,6 +52,15 @@ source edits in this package.
    Forces Opus RED/FEC, stereo signaling, 10 ms packet time, no DTX, and a
    510 kbps maximum average bitrate in local offers and remote answers.
 
+10. **Remote audio volume restore at exactly zero** (`src/room/track/RemoteAudioTrack.ts`)
+    `attach()`, `connectWebAudio()` and `getVolume()` guarded the remembered
+    `elementVolume` with a truthiness check, so a track deliberately held at `0`
+    came back at full volume whenever it was re-attached or its Web Audio graph
+    was rebuilt. All three guards now test `!== undefined`. Note that remote
+    gains above `1.0` are only legal because `setVolume()` takes the Web Audio
+    `gainNode` branch; the `el.volume` branch would throw `IndexSizeError`.
+    `webAudioMix` must stay unconditional.
+
 ## Updating from upstream
 
 1. Check the upstream changelog for the target version.
