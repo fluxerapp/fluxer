@@ -48,6 +48,7 @@ interface MediaVerticalVolumeControlProps {
 	iconSize?: number;
 	className?: string;
 	position?: 'above' | 'below';
+	maxVolume?: number;
 }
 
 function getVolumeIcon(volume: number, isMuted: boolean) {
@@ -73,6 +74,7 @@ export function MediaVerticalVolumeControl({
 	iconSize = 18,
 	className,
 	position = 'above',
+	maxVolume = 1,
 }: MediaVerticalVolumeControlProps) {
 	const {i18n} = useLingui();
 	const buttonRef = useRef<HTMLButtonElement>(null);
@@ -178,9 +180,9 @@ export function MediaVerticalVolumeControl({
 	}, [isDragging, scheduleClose]);
 	const handleSliderValueChange = useCallback(
 		(nextValue: number) => {
-			onVolumeChange(Math.max(0, Math.min(1, nextValue / 100)));
+			onVolumeChange(Math.max(0, Math.min(maxVolume, nextValue / 100)));
 		},
-		[onVolumeChange],
+		[maxVolume, onVolumeChange],
 	);
 	const handleSliderInteractionChange = useCallback(
 		(nextIsDragging: boolean) => {
@@ -209,7 +211,7 @@ export function MediaVerticalVolumeControl({
 				case 'ArrowRight':
 					e.preventDefault();
 					e.stopPropagation();
-					newVolume = Math.min(1, volume + step);
+					newVolume = Math.min(maxVolume, volume + step);
 					break;
 				case 'ArrowDown':
 				case 'ArrowLeft':
@@ -228,7 +230,7 @@ export function MediaVerticalVolumeControl({
 			}
 			onVolumeChange(newVolume);
 		},
-		[volume, onVolumeChange, onToggleMute],
+		[maxVolume, volume, onVolumeChange, onToggleMute],
 	);
 	useEffect(() => {
 		return () => {
@@ -264,7 +266,7 @@ export function MediaVerticalVolumeControl({
 						defaultValue={sliderValue}
 						factoryDefaultValue={100}
 						minValue={0}
-						maxValue={100}
+						maxValue={maxVolume * 100}
 						step={1}
 						value={sliderValue}
 						orientation="vertical"

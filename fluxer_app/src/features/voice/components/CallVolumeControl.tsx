@@ -9,6 +9,7 @@ import {
 } from '@app/features/voice/components/CallVolumeState';
 import {MediaVerticalVolumeControl} from '@app/features/voice/components/media_player/components/MediaVerticalVolumeControl';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {VOICE_VOLUME_MAX_SLIDER_VOLUME} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useRef} from 'react';
@@ -30,7 +31,9 @@ export const CallVolumeControl: React.FC<CallVolumeControlProps> = observer(func
 		lastNonZeroVolumeRef.current = resolveLastNonZeroCallVolume(outputVolume, lastNonZeroVolumeRef.current);
 	}, [outputVolume]);
 	const handleVolumeChange = useCallback((volume: number) => {
-		VoiceSettingsCommands.update({outputVolume: sliderVolumeToCallVolumePercent(volume)});
+		const nextPercent = sliderVolumeToCallVolumePercent(volume);
+		if (nextPercent === VoiceSettings.outputVolume) return;
+		VoiceSettingsCommands.update({outputVolume: nextPercent});
 	}, []);
 	const handleToggleMute = useCallback(() => {
 		VoiceSettingsCommands.update({
@@ -41,6 +44,7 @@ export const CallVolumeControl: React.FC<CallVolumeControlProps> = observer(func
 		<MediaVerticalVolumeControl
 			volume={callVolumePercentToSliderVolume(outputVolume)}
 			isMuted={outputVolume === 0}
+			maxVolume={VOICE_VOLUME_MAX_SLIDER_VOLUME}
 			onVolumeChange={handleVolumeChange}
 			onToggleMute={handleToggleMute}
 			iconSize={iconSize}

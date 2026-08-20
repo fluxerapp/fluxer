@@ -23,6 +23,11 @@ describe('callVolumePercentToSliderVolume', () => {
 	it('clamps negative percent to zero', () => {
 		expect(callVolumePercentToSliderVolume(-10)).toBe(0);
 	});
+
+	it('reaches the boosted ceiling and clamps past it', () => {
+		expect(callVolumePercentToSliderVolume(200)).toBe(2);
+		expect(callVolumePercentToSliderVolume(250)).toBe(2);
+	});
 });
 
 describe('sliderVolumeToCallVolumePercent', () => {
@@ -34,7 +39,12 @@ describe('sliderVolumeToCallVolumePercent', () => {
 
 	it('clamps out-of-range slider values', () => {
 		expect(sliderVolumeToCallVolumePercent(-0.5)).toBe(0);
-		expect(sliderVolumeToCallVolumePercent(2)).toBe(100);
+		expect(sliderVolumeToCallVolumePercent(2.5)).toBe(200);
+	});
+
+	it('maps the boosted range above unity', () => {
+		expect(sliderVolumeToCallVolumePercent(1.5)).toBe(150);
+		expect(sliderVolumeToCallVolumePercent(2)).toBe(200);
 	});
 
 	it('falls back to the default for non-finite input', () => {
@@ -68,5 +78,20 @@ describe('resolveCallVolumeMuteToggle', () => {
 
 	it('restores the default when no volume was remembered', () => {
 		expect(resolveCallVolumeMuteToggle(0, 0)).toBe(CALL_VOLUME_DEFAULT_PERCENT);
+	});
+});
+
+describe('call volume round trip', () => {
+	it('preserves a stored boosted volume through the slider', () => {
+		expect(sliderVolumeToCallVolumePercent(callVolumePercentToSliderVolume(200))).toBe(200);
+	});
+
+	it('steps a boosted volume down by one keyboard step instead of collapsing to unity', () => {
+		expect(sliderVolumeToCallVolumePercent(Math.max(0, callVolumePercentToSliderVolume(200) - 0.1))).toBe(190);
+	});
+
+	it('restores a boosted volume after a mute toggle', () => {
+		expect(resolveCallVolumeMuteToggle(200, 200)).toBe(0);
+		expect(resolveCallVolumeMuteToggle(0, resolveLastNonZeroCallVolume(0, 200))).toBe(200);
 	});
 });

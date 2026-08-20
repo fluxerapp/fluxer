@@ -68,6 +68,7 @@ import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import {hasValidRoomForVoiceCallContext} from '@app/features/voice/utils/VoiceCallContext';
 import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {VOICE_VOLUME_MAX_SLIDER_VOLUME} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -620,6 +621,7 @@ const VoiceCallViewInner = observer(
 								<MediaVerticalVolumeControl
 									volume={focusedStreamVolume / 100}
 									isMuted={isFocusedStreamMuted}
+									maxVolume={VOICE_VOLUME_MAX_SLIDER_VOLUME}
 									onVolumeChange={handleFocusedStreamVolumeChange}
 									onToggleMute={handleFocusedStreamToggleMute}
 									iconSize={18}
