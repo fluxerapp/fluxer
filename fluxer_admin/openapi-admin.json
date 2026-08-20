@@ -14913,7 +14913,7 @@
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
 					"deletion_reason_code": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"deletion_public_reason": {"nullable": true, "type": "string"},
-					"acls": {"type": "array", "items": {"type": "string"}, "maxItems": 100},
+					"acls": {"type": "array", "items": {"type": "string"}, "maxItems": 115},
 					"traits": {"type": "array", "items": {"type": "string"}, "maxItems": 100},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}, "maxItems": 10},
@@ -15481,7 +15481,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 115,
 						"description": "List of access control permissions to assign"
 					}
 				},
