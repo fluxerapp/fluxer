@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN cargo build --release -p fluxer-messages
+RUN cargo build --release -p fluxer-messages --features scylla
 
 FROM debian:bookworm-slim
 
