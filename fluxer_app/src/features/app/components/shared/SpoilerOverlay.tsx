@@ -5,7 +5,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
-import type {CSSProperties, FC, ReactNode} from 'react';
+import type {FC, ReactNode} from 'react';
 
 const REVEAL_SPOILER_DESCRIPTOR = msg({
 	message: 'Reveal spoiler',
@@ -23,24 +23,14 @@ interface SpoilerOverlayProps {
 	label?: string;
 	inline?: boolean;
 	className?: string;
-	style?: CSSProperties;
 }
 
-export const SpoilerOverlay: FC<SpoilerOverlayProps> = ({
-	hidden,
-	onReveal,
-	children,
-	label,
-	inline,
-	className,
-	style,
-}) => {
+export const SpoilerOverlay: FC<SpoilerOverlayProps> = ({hidden, onReveal, children, label, inline, className}) => {
 	const {i18n} = useLingui();
 	const ariaLabel = label ?? i18n._(REVEAL_SPOILER_DESCRIPTOR);
 	return (
 		<div
 			className={clsx(styles.container, inline && styles.inline, hidden && styles.hidden, className)}
-			style={style}
 			data-flx="app.spoiler-overlay.container"
 		>
 			<div className={styles.content} aria-hidden={hidden} data-flx="app.spoiler-overlay.content">

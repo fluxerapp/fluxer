@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ATTACHMENT_CARD_WIDTH} from '@app/features/channel/components/MessageAttachmentUtils';
 import styles from '@app/features/channel/components/MessageUploadProgress.module.css';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {useMessageUpload} from '@app/features/messaging/hooks/useCloudUpload';
@@ -77,8 +78,8 @@ export const MessageUploadProgress = observer(({attachment, message}: MessageUpl
 			}
 		: {
 				display: 'grid',
-				width: '400px',
-				maxWidth: '400px',
+				width: remFromPx(ATTACHMENT_CARD_WIDTH),
+				maxWidth: remFromPx(ATTACHMENT_CARD_WIDTH),
 			};
 	return (
 		<div style={containerStyles} data-flx="channel.message-upload-progress.div">

@@ -2,6 +2,8 @@
 
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
+export const ATTACHMENT_CARD_WIDTH = 400;
+
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/avif'];
 const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MessageEmbedTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 
@@ -28,7 +29,7 @@ export function isMediaOnlyEmbed(embed: MediaOnlyEmbedFields): boolean {
 
 export const BLUESKY_EMBED_MIN_CONTENT_WIDTH = 320;
 export const BLUESKY_EMBED_MEDIA_FALLBACK_OUTER_WIDTH = 432;
-export const BLUESKY_EMBED_TEXT_OUTER_WIDTH = 516;
+export const EMBED_TEXT_OUTER_WIDTH = 516;
 const normalizePositiveWidth = (width: number): number => {
 	if (!Number.isFinite(width) || width <= 0) {
 		return 0;
@@ -55,9 +56,9 @@ export function calculateBlueskyOuterMaxWidth({
 	if (mediaContainerWidth !== undefined) {
 		return mediaContainerWidth + normalizePositiveWidth(chromeWidth);
 	}
-	return hasMedia ? BLUESKY_EMBED_MEDIA_FALLBACK_OUTER_WIDTH : BLUESKY_EMBED_TEXT_OUTER_WIDTH;
+	return hasMedia ? BLUESKY_EMBED_MEDIA_FALLBACK_OUTER_WIDTH : EMBED_TEXT_OUTER_WIDTH;
 }
 
 export function formatResponsiveEmbedWidth(width: number): string {
-	return `min(100%, ${normalizePositiveWidth(width)}px)`;
+	return `min(100%, ${remFromPx(normalizePositiveWidth(width))})`;
 }

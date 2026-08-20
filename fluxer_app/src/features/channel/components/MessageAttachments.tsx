@@ -109,7 +109,6 @@ const SpoileredUrlEmbed = observer(function SpoileredUrlEmbed({
 			hidden={hidden}
 			onReveal={reveal}
 			className={styles.urlEmbedSpoiler}
-			style={{width: '100%', maxWidth: 360}}
 			data-flx="channel.message-attachments.spoilered-url-embed"
 		>
 			{children}

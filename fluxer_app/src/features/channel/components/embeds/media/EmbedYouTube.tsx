@@ -233,7 +233,7 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 			className={styles.videoContainer}
 			style={{
 				...containerStyle,
-				width: `${dimensions.width}px`,
+				width: remFromPx(dimensions.width),
 				aspectRatio,
 				maxWidth: '100%',
 			}}

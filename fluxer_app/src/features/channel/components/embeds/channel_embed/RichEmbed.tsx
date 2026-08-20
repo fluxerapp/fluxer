@@ -23,6 +23,10 @@ import {
 	EmbedProvider,
 	EmbedTitle,
 } from '@app/features/channel/components/embeds/channel_embed/EmbedParts';
+import {
+	EMBED_TEXT_OUTER_WIDTH,
+	formatResponsiveEmbedWidth,
+} from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {MessageEmbedTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {EmbedMedia} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -58,7 +62,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 				data-search-highlight-scope="message"
 				style={{
 					borderLeft: `4px solid ${getBorderColor(embed.color)}`,
-					maxWidth: useNarrowWidth ? `min(100%, ${EMBED_MEDIA_MAX_WIDTH}px)` : 'min(100%, 516px)',
+					maxWidth: formatResponsiveEmbedWidth(useNarrowWidth ? EMBED_MEDIA_MAX_WIDTH : EMBED_TEXT_OUTER_WIDTH),
 				}}
 				data-flx="channel.embeds.embed.rich-embed.embed"
 			>

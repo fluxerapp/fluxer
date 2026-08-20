@@ -48,7 +48,7 @@
 	margin-top: var(--message-container-gap, 0.25rem);
 }
 
-.urlEmbedSpoiler {
+div.urlEmbedSpoiler {
 	width: 100%;
 	max-width: 22.5rem;
 }
