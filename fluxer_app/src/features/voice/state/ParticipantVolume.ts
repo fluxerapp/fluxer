@@ -9,8 +9,9 @@ import {getRemoteVoicePlaybackBoost} from '@app/features/voice/state/RemoteVoice
 import StreamAudioPrefs from '@app/features/voice/state/StreamAudioPrefs';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
-	boostedVoiceVolumePercentToTrackVolume,
+	clampVoiceTrackTotalGain,
 	clampVoiceVolumePercent,
+	composeVoiceVolumeGain,
 } from '@app/features/voice/utils/VoiceVolumeUtils';
 import type {RemoteAudioTrack, RemoteParticipant, Room} from 'livekit-client';
 import {makeAutoObservable} from 'mobx';
@@ -56,13 +57,6 @@ function getVoiceConnectionContext(): VoiceConnectionContextAccess {
 		logger.error('Failed to read voice connection context from media engine', {error});
 		return {guildId: null, channelId: null, connectionId: null};
 	}
-}
-
-function composeVolumePercent(...volumeParts: Array<number>): number {
-	const composed = volumeParts.reduce((accumulator, currentValue) => {
-		return accumulator * (clampVoiceVolumePercent(currentValue) / 100);
-	}, 100);
-	return clampVoiceVolumePercent(composed);
 }
 
 class ParticipantVolume {
@@ -192,40 +186,60 @@ class ParticipantVolume {
 		const locallyMuted = this.isLocalMuted(userId);
 		const {effectiveDeaf} = getEffectiveAudioState();
 		participant.audioTrackPublications.forEach((pub) => {
-			try {
-				const isScreenShareAudio = isScreenShareAudioPublicationLike(pub);
-				const streamVolume = streamKey ? StreamAudioPrefs.getVolume(streamKey) : 100;
-				const streamMuted = streamKey ? StreamAudioPrefs.isMuted(streamKey) : false;
-				const track = pub.track;
-				if (isRemoteAudioTrack(track)) {
-					const baseVolume = isScreenShareAudio
-						? boostedVoiceVolumePercentToTrackVolume(composeVolumePercent(streamVolume, outputVolume))
-						: boostedVoiceVolumePercentToTrackVolume(composeVolumePercent(userVolume, connectionVolume, outputVolume));
-					const playbackBoost = isScreenShareAudio ? 1 : getRemoteVoicePlaybackBoost(participant.identity);
-					const nextVolume = Math.max(0, Math.min(3, baseVolume * playbackBoost));
+			const isScreenShareAudio = isScreenShareAudioPublicationLike(pub);
+			const streamVolume = streamKey ? StreamAudioPrefs.getVolume(streamKey) : 100;
+			const streamMuted = streamKey ? StreamAudioPrefs.isMuted(streamKey) : false;
+			const baseVolume = isScreenShareAudio
+				? composeVoiceVolumeGain(streamVolume, outputVolume)
+				: composeVoiceVolumeGain(userVolume, connectionVolume, outputVolume);
+			const playbackBoost = isScreenShareAudio ? 1 : getRemoteVoicePlaybackBoost(participant.identity);
+			const nextVolume = clampVoiceTrackTotalGain(baseVolume * playbackBoost);
+			const shouldDisable = isScreenShareAudio ? streamMuted || effectiveDeaf : locallyMuted || effectiveDeaf;
+			logger.debug('Applying remote audio publication prefs', {
+				participantIdentity: participant.identity,
+				source: pub.source,
+				trackName: pub.trackName,
+				trackSid: pub.trackSid,
+				isScreenShareAudio,
+				streamKey,
+				streamVolume,
+				streamMuted,
+				userVolume,
+				connectionVolume,
+				outputVolume,
+				playbackBoost,
+				nextVolume,
+				locallyMuted,
+				effectiveDeaf,
+				shouldDisable,
+			});
+			const track = pub.track;
+			if (isRemoteAudioTrack(track)) {
+				try {
 					track.setVolume(nextVolume);
-				}
-				const shouldDisable = isScreenShareAudio ? locallyMuted || streamMuted : locallyMuted || effectiveDeaf;
-				if (isScreenShareAudio) {
-					logger.debug('Applying screen share audio prefs', {
-						participantIdentity: participant.identity,
+				} catch (error) {
+					logger.warn(`Failed to set remote track volume for participant ${userId}`, {
+						error,
 						trackSid: pub.trackSid,
-						streamKey,
-						streamVolume,
-						streamMuted,
-						locallyMuted,
-						effectiveDeaf,
-						shouldDisable,
 					});
 				}
+			}
+			try {
 				if (pub.isDesired) {
 					pub.setEnabled(!shouldDisable);
 				}
-				if (isScreenShareAudio && streamKey && StreamAudioPrefs.hasEntry(streamKey)) {
-					StreamAudioPrefs.touchStream(streamKey);
-				}
 			} catch (error) {
-				logger.warn(`Failed to apply settings to participant ${userId}`, {error});
+				logger.warn(`Failed to apply enabled state for participant ${userId}`, {
+					error,
+					trackSid: pub.trackSid,
+				});
+			}
+			if (isScreenShareAudio && streamKey && StreamAudioPrefs.hasEntry(streamKey)) {
+				try {
+					StreamAudioPrefs.touchStream(streamKey);
+				} catch (error) {
+					logger.warn(`Failed to touch stream audio prefs for participant ${userId}`, {error, streamKey});
+				}
 			}
 		});
 	}
