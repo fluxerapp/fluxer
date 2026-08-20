@@ -19,7 +19,7 @@ msgid "... turn dense mode on. Nice!"
 msgstr "... เปิดโหมดกระชับแล้ว เยี่ยมเลย!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
-#: src/features/channel/components/MessageAttachments.tsx:362
+#: src/features/channel/components/MessageAttachments.tsx:361
 #: src/features/channel/components/UserMessage.tsx:67
 msgid "(edited)"
 msgstr "(แก้ไขแล้ว)"
@@ -409,7 +409,7 @@ msgstr "{count, plural, one {# ชุมชนร่วมกัน} other {# �
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# คนอื่น} other {# คนอื่น}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:496
+#: src/features/voice/components/VoiceCallView.tsx:497
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# คนในสาย} other {# คนในสาย}}"
 
@@ -455,7 +455,7 @@ msgstr "{count, plural, one {ขยาย (# บรรทัด)} other {ขย�
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {ขยาย (# แถว)} other {ขยาย (# แถว)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:312
+#: src/features/voice/components/VoiceParticipantTile.tsx:302
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {ขยายอุปกรณ์อื่น # เครื่อง} other {ขยายอุปกรณ์อื่น # เครื่อง}}"
 
@@ -476,7 +476,7 @@ msgstr "{count, plural, one {กำลังคุยสาย} other {# คน�
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {เข้าร่วมวิดีโอคอล (# ผู้เข้าร่วม)} other {เข้าร่วมวิดีโอคอล (# ผู้เข้าร่วม)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:710
+#: src/features/voice/components/VoiceParticipantTile.tsx:619
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "ดูสตรีม # {count, plural, one {} other {อื่นๆ }}ต่อไปและเพิ่มสตรีมนี้"
 
@@ -841,7 +841,7 @@ msgid "{length} attachments"
 msgstr "ไฟล์แนบ {length} รายการ"
 
 #. Summary chip text in the mobile channel search sheet when more than one channel is selected. length is the count.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:165
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:170
 msgid "{length} channels"
 msgstr "{length} ช่อง"
 
@@ -856,12 +856,12 @@ msgid "{length} stickers"
 msgstr "สติกเกอร์ {length} รายการ"
 
 #. Summary chip text in the mobile channel search sheet when multiple content types are selected. length is the count.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:116
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:121
 msgid "{length} types"
 msgstr "{length} ประเภท"
 
 #. Summary chip text in the mobile channel search sheet when more than one user is selected. length is the count.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:83
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:88
 msgid "{length} users"
 msgstr "{length} ผู้ใช้"
 
@@ -1237,7 +1237,7 @@ msgid "{resolvedName}'s group"
 msgstr "กลุ่มของ{resolvedName}"
 
 #. Subtitle in the mobile channel search bottom sheet showing the total number of search results.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:125
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:130
 msgid "{resultCount} results"
 msgstr "{resultCount} ผลลัพธ์"
 
@@ -1556,7 +1556,7 @@ msgid "<0>URL-only favorites (default)</0>: synced across your devices, no uploa
 msgstr "<0>รายการโปรดที่เป็น URL เท่านั้น (ค่าเริ่มต้น)</0>: ซิงค์ในทุกอุปกรณ์ของคุณ ไม่มีการอัปโหลด ไม่นับรวมในพื้นที่เก็บข้อมูลสื่อที่บันทึกไว้ สื่อต้นฉบับอาจหายไปหากโฮสต์นำออก"
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:161
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:166
 msgid "1 channel"
 msgstr "1 ช่อง"
 
@@ -1633,7 +1633,7 @@ msgid "1 use"
 msgstr "1 ครั้ง"
 
 #. Summary chip text in the mobile channel search sheet when exactly one user is selected as a filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:79
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:84
 msgid "1 user"
 msgstr "1 คน"
 
@@ -2329,7 +2329,7 @@ msgid "Activity sharing"
 msgstr "การแชร์กิจกรรม"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:469
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:97
 msgid "Activity threshold"
 msgstr "เกณฑ์กิจกรรม"
@@ -3029,11 +3029,11 @@ msgstr "อนุญาต {everyoneMention} และ {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "อนุญาตให้ {PRODUCT_NAME} เข้าถึงกล้องของคุณในการตั้งค่าระบบ {MACOS_SYSTEM_SETTINGS_NAME} → ความเป็นส่วนตัวและความปลอดภัย {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → สิทธิ์การเข้าถึงกล้อง {MACOS_CAMERA_PERMISSION_NAME}"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:533
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "อนุญาตให้ {PRODUCT_NAME} เข้าถึงไมโครโฟนของคุณได้ในการตั้งค่า {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:538
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "อนุญาตให้ {PRODUCT_NAME} เข้าถึงไมโครโฟนของคุณ ตรวจสอบแถบที่อยู่หรือการตั้งค่าของเบราว์เซอร์ของคุณ"
 
@@ -3121,7 +3121,7 @@ msgstr "อนุญาตให้สมาชิกที่ไม่มีส
 msgid "Allow mentions for this role"
 msgstr "อนุญาตให้กล่าวถึงสำหรับบทบาทนี้"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:555
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
 msgid "Allow microphone"
 msgstr "อนุญาตให้ใช้ไมโครโฟน"
 
@@ -3712,7 +3712,7 @@ msgid "App state"
 msgstr "สถานะแอป"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:111
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:102
 msgid "App window"
 msgstr "หน้าต่างแอป"
 
@@ -3852,7 +3852,7 @@ msgstr "อนุมัติแล้ว"
 #. Short label in the Discovery page sidebar. Keep it concise.
 #. Tab label in the screen-share picker. Lists shareable app windows.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:125
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Apps"
 msgstr "แอป"
 
@@ -4034,7 +4034,7 @@ msgid "Attachment actions"
 msgstr "การดำเนินการไฟล์แนบ"
 
 #. Error message in the channel and chat attachment file.
-#: src/features/channel/components/embeds/attachments/AttachmentFile.tsx:41
+#: src/features/channel/components/embeds/attachments/AttachmentFile.tsx:42
 msgid "Attachment expired"
 msgstr "ไฟล์แนบหมดอายุแล้ว"
 
@@ -4234,7 +4234,7 @@ msgid "Audio sources: {summaryLabel}"
 msgstr "แหล่งเสียง: {summaryLabel}"
 
 #. Label for the has:sound filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:96
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:101
 msgid "audio upload"
 msgstr "อัปโหลดเสียง"
 
@@ -4389,7 +4389,7 @@ msgstr "ความไวอัตโนมัติ"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:114
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:456
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
 msgid "Auto-set activity threshold"
 msgstr "ตั้งค่าเกณฑ์กิจกรรมอัตโนมัติ"
 
@@ -4773,7 +4773,7 @@ msgid "Back to sticker"
 msgstr "กลับไปที่สติกเกอร์"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:109
+#: src/features/voice/components/VoiceCallView.tsx:110
 msgid "Back to voice channel"
 msgstr "กลับสู่ช่องเสียง"
 
@@ -4797,7 +4797,7 @@ msgstr "ปิดใช้งานสิทธิประโยชน์พร
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:52
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:847
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
 msgid "Background"
 msgstr "พื้นหลัง"
 
@@ -5207,7 +5207,7 @@ msgid "Blur"
 msgstr "เบลอ"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:90
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:79
 msgid "Blur strength"
 msgstr "ระดับความเบลอ"
 
@@ -5678,7 +5678,7 @@ msgstr "อุปกรณ์กล้อง"
 msgid "Camera effects"
 msgstr "เอฟเฟกต์กล้อง"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:933
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
 msgid "Camera error"
 msgstr "กล้องมีข้อผิดพลาด"
 
@@ -5721,7 +5721,7 @@ msgstr "ต้องอนุญาตการเข้าถึงกล้อ
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:181
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:62
 msgid "Camera preview"
 msgstr "ตัวอย่างกล้อง"
 
@@ -5827,7 +5827,7 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #: src/features/user/components/modals/PhoneAddModal.tsx:391
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:969
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "ยกเลิก"
@@ -5884,7 +5884,7 @@ msgid "Cancel subscription?"
 msgstr "ยกเลิกการสมัครสมาชิกใช่หรือไม่"
 
 #. Button or menu action label in the channel and chat message upload progress. Keep it concise.
-#: src/features/channel/components/MessageUploadProgress.tsx:20
+#: src/features/channel/components/MessageUploadProgress.tsx:21
 msgid "Cancel upload"
 msgstr "ยกเลิกการอัปโหลด"
 
@@ -6090,7 +6090,7 @@ msgstr "จัดกึ่งกลาง"
 msgid "Change avatar"
 msgstr "เปลี่ยนรูปโปรไฟล์"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:860
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
 msgid "Change background"
 msgstr "เปลี่ยนพื้นหลัง"
 
@@ -6216,7 +6216,7 @@ msgid "Change source"
 msgstr "เปลี่ยนแหล่งที่มา"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:169
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
 msgid "Change stream source"
 msgstr "เปลี่ยนแหล่งที่มาของสตรีม"
 
@@ -6855,7 +6855,7 @@ msgid "Choose payment method"
 msgstr "เลือกช่องทางการชำระเงิน"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:173
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
 msgid "Choose something to share"
 msgstr "เลือกสิ่งที่จะแชร์"
 
@@ -7616,7 +7616,7 @@ msgstr "ยุบหัวข้อช่อง"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:98
-#: src/features/voice/components/VoiceParticipantTile.tsx:174
+#: src/features/voice/components/VoiceParticipantTile.tsx:164
 msgid "Collapse devices"
 msgstr "ยุบอุปกรณ์"
 
@@ -8274,7 +8274,7 @@ msgstr "เชื่อมต่อกับเสียงแล้ว"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:88
+#: src/features/voice/components/VoiceCallView.tsx:89
 msgid "Connecting..."
 msgstr "กำลังเชื่อมต่อ..."
 
@@ -8335,7 +8335,7 @@ msgid "Connection removed"
 msgstr "ลบการเชื่อมต่อแล้ว"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:113
+#: src/features/voice/components/VoiceCallView.tsx:114
 msgid "Connection stats"
 msgstr "สถานะการเชื่อมต่อ"
 
@@ -10505,7 +10505,7 @@ msgstr "เส้นแบ่งตกแต่ง"
 #: src/features/ui/action_menu/items/SearchMenuData.tsx:43
 #: src/features/ui/action_menu/items/SearchProviderMenuItems.tsx:14
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:117
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:66
 #: src/features/voice/components/VoiceSettingsMenus.tsx:121
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgid "Default"
@@ -10524,7 +10524,7 @@ msgid "Default"
 msgstr "ค่าเริ่มต้น"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:112
 msgid "Default camera"
 msgstr "กล้องเริ่มต้น"
 
@@ -10609,7 +10609,7 @@ msgstr "ค่าเริ่มต้นคือปิดในมือถื
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip for the custom emoji delete button.
-#: src/features/channel/components/embeds/media/EmbedAudio.tsx:28
+#: src/features/channel/components/embeds/media/EmbedAudio.tsx:29
 #: src/features/channel/components/embeds/media/MediaContainer.tsx:22
 #: src/features/channel/components/MobileMemesPicker.tsx:86
 #: src/features/channel/components/pickers/memes/MemeGridItem.tsx:39
@@ -11254,7 +11254,7 @@ msgstr "อุปกรณ์:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:62
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
 msgid "Devices"
 msgstr "อุปกรณ์"
 
@@ -11362,7 +11362,7 @@ msgstr "กำลังอัปโหลดโดยตรง"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:193
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Disable"
 msgstr "ปิด"
 
@@ -11561,7 +11561,7 @@ msgid "Disabled value"
 msgstr "ค่าที่ปิดใช้งาน"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "การปิดใช้งานตัวอย่างจะไม่ทำให้มีการอัปโหลดตัวอย่างเพิ่มเติมในอนาคต รูปภาพตัวอย่างที่มีอยู่แล้วอาจยังคงแสดงต่อไปจนกว่าสตรีมจะสิ้นสุดลงหรือตัวอย่างได้รับการรีเฟรช"
 
@@ -11574,7 +11574,7 @@ msgid "Disallow @mention."
 msgstr "ไม่อนุญาตให้ @mention"
 
 #. Accessible label and tooltip for the discard button after recording a voice message.
-#: src/features/channel/components/VoiceMessageRecorder.tsx:62
+#: src/features/channel/components/VoiceMessageRecorder.tsx:61
 msgid "Discard voice message"
 msgstr "ทิ้งข้อความเสียง"
 
@@ -11612,7 +11612,7 @@ msgstr "ยกเลิกการเชื่อมต่อซ็อกเก
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:97
+#: src/features/voice/components/VoiceCallView.tsx:98
 msgid "Disconnected"
 msgstr "ตัดการเชื่อมต่อแล้ว"
 
@@ -11705,7 +11705,7 @@ msgstr "ปิดการกล่าวถึง"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:14
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:14
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:107
 msgid "Display"
 msgstr "การแสดงผล"
 
@@ -11767,7 +11767,7 @@ msgid "Display scaling"
 msgstr "การปรับขนาดการแสดงผล"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "Displays"
 msgstr "กำลังแสดง"
 
@@ -12559,11 +12559,6 @@ msgstr "กำลังแก้ไขข้อความที่กำหน
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
 msgid "Education"
 msgstr "การศึกษา"
-
-#. Inline notice in the camera preview modal when the native effects preview cannot start and the raw camera feed is shown instead.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:85
-msgid "Effects preview unavailable — showing unprocessed camera"
-msgstr "ไม่สามารถแสดงตัวอย่างเอฟเฟกต์ได้ กำลังแสดงภาพจากกล้องแบบดิบ"
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:184
 msgid "Eligible for a refund until {windowEndsOn}."
@@ -13372,7 +13367,7 @@ msgstr "ป้อนรหัส"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:105
+#: src/features/voice/components/VoiceCallView.tsx:106
 msgid "Enter fullscreen"
 msgstr "เข้าสู่โหมดเต็มหน้าจอ"
 
@@ -13657,12 +13652,12 @@ msgstr "ชำระเงินค่าสมัครสมาชิก (EUR)
 msgid "Evening time"
 msgstr "ช่วงเย็น"
 
-#. Description for the automatic gain control toggle in the custom voice processing settings.
-#. Description for the automatic gain control toggle in the custom voice processing settings.
+#. Description for the automatic gain control toggle in the voice processing settings.
+#. Description for the automatic gain control toggle in the voice processing settings.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:72
-msgid "Evens out your mic volume. Off when enhanced suppression is on."
-msgstr "ปรับระดับเสียงไมโครโฟนให้สม่ำเสมอ ปิดเมื่อเปิดการลดเสียงรบกวนขั้นสูง"
+msgid "Evens out your mic volume so you are not too quiet."
+msgstr "ปรับระดับเสียงไมโครโฟนของคุณให้สม่ำเสมอ เพื่อไม่ให้เสียงเบาเกินไป"
 
 #. Short label in the text to speech. Keep it concise.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:17
@@ -13736,7 +13731,7 @@ msgstr "ออก"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:101
+#: src/features/voice/components/VoiceCallView.tsx:102
 msgid "Exit fullscreen"
 msgstr "ออกจากโหมดเต็มหน้าจอ"
 
@@ -14111,7 +14106,7 @@ msgid "Failed to delete channel"
 msgstr "ลบช่องไม่สำเร็จ"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:58
 msgid "Failed to enable camera."
 msgstr "ไม่สามารถเปิดกล้องได้"
 
@@ -14167,7 +14162,7 @@ msgid "Failed to load invites. Try again."
 msgstr "โหลดคำเชิญไม่สำเร็จ ลองอีกครั้ง"
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:102
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:93
 msgid "Failed to load shareable sources."
 msgstr "โหลดแหล่งที่มาที่แชร์ได้ไม่สำเร็จ"
 
@@ -14295,7 +14290,7 @@ msgid "Failed to start"
 msgstr "เริ่มต้นไม่ได้"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:53
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "ไม่สามารถเริ่มแสดงตัวอย่างกล้องได้ โปรดตรวจสอบสิทธิ์การเข้าถึงกล้องของคุณ"
 
@@ -14525,7 +14520,7 @@ msgid "File size too large"
 msgstr "ไฟล์มีขนาดใหญ่เกินไป"
 
 #. Label for the has:file filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:100
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:105
 msgid "file upload"
 msgstr "อัปโหลดไฟล์"
 
@@ -14640,7 +14635,7 @@ msgstr "การกรอง"
 msgid "Filtering by {language}"
 msgstr "กรองตาม{language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:912
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
 msgid "Finalizing camera..."
 msgstr "กำลังเตรียมกล้อง..."
 
@@ -15052,7 +15047,7 @@ msgstr "ส่งต่อสื่อ"
 msgid "Forward message"
 msgstr "ส่งต่อข้อความ"
 
-#: src/features/channel/components/MessageAttachments.tsx:332
+#: src/features/channel/components/MessageAttachments.tsx:331
 msgid "Forwarded"
 msgstr "ส่งต่อแล้ว"
 
@@ -15061,8 +15056,8 @@ msgstr "ส่งต่อแล้ว"
 msgid "Forwarded a message"
 msgstr "ส่งต่อข้อความแล้ว"
 
-#: src/features/channel/components/MessageAttachments.tsx:210
-#: src/features/channel/components/MessageAttachments.tsx:241
+#: src/features/channel/components/MessageAttachments.tsx:209
+#: src/features/channel/components/MessageAttachments.tsx:240
 msgid "Forwarded from"
 msgstr "ส่งต่อจาก"
 
@@ -15249,7 +15244,7 @@ msgid "Friends sections"
 msgstr "ส่วนเพื่อน"
 
 #. Filter category label in the mobile channel search sheet for the from: user filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:133
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:138
 msgid "From"
 msgstr "จาก"
 
@@ -15290,7 +15285,7 @@ msgid "From name"
 msgstr "ชื่อผู้ส่ง"
 
 #. Section header in the mobile channel search user picker. Filters by sending user.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:153
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:158
 msgid "From user"
 msgstr "จากผู้ใช้"
 
@@ -15324,11 +15319,6 @@ msgstr "ปิดและรีสตาร์ท {productName} เพื่อ
 msgid "Gain control"
 msgstr "ควบคุมได้ดั่งใจ"
 
-#. Button label that starts native Linux game capture through the OBS-compatible hook path.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:165
-msgid "Game capture"
-msgstr "จับภาพเกม"
-
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:281
 msgid "Game capture injection (Windows)"
@@ -15338,12 +15328,6 @@ msgstr "การแทรกการจับภาพเกม (Windows)"
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:56
 msgid "Game controller"
 msgstr "จอยเกม"
-
-#. Fallback display name for a window screen-share source when browser display capture fails and native DXGI capture is attempted.
-#: src/features/voice/utils/ScreenShareStartFlow.ts:70
-msgctxt "screen-share"
-msgid "Game window (DXGI fallback)"
-msgstr "หน้าต่างเกม (DXGI fallback)"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
@@ -15882,7 +15866,7 @@ msgstr "กรีก"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:785
+#: src/features/voice/components/VoiceSettingsMenus.tsx:784
 msgid "Grid view"
 msgstr "มุมมองตาราง"
 
@@ -16120,7 +16104,7 @@ msgid "Harvest"
 msgstr "เก็บเกี่ยว"
 
 #. Filter category label in the mobile channel search sheet for the has: content type filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:137
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:142
 msgid "Has"
 msgstr "มี"
 
@@ -16512,14 +16496,9 @@ msgid "Hold Shift and press X to select apps. Press {selectAllShortcutLabel} to 
 msgstr "กด Shift ค้างไว้แล้วกด X เพื่อเลือกแอป กด {selectAllShortcutLabel} เพื่อเลือกทั้งหมด"
 
 #. Hint text shown next to the hold-to-record button explaining the gesture.
-#: src/features/channel/components/VoiceMessageRecorder.tsx:58
+#: src/features/channel/components/VoiceMessageRecorder.tsx:57
 msgid "Hold to record. Drag up to lock, or release to send."
 msgstr "กดค้างเพื่อบันทึกเสียง ลากขึ้นเพื่อล็อก หรือปล่อยเพื่อส่ง"
-
-#. Tooltip on the hold-to-record button in its idle state.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:42
-msgid "Hold to send voice message"
-msgstr "กดค้างเพื่อส่งข้อความเสียง"
 
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
@@ -16986,7 +16965,7 @@ msgid "Image search provider"
 msgstr "ผู้ให้บริการค้นหารูปภาพ"
 
 #. Label for the has:image filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:88
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:93
 msgid "image upload"
 msgstr "อัปโหลดรูปภาพ"
 
@@ -17128,7 +17107,7 @@ msgid "Importing… {processedCount, number} / {totalCount, number} processed, {
 msgstr "กำลังนำเข้า… ดำเนินการแล้ว {processedCount, number} / {totalCount, number} รายการ, เพิ่มแล้ว {importedCount, number} รายการ"
 
 #. Filter category label in the mobile channel search sheet for the in: channel filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:141
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:146
 msgid "In"
 msgstr "ใน"
 
@@ -17136,7 +17115,7 @@ msgstr "ใน"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "ในโหมด \"ระบบปฏิบัติการ\" พจนานุกรมที่แสดงด้านบนเป็นเพียงคำแนะนำ {PRODUCT_NAME} จะส่งแท็กภาษาเหล่านี้ไปยังโปรแกรมตรวจการสะกดของระบบปฏิบัติการของคุณ หากระบบปฏิบัติการรองรับ แท็กที่ระบบไม่รู้จักจะถูกละเว้น"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:324
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:323
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "ในเบราว์เซอร์ การกดเพื่อพูดจะทำงานเมื่อแท็บ {PRODUCT_NAME} โฟกัสอยู่เท่านั้น ติดตั้งแอปเดสก์ท็อปเพื่อใช้การกดเพื่อพูดได้ทั่วทั้งระบบ"
 
@@ -17159,7 +17138,7 @@ msgid "In call on another device"
 msgstr "กำลังคุยสายบนอุปกรณ์อื่น"
 
 #. Section header in the mobile channel search channel picker. Filters by channel.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:157
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:162
 msgid "In channel"
 msgstr "ในช่อง"
 
@@ -17360,7 +17339,7 @@ msgstr "รับช่วงต่อ"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "รับช่วงต่อจาก {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:914
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
 msgid "Initializing camera..."
 msgstr "กำลังเริ่มต้นกล้อง..."
 
@@ -18106,7 +18085,7 @@ msgstr "เข้าร่วมการโทรด้วยเสียง"
 
 #. Button in the unjoined voice channel call surface. Joins the current voice channel.
 #. Confirm dialog title shown before joining a voice channel from a context where confirmation is required.
-#: src/features/channel/components/channel_view/GuildChannelView.tsx:65
+#: src/features/channel/components/channel_view/GuildChannelView.tsx:64
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "เข้าร่วมช่องเสียง"
@@ -18485,7 +18464,7 @@ msgid "Learn about {premiumProductName}"
 msgstr "เรียนรู้เกี่ยวกับ {premiumProductName}"
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
 msgid "Learn about screen share previews"
 msgstr "ดูข้อมูลเพิ่มเติมเกี่ยวกับการแสดงตัวอย่างการแชร์หน้าจอ"
 
@@ -18712,7 +18691,7 @@ msgstr "ถูกใจ"
 
 #. Label for the has:link filter option in the mobile channel search sheet.
 #. has:link chip label. Always lowercase; matches the typed query value 1:1.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:108
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:113
 #: src/features/search/utils/SearchUtils.ts:25
 msgid "link"
 msgstr "ลิงก์"
@@ -18781,7 +18760,7 @@ msgid "Link preview"
 msgstr "แสดงตัวอย่างลิงก์"
 
 #. Label for the has:embed filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:104
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:109
 msgid "link preview or embed"
 msgstr "ดูตัวอย่างลิงก์หรือฝัง"
 
@@ -19118,7 +19097,7 @@ msgid "Look and feel"
 msgstr "รูปลักษณ์และการแสดงผล"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "ดูเหมือนว่าคุณกำลังใช้ {0} การประมวลผลของ {PRODUCT_NAME} เพิ่มเติมอาจทำให้เกิดเสียงปั๊มหรือเสียงผิดเพี้ยนได้ การป้อนข้อมูลโดยตรงจะส่งสัญญาณเสียงของคุณไปโดยไม่มีการเปลี่ยนแปลง"
 
@@ -20462,8 +20441,8 @@ msgstr "ผู้เยาว์ตกอยู่ในความเสี่
 #. Switch label in the screen-share device picker for flipping shared camera/device video horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:181
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:70
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
 #: src/features/voice/components/VoiceSettingsMenus.tsx:135
 msgid "Mirror camera"
 msgstr "กลับด้านกล้อง"
@@ -21493,7 +21472,7 @@ msgid "New version"
 msgstr "เวอร์ชันใหม่"
 
 #. Sort mode label in the mobile channel search bottom sheet. Sorts results newest first.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:67
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:72
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:104
 msgid "Newest"
 msgstr "ใหม่สุด"
@@ -21864,7 +21843,7 @@ msgstr "ไม่พบผลลัพธ์"
 msgid "No mentions yet"
 msgstr "ยังไม่มีการกล่าวถึง"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:528
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
 msgid "No microphone found"
 msgstr "ไม่พบไมโครโฟน"
 
@@ -22447,7 +22426,7 @@ msgid "Okay"
 msgstr "ตกลง"
 
 #. Sort mode label in the mobile channel search bottom sheet. Sorts results oldest first.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:71
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:76
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:105
 msgid "Oldest"
 msgstr "เก่าสุด"
@@ -22765,7 +22744,7 @@ msgid "Open browser"
 msgstr "เปิดเบราว์เซอร์"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
 msgid "Open browser picker"
 msgstr "เปิดตัวเลือกเบราว์เซอร์"
 
@@ -22869,7 +22848,7 @@ msgstr "เปิดอิโมจิในเบราว์เซอร์"
 msgid "Open emoji picker"
 msgstr "เปิดแป้นพิมพ์อีโมจิ"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:878
+#: src/features/voice/components/VoiceSettingsMenus.tsx:877
 msgid "Open event sink"
 msgstr "เปิด Event Sink"
 
@@ -22954,9 +22933,7 @@ msgid "Open link"
 msgstr "เปิดลิงก์"
 
 #. Accessible label for the plus button that opens the textarea attachment and customization menu.
-#. Button or menu action label in the channel and chat mobile textarea layout. Keep it concise.
 #: src/features/channel/components/channel_textarea/shared.ts:20
-#: src/features/channel/components/textarea/MobileTextareaLayout.tsx:23
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:488
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:157
 msgid "Open menu"
@@ -23035,7 +23012,7 @@ msgid "Open system DM"
 msgstr "เปิด DM ของระบบ"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:161
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
 msgid "Open system picker"
 msgstr "เปิดตัวเลือกของระบบ"
 
@@ -23162,7 +23139,7 @@ msgstr "ระบบปฏิบัติการ"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "เปิดใช้งานการควบคุมจำนวนข้อความที่ยังไม่ได้อ่านในแต่ละกลุ่มและช่องทดลองใช้"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:910
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Optimizing camera..."
 msgstr "กำลังปรับปรุงกล้อง..."
 
@@ -23427,7 +23404,7 @@ msgstr "แพ็กเก็ตขาดหาย"
 msgid "Packs"
 msgstr "แพ็ก"
 
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:713
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:714
 msgid "Page {currentPage} of {totalPages}"
 msgstr "หน้า {currentPage} จาก {totalPages}"
 
@@ -24438,7 +24415,7 @@ msgstr "ปุ่มดูตัวอย่าง"
 
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
-#: src/features/voice/components/VoiceSettingsMenus.tsx:618
+#: src/features/voice/components/VoiceSettingsMenus.tsx:617
 msgid "Preview camera"
 msgstr "ดูตัวอย่างกล้อง"
 
@@ -24448,17 +24425,17 @@ msgid "Preview hidden"
 msgstr "ซ่อนตัวอย่าง"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:235
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:222
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "รูปภาพตัวอย่างจะถูกจัดเก็บโดย {productName} ชั่วคราวเพื่อส่ง และจะไม่ได้รับการเข้ารหัสแบบ end-to-end หากคุณไม่ต้องการให้เฟรมการแชร์หน้าจอถูกอัปโหลดสำหรับสร้างภาพขนาดย่อ ให้ปิดใช้งานตัวอย่าง"
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "ภาพตัวอย่างจะถูกจัดเก็บโดย {productName} ชั่วคราวเพื่อส่ง และไม่ได้มีการเข้ารหัสแบบ end-to-end ผู้ใช้ในกลุ่มสนทนานี้ไม่จำเป็นต้องกำลังรับชมสตรีมของคุณ เพื่อดูภาพตัวอย่าง"
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:223
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:210
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "รูปภาพตัวอย่างจะถูกจัดเก็บโดย {productName} ชั่วคราวเพื่อส่ง และจะไม่ได้รับการเข้ารหัสแบบ end-to-end ผู้ใช้ยังคงต้องได้รับอนุญาตในการเชื่อมต่อ แต่ไม่จำเป็นต้องดูสตรีมของคุณอยู่เสมอ"
 
@@ -24484,7 +24461,7 @@ msgstr "ดูตัวอย่าง พฤติกรรมการป็�
 msgid "Previews"
 msgstr "ตัวอย่าง"
 
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:707
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:708
 msgid "Previous"
 msgstr "ก่อนหน้า"
 
@@ -25022,8 +24999,8 @@ msgstr "ปุ่มกดเพื่อพูด"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:110
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:363
-#: src/features/voice/components/VoiceSettingsMenus.tsx:389
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/voice/components/VoiceSettingsMenus.tsx:388
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
@@ -25032,7 +25009,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "กดเพื่อพูด (จำกัด)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:669
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "การกดเพื่อพูดจะถูกละเว้นในการป้อนข้อมูลโดยตรง หากต้องการใช้งาน ให้เปลี่ยนเป็นเสียงที่เน้นหรือกำหนดเอง"
 
@@ -25372,7 +25349,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "เชื่อมต่อสำเร็จ หากต้องการสตรีมต่อ ให้เลือกหน้าจออีกครั้ง"
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:92
+#: src/features/voice/components/VoiceCallView.tsx:93
 msgid "Reconnecting..."
 msgstr "กำลังเชื่อมต่อใหม่..."
 
@@ -25390,11 +25367,9 @@ msgstr "บันทึกปุ่มลัด"
 msgid "Recording"
 msgstr "กำลังบันทึก"
 
-#. Error toast shown when the hold-to-record voice message recording fails.
 #. Error toast shown when the voice message recording fails (encoder error, etc).
 #. Toast shown when MediaRecorder produced no usable audio.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:18
-#: src/features/channel/components/VoiceMessageRecorder.tsx:38
+#: src/features/channel/components/VoiceMessageRecorder.tsx:37
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:52
 msgid "Recording failed. Try again."
 msgstr "บันทึกเสียงไม่สำเร็จ ลองอีกครั้ง"
@@ -25635,13 +25610,8 @@ msgstr "สัมพัทธ์"
 msgid "Release delay"
 msgstr "หน่วงเวลาปล่อยเสียง"
 
-#. Tooltip on the hold-to-record button while the user is actively holding to record.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:38
-msgid "Release to send"
-msgstr "ปล่อยเพื่อส่ง"
-
 #. Sort mode label in the mobile channel search bottom sheet. Sorts by relevance.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:75
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:80
 msgid "Relevant"
 msgstr "เกี่ยวข้อง"
 
@@ -26726,7 +26696,7 @@ msgid "Resize panels"
 msgstr "ปรับขนาดแผง"
 
 #. Aria label on the PiP resize handle.
-#: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx:59
+#: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx:54
 msgid "Resize picture-in-picture"
 msgstr "ปรับขนาดภาพซ้อนภาพ"
 
@@ -27417,7 +27387,7 @@ msgstr "วิทยาศาสตร์และเทคโนโลยี"
 
 #. Filter category label in the mobile channel search sheet for the search scope selector.
 #. Summary row label on the confirm step showing the user-picked scope.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:149
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:154
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:203
 msgid "Scope"
 msgstr "ขอบเขต"
@@ -27426,12 +27396,6 @@ msgstr "ขอบเขต"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:426
 msgid "Scopes"
 msgstr "ขอบเขตการเข้าถึง"
-
-#. Fallback display name for a full-screen screen-share source when the original display name is unavailable.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareCaptureCoordinator.ts:77
-msgctxt "screen-share"
-msgid "Screen"
-msgstr "หน้าจอ"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -27486,7 +27450,7 @@ msgid "Screen share encoder controls"
 msgstr "การควบคุมตัวเข้ารหัสสำหรับการแชร์หน้าจอ"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:94
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "การแชร์หน้าจอสิ้นสุดลง"
@@ -27512,17 +27476,17 @@ msgid "Screen share preview behavior"
 msgstr "พฤติกรรมการแสดงตัวอย่างการแชร์หน้าจอ"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:201
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
 msgid "Screen share previews"
 msgstr "ตัวอย่างภาพหน้าจอการแชร์หน้าจอ"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:189
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
 msgid "Screen share previews are disabled."
 msgstr "ปิดใช้งานตัวอย่างภาพหน้าจอแล้ว"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:185
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
 msgid "Screen share previews are enabled."
 msgstr "เปิดใช้งานการแสดงตัวอย่างการแชร์หน้าจอแล้ว"
 
@@ -27656,8 +27620,8 @@ msgstr "ตัวอย่างการปรับแต่ง"
 #. Title of the mobile channel search bottom sheet.
 #. Tooltip on the channel header search button that opens the message search input.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:137
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:121
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:847
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:126
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:848
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
@@ -27793,7 +27757,7 @@ msgstr "ค้นหาภาษา…"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Placeholder shown inside the message search input. Sentence case.
 #. Placeholder text in the mobile channel search input.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:129
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:134
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:476
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx:49
 #: src/features/input/state/input_keybind/shared.ts:237
@@ -28393,11 +28357,9 @@ msgid "Send gift"
 msgstr "ส่งของขวัญ"
 
 #. Button or menu action label in the channel and chat friend list item. Keep it concise.
-#. Button or menu action label in the channel and chat mobile textarea layout. Keep it concise.
 #. Button or menu action label in the channel and chat textarea buttons. Keep it concise.
 #: src/features/channel/components/friends/FriendListItem.tsx:59
-#: src/features/channel/components/textarea/MobileTextareaLayout.tsx:27
-#: src/features/channel/components/textarea/TextareaButtons.tsx:34
+#: src/features/channel/components/textarea/TextareaButtons.tsx:24
 msgid "Send message"
 msgstr "ส่งข้อความ"
 
@@ -28476,7 +28438,7 @@ msgstr "ส่งรหัสยืนยัน"
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
-#: src/features/channel/components/VoiceMessageRecorder.tsx:66
+#: src/features/channel/components/VoiceMessageRecorder.tsx:65
 #: src/features/input/state/input_keybind/shared.ts:285
 msgid "Send voice message"
 msgstr "ส่งข้อความเสียง"
@@ -28918,7 +28880,7 @@ msgid "Share active theme"
 msgstr "แชร์ธีมที่ใช้งานอยู่"
 
 #. Primary button in the screen-share picker (start mode, devices tab). Begins sharing the selected camera/device.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
 msgid "Share device"
 msgstr "แชร์หน้าจอ"
 
@@ -28933,7 +28895,7 @@ msgid "Share screens and windows."
 msgstr "แชร์หน้าจอและหน้าต่าง"
 
 #. Primary button in the screen-share picker (start mode). Begins sharing the selected window or display.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
 msgid "Share source"
 msgstr "แชร์แหล่งที่มา"
 
@@ -29064,7 +29026,7 @@ msgstr "รหัสย่อ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:106
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:378
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
 msgid "Shortcut"
@@ -29384,7 +29346,7 @@ msgstr "แสดงช่องที่ปิดเสียง"
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:815
+#: src/features/voice/components/VoiceSettingsMenus.tsx:814
 msgid "Show my own camera"
 msgstr "แสดงกล้องของฉัน"
 
@@ -29420,7 +29382,7 @@ msgstr "แสดงป๊อปอัปอุปกรณ์ใหม่"
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:829
+#: src/features/voice/components/VoiceSettingsMenus.tsx:828
 msgid "Show non-video participants"
 msgstr "แสดงผู้เข้าร่วมที่ไม่ได้เปิดกล้อง"
 
@@ -30256,7 +30218,7 @@ msgstr "เกิดข้อผิดพลาดบางอย่าง เ�
 
 #. Accessible label for the sort-mode select on the community members page.
 #. Filter category label in the mobile channel search sheet for the sort mode selector.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:145
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:150
 #: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:22
 msgid "Sort"
 msgstr "จัดเรียง"
@@ -30701,7 +30663,7 @@ msgstr "วันที่เริ่มต้น"
 msgid "Start date must be earlier than end date."
 msgstr "วันที่เริ่มต้นต้องเร็วกว่าวันที่สิ้นสุด"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:861
+#: src/features/voice/components/VoiceSettingsMenus.tsx:860
 msgid "Start debug logging session"
 msgstr "เริ่มเซสชันการบันทึกข้อมูลแก้ไขข้อบกพร่อง"
 
@@ -30821,7 +30783,7 @@ msgstr "ขั้นตอนที่ 4"
 #. Label for the has:sticker filter option in the mobile channel search sheet.
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #. has:sticker chip label. Always lowercase; matches the typed query value 1:1.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:112
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:117
 #: src/features/channel/components/ChannelMessage.tsx:53
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "sticker"
@@ -31103,7 +31065,7 @@ msgid "Stream preview"
 msgstr "ตัวอย่างสตรีม"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:177
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
 msgid "Stream settings"
 msgstr "การตั้งค่าการแชร์หน้าจอ"
 
@@ -31384,11 +31346,11 @@ msgid "Switch to dense layout"
 msgstr "เปลี่ยนเป็นเลย์เอาต์แบบกระชับ"
 
 #. Primary button in the screen-share picker (switch mode, devices tab). Replaces the current stream with the selected camera/device.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:128
 msgid "Switch to device"
 msgstr "สลับไปที่อุปกรณ์"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Switch to direct input"
 msgstr "เปลี่ยนเป็นพิมพ์ข้อความ"
 
@@ -31442,7 +31404,7 @@ msgid "Switch to single column"
 msgstr "เปลี่ยนเป็นคอลัมน์เดียว"
 
 #. Primary button in the screen-share picker (switch mode). Replaces the current stream with the selected window or display.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
 msgid "Switch to source"
 msgstr "สลับไปที่ต้นฉบับ"
 
@@ -32135,7 +32097,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "redirect_uri ที่ระบุต้องใช้ HTTP หรือ HTTPS"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "แหล่งที่มาของการแชร์หน้าจอหยุดส่งวิดีโอ ดังนั้นการแชร์หน้าจอก็จะหยุดลง"
@@ -32161,12 +32123,6 @@ msgstr "ชื่อผู้ใช้ <0>{fluxerTag}</0> ถูกใช้ไ�
 #: src/features/moderation/components/pages/ReportPage.tsx:89
 msgid "The verification code is invalid or expired."
 msgstr "รหัสยืนยันไม่ถูกต้องหรือหมดอายุแล้ว"
-
-#. Body of a modal shown when a native screen share stops because the selected display or window disappeared.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareCaptureCoordinator.ts:67
-msgctxt "screen-share"
-msgid "The window or display you were sharing is no longer available, so your screen share was stopped."
-msgstr "หน้าต่างหรือหน้าจอที่คุณกำลังแชร์ไม่มีให้บริการอีกต่อไป ดังนั้นการแชร์หน้าจอก็จะหยุดลง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the appearance tab. Keep it concise.
@@ -32879,7 +32835,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "หมายเลขโทรศัพท์นี้ถูกใช้ไปแล้ว ลองใช้หมายเลขอื่นหรือติดต่อฝ่ายสนับสนุน"
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:106
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:97
 msgid "This picker is only available in the desktop app."
 msgstr "ตัวเลือกนี้ใช้ได้เฉพาะในแอปเดสก์ท็อปเท่านั้น"
 
@@ -34081,11 +34037,9 @@ msgstr "ไม่สามารถเตรียมอิโมจิสำห
 msgid "Unable to resend code right now"
 msgstr "ไม่สามารถส่งรหัสซ้ำได้ในขณะนี้"
 
-#. Error toast shown when sending a hold-to-record voice message fails.
 #. Error toast shown when sending the recorded voice message fails.
 #. Toast shown when the voice message send pipeline fails.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:26
-#: src/features/channel/components/VoiceMessageRecorder.tsx:46
+#: src/features/channel/components/VoiceMessageRecorder.tsx:45
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:56
 msgid "Unable to send voice message. Try again."
 msgstr "ส่งข้อความเสียงไม่ได้ ลองอีกครั้ง"
@@ -34106,9 +34060,7 @@ msgid "Unable to start password change"
 msgstr "ไม่สามารถเปลี่ยนรหัสผ่านได้"
 
 #. Inline error shown when the user denies microphone permission for voice messages.
-#. Inline error when microphone permission is denied for the hold-to-record voice message flow.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:34
-#: src/features/channel/components/VoiceMessageRecorder.tsx:54
+#: src/features/channel/components/VoiceMessageRecorder.tsx:53
 msgid "Unable to start recording. Allow microphone access."
 msgstr "ไม่สามารถเริ่มบันทึกได้ โปรดอนุญาตการเข้าถึงไมโครโฟน"
 
@@ -34447,7 +34399,7 @@ msgstr "ผู้ใช้ไม่ทราบชื่อ"
 #: src/features/devtools/utils/CommandUtils.ts:23
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:170
+#: src/features/voice/components/VoiceParticipantTile.tsx:160
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "ผู้ใช้ไม่รู้จัก"
@@ -35112,7 +35064,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "อัปโหลดอิโมจิและสติกเกอร์ใหม่ รวมถึงจัดการผลงานของคุณเอง"
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:247
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:234
 msgid "Upload preview frames for screen shares."
 msgstr "อัปโหลดตัวอย่างภาพสำหรับแชร์หน้าจอ"
 
@@ -36272,7 +36224,7 @@ msgid "Video thumbnail"
 msgstr "รูปปกวิดีโอ"
 
 #. Label for the has:video filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:92
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:97
 msgid "video upload"
 msgstr "วิดีโอที่อัปโหลด"
 
@@ -36367,7 +36319,7 @@ msgid "View call"
 msgstr "ดูการโทร"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:118
+#: src/features/voice/components/VoiceCallView.tsx:119
 msgid "View call controls"
 msgstr "ดูการควบคุมการโทร"
 
@@ -36772,12 +36724,8 @@ msgid "Voice join"
 msgstr "เข้าร่วมด้วยเสียง"
 
 #. Filename label used for outgoing voice messages.
-#. Filename label used for voice messages sent via the hold-to-record button.
-#. Short label in the channel and chat textarea buttons. Keep it concise.
 #. Title of the desktop voice message composer modal.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:22
-#: src/features/channel/components/textarea/TextareaButtons.tsx:30
-#: src/features/channel/components/VoiceMessageRecorder.tsx:42
+#: src/features/channel/components/VoiceMessageRecorder.tsx:41
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:32
 msgid "Voice message"
 msgstr "ข้อความเสียง"
@@ -36799,7 +36747,7 @@ msgstr "ผู้เข้าร่วมการโทรด้วยเสี
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
@@ -36812,9 +36760,7 @@ msgstr "คุณภาพเสียง"
 
 #. Error shown when MediaRecorder is unavailable.
 #. Inline error shown when the browser does not support MediaRecorder for voice messages.
-#. Inline error when MediaRecorder is unsupported for the hold-to-record voice message flow.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:30
-#: src/features/channel/components/VoiceMessageRecorder.tsx:50
+#: src/features/channel/components/VoiceMessageRecorder.tsx:49
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:48
 msgid "Voice recording is not supported in this browser."
 msgstr "เบราว์เซอร์นี้ไม่รองรับการบันทึกเสียง"
@@ -37432,17 +37378,17 @@ msgid "When posted as links to chat"
 msgstr "เมื่อโพสต์เป็นลิงก์ในแชท"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:211
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:198
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "เมื่อเปิดใช้งานตัวอย่าง {productName} จะอัปโหลดเฟรม JPEG จากการแชร์หน้าจอเป็นครั้งคราว เพื่อให้ผู้ใช้อื่นๆ ในกลุ่ม DM นี้สามารถดูภาพตัวอย่างก่อนรับชมได้"
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:205
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "เมื่อเปิดใช้งานตัวอย่าง ผู้ใช้ {productName} จะอัปโหลดเฟรม JPEG จากการแชร์หน้าจอเป็นครั้งคราว เพื่อให้ผู้ที่มีสิทธิ์เชื่อมต่อกับช่องเสียงนี้สามารถดูภาพตัวอย่างก่อนรับชมได้"
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "เมื่อเปิดใช้งานตัวอย่าง {productName} จะอัปโหลดเฟรม JPEG จากการแชร์หน้าจอเป็นครั้งคราว เพื่อให้อีกคนใน DM นี้สามารถดูภาพตัวอย่างก่อนรับชมได้"
 
@@ -37481,7 +37427,7 @@ msgstr "การสนทนาใดบ้าง"
 msgid "Which rule was broken?"
 msgstr "ทำผิดกฎข้อไหน"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:372
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:371
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "ขณะที่เปิดใช้งานการกดเพื่อพูด ปุ่มลัดจะควบคุมไมโครโฟนของคุณ ดังนั้นปุ่มปิดเสียงจะถูกปิดใช้งาน"
 
@@ -37550,12 +37496,6 @@ msgstr "ปุ่ม Win"
 #. Top-level native menu bar title (Window menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts:70
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
-msgid "Window"
-msgstr "หน้าต่าง"
-
-#. Fallback display name for a window screen-share source when the original window title is unavailable.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareCaptureCoordinator.ts:72
-msgctxt "screen-share"
 msgid "Window"
 msgstr "หน้าต่าง"
 
@@ -37994,7 +37934,7 @@ msgstr "คุณไม่สามารถพูดในช่องนี้
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:80
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:74
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
 #: src/features/voice/components/VoiceControlBar.tsx:131
 msgid "You can't turn on your camera in this channel"
@@ -38110,7 +38050,7 @@ msgid "You don't have permission to do this to this member."
 msgstr "คุณไม่มีสิทธิ์ดำเนินการนี้กับสมาชิกคนนี้"
 
 #. Tooltip on the disabled Join voice channel button shown when the user lacks the Connect permission in the voice channel.
-#: src/features/channel/components/channel_view/GuildChannelView.tsx:69
+#: src/features/channel/components/channel_view/GuildChannelView.tsx:68
 msgid "You don't have permission to join this voice channel"
 msgstr "คุณไม่มีสิทธิ์เข้าร่วมช่องเสียงนี้"
 

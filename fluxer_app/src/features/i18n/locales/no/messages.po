@@ -19,7 +19,7 @@ msgid "... turn dense mode on. Nice!"
 msgstr "... slå på kompakt modus. Bra!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
-#: src/features/channel/components/MessageAttachments.tsx:362
+#: src/features/channel/components/MessageAttachments.tsx:361
 #: src/features/channel/components/UserMessage.tsx:67
 msgid "(edited)"
 msgstr "(redigert)"
@@ -409,7 +409,7 @@ msgstr "{count, plural, one {# felles fellesskap} other {# felles fellesskap}}"
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# annen} other {# andre}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:496
+#: src/features/voice/components/VoiceCallView.tsx:497
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# deltaker i samtalen} other {# deltakere i samtalen}}"
 
@@ -455,7 +455,7 @@ msgstr "{count, plural, one {Vis (# linje)} other {Vis (# linjer)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Vis flere (# rad)} other {Vis flere (# rader)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:312
+#: src/features/voice/components/VoiceParticipantTile.tsx:302
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Vis # annen enhet} other {Vis # andre enheter}}"
 
@@ -476,7 +476,7 @@ msgstr "{count, plural, one {I samtale} other {# i samtale}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Bli med i videosamtale (# deltaker)} other {Bli med i videosamtale (# deltakere)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:710
+#: src/features/voice/components/VoiceParticipantTile.tsx:619
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Fortsett å se # strøm og legg til denne} other {Fortsett å se # strømmer og legg til denne}}"
 
@@ -841,7 +841,7 @@ msgid "{length} attachments"
 msgstr "{length} vedlegg"
 
 #. Summary chip text in the mobile channel search sheet when more than one channel is selected. length is the count.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:165
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:170
 msgid "{length} channels"
 msgstr "{length} kanaler"
 
@@ -856,12 +856,12 @@ msgid "{length} stickers"
 msgstr "{length} klistremerker"
 
 #. Summary chip text in the mobile channel search sheet when multiple content types are selected. length is the count.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:116
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:121
 msgid "{length} types"
 msgstr "{length} typer"
 
 #. Summary chip text in the mobile channel search sheet when more than one user is selected. length is the count.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:83
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:88
 msgid "{length} users"
 msgstr "{length} brukere"
 
@@ -1237,7 +1237,7 @@ msgid "{resolvedName}'s group"
 msgstr "{resolvedName}s gruppe"
 
 #. Subtitle in the mobile channel search bottom sheet showing the total number of search results.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:125
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:130
 msgid "{resultCount} results"
 msgstr "{resultCount} resultater"
 
@@ -1556,7 +1556,7 @@ msgid "<0>URL-only favorites (default)</0>: synced across your devices, no uploa
 msgstr "<0>URL-favoritter (standard)</0>: synkroniseres på tvers av enhetene dine, ingen opplasting, teller ikke mot lagrede medier. Det originale mediet kan forsvinne hvis verten fjerner det."
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:161
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:166
 msgid "1 channel"
 msgstr "1 kanal"
 
@@ -1633,7 +1633,7 @@ msgid "1 use"
 msgstr "1 bruk"
 
 #. Summary chip text in the mobile channel search sheet when exactly one user is selected as a filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:79
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:84
 msgid "1 user"
 msgstr "1 bruker"
 
@@ -2329,7 +2329,7 @@ msgid "Activity sharing"
 msgstr "Aktivitetsdeling"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:469
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:97
 msgid "Activity threshold"
 msgstr "Aktivitetsterskel"
@@ -3029,11 +3029,11 @@ msgstr "Tillat {everyoneMention} og {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Tillat {PRODUCT_NAME} å få tilgang til kameraet ditt i {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:533
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Gi {PRODUCT_NAME} tilgang til mikrofonen din i {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:538
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Tillat {PRODUCT_NAME} å få tilgang til mikrofonen din. Sjekk nettleserens adressefelt eller innstillinger."
 
@@ -3121,7 +3121,7 @@ msgstr "Tillat medlemmer uten tillatelsen {readMessageHistoryPermissionLabel} å
 msgid "Allow mentions for this role"
 msgstr "Tillat omtaler for denne rollen"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:555
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
 msgid "Allow microphone"
 msgstr "Tillat mikrofon"
 
@@ -3712,7 +3712,7 @@ msgid "App state"
 msgstr "Apptilstand"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:111
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:102
 msgid "App window"
 msgstr "Appvindu"
 
@@ -3852,7 +3852,7 @@ msgstr "Godkjent"
 #. Short label in the Discovery page sidebar. Keep it concise.
 #. Tab label in the screen-share picker. Lists shareable app windows.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:125
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Apps"
 msgstr "Apper"
 
@@ -4034,7 +4034,7 @@ msgid "Attachment actions"
 msgstr "Vedleggshandlinger"
 
 #. Error message in the channel and chat attachment file.
-#: src/features/channel/components/embeds/attachments/AttachmentFile.tsx:41
+#: src/features/channel/components/embeds/attachments/AttachmentFile.tsx:42
 msgid "Attachment expired"
 msgstr "Vedlegg utløpt"
 
@@ -4234,7 +4234,7 @@ msgid "Audio sources: {summaryLabel}"
 msgstr "Lydkilder: {summaryLabel}"
 
 #. Label for the has:sound filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:96
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:101
 msgid "audio upload"
 msgstr "lydopplasting"
 
@@ -4389,7 +4389,7 @@ msgstr "Automatisk følsomhet"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:114
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:456
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
 msgid "Auto-set activity threshold"
 msgstr "Angi aktivitetsgrense automatisk"
 
@@ -4773,7 +4773,7 @@ msgid "Back to sticker"
 msgstr "Tilbake til klistremerke"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:109
+#: src/features/voice/components/VoiceCallView.tsx:110
 msgid "Back to voice channel"
 msgstr "Tilbake til talekanal"
 
@@ -4797,7 +4797,7 @@ msgstr "Premiumfordeler for backend deaktivert"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:52
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:847
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
 msgid "Background"
 msgstr "Bakgrunn"
 
@@ -5207,7 +5207,7 @@ msgid "Blur"
 msgstr "Gjør uskarp"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:90
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:79
 msgid "Blur strength"
 msgstr "Uskarphetsstyrke"
 
@@ -5678,7 +5678,7 @@ msgstr "Kameraenhet"
 msgid "Camera effects"
 msgstr "Kameraeffekter"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:933
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
 msgid "Camera error"
 msgstr "Kamerafeil"
 
@@ -5721,7 +5721,7 @@ msgstr "Kameratillatelse kreves"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:181
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:62
 msgid "Camera preview"
 msgstr "Forhåndsvisning av kamera"
 
@@ -5827,7 +5827,7 @@ msgstr "Kan ikke laste opp filer her"
 #: src/features/user/components/modals/PhoneAddModal.tsx:391
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:969
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "Avbryt"
@@ -5884,7 +5884,7 @@ msgid "Cancel subscription?"
 msgstr "Avbryte abonnementet?"
 
 #. Button or menu action label in the channel and chat message upload progress. Keep it concise.
-#: src/features/channel/components/MessageUploadProgress.tsx:20
+#: src/features/channel/components/MessageUploadProgress.tsx:21
 msgid "Cancel upload"
 msgstr "Avbryt opplasting"
 
@@ -6090,7 +6090,7 @@ msgstr "Midtstilt"
 msgid "Change avatar"
 msgstr "Endre profilbilde"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:860
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
 msgid "Change background"
 msgstr "Endre bakgrunn"
 
@@ -6216,7 +6216,7 @@ msgid "Change source"
 msgstr "Endre kilde"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:169
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
 msgid "Change stream source"
 msgstr "Endre strømmekilde"
 
@@ -6855,7 +6855,7 @@ msgid "Choose payment method"
 msgstr "Velg betalingsmåte"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:173
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
 msgid "Choose something to share"
 msgstr "Velg noe å dele"
 
@@ -7616,7 +7616,7 @@ msgstr "Skjul kanalemne"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:98
-#: src/features/voice/components/VoiceParticipantTile.tsx:174
+#: src/features/voice/components/VoiceParticipantTile.tsx:164
 msgid "Collapse devices"
 msgstr "Skjul enheter"
 
@@ -8274,7 +8274,7 @@ msgstr "Koblet til tale"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:88
+#: src/features/voice/components/VoiceCallView.tsx:89
 msgid "Connecting..."
 msgstr "Kobler til..."
 
@@ -8335,7 +8335,7 @@ msgid "Connection removed"
 msgstr "Tilkobling fjernet"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:113
+#: src/features/voice/components/VoiceCallView.tsx:114
 msgid "Connection stats"
 msgstr "Tilkoblingsstatistikk"
 
@@ -10505,7 +10505,7 @@ msgstr "Dekorativ skillelinje"
 #: src/features/ui/action_menu/items/SearchMenuData.tsx:43
 #: src/features/ui/action_menu/items/SearchProviderMenuItems.tsx:14
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:117
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:66
 #: src/features/voice/components/VoiceSettingsMenus.tsx:121
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgid "Default"
@@ -10524,7 +10524,7 @@ msgid "Default"
 msgstr "Standard"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:112
 msgid "Default camera"
 msgstr "Standardkamera"
 
@@ -10609,7 +10609,7 @@ msgstr "Standard er av på mobil for å spare batteri og data."
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip for the custom emoji delete button.
-#: src/features/channel/components/embeds/media/EmbedAudio.tsx:28
+#: src/features/channel/components/embeds/media/EmbedAudio.tsx:29
 #: src/features/channel/components/embeds/media/MediaContainer.tsx:22
 #: src/features/channel/components/MobileMemesPicker.tsx:86
 #: src/features/channel/components/pickers/memes/MemeGridItem.tsx:39
@@ -11254,7 +11254,7 @@ msgstr "Enhet:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:62
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
 msgid "Devices"
 msgstr "Enheter"
 
@@ -11362,7 +11362,7 @@ msgstr "Direkteopplasting aktiv"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:193
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Disable"
 msgstr "Deaktiver"
 
@@ -11561,7 +11561,7 @@ msgid "Disabled value"
 msgstr "Deaktivert verdi"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "Hvis du deaktiverer forhåndsvisninger, vil ikke nye forhåndsvisningsopplastinger bli gjort. Eksisterende forhåndsvisningsbilder kan fortsatt være synlige til strømmen avsluttes eller forhåndsvisningen oppdateres."
 
@@ -11574,7 +11574,7 @@ msgid "Disallow @mention."
 msgstr "Ikke tillat @omtale."
 
 #. Accessible label and tooltip for the discard button after recording a voice message.
-#: src/features/channel/components/VoiceMessageRecorder.tsx:62
+#: src/features/channel/components/VoiceMessageRecorder.tsx:61
 msgid "Discard voice message"
 msgstr "Forkast talemelding"
 
@@ -11612,7 +11612,7 @@ msgstr "Koble fra socket"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:97
+#: src/features/voice/components/VoiceCallView.tsx:98
 msgid "Disconnected"
 msgstr "Frakoblet"
 
@@ -11705,7 +11705,7 @@ msgstr "Avvis omtale"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:14
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:14
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:107
 msgid "Display"
 msgstr "Visning"
 
@@ -11767,7 +11767,7 @@ msgid "Display scaling"
 msgstr "Skalering av visning"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "Displays"
 msgstr "Viser"
 
@@ -12559,11 +12559,6 @@ msgstr "Redigerer planlagt melding"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
 msgid "Education"
 msgstr "Utdanning"
-
-#. Inline notice in the camera preview modal when the native effects preview cannot start and the raw camera feed is shown instead.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:85
-msgid "Effects preview unavailable — showing unprocessed camera"
-msgstr "Effektforhåndsvisning er ikke tilgjengelig – viser ubehandlet kamerabilde"
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:184
 msgid "Eligible for a refund until {windowEndsOn}."
@@ -13372,7 +13367,7 @@ msgstr "Skriv inn kode"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:105
+#: src/features/voice/components/VoiceCallView.tsx:106
 msgid "Enter fullscreen"
 msgstr "Gå til fullskjerm"
 
@@ -13657,12 +13652,12 @@ msgstr "Betaling for EUR-abonnement"
 msgid "Evening time"
 msgstr "Kveldstid"
 
-#. Description for the automatic gain control toggle in the custom voice processing settings.
-#. Description for the automatic gain control toggle in the custom voice processing settings.
+#. Description for the automatic gain control toggle in the voice processing settings.
+#. Description for the automatic gain control toggle in the voice processing settings.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:72
-msgid "Evens out your mic volume. Off when enhanced suppression is on."
-msgstr "Jevner ut mikrofonvolumet ditt. Av når forbedret undertrykking er på."
+msgid "Evens out your mic volume so you are not too quiet."
+msgstr "Jevner ut mikrofonvolumet ditt slik at du ikke er for stille."
 
 #. Short label in the text to speech. Keep it concise.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:17
@@ -13736,7 +13731,7 @@ msgstr "Avslutt"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:101
+#: src/features/voice/components/VoiceCallView.tsx:102
 msgid "Exit fullscreen"
 msgstr "Avslutt fullskjerm"
 
@@ -14111,7 +14106,7 @@ msgid "Failed to delete channel"
 msgstr "Kunne ikke slette kanal"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:58
 msgid "Failed to enable camera."
 msgstr "Klarte ikke å aktivere kameraet."
 
@@ -14167,7 +14162,7 @@ msgid "Failed to load invites. Try again."
 msgstr "Kunne ikke laste inn invitasjoner. Prøv igjen."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:102
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:93
 msgid "Failed to load shareable sources."
 msgstr "Kunne ikke laste inn delbare kilder."
 
@@ -14295,7 +14290,7 @@ msgid "Failed to start"
 msgstr "Kunne ikke starte"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:53
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "Klarte ikke å starte kameraforhåndsvisning. Sjekk kameratillatelsene dine."
 
@@ -14525,7 +14520,7 @@ msgid "File size too large"
 msgstr "Filstørrelsen er for stor"
 
 #. Label for the has:file filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:100
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:105
 msgid "file upload"
 msgstr "filopplasting"
 
@@ -14640,7 +14635,7 @@ msgstr "Filtrering"
 msgid "Filtering by {language}"
 msgstr "Filtrerer etter {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:912
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
 msgid "Finalizing camera..."
 msgstr "Fullfører kamera..."
 
@@ -15052,7 +15047,7 @@ msgstr "Videresend media"
 msgid "Forward message"
 msgstr "Videresend melding"
 
-#: src/features/channel/components/MessageAttachments.tsx:332
+#: src/features/channel/components/MessageAttachments.tsx:331
 msgid "Forwarded"
 msgstr "Videresendt"
 
@@ -15061,8 +15056,8 @@ msgstr "Videresendt"
 msgid "Forwarded a message"
 msgstr "Videresendte en melding"
 
-#: src/features/channel/components/MessageAttachments.tsx:210
-#: src/features/channel/components/MessageAttachments.tsx:241
+#: src/features/channel/components/MessageAttachments.tsx:209
+#: src/features/channel/components/MessageAttachments.tsx:240
 msgid "Forwarded from"
 msgstr "Videresendt fra"
 
@@ -15249,7 +15244,7 @@ msgid "Friends sections"
 msgstr "Venner-seksjoner"
 
 #. Filter category label in the mobile channel search sheet for the from: user filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:133
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:138
 msgid "From"
 msgstr "Fra"
 
@@ -15290,7 +15285,7 @@ msgid "From name"
 msgstr "Navn"
 
 #. Section header in the mobile channel search user picker. Filters by sending user.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:153
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:158
 msgid "From user"
 msgstr "Fra bruker"
 
@@ -15324,11 +15319,6 @@ msgstr "Lukk og start {productName} på nytt slik at macOS bruker denne tillatel
 msgid "Gain control"
 msgstr "Få kontroll"
 
-#. Button label that starts native Linux game capture through the OBS-compatible hook path.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:165
-msgid "Game capture"
-msgstr "Spillopptak"
-
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:281
 msgid "Game capture injection (Windows)"
@@ -15338,12 +15328,6 @@ msgstr "Spillopptaksinjeksjon (Windows)"
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:56
 msgid "Game controller"
 msgstr "Spillkontroller"
-
-#. Fallback display name for a window screen-share source when browser display capture fails and native DXGI capture is attempted.
-#: src/features/voice/utils/ScreenShareStartFlow.ts:70
-msgctxt "screen-share"
-msgid "Game window (DXGI fallback)"
-msgstr "Spillvindu (DXGI-fallback)"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
@@ -15882,7 +15866,7 @@ msgstr "Gresk"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:785
+#: src/features/voice/components/VoiceSettingsMenus.tsx:784
 msgid "Grid view"
 msgstr "Rutenettvisning"
 
@@ -16120,7 +16104,7 @@ msgid "Harvest"
 msgstr "Innsamling"
 
 #. Filter category label in the mobile channel search sheet for the has: content type filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:137
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:142
 msgid "Has"
 msgstr "Har"
 
@@ -16512,14 +16496,9 @@ msgid "Hold Shift and press X to select apps. Press {selectAllShortcutLabel} to 
 msgstr "Hold nede Shift og trykk X for å velge apper. Trykk {selectAllShortcutLabel} for å velge alle."
 
 #. Hint text shown next to the hold-to-record button explaining the gesture.
-#: src/features/channel/components/VoiceMessageRecorder.tsx:58
+#: src/features/channel/components/VoiceMessageRecorder.tsx:57
 msgid "Hold to record. Drag up to lock, or release to send."
 msgstr "Hold for å ta opp. Dra opp for å låse, eller slipp for å sende."
-
-#. Tooltip on the hold-to-record button in its idle state.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:42
-msgid "Hold to send voice message"
-msgstr "Hold for å sende talemelding"
 
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
@@ -16986,7 +16965,7 @@ msgid "Image search provider"
 msgstr "Bildesøk-leverandør"
 
 #. Label for the has:image filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:88
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:93
 msgid "image upload"
 msgstr "bildeopplasting"
 
@@ -17128,7 +17107,7 @@ msgid "Importing… {processedCount, number} / {totalCount, number} processed, {
 msgstr "Importerer … {processedCount, number} av {totalCount, number} behandlet, {importedCount, number} lagt til."
 
 #. Filter category label in the mobile channel search sheet for the in: channel filter.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:141
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:146
 msgid "In"
 msgstr "I"
 
@@ -17136,7 +17115,7 @@ msgstr "I"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "I \"Operativsystem\"-modus er ordbøkene ovenfor veiledende. {PRODUCT_NAME} sender disse språkmerkene til operativsystemets stavekontroll når det støttes. Merker som ikke gjenkjennes, blir ignorert."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:324
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:323
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "I en nettleser fungerer push-to-talk bare når {PRODUCT_NAME}-fanen er fokusert. Installer skrivebordsappen for push-to-talk på hele systemet."
 
@@ -17159,7 +17138,7 @@ msgid "In call on another device"
 msgstr "I samtale på en annen enhet"
 
 #. Section header in the mobile channel search channel picker. Filters by channel.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:157
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:162
 msgid "In channel"
 msgstr "I kanal"
 
@@ -17360,7 +17339,7 @@ msgstr "Arvet"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Arvet fra {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:914
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
 msgid "Initializing camera..."
 msgstr "Initialiserer kamera ..."
 
@@ -18106,7 +18085,7 @@ msgstr "Bli med i talesamtale"
 
 #. Button in the unjoined voice channel call surface. Joins the current voice channel.
 #. Confirm dialog title shown before joining a voice channel from a context where confirmation is required.
-#: src/features/channel/components/channel_view/GuildChannelView.tsx:65
+#: src/features/channel/components/channel_view/GuildChannelView.tsx:64
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "Bli med i talekanal"
@@ -18485,7 +18464,7 @@ msgid "Learn about {premiumProductName}"
 msgstr "Lær mer om {premiumProductName}"
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
 msgid "Learn about screen share previews"
 msgstr "Lær mer om skjermdelingsforhåndsvisninger"
 
@@ -18712,7 +18691,7 @@ msgstr "likerklikk"
 
 #. Label for the has:link filter option in the mobile channel search sheet.
 #. has:link chip label. Always lowercase; matches the typed query value 1:1.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:108
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:113
 #: src/features/search/utils/SearchUtils.ts:25
 msgid "link"
 msgstr "lenke"
@@ -18781,7 +18760,7 @@ msgid "Link preview"
 msgstr "Forhåndsvisning av lenke"
 
 #. Label for the has:embed filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:104
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:109
 msgid "link preview or embed"
 msgstr "forhåndsvisning av lenke eller innebygd innhold"
 
@@ -19118,7 +19097,7 @@ msgid "Look and feel"
 msgstr "Utseende og følelse"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Det ser ut som du bruker {0}. Hvis du legger til {PRODUCT_NAME}s prosessering i tillegg, kan det føre til pumping eller forvrengning. Direkte inndata sender lyden din uendret gjennom."
 
@@ -20462,8 +20441,8 @@ msgstr "Mindreårige i fare, upassende innhold eller uønsket oppførsel."
 #. Switch label in the screen-share device picker for flipping shared camera/device video horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:181
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:70
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
 #: src/features/voice/components/VoiceSettingsMenus.tsx:135
 msgid "Mirror camera"
 msgstr "Speil kamera"
@@ -21493,7 +21472,7 @@ msgid "New version"
 msgstr "Ny versjon"
 
 #. Sort mode label in the mobile channel search bottom sheet. Sorts results newest first.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:67
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:72
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:104
 msgid "Newest"
 msgstr "Nyeste"
@@ -21864,7 +21843,7 @@ msgstr "Ingen treff"
 msgid "No mentions yet"
 msgstr "Ingen omtaler ennå"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:528
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
 msgid "No microphone found"
 msgstr "Ingen mikrofon funnet"
 
@@ -22447,7 +22426,7 @@ msgid "Okay"
 msgstr "OK"
 
 #. Sort mode label in the mobile channel search bottom sheet. Sorts results oldest first.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:71
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:76
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:105
 msgid "Oldest"
 msgstr "Eldste"
@@ -22765,7 +22744,7 @@ msgid "Open browser"
 msgstr "Åpne nettleser"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
 msgid "Open browser picker"
 msgstr "Åpne nettleservelger"
 
@@ -22869,7 +22848,7 @@ msgstr "Åpne emoji i nettleser"
 msgid "Open emoji picker"
 msgstr "Åpne emojivelger"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:878
+#: src/features/voice/components/VoiceSettingsMenus.tsx:877
 msgid "Open event sink"
 msgstr "Åpne hendelseskilde"
 
@@ -22954,9 +22933,7 @@ msgid "Open link"
 msgstr "Åpne lenke"
 
 #. Accessible label for the plus button that opens the textarea attachment and customization menu.
-#. Button or menu action label in the channel and chat mobile textarea layout. Keep it concise.
 #: src/features/channel/components/channel_textarea/shared.ts:20
-#: src/features/channel/components/textarea/MobileTextareaLayout.tsx:23
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:488
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:157
 msgid "Open menu"
@@ -23035,7 +23012,7 @@ msgid "Open system DM"
 msgstr "Åpne system-DM"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:161
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
 msgid "Open system picker"
 msgstr "Åpne systemvelger"
 
@@ -23162,7 +23139,7 @@ msgstr "Operativsystem"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Aktiver eksperimentelle innstillinger for å vise antall uleste meldinger per kanal og fellesskap"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:910
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Optimizing camera..."
 msgstr "Optimaliserer kamera ..."
 
@@ -23427,7 +23404,7 @@ msgstr "Pakktap"
 msgid "Packs"
 msgstr "Pakker"
 
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:713
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:714
 msgid "Page {currentPage} of {totalPages}"
 msgstr "Side {currentPage} av {totalPages}"
 
@@ -24438,7 +24415,7 @@ msgstr "Forhåndsvisningsknapp"
 
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
-#: src/features/voice/components/VoiceSettingsMenus.tsx:618
+#: src/features/voice/components/VoiceSettingsMenus.tsx:617
 msgid "Preview camera"
 msgstr "Forhåndsvis kamera"
 
@@ -24448,17 +24425,17 @@ msgid "Preview hidden"
 msgstr "Forhåndsvisning skjult"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:235
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:222
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "Forhåndsvisningsbilder lagres midlertidig av {productName} for å kunne vises, og er ikke ende-til-ende-kryptert. Deaktiver forhåndsvisninger hvis du ikke ønsker at skjermdelingsbilder skal lastes opp for å lage miniatyrbilder."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "Forhåndsvisningsbilder lagres midlertidig av {productName} for å kunne vises, og er ikke ende-til-ende-kryptert. Personer i denne gruppe-DM-en trenger ikke å se på strømmen din aktivt for å se miniatyrbildet."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:223
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:210
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "Forhåndsvisningsbilder lagres midlertidig av {productName} for visning og er ikke ende-til-ende-kryptert. Folk trenger fortsatt tillatelse til å koble seg til, men de trenger ikke aktivt å se på strømmen din."
 
@@ -24484,7 +24461,7 @@ msgstr "Forhåndsvisning, popup og oppførsel for strømmeminiatyrbilder"
 msgid "Previews"
 msgstr "Forhåndsvisninger"
 
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:707
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:708
 msgid "Previous"
 msgstr "Forrige"
 
@@ -25022,8 +24999,8 @@ msgstr "Trykk for å snakke-tast"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:110
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:363
-#: src/features/voice/components/VoiceSettingsMenus.tsx:389
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/voice/components/VoiceSettingsMenus.tsx:388
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
@@ -25032,7 +25009,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Trykk for å snakke (begrenset)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:669
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Trykk-og-snakk ignoreres ved direkte innskriving. Bytt til fokusert tale eller tilpasset for å bruke det."
 
@@ -25372,7 +25349,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Tilkoblingen er gjenopprettet. Velg en skjerm på nytt hvis du vil fortsette den forrige strømmen din."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:92
+#: src/features/voice/components/VoiceCallView.tsx:93
 msgid "Reconnecting..."
 msgstr "Kobler til på nytt..."
 
@@ -25390,11 +25367,9 @@ msgstr "Ta opp snarvei"
 msgid "Recording"
 msgstr "Spiller inn"
 
-#. Error toast shown when the hold-to-record voice message recording fails.
 #. Error toast shown when the voice message recording fails (encoder error, etc).
 #. Toast shown when MediaRecorder produced no usable audio.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:18
-#: src/features/channel/components/VoiceMessageRecorder.tsx:38
+#: src/features/channel/components/VoiceMessageRecorder.tsx:37
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:52
 msgid "Recording failed. Try again."
 msgstr "Opptak mislyktes. Prøv igjen."
@@ -25635,13 +25610,8 @@ msgstr "Relativ"
 msgid "Release delay"
 msgstr "Utløsningsforsinkelse"
 
-#. Tooltip on the hold-to-record button while the user is actively holding to record.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:38
-msgid "Release to send"
-msgstr "Slipp for å sende"
-
 #. Sort mode label in the mobile channel search bottom sheet. Sorts by relevance.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:75
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:80
 msgid "Relevant"
 msgstr "Relevante"
 
@@ -26726,7 +26696,7 @@ msgid "Resize panels"
 msgstr "Endre størrelse på paneler"
 
 #. Aria label on the PiP resize handle.
-#: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx:59
+#: src/features/voice/components/pip_overlay/PiPOverlayInner.tsx:54
 msgid "Resize picture-in-picture"
 msgstr "Endre størrelse på bilde-i-bilde"
 
@@ -27417,7 +27387,7 @@ msgstr "Vitenskap og teknologi"
 
 #. Filter category label in the mobile channel search sheet for the search scope selector.
 #. Summary row label on the confirm step showing the user-picked scope.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:149
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:154
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:203
 msgid "Scope"
 msgstr "Omfang"
@@ -27426,12 +27396,6 @@ msgstr "Omfang"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:426
 msgid "Scopes"
 msgstr "Omfang"
-
-#. Fallback display name for a full-screen screen-share source when the original display name is unavailable.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareCaptureCoordinator.ts:77
-msgctxt "screen-share"
-msgid "Screen"
-msgstr "Skjerm"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -27486,7 +27450,7 @@ msgid "Screen share encoder controls"
 msgstr "Kontroller for skjermdelingsenkoder"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:94
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Skjermdelingen ble avsluttet"
@@ -27512,17 +27476,17 @@ msgid "Screen share preview behavior"
 msgstr "Visning av skjermdeling"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:201
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
 msgid "Screen share previews"
 msgstr "Forhåndsvisning av skjermdeling"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:189
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
 msgid "Screen share previews are disabled."
 msgstr "Forhåndsvisninger av skjermdeling er deaktivert."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:185
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
 msgid "Screen share previews are enabled."
 msgstr "Forhåndsvisninger av skjermdeling er aktivert."
 
@@ -27656,8 +27620,8 @@ msgstr "Forhåndsvis rengjøring"
 #. Title of the mobile channel search bottom sheet.
 #. Tooltip on the channel header search button that opens the message search input.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:137
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:121
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:847
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:126
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:848
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
@@ -27793,7 +27757,7 @@ msgstr "Søk etter språk …"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Placeholder shown inside the message search input. Sentence case.
 #. Placeholder text in the mobile channel search input.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:129
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:134
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:476
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx:49
 #: src/features/input/state/input_keybind/shared.ts:237
@@ -28393,11 +28357,9 @@ msgid "Send gift"
 msgstr "Send gave"
 
 #. Button or menu action label in the channel and chat friend list item. Keep it concise.
-#. Button or menu action label in the channel and chat mobile textarea layout. Keep it concise.
 #. Button or menu action label in the channel and chat textarea buttons. Keep it concise.
 #: src/features/channel/components/friends/FriendListItem.tsx:59
-#: src/features/channel/components/textarea/MobileTextareaLayout.tsx:27
-#: src/features/channel/components/textarea/TextareaButtons.tsx:34
+#: src/features/channel/components/textarea/TextareaButtons.tsx:24
 msgid "Send message"
 msgstr "Send melding"
 
@@ -28476,7 +28438,7 @@ msgstr "Send bekreftelseskode"
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
-#: src/features/channel/components/VoiceMessageRecorder.tsx:66
+#: src/features/channel/components/VoiceMessageRecorder.tsx:65
 #: src/features/input/state/input_keybind/shared.ts:285
 msgid "Send voice message"
 msgstr "Send talemelding"
@@ -28918,7 +28880,7 @@ msgid "Share active theme"
 msgstr "Del aktivt tema"
 
 #. Primary button in the screen-share picker (start mode, devices tab). Begins sharing the selected camera/device.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
 msgid "Share device"
 msgstr "Del enhet"
 
@@ -28933,7 +28895,7 @@ msgid "Share screens and windows."
 msgstr "Del skjermer og vinduer."
 
 #. Primary button in the screen-share picker (start mode). Begins sharing the selected window or display.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
 msgid "Share source"
 msgstr "Del kilde"
 
@@ -29064,7 +29026,7 @@ msgstr "Snarveier"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:106
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:378
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
 msgid "Shortcut"
@@ -29384,7 +29346,7 @@ msgstr "Vis dempede kanaler"
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:815
+#: src/features/voice/components/VoiceSettingsMenus.tsx:814
 msgid "Show my own camera"
 msgstr "Vis mitt eget kamera"
 
@@ -29420,7 +29382,7 @@ msgstr "Vis modal for ny enhet"
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:829
+#: src/features/voice/components/VoiceSettingsMenus.tsx:828
 msgid "Show non-video participants"
 msgstr "Vis deltakere uten video"
 
@@ -30256,7 +30218,7 @@ msgstr "Noe gikk galt. Vi jobber med saken."
 
 #. Accessible label for the sort-mode select on the community members page.
 #. Filter category label in the mobile channel search sheet for the sort mode selector.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:145
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:150
 #: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx:22
 msgid "Sort"
 msgstr "Sorter"
@@ -30701,7 +30663,7 @@ msgstr "Startdato"
 msgid "Start date must be earlier than end date."
 msgstr "Startdato må være tidligere enn sluttdato."
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:861
+#: src/features/voice/components/VoiceSettingsMenus.tsx:860
 msgid "Start debug logging session"
 msgstr "Start feilsøkingsloggingsøkt"
 
@@ -30821,7 +30783,7 @@ msgstr "Trinn 4"
 #. Label for the has:sticker filter option in the mobile channel search sheet.
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #. has:sticker chip label. Always lowercase; matches the typed query value 1:1.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:112
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:117
 #: src/features/channel/components/ChannelMessage.tsx:53
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "sticker"
@@ -31103,7 +31065,7 @@ msgid "Stream preview"
 msgstr "Forhåndsvisning av strøm"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:177
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
 msgid "Stream settings"
 msgstr "Strømmeinnstillinger"
 
@@ -31384,11 +31346,11 @@ msgid "Switch to dense layout"
 msgstr "Bytt til kompakt visning"
 
 #. Primary button in the screen-share picker (switch mode, devices tab). Replaces the current stream with the selected camera/device.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:128
 msgid "Switch to device"
 msgstr "Bytt til enhet"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Switch to direct input"
 msgstr "Bytt til direkte inndata"
 
@@ -31442,7 +31404,7 @@ msgid "Switch to single column"
 msgstr "Bytt til én kolonne"
 
 #. Primary button in the screen-share picker (switch mode). Replaces the current stream with the selected window or display.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
 msgid "Switch to source"
 msgstr "Bytt til kilde"
 
@@ -32135,7 +32097,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Den oppgitte redirect_uri må bruke HTTP eller HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Kilden for skjermdelingen sluttet å sende video, så skjermdelingen ble stoppet."
@@ -32161,12 +32123,6 @@ msgstr "Brukernavnet <0>{fluxerTag}</0> er allerede tatt. Hvis du fortsetter, vi
 #: src/features/moderation/components/pages/ReportPage.tsx:89
 msgid "The verification code is invalid or expired."
 msgstr "Verifiseringskoden er ugyldig eller utløpt."
-
-#. Body of a modal shown when a native screen share stops because the selected display or window disappeared.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareCaptureCoordinator.ts:67
-msgctxt "screen-share"
-msgid "The window or display you were sharing is no longer available, so your screen share was stopped."
-msgstr "Vinduet eller skjermen du delte er ikke lenger tilgjengelig, så skjermdelingen ble stoppet."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the appearance tab. Keep it concise.
@@ -32879,7 +32835,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "Dette telefonnummeret er allerede i bruk. Prøv et annet nummer eller kontakt kundestøtte."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:106
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:97
 msgid "This picker is only available in the desktop app."
 msgstr "Denne velgeren er bare tilgjengelig i skrivebordsappen."
 
@@ -34081,11 +34037,9 @@ msgstr "Kan ikke klargjøre emojier for opplasting. Følgende feil oppsto:"
 msgid "Unable to resend code right now"
 msgstr "Kan ikke sende kode på nytt akkurat nå"
 
-#. Error toast shown when sending a hold-to-record voice message fails.
 #. Error toast shown when sending the recorded voice message fails.
 #. Toast shown when the voice message send pipeline fails.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:26
-#: src/features/channel/components/VoiceMessageRecorder.tsx:46
+#: src/features/channel/components/VoiceMessageRecorder.tsx:45
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:56
 msgid "Unable to send voice message. Try again."
 msgstr "Kan ikke sende talemelding. Prøv igjen."
@@ -34106,9 +34060,7 @@ msgid "Unable to start password change"
 msgstr "Kan ikke starte passordendring"
 
 #. Inline error shown when the user denies microphone permission for voice messages.
-#. Inline error when microphone permission is denied for the hold-to-record voice message flow.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:34
-#: src/features/channel/components/VoiceMessageRecorder.tsx:54
+#: src/features/channel/components/VoiceMessageRecorder.tsx:53
 msgid "Unable to start recording. Allow microphone access."
 msgstr "Kan ikke starte opptak. Tillat mikrofontilgang."
 
@@ -34447,7 +34399,7 @@ msgstr "ukjent bruker"
 #: src/features/devtools/utils/CommandUtils.ts:23
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:170
+#: src/features/voice/components/VoiceParticipantTile.tsx:160
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Ukjent bruker"
@@ -35112,7 +35064,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "Last opp nye emojier og klistremerker, og administrer dine egne kreasjoner."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:247
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:234
 msgid "Upload preview frames for screen shares."
 msgstr "Last opp forhåndsvisningsbilder for skjermdeling."
 
@@ -36272,7 +36224,7 @@ msgid "Video thumbnail"
 msgstr "Videominiatyrbilde"
 
 #. Label for the has:video filter option in the mobile channel search sheet.
-#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:92
+#: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:97
 msgid "video upload"
 msgstr "videoopplasting"
 
@@ -36367,7 +36319,7 @@ msgid "View call"
 msgstr "Vis samtale"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:118
+#: src/features/voice/components/VoiceCallView.tsx:119
 msgid "View call controls"
 msgstr "Vis samtalekontroller"
 
@@ -36772,12 +36724,8 @@ msgid "Voice join"
 msgstr "Bli med med tale"
 
 #. Filename label used for outgoing voice messages.
-#. Filename label used for voice messages sent via the hold-to-record button.
-#. Short label in the channel and chat textarea buttons. Keep it concise.
 #. Title of the desktop voice message composer modal.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:22
-#: src/features/channel/components/textarea/TextareaButtons.tsx:30
-#: src/features/channel/components/VoiceMessageRecorder.tsx:42
+#: src/features/channel/components/VoiceMessageRecorder.tsx:41
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:32
 msgid "Voice message"
 msgstr "Talemelding"
@@ -36799,7 +36747,7 @@ msgstr "Stemmedeltakere"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
@@ -36812,9 +36760,7 @@ msgstr "Talekvalitet"
 
 #. Error shown when MediaRecorder is unavailable.
 #. Inline error shown when the browser does not support MediaRecorder for voice messages.
-#. Inline error when MediaRecorder is unsupported for the hold-to-record voice message flow.
-#: src/features/channel/components/textarea/HoldToRecordButton.tsx:30
-#: src/features/channel/components/VoiceMessageRecorder.tsx:50
+#: src/features/channel/components/VoiceMessageRecorder.tsx:49
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:48
 msgid "Voice recording is not supported in this browser."
 msgstr "Talemeldinger støttes ikke i denne nettleseren."
@@ -37432,17 +37378,17 @@ msgid "When posted as links to chat"
 msgstr "Når de legges ut som lenker i chatten"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:211
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:198
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "Når forhåndsvisninger er aktivert, laster {productName} opp enkelte JPEG-bilder fra skjermdelingen din slik at andre i denne gruppechatten kan se et miniatyrbilde før de ser på."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:205
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "Når forhåndsvisninger er aktivert, laster {productName} opp enkelte JPEG-bilder fra skjermdelingen din slik at folk med tillatelse til å koble seg til denne talechatten kan se et miniatyrbilde før de ser på."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "Når forhåndsvisninger er aktivert, laster {productName} opp enkelte JPEG-bilder fra skjermdelingen din slik at den andre personen i denne direktechatten kan se et miniatyrbilde før de ser på."
 
@@ -37481,7 +37427,7 @@ msgstr "Hvilke samtaler"
 msgid "Which rule was broken?"
 msgstr "Hvilken regel ble brutt?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:372
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:371
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Når push-to-talk er på, styrer snarveien mikrofonen din, så demp-knappen er deaktivert."
 
@@ -37550,12 +37496,6 @@ msgstr "Win"
 #. Top-level native menu bar title (Window menu).
 #: src/features/platform/utils/DesktopLocaleBridge.ts:70
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
-msgid "Window"
-msgstr "Vindu"
-
-#. Fallback display name for a window screen-share source when the original window title is unavailable.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareCaptureCoordinator.ts:72
-msgctxt "screen-share"
 msgid "Window"
 msgstr "Vindu"
 
@@ -37994,7 +37934,7 @@ msgstr "Du kan ikke snakke i denne kanalen"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:80
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:74
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
 #: src/features/voice/components/VoiceControlBar.tsx:131
 msgid "You can't turn on your camera in this channel"
@@ -38110,7 +38050,7 @@ msgid "You don't have permission to do this to this member."
 msgstr "Du har ikke tillatelse til å gjøre dette med dette medlemmet."
 
 #. Tooltip on the disabled Join voice channel button shown when the user lacks the Connect permission in the voice channel.
-#: src/features/channel/components/channel_view/GuildChannelView.tsx:69
+#: src/features/channel/components/channel_view/GuildChannelView.tsx:68
 msgid "You don't have permission to join this voice channel"
 msgstr "Du har ikke tillatelse til å bli med i denne talekanalen"
 
