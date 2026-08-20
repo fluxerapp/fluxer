@@ -12,6 +12,7 @@ import {
 	clampVoiceTrackTotalGain,
 	clampVoiceVolumePercent,
 	composeVoiceVolumeGain,
+	recalibrateStoredVoiceVolumes,
 } from '@app/features/voice/utils/VoiceVolumeUtils';
 import type {RemoteAudioTrack, RemoteParticipant, Room} from 'livekit-client';
 import {makeAutoObservable} from 'mobx';
@@ -62,6 +63,7 @@ function getVoiceConnectionContext(): VoiceConnectionContextAccess {
 class ParticipantVolume {
 	volumes: Record<string, number> = {};
 	localMutes: Record<string, boolean> = {};
+	outputVolumeRecalibratedV1 = false;
 	connectionVolumesByLocalConnectionId: Record<string, Record<string, number>> = {};
 	private listeners = new Set<() => void>();
 
@@ -81,7 +83,17 @@ class ParticipantVolume {
 	}
 
 	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'ParticipantVolume', ['volumes', 'localMutes']);
+		await makePersistent(this, 'ParticipantVolume', ['volumes', 'localMutes', 'outputVolumeRecalibratedV1']);
+		this.applyOutputVolumeRecalibration();
+	}
+
+	private applyOutputVolumeRecalibration(): void {
+		if (this.outputVolumeRecalibratedV1) {
+			return;
+		}
+		this.volumes = recalibrateStoredVoiceVolumes(this.volumes);
+		this.outputVolumeRecalibratedV1 = true;
+		this.notifyListeners();
 	}
 
 	setVolume(userId: string, volume: number): void {

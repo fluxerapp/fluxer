@@ -37,6 +37,21 @@ export function composeVoiceVolumeGain(...volumePercents: Array<number>): number
 	return volumePercents.reduce((gain, percent) => gain * boostedVoiceVolumePercentToTrackVolume(percent), 1);
 }
 
+export function recalibrateStoredVoiceVolumePercent(value: number): number {
+	if (!Number.isFinite(value) || value <= UNITY_GAIN_PERCENT) {
+		return value;
+	}
+	return UNITY_GAIN_PERCENT;
+}
+
+export function recalibrateStoredVoiceVolumes<T extends Record<string, number>>(volumes: T): T {
+	const entries = Object.entries(volumes);
+	if (!entries.some(([, value]) => recalibrateStoredVoiceVolumePercent(value) !== value)) {
+		return volumes;
+	}
+	return Object.fromEntries(entries.map(([key, value]) => [key, recalibrateStoredVoiceVolumePercent(value)])) as T;
+}
+
 export function clampVoiceTrackTotalGain(gain: number): number {
 	if (!Number.isFinite(gain)) {
 		return 1;

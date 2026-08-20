@@ -2,7 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
-import {clampVoiceVolumePercent} from '@app/features/voice/utils/VoiceVolumeUtils';
+import {clampVoiceVolumePercent, recalibrateStoredVoiceVolumePercent} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {
 	STREAM_AUDIO_PREFS_PRUNE_INTERVAL_MS,
 	STREAM_AUDIO_PREFS_TOUCH_INTERVAL_MS,
@@ -20,6 +20,7 @@ interface StreamAudioPrefsEntry {
 
 class StreamAudioPrefs {
 	entries: Record<string, StreamAudioPrefsEntry> = {};
+	outputVolumeRecalibratedV1 = false;
 	audioPrefsRevision = 0;
 	private pruneIntervalId: number | null = null;
 	private listeners = new Set<() => void>();
@@ -42,10 +43,24 @@ class StreamAudioPrefs {
 	}
 
 	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'StreamAudioPrefs', ['entries']);
+		await makePersistent(this, 'StreamAudioPrefs', ['entries', 'outputVolumeRecalibratedV1']);
+		this.applyOutputVolumeRecalibration();
 		if (this.hasAnyEntries()) {
 			this.startPruneInterval();
 		}
+	}
+
+	private applyOutputVolumeRecalibration(): void {
+		if (this.outputVolumeRecalibratedV1) {
+			return;
+		}
+		this.entries = Object.fromEntries(
+			Object.entries(this.entries).map(([streamKey, entry]) => [
+				streamKey,
+				{...entry, volume: recalibrateStoredVoiceVolumePercent(entry.volume)},
+			]),
+		);
+		this.outputVolumeRecalibratedV1 = true;
 	}
 
 	hasEntry(streamKey: string): boolean {

@@ -4,6 +4,8 @@ import {
 	boostedVoiceVolumePercentToTrackVolume,
 	clampVoiceTrackTotalGain,
 	composeVoiceVolumeGain,
+	recalibrateStoredVoiceVolumePercent,
+	recalibrateStoredVoiceVolumes,
 	VOICE_TRACK_MAX_TOTAL_GAIN,
 	VOICE_VOLUME_MAX_GAIN,
 	VOICE_VOLUME_MAX_PERCENT,
@@ -68,5 +70,32 @@ describe('clampVoiceTrackTotalGain', () => {
 		expect(clampVoiceTrackTotalGain(Number.POSITIVE_INFINITY)).toBe(1);
 		expect(clampVoiceTrackTotalGain(48)).toBe(12);
 		expect(clampVoiceTrackTotalGain(-1)).toBe(0);
+	});
+});
+
+describe('recalibrateStoredVoiceVolumePercent', () => {
+	it('pulls every boosted stored value back to unity', () => {
+		expect(recalibrateStoredVoiceVolumePercent(200)).toBe(100);
+		expect(recalibrateStoredVoiceVolumePercent(150)).toBe(100);
+		expect(recalibrateStoredVoiceVolumePercent(101)).toBe(100);
+	});
+
+	it('leaves unity and quieter values untouched', () => {
+		expect(recalibrateStoredVoiceVolumePercent(100)).toBe(100);
+		expect(recalibrateStoredVoiceVolumePercent(40)).toBe(40);
+		expect(recalibrateStoredVoiceVolumePercent(0)).toBe(0);
+	});
+
+	it('keeps the same object when nothing needs recalibrating', () => {
+		const volumes = {alice: 100, bob: 40};
+		expect(recalibrateStoredVoiceVolumes(volumes)).toBe(volumes);
+	});
+
+	it('caps only the boosted entries in a stored map', () => {
+		expect(recalibrateStoredVoiceVolumes({alice: 200, bob: 60, carol: 150})).toEqual({
+			alice: 100,
+			bob: 60,
+			carol: 100,
+		});
 	});
 });
