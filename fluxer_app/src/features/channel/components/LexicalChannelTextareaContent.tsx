@@ -1375,7 +1375,10 @@ export const LexicalChannelTextareaContent = observer(
 								showStickersButton={showStickersButton}
 								showEmojiButton={showEmojiButton}
 								showMessageSendButton={showMessageSendButton}
-								showVoiceMessageButton={false}
+								canRecordVoice={canAttachFilesInChannel(channel)}
+								isEditingMessage={isEditingMessageInComposer || editingMessageId != null}
+								hasPendingSticker={hasPendingSticker}
+								voiceTooltipAnchorRef={contentAreaRef}
 								expressionPickerOpen={expressionPickerOpen}
 								selectedTab={selectedTab}
 								isMobile={mobileLayout.enabled}

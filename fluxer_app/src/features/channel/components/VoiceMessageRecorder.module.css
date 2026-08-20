@@ -7,6 +7,34 @@
 	justify-content: center;
 }
 
+.voiceButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--textarea-button-height);
+	height: var(--textarea-button-height);
+	padding: 0;
+	color: var(--text-primary-muted);
+	border-radius: var(--radius-md);
+	background: transparent;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	flex-shrink: 0;
+	touch-action: none;
+}
+
+.voiceButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.7;
+}
+
+.voiceButtonIcon {
+	width: var(--textarea-button-icon-size);
+	height: var(--textarea-button-icon-size);
+	flex-shrink: 0;
+}
+
 .holdTooltip {
 	background-color: var(--brand-primary);
 	color: var(--text-on-brand-primary);
@@ -33,6 +61,10 @@
 }
 
 .overlayInner {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.375rem;
+	padding: 0.5rem;
 	width: 100%;
 	min-width: 0;
 	box-sizing: border-box;
@@ -133,6 +165,7 @@
 	flex-shrink: 0;
 	display: flex;
 	align-items: center;
+	width: 2.25rem;
 	height: 2.25rem;
 }
 

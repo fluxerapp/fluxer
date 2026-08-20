@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import HoldToRecordButton from '@app/features/channel/components/textarea/HoldToRecordButton';
+import {transitionMobileTextareaButtonState} from '@app/features/channel/components/textarea/MobileTextareaButtonStateMachine';
 import {TextareaButton} from '@app/features/channel/components/textarea/TextareaButton';
 import textareaButtonsStyles from '@app/features/channel/components/textarea/TextareaButtons.module.css';
 import styles from '@app/features/channel/components/textarea/TextareaInput.module.css';
+import VoiceMessageRecorder from '@app/features/channel/components/VoiceMessageRecorder';
 import type {ExpressionPickerTabType} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import {
 	EMOJIS_DESCRIPTOR,
@@ -12,29 +13,28 @@ import {
 	MEDIA_DESCRIPTOR,
 	STICKERS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getReducedMotionProps} from '@app/features/ui/utils/ReducedMotionAnimation';
+import {getReducedMotionProps, type MotionAnimation} from '@app/features/ui/utils/ReducedMotionAnimation';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {
-	GifIcon,
-	ImageSquareIcon,
-	MicrophoneIcon,
-	PaperPlaneRightIcon,
-	SmileyIcon,
-	StickerIcon,
-} from '@phosphor-icons/react';
+import {GifIcon, ImageSquareIcon, PaperPlaneRightIcon, SmileyIcon, StickerIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
-import React from 'react';
+import React, {useMemo} from 'react';
 
-const VOICE_MESSAGE_DESCRIPTOR = msg({
-	message: 'Voice message',
-	comment: 'Short label in the channel and chat textarea buttons. Keep it concise.',
-});
 const SEND_MESSAGE_DESCRIPTOR = msg({
 	message: 'Send message',
 	comment: 'Button or menu action label in the channel and chat textarea buttons. Keep it concise.',
 });
+const MOBILE_BUTTON_SWAP_MOTION: MotionAnimation = {
+	initial: {opacity: 0, scale: 0.86, y: 3},
+	animate: {opacity: 1, scale: 1, y: 0},
+	exit: {opacity: 0, scale: 0.9, y: -2},
+	transition: {
+		opacity: {duration: 0.08},
+		y: {duration: 0.08, ease: 'easeOut'},
+		scale: {type: 'spring', stiffness: 560, damping: 28, mass: 0.55},
+	},
+};
 
 interface TextareaButtonsProps {
 	disabled: boolean;
@@ -44,8 +44,10 @@ interface TextareaButtonsProps {
 	showStickersButton: boolean;
 	showEmojiButton: boolean;
 	showMessageSendButton: boolean;
-	showVoiceMessageButton?: boolean;
-	onVoiceMessageClick?: () => void;
+	canRecordVoice: boolean;
+	isEditingMessage: boolean;
+	hasPendingSticker: boolean;
+	voiceTooltipAnchorRef?: React.RefObject<HTMLElement | null>;
 	channelId: string;
 	expressionPickerOpen: boolean;
 	selectedTab: ExpressionPickerTabType;
@@ -71,8 +73,10 @@ export const TextareaButtons = React.forwardRef<HTMLDivElement, TextareaButtonsP
 			showStickersButton,
 			showEmojiButton,
 			showMessageSendButton,
-			showVoiceMessageButton,
-			onVoiceMessageClick,
+			canRecordVoice,
+			isEditingMessage,
+			hasPendingSticker,
+			voiceTooltipAnchorRef,
 			channelId,
 			expressionPickerOpen,
 			selectedTab,
@@ -90,22 +94,40 @@ export const TextareaButtons = React.forwardRef<HTMLDivElement, TextareaButtonsP
 		ref,
 	) => {
 		const {i18n} = useLingui();
+		const buttonModel = useMemo(
+			() =>
+				transitionMobileTextareaButtonState({
+					disabled,
+					canRecordVoice,
+					value: '',
+					isSlowmodeActive,
+					isOverCharacterLimit: isOverLimit,
+					isEditingMessage,
+					hasContent,
+					hasAttachments,
+					hasPendingSticker,
+					isEditingScheduledMessage: false,
+				}),
+			[
+				canRecordVoice,
+				disabled,
+				hasAttachments,
+				hasContent,
+				hasPendingSticker,
+				isEditingMessage,
+				isOverLimit,
+				isSlowmodeActive,
+			],
+		);
 		if (disabled) {
 			return null;
 		}
-		const buttonSwapMotion = getReducedMotionProps(
-			{
-				initial: {scale: 0.8, opacity: 0},
-				animate: {scale: 1, opacity: 1},
-				exit: {scale: 0.8, opacity: 0},
-				transition: {duration: 0.15, ease: 'easeOut'},
-			},
-			Accessibility.useReducedMotion,
-		);
+		const buttonSwapMotion = getReducedMotionProps(MOBILE_BUTTON_SWAP_MOTION, Accessibility.useReducedMotion);
 		const shouldShowDesktopSendButton = showMessageSendButton;
-		const baseSendDisabled = isSlowmodeActive || isOverLimit || disableSendButton;
-		const sendButtonDisabled = baseSendDisabled || (!hasContent && !hasAttachments);
-		const shouldShowHoldToRecord = isMobile && showVoiceMessageButton && !hasContent && !hasAttachments;
+		const desktopSendDisabled =
+			isSlowmodeActive || isOverLimit || (!hasContent && !hasAttachments) || disableSendButton;
+		const shouldShowVoiceButton = buttonModel.visibleButton === 'voice';
+		const mobileSendDisabled = buttonModel.sendButton.disabled || Boolean(disableSendButton);
 		return (
 			<div
 				className={clsx(styles.buttonContainerDense, styles.sideButtonPadding)}
@@ -167,48 +189,51 @@ export const TextareaButtons = React.forwardRef<HTMLDivElement, TextareaButtonsP
 					className={textareaButtonsStyles.invisibleTrigger}
 					data-flx="channel.textarea.textarea-buttons.div"
 				/>
-				{isMobile && showVoiceMessageButton && onVoiceMessageClick && !shouldShowHoldToRecord && (
-					<TextareaButton
-						icon={MicrophoneIcon}
-						label={i18n._(VOICE_MESSAGE_DESCRIPTOR)}
-						onClick={onVoiceMessageClick}
-						data-flx="channel.textarea.textarea-buttons.textarea-button.voice-message-click"
-					/>
-				)}
 				{isMobile && (
-					<AnimatePresence mode="wait" initial={false} data-flx="channel.textarea.textarea-buttons.animate-presence">
-						{shouldShowHoldToRecord ? (
-							<motion.div
-								key="hold-to-record"
-								data-flx="channel.textarea.textarea-buttons.div--2"
-								{...buttonSwapMotion}
-							>
-								<HoldToRecordButton
-									channelId={channelId}
-									disabled={baseSendDisabled}
-									onFallback={onVoiceMessageClick}
-									data-flx="channel.textarea.textarea-buttons.hold-to-record-button"
-								/>
-							</motion.div>
-						) : (
-							<motion.div key="send-button" data-flx="channel.textarea.textarea-buttons.div--3" {...buttonSwapMotion}>
-								<TextareaButton
-									disabled={sendButtonDisabled}
-									icon={PaperPlaneRightIcon}
-									label={i18n._(SEND_MESSAGE_DESCRIPTOR)}
-									onClick={onSubmit}
-									keybindCombo={{key: 'Enter'}}
-									data-flx="channel.textarea.textarea-buttons.textarea-button.submit"
-								/>
-							</motion.div>
-						)}
-					</AnimatePresence>
+					<div
+						className={textareaButtonsStyles.mobileRightButtonContainer}
+						data-flx="channel.textarea.textarea-buttons.mobile-right-button-container"
+					>
+						<AnimatePresence initial={false} data-flx="channel.textarea.textarea-buttons.animate-presence">
+							{shouldShowVoiceButton ? (
+								<motion.div
+									key="voice-button"
+									className={textareaButtonsStyles.mobileRightButtonSlot}
+									data-flx="channel.textarea.textarea-buttons.div--2"
+									{...buttonSwapMotion}
+								>
+									<VoiceMessageRecorder
+										channelId={channelId}
+										disabled={buttonModel.voiceButton.disabled}
+										tooltipAnchorRef={voiceTooltipAnchorRef}
+										data-flx="channel.textarea.textarea-buttons.voice-message-recorder"
+									/>
+								</motion.div>
+							) : (
+								<motion.div
+									key="send-button"
+									className={textareaButtonsStyles.mobileRightButtonSlot}
+									data-flx="channel.textarea.textarea-buttons.div--3"
+									{...buttonSwapMotion}
+								>
+									<TextareaButton
+										disabled={mobileSendDisabled}
+										icon={PaperPlaneRightIcon}
+										label={i18n._(SEND_MESSAGE_DESCRIPTOR)}
+										onClick={onSubmit}
+										keybindCombo={{key: 'Enter'}}
+										data-flx="channel.textarea.textarea-buttons.textarea-button.submit"
+									/>
+								</motion.div>
+							)}
+						</AnimatePresence>
+					</div>
 				)}
 				{!isMobile && shouldShowDesktopSendButton && (
 					<>
 						<div className={styles.divider} data-flx="channel.textarea.textarea-buttons.divider" />
 						<TextareaButton
-							disabled={isSlowmodeActive || isOverLimit || (!hasContent && !hasAttachments) || disableSendButton}
+							disabled={desktopSendDisabled}
 							icon={PaperPlaneRightIcon}
 							label={i18n._(SEND_MESSAGE_DESCRIPTOR)}
 							onClick={onSubmit}

@@ -14,33 +14,17 @@
 	align-items: stretch;
 }
 
-.holdButtonWrapper {
+.mobileRightButtonContainer {
+	position: relative;
+	flex-shrink: 0;
+	width: var(--textarea-button-height);
+	height: var(--textarea-button-height);
+}
+
+.mobileRightButtonSlot {
+	position: absolute;
+	inset: 0;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
-	gap: 0.25rem;
-	touch-action: none;
-}
-
-.holdButton {
-	touch-action: none;
-}
-
-.holdButtonRecording {
-	box-shadow: 0 0 0 0.125rem rgba(252, 95, 105, 0.35);
-}
-
-.holdIndicator {
-	font-size: 0.625rem;
-	text-transform: uppercase;
-	color: var(--text-primary-muted);
-}
-
-.holdIndicatorRecording {
-	color: var(--accent-danger);
-}
-
-.holdIndicatorError {
-	color: var(--accent-danger);
-	font-weight: 600;
+	justify-content: center;
 }

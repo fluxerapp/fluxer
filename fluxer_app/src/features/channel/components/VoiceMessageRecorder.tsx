@@ -2,7 +2,6 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import layoutStyles from '@app/features/channel/components/textarea/MobileTextareaLayout.module.css';
 import styles from '@app/features/channel/components/VoiceMessageRecorder.module.css';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
@@ -529,7 +528,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 			>
 				<motion.button
 					type="button"
-					className={layoutStyles.mobileVoiceButton}
+					className={styles.voiceButton}
 					onPointerDown={handlePointerDown}
 					onPointerUp={handlePointerUp}
 					onPointerMove={handlePointerMove}
@@ -541,7 +540,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 					data-flx="channel.voice-message-recorder.button.pointer-down"
 				>
 					<MicrophoneIcon
-						className={layoutStyles.mobileRightButtonIcon}
+						className={styles.voiceButtonIcon}
 						data-flx="channel.voice-message-recorder.microphone-icon"
 					/>
 				</motion.button>
@@ -578,10 +577,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 						transition={resolvedOverlayMotion.transition}
 						data-flx="channel.voice-message-recorder.recording-overlay"
 					>
-						<div
-							className={clsx(styles.overlayInner, layoutStyles.mobileTextareaWrapper)}
-							data-flx="channel.voice-message-recorder.overlay-inner"
-						>
+						<div className={styles.overlayInner} data-flx="channel.voice-message-recorder.overlay-inner">
 							<button
 								type="button"
 								className={clsx(styles.iconButton, styles.trashButton)}
@@ -610,7 +606,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 									</div>
 								</div>
 								<div
-									className={clsx(styles.lockIndicatorWrapper, layoutStyles.mobileRightButtonContainer)}
+									className={styles.lockIndicatorWrapper}
 									data-flx="channel.voice-message-recorder.lock-indicator-wrapper"
 								>
 									<button
