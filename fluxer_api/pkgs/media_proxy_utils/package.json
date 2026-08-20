@@ -29,12 +29,16 @@
 	"main": "./src/MediaProxyUtils.ts",
 	"types": "./src/MediaProxyUtils.ts",
 	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
 		"@types/node": "catalog:"
 	},
 	"devDependencies": {
-		"@typescript/native-preview": "catalog:"
+		"@typescript/native-preview": "catalog:",
+		"vitest": "catalog:",
+		"vite-tsconfig-paths": "catalog:"
 	}
 }

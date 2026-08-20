@@ -1,0 +1,10 @@
+{
+	"extends": "../../../tsconfigs/package.json",
+	"compilerOptions": {
+		"paths": {
+			"@fluxer/*": ["../../../packages/*", "../../../packages/*/src/index.ts"],
+			"@pkgs/*": ["../*"]
+		}
+	},
+	"include": ["src/**/*"]
+}

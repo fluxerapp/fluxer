@@ -74,7 +74,8 @@ function reconstructLegacyOriginalUrl(proxyUrlPath: string): string {
 	const query = encodedQuery ? decodeLegacyComponent(encodedQuery) : '';
 	const path = decodeLegacyComponent(encodedPath);
 	const {hostname, port} = decodeLegacyHostAndPort(hostPart);
-	return `${protocol}://${hostname}${port ? `:${port}` : ''}/${path}${query ? `?${query}` : ''}`;
+	const normalizedQuery = query.startsWith('?') ? query.slice(1) : query;
+	return `${protocol}://${hostname}${port ? `:${port}` : ''}/${path}${normalizedQuery ? `?${normalizedQuery}` : ''}`;
 }
 
 function reconstructV2OriginalUrl(proxyUrlPath: string): string {
@@ -85,9 +86,26 @@ function reconstructV2OriginalUrl(proxyUrlPath: string): string {
 	return decodeV2PathComponent(encodedOriginalUrl);
 }
 
-export function buildExternalMediaProxyPath(inputUrl: string): string {
+export function buildV2ExternalMediaProxyPath(inputUrl: string): string {
 	const parsedUrl = new URL(inputUrl);
 	return `${V2_PATH_PREFIX}${encodeV2PathComponent(parsedUrl.toString())}`;
+}
+
+export function buildExternalMediaProxyPath(inputUrl: string): string {
+	const parsedUrl = new URL(inputUrl);
+	const protocol = parsedUrl.protocol.replace(/:$/u, '');
+	const host = parsedUrl.port ? `${parsedUrl.hostname}:${parsedUrl.port}` : parsedUrl.hostname;
+	const path = parsedUrl.pathname
+		.replace(/^\//u, '')
+		.split('/')
+		.map((segment) => encodeURIComponent(segment))
+		.join('/');
+	const segments = parsedUrl.search ? [encodeURIComponent(parsedUrl.search)] : [];
+	segments.push(protocol, host);
+	if (path) {
+		segments.push(path);
+	}
+	return segments.join('/');
 }
 
 export function reconstructOriginalUrl(proxyUrlPath: string): string {

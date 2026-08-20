@@ -15,11 +15,68 @@ pub enum ExternalPathError {
     InvalidUtf8,
 }
 
-pub fn build_external_media_proxy_path(input_url: &str) -> String {
+pub fn build_v2_external_media_proxy_path(input_url: &str) -> String {
     format!(
         "{V2_PREFIX}{}",
         BASE64_URL_SAFE_NO_PAD.encode(input_url.as_bytes())
     )
+}
+
+fn percent_encode_component(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for byte in value.bytes() {
+        match byte {
+            b'A'..=b'Z'
+            | b'a'..=b'z'
+            | b'0'..=b'9'
+            | b'-'
+            | b'_'
+            | b'.'
+            | b'!'
+            | b'~'
+            | b'*'
+            | b'\''
+            | b'('
+            | b')' => out.push(byte as char),
+            _ => out.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    out
+}
+
+pub fn build_external_media_proxy_path(input_url: &str) -> Result<String, ExternalPathError> {
+    let (scheme, remainder) = input_url
+        .split_once("://")
+        .ok_or(ExternalPathError::InvalidExternalPath)?;
+    if scheme.is_empty() || remainder.is_empty() {
+        return Err(ExternalPathError::InvalidExternalPath);
+    }
+    let (authority_and_path, query) = match remainder.split_once('?') {
+        Some((head, tail)) => (head, Some(tail)),
+        None => (remainder, None),
+    };
+    let (host, path) = match authority_and_path.split_once('/') {
+        Some((host, path)) => (host, path),
+        None => (authority_and_path, ""),
+    };
+    if host.is_empty() {
+        return Err(ExternalPathError::InvalidExternalPath);
+    }
+    let mut segments: Vec<String> = Vec::new();
+    if let Some(query) = query {
+        segments.push(percent_encode_component(&format!("?{query}")));
+    }
+    segments.push(scheme.to_owned());
+    segments.push(host.to_owned());
+    if !path.is_empty() {
+        segments.push(
+            path.split('/')
+                .map(percent_encode_component)
+                .collect::<Vec<_>>()
+                .join("/"),
+        );
+    }
+    Ok(segments.join("/"))
 }
 
 fn decode_v2(proxy_path: &str) -> Result<String, ExternalPathError> {
@@ -105,10 +162,10 @@ fn reconstruct_legacy(proxy_path: &str) -> Result<String, ExternalPathError> {
     let path_raw = parts[protocol_index + 2..].join("/");
     let query = percent_decode_string(&query_raw, false);
     let path = percent_decode_string(&path_raw, false);
+    let normalized_query = query.strip_prefix('?').unwrap_or(&query);
     Ok(format!(
-        "{protocol}://{host_port}/{path}{}{}",
-        if query.is_empty() { "" } else { "?" },
-        query
+        "{protocol}://{host_port}/{path}{}{normalized_query}",
+        if normalized_query.is_empty() { "" } else { "?" }
     ))
 }
 
@@ -125,8 +182,75 @@ mod tests {
     use super::*;
 
     #[test]
+    fn builds_the_plain_path_shape() {
+        assert_eq!(
+            "https/static.klipy.com/ii/c8/28/HkAKKCzZ.webp",
+            build_external_media_proxy_path("https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp")
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn builds_an_encoded_query_ahead_of_the_scheme() {
+        assert_eq!(
+            "%3Fv%3Dquery_param%26goes%3Dhere/https/static.klipy.com/ii/HkAKKCzZ.webp",
+            build_external_media_proxy_path(
+                "https://static.klipy.com/ii/HkAKKCzZ.webp?v=query_param&goes=here"
+            )
+            .unwrap()
+        );
+    }
+
+    #[test]
+    fn keeps_a_non_default_port() {
+        assert_eq!(
+            "https/example.com:8443/a.png",
+            build_external_media_proxy_path("https://example.com:8443/a.png").unwrap()
+        );
+    }
+
+    #[test]
+    fn round_trips_every_shape() {
+        for url in [
+            "https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp",
+            "https://static.klipy.com/ii/HkAKKCzZ.webp?v=query_param&goes=here",
+            "https://example.com:8443/a.png",
+            "https://avatars.githubusercontent.com/u/241303489?v=4",
+            "http://example.com/plain.gif",
+            "https://example.com/file.png?a=1&b=2&c=3",
+        ] {
+            let path = build_external_media_proxy_path(url).unwrap();
+            assert_eq!(
+                url,
+                reconstruct_original_url(&path).unwrap(),
+                "round trip {url}"
+            );
+        }
+    }
+
+    #[test]
+    fn does_not_double_the_question_mark() {
+        let decoded = reconstruct_original_url("%3Fa%3D1/https/example.com/x.png").unwrap();
+        assert_eq!("https://example.com/x.png?a=1", decoded);
+        assert!(!decoded.contains("??"));
+    }
+
+    #[test]
+    fn still_accepts_a_query_without_a_leading_question_mark() {
+        assert_eq!(
+            "https://example.com/x.png?a=1",
+            reconstruct_original_url("a%3D1/https/example.com/x.png").unwrap()
+        );
+    }
+
+    #[test]
+    fn rejects_a_url_without_a_scheme() {
+        assert!(build_external_media_proxy_path("example.com/a.png").is_err());
+    }
+
+    #[test]
     fn v2_path_roundtrip() {
-        let path = build_external_media_proxy_path("https://example.com/a b.png?x=1");
+        let path = build_v2_external_media_proxy_path("https://example.com/a b.png?x=1");
         let decoded = reconstruct_original_url(&path).unwrap();
         assert_eq!("https://example.com/a b.png?x=1", decoded);
     }
