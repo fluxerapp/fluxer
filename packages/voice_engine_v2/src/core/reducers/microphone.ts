@@ -203,46 +203,6 @@ function microphoneOptionsWithAudioInputDevice(
 	return {...options, deviceId};
 }
 
-function nativeAudioDeviceModuleNotReadyError(snapshot: VoiceEngineV2Snapshot): VoiceEngineV2Error {
-	assert.ok(snapshot != null, 'nativeAudioDeviceModuleNotReadyError snapshot must not be null');
-	assert.ok(
-		snapshot.nativeAudioDeviceModule.status === 'failed',
-		'nativeAudioDeviceModuleNotReadyError requires failed ADM status',
-	);
-	return {
-		code: 'deviceUnavailable',
-		capability: 'microphone',
-		message: snapshot.nativeAudioDeviceModule.detail ?? 'Native audio device module failed to become ready',
-	};
-}
-
-function planNativeAudioDeviceModuleGatedMicrophone(snapshot: VoiceEngineV2Snapshot): VoiceEngineV2Transition | null {
-	assert.ok(snapshot != null, 'planNativeAudioDeviceModuleGatedMicrophone snapshot must not be null');
-	assert.ok(snapshot.nativeAudioDeviceModule != null, 'snapshot.nativeAudioDeviceModule must not be null');
-	switch (snapshot.nativeAudioDeviceModule.status) {
-		case 'unsupported':
-		case 'ready':
-			return null;
-		case 'unknown':
-		case 'warming':
-			return {
-				snapshot: {...snapshot, microphone: {...snapshot.microphone, status: 'idle', failure: null}},
-				commands: [],
-			};
-		case 'failed': {
-			const error = nativeAudioDeviceModuleNotReadyError(snapshot);
-			return {
-				snapshot: {
-					...snapshot,
-					microphone: {...snapshot.microphone, status: 'failed', published: null, operationId: null, failure: error},
-					lastFailure: error,
-				},
-				commands: [],
-			};
-		}
-	}
-}
-
 export function planMicrophoneDeviceChange(
 	snapshot: VoiceEngineV2Snapshot,
 	deviceId: string | null,
@@ -327,8 +287,6 @@ export function beginMicrophonePublish(snapshot: VoiceEngineV2Snapshot): VoiceEn
 		};
 	}
 	if (!isConnected(snapshot)) return {snapshot, commands: []};
-	const gated = planNativeAudioDeviceModuleGatedMicrophone(snapshot);
-	if (gated) return gated;
 	if (snapshot.microphone.status === 'publishing') return {snapshot, commands: []};
 	if (snapshot.microphone.status === 'published' && sameMicrophoneOptions(snapshot.microphone.published, desired)) {
 		return {snapshot, commands: []};

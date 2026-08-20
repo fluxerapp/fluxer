@@ -39,7 +39,6 @@ import type {
 	VoiceEngineV2LiveKitRoomState,
 	VoiceEngineV2LocalStreamSource,
 	VoiceEngineV2MicrophoneOptions,
-	VoiceEngineV2NativeAudioDeviceModuleStatus,
 	VoiceEngineV2NativeAudioTapOptions,
 	VoiceEngineV2NativeCaptureFrame,
 	VoiceEngineV2NativeCaptureOptions,
@@ -198,11 +197,6 @@ export type VoiceEngineV2Event =
 	| {type: 'devices.selectAudioInputRequested'; deviceId: string | null}
 	| {type: 'devices.selectAudioOutputRequested'; deviceId: string | null}
 	| {type: 'devices.selectCameraRequested'; deviceId: string | null}
-	| {
-			type: 'nativeAudioDeviceModule.statusChanged';
-			status: VoiceEngineV2NativeAudioDeviceModuleStatus;
-			detail?: string | null;
-	  }
 	| {type: 'audioControls.changed'; controls: VoiceEngineV2AudioControlsPatch}
 	| {type: 'nativeCapture.startRequested'; options: VoiceEngineV2NativeCaptureOptions}
 	| {type: 'nativeCapture.updateRequested'; options: VoiceEngineV2NativeCaptureOptions}

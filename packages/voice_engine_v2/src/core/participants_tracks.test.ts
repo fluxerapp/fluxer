@@ -6,7 +6,6 @@ import inboundVideoFramesFixtureJson from '../../fixtures/event_logs/inbound_vid
 import participantsTracksFixtureJson from '../../fixtures/event_logs/participants_tracks.json';
 import subscriptionQualityFixtureJson from '../../fixtures/event_logs/subscription_quality.json';
 import watchedStreamsFixtureJson from '../../fixtures/event_logs/watched_streams.json';
-import {translateVoiceEngineV2BridgeEventToEvents, translateVoiceEngineV2BridgeVideoFrameToEvent} from '../bridge';
 import type {VoiceEngineV2Command} from '../protocol/commands';
 import type {VoiceEngineV2Event} from '../protocol/events';
 import type {
@@ -136,39 +135,45 @@ describe('voice engine v2 participants, subscriptions, and inbound video fixture
 		assertFixture(fixture);
 	});
 
-	it('translates native bridge participant, track, and frame events into v2 projections', () => {
-		let snapshot = createVoiceEngineV2InitialSnapshot(availableVoiceEngineV2Capabilities());
-		const bridgeEvents = translateVoiceEngineV2BridgeEventToEvents({
-			type: 'trackSubscribed',
-			payload: {
-				participantSid: 'PA_alice',
-				identity: 'alice',
-				participantName: 'Alice',
-				trackSid: 'TR_screen',
-				trackName: 'screen_share',
-				kind: 'video',
-				source: 'screen_share',
-				muted: false,
-				subscribed: true,
-				subscriptionStatus: 'subscribed',
+	it('projects a subscribed video track and its first frame into room and inbound-video state', () => {
+		const events: Array<VoiceEngineV2Event> = [
+			{
+				type: 'room.trackPublished',
+				track: {
+					participantIdentity: 'alice',
+					participantSid: 'PA_alice',
+					trackSid: 'TR_screen',
+					trackName: 'screen_share',
+					kind: 'video',
+					source: 'screen',
+					muted: false,
+				},
 			},
-		});
-		for (const event of bridgeEvents) {
-			snapshot = transitionVoiceEngineV2(snapshot, event).snapshot;
-		}
-		snapshot = transitionVoiceEngineV2(
-			snapshot,
-			translateVoiceEngineV2BridgeVideoFrameToEvent({
-				meta: {
+			{
+				type: 'inboundVideo.trackSubscribed',
+				track: {
+					participantSid: 'PA_alice',
+					participantIdentity: 'alice',
+					trackSid: 'TR_screen',
+					source: 'screen',
+				},
+			},
+			{
+				type: 'inboundVideo.frameReceived',
+				frame: {
 					participantSid: 'PA_alice',
 					trackSid: 'TR_screen',
 					width: 320,
 					height: 180,
 					timestampUs: 100,
+					byteLength: 86_400,
 				},
-				data: new ArrayBuffer(86_400),
-			}),
-		).snapshot;
+			},
+		];
+		let snapshot = createVoiceEngineV2InitialSnapshot(availableVoiceEngineV2Capabilities());
+		for (const event of events) {
+			snapshot = transitionVoiceEngineV2(snapshot, event).snapshot;
+		}
 
 		expect(snapshot.room.tracks.TR_screen).toMatchObject({
 			participantIdentity: 'alice',

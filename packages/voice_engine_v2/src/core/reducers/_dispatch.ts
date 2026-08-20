@@ -17,7 +17,6 @@ import {transitionImplementation} from './implementation';
 import {transitionInboundVideo} from './inboundVideo';
 import {transitionLifecycle} from './lifecycle';
 import {transitionMicrophone} from './microphone';
-import {transitionNativeAudioDeviceModule} from './nativeAudioDeviceModule';
 import {transitionNativeAudioTap} from './nativeAudioTap';
 import {transitionNativeCapture} from './nativeCapture';
 import {transitionNativeFrameSink} from './nativeFrameSink';
@@ -179,8 +178,6 @@ export function dispatchPlatformEvent(
 		case 'devices.selectAudioOutputRequested':
 		case 'devices.selectCameraRequested':
 			return transitionDevices(snapshot, event);
-		case 'nativeAudioDeviceModule.statusChanged':
-			return transitionNativeAudioDeviceModule(snapshot, event);
 		case 'nativeCapture.startRequested':
 		case 'nativeCapture.updateRequested':
 		case 'nativeCapture.stopRequested':

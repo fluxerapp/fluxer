@@ -15,12 +15,6 @@ export {
 	isVoiceEngineV2FrameReceivedEvent,
 	VOICE_ENGINE_V2_COALESCED_TRACKS_CAP,
 } from './frameCoalescing';
-export type {VoiceEngineV2FrameStatsEvent} from './frameStatsBatching';
-export {
-	VOICE_ENGINE_V2_FRAME_STATS_FLUSH_INTERVAL_MS,
-	VOICE_ENGINE_V2_FRAME_STATS_TRACKS_CAP,
-	VoiceEngineV2FrameStatsAccumulator,
-} from './frameStatsBatching';
 export type {
 	VoiceEngineV2ClockPort,
 	VoiceEngineV2EntropySource,

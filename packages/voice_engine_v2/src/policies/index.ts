@@ -21,8 +21,6 @@ export {
 	voiceEngineV2VideoCodecRank,
 	worseVoiceEngineV2VideoCodec,
 } from './codecNegotiation';
-export type {VoiceEngineV2ParticipantE2eeState} from './e2eeState';
-export {normalizeVoiceEngineV2ParticipantE2eeState} from './e2eeState';
 export {
 	hasVoiceEngineV2NativeHardwareEncoder,
 	hasVoiceEngineV2NativeNvencEncoder,
@@ -31,30 +29,12 @@ export {
 	unavailableVoiceEngineV2HardwareEncoderCapabilities,
 } from './hardwareEncoderCapabilities';
 export type {
-	VoiceEngineV2LocalTrackReconnectState,
-	VoiceEngineV2ReconnectTrackSource,
-} from './localMediaReconnectSuppression';
-export {shouldSuppressVoiceEngineV2LocalTrackStateDuringReconnect} from './localMediaReconnectSuppression';
-export type {
 	VoiceEngineV2MicrophoneFailureContext,
 	VoiceEngineV2MicrophoneOperationFailureAction,
 	VoiceEngineV2OperationFailureLike,
 	VoiceEngineV2OperationResultLike,
 } from './microphoneFailureAction';
 export {getVoiceEngineV2MicrophoneOperationFailureAction} from './microphoneFailureAction';
-export type {
-	VoiceEngineV2NativeConnectRetryPolicyInput,
-	VoiceEngineV2RetryConnectionState,
-	VoiceEngineV2RetryVoiceState,
-} from './nativeConnectRetry';
-export {shouldRetryVoiceEngineV2NativeConnectTimeout} from './nativeConnectRetry';
-export type {VoiceEngineV2NativeParticipantVolumeInput} from './nativeParticipantVolume';
-export {
-	boostedVoiceEngineV2VolumePercentToTrackVolume,
-	clampVoiceEngineV2VolumePercent,
-	computeVoiceEngineV2NativeParticipantVolume,
-	VOICE_ENGINE_V2_VOLUME_MAX_PERCENT,
-} from './nativeParticipantVolume';
 export type {
 	VoiceEngineV2ScreenEncodingPlan,
 	VoiceEngineV2ScreenEncodingPlanAction,

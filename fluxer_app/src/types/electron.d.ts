@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2BridgeApi} from '@fluxer/voice_engine_v2/bridge';
+import type {VoiceEngineV2BridgeHardwareEncoderApi} from '@fluxer/voice_engine_v2/bridge';
 import type {AuthenticationResponseJSON, RegistrationResponseJSON} from '@simplewebauthn/browser';
 
 export type InputMonitoringPermissionStatus = 'granted' | 'denied' | 'not-determined' | 'unsupported';
@@ -490,7 +490,7 @@ export interface ElectronAPI {
 	virtmic?: VirtmicApi;
 	nativeAudio?: NativeAudioApi;
 	nativeScreenCapture?: NativeScreenCaptureApi;
-	voiceEngine?: VoiceEngineV2BridgeApi;
+	voiceEngine?: VoiceEngineV2BridgeHardwareEncoderApi;
 }
 
 export type VirtmicUnavailableReason =

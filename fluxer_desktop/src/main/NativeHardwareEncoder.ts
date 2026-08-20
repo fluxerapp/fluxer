@@ -5,7 +5,7 @@ import {createChildLogger} from '@electron/common/Logger';
 import {
 	normalizeVoiceEngineV2BridgeHardwareEncoderCapabilities,
 	unavailableVoiceEngineV2BridgeHardwareEncoderCapabilities,
-	VOICE_ENGINE_V2_IPC_CHANNELS,
+	VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL,
 	type VoiceEngineV2BridgeHardwareEncoderCapabilities,
 } from '@fluxer/voice_engine_v2/bridge';
 import {ipcMain} from 'electron';
@@ -56,13 +56,13 @@ export function registerNativeHardwareEncoderHandlers(): void {
 	if (handlersRegistered) return;
 	handlersRegistered = true;
 	ipcMain.handle(
-		VOICE_ENGINE_V2_IPC_CHANNELS.getHardwareEncoderCapabilities,
+		VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL,
 		(): VoiceEngineV2BridgeHardwareEncoderCapabilities => getHardwareEncoderCapabilities(),
 	);
 }
 
 export function cleanupNativeHardwareEncoderHandlers(): void {
 	if (!handlersRegistered) return;
-	ipcMain.removeHandler(VOICE_ENGINE_V2_IPC_CHANNELS.getHardwareEncoderCapabilities);
+	ipcMain.removeHandler(VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL);
 	handlersRegistered = false;
 }

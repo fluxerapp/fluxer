@@ -59,8 +59,6 @@ export type {
 	VoiceEngineV2MediaStatus,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2Model,
-	VoiceEngineV2NativeAudioDeviceModuleState,
-	VoiceEngineV2NativeAudioDeviceModuleStatus,
 	VoiceEngineV2NativeAudioTapOptions,
 	VoiceEngineV2NativeCaptureFrame,
 	VoiceEngineV2NativeCaptureKind,

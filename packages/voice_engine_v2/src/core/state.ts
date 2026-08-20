@@ -27,7 +27,6 @@ import type {
 	VoiceEngineV2LiveKitRoomState,
 	VoiceEngineV2MediaStatus,
 	VoiceEngineV2MicrophoneOptions,
-	VoiceEngineV2NativeAudioDeviceModuleState,
 	VoiceEngineV2NativeAudioTapOptions,
 	VoiceEngineV2NativeCaptureOptions,
 	VoiceEngineV2NativeFrameSinkOptions,
@@ -162,7 +161,6 @@ export interface VoiceEngineV2Snapshot {
 	connection: VoiceEngineV2ConnectionState;
 	gateway: VoiceEngineV2GatewayState;
 	liveKit: VoiceEngineV2LiveKitState;
-	nativeAudioDeviceModule: VoiceEngineV2NativeAudioDeviceModuleState;
 	microphone: VoiceEngineV2MicrophoneState;
 	camera: VoiceEngineV2LocalMediaState<VoiceEngineV2CameraOptions>;
 	screen: VoiceEngineV2LocalMediaState<VoiceEngineV2ScreenOptions>;
@@ -285,10 +283,6 @@ export function createVoiceEngineV2InitialSnapshot(
 			roomName: null,
 			serverRegion: null,
 			failure: null,
-		},
-		nativeAudioDeviceModule: {
-			status: 'unsupported',
-			detail: null,
 		},
 		microphone: {
 			status: 'idle',

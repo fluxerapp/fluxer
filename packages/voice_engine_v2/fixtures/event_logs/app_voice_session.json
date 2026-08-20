@@ -658,10 +658,6 @@
 				"serverRegion": "us-east",
 				"failure": null
 			},
-			"nativeAudioDeviceModule": {
-				"status": "unsupported",
-				"detail": null
-			},
 			"microphone": {
 				"status": "published",
 				"desired": {

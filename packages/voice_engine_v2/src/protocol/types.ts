@@ -11,7 +11,6 @@ export type VoiceEngineV2ConnectionStatus =
 	| 'failed';
 
 export type VoiceEngineV2MediaStatus = 'idle' | 'publishing' | 'published' | 'unpublishing' | 'failed';
-export type VoiceEngineV2NativeAudioDeviceModuleStatus = 'unknown' | 'unsupported' | 'warming' | 'ready' | 'failed';
 
 export type VoiceEngineV2OperationId = number;
 
@@ -173,11 +172,6 @@ export interface VoiceEngineV2LiveKitRoomState {
 	roomSid: string | null;
 	roomName: string | null;
 	serverRegion: string | null;
-}
-
-export interface VoiceEngineV2NativeAudioDeviceModuleState {
-	status: VoiceEngineV2NativeAudioDeviceModuleStatus;
-	detail: string | null;
 }
 
 export interface VoiceEngineV2MicrophoneOptions {

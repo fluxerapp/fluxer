@@ -18,9 +18,9 @@ let pendingPromise: Promise<VoiceEngineV2HardwareEncoderCapabilities | null> | n
 
 function fetchCapabilities(): Promise<VoiceEngineV2HardwareEncoderCapabilities | null> {
 	if (!isDesktop()) return Promise.resolve(null);
-	const bridge = getElectronAPI()?.voiceEngine;
-	if (!bridge?.getHardwareEncoderCapabilities) return Promise.resolve(null);
-	return bridge
+	const voiceEngine = getElectronAPI()?.voiceEngine;
+	if (!voiceEngine?.getHardwareEncoderCapabilities) return Promise.resolve(null);
+	return voiceEngine
 		.getHardwareEncoderCapabilities()
 		.then((capabilities) => {
 			const normalized = normalizeVoiceEngineV2HardwareEncoderCapabilities(capabilities);

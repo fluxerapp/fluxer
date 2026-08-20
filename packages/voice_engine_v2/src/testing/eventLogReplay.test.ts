@@ -5,7 +5,6 @@ import appVoiceSessionFixtureJson from '../../fixtures/event_logs/app_voice_sess
 import type {VoiceEngineV2Event} from '../protocol/events';
 import {createVoiceEngineV2MemoryEventLogSpillSink} from '../runtime/eventLogRing';
 import {coalesceVoiceEngineV2EventSequence} from '../runtime/frameCoalescing';
-import {VoiceEngineV2FrameStatsAccumulator} from '../runtime/frameStatsBatching';
 import {VoiceEngineV2Runtime} from '../runtime/VoiceEngineV2Runtime';
 import {
 	replayVoiceEngineV2EventLogFixture,
@@ -125,45 +124,6 @@ describe('voice engine v2 event-log fixture replay', () => {
 		expect(replay.finalSnapshot).toEqual(runtime.snapshot);
 		expect(replay.finalSnapshot.inboundVideo.tracks.TR_screen?.lastFrameTimestampUs).toBe(12_000);
 		expect(replay.finalSnapshot.inboundVideo.tracks.TR_screen?.frameCount).toBe(1);
-	});
-
-	it('replays a batched frame-stats log to the identical snapshot with a true cumulative frame count', () => {
-		const accumulator = new VoiceEngineV2FrameStatsAccumulator();
-		const runtime = makeCoalescingRuntime();
-		runtime.dispatch({
-			type: 'inboundVideo.trackSubscribed',
-			track: {participantSid: 'PA_alice', participantIdentity: 'alice', trackSid: 'TR_screen', source: 'screen'},
-		});
-		const burst = 30;
-		for (let index = 1; index <= burst; index += 1) {
-			accumulator.record({
-				participantSid: 'PA_alice',
-				participantIdentity: 'alice',
-				trackSid: 'TR_screen',
-				width: 1280,
-				height: 720,
-				timestampUs: index * 33_333,
-				byteLength: 1_382_400,
-			});
-		}
-		const flushedCount = accumulator.flushDirty((event) => {
-			runtime.dispatch(event);
-		});
-
-		expect(flushedCount).toBe(1);
-		expect(runtime.eventLog).toHaveLength(2);
-		expect(runtime.snapshot.inboundVideo.tracks.TR_screen?.frameCount).toBe(burst);
-		expect(runtime.snapshot.inboundVideo.tracks.TR_screen?.lastFrameTimestampUs).toBe(burst * 33_333);
-
-		const fixture: VoiceEngineV2EventLogFixture = {
-			version: VOICE_ENGINE_V2_EVENT_LOG_FIXTURE_VERSION,
-			name: 'batched_inbound_video_frame_stats',
-			steps: runtime.eventLog.map((entry) => ({event: entry.event, commands: entry.commands})),
-			expected: {finalSnapshot: runtime.snapshot},
-		};
-		const replay = replayVoiceEngineV2EventLogFixture(fixture);
-
-		expect(replay.finalSnapshot).toEqual(runtime.snapshot);
 	});
 
 	it('replays the same coalesced log deterministically across runtimes', () => {

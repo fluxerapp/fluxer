@@ -2,12 +2,8 @@
 
 import {describe, expect, it} from 'vitest';
 import cameraShareEncodingPlanFixtures from '../../fixtures/policies/camera_share_encoding_plan.json';
-import e2eeFixtures from '../../fixtures/policies/e2ee_state_normalization.json';
 import hardwareEncoderCapabilityFixtures from '../../fixtures/policies/hardware_encoder_capabilities.json';
-import localMediaReconnectFixtures from '../../fixtures/policies/local_media_reconnect_suppression.json';
 import microphoneFailureFixtures from '../../fixtures/policies/microphone_failure_action.json';
-import connectRetryFixtures from '../../fixtures/policies/native_connect_retry.json';
-import volumeFixtures from '../../fixtures/policies/native_participant_volume.json';
 import screenShareEncodingPlanFixtures from '../../fixtures/policies/screen_share_encoding_plan.json';
 import voiceStatsCoercionFixtures from '../../fixtures/policies/voice_stats_coercion.json';
 import voiceStatsSummaryFixtures from '../../fixtures/policies/voice_stats_summary.json';
@@ -22,63 +18,24 @@ import type {
 import {
 	classifyVoiceEngineV2TrackStats,
 	coerceVoiceEngineV2Stats,
-	computeVoiceEngineV2NativeParticipantVolume,
 	getVoiceEngineV2MicrophoneOperationFailureAction,
 	hasVoiceEngineV2NativeNvencEncoder,
 	normalizeVoiceEngineV2HardwareEncoderCapabilities,
-	normalizeVoiceEngineV2ParticipantE2eeState,
 	planVoiceEngineV2CameraEncodingChange,
 	planVoiceEngineV2ScreenEncodingChange,
-	shouldRetryVoiceEngineV2NativeConnectTimeout,
-	shouldSuppressVoiceEngineV2LocalTrackStateDuringReconnect,
 	summarizeVoiceEngineV2Stats,
-	type VoiceEngineV2LocalTrackReconnectState,
 	type VoiceEngineV2MicrophoneFailureContext,
-	type VoiceEngineV2NativeConnectRetryPolicyInput,
 	type VoiceEngineV2OperationResultLike,
 	type VoiceEngineV2StatsSummary,
 	type VoiceEngineV2StatsTrackClassificationInput,
 	type VoiceEngineV2StatsTrackRoleSelection,
 } from './index';
 
-interface ConnectRetryFixture {
-	name: string;
-	input: VoiceEngineV2NativeConnectRetryPolicyInput;
-	expected: boolean;
-}
-
 interface MicrophoneFailureFixture {
 	name: string;
 	result: VoiceEngineV2OperationResultLike;
 	requestedEnabled: boolean;
 	context?: VoiceEngineV2MicrophoneFailureContext;
-	expected: string;
-}
-
-interface VolumeFixture {
-	name: string;
-	input: {
-		userVolumePercent: number | null;
-		outputVolumePercent: number | null;
-		locallyMuted: boolean;
-	};
-	expected?: number;
-	expectedRange?: {
-		minExclusive?: number;
-		maxExclusive?: number;
-		minInclusive?: number;
-		maxInclusive?: number;
-	};
-}
-
-interface LocalMediaReconnectFixture {
-	name: string;
-	input: VoiceEngineV2LocalTrackReconnectState;
-	expected: boolean;
-}
-
-interface E2eeFixture {
-	raw: unknown;
 	expected: string;
 }
 
@@ -141,50 +98,10 @@ interface VoiceTrackClassificationFixture {
 }
 
 describe('voice engine v2 policies', () => {
-	it.each(connectRetryFixtures as Array<ConnectRetryFixture>)('replays native connect retry fixture: $name', ({
-		input,
-		expected,
-	}) => {
-		expect(shouldRetryVoiceEngineV2NativeConnectTimeout(input)).toBe(expected);
-	});
-
 	it.each(
 		microphoneFailureFixtures as Array<MicrophoneFailureFixture>,
 	)('replays microphone failure action fixture: $name', ({result, requestedEnabled, context, expected}) => {
 		expect(getVoiceEngineV2MicrophoneOperationFailureAction(result, requestedEnabled, context)).toBe(expected);
-	});
-
-	it.each(volumeFixtures as Array<VolumeFixture>)('replays native volume fixture: $name', (fixture) => {
-		const gain = computeVoiceEngineV2NativeParticipantVolume({
-			userVolumePercent: fixture.input.userVolumePercent ?? Number.NaN,
-			outputVolumePercent: fixture.input.outputVolumePercent ?? Number.NaN,
-			locallyMuted: fixture.input.locallyMuted,
-		});
-		if (fixture.expected !== undefined) {
-			expect(gain).toBeCloseTo(fixture.expected, 5);
-		}
-		if (fixture.expectedRange?.minExclusive !== undefined) {
-			expect(gain).toBeGreaterThan(fixture.expectedRange.minExclusive);
-		}
-		if (fixture.expectedRange?.maxExclusive !== undefined) {
-			expect(gain).toBeLessThan(fixture.expectedRange.maxExclusive);
-		}
-		if (fixture.expectedRange?.minInclusive !== undefined) {
-			expect(gain).toBeGreaterThanOrEqual(fixture.expectedRange.minInclusive);
-		}
-		if (fixture.expectedRange?.maxInclusive !== undefined) {
-			expect(gain).toBeLessThanOrEqual(fixture.expectedRange.maxInclusive);
-		}
-	});
-
-	it.each(
-		localMediaReconnectFixtures as Array<LocalMediaReconnectFixture>,
-	)('replays local media reconnect suppression fixture: $name', ({input, expected}) => {
-		expect(shouldSuppressVoiceEngineV2LocalTrackStateDuringReconnect(input)).toBe(expected);
-	});
-
-	it.each(e2eeFixtures as Array<E2eeFixture>)('replays E2EE state normalization fixture %#', ({raw, expected}) => {
-		expect(normalizeVoiceEngineV2ParticipantE2eeState(raw)).toBe(expected);
 	});
 
 	it.each(
