@@ -834,7 +834,7 @@ export async function forward(
 				logger.warn(`Forward send failed in channel ${channelId}`);
 				return false;
 			}
-			SlowmodeCommands.recordMessageSend(channelId);
+			SlowmodeCommands.confirmMessageSend(channelId, forwardedMessage.timestamp);
 			if (optionalMessage) {
 				const commentNonce = SnowflakeUtils.fromTimestamp(Date.now() + 1);
 				const commentMessage = await send(channelId, {
@@ -845,7 +845,7 @@ export async function forward(
 					logger.warn(`Forward comment send failed in channel ${channelId}`);
 					return false;
 				}
-				SlowmodeCommands.recordMessageSend(channelId);
+				SlowmodeCommands.confirmMessageSend(channelId, commentMessage.timestamp);
 			}
 		}
 		logger.debug('Successfully forwarded message to all channels');

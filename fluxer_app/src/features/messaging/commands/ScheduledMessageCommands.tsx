@@ -24,6 +24,7 @@ import {
 	normalizeMessageContent,
 } from '@app/features/messaging/utils/MessageRequestUtils';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {MatureContentRejectedModal} from '@app/features/moderation/components/alerts/MatureContentRejectedModal';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
@@ -66,9 +67,7 @@ type ScheduledMessageRequest = MessageCreateRequest & {
 
 interface ApiErrorBody {
 	code?: number | string;
-	retry_after?: number;
 	message?: string;
-	details?: unknown;
 }
 
 export interface ScheduleMessageParams {
@@ -372,37 +371,6 @@ const getApiErrorBody = (error: HttpError): ApiErrorBody | undefined => {
 	return typeof error.body === 'object' && error.body !== null ? (error.body as ApiErrorBody) : undefined;
 };
 
-function parseNestedRetryAfterSeconds(body: ApiErrorBody | undefined): number | undefined {
-	if (body === undefined || typeof body.details !== 'object' || body.details === null || Array.isArray(body.details)) {
-		return undefined;
-	}
-	const details = body.details as Record<string, unknown>;
-	const retry = details.retry;
-	if (typeof retry !== 'object' || retry === null || Array.isArray(retry)) return undefined;
-	const afterSeconds = (retry as Record<string, unknown>).after_seconds;
-	if (typeof afterSeconds !== 'number' || !Number.isFinite(afterSeconds) || afterSeconds <= 0) return undefined;
-	return afterSeconds;
-}
-
-function resolveRetryAfterSeconds(error: HttpError): number | undefined {
-	const body = getApiErrorBody(error);
-	const nestedRetryAfter = parseNestedRetryAfterSeconds(body);
-	if (nestedRetryAfter !== undefined) return nestedRetryAfter;
-	const bodyRetryAfter = body === undefined ? undefined : body.retry_after;
-	if (typeof bodyRetryAfter === 'number' && Number.isFinite(bodyRetryAfter) && bodyRetryAfter > 0) {
-		return bodyRetryAfter;
-	}
-	const responseHeaders: Record<string, string> | undefined = error.responseHeaders;
-	const header = responseHeaders === undefined ? undefined : responseHeaders['retry-after'];
-	if (header === undefined || header.trim() === '') return undefined;
-	const numeric = Number(header);
-	if (Number.isFinite(numeric) && numeric > 0) return numeric;
-	const deadline = Date.parse(header);
-	if (!Number.isFinite(deadline)) return undefined;
-	const remainingSeconds = (deadline - Date.now()) / 1000;
-	return remainingSeconds > 0 ? remainingSeconds : undefined;
-}
-
 function handleScheduleError(
 	i18n: I18n,
 	error: unknown,
@@ -430,8 +398,7 @@ function handleScheduleError(
 		return;
 	}
 	if (isSlowmodeError(error)) {
-		const retryAfterSeconds = resolveRetryAfterSeconds(error);
-		const retryAfterMs = SlowmodeCommands.retryAfterSecondsToMs(retryAfterSeconds);
+		const retryAfterMs = SlowmodeCommands.clampSlowmodeRetryAfterMs(resolveRetryAfterMs(error));
 		if (retryAfterMs <= 0) {
 			ModalCommands.push(
 				modal(() => (
@@ -490,8 +457,8 @@ function handleScheduleError(
 }
 
 function handleScheduleRateLimit(_i18n: I18n, error: HttpError): void {
-	const retryAfterSecondsValue = resolveRetryAfterSeconds(error);
-	const retryAfterSeconds = retryAfterSecondsValue === undefined ? undefined : Math.ceil(retryAfterSecondsValue);
+	const retryAfterMs = resolveRetryAfterMs(error);
+	const retryAfterSeconds = retryAfterMs === null ? undefined : Math.ceil(retryAfterMs / 1000);
 	ModalCommands.push(
 		modal(() => (
 			<MessageSendTooQuickModal

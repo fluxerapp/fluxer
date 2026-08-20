@@ -38,6 +38,7 @@ import {
 	type MessageEditRequest,
 	normalizeMessageEditContent,
 } from '@app/features/messaging/utils/MessageRequestUtils';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {MatureContentRejectedModal} from '@app/features/moderation/components/alerts/MatureContentRejectedModal';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
@@ -141,9 +142,7 @@ export interface RetryError {
 
 export interface ApiErrorBody {
 	code?: number | string;
-	retry_after?: number;
 	message?: string;
-	details?: unknown;
 }
 
 interface PresignedAttachmentUploadSinglepartResponse {
@@ -225,70 +224,25 @@ const getApiErrorBody = (error: HttpError): ApiErrorBody | undefined => {
 };
 
 interface MessageRateLimitRetry {
-	retryAfterSeconds: number | null;
+	retryAfterMs: number | null;
 	automaticRetryDelayMs: number | null;
 }
 
-function parsePositiveRetryAfterSeconds(value: unknown): number | null {
-	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return null;
-	return value;
-}
-
-function parseRetryAfterHeaderSeconds(value: string | undefined): number | null {
-	if (value === undefined || value.trim() === '') return null;
-	const numeric = Number(value);
-	if (Number.isFinite(numeric) && numeric > 0) return numeric;
-	const deadline = Date.parse(value);
-	if (!Number.isFinite(deadline)) return null;
-	const remainingSeconds = (deadline - Date.now()) / 1000;
-	return remainingSeconds > 0 ? remainingSeconds : null;
-}
-
-function parseNestedRetryAfterSeconds(body: ApiErrorBody | undefined): number | null {
-	if (body === undefined || typeof body.details !== 'object' || body.details === null || Array.isArray(body.details)) {
-		return null;
-	}
-	const details = body.details as Record<string, unknown>;
-	const retry = details.retry;
-	if (typeof retry !== 'object' || retry === null || Array.isArray(retry)) return null;
-	const afterSeconds = (retry as Record<string, unknown>).after_seconds;
-	if (typeof afterSeconds !== 'number' || !Number.isFinite(afterSeconds) || afterSeconds <= 0) return null;
-	return afterSeconds;
-}
-
-function readRateLimitHeader(error: HttpError, name: string): string | undefined {
-	return error.responseHeaders[name.toLowerCase()];
-}
-
 function resolveMessageRateLimitRetry(error: HttpError): MessageRateLimitRetry {
-	const body = getApiErrorBody(error);
-	const candidates: Array<number> = [];
-	const nestedRetryAfter = parseNestedRetryAfterSeconds(body);
-	if (nestedRetryAfter !== null) candidates.push(nestedRetryAfter);
-	const bodyRetryAfter = body === undefined ? undefined : body.retry_after;
-	const parsedBodyRetryAfter = parsePositiveRetryAfterSeconds(bodyRetryAfter);
-	if (parsedBodyRetryAfter !== null) candidates.push(parsedBodyRetryAfter);
-	const parsedHeaderRetryAfter = parseRetryAfterHeaderSeconds(readRateLimitHeader(error, 'retry-after'));
-	if (parsedHeaderRetryAfter !== null) candidates.push(parsedHeaderRetryAfter);
-	const resetAfterHeader = readRateLimitHeader(error, 'x-ratelimit-reset-after');
-	if (resetAfterHeader !== undefined) {
-		const parsedResetAfter = parsePositiveRetryAfterSeconds(Number(resetAfterHeader));
-		if (parsedResetAfter !== null) candidates.push(parsedResetAfter);
-	}
-	if (candidates.length === 0) {
-		return {retryAfterSeconds: null, automaticRetryDelayMs: null};
-	}
-	const rawRetryAfter = Math.max(...candidates);
-	const retryAfterSeconds = Math.ceil(rawRetryAfter);
-	const retryAfterMs = Math.ceil(rawRetryAfter * 1000);
-	if (!Number.isSafeInteger(retryAfterSeconds) || !Number.isSafeInteger(retryAfterMs)) {
-		return {retryAfterSeconds: null, automaticRetryDelayMs: null};
+	const retryAfterMs = resolveRetryAfterMs(error);
+	if (retryAfterMs === null) {
+		return {retryAfterMs: null, automaticRetryDelayMs: null};
 	}
 	let automaticRetryDelayMs: number | null = null;
 	if (retryAfterMs <= MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_DELAY_MS) {
 		automaticRetryDelayMs = retryAfterMs;
 	}
-	return {retryAfterSeconds, automaticRetryDelayMs};
+	return {retryAfterMs, automaticRetryDelayMs};
+}
+
+function retryAfterMsToWholeSeconds(retryAfterMs: number | null): number | null {
+	if (retryAfterMs === null) return null;
+	return Math.ceil(retryAfterMs / 1000);
 }
 const isAbortError = (error: unknown): boolean => {
 	return error instanceof DOMException && error.name === 'AbortError';
@@ -1344,7 +1298,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			this.restoreFailedMessage(payload.channelId, payload.nonce);
 		}
 		completed(null, undefined, error);
-		this.handleRateLimitError(retry.retryAfterSeconds);
+		this.handleRateLimitError(retryAfterMsToWholeSeconds(retry.retryAfterMs));
 	}
 
 	private handleSendError(
@@ -1425,9 +1379,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			);
 		} else if (error instanceof HttpError && isSlowmodeError(error)) {
 			const retry = resolveMessageRateLimitRetry(error);
-			const retryAfterMs = SlowmodeCommands.retryAfterSecondsToMs(
-				retry.retryAfterSeconds === null ? undefined : retry.retryAfterSeconds,
-			);
+			const retryAfterMs = SlowmodeCommands.clampSlowmodeRetryAfterMs(retry.retryAfterMs);
 			if (retryAfterMs <= 0) {
 				ModalCommands.push(
 					modal(() => (
@@ -1579,7 +1531,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			return;
 		}
 		completed(null, undefined, error);
-		this.handleEditRateLimitError(retry.retryAfterSeconds);
+		this.handleEditRateLimitError(retryAfterMsToWholeSeconds(retry.retryAfterMs));
 	}
 
 	private showEditErrorModal(error: HttpError): void {

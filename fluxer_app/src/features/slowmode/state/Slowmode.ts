@@ -52,7 +52,7 @@ class Slowmode {
 		this.pruneExpired(Date.now());
 	}
 
-	recordMessageSend(channelId: string): void {
+	recordMessageSend(channelId: string): number {
 		const now = Date.now();
 		this.pruneExpired(now);
 		const current = this.getEntry(channelId);
@@ -60,17 +60,22 @@ class Slowmode {
 			explicitExpiresAt: current.explicitExpiresAt,
 			lastSendTimestamp: now,
 		});
+		return now;
 	}
 
-	updateSlowmodeTimestamp(channelId: string, timestamp: number): void {
+	updateSlowmodeTimestamp(channelId: string, timestamp: number | null): void {
 		const now = Date.now();
-		if (!isValidTimestamp(timestamp, now)) return;
+		let nextTimestamp = timestamp;
+		if (nextTimestamp !== null) {
+			if (!isValidTimestamp(nextTimestamp, now)) return;
+			nextTimestamp = Math.min(nextTimestamp, now);
+		}
 		this.pruneExpired(now);
 		const current = this.getEntry(channelId);
-		if (current.lastSendTimestamp === timestamp) return;
+		if (current.lastSendTimestamp === nextTimestamp) return;
 		this.setEntry(channelId, {
 			explicitExpiresAt: current.explicitExpiresAt,
-			lastSendTimestamp: timestamp,
+			lastSendTimestamp: nextTimestamp,
 		});
 	}
 

@@ -131,6 +131,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				referenced_message: referencedMessage?.toJSON(),
 			});
 			SlowmodeCommands.prepareMessageSend(channel.id);
+			const pendingSend = SlowmodeCommands.recordPendingMessageSend(channel.id);
 			void MessageCommands.send(channel.id, {
 				content: message.content,
 				nonce,
@@ -141,11 +142,17 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				stickers,
 				favoriteMemeId,
 				tts,
-			}).then((sentMessage) => {
-				if (sentMessage) {
-					SlowmodeCommands.recordMessageSend(channel.id);
-				}
-			});
+			})
+				.then((sentMessage) => {
+					if (sentMessage) {
+						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp);
+						return;
+					}
+					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
+				})
+				.catch(() => {
+					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
+				});
 			ComponentDispatch.dispatch('MESSAGE_SENT', {channelId: channel.id});
 			return true;
 		},
@@ -196,6 +203,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			});
 			SlowmodeCommands.prepareMessageSend(channel.id);
 			const allowedMentions: AllowedMentions = {replied_user: replyingMessage?.mentioning ?? true};
+			const pendingSend = SlowmodeCommands.recordPendingMessageSend(channel.id);
 			void MessageCommands.send(channel.id, {
 				content: messageData.content,
 				nonce,
@@ -207,11 +215,17 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				flags: 0,
 				stickers: messageData.stickers || [],
 				favoriteMemeId: sendOptions.favoriteMemeId,
-			}).then((sentMessage) => {
-				if (sentMessage) {
-					SlowmodeCommands.recordMessageSend(channel.id);
-				}
-			});
+			})
+				.then((sentMessage) => {
+					if (sentMessage) {
+						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp);
+						return;
+					}
+					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
+				})
+				.catch(() => {
+					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
+				});
 			ComponentDispatch.dispatch('MESSAGE_SENT', {channelId: channel.id});
 		},
 		[channel?.id, referencedMessage, replyingMessage],

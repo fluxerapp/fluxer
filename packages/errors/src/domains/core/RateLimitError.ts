@@ -1,24 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {
+	sanitizeRetryAfterDecimalSeconds,
+	sanitizeRetryAfterSeconds,
+} from '@fluxer/errors/src/domains/core/RetryAfterSeconds';
 import {ThrottledError} from '@fluxer/errors/src/domains/core/ThrottledError';
 import type {FluxerErrorData} from '@fluxer/errors/src/FluxerError';
 
 type RateLimitScope = 'global' | 'shared' | 'user';
-
-function sanitizeRetryAfter(value: number | undefined | null): number {
-	if (value == null || !Number.isFinite(value) || value < 0) {
-		return 1;
-	}
-	return Math.max(1, Math.ceil(value));
-}
-
-function sanitizeRetryAfterDecimal(value: number | undefined | null, fallback: number): number {
-	if (value == null || !Number.isFinite(value) || value < 0) {
-		return fallback;
-	}
-	return Math.max(0.001, value);
-}
 
 function sanitizeResetTime(resetTime: Date): number {
 	const timestamp = resetTime.getTime();
@@ -64,8 +54,8 @@ export class RateLimitError extends ThrottledError {
 		bucketHash?: string;
 		scope?: RateLimitScope;
 	}) {
-		const safeRetryAfter = sanitizeRetryAfter(retryAfter);
-		const safeRetryAfterDecimal = sanitizeRetryAfterDecimal(retryAfterDecimal, safeRetryAfter);
+		const safeRetryAfter = sanitizeRetryAfterSeconds(retryAfter);
+		const safeRetryAfterDecimal = sanitizeRetryAfterDecimalSeconds(retryAfterDecimal, safeRetryAfter);
 		const safeResetTimestamp = sanitizeResetTime(resetTime);
 		const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 1;
 		const safeResetAfterDecimal =

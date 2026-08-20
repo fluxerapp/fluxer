@@ -929,9 +929,8 @@ export class MessageSendService {
 				algorithm: 'leaky_bucket',
 			});
 			if (!slowmodeResult.allowed) {
-				const retryAfter = Math.max(0, slowmodeResult.resetTime.getTime() - Date.now());
 				throw new SlowmodeRateLimitError({
-					retryAfter,
+					retryAfter: slowmodeResult.retryAfter,
 					retryAfterDecimal: slowmodeResult.retryAfterDecimal,
 				});
 			}

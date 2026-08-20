@@ -52,4 +52,27 @@ describe('Slowmode Enforcement', () => {
 		expect(messages).toHaveLength(1);
 		expect(messages[0]?.id).toBe(firstMessage.id);
 	});
+	it('reports the slowmode retry window in seconds on the Retry-After header', async () => {
+		const rateLimitPerUser = 5;
+		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		await ensureSessionStarted(harness, member.token);
+		const channel = await createChannel(harness, owner.token, guild.id, 'slowmode-channel');
+		await updateChannel(harness, owner.token, channel.id, {
+			rate_limit_per_user: rateLimitPerUser,
+		});
+		await sendChannelMessage(harness, member.token, channel.id, 'first message');
+		const {response, json} = await createBuilder<{code: string; retry_after: number}>(harness, member.token)
+			.post(`/channels/${channel.id}/messages`)
+			.body({content: 'second message'})
+			.expect(400, APIErrorCodes.SLOWMODE_RATE_LIMITED)
+			.executeWithResponse();
+		const headerRetryAfter = Number(response.headers.get('Retry-After'));
+		expect(Number.isInteger(headerRetryAfter)).toBe(true);
+		expect(headerRetryAfter).toBeGreaterThan(0);
+		expect(headerRetryAfter).toBeLessThanOrEqual(rateLimitPerUser);
+		expect(json.retry_after).toBeGreaterThan(0);
+		expect(json.retry_after).toBeLessThanOrEqual(rateLimitPerUser);
+		expect(headerRetryAfter - json.retry_after).toBeLessThan(1);
+	});
 });
