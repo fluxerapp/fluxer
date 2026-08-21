@@ -1071,6 +1071,7 @@ mod platform {
 
     const BACKSLASH_UTF16: &[u16] = &[b'\\' as u16, 0];
     const PROCESS_LOOPBACK_PROBE_TIMEOUT_MS: u32 = 1_500;
+    const PROCESS_LOOPBACK_PROBE_COUNT: u64 = 2;
     const SESSION_MIXER_REFRESH_INTERVAL: Duration = Duration::from_millis(1_000);
     const SESSION_MIXER_WAIT_TIMEOUT_MS: u32 = 250;
     const MAX_SESSION_MIXER_CAPTURES: usize = 48;
@@ -2197,7 +2198,7 @@ mod platform {
             });
 
         match rx.recv_timeout(std::time::Duration::from_millis(
-            u64::from(PROCESS_LOOPBACK_PROBE_TIMEOUT_MS) + 500,
+            u64::from(PROCESS_LOOPBACK_PROBE_TIMEOUT_MS) * PROCESS_LOOPBACK_PROBE_COUNT + 500,
         )) {
             Ok((include_result, exclude_result)) => ProcessLoopbackRuntimeProbe {
                 include_supported: include_result.is_ok(),

@@ -832,7 +832,7 @@ export async function armNativeAudioForNextCapture(sourceId: string): Promise<bo
 			platform: electronApi.platform,
 			sourceId,
 			backend: availability?.backend ?? null,
-			reason: availability?.reason ?? 'os-version-too-old',
+			reason: availability?.reason ?? 'process-scope-unsupported',
 			detail: availability?.detail ?? null,
 		});
 		logger.warn('Cannot arm per-window audio capture: native audio addon unavailable', {
