@@ -78,7 +78,6 @@ get_guild_state(UserId, State) ->
     Data = guild_data_index:ensure_data_map(State),
     GuildId = guild_id(State),
     AllChannels = guild_data_channels:channels_from_data(Data),
-    AllMembers = guild_data_index:member_values(Data),
     Member = guild_data_members:find_member_by_user_id(UserId, State),
     {ViewableChannels, JoinedAt} = guild_data_channels:derive_member_view(
         UserId, Member, State, AllChannels
@@ -89,9 +88,9 @@ get_guild_state(UserId, State) ->
     AllVoiceStates = guild_voice:get_voice_states_list(StateWithVoice),
     ViewableChannelIds = channel_id_set(ViewableChannels),
     VoiceStates = filter_voice_states(AllVoiceStates, ViewableChannelIds),
-    VoiceMembers = guild_data_channels:voice_members_from_states(VoiceStates, AllMembers),
+    VoiceMembers = resolve_voice_members(VoiceStates, Data),
     Members = guild_data_channels:merge_members(OwnMemberList, VoiceMembers),
-    MemberCount = maps:get(member_count, State, length(AllMembers)),
+    MemberCount = maps:get(member_count, State, guild_data_index:member_count(Data)),
     build_guild_state_map(
         GuildId,
         Data,
@@ -102,6 +101,31 @@ get_guild_state(UserId, State) ->
         VoiceStates,
         JoinedAt
     ).
+
+-spec resolve_voice_members([map()], map()) -> [map()].
+resolve_voice_members(VoiceStates, Data) ->
+    lists:filtermap(fun(VS) -> resolve_voice_member_entry(VS, Data) end, VoiceStates).
+
+-spec resolve_voice_member_entry(map(), map()) -> {true, map()} | false.
+resolve_voice_member_entry(VoiceState, Data) ->
+    case maps:get(<<"member">>, VoiceState, undefined) of
+        Member when is_map(Member), map_size(Member) > 0 ->
+            {true, Member};
+        _ ->
+            resolve_voice_member_by_lookup(VoiceState, Data)
+    end.
+
+-spec resolve_voice_member_by_lookup(map(), map()) -> {true, map()} | false.
+resolve_voice_member_by_lookup(VoiceState, Data) ->
+    case voice_state_utils:voice_state_user_id(VoiceState) of
+        UserId when is_integer(UserId) ->
+            case guild_data_index_members:get_member_ets(UserId, Data) of
+                Member when is_map(Member) -> {true, Member};
+                _ -> false
+            end;
+        _ ->
+            false
+    end.
 
 -spec fetch_latest_voice_states(guild_state()) -> guild_state().
 fetch_latest_voice_states(State) ->

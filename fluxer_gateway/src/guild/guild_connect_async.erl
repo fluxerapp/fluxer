@@ -17,6 +17,9 @@
 
 -define(SESSION_CONNECT_MAX_WORKERS, 8).
 -define(SESSION_CONNECT_DEFAULT_MAX_QUEUE, 1024).
+-define(CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, [
+    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+]).
 
 -spec ensure_session_connect_queue(term()) -> queue:queue().
 ensure_session_connect_queue(Value) when is_list(Value) ->
@@ -363,14 +366,14 @@ queued_session_pid(_) ->
 -spec start_worker(map(), map()) -> map().
 start_worker(Item, State) ->
     Self = self(),
-    Snapshot = build_connect_snapshot(State),
+    Snapshot = build_connect_snapshot(Item, State),
     {_Pid, Ref} = spawn_monitor(fun() -> compute_and_send_done(Item, Self, Snapshot) end),
     WorkerRefs = maps:get(session_connect_worker_refs, State, #{}),
     State#{session_connect_worker_refs => WorkerRefs#{Ref => true}}.
 
--spec build_connect_snapshot(map()) -> map().
-build_connect_snapshot(State) ->
-    maps:with(
+-spec build_connect_snapshot(map(), map()) -> map().
+build_connect_snapshot(Item, State) ->
+    Base = maps:with(
         [
             id,
             data,
@@ -382,7 +385,75 @@ build_connect_snapshot(State) ->
             virtual_channel_access
         ],
         State
+    ),
+    maybe_trim_connect_snapshot(Item, Base, State).
+
+-spec maybe_trim_connect_snapshot(map(), map(), map()) -> map().
+maybe_trim_connect_snapshot(Item, Base, State) ->
+    case has_members_ets(State) of
+        true -> trim_connect_snapshot(Item, Base);
+        false -> Base
+    end.
+
+-spec has_members_ets(map()) -> boolean().
+has_members_ets(#{data := #{members_ets := Tab}}) -> is_reference(Tab);
+has_members_ets(_) -> false.
+
+-spec trim_connect_snapshot(map(), map()) -> map().
+trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
+    Retained = retained_member_map(Item, Base, Data),
+    Trimmed = maps:without(?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, Data),
+    Base#{
+        data => Trimmed#{
+            <<"members">> => Retained,
+            members_normalized => Retained,
+            <<"member_role_index">> =>
+                guild_data_index_members:build_member_role_index(Retained)
+        }
+    };
+trim_connect_snapshot(_Item, Base) ->
+    Base.
+
+-spec retained_member_map(map(), map(), map()) -> #{integer() => map()}.
+retained_member_map(Item, Base, Data) ->
+    UserIds = [connect_user_id(Item) | voice_state_user_ids(Base)],
+    lists:foldl(
+        fun(UserId, Acc) -> retain_member(UserId, Data, Acc) end,
+        #{},
+        UserIds
     ).
+
+-spec retain_member(term(), map(), #{integer() => map()}) -> #{integer() => map()}.
+retain_member(UserId, Data, Acc) when is_integer(UserId) ->
+    case guild_data_index_members:get_member_ets(UserId, Data) of
+        Member when is_map(Member) -> Acc#{UserId => Member};
+        _ -> Acc
+    end;
+retain_member(_UserId, _Data, Acc) ->
+    Acc.
+
+-spec connect_user_id(map()) -> integer() | undefined.
+connect_user_id(Item) ->
+    Request = maps:get(request, Item, #{}),
+    case maps:get(user_id, Request, undefined) of
+        UserId when is_integer(UserId) -> UserId;
+        _ -> undefined
+    end.
+
+-spec voice_state_user_ids(map()) -> [integer()].
+voice_state_user_ids(Base) ->
+    maps:fold(
+        fun(_Key, VoiceState, Acc) -> add_voice_state_user_id(VoiceState, Acc) end,
+        [],
+        voice_state_utils:voice_states(Base)
+    ).
+
+-spec add_voice_state_user_id(term(), [integer()]) -> [integer()].
+add_voice_state_user_id(VoiceState, Acc) ->
+    case voice_state_utils:voice_state_user_id(VoiceState) of
+        UserId when is_integer(UserId) -> [UserId | Acc];
+        _ -> Acc
+    end.
 
 -spec compute_and_send_done(map(), pid(), map()) -> ok.
 compute_and_send_done(Item, GuildPid, Snapshot) ->
