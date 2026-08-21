@@ -808,6 +808,9 @@ export class UserRelationshipService {
 		if (!user) {
 			return false;
 		}
+		if (user.pendingDeletionAt !== null) {
+			return false;
+		}
 		return (user.flags & UserFlags.DELETED) === UserFlags.DELETED;
 	}
 }

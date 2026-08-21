@@ -19,6 +19,16 @@ import {
 } from './RelationshipTestUtils';
 import {fetchUserMe} from './UserTestUtils';
 
+async function markUserScheduledForDeletion(harness: ApiTestHarness, userId: string): Promise<void> {
+	const pendingDeletionAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+	await createBuilder(harness, '')
+		.post(`/test/users/${userId}/set-pending-deletion`)
+		.body({pending_deletion_at: pendingDeletionAt, set_self_deleted_flag: false})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	await markUserDeleted(harness, userId);
+}
+
 async function markUserDeleted(harness: ApiTestHarness, userId: string): Promise<void> {
 	await createBuilder(harness, '')
 		.patch(`/test/users/${userId}/flags`)
@@ -220,6 +230,16 @@ describe('UserRelationshipStateTransitions', () => {
 				.post(`/users/@me/relationships/${bob.userId}`)
 				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
 				.execute();
+		});
+		test('can accept a friend request from a user scheduled for deletion', async () => {
+			const alice = await createTestAccount(harness);
+			const bob = await createTestAccount(harness);
+			await sendFriendRequest(harness, bob.token, alice.userId);
+			await markUserScheduledForDeletion(harness, bob.userId);
+			const {json: friendship} = await acceptFriendRequest(harness, alice.token, bob.userId);
+			assertRelationshipType(friendship, RelationshipTypes.FRIEND);
+			const {json: aliceAfter} = await listRelationships(harness, alice.token);
+			assertRelationshipType(findRelationship(aliceAfter, bob.userId)!, RelationshipTypes.FRIEND);
 		});
 		test('cannot send friend request to user who blocked you', async () => {
 			const alice = await createTestAccount(harness);
