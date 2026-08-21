@@ -84,7 +84,8 @@ export async function mapUserToAdminResponse(
 		premium_lifetime_sequence: user.premiumLifetimeSequence ?? null,
 		suspicious_activity_flags: user.suspiciousActivityFlags,
 		phone_verification_deferred: ((user.suspiciousActivityFlags ?? 0) & DEFERRED_PHONE_ON_COMMUNITY_JOIN) !== 0,
-		temp_banned_until: user.tempBannedUntil?.toISOString() ?? null,
+		temp_banned_until:
+			user.tempBannedUntil && user.tempBannedUntil.getTime() > Date.now() ? user.tempBannedUntil.toISOString() : null,
 		pending_deletion_at: user.pendingDeletionAt?.toISOString() ?? null,
 		pending_bulk_message_deletion_at: user.pendingBulkMessageDeletionAt?.toISOString() ?? null,
 		deletion_reason_code: user.deletionReasonCode,
