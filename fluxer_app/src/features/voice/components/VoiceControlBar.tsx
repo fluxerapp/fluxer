@@ -400,6 +400,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 					applyToLiveStream={isScreenShareEnabled}
 					displayShareEnvironment={displayShareEnvironment}
 					shareContext={ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display'}
+					shareContextResolved={ActiveScreenShareSource.getSourceId() != null}
 					data-flx="voice.voice-control-bar.render-screen-share-menu.stream-settings-menu-content"
 				/>
 				<MenuGroup data-flx="voice.voice-control-bar.render-screen-share-menu.menu-group--2">

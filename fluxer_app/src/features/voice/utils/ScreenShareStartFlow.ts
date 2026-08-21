@@ -291,6 +291,14 @@ function getConfiguredScreenShareOptions(
 		sourceId,
 		preferredDisplaySurface,
 	);
+	if (!includeAudio && shareContext !== 'device' && supportsDesktopScreenShareAudioCapture()) {
+		logger.info('Screen share audio not requested for this surface', {
+			sourceId,
+			preferredDisplaySurface,
+			shareAppAudio: VoiceSettings.getShareAppAudio(),
+			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
+		});
+	}
 	const {captureOptions, publishOptions} = buildScreenShareOptions({
 		resolution,
 		frameRate,
