@@ -414,10 +414,6 @@ export type ScreenShareEncoderVerificationFailure =
 	| (StalledVideoEncoderInfo & {reason: 'stalled'})
 	| MissingExpectedVideoEncoderInfo;
 
-function isSoftwareEncoderStats(implementation: string | null, powerEfficientEncoder: boolean | null): boolean {
-	return classifyVideoEncoderAcceleration(implementation, powerEfficientEncoder) === 'software';
-}
-
 function getStatsKind(report: OutboundVideoStatsEntry, codecs: Map<string, CodecStatsEntry>): string | undefined {
 	if (report.kind || report.mediaType) return report.kind ?? report.mediaType;
 	if (!report.codecId) return undefined;
@@ -462,6 +458,7 @@ export function findSoftwareVideoEncoder(stats: RTCStatsReport, codec?: VideoCod
 			reports.push(report);
 		}
 	}
+	let softwareEncoder: SoftwareVideoEncoderInfo | null = null;
 	for (const report of reports) {
 		if (getStatsKind(report, codecs) !== 'video') continue;
 		if (report.codecId && !codecMatchesTarget(codecs.get(report.codecId)?.mimeType, codec)) continue;
@@ -471,13 +468,16 @@ export function findSoftwareVideoEncoder(stats: RTCStatsReport, codec?: VideoCod
 				: null;
 		const powerEfficientEncoder =
 			typeof report.powerEfficientEncoder === 'boolean' ? report.powerEfficientEncoder : null;
-		if (!isSoftwareEncoderStats(implementation, powerEfficientEncoder)) continue;
-		return {
-			implementation: implementation ?? UNKNOWN_ENCODER_IMPLEMENTATION,
-			powerEfficientEncoder,
-		};
+		const acceleration = classifyVideoEncoderAcceleration(implementation, powerEfficientEncoder);
+		if (acceleration === 'hardware') return null;
+		if (acceleration === 'software' && softwareEncoder === null) {
+			softwareEncoder = {
+				implementation: implementation ?? UNKNOWN_ENCODER_IMPLEMENTATION,
+				powerEfficientEncoder,
+			};
+		}
 	}
-	return null;
+	return softwareEncoder;
 }
 
 export function shouldTriggerSoftwareEncoderWarning(codec: VideoCodec): boolean {
