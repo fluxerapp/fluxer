@@ -96,9 +96,24 @@ const DEFAULT_STAGGER_DELAY_MS = 25;
 const DEFAULT_LOCK_TTL_SECONDS = 180;
 const DEFAULT_GATEWAY_ONLY_GRACE_MS = 10000;
 const DEFAULT_LIVEKIT_ONLY_GRACE_MS = 60000;
+const MIN_CANDIDATE_TTL_SECONDS = 300;
+const MAX_CANDIDATE_TTL_SECONDS = 3600;
+const CANDIDATE_TTL_SWEEP_MULTIPLIER = 3;
+const LAST_SWEEP_KEY_TTL_SECONDS = 86400;
 const ROOM_KEY_PREFIX = 'voice:room:server:';
+export function candidateTtlSecondsFor(input: {
+	intervalMs: number;
+	observedSweepSpacingMs: number;
+	graceMs: number;
+}): number {
+	const spacingMs = Math.max(input.intervalMs, input.observedSweepSpacingMs);
+	const ttlSeconds = Math.ceil((spacingMs * CANDIDATE_TTL_SWEEP_MULTIPLIER + input.graceMs * 2) / 1000);
+	return Math.min(MAX_CANDIDATE_TTL_SECONDS, Math.max(MIN_CANDIDATE_TTL_SECONDS, ttlSeconds));
+}
+
 const VOICE_RECONCILIATION_LOCK_KEY = 'voice:reconcile:lock';
 const VOICE_RECONCILIATION_CADENCE_KEY = 'voice:reconcile:cadence';
+const VOICE_RECONCILIATION_LAST_SWEEP_KEY = 'voice:reconcile:last-sweep-at';
 const GATEWAY_ONLY_CANDIDATE_KEY_PREFIX = 'voice:reconcile:gateway-only:';
 const LIVEKIT_ONLY_CANDIDATE_KEY_PREFIX = 'voice:reconcile:livekit-only:';
 
@@ -115,8 +130,7 @@ export class VoiceReconciliationWorker {
 	private readonly cadenceTtlSeconds: number;
 	private readonly gatewayOnlyGraceMs: number;
 	private readonly liveKitOnlyGraceMs: number;
-	private readonly gatewayOnlyCandidateTtlSeconds: number;
-	private readonly liveKitOnlyCandidateTtlSeconds: number;
+	private observedSweepSpacingMs = 0;
 	private intervalHandle: NodeJS.Timeout | null = null;
 	private reconciling = false;
 	private reconciliationLockLost = false;
@@ -136,14 +150,6 @@ export class VoiceReconciliationWorker {
 		this.cadenceTtlSeconds = options.cadenceTtlSeconds ?? Math.max(1, Math.ceil((this.intervalMs * 3) / 1000));
 		this.gatewayOnlyGraceMs = options.gatewayOnlyGraceMs ?? DEFAULT_GATEWAY_ONLY_GRACE_MS;
 		this.liveKitOnlyGraceMs = options.liveKitOnlyGraceMs ?? DEFAULT_LIVEKIT_ONLY_GRACE_MS;
-		this.gatewayOnlyCandidateTtlSeconds = Math.max(
-			60,
-			Math.ceil((this.intervalMs * 4 + this.gatewayOnlyGraceMs * 4) / 1000),
-		);
-		this.liveKitOnlyCandidateTtlSeconds = Math.max(
-			60,
-			Math.ceil((this.intervalMs * 4 + this.liveKitOnlyGraceMs * 4) / 1000),
-		);
 	}
 
 	start(): void {
@@ -156,6 +162,7 @@ export class VoiceReconciliationWorker {
 				intervalMs: this.intervalMs,
 				gatewayOnlyGraceMs: this.gatewayOnlyGraceMs,
 				liveKitOnlyGraceMs: this.liveKitOnlyGraceMs,
+				gatewayOnlyCandidateTtlSeconds: this.candidateTtlSeconds(this.gatewayOnlyGraceMs),
 			},
 			'Starting VoiceReconciliationWorker',
 		);
@@ -175,6 +182,7 @@ export class VoiceReconciliationWorker {
 
 	async reconcile(): Promise<void> {
 		const startTime = Date.now();
+		await this.recordSweepSpacing(startTime);
 		const discovery = await this.discoverActiveRooms();
 		this.logger.info(
 			{
@@ -233,6 +241,8 @@ export class VoiceReconciliationWorker {
 		const durationMs = Date.now() - startTime;
 		this.logger.info(
 			{
+				observedSweepSpacingMs: this.observedSweepSpacingMs,
+				gatewayOnlyCandidateTtlSeconds: this.candidateTtlSeconds(this.gatewayOnlyGraceMs),
 				roomsChecked,
 				totalConfirmed,
 				totalRepaired,
@@ -297,6 +307,37 @@ export class VoiceReconciliationWorker {
 		} catch (error) {
 			this.logger.error({error}, 'Failed to acquire voice reconciliation lock');
 			return null;
+		}
+	}
+
+	private candidateTtlSeconds(graceMs: number): number {
+		return candidateTtlSecondsFor({
+			intervalMs: this.intervalMs,
+			observedSweepSpacingMs: this.observedSweepSpacingMs,
+			graceMs,
+		});
+	}
+
+	private async recordSweepSpacing(startedAt: number): Promise<void> {
+		try {
+			const previous = await this.kvClient.get(VOICE_RECONCILIATION_LAST_SWEEP_KEY);
+			const previousAt = previous === null ? Number.NaN : Number(previous);
+			if (Number.isFinite(previousAt) && startedAt > previousAt) {
+				this.observedSweepSpacingMs = Math.max(this.observedSweepSpacingMs, startedAt - previousAt);
+				const gatewayOnlyCandidateTtlSeconds = this.candidateTtlSeconds(this.gatewayOnlyGraceMs);
+				if (this.observedSweepSpacingMs >= gatewayOnlyCandidateTtlSeconds * 1000) {
+					this.logger.warn(
+						{
+							observedSweepSpacingMs: this.observedSweepSpacingMs,
+							gatewayOnlyCandidateTtlSeconds,
+						},
+						'Reconciliation sweeps are further apart than the candidate TTL; divergent voice states will be deferred forever',
+					);
+				}
+			}
+			await this.kvClient.setex(VOICE_RECONCILIATION_LAST_SWEEP_KEY, LAST_SWEEP_KEY_TTL_SECONDS, String(startedAt));
+		} catch (error) {
+			this.logger.warn({error}, 'Failed to record reconciliation sweep spacing');
 		}
 	}
 
@@ -993,7 +1034,7 @@ export class VoiceReconciliationWorker {
 			}
 			await this.kvClient.setex(
 				key,
-				this.gatewayOnlyCandidateTtlSeconds,
+				this.candidateTtlSeconds(this.gatewayOnlyGraceMs),
 				Number.isFinite(firstSeen) ? String(firstSeen) : String(now),
 			);
 			return false;
@@ -1024,7 +1065,7 @@ export class VoiceReconciliationWorker {
 			}
 			await this.kvClient.setex(
 				key,
-				this.liveKitOnlyCandidateTtlSeconds,
+				this.candidateTtlSeconds(this.liveKitOnlyGraceMs),
 				Number.isFinite(firstSeen) ? String(firstSeen) : String(now),
 			);
 			return false;

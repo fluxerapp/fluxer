@@ -361,6 +361,14 @@ export interface APIConfig {
 		taskName?: WorkerTaskName;
 		enableCronScheduler?: boolean;
 		enableVoiceReconciliation: boolean;
+		voiceReconciliation: {
+			intervalMs: number | undefined;
+			staggerDelayMs: number | undefined;
+			lockTtlSeconds: number | undefined;
+			cadenceTtlSeconds: number | undefined;
+			gatewayOnlyGraceMs: number | undefined;
+			liveKitOnlyGraceMs: number | undefined;
+		};
 		laneConcurrencyOverrides: {
 			realtime?: number;
 			unfurl?: number;

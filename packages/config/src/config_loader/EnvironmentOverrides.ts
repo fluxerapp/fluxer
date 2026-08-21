@@ -96,6 +96,30 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['services', 'api', 'worker', 'enable_voice_reconciliation'],
 		parse: parseEnvValue,
 	},
+	FLUXER_API_WORKER_VOICE_RECONCILIATION_INTERVAL_MS: {
+		path: ['services', 'api', 'worker', 'voice_reconciliation', 'interval_ms'],
+		parse: parseEnvValue,
+	},
+	FLUXER_API_WORKER_VOICE_RECONCILIATION_STAGGER_DELAY_MS: {
+		path: ['services', 'api', 'worker', 'voice_reconciliation', 'stagger_delay_ms'],
+		parse: parseEnvValue,
+	},
+	FLUXER_API_WORKER_VOICE_RECONCILIATION_LOCK_TTL_SECONDS: {
+		path: ['services', 'api', 'worker', 'voice_reconciliation', 'lock_ttl_seconds'],
+		parse: parseEnvValue,
+	},
+	FLUXER_API_WORKER_VOICE_RECONCILIATION_CADENCE_TTL_SECONDS: {
+		path: ['services', 'api', 'worker', 'voice_reconciliation', 'cadence_ttl_seconds'],
+		parse: parseEnvValue,
+	},
+	FLUXER_API_WORKER_VOICE_RECONCILIATION_GATEWAY_ONLY_GRACE_MS: {
+		path: ['services', 'api', 'worker', 'voice_reconciliation', 'gateway_only_grace_ms'],
+		parse: parseEnvValue,
+	},
+	FLUXER_API_WORKER_VOICE_RECONCILIATION_LIVEKIT_ONLY_GRACE_MS: {
+		path: ['services', 'api', 'worker', 'voice_reconciliation', 'livekit_only_grace_ms'],
+		parse: parseEnvValue,
+	},
 	FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES: {
 		path: ['services', 'api', 'worker', 'lane_concurrency_overrides'],
 		parse: parseEnvValue,

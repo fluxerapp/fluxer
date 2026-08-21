@@ -243,6 +243,12 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 					voiceRoomStore,
 					kvClient,
 					logger: Logger,
+					intervalMs: Config.worker.voiceReconciliation.intervalMs,
+					staggerDelayMs: Config.worker.voiceReconciliation.staggerDelayMs,
+					lockTtlSeconds: Config.worker.voiceReconciliation.lockTtlSeconds,
+					cadenceTtlSeconds: Config.worker.voiceReconciliation.cadenceTtlSeconds,
+					gatewayOnlyGraceMs: Config.worker.voiceReconciliation.gatewayOnlyGraceMs,
+					liveKitOnlyGraceMs: Config.worker.voiceReconciliation.liveKitOnlyGraceMs,
 				})
 			: null;
 	if (Config.voice.enabled && voiceTopology !== null) {

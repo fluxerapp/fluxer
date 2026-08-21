@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {resolveDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
+import {resolveDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
 import type {APIConfig, BlueskyOAuthConfig} from './config/APIConfig';
@@ -463,6 +463,14 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			taskName: apiWorkerConfig?.task as WorkerTaskName | undefined,
 			enableCronScheduler: apiWorkerConfig?.enable_cron_scheduler,
 			enableVoiceReconciliation: apiWorkerConfig?.enable_voice_reconciliation ?? true,
+			voiceReconciliation: {
+				intervalMs: apiWorkerConfig?.voice_reconciliation?.interval_ms,
+				staggerDelayMs: apiWorkerConfig?.voice_reconciliation?.stagger_delay_ms,
+				lockTtlSeconds: apiWorkerConfig?.voice_reconciliation?.lock_ttl_seconds,
+				cadenceTtlSeconds: apiWorkerConfig?.voice_reconciliation?.cadence_ttl_seconds,
+				gatewayOnlyGraceMs: apiWorkerConfig?.voice_reconciliation?.gateway_only_grace_ms,
+				liveKitOnlyGraceMs: apiWorkerConfig?.voice_reconciliation?.livekit_only_grace_ms,
+			},
 			laneConcurrencyOverrides: {
 				realtime: apiWorkerConfig?.lane_concurrency_overrides?.realtime,
 				unfurl: apiWorkerConfig?.lane_concurrency_overrides?.unfurl,
