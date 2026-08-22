@@ -216,6 +216,18 @@ function applyScreenShareAudioConsentMigrationV1(parsed: Record<string, unknown>
 	return true;
 }
 
+function applyScreenShareAudioDefaultOnMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.screenShareAudioDefaultOnMigratedV1 === true) {
+		return false;
+	}
+	parsed.shareAppAudio = true;
+	parsed.shareDesktopAudio = true;
+	parsed.shareDeviceAudio = true;
+	parsed.muteStreamAudio = false;
+	parsed.screenShareAudioDefaultOnMigratedV1 = true;
+	return true;
+}
+
 function applyStreamingModeDefaultMigrationV1(parsed: Record<string, unknown>): boolean {
 	if (parsed.streamingModeDefaultMigratedV1 === true) {
 		return false;
@@ -284,12 +296,13 @@ class VoiceSettings {
 	streamingMode: StreamingMode = 'screenshare';
 	streamingModeDefaultMigratedV1 = false;
 	hideStreamPreview = false;
-	muteStreamAudio = true;
-	shareAppAudio = false;
-	shareDesktopAudio = false;
-	shareDeviceAudio = false;
+	muteStreamAudio = false;
+	shareAppAudio = true;
+	shareDesktopAudio = true;
+	shareDeviceAudio = true;
 	screenShareAudioDeviceId = 'default';
 	screenShareAudioConsentMigratedV1 = false;
+	screenShareAudioDefaultOnMigratedV1 = false;
 	outputVolumeRecalibratedV1 = false;
 	backgroundImageId = NONE_BACKGROUND_ID;
 	backgroundImages: Array<BackgroundImage> = [];
@@ -424,6 +437,7 @@ class VoiceSettings {
 			changed = applyPiPPopoutDefaultsMigration(parsed) || changed;
 			changed = applyAdaptiveScreenShareQualityMigrationV2(parsed) || changed;
 			changed = applyScreenShareAudioConsentMigrationV1(parsed) || changed;
+			changed = applyScreenShareAudioDefaultOnMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
 			if (changed) {
@@ -463,6 +477,7 @@ class VoiceSettings {
 			'shareDeviceAudio',
 			'screenShareAudioDeviceId',
 			'screenShareAudioConsentMigratedV1',
+			'screenShareAudioDefaultOnMigratedV1',
 			'outputVolumeRecalibratedV1',
 			'backgroundImageId',
 			'backgroundImages',

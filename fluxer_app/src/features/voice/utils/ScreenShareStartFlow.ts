@@ -357,7 +357,11 @@ async function runConfiguredDisplayScreenShare(
 				logger.warn('No active screen share to restart for Wayland portal source switch');
 				return false;
 			}
-			await MediaEngine.setScreenShareEnabled(false, {sendUpdate: false, playSound: false});
+			await MediaEngine.setScreenShareEnabled(false, {
+				sendUpdate: false,
+				playSound: false,
+				preserveStreamAudioPreferences: true,
+			});
 		}
 		let nativeAudioArmed = false;
 		const isOwnWindowShare = options?.isOwnWindow === true && sourceId?.startsWith('window:');

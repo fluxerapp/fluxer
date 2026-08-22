@@ -7,6 +7,7 @@ import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import type {NegotiationReason} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
@@ -691,11 +692,20 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			playSound?: boolean;
 			restartIfEnabled?: boolean;
 			reason?: string;
+			preserveStreamAudioPreferences?: boolean;
 		},
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
 		assert.equal(typeof enabled, 'boolean');
 		await this.controllerRouting.setEnabled(room, enabled, options, publishOptions);
+		if (!enabled && options?.preserveStreamAudioPreferences !== true) {
+			VoiceSettingsCommands.update({
+				shareAppAudio: true,
+				shareDesktopAudio: true,
+				shareDeviceAudio: true,
+				muteStreamAudio: false,
+			});
+		}
 	}
 
 	async executeScreenShareSetEnabledDirect(

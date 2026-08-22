@@ -2326,6 +2326,7 @@ class MediaEngineFacade extends Store {
 			sendUpdate?: boolean;
 			playSound?: boolean;
 			restartIfEnabled?: boolean;
+			preserveStreamAudioPreferences?: boolean;
 		},
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
