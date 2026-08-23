@@ -20,14 +20,35 @@ interface PinoTransportOptions {
 	};
 }
 
+const PINO_LEVELS: ReadonlyArray<pino.Level> = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
+
 function isDevelopment(environment: string): boolean {
 	return environment === 'development';
 }
 
+function isPinoLevel(value: string): value is pino.Level {
+	return (PINO_LEVELS as ReadonlyArray<string>).includes(value);
+}
+
+function resolveEnvironment(options: LoggerOptions): string {
+	return options.environment ?? process.env.FLUXER_ENV ?? 'production';
+}
+
+function resolveLevel(options: LoggerOptions, isDev: boolean): pino.Level {
+	if (options.level) {
+		return options.level;
+	}
+	const configured = process.env.LOG_LEVEL?.trim().toLowerCase();
+	if (configured && isPinoLevel(configured)) {
+		return configured;
+	}
+	return isDev ? 'debug' : 'info';
+}
+
 function createPinoLogger(serviceName: string, options: LoggerOptions = {}): PinoLogger {
-	const environment = options.environment ?? 'production';
+	const environment = resolveEnvironment(options);
 	const isDev = isDevelopment(environment);
-	const level = options.level ?? (isDev ? 'debug' : 'info');
+	const level = resolveLevel(options, isDev);
 	const streams: Array<pino.StreamEntry> = [];
 	if (isDev) {
 		try {
