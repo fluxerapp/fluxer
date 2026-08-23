@@ -47,6 +47,22 @@ export function compareChannelOrdering<Id extends string | bigint>(
 	return idToString(a.id).localeCompare(idToString(b.id));
 }
 
+function channelLayoutRank(channel: {type: number}): number {
+	if (channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_LINK) return 0;
+	if (channel.type === ChannelTypes.GUILD_VOICE) return 1;
+	return 2;
+}
+
+function sortChannelListGroup<Id extends string | bigint, Channel extends ChannelOrderingChannel<Id>>(
+	channels: ReadonlyArray<Channel>,
+): Array<Channel> {
+	return [...channels].sort((a, b) => {
+		const rankDelta = channelLayoutRank(a) - channelLayoutRank(b);
+		if (rankDelta !== 0) return rankDelta;
+		return compareChannelOrdering(a, b);
+	});
+}
+
 export function sortChannelsForOrdering<Id extends string | bigint, Channel extends ChannelOrderingChannel<Id>>(
 	channels: ReadonlyArray<Channel>,
 ): Array<Channel> {
@@ -79,7 +95,7 @@ export function sortChannelsForOrdering<Id extends string | bigint, Channel exte
 		if (!children) {
 			continue;
 		}
-		for (const child of [...children].sort(compareChannelOrdering)) {
+		for (const child of sortChannelListGroup(children)) {
 			orderedChannels.push(child);
 			seen.add(child.id);
 		}
