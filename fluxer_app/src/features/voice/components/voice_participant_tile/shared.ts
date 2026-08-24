@@ -2,12 +2,15 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {MEDIA_PROXY_AVATAR_SIZE_PROFILE} from '@fluxer/constants/src/MediaProxyAssetSizes';
+import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import {msg} from '@lingui/core/macro';
 import type {TrackReferenceOrPlaceholder} from '@livekit/components-react';
 import type React from 'react';
 
 export const logger = new Logger('VoiceParticipantTile');
 export const TILE_AVATAR_BASE = 192;
+export const TILE_AVATAR_MEDIA_SIZE: MediaProxyImageSize = MEDIA_PROXY_AVATAR_SIZE_PROFILE;
 export const TILE_AVATAR_STYLE = {
 	width: 'var(--tile-avatar-size)',
 	height: 'var(--tile-avatar-size)',

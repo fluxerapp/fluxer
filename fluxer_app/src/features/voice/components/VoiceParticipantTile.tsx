@@ -85,6 +85,7 @@ import {
 	STREAM_ENDED_DESCRIPTOR,
 	STREAM_HIDDEN_DESCRIPTOR,
 	TILE_AVATAR_BASE,
+	TILE_AVATAR_MEDIA_SIZE,
 	TILE_AVATAR_STYLE,
 	type VoiceParticipantTileInnerProps,
 	type VoiceParticipantTileProps,
@@ -872,6 +873,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 						<Avatar
 							user={participantUser}
 							size={TILE_AVATAR_BASE}
+							mediaSize={TILE_AVATAR_MEDIA_SIZE}
 							className={styles.avatarFlexShrink}
 							style={TILE_AVATAR_STYLE}
 							guildId={guildId}
