@@ -106,7 +106,7 @@ const VideoAttachment: FC<AttachmentMediaProps & {message?: Message; isPreview?:
 		const embedUrl = attachment.url ?? '';
 		const proxyUrl = attachment.proxy_url ?? embedUrl;
 		const nsfw = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
-		const attachmentDimensions = getAttachmentMediaDimensions(message);
+		const attachmentDimensions = getAttachmentMediaDimensions();
 		const videoLayoutConstraints = getInlineVideoLayoutConstraints(attachmentDimensions);
 		return (
 			<FocusRing
@@ -250,7 +250,7 @@ const AttachmentMedia: FC<AttachmentMediaProps & {message?: Message; isPreview?:
 				/>
 			);
 		}
-		const attachmentDimensions = getAttachmentMediaDimensions(message);
+		const attachmentDimensions = getAttachmentMediaDimensions();
 		const mediaCalculator = createCalculator({
 			maxWidth: attachmentDimensions.maxWidth,
 			maxHeight: attachmentDimensions.maxHeight,

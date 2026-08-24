@@ -54,8 +54,8 @@ message AccessibilitySettings {
   optional bool show_stickers_in_autocomplete = 40;
   optional bool show_memes_in_autocomplete = 41;
 
-  MediaDimensionSize attachment_media_dimension_size = 42;
-  MediaDimensionSize embed_media_dimension_size = 43;
+  reserved 42, 43;
+  reserved "attachment_media_dimension_size", "embed_media_dimension_size";
 
   optional bool voice_channel_join_requires_double_click = 44;
   optional string custom_theme_css = 45;
@@ -91,12 +91,6 @@ enum ChannelTypingIndicatorMode {
   CHANNEL_TYPING_INDICATOR_MODE_AVATARS = 1;
   CHANNEL_TYPING_INDICATOR_MODE_INDICATOR_ONLY = 2;
   CHANNEL_TYPING_INDICATOR_MODE_HIDDEN = 3;
-}
-
-enum MediaDimensionSize {
-  MEDIA_DIMENSION_SIZE_UNSPECIFIED = 0;
-  MEDIA_DIMENSION_SIZE_SMALL = 1;
-  MEDIA_DIMENSION_SIZE_LARGE = 2;
 }
 
 enum DmMessagePreviewMode {

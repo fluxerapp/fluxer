@@ -54,7 +54,7 @@ const AttachmentMosaicComponent: FC<AttachmentMosaicProps> = observer(
 	({attachments, message, hideExpiryFootnote, isPreview, snapshotIndex, onDelete}) => {
 		const {i18n} = useLingui();
 		const mediaAttachments = useMemo(() => attachments.filter(isMediaAttachment), [attachments]);
-		const mosaicDimensions = getMosaicMediaDimensions(message);
+		const mosaicDimensions = getMosaicMediaDimensions();
 		const mosaicStyle: AttachmentMosaicStyle = {
 			'--attachment-media-max-height': remFromPx(mosaicDimensions.maxHeight),
 			'--attachment-media-max-width': remFromPx(mosaicDimensions.maxWidth),

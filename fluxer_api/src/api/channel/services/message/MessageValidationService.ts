@@ -160,12 +160,8 @@ export class MessageValidationService {
 		}
 	}
 
-	calculateMessageFlags(data: {flags?: number; favorite_meme_id?: bigint | null}): number {
-		let flags = data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0;
-		if (data.favorite_meme_id) {
-			flags |= MessageFlags.COMPACT_ATTACHMENTS;
-		}
-		return flags;
+	calculateMessageFlags(data: {flags?: number}): number {
+		return data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0;
 	}
 
 	validateTotalAttachmentSize(

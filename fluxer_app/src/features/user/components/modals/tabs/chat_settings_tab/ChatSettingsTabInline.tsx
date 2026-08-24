@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
-import {MEDIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import styles from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.module.css';
 import {InputTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
-import {MediaTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabMediaTab';
 import {DisplayTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/DisplayTab';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -36,13 +34,6 @@ export const ChatSettingsInlineContent: React.FC = observer(() => {
 				data-flx="user.chat-settings-tab.inline.chat-settings-inline-content.input"
 			>
 				<InputTabContent data-flx="user.chat-settings-tab.inline.chat-settings-inline-content.input-tab-content" />
-			</SettingsSection>
-			<SettingsSection
-				id="media"
-				title={i18n._(MEDIA_DESCRIPTOR)}
-				data-flx="user.chat-settings-tab.inline.chat-settings-inline-content.media"
-			>
-				<MediaTabContent data-flx="user.chat-settings-tab.inline.chat-settings-inline-content.media-tab-content" />
 			</SettingsSection>
 		</div>
 	);

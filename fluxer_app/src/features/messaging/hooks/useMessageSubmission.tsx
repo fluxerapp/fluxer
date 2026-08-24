@@ -105,7 +105,6 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 					content,
 					messageReference,
 					replyingMessage?.mentioning,
-					favoriteMemeId,
 				),
 				{
 					formatMultipleFileLabel: (count) => formatUploadingAttachmentSummary(i18n, count),

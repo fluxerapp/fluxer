@@ -74,12 +74,12 @@ export interface NormalizedMessageContent {
 	flags: number;
 }
 
-export function normalizeMessageContent(content: string, favoriteMemeId?: string): NormalizedMessageContent {
+export function normalizeMessageContent(content: string): NormalizedMessageContent {
 	const withoutSilent = removeSilentFlag(content);
 	const converted = applyOutgoingEmoticonConversion(withoutSilent);
 	const sanitized = maybeSanitizeOutgoingMessage(converted);
 	const normalizedContent = hasVisibleMessageContent(sanitized) ? sanitized : '';
-	const flags = getMessageFlags(content, favoriteMemeId);
+	const flags = getMessageFlags(content);
 	return {content: normalizedContent, flags};
 }
 
@@ -130,13 +130,10 @@ const removeSilentFlag = (content: string): string => {
 const applyOutgoingEmoticonConversion = (content: string): string => {
 	return ChatInputSettings.convertEmoticons ? convertEmoticonsToEmoji(content) : content;
 };
-const getMessageFlags = (content: string, favoriteMemeId?: string): number => {
+const getMessageFlags = (content: string): number => {
 	let flags = 0;
 	if (isSilentMessage(content)) {
 		flags |= MessageFlags.SUPPRESS_NOTIFICATIONS;
-	}
-	if (favoriteMemeId) {
-		flags |= MessageFlags.COMPACT_ATTACHMENTS;
 	}
 	return flags;
 };

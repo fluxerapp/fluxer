@@ -133,13 +133,12 @@ function claimScheduleAttachments(params: ScheduleMessageParams, nonce: string):
 		params.content,
 		params.messageReference,
 		params.replyMentioning,
-		params.favoriteMemeId,
 	);
 }
 
 async function prepareScheduledMessage(params: ScheduleMessageParams): Promise<PreparedScheduledMessage> {
 	const nonce = SnowflakeUtils.fromTimestamp(Date.now());
-	const normalized = normalizeMessageContent(params.content, params.favoriteMemeId);
+	const normalized = normalizeMessageContent(params.content);
 	claimScheduleAttachments(params, nonce);
 	let attachments: Array<ApiAttachmentMetadata> | undefined;
 	let files: Array<File> | undefined;

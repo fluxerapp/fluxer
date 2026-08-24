@@ -128,7 +128,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 			) : (
 				node
 			);
-		const mosaicDimensions = getMosaicMediaDimensions(message);
+		const mosaicDimensions = getMosaicMediaDimensions();
 		const maxMosaicWidth = mosaicDimensions.maxWidth;
 		let targetWidth = maxMosaicWidth;
 		let targetHeight = maxMosaicWidth;

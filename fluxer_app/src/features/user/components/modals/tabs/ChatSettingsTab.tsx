@@ -2,9 +2,7 @@
 
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {MEDIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {InputTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
-import {MediaTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabMediaTab';
 import {DisplayTabContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/DisplayTab';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -29,9 +27,6 @@ const ChatSettingsTab: React.FC = observer(() => {
 				</SettingsSection>
 				<SettingsSection id="input" title={i18n._(INPUT_DESCRIPTOR)} data-flx="user.chat-settings-tab.input">
 					<InputTabContent data-flx="user.chat-settings-tab.input-tab-content" />
-				</SettingsSection>
-				<SettingsSection id="media" title={i18n._(MEDIA_DESCRIPTOR)} data-flx="user.chat-settings-tab.media">
-					<MediaTabContent data-flx="user.chat-settings-tab.media-tab-content" />
 				</SettingsSection>
 			</SettingsTabContent>
 		</SettingsTabContainer>

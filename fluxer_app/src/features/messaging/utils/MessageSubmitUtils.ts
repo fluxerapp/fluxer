@@ -40,7 +40,7 @@ export function createUploadingAttachments(
 }
 
 export function createOptimisticMessage(data: MessageSubmitData, attachments: Array<MessageAttachment>): Message {
-	const normalized = normalizeMessageContent(data.content, data.favoriteMemeId);
+	const normalized = normalizeMessageContent(data.content);
 	const content = normalized.content;
 	const flags = normalized.flags;
 	return new Message({
@@ -77,14 +77,13 @@ export function claimMessageAttachments(
 	content: string,
 	messageReference?: MessageReference,
 	replyMentioning?: boolean,
-	favoriteMemeId?: string,
 ): Array<{
 	filename: string;
 	file: {
 		size: number;
 	};
 }> {
-	const normalized = normalizeMessageContent(content, favoriteMemeId);
+	const normalized = normalizeMessageContent(content);
 	const allowedMentions: AllowedMentions = {replied_user: replyMentioning ?? true};
 	return CloudUpload.claimAttachmentsForMessage(channelId, nonce, undefined, {
 		content: normalized.content,

@@ -61,7 +61,7 @@ export const AttachmentSingleMedia: FC<AttachmentSingleMediaProps> = observer(
 			);
 		const naturalWidth = attachment.width!;
 		const naturalHeight = attachment.height!;
-		const attachmentDimensions = getAttachmentMediaDimensions(message);
+		const attachmentDimensions = getAttachmentMediaDimensions();
 		const videoLayoutConstraints = getInlineVideoLayoutConstraints(attachmentDimensions);
 		const standaloneMediaCalculator = createCalculator({
 			maxWidth: attachmentDimensions.maxWidth,
