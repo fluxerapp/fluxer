@@ -3,10 +3,11 @@
 import i18nGlobal from '@app/app/I18n';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/emoji/components/emojis/EmojiListItem.module.css';
-import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import * as GuildEmojiCommands from '@app/features/expressions/commands/GuildEmojiCommands';
 import Guilds from '@app/features/guild/state/Guilds';
+import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import {EmojiContextMenuItems} from '@app/features/ui/action_menu/items/EmojiContextMenuItems';
@@ -419,8 +420,15 @@ export const EmojiListItem: React.FC<{
 			)),
 		);
 	};
-	const {shouldAnimate} = useStickerAnimation();
-	const emojiUrl = AvatarUtils.getEmojiURL({id: emoji.id, animated: shouldAnimate});
+	const shouldAnimate = useShouldAnimate({kind: 'emoji', isAnimated: emoji.animated});
+	const emojiUrl =
+		getEmojiRenderUrl({
+			id: emoji.id,
+			surrogateUrl: null,
+			isAnimatable: emoji.animated,
+			animated: shouldAnimate,
+			jumbo: false,
+		}) ?? '';
 	const emojiForMenu = {
 		id: emoji.id,
 		guildId,
@@ -457,7 +465,6 @@ export const EmojiListItem: React.FC<{
 							src={emojiUrl}
 							alt={emoji.name}
 							className={styles.gridEmojiImage}
-							loading="lazy"
 							data-flx="emoji.emojis.emoji-list-item.grid-emoji-image"
 						/>
 						{emoji.user && avatarUrl && (
@@ -466,7 +473,6 @@ export const EmojiListItem: React.FC<{
 									src={avatarUrl}
 									alt=""
 									className={styles.gridAvatar}
-									loading="lazy"
 									data-flx="emoji.emojis.emoji-list-item.grid-avatar"
 								/>
 							</Tooltip>
@@ -543,7 +549,6 @@ export const EmojiListItem: React.FC<{
 						src={emojiUrl}
 						alt={emoji.name}
 						className={styles.listEmojiImage}
-						loading="lazy"
 						data-flx="emoji.emojis.emoji-list-item.list-emoji-image"
 					/>
 				</div>
@@ -570,13 +575,7 @@ export const EmojiListItem: React.FC<{
 				<div className={styles.listUploader} data-flx="emoji.emojis.emoji-list-item.list-uploader">
 					{emoji.user && avatarUrl ? (
 						<>
-							<img
-								src={avatarUrl}
-								alt=""
-								className={styles.avatar}
-								loading="lazy"
-								data-flx="emoji.emojis.emoji-list-item.avatar"
-							/>
+							<img src={avatarUrl} alt="" className={styles.avatar} data-flx="emoji.emojis.emoji-list-item.avatar" />
 							<span className={styles.username} data-flx="emoji.emojis.emoji-list-item.username">
 								{NicknameUtils.getDisplayName(emoji.user)}
 							</span>

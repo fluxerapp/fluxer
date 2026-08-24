@@ -6,6 +6,7 @@ import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation
 import * as GuildStickerCommands from '@app/features/expressions/commands/GuildStickerCommands';
 import {EditGuildStickerModal} from '@app/features/expressions/components/modals/EditGuildStickerModal';
 import Guilds from '@app/features/guild/state/Guilds';
+import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {StickerContextMenuItems} from '@app/features/ui/action_menu/items/StickerContextMenuItems';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -66,7 +67,10 @@ export const StickerGridItem = observer(function StickerGridItem({
 	onUpdate,
 }: StickerGridItemProps) {
 	const {i18n} = useLingui();
-	const {shouldAnimate} = useStickerAnimation();
+	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker.animated});
+	const {ref: tileRef, isNearViewport} = useNearViewport<HTMLDivElement>({
+		rememberKey: `guild-sticker-tile:${sticker.id}`,
+	});
 	const stickerName = sticker.name;
 	const guild = Guilds.getGuild(guildId);
 	const canExpressionPurge = guild?.features.has(GuildFeatures.EXPRESSION_PURGE_ALLOWED) ?? false;
@@ -109,6 +113,7 @@ export const StickerGridItem = observer(function StickerGridItem({
 	const stickerUrl = AvatarUtils.getStickerURL({
 		id: sticker.id,
 		animated: shouldAnimate,
+		isAnimatable: sticker.animated,
 		size: 320,
 	});
 	const avatarUrl = sticker.user ? AvatarUtils.getUserAvatarURL(sticker.user, false) : null;
@@ -136,19 +141,25 @@ export const StickerGridItem = observer(function StickerGridItem({
 	};
 	return (
 		<div
+			ref={tileRef}
 			role="group"
 			className={styles.container}
 			onContextMenu={handleContextMenu}
+			onMouseEnter={interactionHandlers.onMouseEnter}
+			onMouseLeave={interactionHandlers.onMouseLeave}
+			onFocus={interactionHandlers.onFocus}
+			onBlur={interactionHandlers.onBlur}
 			data-flx="emoji.stickers.sticker-grid-item.container.context-menu"
 		>
 			<div className={styles.stickerWrapper} data-flx="emoji.stickers.sticker-grid-item.sticker-wrapper">
-				<img
-					src={stickerUrl}
-					alt={stickerName}
-					className={styles.stickerImage}
-					loading="lazy"
-					data-flx="emoji.stickers.sticker-grid-item.sticker-image"
-				/>
+				{isNearViewport && (
+					<img
+						src={stickerUrl}
+						alt={stickerName}
+						className={styles.stickerImage}
+						data-flx="emoji.stickers.sticker-grid-item.sticker-image"
+					/>
+				)}
 			</div>
 			<div className={styles.content} data-flx="emoji.stickers.sticker-grid-item.content">
 				<div className={styles.header} data-flx="emoji.stickers.sticker-grid-item.header">
@@ -158,13 +169,19 @@ export const StickerGridItem = observer(function StickerGridItem({
 				</div>
 				{sticker.user && avatarUrl && (
 					<div className={styles.authorInfo} data-flx="emoji.stickers.sticker-grid-item.author-info">
-						<img
-							src={avatarUrl}
-							alt=""
-							className={styles.authorAvatar}
-							loading="lazy"
-							data-flx="emoji.stickers.sticker-grid-item.author-avatar"
-						/>
+						{isNearViewport ? (
+							<img
+								src={avatarUrl}
+								alt=""
+								className={styles.authorAvatar}
+								data-flx="emoji.stickers.sticker-grid-item.author-avatar"
+							/>
+						) : (
+							<div
+								className={styles.authorAvatar}
+								data-flx="emoji.stickers.sticker-grid-item.author-avatar-placeholder"
+							/>
+						)}
 						<span className={styles.authorName} data-flx="emoji.stickers.sticker-grid-item.author-name">
 							{NicknameUtils.getDisplayName(sticker.user)}
 						</span>
