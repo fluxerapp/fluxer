@@ -99,6 +99,7 @@ const renderCountryOption = (option: CountrySelectOption) => {
 				<img
 					src={flagUrl}
 					alt={countryName}
+					aria-hidden={true}
 					className={styles.flagImage}
 					data-flx="user.phone-add-modal.country-option.flag-image"
 				/>

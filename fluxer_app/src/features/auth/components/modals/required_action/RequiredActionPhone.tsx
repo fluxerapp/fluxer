@@ -94,6 +94,7 @@ const renderCountryOption = (option: CountrySelectOption) => {
 				<img
 					src={flagUrl}
 					alt={countryName}
+					aria-hidden={true}
 					className={styles.countryFlag}
 					data-flx="auth.required-action-modal.country-option.country-flag"
 				/>

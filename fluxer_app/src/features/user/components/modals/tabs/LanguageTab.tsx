@@ -198,6 +198,7 @@ export const LanguageSelector = observer(function LanguageSelector({
 			<img
 				src={flagUrl}
 				alt={`${option.name} flag`}
+				aria-hidden={true}
 				className={styles.flagImage}
 				draggable={false}
 				data-flx="user.language-selector.render-language-content.flag-image"

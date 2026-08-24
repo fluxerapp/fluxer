@@ -53,6 +53,7 @@ export const RtcRegionSelect: React.FC<RtcRegionSelectProps> = observer(({form, 
 						<img
 							src={emojiUrl}
 							alt={displayName}
+							aria-hidden={true}
 							className={styles.regionEmoji}
 							data-flx="channel.channel-tabs.channel-overview-tab.rtc-region-option.region-emoji"
 						/>
