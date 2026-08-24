@@ -3,10 +3,9 @@
 import {AutocompleteOption} from '@app/features/channel/components/message_search_bar/AutocompleteOption';
 import {FilterOption} from '@app/features/channel/components/message_search_bar/FilterOption';
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
+import type {HistoryFilterRow} from '@app/features/channel/components/message_search_bar/MessageSearchBarTypes';
 import type {SearchHistoryEntry} from '@app/features/search/state/SearchHistory';
-import SearchHistory from '@app/features/search/state/SearchHistory';
 import {formatSearchHistoryEntryForStreamerMode} from '@app/features/search/utils/SearchPrivacyUtils';
-import type {SearchFilterOption} from '@app/features/search/utils/SearchUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -34,13 +33,12 @@ interface HistorySectionProps {
 	onMouseEnter: (index: number) => void;
 	onMouseLeave?: () => void;
 	listboxId: string;
-	isInGuild: boolean;
-	channelId?: string;
 	onHistoryClear: () => void;
-	onFilterSelect: (filter: SearchFilterOption, index: number) => void;
+	onFilterSelect: (row: HistoryFilterRow, index: number) => void;
 	onFilterMouseEnter: (index: number) => void;
 	onFilterMouseLeave?: () => void;
-	filterOptions: Array<SearchFilterOption>;
+	filterRows: Array<HistoryFilterRow>;
+	historyOptions: Array<SearchHistoryEntry>;
 }
 
 export const HistorySection: React.FC<HistorySectionProps> = observer(
@@ -51,19 +49,14 @@ export const HistorySection: React.FC<HistorySectionProps> = observer(
 		onMouseEnter,
 		onMouseLeave,
 		listboxId,
-		isInGuild,
-		channelId,
 		onHistoryClear,
 		onFilterSelect,
 		onFilterMouseEnter,
 		onFilterMouseLeave,
-		filterOptions,
+		filterRows,
+		historyOptions,
 	}) => {
 		const {i18n} = useLingui();
-		const historyOptions = SearchHistory.search('', channelId).slice(0, 5);
-		const commonFilters = filterOptions
-			.filter((opt) => !opt.requiresGuild || isInGuild)
-			.filter((opt) => !opt.key.startsWith('-'));
 		return (
 			<>
 				<div className={styles.popoutSection} data-flx="channel.message-search-bar.history-section.popout-section">
@@ -83,20 +76,25 @@ export const HistorySection: React.FC<HistorySectionProps> = observer(
 							{i18n._(SEARCH_FILTERS_DESCRIPTOR)}
 						</span>
 					</div>
-					{commonFilters.map((option: SearchFilterOption, index) => (
-						<FilterOption
-							key={option.key}
-							option={option}
-							index={index}
-							isSelected={selectedIndex === index}
-							isHovered={index === hoverIndex}
-							onSelect={() => onFilterSelect(option, index)}
-							onMouseEnter={() => onFilterMouseEnter(index)}
-							onMouseLeave={onFilterMouseLeave}
-							listboxId={listboxId}
-							data-flx="channel.message-search-bar.history-section.filter-option.filter-select"
-						/>
-					))}
+					{filterRows.map((row: HistoryFilterRow, index) => {
+						if (row.kind === 'filter') {
+							return (
+								<FilterOption
+									key={row.option.key}
+									option={row.option}
+									index={index}
+									isSelected={selectedIndex === index}
+									isHovered={index === hoverIndex}
+									onSelect={() => onFilterSelect(row, index)}
+									onMouseEnter={() => onFilterMouseEnter(index)}
+									onMouseLeave={onFilterMouseLeave}
+									listboxId={listboxId}
+									data-flx="channel.message-search-bar.history-section.filter-option.filter-select"
+								/>
+							);
+						}
+						return null;
+					})}
 				</div>
 				{historyOptions.length > 0 && (
 					<div className={styles.popoutSection} data-flx="channel.message-search-bar.history-section.popout-section--2">
@@ -138,11 +136,11 @@ export const HistorySection: React.FC<HistorySectionProps> = observer(
 							return (
 								<AutocompleteOption
 									key={`${entry.query}:${entry.ts}`}
-									index={commonFilters.length + index}
-									isSelected={selectedIndex === commonFilters.length + index}
-									isHovered={commonFilters.length + index === hoverIndex}
+									index={filterRows.length + index}
+									isSelected={selectedIndex === filterRows.length + index}
+									isHovered={filterRows.length + index === hoverIndex}
 									onSelect={() => onSelect(entry)}
-									onMouseEnter={() => onMouseEnter(commonFilters.length + index)}
+									onMouseEnter={() => onMouseEnter(filterRows.length + index)}
 									onMouseLeave={onMouseLeave}
 									listboxId={listboxId}
 									data-flx="channel.message-search-bar.history-section.autocomplete-option.select"

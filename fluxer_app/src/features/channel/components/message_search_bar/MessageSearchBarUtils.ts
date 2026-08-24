@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	AutocompleteType,
+	HistoryFilterRow,
+} from '@app/features/channel/components/message_search_bar/MessageSearchBarTypes';
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -22,6 +26,63 @@ export const SCOPE_ICON_COMPONENTS: Record<MessageSearchScope, React.ComponentTy
 
 export function filterRequiresValue(filter: SearchFilterOption): boolean {
 	return Boolean(filter.requiresValue) || (filter.values?.length ?? 0) > 0;
+}
+
+export const PLAINTEXT_SUGGESTION_FILTER_KEYS: ReadonlyArray<string> = ['from', 'in', 'mentions'];
+export const PLAINTEXT_SUGGESTIONS_PER_FILTER = 3;
+export const INLINE_FILTER_KEYS: ReadonlyArray<string> = ['from', 'in', 'has', 'mentions'];
+
+export interface SearchFilterEligibility {
+	isInGuildChannel: boolean;
+	hidePersonalInformation: boolean;
+}
+
+export function isSearchFilterOptionEligible(
+	option: SearchFilterOption,
+	{isInGuildChannel, hidePersonalInformation}: SearchFilterEligibility,
+): boolean {
+	if (!option.requiresGuild) return true;
+	if (isInGuildChannel) return true;
+	return option.dmEligible === true && !hidePersonalInformation;
+}
+
+export function orderInlineFilterOptions(
+	options: ReadonlyArray<SearchFilterOption>,
+	eligibility: SearchFilterEligibility,
+): Array<SearchFilterOption> {
+	const eligible = options.filter((option) => isSearchFilterOptionEligible(option, eligibility));
+	const byKey = new Map(eligible.map((option) => [option.key, option]));
+	const ordered: Array<SearchFilterOption> = [];
+	for (const key of INLINE_FILTER_KEYS) {
+		const option = byKey.get(key);
+		if (option != null) {
+			ordered.push(option);
+		}
+	}
+	return ordered;
+}
+
+export function listDiscoverableFilterOptions(
+	options: ReadonlyArray<SearchFilterOption>,
+	eligibility: SearchFilterEligibility,
+): Array<SearchFilterOption> {
+	return options.filter((option) => !option.key.startsWith('-') && isSearchFilterOptionEligible(option, eligibility));
+}
+
+export function buildHistoryFilterRows(
+	options: ReadonlyArray<SearchFilterOption>,
+	eligibility: SearchFilterEligibility,
+): Array<HistoryFilterRow> {
+	const promoted = orderInlineFilterOptions(options, eligibility);
+	const promotedKeys = new Set(promoted.map((option) => option.key));
+	const rest = listDiscoverableFilterOptions(options, eligibility).filter((option) => !promotedKeys.has(option.key));
+	return [...promoted, ...rest].map((option) => ({kind: 'filter', option}));
+}
+
+const SEARCH_VALUE_MODES = new Set<AutocompleteType>(['users', 'channels', 'values', 'date']);
+
+export function isSearchValueMode(autocompleteType: AutocompleteType): boolean {
+	return SEARCH_VALUE_MODES.has(autocompleteType);
 }
 
 export interface MessageSearchCurrentWordRequest {
@@ -60,6 +121,14 @@ export interface TokenInsertionInput {
 	addSpaceAfter: boolean;
 }
 
+const SEARCH_TOKEN_QUOTE_TRIGGER = /[\\" ]/;
+const SEARCH_TOKEN_ESCAPE = /[\\"]/g;
+
+export function quoteSearchTokenValue(value: string): string {
+	if (!SEARCH_TOKEN_QUOTE_TRIGGER.test(value)) return value;
+	return `"${value.replace(SEARCH_TOKEN_ESCAPE, (match) => `\\${match}`)}"`;
+}
+
 export function computeTokenInsertion({
 	textBeforeCursor,
 	textAfterCursor,
@@ -68,27 +137,22 @@ export function computeTokenInsertion({
 	tokenValue,
 	addSpaceAfter,
 }: TokenInsertionInput): TokenInsertionResult {
-	const needsQuotes = /\s/.test(tokenValue);
-	let display: string;
-	if (needsQuotes) {
-		display = `${syntax}"${tokenValue}"`;
-	} else {
-		display = `${syntax}${tokenValue}`;
-	}
+	const display = `${syntax}${quoteSearchTokenValue(tokenValue)}`;
 	const before = textBeforeCursor.slice(0, lastWordStart);
+	const isAlreadyFollowedBySpace = SEARCH_TOKEN_WHITESPACE.test(textAfterCursor.charAt(0));
 	let space = '';
-	if (addSpaceAfter) {
+	if (!isAlreadyFollowedBySpace && (addSpaceAfter || textAfterCursor.length > 0)) {
 		space = ' ';
 	}
-	let separator = '';
-	if (!addSpaceAfter && textAfterCursor.length > 0 && !/^\s/.test(textAfterCursor)) {
-		separator = ' ';
+	let caretAdvance = 0;
+	if (addSpaceAfter) {
+		caretAdvance = 1;
 	}
 	return {
-		newText: [before, display, space, separator, textAfterCursor].join(''),
-		newCursorPos: (before + display).length + space.length,
+		newText: [before, display, space, textAfterCursor].join(''),
+		newCursorPos: (before + display).length + caretAdvance,
 		insertedDisplay: display,
-		insertedLength: display.length + space.length + separator.length,
+		insertedLength: display.length + space.length,
 	};
 }
 
