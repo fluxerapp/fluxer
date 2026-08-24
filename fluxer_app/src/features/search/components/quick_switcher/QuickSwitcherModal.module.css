@@ -14,16 +14,8 @@
 	color: var(--qs-text-primary, var(--text-primary));
 }
 
-.option:hover {
-	background-color: var(--qs-row-hover, var(--background-modifier-accent));
-}
-
 .optionActive {
 	background-color: var(--qs-row-hover, var(--background-modifier-accent));
-}
-
-:global(html.theme-light) .option:hover {
-	background-color: var(--qs-row-hover-light, var(--background-modifier-hover));
 }
 
 :global(html.theme-light) .optionActive {

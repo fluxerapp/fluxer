@@ -8,6 +8,8 @@ import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/Autof
 import {isTextInputKeyEvent} from '@app/features/platform/utils/IsTextInputKeyEvent';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import * as QuickSwitcherCommands from '@app/features/search/commands/QuickSwitcherCommands';
+import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
+import {type EscapeIntent, trackEscapeIntentUntilNextTask} from '@app/features/search/state/QuickSwitcherEscapeIntent';
 import type {
 	GroupDMResult,
 	GuildResult,
@@ -38,7 +40,7 @@ import {msg} from '@lingui/core/macro';
 import {ArrowRightIcon, HashIcon, HouseIcon, SpeakerHighIcon, StarIcon, UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useEffect, useLayoutEffect} from 'react';
+import {useEffect, useLayoutEffect, useRef} from 'react';
 
 const SEARCH_DESCRIPTOR = msg({
 	message: 'Search',
@@ -75,6 +77,7 @@ const UNREAD_DESCRIPTOR = msg({
 });
 
 export interface QuickSwitcherSection {
+	key: string;
 	header?: HeaderResult;
 	rows: Array<{result: QuickSwitcherExecutableResult; index: number}>;
 }
@@ -415,12 +418,13 @@ export function createSections(results: Array<QuickSwitcherResult>): Array<Quick
 	let current: QuickSwitcherSection | null = null;
 	results.forEach((r, index) => {
 		if (r.type === QuickSwitcherResultTypes.HEADER) {
-			current = {header: r as HeaderResult, rows: []};
+			const header = r as HeaderResult;
+			current = {key: `header-${header.id}`, header, rows: []};
 			acc.push(current);
 			return;
 		}
 		if (!current) {
-			current = {rows: []};
+			current = {key: 'leading', rows: []};
 			acc.push(current);
 		}
 		current.rows.push({result: r as QuickSwitcherExecutableResult, index});
@@ -488,6 +492,25 @@ export function useQuickSwitcherKeyboardHandling(
 	}, [isMobile, isOpen, query, inputRef]);
 }
 
+export function dismissQuickSwitcher({isEscape}: {isEscape: boolean}): void {
+	if (isEscape && QuickSwitcher.query.length > 0) {
+		QuickSwitcherCommands.search('');
+		return;
+	}
+	QuickSwitcherCommands.hide();
+}
+
+export function useQuickSwitcherEscapeIntent(isActive: boolean): EscapeIntent {
+	const escapeIntentRef = useRef(false);
+	useEffect(() => {
+		if (!isActive) {
+			return;
+		}
+		return trackEscapeIntentUntilNextTask(escapeIntentRef);
+	}, [isActive]);
+	return escapeIntentRef;
+}
+
 export function useQuickSwitcherInputFocus(
 	isOpen: boolean,
 	isMobile: boolean,
@@ -500,7 +523,7 @@ export function useQuickSwitcherInputFocus(
 			return;
 		}
 		const key = QuickSwitcherCommands.getModalKey();
-		LayerManager.addLayer('modal', key, () => QuickSwitcherCommands.hide());
+		LayerManager.addLayer('modal', key, () => dismissQuickSwitcher({isEscape: true}));
 		const focusInput = () => {
 			inputRef?.current?.focus();
 			inputRef?.current?.select();
