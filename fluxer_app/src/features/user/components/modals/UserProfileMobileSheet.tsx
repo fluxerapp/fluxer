@@ -79,7 +79,7 @@ import {hasActiveDirectCallWithUser} from '@app/features/voice/utils/PrivateCall
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
-	MEDIA_PROXY_AVATAR_SIZE_PROFILE,
+	MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 	MEDIA_PROXY_PROFILE_BANNER_SIZE_MODAL,
 } from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {PublicUserFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -282,7 +282,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 		);
 		const shouldAutoplayProfileAnimations = useAutoplayExpandedProfileAnimations();
 		const {avatarUrl, hoverAvatarUrl} = useMemo(
-			() => ProfileDisplayUtils.getProfileAvatarUrls(profileContext, undefined, MEDIA_PROXY_AVATAR_SIZE_PROFILE),
+			() => ProfileDisplayUtils.getProfileAvatarUrls(profileContext, undefined, MEDIA_PROXY_AVATAR_SIZE_DEFAULT),
 			[profileContext],
 		);
 		const {bannerUrl: staticBannerUrl, hoverBannerUrl} = useMemo(

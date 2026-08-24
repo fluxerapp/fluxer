@@ -170,7 +170,7 @@ const InviteLoginPageContainer = observer(() => {
 		}
 		const guild = guildInvite.guild;
 		if (guild?.splash && guild.id) {
-			const splashUrl = getGuildSplashURL({id: guild.id, splash: guild.splash}, 4096) ?? null;
+			const splashUrl = getGuildSplashURL({id: guild.id, splash: guild.splash}) ?? null;
 			setSplashUrl(splashUrl);
 		}
 	}, [guildInvite?.guild?.splash, guildInvite?.guild?.id, setSplashUrl]);

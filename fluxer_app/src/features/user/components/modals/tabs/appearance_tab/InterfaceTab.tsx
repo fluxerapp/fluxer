@@ -6,13 +6,13 @@ import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/Se
 import {ChannelItemCore} from '@app/features/app/components/layout/ChannelItem';
 import channelItemSurfaceStyles from '@app/features/app/components/layout/ChannelItemSurface.module.css';
 import {Typing} from '@app/features/channel/components/ChannelTyping';
-import {cdnUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
 import {MockAvatar} from '@app/features/ui/components/MockAvatar';
 import type {RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/user/components/modals/tabs/appearance_tab/InterfaceTab.module.css';
+import {getDefaultAvatarURLForIndex} from '@app/features/user/utils/AvatarUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -92,7 +92,7 @@ const ChannelListPreview = observer(({mode}: {mode: ChannelTypingIndicatorMode})
 									key={index}
 									size={12}
 									userTag={`User ${index}`}
-									avatarUrl={cdnUrl(`avatars/${index}.png`)}
+									avatarUrl={getDefaultAvatarURLForIndex(index)}
 									data-flx="user.appearance-tab.interface-tab.channel-list-preview.mock-avatar"
 								/>
 							))}

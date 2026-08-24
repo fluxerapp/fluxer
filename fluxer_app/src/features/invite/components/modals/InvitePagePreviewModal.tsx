@@ -57,7 +57,7 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 		const splashUrl = useMemo(() => {
 			if (previewSplashUrl) return previewSplashUrl;
 			if (guild?.splash) {
-				return AvatarUtils.getGuildSplashURL({id: guild.id, splash: guild.splash}, 4096);
+				return AvatarUtils.getGuildSplashURL({id: guild.id, splash: guild.splash});
 			}
 			return null;
 		}, [previewSplashUrl, guild?.id, guild?.splash]);

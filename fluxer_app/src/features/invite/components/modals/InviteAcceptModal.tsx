@@ -131,13 +131,10 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 		if (!guild.id || !guild.splash) {
 			return null;
 		}
-		return AvatarUtils.getGuildSplashURL(
-			{
-				id: guild.id,
-				splash: guild.splash,
-			},
-			4096,
-		);
+		return AvatarUtils.getGuildSplashURL({
+			id: guild.id,
+			splash: guild.splash,
+		});
 	}, [invite]);
 	const isJoinDisabled = isGuildInviteActionDisabled(guildActionState);
 	const primaryActionType = getGuildInvitePrimaryAction(guildActionState);

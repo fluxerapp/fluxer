@@ -66,13 +66,10 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 		}
 		const guild = guildInvite.guild;
 		if (guild?.splash) {
-			const splashUrl = AvatarUtils.getGuildSplashURL(
-				{
-					id: guild.id,
-					splash: guild.splash,
-				},
-				4096,
-			);
+			const splashUrl = AvatarUtils.getGuildSplashURL({
+				id: guild.id,
+				splash: guild.splash,
+			});
 			setSplashUrl(splashUrl);
 		}
 	}, [guildInvite?.guild?.splash, guildInvite?.guild?.id, setSplashUrl]);
