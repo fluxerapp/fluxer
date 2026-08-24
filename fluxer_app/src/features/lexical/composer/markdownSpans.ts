@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
+import {MAX_LINE_LENGTH} from '@app/features/messaging/utils/markdown/parser/MarkdownConstants';
 import {parseMarkdownAstWithWasm} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
+import {normalizeUrl} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import {findUrlEnd} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
 
 export const MarkdownHl = {
@@ -48,54 +50,148 @@ export const DEFAULT_COMPOSER_MARKDOWN_FLAGS =
 	ParserFlags.ALLOW_TABLES |
 	ParserFlags.ALLOW_ALERTS;
 
+export interface MarkdownRecoveredRange {
+	start: number;
+	end: number;
+}
+
+export interface MarkdownHighlightResult {
+	spans: Array<MarkdownSpan>;
+	recovered: Array<MarkdownRecoveredRange>;
+}
+
 interface AlignContext {
 	source: string;
 	pos: number;
 	spans: Array<MarkdownSpan>;
 	failed: boolean;
 	listIndentLevel: number | null;
+	closers: Array<string>;
 }
+
+type AlignAttempt = {type: 'aligned'; spans: Array<MarkdownSpan>} | {type: 'desynced'; pos: number};
+
+const MAX_ALIGN_ATTEMPTS = 64;
+const MAX_URL_REALIGN_STEPS = 256;
 
 export function computeMarkdownHighlightSpans(
 	source: string,
 	parserFlags = DEFAULT_COMPOSER_MARKDOWN_FLAGS,
 ): Array<MarkdownSpan> {
+	return computeMarkdownHighlightResult(source, parserFlags).spans;
+}
+
+export function computeMarkdownHighlightResult(
+	source: string,
+	parserFlags = DEFAULT_COMPOSER_MARKDOWN_FLAGS,
+): MarkdownHighlightResult {
 	if (source.length === 0) {
-		return [];
+		return {spans: [], recovered: []};
 	}
-	let nodes: Array<Node>;
+	const spans: Array<MarkdownSpan> = [];
+	const recovered: Array<MarkdownRecoveredRange> = [];
+	let offset = 0;
+	let attempts = 0;
+	let segmentLimit = source.length;
+	while (offset < source.length) {
+		attempts += 1;
+		if (attempts > MAX_ALIGN_ATTEMPTS) {
+			recoverRange(spans, recovered, offset, source.length);
+			break;
+		}
+		const segmentEnd = Math.min(segmentEndFrom(source, offset), segmentLimit);
+		const attempt = alignSegment(source.slice(offset, segmentEnd), parserFlags);
+		if (attempt.type === 'aligned') {
+			for (const span of attempt.spans) {
+				spans.push({start: span.start + offset, end: span.end + offset, role: span.role, format: span.format});
+			}
+			offset = segmentEnd;
+			segmentLimit = source.length;
+			continue;
+		}
+		const safe = resyncStart(source, offset, offset + attempt.pos);
+		if (safe > offset) {
+			segmentLimit = safe;
+			continue;
+		}
+		const newline = source.indexOf('\n', offset);
+		const resume = newline < 0 || newline >= segmentEnd ? segmentEnd : newline + 1;
+		recoverRange(spans, recovered, offset, resume);
+		offset = resume;
+		segmentLimit = source.length;
+	}
+	return {spans: coalesce(spans), recovered};
+}
+
+function recoverRange(
+	spans: Array<MarkdownSpan>,
+	recovered: Array<MarkdownRecoveredRange>,
+	start: number,
+	end: number,
+): void {
+	if (end <= start) {
+		return;
+	}
+	spans.push({start, end, role: 'content', format: MarkdownHl.none});
+	recovered.push({start, end});
+}
+
+function resyncStart(source: string, lowerBound: number, failurePos: number): number {
+	if (failurePos <= lowerBound) {
+		return lowerBound;
+	}
+	return Math.max(lowerBound, source.lastIndexOf('\n', failurePos - 1) + 1);
+}
+
+function segmentEndFrom(source: string, offset: number): number {
+	let lineStart = offset;
+	while (lineStart < source.length) {
+		const newline = source.indexOf('\n', lineStart);
+		const lineEnd = newline < 0 ? source.length : newline;
+		if (lineEnd - lineStart > MAX_LINE_LENGTH) {
+			return lineStart > offset ? lineStart : lineStart + MAX_LINE_LENGTH;
+		}
+		if (newline < 0) {
+			return source.length;
+		}
+		lineStart = newline + 1;
+	}
+	return source.length;
+}
+
+function alignSegment(source: string, parserFlags: number): AlignAttempt {
+	const ctx: AlignContext = {source, pos: 0, spans: [], failed: false, listIndentLevel: null, closers: []};
 	try {
-		nodes = parseMarkdownAstWithWasm(source, parserFlags & DEFAULT_COMPOSER_MARKDOWN_FLAGS).nodes;
+		const nodes = parseMarkdownAstWithWasm(source, parserFlags & DEFAULT_COMPOSER_MARKDOWN_FLAGS).nodes;
+		while (ctx.pos < source.length) {
+			const blank = /^[ \t\r]*\n/.exec(source.slice(ctx.pos));
+			if (blank == null) {
+				break;
+			}
+			pushContent(ctx, ctx.pos + blank[0].length, MarkdownHl.none);
+		}
+		for (let index = 0; index < nodes.length; index += 1) {
+			if (ctx.failed) {
+				break;
+			}
+			if (index > 0) {
+				advanceSequenceGap(nodes, index, MarkdownHl.none, ctx);
+			}
+			alignNode(nodes[index]!, MarkdownHl.none, ctx);
+		}
 	} catch {
-		return [{start: 0, end: source.length, role: 'content', format: MarkdownHl.none}];
-	}
-	const ctx: AlignContext = {source, pos: 0, spans: [], failed: false, listIndentLevel: null};
-	while (ctx.pos < source.length) {
-		const blank = /^[ \t\r]*\n/.exec(source.slice(ctx.pos));
-		if (blank == null) {
-			break;
-		}
-		pushContent(ctx, ctx.pos + blank[0].length, MarkdownHl.none);
-	}
-	for (let index = 0; index < nodes.length; index += 1) {
-		if (ctx.failed) {
-			break;
-		}
-		if (index > 0) {
-			advanceSequenceGap(nodes, index, MarkdownHl.none, ctx);
-		}
-		alignNode(nodes[index]!, MarkdownHl.none, ctx);
+		return {type: 'desynced', pos: ctx.pos};
 	}
 	if (ctx.failed) {
-		return [{start: 0, end: source.length, role: 'content', format: MarkdownHl.none}];
+		return {type: 'desynced', pos: ctx.pos};
 	}
 	if (ctx.pos < source.length) {
 		if (!/^[ \t\r\n]*$/.test(source.slice(ctx.pos))) {
-			return [{start: 0, end: source.length, role: 'content', format: MarkdownHl.none}];
+			return {type: 'desynced', pos: ctx.pos};
 		}
 		pushContent(ctx, source.length, MarkdownHl.none);
 	}
-	return coalesce(ctx.spans);
+	return {type: 'aligned', spans: ctx.spans};
 }
 
 function pushMarker(ctx: AlignContext, length: number, format: MarkdownHlFormat): void {
@@ -136,6 +232,12 @@ const WRAPPERS: Partial<Record<Node['type'], {marker: string; bit: number}>> = {
 	Strikethrough: {marker: '~~', bit: MarkdownHl.strike},
 };
 
+function alignEnclosed(children: Array<Node>, closer: string, format: MarkdownHlFormat, ctx: AlignContext): void {
+	ctx.closers.push(closer);
+	alignChildren(children, format, ctx);
+	ctx.closers.pop();
+}
+
 function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): void {
 	const wrapper = WRAPPERS[node.type];
 	if (wrapper != null && 'children' in node) {
@@ -143,18 +245,21 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 		if (!expectMarker(ctx, wrapper.marker, next)) {
 			return;
 		}
-		alignChildren(node.children, next, ctx);
+		alignEnclosed(node.children, wrapper.marker, next, ctx);
 		expectMarker(ctx, wrapper.marker, next);
 		return;
 	}
 	switch (node.type) {
 		case 'Text': {
-			const end = advancePastText(ctx.source, ctx.pos, node.content, ctx.listIndentLevel);
-			if (end == null) {
-				ctx.failed = true;
-				return;
+			const advance = advancePastText(ctx.source, ctx.pos, node.content, ctx.listIndentLevel, format);
+			for (const marker of advance.markers) {
+				pushContent(ctx, marker.start, format);
+				pushMarker(ctx, marker.end - marker.start, format);
 			}
-			pushContent(ctx, end, format);
+			pushContent(ctx, advance.end, format);
+			if (!advance.complete) {
+				ctx.failed = true;
+			}
 			return;
 		}
 		case 'Strong': {
@@ -169,7 +274,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			}
 			const next = format | MarkdownHl.bold;
 			pushMarker(ctx, delimiter.length, next);
-			alignChildren(node.children, next, ctx);
+			alignEnclosed(node.children, delimiter, next, ctx);
 			expectMarker(ctx, delimiter, next);
 			return;
 		}
@@ -181,7 +286,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			}
 			const next = format | MarkdownHl.italic;
 			pushMarker(ctx, 1, next);
-			alignChildren(node.children, next, ctx);
+			alignEnclosed(node.children, delimiter, next, ctx);
 			if (ctx.source[ctx.pos] === delimiter) {
 				pushMarker(ctx, 1, next);
 			} else {
@@ -198,7 +303,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			if (!expectMarker(ctx, '||', next)) {
 				return;
 			}
-			alignChildren(node.children, next, ctx);
+			alignEnclosed(node.children, '||', next, ctx);
 			expectMarker(ctx, '||', next);
 			return;
 		}
@@ -298,7 +403,7 @@ function alignLink(node: Extract<Node, {type: 'Link'}>, format: MarkdownHlFormat
 			pushContent(ctx, close + 1, format);
 			return;
 		}
-		const end = findUrlEnd(ctx.source, ctx.pos);
+		const end = urlExtentEnd(ctx, node.url);
 		if (end <= ctx.pos) {
 			ctx.failed = true;
 			return;
@@ -309,7 +414,9 @@ function alignLink(node: Extract<Node, {type: 'Link'}>, format: MarkdownHlFormat
 	if (!expectMarker(ctx, '[', format)) {
 		return;
 	}
+	ctx.closers.push(']');
 	alignNode(node.text, format | MarkdownHl.link, ctx);
+	ctx.closers.pop();
 	if (ctx.failed) {
 		return;
 	}
@@ -323,6 +430,25 @@ function alignLink(node: Extract<Node, {type: 'Link'}>, format: MarkdownHlFormat
 	}
 	pushMarker(ctx, urlEnd - ctx.pos, format);
 	expectMarker(ctx, ')', format);
+}
+
+function urlExtentEnd(ctx: AlignContext, url: string): number {
+	const scanned = findUrlEnd(ctx.source, ctx.pos);
+	const lowest = Math.max(ctx.pos + 1, scanned - MAX_URL_REALIGN_STEPS);
+	for (let end = scanned; end >= lowest; end -= 1) {
+		if (normalizeUrl(foldUnpairedSurrogates(ctx.source.slice(ctx.pos, end))) !== url) {
+			continue;
+		}
+		return end >= scanned ? scanned : findUrlEnd(ctx.source.slice(0, end), ctx.pos);
+	}
+	let limit = ctx.source.length;
+	for (const closer of ctx.closers) {
+		const found = ctx.source.indexOf(closer, ctx.pos + 1);
+		if (found > ctx.pos && found < limit) {
+			limit = found;
+		}
+	}
+	return limit >= scanned ? scanned : findUrlEnd(ctx.source.slice(0, limit), ctx.pos);
 }
 
 function scanMaskedUrlEnd(source: string, start: number): number {
@@ -445,7 +571,7 @@ function alignCodeBlock(node: Extract<Node, {type: 'CodeBlock'}>, format: Markdo
 	const next = format | MarkdownHl.code | MarkdownHl.codeBlock;
 	if (inlineClosing >= 0) {
 		const contentEnd = languagePartStart + inlineClosing;
-		if (node.language != null || ctx.source.slice(languagePartStart, contentEnd) !== node.content) {
+		if (node.language != null || !equalsParserText(ctx.source.slice(languagePartStart, contentEnd), node.content)) {
 			ctx.failed = true;
 			return;
 		}
@@ -459,7 +585,7 @@ function alignCodeBlock(node: Extract<Node, {type: 'CodeBlock'}>, format: Markdo
 		return;
 	}
 	const language = node.language;
-	if (language != null && trimCodeFenceInfo(languagePart) !== language) {
+	if (language != null && !equalsParserText(trimCodeFenceInfo(languagePart), language)) {
 		ctx.failed = true;
 		return;
 	}
@@ -494,7 +620,7 @@ function alignCodeBlock(node: Extract<Node, {type: 'CodeBlock'}>, format: Markdo
 		}
 		currentLineStart = newline + 1;
 	}
-	if (closingStart < 0 || expectedContent !== node.content) {
+	if (closingStart < 0 || !equalsParserText(expectedContent, node.content)) {
 		ctx.failed = true;
 		return;
 	}
@@ -554,7 +680,11 @@ function alignInlineCode(content: string, format: MarkdownHlFormat, ctx: AlignCo
 	}
 	const contentStart = openingStart + ticks;
 	const closingStart = findInlineCodeClosing(ctx.source, contentStart, ticks);
-	if (closingStart < 0 || unescapeInlineCode(ctx.source.slice(contentStart, closingStart)) !== content) {
+	if (closingStart < 0) {
+		ctx.failed = true;
+		return;
+	}
+	if (!equalsParserText(unescapeInlineCode(ctx.source.slice(contentStart, closingStart)), content)) {
 		ctx.failed = true;
 		return;
 	}
@@ -705,6 +835,7 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		spans: [],
 		failed: false,
 		listIndentLevel: null,
+		closers: [],
 	};
 	if (children.length === 0) {
 		pushContent(virtualContext, virtualSource.length, format);
@@ -895,10 +1026,17 @@ function alignNodeSequence(nodes: Array<Node>, format: MarkdownHlFormat, ctx: Al
 }
 
 function advanceSequenceGap(nodes: Array<Node>, index: number, format: MarkdownHlFormat, ctx: AlignContext): void {
-	let sourceLineBreaks = 0;
-	while (ctx.source[ctx.pos + sourceLineBreaks] === '\n') {
-		sourceLineBreaks += 1;
+	const breakEnds: Array<number> = [];
+	let scan = ctx.pos;
+	while (ctx.source[scan] != null) {
+		const blank = (breakEnds.length === 0 ? LINE_BREAK_RE : BLANK_LINE_RE).exec(ctx.source.slice(scan));
+		if (blank == null) {
+			break;
+		}
+		scan += blank[0].length;
+		breakEnds.push(scan);
 	}
+	const sourceLineBreaks = breakEnds.length;
 	let contentLineBreaks = 0;
 	for (let i = index; i < nodes.length; i += 1) {
 		const next = nodes[i]!;
@@ -915,7 +1053,52 @@ function advanceSequenceGap(nodes: Array<Node>, index: number, format: MarkdownH
 		}
 	}
 	const structuralLineBreaks = Math.max(0, sourceLineBreaks - contentLineBreaks);
-	pushContent(ctx, ctx.pos + structuralLineBreaks, format);
+	if (structuralLineBreaks > 0) {
+		pushContent(ctx, breakEnds[structuralLineBreaks - 1]!, format);
+	}
+}
+
+interface TextAdvance {
+	end: number;
+	markers: Array<MarkdownRecoveredRange>;
+	complete: boolean;
+}
+
+function runLength(value: string, start: number, char: string): number {
+	let length = 0;
+	while (value[start + length] === char) {
+		length += 1;
+	}
+	return length;
+}
+
+const LINE_BREAK_RE = /^\n/;
+const BLANK_LINE_RE = /^[ \t\r]*\n/;
+const DROPPED_WHITESPACE_RE = /^[ \t\r]+\n/;
+const LINE_WHITESPACE_RE = /^[ \t\r]+/;
+
+const REPLACEMENT_CHARACTER = '\uFFFD';
+const UNPAIRED_SURROGATE_RE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+function isUnpairedSurrogateAt(text: string, index: number): boolean {
+	const code = text.charCodeAt(index);
+	if (code >= 0xd800 && code <= 0xdbff) {
+		const next = text.charCodeAt(index + 1);
+		return !(next >= 0xdc00 && next <= 0xdfff);
+	}
+	if (code >= 0xdc00 && code <= 0xdfff) {
+		const previous = text.charCodeAt(index - 1);
+		return !(previous >= 0xd800 && previous <= 0xdbff);
+	}
+	return false;
+}
+
+export function foldUnpairedSurrogates(text: string): string {
+	return text.replace(UNPAIRED_SURROGATE_RE, REPLACEMENT_CHARACTER);
+}
+
+export function equalsParserText(sourceText: string, parserText: string): boolean {
+	return sourceText === parserText || foldUnpairedSurrogates(sourceText) === parserText;
 }
 
 function advancePastText(
@@ -923,23 +1106,68 @@ function advancePastText(
 	start: number,
 	content: string,
 	listIndentLevel: number | null,
-): number | null {
+	format: MarkdownHlFormat,
+): TextAdvance {
+	const markers: Array<MarkdownRecoveredRange> = [];
 	let pos = start;
 	let ci = 0;
 	while (ci < content.length && pos < source.length) {
-		if (source[pos] === '\\' && pos + 1 < source.length && source[pos + 1] === content[ci]) {
-			pos += 2;
-			ci += 1;
-			continue;
+		if (source[pos] === '\\') {
+			const sourceRun = runLength(source, pos, '\\');
+			const contentRun = runLength(content, ci, '\\');
+			if (contentRun > 0 && contentRun === sourceRun) {
+				pos += sourceRun;
+				ci += sourceRun;
+				continue;
+			}
+			if (contentRun > 0 && contentRun === Math.floor(sourceRun / 2)) {
+				for (let pair = 0; pair < contentRun; pair += 1) {
+					markers.push({start: pos + pair * 2, end: pos + pair * 2 + 1});
+				}
+				pos += contentRun * 2;
+				ci += contentRun;
+				continue;
+			}
+			if (contentRun === 0 && pos + 1 < source.length && source[pos + 1] === content[ci]) {
+				markers.push({start: pos, end: pos + 1});
+				pos += 2;
+				ci += 1;
+				continue;
+			}
 		}
 		if (source[pos] === content[ci]) {
 			pos += 1;
 			ci += 1;
 			continue;
 		}
+		if (content[ci] === REPLACEMENT_CHARACTER && isUnpairedSurrogateAt(source, pos)) {
+			pos += 1;
+			ci += 1;
+			continue;
+		}
+		if (content[ci] === '\n') {
+			const dropped = DROPPED_WHITESPACE_RE.exec(source.slice(pos));
+			if (dropped != null) {
+				pos += dropped[0].length;
+				ci += 1;
+				continue;
+			}
+		}
 		if (/\s/.test(source[pos]!) && /\s/.test(content[ci]!)) {
 			pos += 1;
 			ci += 1;
+			continue;
+		}
+		if (pos === 0 || source[pos - 1] === '\n') {
+			const indent = LINE_WHITESPACE_RE.exec(source.slice(pos));
+			if (indent != null) {
+				pos += indent[0].length;
+				continue;
+			}
+		}
+		if ((format & MarkdownHl.italic) !== 0 && (source[pos] === '*' || source[pos] === '_')) {
+			markers.push({start: pos, end: pos + 1});
+			pos += 1;
 			continue;
 		}
 		if (listIndentLevel != null) {
@@ -951,7 +1179,7 @@ function advancePastText(
 		}
 		break;
 	}
-	return ci === content.length ? pos : null;
+	return {end: pos, markers, complete: ci === content.length};
 }
 
 function coalesce(spans: Array<MarkdownSpan>): Array<MarkdownSpan> {
