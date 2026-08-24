@@ -5,10 +5,11 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {
 	type FavoriteGifEntry,
 	inferFormatContentType,
-	pickBestPreviewFormat,
+	pickCanonicalPreviewFormat,
 } from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
 import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
 import {FAVORITE_GIF_LIMIT_REACHED_DESCRIPTOR} from '@app/features/expressions/utils/FavoriteGifMessageDescriptors';
+import * as GifSlugUtils from '@app/features/expressions/utils/GifSlugUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -88,10 +89,10 @@ export function addFavoriteGif(i18n: I18n, entry: FavoriteGifEntry): void {
 
 export function addFavoriteGifFromMedia(i18n: I18n, params: FavoriteGifFromMediaParams): void {
 	const media = params.media ?? {};
-	const bestPreview = pickBestPreviewFormat(media);
+	const bestPreview = pickCanonicalPreviewFormat(media);
 	addFavoriteGif(i18n, {
 		url: params.url,
-		proxy_url: bestPreview?.format.proxy_src ?? params.proxyUrl ?? params.url,
+		proxy_url: bestPreview?.format.proxy_src ?? params.proxyUrl ?? '',
 		width: bestPreview?.format.width ?? params.width ?? 0,
 		height: bestPreview?.format.height ?? params.height ?? 0,
 		media,
@@ -147,7 +148,8 @@ export async function refreshFavoriteGifPreviews(): Promise<void> {
 }
 
 function needsPreviewRefresh(entry: FavoriteGifEntry): boolean {
-	if (pickBestPreviewFormat(entry.media)) return false;
+	if (pickCanonicalPreviewFormat(entry.media)) return false;
+	if (!entry.proxy_url || GifSlugUtils.isProviderPageUrl(entry.proxy_url)) return true;
 	if (entry.width <= 0 || entry.height <= 0) return true;
 	return !entry.content_type.startsWith('image/') && !entry.content_type.startsWith('video/');
 }

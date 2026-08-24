@@ -27,6 +27,17 @@ export function extractSlugFromUrl(provider: string, url: string): string | null
 	return getAdapter(provider)?.extractSlugFromUrl(url) ?? null;
 }
 
+export function isProviderPageUrl(url: string): boolean {
+	if (!url) return false;
+	return Object.values(PROVIDER_URL_ADAPTERS).some((adapter) => adapter.extractSlugFromUrl(url) != null);
+}
+
+export function isUsableMediaSource(url: string): boolean {
+	if (!url) return false;
+	if (!/^https?:\/\//i.test(url.trim())) return false;
+	return !isProviderPageUrl(url);
+}
+
 function looksLikeUrl(value: string): boolean {
 	const trimmed = value.trim();
 	return /^https?:\/\//i.test(trimmed);

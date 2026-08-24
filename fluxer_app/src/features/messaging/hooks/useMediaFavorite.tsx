@@ -98,7 +98,7 @@ export function useMediaFavorite({
 					} else {
 						FavoriteGifCommands.addFavoriteGifFromMedia(i18n, {
 							url: embedURL!,
-							proxyUrl: proxyURL ?? embedURL!,
+							proxyUrl: proxyURL,
 							width: naturalWidth ?? 0,
 							height: naturalHeight ?? 0,
 							media: {},
