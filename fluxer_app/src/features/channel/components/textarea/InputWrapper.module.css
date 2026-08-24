@@ -57,8 +57,9 @@
 	background: linear-gradient(
 		to bottom,
 		transparent 0%,
-		color-mix(in srgb, var(--composer-surface-fill) 42%, transparent) 34%,
-		color-mix(in srgb, var(--composer-surface-fill) 82%, transparent) 66%,
+		color-mix(in srgb, var(--composer-surface-fill) 48%, transparent) 26%,
+		color-mix(in srgb, var(--composer-surface-fill) 82%, transparent) 54%,
+		var(--composer-surface-fill) 78%,
 		var(--composer-surface-fill) 100%
 	);
 	pointer-events: none;
