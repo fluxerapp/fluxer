@@ -2106,7 +2106,7 @@ msgstr ""
 #: fluxer_marketing/generated:download.android.obtainium_fcm
 msgctxt "download.android.obtainium_fcm"
 msgid "Add to {obtainium} (most phones)"
-msgstr "{obtainium}(대부분의 휴대폰)에 추가"
+msgstr "{obtainium}에 추가 (대부분의 휴대폰)"
 
 #. Link label that adds the UnifiedPush build of the Android beta to Obtainium, for phones without Google services. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.obtainium_oss

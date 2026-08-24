@@ -2212,7 +2212,7 @@ msgstr "Derleme listesi şu anda yüklenemedi. Tüm sürümler her zaman {github
 #: fluxer_marketing/generated:download.android.get_cta
 msgctxt "download.android.get_cta"
 msgid "Get the {android} beta"
-msgstr "{android} betayı edin"
+msgstr "{android} betasını edinin"
 
 #. Lead sentence of the recommended section on the Android install methods page, explaining why Obtainium is preferred over downloading files manually. Keep Obtainium as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.recommended_body
