@@ -13,6 +13,7 @@ import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {ensureMembersForMessages} from '@app/features/messaging/commands/MessageCommands';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
@@ -79,6 +80,7 @@ export const ChannelPinsContent = observer(({channel, onJump}: ChannelPinsConten
 	const canUnpin = isDMChannel || Permission.can(Permissions.MANAGE_MESSAGES, channel);
 	const mobileLayout = MobileLayout;
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
+	const resolvePinnedScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
 	const pinMessagesPermissionLabel = formatPermissionLabel(i18n, Permissions.PIN_MESSAGES);
@@ -187,107 +189,114 @@ export const ChannelPinsContent = observer(({channel, onJump}: ChannelPinsConten
 	}
 	return (
 		<>
-			<Scroller
-				className={clsx(previewStyles.scroller, mobileLayout.enabled && previewStyles.scrollerMobile)}
-				key="channel-pins-scroller"
-				onScroll={handleScroll}
-				ref={scrollerRef}
-				onCopy={onCopySelectedMessages}
-				data-message-selection-root="true"
-				data-flx="app.channel-pins-content.scroller"
-			>
-				{mobileLayout.enabled && <div className={previewStyles.topSpacer} data-flx="app.channel-pins-content.div--5" />}
-				{pinnedPins.slice().map(({message}) => {
-					const cardClasses = clsx(previewStyles.previewCard, mobileLayout.enabled && previewStyles.previewCardMobile);
-					const messageChannel =
-						Channels.getChannel(message.channelId) ?? (message.channelId === channel.id ? channel : null);
-					if (!messageChannel) return null;
-					if (mobileLayout.enabled) {
+			<NearViewportSurfaceContext.Provider value={resolvePinnedScrollSurface}>
+				<Scroller
+					className={clsx(previewStyles.scroller, mobileLayout.enabled && previewStyles.scrollerMobile)}
+					key="channel-pins-scroller"
+					onScroll={handleScroll}
+					ref={scrollerRef}
+					onCopy={onCopySelectedMessages}
+					data-message-selection-root="true"
+					data-flx="app.channel-pins-content.scroller"
+				>
+					{mobileLayout.enabled && (
+						<div className={previewStyles.topSpacer} data-flx="app.channel-pins-content.div--5" />
+					)}
+					{pinnedPins.slice().map(({message}) => {
+						const cardClasses = clsx(
+							previewStyles.previewCard,
+							mobileLayout.enabled && previewStyles.previewCardMobile,
+						);
+						const messageChannel =
+							Channels.getChannel(message.channelId) ?? (message.channelId === channel.id ? channel : null);
+						if (!messageChannel) return null;
+						if (mobileLayout.enabled) {
+							return (
+								<LongPressable
+									key={message.id}
+									className={cardClasses}
+									data-message-id={message.id}
+									data-is-group-start="true"
+									role="button"
+									tabIndex={0}
+									onClick={() => handleTap(message)}
+									onKeyDown={(e) => {
+										if (isKeyboardActivationKey(e.key)) {
+											e.preventDefault();
+											handleTap(message);
+										}
+									}}
+									onLongPress={() => {
+										if (!canUnpin) return;
+										setSelectedMessage(message);
+										setMenuOpen(true);
+									}}
+									data-flx="app.channel-pins-content.button.tap"
+								>
+									<MessageComponent
+										message={message}
+										channel={messageChannel}
+										previewContext={MessagePreviewContext.LIST_POPOUT}
+										data-flx="app.channel-pins-content.message-component"
+									/>
+								</LongPressable>
+							);
+						}
 						return (
-							<LongPressable
+							<div
 								key={message.id}
 								className={cardClasses}
 								data-message-id={message.id}
 								data-is-group-start="true"
-								role="button"
-								tabIndex={0}
-								onClick={() => handleTap(message)}
-								onKeyDown={(e) => {
-									if (isKeyboardActivationKey(e.key)) {
-										e.preventDefault();
-										handleTap(message);
-									}
-								}}
-								onLongPress={() => {
-									if (!canUnpin) return;
-									setSelectedMessage(message);
-									setMenuOpen(true);
-								}}
-								data-flx="app.channel-pins-content.button.tap"
+								data-flx="app.channel-pins-content.div--6"
 							>
 								<MessageComponent
 									message={message}
 									channel={messageChannel}
 									previewContext={MessagePreviewContext.LIST_POPOUT}
-									data-flx="app.channel-pins-content.message-component"
+									data-flx="app.channel-pins-content.message-component--2"
 								/>
-							</LongPressable>
+								<div className={previewStyles.actionButtons} data-flx="app.channel-pins-content.div--7">
+									<FocusRing offset={-2} data-flx="app.channel-pins-content.focus-ring">
+										<button
+											type="button"
+											className={previewStyles.actionButton}
+											onClick={() => handleJump(message.channelId, message.id)}
+											data-flx="app.channel-pins-content.button.jump"
+										>
+											{i18n._(JUMP_DESCRIPTOR)}
+										</button>
+									</FocusRing>
+									{renderUnpinButton(message)}
+								</div>
+							</div>
 						);
-					}
-					return (
-						<div
-							key={message.id}
-							className={cardClasses}
-							data-message-id={message.id}
-							data-is-group-start="true"
-							data-flx="app.channel-pins-content.div--6"
-						>
-							<MessageComponent
-								message={message}
-								channel={messageChannel}
-								previewContext={MessagePreviewContext.LIST_POPOUT}
-								data-flx="app.channel-pins-content.message-component--2"
-							/>
-							<div className={previewStyles.actionButtons} data-flx="app.channel-pins-content.div--7">
-								<FocusRing offset={-2} data-flx="app.channel-pins-content.focus-ring">
-									<button
-										type="button"
-										className={previewStyles.actionButton}
-										onClick={() => handleJump(message.channelId, message.id)}
-										data-flx="app.channel-pins-content.button.jump"
-									>
-										{i18n._(JUMP_DESCRIPTOR)}
-									</button>
-								</FocusRing>
-								{renderUnpinButton(message)}
+					})}
+					{isLoading && (
+						<div className={previewStyles.loadingState} data-flx="app.channel-pins-content.div--8">
+							<Spinner data-flx="app.channel-pins-content.spinner--2" />
+						</div>
+					)}
+					{!hasMore && (
+						<div className={previewStyles.endState} data-flx="app.channel-pins-content.div--9">
+							<div className={previewStyles.endStateContent} data-flx="app.channel-pins-content.div--10">
+								<FlagCheckeredIcon
+									className={previewStyles.endStateIcon}
+									data-flx="app.channel-pins-content.flag-checkered-icon"
+								/>
+								<div className={previewStyles.endStateTextContainer} data-flx="app.channel-pins-content.div--11">
+									<h3 className={previewStyles.endStateTitle} data-flx="app.channel-pins-content.h3--2">
+										{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
+									</h3>
+									<p className={previewStyles.endStateDescription} data-flx="app.channel-pins-content.p--2">
+										{endStateDescription}
+									</p>
+								</div>
 							</div>
 						</div>
-					);
-				})}
-				{isLoading && (
-					<div className={previewStyles.loadingState} data-flx="app.channel-pins-content.div--8">
-						<Spinner data-flx="app.channel-pins-content.spinner--2" />
-					</div>
-				)}
-				{!hasMore && (
-					<div className={previewStyles.endState} data-flx="app.channel-pins-content.div--9">
-						<div className={previewStyles.endStateContent} data-flx="app.channel-pins-content.div--10">
-							<FlagCheckeredIcon
-								className={previewStyles.endStateIcon}
-								data-flx="app.channel-pins-content.flag-checkered-icon"
-							/>
-							<div className={previewStyles.endStateTextContainer} data-flx="app.channel-pins-content.div--11">
-								<h3 className={previewStyles.endStateTitle} data-flx="app.channel-pins-content.h3--2">
-									{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
-								</h3>
-								<p className={previewStyles.endStateDescription} data-flx="app.channel-pins-content.p--2">
-									{endStateDescription}
-								</p>
-							</div>
-						</div>
-					</div>
-				)}
-			</Scroller>
+					)}
+				</Scroller>
+			</NearViewportSurfaceContext.Provider>
 			{mobileLayout.enabled && selectedMessage && (
 				<MenuBottomSheet
 					isOpen={menuOpen}
