@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import styles from '@app/features/ui/avatars/AvatarWithPresence.module.css';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
 import type {User} from '@app/features/user/models/User';
+import {parseAvatarHash} from '@app/features/user/utils/AvatarMediaUtils';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -11,6 +15,7 @@ import {MicrophoneSlashIcon, SpeakerSlashIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useEffect, useState} from 'react';
 
 const MUTED_VOICE_BADGE_LABEL = msg({
 	message: 'Muted',
@@ -47,17 +52,42 @@ export const AvatarWithPresence: React.FC<Props> = observer(function AvatarWithP
 }) {
 	const {i18n} = useLingui();
 	const guildMember = GuildMembers.getMember(guildId || '', user.id);
-	const animated = speaking ?? false;
-	const src =
+	const resolveSrc = (animated: boolean) =>
 		guildId && guildMember
 			? AvatarUtils.getGuildMemberDisplayAvatarURL({
 					guildId,
-					user,
+					user: {id: user.id, avatar: user.avatar},
 					memberAvatar: guildMember.avatar,
 					avatarUnset: guildMember.isAvatarUnset(),
 					animated,
 				})
-			: AvatarUtils.getUserAvatarURL(user, animated);
+			: AvatarUtils.getUserAvatarURL({id: user.id, avatar: user.avatar}, animated);
+	const displayAvatarHash =
+		guildId && guildMember ? (guildMember.isAvatarUnset() ? null : (guildMember.avatar ?? user.avatar)) : user.avatar;
+	const isAnimatableAvatar = displayAvatarHash != null && parseAvatarHash(displayAvatarHash).animated;
+	const src = resolveSrc(false);
+	const animatedSrc = isAnimatableAvatar ? resolveSrc(true) : null;
+	const hoverSrc = animatedSrc && animatedSrc !== src ? animatedSrc : undefined;
+	const speakingNow = speaking === true;
+	const settingsAllowAnimation = useShouldAnimate({
+		kind: 'avatar',
+		isAnimated: isAnimatableAvatar,
+		isHovering: speakingNow && !Accessibility.useReducedMotion,
+	});
+	const wantsAnimatedAvatar = hoverSrc != null && speakingNow && settingsAllowAnimation;
+	const [loadedAnimatedSrc, setLoadedAnimatedSrc] = useState<string | null>(null);
+	useEffect(() => {
+		if (!hoverSrc || !wantsAnimatedAvatar) return;
+		let active = true;
+		const cancelAnimatedAvatarLoad = ImageCacheUtils.loadImage(hoverSrc, () => {
+			if (active) setLoadedAnimatedSrc(hoverSrc);
+		});
+		return () => {
+			active = false;
+			cancelAnimatedAvatarLoad();
+		};
+	}, [hoverSrc, wantsAnimatedAvatar]);
+	const isAnimatedAvatarLoaded = hoverSrc != null && loadedAnimatedSrc === hoverSrc;
 	const voiceBadge = deafened ? (
 		<SpeakerSlashIcon
 			weight="fill"
@@ -82,13 +112,15 @@ export const AvatarWithPresence: React.FC<Props> = observer(function AvatarWithP
 		<BaseAvatar
 			size={size}
 			avatarUrl={src}
+			hoverAvatarUrl={isAnimatedAvatarLoaded ? hoverSrc : undefined}
+			shouldPlayAnimated={wantsAnimatedAvatar && isAnimatedAvatarLoaded}
 			className={clsx(styles.container, speaking && styles.containerSpeaking, borderClassName, className)}
 			userTag={ariaLabel ?? user.displayName}
 			disableStatusTooltip
 			customStatusBadge={voiceBadge}
 			customStatusBadgeColor="var(--status-danger)"
 			customStatusBadgeLabel={voiceBadgeLabel}
-			customStatusBadgeMaskId="svg-mask-status-online"
+			customStatusBadgeMaskId="flx-mask-presence-online"
 			customStatusBadgeScale={1.5}
 			customStatusBadgeMaxSizeRatio={0.36}
 			customStatusBadgeCutoutPaddingScale={1.35}

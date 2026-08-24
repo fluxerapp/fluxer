@@ -15,7 +15,7 @@ import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSiz
 import {normalizeStatus} from '@fluxer/constants/src/StatusConstants';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import React, {type CSSProperties, useEffect, useMemo, useState} from 'react';
+import React, {type CSSProperties, useCallback, useEffect, useMemo, useState} from 'react';
 
 interface AvatarProps {
 	user: User;
@@ -34,53 +34,8 @@ interface AvatarProps {
 	hoverAvatarUrl?: string | null;
 	guildId?: string | null;
 	mediaSize?: MediaProxyImageSize;
-	deferImageLoad?: boolean;
 	animateStatusCutout?: boolean;
 	title?: never;
-}
-
-type AvatarImagePresentation =
-	| {
-			kind: 'image';
-			avatarUrl: string;
-			showSkeleton: false;
-	  }
-	| {
-			kind: 'deferredKnownAvatar';
-			avatarUrl: '';
-			showSkeleton: true;
-	  };
-
-function resolveInitiallyLoadedImageUrl(url: string | null): string | null {
-	if (url == null) return null;
-	if (ImageCacheUtils.hasImage(url)) return url;
-	return null;
-}
-
-function resolveAvatarImagePresentation({
-	avatarUrl,
-	fallbackAvatarUrl,
-	deferImageLoad,
-	isStaticLoaded,
-}: {
-	avatarUrl: string | null;
-	fallbackAvatarUrl: string;
-	deferImageLoad: boolean;
-	isStaticLoaded: boolean;
-}): AvatarImagePresentation {
-	const hasKnownAvatar = Boolean(avatarUrl) && avatarUrl !== fallbackAvatarUrl;
-	if (deferImageLoad && !isStaticLoaded && hasKnownAvatar) {
-		return {
-			kind: 'deferredKnownAvatar',
-			avatarUrl: '',
-			showSkeleton: true,
-		};
-	}
-	return {
-		kind: 'image',
-		avatarUrl: deferImageLoad && !isStaticLoaded ? fallbackAvatarUrl : (avatarUrl ?? fallbackAvatarUrl),
-		showSkeleton: false,
-	};
 }
 
 const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
@@ -101,51 +56,73 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			hoverAvatarUrl: customHoverAvatarUrl,
 			guildId,
 			mediaSize,
-			deferImageLoad = false,
 			animateStatusCutout = false,
 			...props
 		},
 		ref,
 	) => {
 		const {i18n} = useLingui();
-		const guildMember = GuildMembers.getMember(guildId || '', user.id);
+		const userId = user.id;
+		const userAvatar = user.avatar;
+		const guildMember = GuildMembers.getMember(guildId || '', userId);
+		const hasGuildMemberAvatarSource = Boolean(guildId) && guildMember != null;
+		const memberAvatar = guildMember?.avatar ?? null;
+		const memberAvatarUnset = guildMember?.isAvatarUnset() ?? false;
 		const avatarUrl = useMemo(() => {
 			if (customAvatarUrl !== undefined) return customAvatarUrl;
-			if (guildId && guildMember) {
+			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
 					guildId,
-					user,
-					memberAvatar: guildMember.avatar,
-					avatarUnset: guildMember.isAvatarUnset(),
+					user: {id: userId, avatar: userAvatar},
+					memberAvatar,
+					avatarUnset: memberAvatarUnset,
 					animated: false,
 					size: mediaSize,
 				});
 			}
-			return AvatarUtils.getUserAvatarURL(user, false, mediaSize);
-		}, [user, customAvatarUrl, guildId, guildMember, mediaSize]);
+			return AvatarUtils.getUserAvatarURL({id: userId, avatar: userAvatar}, false, mediaSize);
+		}, [
+			customAvatarUrl,
+			guildId,
+			hasGuildMemberAvatarSource,
+			memberAvatar,
+			memberAvatarUnset,
+			mediaSize,
+			userAvatar,
+			userId,
+		]);
 		const hoverAvatarUrl = useMemo(() => {
 			if (customHoverAvatarUrl !== undefined) return customHoverAvatarUrl;
-			if (guildId && guildMember) {
+			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
 					guildId,
-					user,
-					memberAvatar: guildMember.avatar,
-					avatarUnset: guildMember.isAvatarUnset(),
+					user: {id: userId, avatar: userAvatar},
+					memberAvatar,
+					avatarUnset: memberAvatarUnset,
 					animated: true,
 					size: mediaSize,
 				});
 			}
-			return AvatarUtils.getUserAvatarURL(user, true, mediaSize);
-		}, [user, customHoverAvatarUrl, guildId, guildMember, mediaSize]);
+			return AvatarUtils.getUserAvatarURL({id: userId, avatar: userAvatar}, true, mediaSize);
+		}, [
+			customHoverAvatarUrl,
+			guildId,
+			hasGuildMemberAvatarSource,
+			memberAvatar,
+			memberAvatarUnset,
+			mediaSize,
+			userAvatar,
+			userId,
+		]);
 		const statusLabel = status != null ? getStatusTypeLabel(i18n, status) : null;
 		const hasDistinctHoverAvatar = Boolean(hoverAvatarUrl && hoverAvatarUrl !== avatarUrl);
 		const [hoverRef, isHovering] = useHover();
-		const settingsAnimationAllowed = useShouldAnimate({
+		const animationAllowed = useShouldAnimate({
 			kind: 'avatar',
-			isHovering: hasDistinctHoverAvatar && (isHovering || forceAnimate),
-			respectPlaybackAllowed: hasDistinctHoverAvatar,
+			isAnimated: hasDistinctHoverAvatar,
+			isHovering: hasDistinctHoverAvatar && (isHovering || forceAnimate || forceAnimateIgnoringSettings),
 		});
-		const animationAllowed = hasDistinctHoverAvatar && (forceAnimateIgnoringSettings || settingsAnimationAllowed);
+		const inlineAutoplayAllowed = animationAllowed && forceAnimateIgnoringSettings;
 		const [requestedAnimatedUrl, setRequestedAnimatedUrl] = useState<string | null>(() =>
 			hasDistinctHoverAvatar && animationAllowed ? hoverAvatarUrl : null,
 		);
@@ -155,55 +132,34 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			}
 		}, [hasDistinctHoverAvatar, animationAllowed, hoverAvatarUrl]);
 		const isAnimatedNeeded = hasDistinctHoverAvatar && (animationAllowed || requestedAnimatedUrl === hoverAvatarUrl);
-		const [loadedStaticUrl, setLoadedStaticUrl] = useState<string | null>(() =>
-			resolveInitiallyLoadedImageUrl(avatarUrl),
-		);
-		const [loadedAnimatedUrl, setLoadedAnimatedUrl] = useState<string | null>(() =>
-			resolveInitiallyLoadedImageUrl(hoverAvatarUrl),
-		);
+		const rendersAnimatedInline = isAnimatedNeeded && inlineAutoplayAllowed;
+		const [loadedStaticUrl, setLoadedStaticUrl] = useState<string | null>(null);
+		const [loadedAnimatedUrl, setLoadedAnimatedUrl] = useState<string | null>(null);
 		const isStaticLoaded = avatarUrl != null && loadedStaticUrl === avatarUrl;
 		const isAnimatedLoaded = hasDistinctHoverAvatar && hoverAvatarUrl != null && loadedAnimatedUrl === hoverAvatarUrl;
+		const handleImageLoaded = useCallback(
+			(loadedUrl: string) => {
+				if (loadedUrl === avatarUrl) setLoadedStaticUrl(loadedUrl);
+				else if (loadedUrl === hoverAvatarUrl) setLoadedAnimatedUrl(loadedUrl);
+			},
+			[avatarUrl, hoverAvatarUrl],
+		);
 		useEffect(() => {
-			const staticLoaded = ImageCacheUtils.hasImage(avatarUrl);
-			const animatedLoaded = hasDistinctHoverAvatar ? ImageCacheUtils.hasImage(hoverAvatarUrl) : false;
-			if (staticLoaded && loadedStaticUrl !== avatarUrl && avatarUrl != null) {
-				setLoadedStaticUrl(avatarUrl);
-			}
-			if (animatedLoaded && loadedAnimatedUrl !== hoverAvatarUrl && hoverAvatarUrl != null) {
-				setLoadedAnimatedUrl(hoverAvatarUrl);
-			}
-			if (deferImageLoad && !staticLoaded) {
+			if (!isAnimatedNeeded || rendersAnimatedInline || hoverAvatarUrl == null) {
 				return;
 			}
 			let active = true;
-			const cleanupStaticLoad = ImageCacheUtils.loadImage(avatarUrl, () => {
-				if (active && avatarUrl != null) {
-					setLoadedStaticUrl(avatarUrl);
-				}
+			const cleanupAnimatedLoad = ImageCacheUtils.loadImage(hoverAvatarUrl, () => {
+				if (active) setLoadedAnimatedUrl(hoverAvatarUrl);
 			});
-			let cleanupAnimatedLoad: (() => void) | undefined;
-			if (isAnimatedNeeded && !deferImageLoad && hoverAvatarUrl != null) {
-				cleanupAnimatedLoad = ImageCacheUtils.loadImage(hoverAvatarUrl, () => {
-					if (active) setLoadedAnimatedUrl(hoverAvatarUrl);
-				});
-			}
 			return () => {
 				active = false;
-				cleanupStaticLoad();
-				if (cleanupAnimatedLoad !== undefined) cleanupAnimatedLoad();
+				cleanupAnimatedLoad();
 			};
-		}, [avatarUrl, hoverAvatarUrl, hasDistinctHoverAvatar, isAnimatedNeeded, deferImageLoad]);
+		}, [hoverAvatarUrl, isAnimatedNeeded, rendersAnimatedInline]);
 		const shouldPlayAnimated = hasDistinctHoverAvatar && animationAllowed && isAnimatedLoaded;
-		const fallbackAvatarUrl = useMemo(
-			() => AvatarUtils.getUserAvatarURL({id: user.id, avatar: null}, false),
-			[user.id],
-		);
-		const avatarPresentation = resolveAvatarImagePresentation({
-			avatarUrl,
-			fallbackAvatarUrl,
-			deferImageLoad,
-			isStaticLoaded,
-		});
+		const fallbackAvatarUrl = useMemo(() => AvatarUtils.getUserAvatarURL({id: userId, avatar: null}, false), [userId]);
+		const resolvedAvatarUrl = avatarUrl ?? fallbackAvatarUrl;
 		const safeHoverAvatarUrl = isAnimatedNeeded ? hoverAvatarUrl || undefined : undefined;
 		const normalizedStatusAttr = status != null ? normalizeStatus(status) : undefined;
 		const displayName = NicknameUtils.getNickname(user, guildId ?? null);
@@ -213,13 +169,14 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			<BaseAvatar
 				ref={mergedRef}
 				size={size}
-				avatarUrl={avatarPresentation.avatarUrl}
+				avatarUrl={resolvedAvatarUrl}
 				hoverAvatarUrl={safeHoverAvatarUrl}
+				onImageLoaded={handleImageLoaded}
 				status={status}
 				isMobileStatus={isMobileStatus}
-				showSkeleton={avatarPresentation.showSkeleton}
+				showSkeleton
 				shouldPlayAnimated={shouldPlayAnimated && isStaticLoaded}
-				forceAnimatedPlayback={forceAnimateIgnoringSettings}
+				forceAnimatedPlayback={inlineAutoplayAllowed}
 				isTyping={isTyping}
 				showOffline={showOffline}
 				className={className}
@@ -229,11 +186,11 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 				disableStatusTooltip={disableStatusTooltip}
 				animateStatusCutout={animateStatusCutout}
 				data-flx="ui.avatar.avatar-component.base-avatar"
-				data-flx-user-id={user.id}
+				data-flx-user-id={userId}
 				data-flx-user-username={NicknameUtils.formatNameForStreamerMode(user.username)}
 				data-flx-user-name={displayName}
 				data-flx-user-bot={user.bot ? 'true' : undefined}
-				data-flx-user-self={user.id === Users.currentUserId ? 'true' : undefined}
+				data-flx-user-self={userId === Users.currentUserId ? 'true' : undefined}
 				data-flx-guild-id={guildId ?? undefined}
 				data-flx-size={String(size)}
 				data-flx-status={normalizedStatusAttr ?? undefined}

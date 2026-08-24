@@ -25,7 +25,6 @@ export interface StatusAwareAvatarProps {
 	hoverAvatarUrl?: string | null;
 	guildId?: string | null;
 	mediaSize?: MediaProxyImageSize;
-	deferImageLoad?: boolean;
 	status?: string | null;
 	animateStatusCutout?: boolean;
 }
@@ -54,7 +53,6 @@ export const StatusAwareAvatar: React.FC<StatusAwareAvatarProps> = observer(
 		hoverAvatarUrl,
 		guildId,
 		mediaSize,
-		deferImageLoad,
 		status: externalStatus,
 		animateStatusCutout,
 	}) => {
@@ -86,7 +84,6 @@ export const StatusAwareAvatar: React.FC<StatusAwareAvatarProps> = observer(
 				hoverAvatarUrl={hoverAvatarUrl}
 				guildId={guildId}
 				mediaSize={mediaSize}
-				deferImageLoad={deferImageLoad}
 				animateStatusCutout={animateStatusCutout}
 				data-flx="ui.status-aware-avatar.avatar"
 			/>

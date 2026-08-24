@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
-import {cdnUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
+import {getDefaultAvatarURLForIndex} from '@app/features/user/utils/AvatarUtils';
 import {useLingui} from '@lingui/react/macro';
 import React from 'react';
 
@@ -25,7 +25,7 @@ export const MockAvatar = React.forwardRef<HTMLDivElement, MockAvatarProps>(
 	(
 		{
 			size,
-			avatarUrl = cdnUrl('avatars/0.png'),
+			avatarUrl = getDefaultAvatarURLForIndex(0),
 			hoverAvatarUrl,
 			status,
 			isTyping = false,

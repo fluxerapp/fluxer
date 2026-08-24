@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {useAnimatedMediaPlaybackAllowed} from '@app/features/app/hooks/useAnimatedMediaPlayback';
+import {useSaveData} from '@app/features/app/hooks/useSaveData';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {StickerAnimationOptions} from '@fluxer/constants/src/UserConstants';
-import {useEffect, useState} from 'react';
 
 export type ShouldAnimateKind =
 	| 'avatar'
@@ -17,63 +16,11 @@ export type ShouldAnimateKind =
 
 export interface UseShouldAnimateOptions {
 	kind: ShouldAnimateKind;
+	isAnimated?: boolean;
 	isHovering?: boolean;
 	isFocused?: boolean;
 	entitlementOk?: boolean;
 	respectPlaybackAllowed?: boolean;
-}
-
-type ConnectionLike = {
-	saveData?: boolean;
-	addEventListener?: (event: string, cb: () => void) => void;
-};
-
-const getConnection = (): ConnectionLike | undefined => {
-	const nav =
-		typeof navigator === 'undefined'
-			? undefined
-			: (navigator as Navigator & {
-					connection?: ConnectionLike;
-				});
-	return nav?.connection;
-};
-
-let cachedSaveData: boolean = getConnection()?.saveData === true;
-
-const saveDataListeners = new Set<(value: boolean) => void>();
-
-let saveDataListenerInstalled = false;
-
-function installSaveDataListener(): void {
-	if (saveDataListenerInstalled) return;
-	const connection = getConnection();
-	if (!connection?.addEventListener) {
-		saveDataListenerInstalled = true;
-		return;
-	}
-	connection.addEventListener('change', () => {
-		const next = getConnection()?.saveData === true;
-		if (next !== cachedSaveData) {
-			cachedSaveData = next;
-			saveDataListeners.forEach((listener) => listener(next));
-		}
-	});
-	saveDataListenerInstalled = true;
-}
-
-function useSaveData(): boolean {
-	const [saveData, setSaveData] = useState(() => getConnection()?.saveData === true);
-	useEffect(() => {
-		installSaveDataListener();
-		const live = getConnection()?.saveData === true;
-		if (live !== cachedSaveData) cachedSaveData = live;
-		setSaveData(live);
-		saveDataListeners.add(setSaveData);
-		return () => {
-			saveDataListeners.delete(setSaveData);
-		};
-	}, []);
-	return saveData;
 }
 
 function isKeptUnderReducedMotion(kind: ShouldAnimateKind): boolean {
@@ -106,27 +53,27 @@ function getKindAllowance(kind: ShouldAnimateKind): AnimationAllowanceMode {
 }
 
 export interface ShouldAnimateDecisionInput {
+	isAnimated?: boolean;
 	allowance: AnimationAllowanceMode;
 	reducedMotion: boolean;
 	keptUnderReducedMotion: boolean;
 	isInteracting: boolean;
 	entitlementOk?: boolean;
 	saveData: boolean;
-	animatedMediaPlaybackAllowed: boolean;
 }
 
 export function resolveShouldAnimateDecision({
+	isAnimated = true,
 	allowance,
 	reducedMotion,
 	keptUnderReducedMotion,
 	isInteracting,
 	entitlementOk,
 	saveData,
-	animatedMediaPlaybackAllowed,
 }: ShouldAnimateDecisionInput): boolean {
+	if (!isAnimated) return false;
 	if (entitlementOk === false) return false;
 	if (saveData) return false;
-	if (!animatedMediaPlaybackAllowed) return false;
 	if (allowance === 'NEVER') return false;
 	if (reducedMotion && !keptUnderReducedMotion) return isInteracting;
 	if (allowance === 'ALWAYS') return true;
@@ -135,21 +82,20 @@ export function resolveShouldAnimateDecision({
 
 export function useShouldAnimate({
 	kind,
+	isAnimated = true,
 	isHovering = false,
 	isFocused = false,
 	entitlementOk,
-	respectPlaybackAllowed = true,
 }: UseShouldAnimateOptions): boolean {
 	const saveData = useSaveData();
-	const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed({enabled: respectPlaybackAllowed});
 	const allowance = getKindAllowance(kind);
 	return resolveShouldAnimateDecision({
+		isAnimated,
 		allowance,
 		reducedMotion: Accessibility.useReducedMotion,
 		keptUnderReducedMotion: isKeptUnderReducedMotion(kind),
 		isInteracting: isHovering || isFocused,
 		entitlementOk,
 		saveData,
-		animatedMediaPlaybackAllowed,
 	});
 }

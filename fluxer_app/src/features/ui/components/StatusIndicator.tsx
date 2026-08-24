@@ -18,7 +18,7 @@ const normalizeStatus = (status: string) => (status === StatusTypes.INVISIBLE ? 
 export const StatusIndicator = memo(
 	({status, size = 12, className, appearance = 'default', monochromeColor}: StatusIndicatorProps) => {
 		const normalizedStatus = normalizeStatus(status);
-		const maskId = `svg-mask-status-${normalizedStatus}`;
+		const maskId = `flx-mask-presence-${normalizedStatus}`;
 		const fill =
 			appearance === 'monochrome' ? (monochromeColor ?? 'currentColor') : `var(--status-${normalizedStatus})`;
 		return (
@@ -55,7 +55,7 @@ interface RenderStatusIconOptions {
 export const renderStatusIconContent = (status: string, size: number, options: RenderStatusIconOptions = {}) => {
 	const {appearance = 'default', monochromeColor} = options;
 	const normalizedStatus = normalizeStatus(status);
-	const maskId = `svg-mask-status-${normalizedStatus}`;
+	const maskId = `flx-mask-presence-${normalizedStatus}`;
 	const fill = appearance === 'monochrome' ? (monochromeColor ?? 'currentColor') : `var(--status-${normalizedStatus})`;
 	return (
 		<svg

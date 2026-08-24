@@ -75,8 +75,7 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 		roleColor,
 		displayName,
 		disableBackdrop = false,
-		deferAvatarLoad = false,
-		deferCustomStatusMedia = false,
+			deferCustomStatusMedia = false,
 		avatarMediaSize,
 	} = props;
 	const itemRef = useRef<HTMLButtonElement>(null);
@@ -214,8 +213,7 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 								avatarUrl={memberAvatarUrl}
 								hoverAvatarUrl={memberHoverAvatarUrl}
 								mediaSize={avatarMediaSize}
-								deferImageLoad={deferAvatarLoad}
-								data-flx="channel.member-list-item.status-aware-avatar"
+											data-flx="channel.member-list-item.status-aware-avatar"
 							/>
 						</div>
 						<div className={styles.userInfoContainer} data-flx="channel.member-list-item.user-info-container">

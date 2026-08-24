@@ -2,7 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
-import {useAnimatedMediaPlaybackAllowed} from '@app/features/app/hooks/useAnimatedMediaPlayback';
+import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {type AvatarStatusLayout, getAvatarStatusLayout} from '@app/features/ui/components/AvatarStatusLayout';
 import styles from '@app/features/ui/components/BaseAvatar.module.css';
@@ -13,7 +13,7 @@ import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import React, {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useId, useMemo, useState} from 'react';
 
 const AVATAR_DESCRIPTOR = msg({
 	message: 'Avatar',
@@ -29,7 +29,8 @@ const STATUS_DESCRIPTOR = msg({
 });
 const DEFAULT_CUSTOM_STATUS_BADGE_SCALE = 1.25;
 const DEFAULT_CUSTOM_STATUS_BADGE_CUTOUT_PADDING_SCALE = 1.2;
-const STATUS_TRANSITION_DURATION_MS = 160;
+const AVATAR_IMAGE_RETRY_LIMIT = 3;
+const PLACEHOLDER_FAST_FADE_WINDOW_MS = 200;
 
 type AvatarCSSProperties = React.CSSProperties & {
 	'--avatar-status-width'?: string;
@@ -42,6 +43,14 @@ type AvatarCSSProperties = React.CSSProperties & {
 	'--avatar-typing-dot-size'?: string;
 };
 
+type AvatarMaskCSSProperties = React.CSSProperties & {
+	'--avatar-mask-x'?: string;
+	'--avatar-mask-y'?: string;
+	'--avatar-mask-width'?: string;
+	'--avatar-mask-height'?: string;
+	'--avatar-mask-radius'?: string;
+};
+
 interface AvatarStatusBox {
 	width: number;
 	height: number;
@@ -51,10 +60,18 @@ interface AvatarStatusBox {
 	cutoutPadding: number;
 }
 
+type PlaceholderFade = 'instant' | 'fast' | 'gradual';
+
+interface PaintedAvatarImage {
+	url: string;
+	fade: PlaceholderFade;
+}
+
 const SVG_MASK_URL_CACHE = new Map<string, string>();
 const AVATAR_VIEW_BOX_CACHE = new Map<number, string>();
 const STATIC_AVATAR_MASK_SIZES = new Set([16, 20, 24, 32, 36, 40, 44, 48, 56, 80, 120]);
 const STATUS_INDICATOR_STYLE = {display: 'block', width: '100%', height: '100%'} satisfies React.CSSProperties;
+const PLACEHOLDER_INSTANT_STYLE = {transition: 'none'} satisfies React.CSSProperties;
 
 type DynamicAvatarMaskKind = 'animated' | 'mobile' | 'round' | 'typing';
 
@@ -64,9 +81,6 @@ interface AvatarMaskConfig {
 }
 
 function getSvgMaskUrl(maskId: string): string {
-	if (maskId.startsWith('svg-mask-avatar-dynamic-')) {
-		return `url(#${maskId})`;
-	}
 	const cached = SVG_MASK_URL_CACHE.get(maskId);
 	if (cached) return cached;
 	const value = `url(#${maskId})`;
@@ -82,14 +96,13 @@ function getAvatarViewBox(size: number): string {
 	return value;
 }
 
-function getDynamicAvatarMaskId(kind: DynamicAvatarMaskKind, size: number): string {
-	return `svg-mask-avatar-dynamic-${kind}-${String(size).replace(/[^A-Za-z0-9_-]/g, '_')}`;
-}
+const isImagePainted = (image: HTMLImageElement): boolean => image.complete && image.naturalWidth > 0;
 
 interface BaseAvatarProps {
 	size: number;
 	avatarUrl: string;
 	hoverAvatarUrl?: string;
+	onImageLoaded?: (src: string) => void;
 	status?: StatusType | string | null;
 	shouldPlayAnimated?: boolean;
 	forceAnimatedPlayback?: boolean;
@@ -120,6 +133,7 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 			size,
 			avatarUrl,
 			hoverAvatarUrl,
+			onImageLoaded,
 			status,
 			shouldPlayAnimated = false,
 			forceAnimatedPlayback = false,
@@ -145,17 +159,12 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 		ref,
 	) => {
 		const {i18n} = useLingui();
+		const dynamicMaskId = useId();
 		const animatedMediaPlaybackEnabled = Boolean((shouldPlayAnimated || forceAnimatedPlayback) && hoverAvatarUrl);
-		const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed({enabled: animatedMediaPlaybackEnabled});
 		const normalizedStatus = status == null ? null : normalizeStatus(status);
 		const renderableStatus = resolveRenderableStatus(normalizedStatus);
 		const isMobileOnline = isMobileStatus && renderableStatus === StatusTypes.ONLINE && !isTyping;
 		const layout = getAvatarStatusLayout(size, isMobileOnline);
-		const rawDynamicMaskId = useId();
-		const dynamicAvatarMaskId = useMemo(
-			() => `svg-mask-avatar-dynamic-${rawDynamicMaskId.replace(/[^A-Za-z0-9_-]/g, '_')}`,
-			[rawDynamicMaskId],
-		);
 		const hasCustomStatusBadge = customStatusBadge != null;
 		const shouldShowPresenceStatus =
 			isTyping || (normalizedStatus != null && (showOffline || renderableStatus !== StatusTypes.OFFLINE));
@@ -165,35 +174,75 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 		const shouldUseDynamicAvatarMask = shouldShowCustomStatusBadge || shouldAnimateAvatarMask;
 		const maskIsMobileOnline = shouldShowCustomStatusBadge ? false : isMobileOnline;
 		const reducedMotion = Accessibility.useReducedMotion;
-		const statusAnimationProgress = useAvatarStatusAnimationProgress({
-			target: isTyping ? 1 : 0,
-			enabled: shouldAnimateAvatarMask && !reducedMotion,
-		});
-		const candidateUrl =
-			animatedMediaPlaybackEnabled && animatedMediaPlaybackAllowed ? hoverAvatarUrl || '' : avatarUrl;
+		const candidateUrl = animatedMediaPlaybackEnabled ? hoverAvatarUrl || '' : avatarUrl;
 		const [imgError, setImgError] = useState(false);
+		const [imgRetryCount, setImgRetryCount] = useState(0);
+		const [wasCachedAtMount] = useState(() => ImageCacheUtils.hasImage(candidateUrl));
+		const [mountedAt] = useState(() => Date.now());
+		const [paintedImage, setPaintedImage] = useState<PaintedAvatarImage | null>(() =>
+			wasCachedAtMount ? {url: candidateUrl, fade: 'instant'} : null,
+		);
 		useEffect(() => {
 			setImgError(false);
+			setImgRetryCount(0);
 		}, [candidateUrl]);
+		useEffect(() => {
+			if (!imgError || !candidateUrl || imgRetryCount >= AVATAR_IMAGE_RETRY_LIMIT) {
+				return;
+			}
+			let active = true;
+			const cancelImageRetry = ImageCacheUtils.loadImage(candidateUrl, () => {
+				if (!active) return;
+				setImgRetryCount((count) => count + 1);
+				setImgError(false);
+			});
+			return () => {
+				active = false;
+				cancelImageRetry();
+			};
+		}, [candidateUrl, imgError, imgRetryCount]);
+		const handleImageRef = useCallback(
+			(node: HTMLImageElement | null) => {
+				if (node == null) return;
+				const painted = isImagePainted(node);
+				setPaintedImage((current) => {
+					if (!painted) return current?.url === candidateUrl ? null : current;
+					if (current?.url === candidateUrl) return current;
+					return {url: candidateUrl, fade: 'instant'};
+				});
+				if (painted) onImageLoaded?.(candidateUrl);
+			},
+			[candidateUrl, onImageLoaded],
+		);
+		const handleImageLoad = useCallback(
+			(event: React.SyntheticEvent<HTMLImageElement>) => {
+				const image = event.currentTarget;
+				const src = image.getAttribute('src');
+				ImageCacheUtils.rememberImage(src, image);
+				if (src != null && src.length > 0) {
+					const fade: PlaceholderFade = Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS ? 'fast' : 'gradual';
+					setPaintedImage((current) => (current?.url === src ? current : {url: src, fade}));
+					onImageLoaded?.(src);
+				}
+			},
+			[mountedAt, onImageLoaded],
+		);
 		const handleImageError = useCallback(() => {
 			setImgError(true);
 		}, []);
 		const showFallback = !candidateUrl || imgError;
-		const avatarMask = resolveAvatarMask({
-			shouldShowStatus,
-			isTyping,
-			isMobileOnline: maskIsMobileOnline,
-			size,
-			animatedMaskId: shouldUseDynamicAvatarMask ? dynamicAvatarMaskId : null,
-		});
-		const avatarMaskUrl = getSvgMaskUrl(avatarMask.id);
+		const paintedCandidate = paintedImage?.url === candidateUrl ? paintedImage : null;
+		const shouldMountPlaceholder = showSkeleton && !wasCachedAtMount;
+		const isPlaceholderVisible = showSkeleton && paintedCandidate == null;
+		const placeholderStyle = paintedCandidate?.fade === 'instant' ? PLACEHOLDER_INSTANT_STYLE : undefined;
+		const placeholderFastFade = paintedCandidate?.fade === 'fast';
 		const statusMaskId = shouldShowCustomStatusBadge
-			? (customStatusBadgeMaskId ?? 'svg-mask-status-online')
+			? (customStatusBadgeMaskId ?? 'flx-mask-presence-online')
 			: isMobileOnline
 				? STATIC_AVATAR_MASK_SIZES.has(size)
-					? `svg-mask-status-online-mobile-${size}`
-					: 'svg-mask-status-online-mobile'
-				: `svg-mask-status-${renderableStatus}`;
+					? `flx-mask-presence-online-mobile-${size}`
+					: 'flx-mask-presence-online-mobile'
+				: `flx-mask-presence-${renderableStatus}`;
 		const avatarViewBox = getAvatarViewBox(size);
 		const statusColor = shouldShowCustomStatusBadge
 			? (customStatusBadgeColor ?? `var(--status-${renderableStatus})`)
@@ -203,11 +252,8 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 			[size],
 		);
 		const regularStatusBox = useMemo(
-			() =>
-				shouldAnimateAvatarMask && !reducedMotion
-					? getInterpolatedAvatarStatusBox(layout, isMobileOnline, statusAnimationProgress)
-					: getAvatarStatusBox(layout, isTyping, isMobileOnline),
-			[isMobileOnline, isTyping, layout, reducedMotion, shouldAnimateAvatarMask, statusAnimationProgress],
+			() => getAvatarStatusBox(layout, isTyping, isMobileOnline),
+			[isMobileOnline, isTyping, layout],
 		);
 		const customStatusBox = useMemo(
 			() =>
@@ -221,6 +267,16 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 			[customStatusBadgeCutoutPaddingScale, customStatusBadgeMaxSizeRatio, customStatusBadgeScale, layout, size],
 		);
 		const statusBox = shouldShowCustomStatusBadge ? customStatusBox : regularStatusBox;
+		const avatarMask = resolveAvatarMask({
+			shouldShowStatus,
+			isTyping,
+			isMobileOnline: maskIsMobileOnline,
+			size,
+			dynamicMaskId,
+			useDynamicMask: shouldUseDynamicAvatarMask,
+		});
+		const avatarMaskUrl = avatarMask.dynamicKind == null ? getSvgMaskUrl(avatarMask.id) : `url(#${avatarMask.id})`;
+		const animateAvatarMaskShape = shouldAnimateAvatarMask && !shouldShowCustomStatusBadge;
 		const statusContainerStyle = useMemo<AvatarCSSProperties>(() => {
 			const dotSize = Math.round(layout.innerTypingHeight * TYPING_DOT_SIZE_RATIO);
 			const dotGap = Math.round(layout.innerTypingHeight * TYPING_DOT_GAP_RATIO);
@@ -237,9 +293,7 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 		}, [layout, statusBox, statusColor]);
 		const statusContainerClassName = `${styles.statusContainer} ${
 			isTyping || disableStatusTooltip ? styles.statusTooltipDisabled : ''
-		} ${reducedMotion ? styles.reducedMotion : ''} ${
-			shouldAnimateAvatarMask && !reducedMotion ? styles.statusAnimationDriven : ''
-		}`.trim();
+		} ${reducedMotion ? styles.reducedMotion : ''}`.trim();
 		const ariaLabel = statusLabel && userTag ? `${userTag}, ${statusLabel}` : userTag || i18n._(AVATAR_DESCRIPTOR);
 		const interactiveProps = useMemo(
 			() =>
@@ -331,30 +385,44 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 							size={size}
 							layout={layout}
 							statusBox={statusBox}
+							animateShape={animateAvatarMaskShape}
+							reducedMotion={reducedMotion}
 							data-flx="ui.base-avatar.dynamic-avatar-mask"
 						/>
 					)}
-					{showSkeleton ? (
+					{shouldMountPlaceholder && (
 						<rect
+							className={`${styles.placeholder} ${isPlaceholderVisible ? styles.placeholderVisible : styles.placeholderHidden} ${placeholderFastFade ? styles.placeholderFastFade : ''}`.trim()}
+							style={placeholderStyle}
 							x={0}
 							y={0}
 							width={size}
 							height={size}
 							mask={avatarMaskUrl}
-							fill="var(--background-modifier-accent)"
-							opacity={0.45}
 							data-flx="ui.base-avatar.skeleton"
 						/>
-					) : showFallback ? null : (
-						<image
-							href={candidateUrl}
+					)}
+					{showFallback ? null : (
+						<foreignObject
+							x={0}
+							y={0}
 							width={size}
 							height={size}
 							mask={avatarMaskUrl}
-							preserveAspectRatio="xMidYMid slice"
-							onError={handleImageError}
-							data-flx="ui.base-avatar.image"
-						/>
+							data-flx="ui.base-avatar.image-frame"
+						>
+							<img
+								ref={handleImageRef}
+								className={styles.image}
+								src={candidateUrl}
+								alt=""
+								aria-hidden
+								draggable={false}
+								onLoad={handleImageLoad}
+								onError={handleImageError}
+								data-flx="ui.base-avatar.image"
+							/>
+						</foreignObject>
 					)}
 					<rect
 						className={styles.hoverOverlay}
@@ -442,108 +510,31 @@ function getCustomAvatarStatusBox(
 	};
 }
 
-function getInterpolatedAvatarStatusBox(
-	layout: AvatarStatusLayout,
-	isMobileOnline: boolean,
-	progress: number,
-): AvatarStatusBox {
-	const statusBox = getAvatarStatusBox(layout, false, isMobileOnline);
-	const typingBox = getAvatarStatusBox(layout, true, isMobileOnline);
-	return {
-		width: interpolate(statusBox.width, typingBox.width, progress),
-		height: interpolate(statusBox.height, typingBox.height, progress),
-		right: interpolate(statusBox.right, typingBox.right, progress),
-		bottom: interpolate(statusBox.bottom, typingBox.bottom, progress),
-		radius: interpolate(statusBox.radius, typingBox.radius, progress),
-		cutoutPadding: interpolate(statusBox.cutoutPadding, typingBox.cutoutPadding, progress),
-	};
-}
-
-function interpolate(from: number, to: number, progress: number): number {
-	return from + (to - from) * progress;
-}
-
-function easeOutCubic(progress: number): number {
-	return 1 - (1 - progress) ** 3;
-}
-
-function useAvatarStatusAnimationProgress({target, enabled}: {target: number; enabled: boolean}): number {
-	const [progress, setProgress] = useState(target);
-	const progressRef = useRef(progress);
-	const frameRef = useRef<number | null>(null);
-
-	useEffect(() => {
-		progressRef.current = progress;
-	}, [progress]);
-
-	useEffect(() => {
-		if (frameRef.current != null) {
-			cancelAnimationFrame(frameRef.current);
-			frameRef.current = null;
-		}
-
-		if (!enabled) {
-			progressRef.current = target;
-			setProgress(target);
-			return;
-		}
-
-		const from = progressRef.current;
-		if (Math.abs(from - target) < 0.001) {
-			progressRef.current = target;
-			setProgress(target);
-			return;
-		}
-
-		const startedAt = performance.now();
-		const step = (timestamp: number) => {
-			const elapsed = Math.min(1, (timestamp - startedAt) / STATUS_TRANSITION_DURATION_MS);
-			const nextProgress = interpolate(from, target, easeOutCubic(elapsed));
-			progressRef.current = nextProgress;
-			setProgress(nextProgress);
-			if (elapsed < 1) {
-				frameRef.current = requestAnimationFrame(step);
-			} else {
-				frameRef.current = null;
-			}
-		};
-
-		frameRef.current = requestAnimationFrame(step);
-		return () => {
-			if (frameRef.current != null) {
-				cancelAnimationFrame(frameRef.current);
-				frameRef.current = null;
-			}
-		};
-	}, [enabled, target]);
-
-	return enabled ? progress : target;
-}
-
 const resolveAvatarMask = ({
 	shouldShowStatus,
 	isTyping,
 	isMobileOnline,
 	size,
-	animatedMaskId,
+	dynamicMaskId,
+	useDynamicMask,
 }: {
 	shouldShowStatus: boolean;
 	isTyping: boolean;
 	isMobileOnline: boolean;
 	size: number;
-	animatedMaskId?: string | null;
+	dynamicMaskId: string;
+	useDynamicMask: boolean;
 }): AvatarMaskConfig => {
-	if (!shouldShowStatus) return {id: 'svg-mask-avatar-default', dynamicKind: null};
-	if (animatedMaskId && !isMobileOnline) {
-		return {id: animatedMaskId, dynamicKind: 'animated'};
+	if (!shouldShowStatus) return {id: 'flx-mask-avatar-plain', dynamicKind: null};
+	if (useDynamicMask && !isMobileOnline) {
+		return {id: dynamicMaskId, dynamicKind: 'animated'};
 	}
 	if (STATIC_AVATAR_MASK_SIZES.has(size)) {
-		if (isTyping) return {id: `svg-mask-avatar-status-typing-${size}`, dynamicKind: null};
-		if (isMobileOnline) return {id: `svg-mask-avatar-status-mobile-${size}`, dynamicKind: null};
-		return {id: `svg-mask-avatar-status-round-${size}`, dynamicKind: null};
+		if (isTyping) return {id: `flx-mask-avatar-notch-typing-${size}`, dynamicKind: null};
+		if (isMobileOnline) return {id: `flx-mask-avatar-notch-phone-${size}`, dynamicKind: null};
+		return {id: `flx-mask-avatar-notch-circle-${size}`, dynamicKind: null};
 	}
-	const dynamicKind = isTyping ? 'typing' : isMobileOnline ? 'mobile' : 'round';
-	return {id: getDynamicAvatarMaskId(dynamicKind, size), dynamicKind};
+	return {id: dynamicMaskId, dynamicKind: isTyping ? 'typing' : isMobileOnline ? 'mobile' : 'round'};
 };
 
 interface DynamicAvatarMaskProps {
@@ -552,6 +543,8 @@ interface DynamicAvatarMaskProps {
 	size: number;
 	layout: AvatarStatusLayout;
 	statusBox: AvatarStatusBox;
+	animateShape: boolean;
+	reducedMotion: boolean;
 }
 
 const DynamicAvatarMask = React.memo(function DynamicAvatarMask({
@@ -560,6 +553,8 @@ const DynamicAvatarMask = React.memo(function DynamicAvatarMask({
 	size,
 	layout,
 	statusBox,
+	animateShape,
+	reducedMotion,
 }: DynamicAvatarMaskProps) {
 	const cutoutRadius = layout.cutoutRadius;
 	const cutoutY = layout.cutoutCy - cutoutRadius;
@@ -573,6 +568,18 @@ const DynamicAvatarMask = React.memo(function DynamicAvatarMask({
 	const typingBridgeShift = layout.innerStatusRight - layout.innerTypingRight;
 	const typingLeftCx = layout.cutoutCx - typingExtension + typingBridgeShift;
 	const typingRightCx = layout.cutoutCx + typingBridgeShift;
+	const animatedCutoutClassName = animateShape
+		? `${styles.animatedMaskShape} ${reducedMotion ? styles.animatedMaskReducedMotion : ''}`.trim()
+		: undefined;
+	const animatedCutoutStyle: AvatarMaskCSSProperties | undefined = animateShape
+		? {
+				'--avatar-mask-x': `${animatedCutoutX}px`,
+				'--avatar-mask-y': `${animatedCutoutY}px`,
+				'--avatar-mask-width': `${animatedCutoutWidth}px`,
+				'--avatar-mask-height': `${animatedCutoutHeight}px`,
+				'--avatar-mask-radius': `${animatedCutoutRadius}px`,
+			}
+		: undefined;
 	return (
 		<defs data-flx="ui.base-avatar.dynamic-avatar-mask.defs">
 			<mask
@@ -600,6 +607,8 @@ const DynamicAvatarMask = React.memo(function DynamicAvatarMask({
 						height={animatedCutoutHeight}
 						rx={animatedCutoutRadius}
 						ry={animatedCutoutRadius}
+						className={animatedCutoutClassName}
+						style={animatedCutoutStyle}
 						data-flx="ui.base-avatar.dynamic-avatar-mask.animated-cutout"
 					/>
 				) : kind === 'typing' ? (

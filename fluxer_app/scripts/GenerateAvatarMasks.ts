@@ -444,74 +444,74 @@ for (const size of SIZES) {
 	const mobileScreenHeight = ((screenHeightPx / mobileStatus.phoneHeight) * DESIGN_RULES.mobileAspectRatio).toFixed(4);
 	const mobileScreenRx = (screenRxPx / mobileStatus.phoneWidth).toFixed(4);
 	const mobileScreenRy = ((screenRxPx / mobileStatus.phoneWidth) * DESIGN_RULES.mobileAspectRatio).toFixed(4);
-	output += `			<mask id="svg-mask-avatar-default-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+	output += `			<mask id="flx-mask-avatar-plain-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 			</mask>
-			<mask id="svg-mask-avatar-status-round-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-notch-circle-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 			</mask>
-			<mask id="svg-mask-avatar-status-mobile-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-notch-phone-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<rect fill="black" x="${formatNumber(cutoutPhoneX)}" y="${formatNumber(cutoutPhoneY)}" width="${formatNumber(cutoutPhoneWidth)}" height="${formatNumber(cutoutPhoneHeight)}" rx="${formatNumber(cutoutPhoneRx)}" ry="${formatNumber(cutoutPhoneRx)}" />
 			</mask>
-			<mask id="svg-mask-avatar-status-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-notch-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="${formatNumber(typingCutoutRightCx)}" cy="${formatNumber(cy)}" r="${formatNumber(typingRx)}" />
 				<rect fill="black" x="${formatNumber(typingCutoutLeftCx)}" y="${formatNumber(typingCutoutY)}" width="${formatNumber(typingExtensionPx / size)}" height="${formatNumber(typingCutoutHeight)}" />
 				<circle fill="black" cx="${formatNumber(typingCutoutLeftCx)}" cy="${formatNumber(cy)}" r="${formatNumber(typingRx)}" />
 			</mask>
-			<mask id="svg-mask-status-online-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-online-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 			</mask>
-			<mask id="svg-mask-status-online-mobile-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-online-mobile-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="0" y="0" width="1" height="1" rx="${DESIGN_RULES.mobileCornerRadius}" ry="${(DESIGN_RULES.mobileCornerRadius * DESIGN_RULES.mobileAspectRatio).toFixed(4)}" />
 				<rect fill="black" x="${mobileScreenX}" y="${mobileScreenY}" width="${mobileScreenWidth}" height="${mobileScreenHeight}" rx="${mobileScreenRx}" ry="${mobileScreenRy}" />
 				<ellipse fill="black" cx="0.5" cy="${DESIGN_RULES.mobileWheelY}" rx="${DESIGN_RULES.mobileWheelRadius}" ry="${(DESIGN_RULES.mobileWheelRadius * DESIGN_RULES.mobileAspectRatio).toFixed(4)}" />
 			</mask>
-			<mask id="svg-mask-status-idle-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-idle-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 				<circle fill="black" cx="${formatNumber(idleCutoutCx)}" cy="${formatNumber(idleCutoutCy)}" r="${formatNumber(idleCutoutR)}" />
 			</mask>
-			<mask id="svg-mask-status-dnd-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-dnd-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 				<rect fill="black" x="${formatNumber(dndBarX)}" y="${formatNumber(dndBarY)}" width="${formatNumber(dndBarWidth)}" height="${formatNumber(dndBarHeight)}" rx="${formatNumber(dndBarRx)}" ry="${formatNumber(dndBarRx)}" />
 			</mask>
-			<mask id="svg-mask-status-offline-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-offline-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />
 				<circle fill="black" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(offlineInnerR)}" />
 			</mask>
-			<mask id="svg-mask-status-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="${formatNumber(typingX)}" y="${formatNumber(typingY)}" width="${formatNumber(typingWidth)}" height="${formatNumber(typingHeight)}" rx="${formatNumber(typingRx)}" ry="${formatNumber(typingRx)}" />
 			</mask>
 
 `;
 }
 
-output += `			<mask id="svg-mask-status-online" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+output += `			<mask id="flx-mask-presence-online" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 			</mask>
-			<mask id="svg-mask-status-idle" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-idle" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="0.25" cy="0.25" r="0.375" />
 			</mask>
-			<mask id="svg-mask-status-dnd" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-dnd" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<rect fill="black" x="0.125" y="0.375" width="0.75" height="0.25" rx="0.125" ry="0.125" />
 			</mask>
-			<mask id="svg-mask-status-offline" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-offline" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 				<circle fill="black" cx="0.5" cy="0.5" r="0.25" />
 			</mask>
-			<mask id="svg-mask-status-typing" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-typing" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="0" y="0" width="1" height="1" rx="0.5" ry="0.5" />
 			</mask>
-			<mask id="svg-mask-status-online-mobile" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-presence-online-mobile" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<rect fill="white" x="0" y="0" width="1" height="1" rx="${DESIGN_RULES.mobileCornerRadius}" ry="${(DESIGN_RULES.mobileCornerRadius * DESIGN_RULES.mobileAspectRatio).toFixed(2)}" />
 				<rect fill="black" x="${((1 - DESIGN_RULES.mobileScreenWidth) / 2).toFixed(4)}" y="${DESIGN_RULES.mobileScreenY}" width="${DESIGN_RULES.mobileScreenWidth}" height="${(DESIGN_RULES.mobileScreenHeight * DESIGN_RULES.mobileAspectRatio).toFixed(4)}" rx="0.04" ry="${(0.04 * DESIGN_RULES.mobileAspectRatio).toFixed(2)}" />
 				<ellipse fill="black" cx="0.5" cy="${DESIGN_RULES.mobileWheelY}" rx="${DESIGN_RULES.mobileWheelRadius}" ry="${(DESIGN_RULES.mobileWheelRadius * DESIGN_RULES.mobileAspectRatio).toFixed(3)}" />
 			</mask>
-			<mask id="svg-mask-avatar-default" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+			<mask id="flx-mask-avatar-plain" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
 			</mask>
 		</defs>

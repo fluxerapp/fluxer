@@ -181,8 +181,7 @@ export const MobileMemberListItem = observer(
 						avatarUrl={avatarUrl}
 						hoverAvatarUrl={hoverAvatarUrl}
 						mediaSize={MEMBER_LIST_AVATAR_MEDIA_SIZE}
-						deferImageLoad={deferAvatarLoad}
-						data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.status-aware-avatar"
+							data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.status-aware-avatar"
 					/>
 					<div
 						className={styles.memberContent}
