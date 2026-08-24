@@ -2,6 +2,14 @@
 
 use serde::{Deserialize, Serialize};
 
+fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::<T>::deserialize(deserializer).map(Some)
+}
+
 mod serde_id {
     use serde::Deserialize;
     use serde::de::{self, Deserializer};
@@ -461,8 +469,12 @@ pub struct ApiMessageResponse {
     pub nonce: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub call: Option<ApiMessageCallResponse>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub referenced_message: Option<Box<ApiMessageResponse>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_double_option"
+    )]
+    pub referenced_message: Option<Option<Box<ApiMessageResponse>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -739,5 +751,82 @@ mod tests {
             message.call.unwrap().participant_ids,
             vec![1_472_426_752_046_002_208]
         );
+    }
+
+    fn minimal_api_message(
+        referenced: Option<Option<Box<ApiMessageResponse>>>,
+    ) -> ApiMessageResponse {
+        let author = ApiUserPartialResponse {
+            id: "1".to_string(),
+            username: "user".to_string(),
+            discriminator: "0001".to_string(),
+            global_name: None,
+            avatar: None,
+            avatar_color: None,
+            bot: None,
+            system: None,
+            flags: 0,
+            mention_flags: None,
+        };
+        ApiMessageResponse {
+            id: "2".to_string(),
+            channel_id: "3".to_string(),
+            author,
+            webhook_id: None,
+            message_type: 0,
+            flags: 0,
+            content: String::new(),
+            timestamp: "2026-01-01T00:00:00Z".to_string(),
+            edited_timestamp: None,
+            pinned: false,
+            mention_everyone: false,
+            tts: false,
+            mentions: Vec::new(),
+            mention_roles: Vec::new(),
+            mention_channels: None,
+            users: None,
+            embeds: Vec::new(),
+            attachments: Vec::new(),
+            stickers: Vec::new(),
+            nsfw_emojis: None,
+            reactions: None,
+            message_reference: None,
+            message_snapshots: None,
+            nonce: None,
+            call: None,
+            referenced_message: referenced,
+        }
+    }
+
+    fn msgpack_round_trip(
+        referenced: Option<Option<Box<ApiMessageResponse>>>,
+    ) -> Option<Option<Box<ApiMessageResponse>>> {
+        let encoded =
+            rmp_serde::to_vec_named(&minimal_api_message(referenced)).expect("encodes to msgpack");
+        rmp_serde::from_slice::<ApiMessageResponse>(&encoded)
+            .expect("decodes from msgpack")
+            .referenced_message
+    }
+
+    #[test]
+    fn referenced_message_null_survives_the_msgpack_round_trip() {
+        assert!(msgpack_round_trip(None).is_none());
+        assert!(matches!(msgpack_round_trip(Some(None)), Some(None)));
+        assert!(matches!(
+            msgpack_round_trip(Some(Some(Box::new(minimal_api_message(None))))),
+            Some(Some(_))
+        ));
+    }
+
+    #[test]
+    fn referenced_message_null_serialises_as_json_null_not_an_absent_key() {
+        let deleted = serde_json::to_value(minimal_api_message(Some(None))).expect("serialises");
+        assert_eq!(
+            deleted.get("referenced_message"),
+            Some(&serde_json::Value::Null)
+        );
+
+        let absent = serde_json::to_value(minimal_api_message(None)).expect("serialises");
+        assert!(absent.get("referenced_message").is_none());
     }
 }

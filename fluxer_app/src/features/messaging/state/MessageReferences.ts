@@ -1,18 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Endpoints} from '@app/features/app/constants/Endpoints';
-import Channels from '@app/features/channel/state/Channels';
-import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import {Message as MessageRecord} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
-import {http} from '@app/features/platform/transport/RestTransport';
-import {HttpError} from '@app/features/platform/types/EndpointError';
-import {Logger} from '@app/features/platform/utils/AppLogger';
+import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {makeAutoObservable} from 'mobx';
 
-const logger = new Logger('MessageReferences');
 export const MessageReferenceState = {
 	LOADED: 'LOADED',
 	NOT_LOADED: 'NOT_LOADED',
@@ -20,6 +14,20 @@ export const MessageReferenceState = {
 } as const;
 
 export type MessageReferenceState = ValueOf<typeof MessageReferenceState>;
+
+export type MessageReferenceResolution =
+	| {readonly state: typeof MessageReferenceState.LOADED; readonly message: MessageRecord}
+	| {readonly state: typeof MessageReferenceState.NOT_LOADED}
+	| {readonly state: typeof MessageReferenceState.DELETED};
+
+const NOT_LOADED_RESOLUTION: MessageReferenceResolution = Object.freeze({
+	state: MessageReferenceState.NOT_LOADED,
+});
+
+const DELETED_RESOLUTION: MessageReferenceResolution = Object.freeze({
+	state: MessageReferenceState.DELETED,
+});
+
 type MessageInput = WireMessage | MessageRecord;
 
 const toWireMessage = (message: MessageInput): WireMessage =>
@@ -59,10 +67,23 @@ class MessageReferences {
 		const key = this.getKey(refChannelId, refMessageId);
 		const nextMessage = new MessageRecord(toWireMessage(message), {missingReactions: 'preserve'});
 		const currentMessage = this.cachedMessages.get(key);
-		if (currentMessage?.equals(nextMessage)) {
+		if (this.deletedMessageIds.has(key)) {
+			this.deletedMessageIds.delete(key);
+		} else if (currentMessage?.equals(nextMessage)) {
 			return false;
 		}
 		this.cachedMessages.set(key, nextMessage);
+		this.bumpReferenceVersion(refChannelId, refMessageId);
+		return true;
+	}
+
+	private markReferenceDeleted(refChannelId: string, refMessageId: string): boolean {
+		const key = this.getKey(refChannelId, refMessageId);
+		if (this.deletedMessageIds.has(key) && !this.cachedMessages.has(key)) {
+			return false;
+		}
+		this.deletedMessageIds.add(key);
+		this.cachedMessages.delete(key);
 		this.bumpReferenceVersion(refChannelId, refMessageId);
 		return true;
 	}
@@ -116,13 +137,26 @@ class MessageReferences {
 		this.referencingMessages.delete(referencingMessageId);
 	}
 
-	handleMessageCreate(message: WireMessage, _optimistic: boolean): void {
-		if (message.referenced_message) {
-			const refChannelId = message.message_reference?.channel_id ?? message.channel_id;
-			const refMessageId = message.referenced_message.id;
-			this.setCachedMessage(refChannelId, refMessageId, message.referenced_message);
-			this.addReference(refChannelId, refMessageId, message.id);
+	private resolveReferenceTarget(message: WireMessage, fallbackChannelId: string): boolean {
+		const reference = message.message_reference;
+		if (!reference || reference.type !== MessageReferenceTypes.DEFAULT) {
+			return false;
 		}
+		const refChannelId = reference.channel_id ?? fallbackChannelId;
+		const refMessageId = reference.message_id;
+		this.addReference(refChannelId, refMessageId, message.id);
+		if (!('referenced_message' in message)) {
+			return false;
+		}
+		const referenced = message.referenced_message;
+		if (referenced == null) {
+			return this.markReferenceDeleted(refChannelId, refMessageId);
+		}
+		return this.setCachedMessage(refChannelId, refMessageId, referenced);
+	}
+
+	handleMessageCreate(message: WireMessage, _optimistic: boolean): void {
+		this.resolveReferenceTarget(message, message.channel_id);
 	}
 
 	handleMessageDelete(channelId: string, messageId: string): void {
@@ -139,45 +173,13 @@ class MessageReferences {
 
 	handleMessageDeleteBulk(channelId: string, messageIds: Array<string>): void {
 		for (const messageId of messageIds) {
-			const key = this.getKey(channelId, messageId);
-			this.deletedMessageIds.add(key);
-			this.cachedMessages.delete(key);
-			this.referenceVersions.delete(key);
-			this.referenceCount.delete(key);
-			const referencedBy = this.referencingMessages.get(messageId);
-			if (referencedBy) {
-				this.removeReference(referencedBy.channelId, referencedBy.messageId, messageId);
-			}
+			this.handleMessageDelete(channelId, messageId);
 		}
 	}
 
 	handleMessagesFetchSuccess(channelId: string, messages: Array<WireMessage>): void {
 		for (const message of messages) {
-			if (message.referenced_message) {
-				const refChannelId = message.message_reference?.channel_id ?? channelId;
-				const refMessageId = message.referenced_message.id;
-				this.setCachedMessage(refChannelId, refMessageId, message.referenced_message);
-				this.addReference(refChannelId, refMessageId, message.id);
-			}
-		}
-		const potentiallyMissingMessageIds = messages
-			.filter((message) => message.message_reference && !message.referenced_message)
-			.map((message) => ({
-				channelId: message.message_reference!.channel_id ?? channelId,
-				messageId: message.message_reference!.message_id,
-				referencingMessageId: message.id,
-			}))
-			.filter(
-				({channelId: refChannelId, messageId}) =>
-					!Messages.getMessage(refChannelId, messageId) &&
-					!this.deletedMessageIds.has(this.getKey(refChannelId, messageId)) &&
-					!this.cachedMessages.has(this.getKey(refChannelId, messageId)),
-			);
-		for (const {channelId: refChannelId, messageId, referencingMessageId} of potentiallyMissingMessageIds) {
-			this.addReference(refChannelId, messageId, referencingMessageId);
-		}
-		if (potentiallyMissingMessageIds.length > 0) {
-			this.fetchMissingMessages(potentiallyMissingMessageIds.map(({channelId, messageId}) => ({channelId, messageId})));
+			this.resolveReferenceTarget(message, channelId);
 		}
 	}
 
@@ -198,9 +200,11 @@ class MessageReferences {
 		if (!('message_reference' in message) && !('referenced_message' in message)) {
 			return;
 		}
+		const reference = message.message_reference;
+		const isReferenceBearing = reference != null && reference.type === MessageReferenceTypes.DEFAULT;
 		const previousRef = this.referencingMessages.get(message.id);
-		const newRefChannelId = message.message_reference?.channel_id ?? message.channel_id;
-		const newRefMessageId = message.referenced_message?.id ?? message.message_reference?.message_id;
+		const newRefChannelId = reference?.channel_id ?? message.channel_id;
+		const newRefMessageId = isReferenceBearing ? reference.message_id : undefined;
 		if (previousRef) {
 			const previousKey = this.getKey(previousRef.channelId, previousRef.messageId);
 			const newKey = newRefMessageId ? this.getKey(newRefChannelId, newRefMessageId) : null;
@@ -209,61 +213,7 @@ class MessageReferences {
 			}
 		}
 		if (newRefMessageId) {
-			if (message.referenced_message) {
-				this.setCachedMessage(newRefChannelId, newRefMessageId, message.referenced_message);
-			}
-			this.addReference(newRefChannelId, newRefMessageId, message.id);
-		}
-	}
-
-	private fetchMissingMessages(
-		refs: Array<{
-			channelId: string;
-			messageId: string;
-		}>,
-	): void {
-		const allowedRefs = refs.filter(({channelId}) => {
-			const channel = Channels.getChannel(channelId);
-			if (!channel) {
-				return false;
-			}
-			if (channel.isPrivate()) {
-				return true;
-			}
-			return !GuildMatureContentAgree.shouldShowGate({channelId: channel.id, guildId: channel.guildId ?? null});
-		});
-		if (allowedRefs.length === 0) {
-			return;
-		}
-		Promise.allSettled(
-			allowedRefs.map(({channelId, messageId}) =>
-				http
-					.get<WireMessage>(Endpoints.CHANNEL_MESSAGE(channelId, messageId))
-					.then((response) => {
-						if (response.body) {
-							this.handleMessageFetchSuccess(channelId, messageId, response.body);
-						}
-					})
-					.catch((error) => this.handleMessageFetchError(channelId, messageId, error)),
-			),
-		);
-	}
-
-	private handleMessageFetchSuccess(channelId: string, messageId: string, message: WireMessage): void {
-		const messageRecord = new MessageRecord(message);
-		const key = this.getKey(channelId, messageId);
-		this.cachedMessages.set(key, messageRecord);
-		this.bumpReferenceVersion(channelId, messageId);
-	}
-
-	private handleMessageFetchError(channelId: string, messageId: string, error: unknown): void {
-		const key = this.getKey(channelId, messageId);
-		if (error instanceof HttpError && error.status === 404) {
-			this.deletedMessageIds.add(key);
-			this.cachedMessages.delete(key);
-			this.referenceVersions.delete(key);
-		} else {
-			logger.error(`Failed to fetch message ${messageId}`, error);
+			this.resolveReferenceTarget(message, message.channel_id);
 		}
 	}
 
@@ -296,48 +246,21 @@ class MessageReferences {
 		}
 	}
 
-	getMessage(channelId: string, messageId: string): MessageRecord | null {
+	getMessageReference(channelId: string, messageId: string): MessageReferenceResolution {
 		const key = this.getKey(channelId, messageId);
 		this.readReferenceVersion(channelId, messageId);
 		if (this.deletedMessageIds.has(key)) {
-			return null;
-		}
-		return Messages.getMessage(channelId, messageId) || this.cachedMessages.get(key) || null;
-	}
-
-	getMessageReference(
-		channelId: string,
-		messageId: string,
-	): {
-		message: MessageRecord | null;
-		state: MessageReferenceState;
-	} {
-		const key = this.getKey(channelId, messageId);
-		this.readReferenceVersion(channelId, messageId);
-		if (this.deletedMessageIds.has(key)) {
-			return {
-				message: null,
-				state: MessageReferenceState.DELETED,
-			};
-		}
-		const message = Messages.getMessage(channelId, messageId);
-		if (message) {
-			return {
-				message,
-				state: MessageReferenceState.LOADED,
-			};
+			return DELETED_RESOLUTION;
 		}
 		const cachedMessage = this.cachedMessages.get(key);
 		if (cachedMessage) {
-			return {
-				message: cachedMessage,
-				state: MessageReferenceState.LOADED,
-			};
+			return {state: MessageReferenceState.LOADED, message: cachedMessage};
 		}
-		return {
-			message: null,
-			state: MessageReferenceState.NOT_LOADED,
-		};
+		const message = Messages.getMessage(channelId, messageId);
+		if (message) {
+			return {state: MessageReferenceState.LOADED, message};
+		}
+		return NOT_LOADED_RESOLUTION;
 	}
 }
 

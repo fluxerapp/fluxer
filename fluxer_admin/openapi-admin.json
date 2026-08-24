@@ -13669,7 +13669,7 @@
 						"required": ["participants"]
 					},
 					"referenced_message": {
-						"description": "The message that this message is replying to or forwarding",
+						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence.",
 						"nullable": true,
 						"type": "object",
 						"properties": {

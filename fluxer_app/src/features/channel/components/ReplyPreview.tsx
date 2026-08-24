@@ -57,7 +57,7 @@ export const ReplyPreview = observer(
 		messageDisplayCompact: boolean;
 	}) => {
 		const {i18n} = useLingui();
-		const {message: referencedMessage, state: messageState} = MessageReferences.getMessageReference(
+		const resolution = MessageReferences.getMessageReference(
 			message.messageReference?.channel_id ?? '',
 			message.messageReference?.message_id ?? '',
 		);
@@ -72,12 +72,14 @@ export const ReplyPreview = observer(
 			}
 		}, [message.channelId, message.id, message.messageReference]);
 		if (!message.messageReference) return null;
-		if (messageState !== MessageReferenceState.LOADED || !referencedMessage) {
+		if (resolution.state !== MessageReferenceState.LOADED) {
+			const isDeleted = resolution.state === MessageReferenceState.DELETED;
 			return (
 				<div
 					className={clsx(styles.repliedMessage, messageDisplayCompact && styles.repliedMessageCompact)}
 					data-message-copy-hidden="true"
 					data-flx="channel.reply-preview.replied-message"
+					data-flx-reference-state={resolution.state}
 				>
 					<div className={styles.repliedIconContainer} data-flx="channel.reply-preview.replied-icon-container">
 						<ArrowBendUpLeftIcon
@@ -86,26 +88,40 @@ export const ReplyPreview = observer(
 							data-flx="channel.reply-preview.replied-icon"
 						/>
 					</div>
-					<button
-						type="button"
-						disabled
-						className={clsx(styles.repliedTextPreview, styles.unstyled)}
-						tabIndex={-1}
-						data-flx="channel.reply-preview.replied-text-preview.button"
-					>
-						{messageState === MessageReferenceState.DELETED ? (
+					{isDeleted ? (
+						<div
+							className={clsx(styles.repliedTextPreview, styles.unstyled)}
+							data-flx="channel.reply-preview.replied-text-preview.deleted"
+						>
 							<span className={styles.repliedItalic} data-flx="channel.reply-preview.replied-italic">
 								{i18n._(ORIGINAL_MESSAGE_WAS_DELETED_DESCRIPTOR)}
 							</span>
-						) : (
-							<span className={styles.repliedItalic} data-flx="channel.reply-preview.replied-italic--2">
-								{i18n._(ORIGINAL_MESSAGE_FAILED_TO_LOAD_DESCRIPTOR)}
-							</span>
-						)}
-					</button>
+						</div>
+					) : (
+						<FocusRing offset={-2} data-flx="channel.reply-preview.focus-ring--not-loaded">
+							<button
+								type="button"
+								className={clsx(styles.repliedTextPreview, styles.unstyled)}
+								onClick={jumpToRepliedMessage}
+								tabIndex={0}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										jumpToRepliedMessage();
+									}
+								}}
+								data-flx="channel.reply-preview.replied-text-preview.not-loaded"
+							>
+								<span className={styles.repliedItalic} data-flx="channel.reply-preview.replied-italic--2">
+									{i18n._(ORIGINAL_MESSAGE_FAILED_TO_LOAD_DESCRIPTOR)}
+								</span>
+							</button>
+						</FocusRing>
+					)}
 				</div>
 			);
 		}
+		const referencedMessage = resolution.message;
 		const isSpammerReply =
 			referencedMessage.author.id !== Authentication.currentUserId &&
 			LocalUserSpamOverride.isUserMarkedAsSpammer(referencedMessage.author.id, referencedMessage.author.flags);
