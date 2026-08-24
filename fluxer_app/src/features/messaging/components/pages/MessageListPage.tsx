@@ -9,6 +9,7 @@ import {JUMP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors
 import styles from '@app/features/messaging/components/pages/MessageListPage.module.css';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
@@ -20,7 +21,7 @@ import {useLingui} from '@lingui/react/macro';
 import {FlagCheckeredIcon, SparkleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useRef} from 'react';
+import {useMemo, useRef} from 'react';
 
 const YOU_VE_REACHED_THE_END_DESCRIPTOR = msg({
 	message: "You've reached the end",
@@ -51,6 +52,7 @@ export const MessageListPage = observer(
 	}: MessageListPageProps) => {
 		const {i18n} = useLingui();
 		const scrollerRef = useRef<ScrollerHandle | null>(null);
+		const resolveListPageScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 		const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(messages);
 		const leftContent = (
 			<div className={styles.header} data-flx="messaging.message-list-page.header">
@@ -73,77 +75,79 @@ export const MessageListPage = observer(
 				/>
 				<div className={styles.content} data-flx="messaging.message-list-page.content">
 					{messages.length > 0 ? (
-						<Scroller
-							className={styles.scroller}
-							key="message-list-page-scroller"
-							ref={scrollerRef}
-							onCopy={onCopySelectedMessages}
-							data-message-selection-root="true"
-							data-flx="messaging.message-list-page.scroller"
-						>
-							{messages.map((message) => {
-								const channel = Channels.getChannel(message.channelId);
-								if (!channel) {
-									if (renderMissingMessage) {
-										return renderMissingMessage(message);
+						<NearViewportSurfaceContext.Provider value={resolveListPageScrollSurface}>
+							<Scroller
+								className={styles.scroller}
+								key="message-list-page-scroller"
+								ref={scrollerRef}
+								onCopy={onCopySelectedMessages}
+								data-message-selection-root="true"
+								data-flx="messaging.message-list-page.scroller"
+							>
+								{messages.map((message) => {
+									const channel = Channels.getChannel(message.channelId);
+									if (!channel) {
+										if (renderMissingMessage) {
+											return renderMissingMessage(message);
+										}
+										return null;
 									}
-									return null;
-								}
-								return (
-									<div
-										key={message.id}
-										className={previewStyles.previewCard}
-										data-message-id={message.id}
-										data-is-group-start="true"
-										data-flx="messaging.message-list-page.div"
-									>
-										<MessageComponent
-											message={message}
-											channel={channel}
-											previewContext={MessagePreviewContext.LIST_POPOUT}
-											data-flx="messaging.message-list-page.message-component"
+									return (
+										<div
+											key={message.id}
+											className={previewStyles.previewCard}
+											data-message-id={message.id}
+											data-is-group-start="true"
+											data-flx="messaging.message-list-page.div"
+										>
+											<MessageComponent
+												message={message}
+												channel={channel}
+												previewContext={MessagePreviewContext.LIST_POPOUT}
+												data-flx="messaging.message-list-page.message-component"
+											/>
+											<div className={previewStyles.actionButtons} data-flx="messaging.message-list-page.div--2">
+												<button
+													type="button"
+													className={previewStyles.actionButton}
+													onClick={() => {
+														const path = channel.guildId
+															? Routes.guildChannel(channel.guildId, channel.id)
+															: Routes.dmChannel(channel.id);
+														RouterUtils.transitionTo(path);
+														goToMessage(message.channelId, message.id);
+														focusChannelTextareaAfterNavigation(message.channelId);
+													}}
+													data-flx="messaging.message-list-page.button.transition-to"
+												>
+													{i18n._(JUMP_DESCRIPTOR)}
+												</button>
+												{renderActionButtons(message)}
+											</div>
+										</div>
+									);
+								})}
+								<div className={styles.endState} data-flx="messaging.message-list-page.end-state">
+									<div className={styles.endStateContent} data-flx="messaging.message-list-page.end-state-content">
+										<FlagCheckeredIcon
+											className={styles.endStateIcon}
+											data-flx="messaging.message-list-page.end-state-icon"
 										/>
-										<div className={previewStyles.actionButtons} data-flx="messaging.message-list-page.div--2">
-											<button
-												type="button"
-												className={previewStyles.actionButton}
-												onClick={() => {
-													const path = channel.guildId
-														? Routes.guildChannel(channel.guildId, channel.id)
-														: Routes.dmChannel(channel.id);
-													RouterUtils.transitionTo(path);
-													goToMessage(message.channelId, message.id);
-													focusChannelTextareaAfterNavigation(message.channelId);
-												}}
-												data-flx="messaging.message-list-page.button.transition-to"
+										<div className={styles.endStateText} data-flx="messaging.message-list-page.end-state-text">
+											<h3 className={styles.endStateTitle} data-flx="messaging.message-list-page.end-state-title">
+												{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
+											</h3>
+											<p
+												className={styles.endStateDescription}
+												data-flx="messaging.message-list-page.end-state-description"
 											>
-												{i18n._(JUMP_DESCRIPTOR)}
-											</button>
-											{renderActionButtons(message)}
+												{endStateDescription}
+											</p>
 										</div>
 									</div>
-								);
-							})}
-							<div className={styles.endState} data-flx="messaging.message-list-page.end-state">
-								<div className={styles.endStateContent} data-flx="messaging.message-list-page.end-state-content">
-									<FlagCheckeredIcon
-										className={styles.endStateIcon}
-										data-flx="messaging.message-list-page.end-state-icon"
-									/>
-									<div className={styles.endStateText} data-flx="messaging.message-list-page.end-state-text">
-										<h3 className={styles.endStateTitle} data-flx="messaging.message-list-page.end-state-title">
-											{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
-										</h3>
-										<p
-											className={styles.endStateDescription}
-											data-flx="messaging.message-list-page.end-state-description"
-										>
-											{endStateDescription}
-										</p>
-									</div>
 								</div>
-							</div>
-						</Scroller>
+							</Scroller>
+						</NearViewportSurfaceContext.Provider>
 					) : (
 						<div className={styles.emptyState} data-flx="messaging.message-list-page.empty-state">
 							<div className={styles.emptyStateContent} data-flx="messaging.message-list-page.empty-state-content">

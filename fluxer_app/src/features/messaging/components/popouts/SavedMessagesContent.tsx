@@ -13,6 +13,7 @@ import headerStyles from '@app/features/messaging/components/popouts/InboxMessag
 import styles from '@app/features/messaging/components/popouts/SavedMessagesContent.module.css';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
@@ -24,7 +25,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {FlagCheckeredIcon, SparkleIcon, XIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useEffect, useRef} from 'react';
+import {useCallback, useEffect, useMemo, useRef} from 'react';
 
 const NO_BOOKMARKS_DESCRIPTOR = msg({
 	message: 'No bookmarks',
@@ -49,6 +50,7 @@ export const SavedMessagesContent = observer(() => {
 	const {i18n} = useLingui();
 	const {savedMessages, missingSavedMessages, fetched} = SavedMessages;
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
+	const resolveSavedScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 	const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(savedMessages);
 	const renderMissingSavedMessage = useCallback(
 		(entryId: string) => (
@@ -105,99 +107,105 @@ export const SavedMessagesContent = observer(() => {
 		);
 	}
 	return (
-		<Scroller
-			className={styles.scroller}
-			key="saved-messages-scroller"
-			ref={scrollerRef}
-			onCopy={onCopySelectedMessages}
-			data-message-selection-root="true"
-			data-flx="messaging.saved-messages-content.scroller"
-		>
-			{missingSavedMessages.map((entry) => renderMissingSavedMessage(entry.id))}
-			{savedMessages.map((message) => {
-				const channel = Channels.getChannel(message.channelId);
-				if (!channel) {
-					return renderMissingSavedMessage(message.id);
-				}
-				return (
-					<div key={message.id} className={styles.messageCard} data-flx="messaging.saved-messages-content.message-card">
-						<InboxMessageHeader
-							channel={channel}
-							onClick={() => handleJumpToMessage(message.channelId, message.id)}
-							rightActions={
-								<Tooltip
-									text={i18n._(REMOVE_BOOKMARK_DESCRIPTOR)}
-									position="top"
-									data-flx="messaging.saved-messages-content.tooltip"
-								>
-									<FocusRing offset={-2} data-flx="messaging.saved-messages-content.focus-ring">
+		<NearViewportSurfaceContext.Provider value={resolveSavedScrollSurface}>
+			<Scroller
+				className={styles.scroller}
+				key="saved-messages-scroller"
+				ref={scrollerRef}
+				onCopy={onCopySelectedMessages}
+				data-message-selection-root="true"
+				data-flx="messaging.saved-messages-content.scroller"
+			>
+				{missingSavedMessages.map((entry) => renderMissingSavedMessage(entry.id))}
+				{savedMessages.map((message) => {
+					const channel = Channels.getChannel(message.channelId);
+					if (!channel) {
+						return renderMissingSavedMessage(message.id);
+					}
+					return (
+						<div
+							key={message.id}
+							className={styles.messageCard}
+							data-flx="messaging.saved-messages-content.message-card"
+						>
+							<InboxMessageHeader
+								channel={channel}
+								onClick={() => handleJumpToMessage(message.channelId, message.id)}
+								rightActions={
+									<Tooltip
+										text={i18n._(REMOVE_BOOKMARK_DESCRIPTOR)}
+										position="top"
+										data-flx="messaging.saved-messages-content.tooltip"
+									>
+										<FocusRing offset={-2} data-flx="messaging.saved-messages-content.focus-ring">
+											<button
+												type="button"
+												className={headerStyles.headerIconButton}
+												onClick={() => SavedMessageCommands.remove(i18n, message.id)}
+												aria-label={i18n._(REMOVE_BOOKMARK_DESCRIPTOR)}
+												data-flx="messaging.saved-messages-content.button.remove"
+											>
+												<XIcon
+													weight="bold"
+													className={headerStyles.headerIcon}
+													data-flx="messaging.saved-messages-content.x-icon"
+												/>
+											</button>
+										</FocusRing>
+									</Tooltip>
+								}
+								data-flx="messaging.saved-messages-content.inbox-message-header.jump-to-message"
+							/>
+							<div
+								className={previewStyles.previewCard}
+								data-message-id={message.id}
+								data-is-group-start="true"
+								data-flx="messaging.saved-messages-content.div--5"
+							>
+								<Message
+									message={message}
+									channel={channel}
+									previewContext={MessagePreviewContext.LIST_POPOUT}
+									behaviorOverrides={readonlyBehaviorOverrides}
+									suppressMessageActions
+									onHeadingActivate={() => handleJumpToMessage(message.channelId, message.id)}
+									data-flx="messaging.saved-messages-content.message"
+								/>
+								<div className={previewStyles.actionButtons} data-flx="messaging.saved-messages-content.div--6">
+									<FocusRing offset={-2} data-flx="messaging.saved-messages-content.focus-ring--2">
 										<button
 											type="button"
-											className={headerStyles.headerIconButton}
-											onClick={() => SavedMessageCommands.remove(i18n, message.id)}
-											aria-label={i18n._(REMOVE_BOOKMARK_DESCRIPTOR)}
-											data-flx="messaging.saved-messages-content.button.remove"
+											className={previewStyles.actionButton}
+											onClick={() => {
+												handleJumpToMessage(message.channelId, message.id);
+											}}
+											data-flx="messaging.saved-messages-content.button.jump-to-message"
 										>
-											<XIcon
-												weight="bold"
-												className={headerStyles.headerIcon}
-												data-flx="messaging.saved-messages-content.x-icon"
-											/>
+											{i18n._(JUMP_DESCRIPTOR)}
 										</button>
 									</FocusRing>
-								</Tooltip>
-							}
-							data-flx="messaging.saved-messages-content.inbox-message-header.jump-to-message"
-						/>
-						<div
-							className={previewStyles.previewCard}
-							data-message-id={message.id}
-							data-is-group-start="true"
-							data-flx="messaging.saved-messages-content.div--5"
-						>
-							<Message
-								message={message}
-								channel={channel}
-								previewContext={MessagePreviewContext.LIST_POPOUT}
-								behaviorOverrides={readonlyBehaviorOverrides}
-								suppressMessageActions
-								onHeadingActivate={() => handleJumpToMessage(message.channelId, message.id)}
-								data-flx="messaging.saved-messages-content.message"
-							/>
-							<div className={previewStyles.actionButtons} data-flx="messaging.saved-messages-content.div--6">
-								<FocusRing offset={-2} data-flx="messaging.saved-messages-content.focus-ring--2">
-									<button
-										type="button"
-										className={previewStyles.actionButton}
-										onClick={() => {
-											handleJumpToMessage(message.channelId, message.id);
-										}}
-										data-flx="messaging.saved-messages-content.button.jump-to-message"
-									>
-										{i18n._(JUMP_DESCRIPTOR)}
-									</button>
-								</FocusRing>
+								</div>
 							</div>
 						</div>
-					</div>
-				);
-			})}
-			<div className={previewStyles.endState} data-flx="messaging.saved-messages-content.div--7">
-				<div className={previewStyles.endStateContent} data-flx="messaging.saved-messages-content.div--8">
-					<FlagCheckeredIcon
-						className={previewStyles.endStateIcon}
-						data-flx="messaging.saved-messages-content.flag-checkered-icon"
-					/>
-					<div className={previewStyles.endStateTextContainer} data-flx="messaging.saved-messages-content.div--9">
-						<h3 className={previewStyles.endStateTitle} data-flx="messaging.saved-messages-content.h3--2">
-							{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
-						</h3>
-						<p className={previewStyles.endStateDescription} data-flx="messaging.saved-messages-content.p--2">
-							{i18n._(THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR)}
-						</p>
+					);
+				})}
+				<div className={previewStyles.endState} data-flx="messaging.saved-messages-content.div--7">
+					<div className={previewStyles.endStateContent} data-flx="messaging.saved-messages-content.div--8">
+						<FlagCheckeredIcon
+							className={previewStyles.endStateIcon}
+							data-flx="messaging.saved-messages-content.flag-checkered-icon"
+						/>
+						<div className={previewStyles.endStateTextContainer} data-flx="messaging.saved-messages-content.div--9">
+							<h3 className={previewStyles.endStateTitle} data-flx="messaging.saved-messages-content.h3--2">
+								{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
+							</h3>
+							<p className={previewStyles.endStateDescription} data-flx="messaging.saved-messages-content.p--2">
+								{i18n._(THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR)}
+							</p>
+						</div>
 					</div>
 				</div>
-			</div>
-		</Scroller>
+			</Scroller>
+		</NearViewportSurfaceContext.Provider>
 	);
 });

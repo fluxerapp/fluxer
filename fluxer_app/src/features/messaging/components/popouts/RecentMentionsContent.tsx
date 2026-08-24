@@ -18,6 +18,7 @@ import headerStyles from '@app/features/messaging/components/popouts/InboxMessag
 import styles from '@app/features/messaging/components/popouts/RecentMentionsContent.module.css';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import type {Message as MessagingMessage} from '@app/features/messaging/models/MessagingMessage';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import * as RecentMentionCommands from '@app/features/notification/commands/RecentMentionCommands';
@@ -217,6 +218,7 @@ export const RecentMentionsContent = observer(
 		const isLoadingMore = MentionFeed.getIsLoadingMore();
 		const filterButtonRef = useRef<HTMLButtonElement>(null);
 		const scrollerRef = useRef<ScrollerHandle | null>(null);
+		const resolveMentionsScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 		const {isOpen: isFilterMenuOpen, withTracking} = useContextMenuTrigger();
 		const accessibleMentions = MentionFeed.getAccessibleMentions();
 		const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(accessibleMentions);
@@ -354,64 +356,69 @@ export const RecentMentionsContent = observer(
 			);
 		}
 		return (
-			<Scroller
-				className={styles.scroller}
-				onScroll={handleScroll}
-				key="recent-mentions-scroller"
-				ref={scrollerRef}
-				onCopy={onCopySelectedMessages}
-				data-message-selection-root="true"
-				data-flx="messaging.recent-mentions-content.scroller"
-			>
-				{groupedMentions.map((group) => {
-					return (
-						<section
-							key={group.key}
-							className={styles.guildGroup}
-							aria-label={group.label}
-							data-flx="messaging.recent-mentions-content.guild-group"
-						>
-							{group.mentions.map((message) => {
-								const channel = Channels.getChannel(message.channelId);
-								if (!channel) return null;
-								return (
-									<MentionMessageCard
-										key={message.id}
-										message={message}
-										channel={channel}
-										onJump={handleJumpToMessage}
-										onRemove={handleRemoveMention}
-										data-flx="messaging.recent-mentions-content.mention-message-card"
-									/>
-								);
-							})}
-						</section>
-					);
-				})}
-				{isLoadingMore && (
-					<div className={previewStyles.loadingState} data-flx="messaging.recent-mentions-content.div--7">
-						<Spinner data-flx="messaging.recent-mentions-content.spinner--2" />
-					</div>
-				)}
-				{!hasMore && !isLoadingMore && (
-					<div className={previewStyles.endState} data-flx="messaging.recent-mentions-content.div--8">
-						<div className={previewStyles.endStateContent} data-flx="messaging.recent-mentions-content.div--9">
-							<FlagCheckeredIcon
-								className={previewStyles.endStateIcon}
-								data-flx="messaging.recent-mentions-content.flag-checkered-icon"
-							/>
-							<div className={previewStyles.endStateTextContainer} data-flx="messaging.recent-mentions-content.div--10">
-								<h3 className={previewStyles.endStateTitle} data-flx="messaging.recent-mentions-content.h3--2">
-									<Trans>You've reached the end</Trans>
-								</h3>
-								<p className={previewStyles.endStateDescription} data-flx="messaging.recent-mentions-content.p--2">
-									<Trans>You've seen all your recent mentions. More will appear here soon.</Trans>
-								</p>
+			<NearViewportSurfaceContext.Provider value={resolveMentionsScrollSurface}>
+				<Scroller
+					className={styles.scroller}
+					onScroll={handleScroll}
+					key="recent-mentions-scroller"
+					ref={scrollerRef}
+					onCopy={onCopySelectedMessages}
+					data-message-selection-root="true"
+					data-flx="messaging.recent-mentions-content.scroller"
+				>
+					{groupedMentions.map((group) => {
+						return (
+							<section
+								key={group.key}
+								className={styles.guildGroup}
+								aria-label={group.label}
+								data-flx="messaging.recent-mentions-content.guild-group"
+							>
+								{group.mentions.map((message) => {
+									const channel = Channels.getChannel(message.channelId);
+									if (!channel) return null;
+									return (
+										<MentionMessageCard
+											key={message.id}
+											message={message}
+											channel={channel}
+											onJump={handleJumpToMessage}
+											onRemove={handleRemoveMention}
+											data-flx="messaging.recent-mentions-content.mention-message-card"
+										/>
+									);
+								})}
+							</section>
+						);
+					})}
+					{isLoadingMore && (
+						<div className={previewStyles.loadingState} data-flx="messaging.recent-mentions-content.div--7">
+							<Spinner data-flx="messaging.recent-mentions-content.spinner--2" />
+						</div>
+					)}
+					{!hasMore && !isLoadingMore && (
+						<div className={previewStyles.endState} data-flx="messaging.recent-mentions-content.div--8">
+							<div className={previewStyles.endStateContent} data-flx="messaging.recent-mentions-content.div--9">
+								<FlagCheckeredIcon
+									className={previewStyles.endStateIcon}
+									data-flx="messaging.recent-mentions-content.flag-checkered-icon"
+								/>
+								<div
+									className={previewStyles.endStateTextContainer}
+									data-flx="messaging.recent-mentions-content.div--10"
+								>
+									<h3 className={previewStyles.endStateTitle} data-flx="messaging.recent-mentions-content.h3--2">
+										<Trans>You've reached the end</Trans>
+									</h3>
+									<p className={previewStyles.endStateDescription} data-flx="messaging.recent-mentions-content.p--2">
+										<Trans>You've seen all your recent mentions. More will appear here soon.</Trans>
+									</p>
+								</div>
 							</div>
 						</div>
-					</div>
-				)}
-			</Scroller>
+					)}
+				</Scroller>
+			</NearViewportSurfaceContext.Provider>
 		);
 	},
 );
