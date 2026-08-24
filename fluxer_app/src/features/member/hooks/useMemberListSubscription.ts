@@ -28,13 +28,12 @@ interface MemberListSubscriptionControl {
 	verifyHydration: () => void;
 }
 
-type MemberListSubscriptionPhase = 'offline' | 'hydrating' | 'settled' | 'freshSession';
+type MemberListSubscriptionPhase = 'offline' | 'hydrating' | 'settled';
 
 const INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES = normalizeMemberListRanges([[0, MEMBER_LIST_RANGE_MAX_SPAN]]);
+const MEMBER_LIST_SUBSCRIPTION_SETTLE_MS = 50;
 const MEMBER_LIST_RESUBSCRIBE_DELAY_MS = 1000;
 const MEMBER_LIST_MAX_RESUBSCRIBE_ATTEMPTS = 3;
-const MEMBER_LIST_RECOVERY_DELAY_MS = 3000;
-const MEMBER_LIST_MAX_RECOVERY_ATTEMPTS = 2;
 const logger = new Logger('useMemberListSubscription');
 
 let nextMemberListSubscriptionOwnerId = 0;
@@ -56,7 +55,43 @@ export function useMemberListSubscription({
 }: UseMemberListSubscriptionOptions): UseMemberListSubscriptionResult {
 	const [ownerId] = useState(createMemberListSubscriptionOwnerId);
 	const desiredRangesRef = useRef<NormalizedMemberListRanges>(INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES);
+	const pendingDesiredRangesRef = useRef<NormalizedMemberListRanges | null>(null);
+	const settleTimerRef = useRef<number | null>(null);
 	const controlRef = useRef<MemberListSubscriptionControl | null>(null);
+
+	const clearSettleTimer = useCallback(() => {
+		if (settleTimerRef.current == null) {
+			return;
+		}
+		window.clearTimeout(settleTimerRef.current);
+		settleTimerRef.current = null;
+	}, []);
+
+	const sendWithoutControl = useCallback(
+		(nextDesiredRanges: NormalizedMemberListRanges) => {
+			if (!MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId)) {
+				MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
+			}
+			MemberSidebar.subscribeToChannel(guildId, channelId, nextDesiredRanges, ownerId);
+		},
+		[guildId, channelId, ownerId],
+	);
+
+	const commitDesiredRanges = useCallback(() => {
+		settleTimerRef.current = null;
+		const nextDesiredRanges = pendingDesiredRangesRef.current;
+		pendingDesiredRangesRef.current = null;
+		if (nextDesiredRanges == null) {
+			return;
+		}
+		desiredRangesRef.current = nextDesiredRanges;
+		const control = controlRef.current;
+		if (control != null) {
+			control.handleDesiredRanges(true);
+			return;
+		}
+		sendWithoutControl(nextDesiredRanges);
+	}, [sendWithoutControl]);
 
 	const subscribe = useCallback(
 		(ranges: MemberListRanges) => {
@@ -64,27 +99,37 @@ export function useMemberListSubscription({
 				return;
 			}
 			const nextDesiredRanges = resolveDesiredRanges(ranges);
-			const desiredRangesChanged = !areNormalizedMemberListRangesEqual(desiredRangesRef.current, nextDesiredRanges);
-			desiredRangesRef.current = nextDesiredRanges;
-			const control = controlRef.current;
-			if (control != null) {
-				control.handleDesiredRanges(desiredRangesChanged);
-				if (!desiredRangesChanged) {
+			if (areNormalizedMemberListRangesEqual(desiredRangesRef.current, nextDesiredRanges)) {
+				pendingDesiredRangesRef.current = null;
+				clearSettleTimer();
+				const control = controlRef.current;
+				if (control != null) {
+					control.handleDesiredRanges(false);
 					control.verifyHydration();
+					return;
 				}
+				sendWithoutControl(desiredRangesRef.current);
 				return;
 			}
-			if (!MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId)) {
-				MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
-			}
-			MemberSidebar.subscribeToChannel(guildId, channelId, desiredRangesRef.current, ownerId);
+			pendingDesiredRangesRef.current = nextDesiredRanges;
+			clearSettleTimer();
+			settleTimerRef.current = window.setTimeout(commitDesiredRanges, MEMBER_LIST_SUBSCRIPTION_SETTLE_MS);
 		},
-		[guildId, channelId, enabled, ownerId],
+		[enabled, clearSettleTimer, commitDesiredRanges, sendWithoutControl],
 	);
 
 	useEffect(() => {
 		desiredRangesRef.current = INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES;
-	}, [guildId, channelId]);
+		pendingDesiredRangesRef.current = null;
+		clearSettleTimer();
+	}, [guildId, channelId, enabled, clearSettleTimer]);
+
+	useEffect(() => {
+		return () => {
+			pendingDesiredRangesRef.current = null;
+			clearSettleTimer();
+		};
+	}, [clearSettleTimer]);
 
 	useEffect(() => {
 		if (!enabled) {
@@ -94,8 +139,6 @@ export function useMemberListSubscription({
 		let reconciliationScheduled = false;
 		let retryTimer: number | null = null;
 		let hydrationGeneration = 0;
-		let freshSessionResetId: string | null = null;
-		let recoveryAttemptCount = 0;
 		let resubscribeAttemptCount = 0;
 		let phase: MemberListSubscriptionPhase = 'offline';
 
@@ -122,13 +165,12 @@ export function useMemberListSubscription({
 		function beginRecoveryDemand(): void {
 			clearRetryTimer();
 			hydrationGeneration += 1;
-			recoveryAttemptCount = 0;
 			resubscribeAttemptCount = 0;
 		}
 
 		function resendStaleSubscription(): void {
 			clearRetryTimer();
-			if (disposed || phase === 'freshSession' || !ownsSubscription()) {
+			if (disposed || !ownsSubscription()) {
 				return;
 			}
 			if (!gatewayAvailable()) {
@@ -141,11 +183,11 @@ export function useMemberListSubscription({
 				channelId,
 				attempt: resubscribeAttemptCount,
 			});
-			sendDesiredRequest();
+			sendDesiredRequest(true);
 		}
 
 		function scheduleResubscribe(): void {
-			if (retryTimer != null) {
+			if (retryTimer != null || resubscribeAttemptCount >= MEMBER_LIST_MAX_RESUBSCRIBE_ATTEMPTS) {
 				return;
 			}
 			const scheduledGeneration = hydrationGeneration;
@@ -158,76 +200,23 @@ export function useMemberListSubscription({
 			}, MEMBER_LIST_RESUBSCRIBE_DELAY_MS);
 		}
 
-		function scheduleHydrationRecovery(): void {
-			if (resubscribeAttemptCount < MEMBER_LIST_MAX_RESUBSCRIBE_ATTEMPTS) {
-				scheduleResubscribe();
-				return;
-			}
-			scheduleSessionReplacement();
-		}
-
-		function replaceStaleSession(): void {
-			clearRetryTimer();
-			if (
-				disposed ||
-				recoveryAttemptCount >= MEMBER_LIST_MAX_RECOVERY_ATTEMPTS ||
-				phase === 'freshSession' ||
-				!ownsSubscription()
-			) {
-				return;
-			}
-			const socket = GatewayConnection.socket;
-			if (!gatewayAvailable() || socket == null) {
-				phase = 'offline';
-				return;
-			}
-			freshSessionResetId = GatewayConnection.sessionId;
-			if (freshSessionResetId == null) {
-				phase = 'offline';
-				return;
-			}
-			recoveryAttemptCount += 1;
-			phase = 'freshSession';
-			logger.warn('Member list hydration stalled; replacing the stale Gateway session', {guildId, channelId});
-			socket.reset(true);
-		}
-
-		function scheduleSessionReplacement(): void {
-			if (recoveryAttemptCount >= MEMBER_LIST_MAX_RECOVERY_ATTEMPTS || retryTimer != null) {
-				return;
-			}
-			const scheduledGeneration = hydrationGeneration;
-			retryTimer = window.setTimeout(() => {
-				retryTimer = null;
-				if (scheduledGeneration !== hydrationGeneration) {
-					return;
-				}
-				replaceStaleSession();
-			}, MEMBER_LIST_RECOVERY_DELAY_MS);
-		}
-
 		function verifyHydration(): void {
 			if (disposed || !ownsSubscription()) {
 				return;
 			}
-			if (phase === 'freshSession') {
-				return;
-			}
 			if (hasHydratedDesiredRanges()) {
 				clearRetryTimer();
-				recoveryAttemptCount = 0;
 				resubscribeAttemptCount = 0;
-				freshSessionResetId = null;
 				phase = 'settled';
 				return;
 			}
 			if (phase === 'settled' || phase === 'hydrating') {
 				phase = 'hydrating';
-				scheduleHydrationRecovery();
+				scheduleResubscribe();
 			}
 		}
 
-		function sendDesiredRequest(): void {
+		function sendDesiredRequest(forceResend = false): void {
 			clearRetryTimer();
 			if (disposed || !gatewayAvailable()) {
 				phase = 'offline';
@@ -236,7 +225,14 @@ export function useMemberListSubscription({
 			if (!ownsSubscription()) {
 				MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
 			}
-			if (!MemberSidebar.retryChannelSubscription(guildId, channelId, desiredRangesRef.current, ownerId)) {
+			const reachedWire = MemberSidebar.retryChannelSubscription(
+				guildId,
+				channelId,
+				desiredRangesRef.current,
+				ownerId,
+				forceResend,
+			);
+			if (!reachedWire && !ownsSubscription()) {
 				phase = 'offline';
 				return;
 			}
@@ -267,9 +263,6 @@ export function useMemberListSubscription({
 			if (!changed && !reclaimedOwnership) {
 				return;
 			}
-			if (phase === 'freshSession') {
-				return;
-			}
 			sendDesiredRequest();
 		}
 
@@ -277,14 +270,6 @@ export function useMemberListSubscription({
 			if (disposed || !gatewayAvailable()) {
 				return;
 			}
-			if (
-				phase === 'freshSession' &&
-				freshSessionResetId != null &&
-				GatewayConnection.sessionId === freshSessionResetId
-			) {
-				return;
-			}
-			freshSessionResetId = null;
 			if (!ownsSubscription()) {
 				if (MemberSidebar.hasActiveMemberListSubscription()) {
 					return;
@@ -324,9 +309,7 @@ export function useMemberListSubscription({
 				if (!isAvailable) {
 					clearRetryTimer();
 					MemberSidebar.handleGatewayDisconnected();
-					if (phase !== 'freshSession') {
-						phase = 'offline';
-					}
+					phase = 'offline';
 					return;
 				}
 				scheduleReconciliation();

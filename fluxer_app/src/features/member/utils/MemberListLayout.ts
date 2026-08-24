@@ -23,22 +23,22 @@ export function buildMemberListLayout(groups: ReadonlyArray<MemberListGroupSnaps
 	for (const group of groups) {
 		const effectiveCount = Math.max(0, group.count);
 		if (effectiveCount === 0) {
-		} else {
-			const headerRowIndex = rowIndex;
-			const memberStartIndex = memberIndex;
-			const memberEndIndex = memberIndex + effectiveCount - 1;
-			const rowEndIndex = headerRowIndex + effectiveCount;
-			layouts.push({
-				id: group.id,
-				count: effectiveCount,
-				headerRowIndex,
-				memberStartIndex,
-				memberEndIndex,
-				rowEndIndex,
-			});
-			rowIndex = rowEndIndex + 1;
-			memberIndex = memberEndIndex + 1;
+			continue;
 		}
+		const headerRowIndex = rowIndex;
+		const memberStartIndex = memberIndex;
+		const memberEndIndex = memberIndex + effectiveCount - 1;
+		const rowEndIndex = headerRowIndex + effectiveCount;
+		layouts.push({
+			id: group.id,
+			count: effectiveCount,
+			headerRowIndex,
+			memberStartIndex,
+			memberEndIndex,
+			rowEndIndex,
+		});
+		rowIndex = rowEndIndex + 1;
+		memberIndex = memberEndIndex + 1;
 	}
 	return layouts;
 }
@@ -66,13 +66,33 @@ export function buildMemberListRowOffsets(
 	if (safeTotalRows === 0) {
 		return offsets;
 	}
-	const headerRows = new Set<number>();
+	let rowIndex = 0;
+	let runningOffset = 0;
 	for (const layout of layouts) {
-		headerRows.add(layout.headerRowIndex);
+		if (rowIndex >= safeTotalRows) {
+			break;
+		}
+		while (rowIndex < layout.headerRowIndex && rowIndex < safeTotalRows) {
+			runningOffset += memberHeight;
+			rowIndex += 1;
+			offsets[rowIndex] = runningOffset;
+		}
+		if (rowIndex === layout.headerRowIndex && rowIndex < safeTotalRows) {
+			runningOffset += headerHeight;
+			rowIndex += 1;
+			offsets[rowIndex] = runningOffset;
+		}
+		const lastMemberRow = Math.min(layout.rowEndIndex, safeTotalRows - 1);
+		while (rowIndex <= lastMemberRow) {
+			runningOffset += memberHeight;
+			rowIndex += 1;
+			offsets[rowIndex] = runningOffset;
+		}
 	}
-	for (let rowIndex = 0; rowIndex < safeTotalRows; rowIndex += 1) {
-		const rowHeight = headerRows.has(rowIndex) ? headerHeight : memberHeight;
-		offsets[rowIndex + 1] = offsets[rowIndex]! + rowHeight;
+	while (rowIndex < safeTotalRows) {
+		runningOffset += memberHeight;
+		rowIndex += 1;
+		offsets[rowIndex] = runningOffset;
 	}
 	return offsets;
 }
@@ -113,15 +133,23 @@ export function getGroupLayoutForRow(
 	layouts: ReadonlyArray<MemberListGroupLayout>,
 	rowIndex: number,
 ): MemberListGroupLayout | null {
-	for (const layout of layouts) {
-		if (rowIndex < layout.headerRowIndex) {
-			return null;
-		}
-		if (rowIndex <= layout.rowEndIndex) {
-			return layout;
+	let low = 0;
+	let high = layouts.length - 1;
+	let candidate: MemberListGroupLayout | null = null;
+	while (low <= high) {
+		const mid = (low + high) >> 1;
+		const layout = layouts[mid]!;
+		if (layout.headerRowIndex <= rowIndex) {
+			candidate = layout;
+			low = mid + 1;
+		} else {
+			high = mid - 1;
 		}
 	}
-	return null;
+	if (candidate == null || rowIndex > candidate.rowEndIndex) {
+		return null;
+	}
+	return candidate;
 }
 
 export function getMemberIndexForRow(
@@ -166,15 +194,23 @@ export function getRowIndexForMemberIndex(
 	if (layouts.length === 0) {
 		return memberIndex;
 	}
-	for (const layout of layouts) {
-		if (memberIndex < layout.memberStartIndex) {
-			return null;
-		}
-		if (memberIndex <= layout.memberEndIndex) {
-			return layout.headerRowIndex + 1 + (memberIndex - layout.memberStartIndex);
+	let low = 0;
+	let high = layouts.length - 1;
+	let candidate: MemberListGroupLayout | null = null;
+	while (low <= high) {
+		const mid = (low + high) >> 1;
+		const layout = layouts[mid]!;
+		if (layout.memberStartIndex <= memberIndex) {
+			candidate = layout;
+			low = mid + 1;
+		} else {
+			high = mid - 1;
 		}
 	}
-	return null;
+	if (candidate == null || memberIndex > candidate.memberEndIndex) {
+		return null;
+	}
+	return candidate.headerRowIndex + 1 + (memberIndex - candidate.memberStartIndex);
 }
 
 export function getRowIndexRangeForMemberIndexRange(
@@ -188,4 +224,23 @@ export function getRowIndexRangeForMemberIndexRange(
 		return null;
 	}
 	return [start, end];
+}
+
+export interface MemberListScrollSpan {
+	top: number;
+	height: number;
+}
+
+export function quantizeMemberListScrollSpan(
+	scrollTop: number,
+	viewportHeight: number,
+	chunkPx: number,
+): MemberListScrollSpan {
+	const safeChunkPx = Number.isFinite(chunkPx) && chunkPx > 0 ? chunkPx : 1;
+	const safeScrollTop = Number.isFinite(scrollTop) ? Math.max(0, scrollTop) : 0;
+	const safeViewportHeight = Number.isFinite(viewportHeight) ? Math.max(0, viewportHeight) : 0;
+	const firstChunk = Math.floor(safeScrollTop / safeChunkPx) - 1;
+	const lastChunk = Math.ceil((safeScrollTop + safeViewportHeight) / safeChunkPx) + 1;
+	const top = Math.max(0, firstChunk * safeChunkPx);
+	return {top, height: Math.max(0, lastChunk * safeChunkPx - top)};
 }
