@@ -2,6 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {getNotificationIconURL} from '@app/features/notification/utils/NotificationIconURL';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import type {NotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {getNotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
@@ -12,7 +13,6 @@ import Sound from '@app/features/ui/state/Sound';
 import {getElectronAPI, hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {isInstalledIOSPwa, isInstalledPwa, isMobileOrTablet} from '@app/features/ui/utils/PwaUtils';
 import Users from '@app/features/user/state/Users';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -126,12 +126,13 @@ const requestBrowserPermission = async (): Promise<PermissionResult> => {
 		return 'denied';
 	}
 };
+
 const getCurrentUserAvatar = (): string | null => {
 	const currentUserId = Authentication.currentUserId;
 	if (!currentUserId) return null;
 	const currentUser = Users.getUser(currentUserId);
 	if (!currentUser) return null;
-	return AvatarUtils.getUserNotificationAvatarURL(currentUser);
+	return getNotificationIconURL(currentUser);
 };
 
 async function handleDeniedPermission(i18n: I18n): Promise<void> {

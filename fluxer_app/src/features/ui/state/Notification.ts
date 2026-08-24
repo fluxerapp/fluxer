@@ -13,6 +13,7 @@ import * as MessageUtils from '@app/features/messaging/utils/MessageUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
+import {getNotificationIconURL} from '@app/features/notification/utils/NotificationIconURL';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
 import * as PushSubscriptionService from '@app/features/platform/push/PushSubscriptionService';
 import {IS_DEV} from '@app/features/platform/types/Env';
@@ -29,7 +30,6 @@ import {isInstalledPwa} from '@app/features/ui/utils/PwaUtils';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {FAVORITES_GUILD_ID as ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes, MessageFlags, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -283,10 +283,7 @@ class NotificationState {
 	}
 
 	private markNotified(key: string): void {
-		const newCache = new LRUCache<string, boolean>({max: CACHE_SIZE});
-		this.notifiedMessageIds.forEach((value, k) => newCache.set(k, value));
-		newCache.set(key, true);
-		this.notifiedMessageIds = newCache;
+		this.notifiedMessageIds.set(key, true);
 	}
 
 	private claimNotification(key: string): boolean {
@@ -357,7 +354,7 @@ class NotificationState {
 				title,
 				subtitle,
 				body,
-				icon: AvatarUtils.getUserNotificationAvatarURL(user),
+				icon: getNotificationIconURL(user, channel.guildId),
 				url: notificationUrl,
 				playSound: false,
 			});
@@ -447,7 +444,7 @@ class NotificationState {
 		this.unreadMessageBadgeEnabled = enabled;
 	}
 
-	handleWindowFocus({focused}: {focused: boolean}): void {
+	handleWindowFocused({focused}: {focused: boolean}): void {
 		this.focused = focused;
 		if (focused) {
 			const channelId = SelectedChannel.currentChannelId;
@@ -524,7 +521,7 @@ class NotificationState {
 			id: cacheKey,
 			title,
 			body,
-			icon: AvatarUtils.getUserNotificationAvatarURL(user),
+			icon: getNotificationIconURL(user),
 			url: Routes.ME,
 		}).catch((error) => {
 			logger.error('Failed to show relationship notification', {cacheKey}, error);

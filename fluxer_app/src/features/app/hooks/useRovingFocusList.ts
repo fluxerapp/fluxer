@@ -248,7 +248,7 @@ export const useRovingFocusList = <T extends HTMLElement>(options: UseRovingFocu
 	}, [node, enabled, getCachedFocusableElements]);
 	useEffect(() => {
 		if (!node || !restoreFocusOnWindowFocus || !enabled) return;
-		const handleWindowFocus = () => {
+		const handleWindowFocused = () => {
 			const {focusableSelector: selector, manageTabIndex: manage} = latestOptionsRef.current;
 			const focusable = manage
 				? getCachedFocusableElements(node, selector, true)
@@ -265,9 +265,9 @@ export const useRovingFocusList = <T extends HTMLElement>(options: UseRovingFocu
 				target.focus();
 			}
 		};
-		window.addEventListener('focus', handleWindowFocus);
+		window.addEventListener('focus', handleWindowFocused);
 		return () => {
-			window.removeEventListener('focus', handleWindowFocus);
+			window.removeEventListener('focus', handleWindowFocused);
 		};
 	}, [node, restoreFocusOnWindowFocus, enabled, getCachedFocusableElements]);
 	useEffect(() => {

@@ -7,7 +7,7 @@ import Window from '@app/features/window/state/Window';
 
 function applyFocusSideEffects(focused: boolean): void {
 	GuildReadState.handleWindowFocused();
-	Notification.handleWindowFocus({focused});
+	Notification.handleWindowFocused({focused});
 	if (focused) {
 		Idle.recordActivity();
 	}
