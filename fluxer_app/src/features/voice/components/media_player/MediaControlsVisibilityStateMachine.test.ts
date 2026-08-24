@@ -42,17 +42,24 @@ describe('MediaControlsVisibilityStateMachine', () => {
 		expect(selectMediaControlsVisible(snapshot, signals())).toBe(true);
 	});
 
-	it('keeps controls visible when disabled, paused, interacting, or hovered', () => {
+	it('keeps controls visible when disabled, paused, or interacting', () => {
 		let snapshot = createMediaControlsVisibilitySnapshot();
 		snapshot = send(snapshot, {type: 'controls.hide'});
 
 		expect(selectMediaControlsVisible(snapshot, signals({disabled: true}))).toBe(true);
 		expect(selectMediaControlsVisible(snapshot, signals({isPlaying: false}))).toBe(true);
 		expect(selectMediaControlsVisible(snapshot, signals({isInteracting: true}))).toBe(true);
+	});
 
+	it('lets a resting pointer inside the player still lose the controls', () => {
+		let snapshot = createMediaControlsVisibilitySnapshot();
 		snapshot = send(snapshot, {type: 'controls.mouseEnter'});
-		snapshot = send(snapshot, {type: 'controls.hide'});
 		expect(selectMediaControlsVisible(snapshot, signals())).toBe(true);
+
+		snapshot = send(snapshot, {type: 'controls.hide'});
+
+		expect(getMediaControlsVisibilityValue(snapshot)).toBe('hidden');
+		expect(selectMediaControlsVisible(snapshot, signals())).toBe(false);
 	});
 
 	it('hides on pointer leave only while playback is active and not interacting', () => {

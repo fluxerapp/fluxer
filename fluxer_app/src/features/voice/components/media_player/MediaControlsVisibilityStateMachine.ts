@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MediaControlsVisibilitySignals {
 	disabled: boolean;
@@ -18,18 +18,9 @@ export type MediaControlsVisibilityEvent =
 	| {type: 'controls.mouseLeave'; signals: MediaControlsVisibilitySignals}
 	| {type: 'controls.touchStart'; signals: MediaControlsVisibilitySignals};
 
-interface MediaControlsVisibilityContext {
-	isHovered: boolean;
-}
-
 export const mediaControlsVisibilityStateMachine = setup({
 	types: {} as {
-		context: MediaControlsVisibilityContext;
 		events: MediaControlsVisibilityEvent;
-	},
-	actions: {
-		markHovered: assign(() => ({isHovered: true})),
-		markUnhovered: assign(() => ({isHovered: false})),
 	},
 	guards: {
 		shouldHideOnPointerLeave: ({event}) =>
@@ -39,7 +30,6 @@ export const mediaControlsVisibilityStateMachine = setup({
 	},
 }).createMachine({
 	id: 'mediaControlsVisibility',
-	context: () => ({isHovered: false}),
 	initial: 'visible',
 	states: {
 		visible: {
@@ -47,11 +37,8 @@ export const mediaControlsVisibilityStateMachine = setup({
 				'controls.show': {target: 'visible'},
 				'controls.hide': {target: 'hidden'},
 				'controls.mouseMove': {target: 'visible'},
-				'controls.mouseEnter': {target: 'visible', actions: 'markHovered'},
-				'controls.mouseLeave': [
-					{target: 'hidden', guard: 'shouldHideOnPointerLeave', actions: 'markUnhovered'},
-					{target: 'visible', actions: 'markUnhovered'},
-				],
+				'controls.mouseEnter': {target: 'visible'},
+				'controls.mouseLeave': [{target: 'hidden', guard: 'shouldHideOnPointerLeave'}, {target: 'visible'}],
 				'controls.touchStart': [{target: 'hidden', guard: 'shouldToggleOnTouch'}, {target: 'visible'}],
 			},
 		},
@@ -60,8 +47,8 @@ export const mediaControlsVisibilityStateMachine = setup({
 				'controls.show': {target: 'visible'},
 				'controls.hide': {target: 'hidden'},
 				'controls.mouseMove': {target: 'visible'},
-				'controls.mouseEnter': {target: 'visible', actions: 'markHovered'},
-				'controls.mouseLeave': {target: 'hidden', actions: 'markUnhovered'},
+				'controls.mouseEnter': {target: 'visible'},
+				'controls.mouseLeave': {target: 'hidden'},
 				'controls.touchStart': {target: 'visible'},
 			},
 		},
@@ -96,7 +83,6 @@ export function selectMediaControlsVisible(
 		signals.disabled ||
 		!signals.isPlaying ||
 		signals.isInteracting ||
-		snapshot.context.isHovered ||
 		getMediaControlsVisibilityValue(snapshot) === 'visible'
 	);
 }
