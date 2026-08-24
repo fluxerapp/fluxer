@@ -52,9 +52,9 @@ pub fn add_media_headers(
     headers.insert(
         header::CACHE_CONTROL,
         HeaderValue::from_static(if streamable {
-            "public, max-age=31536000, no-transform, immutable"
+            "public, max-age=31536000, no-transform"
         } else {
-            "public, max-age=31536000, immutable"
+            "public, max-age=31536000"
         }),
     );
     headers.insert(
@@ -70,18 +70,7 @@ pub fn add_media_headers(
         HeaderValue::from_str(content_type)
             .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
     );
-    headers.insert(
-        header::EXPIRES,
-        HeaderValue::from_static("Thu, 31 Dec 2037 23:55:55 GMT"),
-    );
-    headers.insert(
-        header::LAST_MODIFIED,
-        HeaderValue::from_static("Thu, 01 Jan 1970 00:00:00 GMT"),
-    );
-    headers.insert(
-        header::VARY,
-        HeaderValue::from_static("Accept-Encoding, Range"),
-    );
+    headers.insert(header::VARY, HeaderValue::from_static("Accept-Encoding"));
     headers.insert(
         header::X_CONTENT_TYPE_OPTIONS,
         HeaderValue::from_static("nosniff"),
@@ -107,9 +96,49 @@ pub fn add_unsatisfiable_headers(headers: &mut HeaderMap, size: usize) {
         header::CONTENT_RANGE,
         HeaderValue::from_str(&format!("bytes */{size}")).expect("content-range is ASCII"),
     );
-    headers.insert(
-        header::VARY,
-        HeaderValue::from_static("Accept-Encoding, Range"),
-    );
+    headers.insert(header::VARY, HeaderValue::from_static("Accept-Encoding"));
     headers.insert("X-Robots-Tag", HeaderValue::from_static(ROBOTS));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn media_headers_always_cache_forever() {
+        let mut headers = HeaderMap::new();
+        add_media_headers(&mut headers, 10, "image/png", None);
+        assert_eq!(
+            "public, max-age=31536000",
+            headers.get(header::CACHE_CONTROL).unwrap()
+        );
+
+        let mut streamable = HeaderMap::new();
+        add_media_headers(&mut streamable, 10, "video/mp4", None);
+        assert_eq!(
+            "public, max-age=31536000, no-transform",
+            streamable.get(header::CACHE_CONTROL).unwrap()
+        );
+
+        let mut audio = HeaderMap::new();
+        add_media_headers(&mut audio, 10, "audio/ogg", None);
+        assert_eq!(
+            "public, max-age=31536000, no-transform",
+            audio.get(header::CACHE_CONTROL).unwrap()
+        );
+    }
+
+    #[test]
+    fn media_headers_pair_the_policy_with_cdn_cache_control_and_omit_expires() {
+        let mut headers = HeaderMap::new();
+        add_media_headers(&mut headers, 10, "image/png", None);
+        assert_eq!(
+            "public, max-age=31536000",
+            headers.get("CDN-Cache-Control").unwrap()
+        );
+        assert!(
+            headers.get(header::EXPIRES).is_none(),
+            "Cache-Control is authoritative; a fixed Expires date only contradicts it"
+        );
+    }
 }
