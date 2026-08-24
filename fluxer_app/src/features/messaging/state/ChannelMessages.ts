@@ -293,7 +293,6 @@ export class ChannelMessages {
 	jumpDestinationOffset = 0;
 	jumpTicket = 1;
 	hasJumped = false;
-	jumpedToPresent = false;
 	landedAtLiveEdge = false;
 	jumpHighlight = true;
 	jumpReturnMessageId: string | null = null;

@@ -115,9 +115,6 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 		const unreadDividerBeforeMessageId = getUnreadDividerBeforeMessageId(pendingStreamItems, suppressUnreadIndicator);
 		const firstMessageHasUnreadDivider = unreadDividerBeforeMessageId === pendingMessages[0].id;
 		pushSpacerIfNeeded(groupKind, groupKey, firstMessageHasUnreadDivider);
-		const getUnreadDividerVisibility = (messageId: string, position: 'before' | 'after') => {
-			return position === 'before' && unreadDividerBeforeMessageId === messageId;
-		};
 		nodes.push(
 			<MessageGroup
 				key={groupKey}
@@ -127,7 +124,8 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 				highlightedMessageId={highlightedMessageId}
 				messageDisplayCompact={messageDisplayCompact}
 				flashKey={pendingFlashKey}
-				getUnreadDividerVisibility={getUnreadDividerVisibility}
+				showUnreadDividerSlots={true}
+				unreadDividerBeforeMessageId={unreadDividerBeforeMessageId}
 				idPrefix="chat-messages"
 				messageRowClassName={messageRowClassName}
 				messageActionsClassName={messageActionsClassName}

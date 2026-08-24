@@ -36,22 +36,22 @@ const MARK_READ_DESCRIPTOR = msg({
 export const NewMessagesBar = observer(
 	({
 		unreadCount,
-		oldestUnreadTimestamp,
+		oldestUnreadMessageTimestamp,
 		isEstimated,
 		onJumpToOldestUnread,
 		onJumpToNewMessages,
 	}: {
 		unreadCount: number;
-		oldestUnreadTimestamp: number;
+		oldestUnreadMessageTimestamp: number;
 		isEstimated: boolean;
 		onJumpToOldestUnread: () => void;
 		onJumpToNewMessages: () => void;
 	}) => {
 		const {i18n} = useLingui();
 		const isMobile = MobileLayout.isMobileLayout();
-		const sameDay = isSameDayBase(oldestUnreadTimestamp);
-		const compactTime = DateUtils.getFormattedCompactDateTime(oldestUnreadTimestamp);
-		const shortTime = sameDay ? DateUtils.getFormattedTime(oldestUnreadTimestamp) : compactTime;
+		const sameDay = isSameDayBase(oldestUnreadMessageTimestamp);
+		const compactTime = DateUtils.getFormattedCompactDateTime(oldestUnreadMessageTimestamp);
+		const shortTime = sameDay ? DateUtils.getFormattedTime(oldestUnreadMessageTimestamp) : compactTime;
 		return (
 			<div className={styles.newMessagesBarBanner} data-flx="channel.new-messages-bar.new-messages-bar">
 				<button

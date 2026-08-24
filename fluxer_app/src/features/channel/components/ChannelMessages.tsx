@@ -18,8 +18,15 @@ import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescri
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessageGetter} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
+import {
+	resolveChannelMessagesWindowStatus,
+	selectChannelMessagesFillerVisible,
+	selectChannelMessagesSpacerHeight,
+	selectChannelMessagesWindowBar,
+} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
 import MessagesState from '@app/features/messaging/state/MessagingMessages';
@@ -51,6 +58,7 @@ import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {clsx} from 'clsx';
 import {runInAction} from 'mobx';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import type React from 'react';
@@ -180,6 +188,16 @@ export const Messages = observer(function Messages({
 		groupSpacing: state.messageGroupSpacing,
 	});
 	const safeMessages = state.messages ?? MessagesState.getMessages(channel.id);
+	const windowStatus = resolveChannelMessagesWindowStatus({
+		ready: safeMessages.ready,
+		loading: safeMessages.loadingMore,
+		failed: safeMessages.error,
+		messageCount: safeMessages.length,
+		hasMoreBefore: safeMessages.hasMoreBefore,
+		hasMoreAfter: safeMessages.hasMoreAfter,
+	});
+	const windowBar = selectChannelMessagesWindowBar(windowStatus);
+	const windowNeedsPage = windowStatus.needsPage;
 	const canAutoAck = shouldAutoAck({
 		channelActive: allowAutoAck,
 		windowFocused: isWindowFocused,
@@ -220,7 +238,7 @@ export const Messages = observer(function Messages({
 		compact: state.messageDisplayCompact,
 		hasPendingUnreads: state.unreadCount > 0,
 		focusAnchorId: null,
-		unloadedSpacerHeight: placeholderSpecs.totalHeight,
+		unloadedSpacerHeight: selectChannelMessagesSpacerHeight(windowStatus, placeholderSpecs.totalHeight),
 		allowHistoryFetch: true,
 		windowId,
 		notifyPinnedToBottom: () => {
@@ -237,6 +255,10 @@ export const Messages = observer(function Messages({
 		canAutoAck,
 		handleJumpHighlight,
 	});
+	const resolveMessageScrollSurface = useMemo(
+		() => () => scrollManager.ref.current?.getViewportElement() ?? null,
+		[scrollManager],
+	);
 	useEffect(() => {
 		ChannelMessages.retainChannel(channel.id);
 		return () => {
@@ -370,9 +392,9 @@ export const Messages = observer(function Messages({
 			const data = (payload ?? {}) as {channelId?: string};
 			if (!data.channelId || data.channelId !== channel.id) return;
 			const scroller = scrollManager.ref.current?.getViewportElement();
-			const scrollerInner = scrollerInnerRef.current;
-			if (!scroller || !scrollerInner) return;
-			const messageElements = scrollerInner.querySelectorAll<HTMLElement>('[data-message-id]');
+			const innerElement = scrollerInnerRef.current;
+			if (!scroller || !innerElement) return;
+			const messageElements = innerElement.querySelectorAll<HTMLElement>('[data-message-id]');
 			if (!messageElements.length) return;
 			const scrollerRect = scroller.getBoundingClientRect();
 			let bottomMostVisibleMessage: HTMLElement | null = null;
@@ -424,16 +446,7 @@ export const Messages = observer(function Messages({
 		}
 	}, [state.editingMessageId, scrollManager]);
 	useEffect(() => {
-		const messages = state.messages;
-		if (
-			!messages ||
-			messages.ready ||
-			messages.loadingMore ||
-			messages.error ||
-			messages.length > 0 ||
-			!isGatewayConnected ||
-			selectedChannelId !== channel.id
-		) {
+		if (!windowNeedsPage || !isGatewayConnected || selectedChannelId !== channel.id) {
 			if (recoveryFetchChannelIdRef.current === channel.id) {
 				recoveryFetchChannelIdRef.current = null;
 			}
@@ -448,15 +461,7 @@ export const Messages = observer(function Messages({
 				recoveryFetchChannelIdRef.current = null;
 			}
 		});
-	}, [
-		channel.id,
-		isGatewayConnected,
-		selectedChannelId,
-		state.messages?.ready,
-		state.messages?.loadingMore,
-		state.messages?.error,
-		state.messageVersion,
-	]);
+	}, [channel.id, isGatewayConnected, selectedChannelId, windowNeedsPage, state.messageVersion]);
 	useMessageListKeyboardNavigation({
 		containerRef: scrollManager.ref,
 		channelId: channel.id,
@@ -506,14 +511,14 @@ export const Messages = observer(function Messages({
 	}, [channel.id]);
 	const spammerOverrideVersion = LocalUserSpamOverride.version;
 	const channelStream = useMemo<Array<ChannelStreamItem>>(() => {
-		if (!state.messages?.ready) return [];
+		if (!state.messages) return [];
 		return createChannelStream({
 			channel,
 			messages: state.messages,
 			oldestUnreadMessageId: state.visualUnreadMessageId,
 			treatSpam: true,
 		});
-	}, [channel, state.messages?.ready, state.messageVersion, state.visualUnreadMessageId, spammerOverrideVersion]);
+	}, [channel, state.messages, state.messageVersion, state.visualUnreadMessageId, spammerOverrideVersion]);
 	useEffect(() => {
 		const messages = state.messages;
 		if (!messages?.ready) {
@@ -552,7 +557,7 @@ export const Messages = observer(function Messages({
 		[channel.id, channel.guildId, state.permissionVersion],
 	);
 	const streamMarkup = useMemo(() => {
-		if (!state.messages?.ready) return null;
+		if (!state.messages) return null;
 		return renderChannelStream({
 			channelStream,
 			messages: state.messages,
@@ -566,7 +571,7 @@ export const Messages = observer(function Messages({
 		});
 	}, [
 		channelStream,
-		state.messages?.ready,
+		state.messages,
 		channel,
 		highlightedMessageId,
 		state.messageDisplayCompact,
@@ -575,9 +580,7 @@ export const Messages = observer(function Messages({
 		onMessageEdit,
 		onReveal,
 	]);
-	const hasJumpToPresentBar = Boolean(state.messages?.ready && state.messages.hasMoreAfter);
-	const hasLoadErrorBar = Boolean(state.messages?.error);
-	const hasBottomBar = hasJumpToPresentBar || hasLoadErrorBar;
+	const hasBottomBar = windowBar !== 'none';
 	useEffect(() => {
 		onBottomBarVisibilityChange?.(hasBottomBar);
 	}, [hasBottomBar, onBottomBarVisibilityChange]);
@@ -586,34 +589,33 @@ export const Messages = observer(function Messages({
 			onBottomBarVisibilityChange?.(false);
 		};
 	}, [onBottomBarVisibilityChange]);
-	const jumpToPresentBar = hasJumpToPresentBar ? (
-		<JumpToPresentBar
-			loadingMore={state.messages.loadingMore}
-			jumpedToPresent={state.messages.jumpedToPresent}
-			onJumpToPresent={onScrollToPresent}
-			data-flx="channel.messages.jump-to-present-bar"
-		/>
-	) : null;
-	const loadErrorBar = hasLoadErrorBar ? (
-		<LoadErrorBar
-			loading={state.messages.loadingMore}
-			onRetry={onRetryLoadMessages}
-			data-flx="channel.messages.load-error-bar"
-		/>
-	) : null;
-	const showNewMessagesBar = Boolean(state.messages?.ready && state.unreadCount > 0);
+	const bottomBar =
+		windowBar === 'retry' ? (
+			<LoadErrorBar
+				loading={safeMessages.loadingMore}
+				onRetry={onRetryLoadMessages}
+				data-flx="channel.messages.load-error-bar"
+			/>
+		) : windowBar === 'present' ? (
+			<JumpToPresentBar
+				loadingMore={safeMessages.loadingMore}
+				landedAtLiveEdge={safeMessages.landedAtLiveEdge}
+				onJumpToPresent={onScrollToPresent}
+				data-flx="channel.messages.jump-to-present-bar"
+			/>
+		) : null;
+	const showNewMessagesBar = Boolean(windowStatus.phase === 'stream' && state.unreadCount > 0);
 	const unreadTimestampMessageId = state.oldestUnreadMessageId ?? state.ackMessageId;
 	const topBar = showNewMessagesBar ? (
 		<NewMessagesBar
 			unreadCount={state.unreadCount}
-			oldestUnreadTimestamp={unreadTimestampMessageId ? extractTimestamp(unreadTimestampMessageId) : 0}
+			oldestUnreadMessageTimestamp={unreadTimestampMessageId ? extractTimestamp(unreadTimestampMessageId) : 0}
 			isEstimated={state.isEstimated}
 			onJumpToOldestUnread={onJumpToOldestUnread}
 			onJumpToNewMessages={onScrollToPresentAndAck}
 			data-flx="channel.messages.new-messages-bar"
 		/>
 	) : null;
-	const readyMessages = state.messages?.ready ? state.messages : null;
 	const messagesWrapperStyle = useMemo<MessagesWrapperStyle>(
 		() => ({
 			'--message-group-spacing': remFromPx(state.messageGroupSpacing),
@@ -638,24 +640,36 @@ export const Messages = observer(function Messages({
 		? i18n._(MESSAGE_LIST_FOR_DESCRIPTOR, {channelName: channel.name})
 		: i18n._(MESSAGE_LIST_DESCRIPTOR);
 	const messageListLiveMode = Accessibility.screenReaderAnnounceNewMessages && state.isAtBottom ? 'polite' : 'off';
-	const scrollerInner = readyMessages ? (
+	const topFillerVisible = selectChannelMessagesFillerVisible({
+		reducedMotion: Accessibility.useReducedMotion,
+		scrollManagerInitialized: scrollManager.lifecycleIsInitialized(),
+		ready: safeMessages.ready,
+	});
+	const headFillerVisible = windowStatus.olderPageAvailable && topFillerVisible;
+	const tailFillerVisible = windowStatus.newerPageAvailable;
+	const streamHasRows = streamMarkup != null && streamMarkup.length > 0;
+	const spacerFollowsFiller = tailFillerVisible || (headFillerVisible && !streamHasRows);
+	const scrollerInner = (
 		<>
-			{!readyMessages.hasMoreBefore && (
+			{headFillerVisible && (
+				<ScrollFillerSkeleton data-flx="channel.messages.scroll-filler-skeleton" {...placeholderSpecs} />
+			)}
+			{windowStatus.olderPageAvailable && safeMessages.length > 0 && (
+				<div className={styles.fillerBuffer} data-flx="channel.messages.filler-buffer" />
+			)}
+			{!windowStatus.olderPageAvailable && (
 				<ChannelWelcomeSection channel={channel} data-flx="channel.messages.channel-welcome-section" />
 			)}
-			{readyMessages.hasMoreBefore && (
-				<>
-					<div className={styles.placeholderSpacer} data-flx="channel.messages.placeholder-spacer" />
-					<ScrollFillerSkeleton data-flx="channel.messages.scroll-filler-skeleton" {...placeholderSpecs} />
-				</>
-			)}
 			{streamMarkup}
-			{readyMessages.hasMoreAfter && (
+			{tailFillerVisible && (
 				<ScrollFillerSkeleton data-flx="channel.messages.scroll-filler-skeleton--2" {...placeholderSpecs} />
 			)}
-			<div className={styles.scrollerSpacer} data-flx="channel.messages.scroller-spacer" />
+			<div
+				className={clsx(styles.scrollerSpacer, spacerFollowsFiller && styles.scrollerSpacerAfterFiller)}
+				data-flx="channel.messages.scroller-spacer"
+			/>
 		</>
-	) : null;
+	);
 	return (
 		<div className={styles.messagesWrapper} style={messagesWrapperStyle} data-flx="channel.messages.messages-wrapper">
 			<UploadManager
@@ -692,34 +706,36 @@ export const Messages = observer(function Messages({
 							aria-live={messageListLiveMode}
 							aria-relevant="additions text"
 							aria-atomic="false"
-							aria-busy={state.messages?.loadingMore ? true : undefined}
+							aria-busy={safeMessages.loadingMore ? true : undefined}
 							data-flx="channel.messages.scroller-inner"
 						>
-							<CollapsedMessageVisibilityProvider
-								value={collapsedMessageVisibility}
-								data-flx="channel.messages.collapsed-message-visibility-provider"
-							>
-								{scrollerInner}
-							</CollapsedMessageVisibilityProvider>
+							<NearViewportSurfaceContext.Provider value={resolveMessageScrollSurface}>
+								<CollapsedMessageVisibilityProvider
+									value={collapsedMessageVisibility}
+									data-flx="channel.messages.collapsed-message-visibility-provider"
+								>
+									{scrollerInner}
+								</CollapsedMessageVisibilityProvider>
+							</NearViewportSurfaceContext.Provider>
 						</div>
 					</div>
 				</Scroller>
 			</div>
-			{loadErrorBar !== null ? loadErrorBar : jumpToPresentBar}
+			{bottomBar}
 		</div>
 	);
 });
 const JumpToPresentBar = observer(function JumpToPresentBar({
 	loadingMore,
-	jumpedToPresent,
+	landedAtLiveEdge,
 	onJumpToPresent,
 }: {
 	loadingMore: boolean;
-	jumpedToPresent: boolean;
+	landedAtLiveEdge: boolean;
 	onJumpToPresent: () => void;
 }) {
 	const {i18n} = useLingui();
-	const jumpIsActiveNow = loadingMore && jumpedToPresent;
+	const jumpIsActiveNow = loadingMore && landedAtLiveEdge;
 	return (
 		<div
 			className={[styles.newMessagesBar, styles.messageBottomPill, styles.jumpToPresentBar].join(' ')}

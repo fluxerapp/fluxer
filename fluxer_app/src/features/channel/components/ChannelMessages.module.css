@@ -40,7 +40,11 @@
 	flex-shrink: 0;
 }
 
-.placeholderSpacer {
+.scrollerSpacerAfterFiller {
+	height: calc(var(--messages-bottom-clearance, var(--scroller-spacer-height)) - var(--message-filler-padding-bottom));
+}
+
+.fillerBuffer {
 	flex: 0 0 auto;
 	height: 1rem;
 }

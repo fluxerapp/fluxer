@@ -120,7 +120,7 @@ import type React from 'react';
 import {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const PLUS_MENU_DOUBLE_CLICK_MS = 500;
-const MESSAGE_SCROLLER_SELECTOR = '[data-fluxer-scroll-container="true"]';
+const MESSAGE_SCROLLER_SELECTOR = '[data-flx="channel.messages.scroller"][data-fluxer-scroll-container="true"]';
 const MESSAGE_SCROLLER_BOTTOM_THRESHOLD = 16;
 const getActiveMessageScroller = (): HTMLElement | null =>
 	document.querySelector<HTMLElement>(MESSAGE_SCROLLER_SELECTOR);

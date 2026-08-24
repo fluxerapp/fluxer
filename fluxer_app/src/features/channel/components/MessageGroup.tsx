@@ -12,7 +12,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {Fragment, useMemo} from 'react';
+import {Fragment, memo, useMemo} from 'react';
 
 const MESSAGE_GROUP_DESCRIPTOR = msg({
 	message: 'Message group',
@@ -31,11 +31,12 @@ export interface MessageGroupProps {
 	messages: Array<Message>;
 	channel: Channel;
 	onEdit?: (targetNode: HTMLElement) => void;
-	jumpSequenceId?: number;
+	jumpTicket?: number;
 	highlightedMessageId?: string | null;
 	messageDisplayCompact?: boolean;
 	flashKey?: number;
-	getUnreadDividerVisibility?: (messageId: string, position: 'before' | 'after') => boolean;
+	showUnreadDividerSlots?: boolean;
+	unreadDividerBeforeMessageId?: string | null;
 	idPrefix?: string;
 	messageRowClassName?: string;
 	messageActionsClassName?: string;
@@ -47,16 +48,17 @@ export interface MessageGroupProps {
 	getMessageHeadingActivate?: (message: Message) => (() => void) | undefined;
 }
 
-export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
+const MessageGroupBase: React.FC<MessageGroupProps> = observer((props) => {
 	const {i18n} = useLingui();
 	const {
 		messages,
 		channel,
 		onEdit,
-		jumpSequenceId,
+		jumpTicket,
 		highlightedMessageId,
 		messageDisplayCompact = false,
-		getUnreadDividerVisibility,
+		showUnreadDividerSlots = false,
+		unreadDividerBeforeMessageId = null,
 		idPrefix,
 		messageRowClassName,
 		messageActionsClassName,
@@ -109,10 +111,10 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 				);
 				return (
 					<Fragment key={message.id}>
-						{getUnreadDividerVisibility && (
+						{showUnreadDividerSlots && (
 							<UnreadDividerSlot
 								beforeId={message.id}
-								visible={getUnreadDividerVisibility(message.id, 'before')}
+								visible={unreadDividerBeforeMessageId === message.id}
 								data-flx="channel.message-group.rendered-messages.unread-divider-slot"
 							/>
 						)}
@@ -145,7 +147,8 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 			highlightedMessageId,
 			messageDisplayCompact,
 			idPrefix,
-			getUnreadDividerVisibility,
+			showUnreadDividerSlots,
+			unreadDividerBeforeMessageId,
 			messageRowClassName,
 			messageActionsClassName,
 			renderMessageActions,
@@ -158,7 +161,7 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 	);
 	return (
 		<div
-			data-jump-sequence-id={jumpSequenceId}
+			data-jump-sequence-id={jumpTicket}
 			data-group-id={groupId}
 			role="group"
 			aria-label={i18n._(MESSAGE_GROUP_DESCRIPTOR)}
@@ -168,3 +171,36 @@ export const MessageGroup: React.FC<MessageGroupProps> = observer((props) => {
 		</div>
 	);
 });
+
+function areMessagesEqual(previous: Array<Message>, next: Array<Message>): boolean {
+	if (previous === next) {
+		return true;
+	}
+	if (previous.length !== next.length) {
+		return false;
+	}
+	for (let index = 0; index < previous.length; index++) {
+		if (previous[index] !== next[index]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function arePropsEqual(previous: MessageGroupProps, next: MessageGroupProps): boolean {
+	const previousKeys = Object.keys(previous) as Array<keyof MessageGroupProps>;
+	if (previousKeys.length !== Object.keys(next).length) {
+		return false;
+	}
+	for (const key of previousKeys) {
+		if (key === 'messages') {
+			continue;
+		}
+		if (previous[key] !== next[key]) {
+			return false;
+		}
+	}
+	return areMessagesEqual(previous.messages, next.messages);
+}
+
+export const MessageGroup = memo(MessageGroupBase, arePropsEqual);
