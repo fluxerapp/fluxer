@@ -759,14 +759,14 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 	);
 });
 
+const MINI_GUILD_INITIALS_MAX_LENGTH = 2;
+
 interface MiniGuildIconProps {
 	readonly guild: Guild;
 }
 
 const MiniGuildIcon = observer(({guild}: MiniGuildIconProps) => {
 	const iconURL = AvatarSourceUtils.getGuildIconURL(guild, false);
-	const initials = getInitialsFromName(guild.name);
-	const displayInitials = truncateInitials(initials, 2);
 	if (iconURL !== '') {
 		return (
 			<flx-app-mini-guild-icon
@@ -785,7 +785,7 @@ const MiniGuildIcon = observer(({guild}: MiniGuildIconProps) => {
 				className={styles.miniGuildInitials}
 				data-flx="app.sidebar-nav.guild-folder-item.mini-guild-icon.mini-guild-initials"
 			>
-				{displayInitials}
+				{truncateInitials(getInitialsFromName(guild.name), MINI_GUILD_INITIALS_MAX_LENGTH)}
 			</span>
 		</flx-app-mini-guild-icon>
 	);

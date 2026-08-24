@@ -145,14 +145,9 @@
 	isolation: isolate;
 }
 
-.folderBadgeActive::before,
-.folderBadge:not(:empty)::before {
-	content: '';
-	position: absolute;
-	inset: -0.1875rem;
-	z-index: -1;
-	border-radius: calc(var(--radius-md) + 0.1875rem);
-	background-color: var(--guild-badge-surface);
+.folderBadgeActive,
+.folderBadge:not(:empty) {
+	--mention-badge-cutout-surface: var(--guild-badge-surface);
 }
 
 .expandedFolderBackground {

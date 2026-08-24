@@ -32,5 +32,17 @@
 }
 
 .animatedWrapper {
+	position: relative;
+	display: flex;
 	pointer-events: none;
+	isolation: isolate;
+}
+
+.animatedWrapper::before {
+	content: '';
+	position: absolute;
+	inset: -0.1875rem;
+	z-index: -1;
+	border-radius: calc(var(--radius-md) + 0.1875rem);
+	background-color: var(--mention-badge-cutout-surface, transparent);
 }

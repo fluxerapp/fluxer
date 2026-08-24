@@ -306,14 +306,9 @@
 	isolation: isolate;
 }
 
-.guildBadgeActive::before,
-.guildBadge:not(:empty)::before {
-	content: '';
-	position: absolute;
-	inset: -0.1875rem;
-	z-index: -1;
-	border-radius: calc(var(--radius-md) + 0.1875rem);
-	background-color: var(--guild-badge-surface);
+.guildBadgeActive,
+.guildBadge:not(:empty) {
+	--mention-badge-cutout-surface: var(--guild-badge-surface);
 }
 
 .guildVoiceBadge {

@@ -34,7 +34,6 @@ import {useState} from 'react';
 
 const GUILD_ICON_SIZE = skeletonSurfaceVar('--guild-icon-size');
 const FOLDER_ICON_SIZE = skeletonSurfaceVar('--guild-list-item-box-size');
-const MENTION_BADGE_SIZE = 'var(--guild-rail-skeleton-badge-size)';
 const GUILD_PLACEHOLDER_COUNT = 6;
 const SHOWS_DOWNLOAD_ACTION = !Platform.isElectron && !Platform.isPWA;
 const FALLBACK_ORGANIZED_ITEMS: ReadonlyArray<RememberedSkeletonGuildRailItem> = Object.freeze(
@@ -190,17 +189,6 @@ function showsSkeletonIndicator({indicator, selected}: SkeletonIndicatorVisibili
 	return indicator !== SkeletonGuildRailItemIndicator.NONE;
 }
 
-const MentionBadgePlaceholder = () => (
-	<SkeletonBlock
-		width={MENTION_BADGE_SIZE}
-		height={MENTION_BADGE_SIZE}
-		radius={SkeletonRadius.MEDIUM}
-		emphasis={SkeletonEmphasis.MUTED}
-		className={styles.mentionBadge}
-		data-flx="app.skeleton.guild-rail-skeleton.mention-badge-placeholder.mention-badge"
-	/>
-);
-
 const GuildPlaceholder = ({
 	indicator,
 	selected,
@@ -223,9 +211,6 @@ const GuildPlaceholder = ({
 			size={GUILD_ICON_SIZE}
 			data-flx="app.skeleton.guild-rail-skeleton.guild-placeholder.skeleton-circle"
 		/>
-		{indicator === SkeletonGuildRailItemIndicator.MENTION && (
-			<MentionBadgePlaceholder data-flx="app.skeleton.guild-rail-skeleton.guild-placeholder.mention-badge-placeholder" />
-		)}
 	</flx-app-guild-rail-skeleton-item-slot>
 );
 
@@ -326,9 +311,6 @@ const CollapsedFolderPlaceholder = ({
 				</flx-app-guild-rail-skeleton-collapsed-folder-grid>
 			)}
 		</flx-app-guild-rail-skeleton-collapsed-folder>
-		{indicator === SkeletonGuildRailItemIndicator.MENTION && (
-			<MentionBadgePlaceholder data-flx="app.skeleton.guild-rail-skeleton.collapsed-folder-placeholder.mention-badge-placeholder" />
-		)}
 	</flx-app-guild-rail-skeleton-item-slot>
 );
 
@@ -354,9 +336,6 @@ const ExpandedFolderGuildPlaceholder = ({
 			size={GUILD_ICON_SIZE}
 			data-flx="app.skeleton.guild-rail-skeleton.expanded-folder-guild-placeholder.skeleton-circle"
 		/>
-		{indicator === SkeletonGuildRailItemIndicator.MENTION && (
-			<MentionBadgePlaceholder data-flx="app.skeleton.guild-rail-skeleton.expanded-folder-guild-placeholder.mention-badge-placeholder" />
-		)}
 	</flx-app-guild-rail-skeleton-expanded-folder-guild>
 );
 

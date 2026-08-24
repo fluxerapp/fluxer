@@ -59,7 +59,6 @@
 }
 
 .itemSlot {
-	--guild-rail-skeleton-badge-size: var(--mention-badge-small-size);
 	position: relative;
 	display: flex;
 	align-items: center;
@@ -80,18 +79,6 @@
 
 .outageSlot {
 	min-height: var(--guild-list-item-box-size);
-}
-
-.mentionBadge {
-	position: absolute;
-	right: calc(50% - var(--guild-icon-size) / 2 - 0.25rem);
-	bottom: calc(50% - var(--guild-icon-size) / 2 - 0.25rem);
-	box-shadow: 0 0 0 0.1875rem var(--guild-badge-surface);
-}
-
-.folderSlot .mentionBadge {
-	right: -0.25rem;
-	bottom: -0.25rem;
 }
 
 .itemsTrailingGapCancel {
