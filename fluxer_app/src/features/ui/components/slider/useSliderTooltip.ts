@@ -2,7 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {useTooltipPortalRoot} from '@app/features/ui/tooltip/Tooltip';
+import {getFullscreenOverflowBoundary, useTooltipPortalRoot} from '@app/features/ui/tooltip/Tooltip';
 import {appZoomCssPx, appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {
 	getReducedMotionProps,
@@ -101,9 +101,17 @@ export function useSliderTooltip({
 				left: '-9999px',
 				top: '-9999px',
 			});
-			const middleware = [offset(8), flip(), shift({padding: 8}), arrow({element: arrowRef})];
+			const overflowBoundary = getFullscreenOverflowBoundary(target);
+			const boundaryOptions = overflowBoundary ? {boundary: overflowBoundary} : undefined;
+			const middleware = [
+				offset(8),
+				flip(boundaryOptions),
+				shift({padding: 8, ...boundaryOptions}),
+				arrow({element: arrowRef}),
+			];
 			const {x, y, middlewareData} = await computePosition(target, tooltip, {
 				placement: 'top',
+				strategy: 'fixed',
 				middleware,
 			});
 			Object.assign(tooltip.style, {

@@ -26,6 +26,7 @@ import {
 	subscribeWindowHoverControlsChange,
 } from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import {elementSupportsRef} from '@app/lib/react';
+import type {ExtendedDocument} from '@app/types/browser.d';
 import {FloatingPortal} from '@floating-ui/react';
 import {arrow, autoUpdate, computePosition, flip, offset, shift} from '@floating-ui/react-dom';
 import {clsx} from 'clsx';
@@ -46,6 +47,20 @@ const TOOLTIP_AUTO_UPDATE_OPTIONS = {
 	elementResize: true,
 	layoutShift: true,
 } as const;
+
+export const getFullscreenOverflowBoundary = (target: HTMLElement): HTMLElement | null => {
+	const ownerDocument = target.ownerDocument as ExtendedDocument;
+	const ownerWindow = ownerDocument.defaultView;
+	if (!ownerWindow) return null;
+	const fullscreenElement =
+		ownerDocument.fullscreenElement ??
+		ownerDocument.webkitFullscreenElement ??
+		ownerDocument.mozFullScreenElement ??
+		ownerDocument.msFullscreenElement ??
+		null;
+	if (!(fullscreenElement instanceof ownerWindow.HTMLElement)) return null;
+	return fullscreenElement.contains(target) ? fullscreenElement : null;
+};
 
 const tooltipPortalRoots = new WeakMap<Document, HTMLElement>();
 
@@ -389,14 +404,17 @@ export const Tooltip = observer(
 					left: '-9999px',
 					top: '-9999px',
 				} as CSSStyleDeclaration);
+				const overflowBoundary = getFullscreenOverflowBoundary(target);
+				const boundaryOptions = overflowBoundary ? {boundary: overflowBoundary} : undefined;
 				const middleware = [
 					offset(padding + nudge),
-					flip(),
-					shift({padding: 8}),
+					flip(boundaryOptions),
+					shift({padding: 8, ...boundaryOptions}),
 					...(arrowRef.current ? [arrow({element: arrowRef.current})] : []),
 				];
 				const {x, y, placement, middlewareData} = await computePosition(target, tooltip, {
 					placement: position,
+					strategy: 'fixed',
 					middleware,
 				});
 				if (
