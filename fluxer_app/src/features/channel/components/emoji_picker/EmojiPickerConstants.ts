@@ -19,7 +19,6 @@ import type {CSSProperties} from 'react';
 export const EMOJI_CLAP = '\u{1F44F}';
 const EMOJI_SPRITE_SIZE = 32;
 export const EMOJI_ROW_HEIGHT = 48;
-export const EMOJI_PICKER_CUSTOM_EMOJI_SIZE = 48;
 export const CATEGORY_HEADER_HEIGHT = 32;
 export const EMOJIS_PER_ROW = 9;
 const EMOJIS_PER_ROW_MIN = 5;

@@ -2,7 +2,6 @@
 
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {
-	EMOJI_PICKER_CUSTOM_EMOJI_SIZE,
 	getEmojiSpriteSheetLayout,
 	getSpriteSheetBackground,
 } from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
@@ -12,15 +11,45 @@ import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
 import UnicodeEmojis, {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
-import {setUrlQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
+import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
 import {EmojiContextMenuItems} from '@app/features/ui/action_menu/items/EmojiContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {isFirefoxBrowser} from '@app/features/ui/utils/NativeUtils';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
-import React, {useEffect, useImperativeHandle, useRef} from 'react';
+import React, {useEffect, useImperativeHandle, useMemo, useRef} from 'react';
+
+type PickerEmojiImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
+	src: string;
+	alt: string;
+};
+
+const PickerEmojiImage = ({src, alt, ...props}: PickerEmojiImageProps) => {
+	const imageRef = useRef<HTMLImageElement | null>(null);
+	const hasLoadedRef = useRef(false);
+	const handleLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+		const view = event.currentTarget?.ownerDocument?.defaultView ?? window;
+		view.requestAnimationFrame(() => {
+			if (imageRef.current == null) {
+				return;
+			}
+			hasLoadedRef.current = true;
+			imageRef.current.classList.remove(styles.emojiImageLoading);
+		});
+	};
+	return (
+		<img
+			data-flx="channel.emoji-picker.emoji-renderer.picker-emoji-image.emoji-image"
+			{...props}
+			ref={imageRef}
+			src={src}
+			alt={alt}
+			className={hasLoadedRef.current ? styles.emojiImage : clsx(styles.emojiImage, styles.emojiImageLoading)}
+			onLoad={hasLoadedRef.current ? undefined : handleLoad}
+		/>
+	);
+};
 
 interface EmojiRendererProps {
 	emoji: FlatEmoji;
@@ -57,11 +86,19 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			}
 		}, [shouldScrollIntoView]);
 		const availability = checkEmojiAvailability(i18n, emoji, channel);
-		const customEmojiUrl = emoji.id
-			? setUrlQueryParams(AvatarUtils.getEmojiURL({id: emoji.id, animated: Boolean(emoji.animated) && shouldAnimate}), {
-					size: EMOJI_PICKER_CUSTOM_EMOJI_SIZE,
-				})
-			: (emoji.url ?? '');
+		const customEmojiUrl = useMemo(
+			() =>
+				emoji.id
+					? (getEmojiRenderUrl({
+							id: emoji.id,
+							surrogateUrl: null,
+							isAnimatable: Boolean(emoji.animated),
+							animated: shouldAnimate,
+							jumbo: false,
+						}) ?? '')
+					: (emoji.url ?? ''),
+			[emoji.id, emoji.animated, emoji.url, shouldAnimate],
+		);
 		const handleClick = (e: React.MouseEvent) => {
 			if (!availability.canUse) {
 				e.preventDefault();
@@ -118,11 +155,9 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 		};
 		if (emoji.guildId || emoji.id) {
 			const content = (
-				<img
+				<PickerEmojiImage
 					src={customEmojiUrl}
 					alt={emoji.name}
-					className={styles.emojiImage}
-					loading="lazy"
 					data-flx="channel.emoji-picker.emoji-renderer.emoji-image"
 				/>
 			);
@@ -130,11 +165,9 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 		}
 		if (!emoji.useSpriteSheet) {
 			return renderButton(
-				<img
+				<PickerEmojiImage
 					src={emoji.url ?? ''}
 					alt={emoji.name}
-					className={styles.emojiImage}
-					loading="lazy"
 					data-flx="channel.emoji-picker.emoji-renderer.emoji-image--2"
 				/>,
 			);
@@ -145,31 +178,21 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			const {url} = getEmojiDisplayDataWithSkinTone(emoji, skinTone);
 			if (url) {
 				return renderButton(
-					<img
-						src={url}
-						alt={emoji.name}
-						className={styles.emojiImage}
-						loading="lazy"
-						data-flx="channel.emoji-picker.emoji-renderer.emoji-image--4"
-					/>,
+					<PickerEmojiImage src={url} alt={emoji.name} data-flx="channel.emoji-picker.emoji-renderer.emoji-image--4" />,
 				);
 			}
 		}
 		if (index === undefined) {
 			return renderButton(
-				<img
+				<PickerEmojiImage
 					src={emoji.url ?? ''}
 					alt={emoji.name}
-					className={styles.emojiImage}
-					loading="lazy"
 					data-flx="channel.emoji-picker.emoji-renderer.emoji-image--3"
 				/>,
 			);
 		}
 		const perRow = hasSkinTones ? EMOJI_SPRITES.SkinTonePerRow : EMOJI_SPRITES.BasePerRow;
-		const rows = Math.ceil(
-			(hasSkinTones ? UnicodeEmojis.skinToneSpriteCount : UnicodeEmojis.baseSpriteCount) / perRow,
-		);
+		const rows = Math.ceil((hasSkinTones ? UnicodeEmojis.skinToneSpriteCount : UnicodeEmojis.baseSpriteCount) / perRow);
 		const spriteStyle = {
 			backgroundImage: getSpriteSheetBackground(hasSkinTones ? skinTone : ''),
 			...getEmojiSpriteSheetLayout(index, perRow, rows),
