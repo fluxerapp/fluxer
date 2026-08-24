@@ -499,6 +499,7 @@ export function clearCustomSoundCache(type?: SoundType): void {
 export async function stopSound(type: SoundType): Promise<void> {
 	const activeSound = activeSounds.get(type);
 	if (!activeSound) return;
+	activeSounds.delete(type);
 	const {audio, gainNode, sourceNode} = activeSound;
 	try {
 		await fadeOut(gainNode, 0.08);
@@ -507,7 +508,6 @@ export async function stopSound(type: SoundType): Promise<void> {
 	audio.currentTime = 0;
 	audio.loop = false;
 	disconnectNodes(sourceNode, gainNode);
-	activeSounds.delete(type);
 }
 
 export async function stopAllSounds(): Promise<void> {
