@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -185,7 +184,6 @@ function markPreviewReady(record: PreviewRecord, url: string, contentType: strin
 	record.nextFetchAt = record.fetchedAt + STREAM_PREVIEW_REFRESH_INTERVAL_MS;
 	record.missingAttemptCount = 0;
 	record.lastUsedAt = record.fetchedAt;
-	ImageCacheUtils.loadImage(url, () => {});
 	logger.debug('useStreamPreview: preview ready', {
 		contentType,
 		streamKey: record.streamKey,
