@@ -49,7 +49,7 @@ export type HarvestStatusResponse = z.infer<typeof HarvestStatusResponseSchema>;
 
 export const HarvestStatusResponseSchemaNullable = HarvestStatusResponseSchema.nullable();
 export const HarvestDownloadUrlResponse = z.object({
-	download_url: createStringType(1, 2048).describe('The presigned URL to download the harvest archive'),
+	download_url: createStringType(1, 2048).describe('The temporary URL to download the harvest archive'),
 	expires_at: z.string().describe('ISO 8601 timestamp when the harvest download expires'),
 });
 

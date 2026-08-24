@@ -2,7 +2,7 @@
 
 use crate::{
     aws_sigv4,
-    config::{Config, StorageBackend},
+    config::{BucketStyle, Config, StorageBackend},
     constants, http_client, mime,
 };
 use axum::body::Body;
@@ -370,23 +370,51 @@ impl Store {
     fn s3_url(&self, bucket: &str, key: &str) -> Result<String, StorageError> {
         safe_bucket(bucket)?;
         safe_key(key)?;
-        if self.cfg.s3_endpoint.is_empty() {
-            return Err(StorageError::InvalidS3Endpoint);
+        object_url(
+            &self.cfg.s3_endpoint,
+            write_bucket_style(&self.cfg),
+            bucket,
+            key,
+        )
+    }
+
+    fn read_endpoint_for(&self, bucket: &str) -> Option<&str> {
+        self.cfg
+            .s3_read_endpoint
+            .as_deref()
+            .filter(|_| bucket == self.cfg.s3_read_bucket)
+    }
+
+    fn s3_read_url(&self, bucket: &str, key: &str) -> Result<String, StorageError> {
+        let Some(endpoint) = self.read_endpoint_for(bucket) else {
+            return self.s3_url(bucket, key);
+        };
+        safe_bucket(bucket)?;
+        safe_key(key)?;
+        object_url(endpoint, self.cfg.s3_read_bucket_style, bucket, key)
+    }
+
+    fn read_status_is_miss(&self, bucket: &str, status: reqwest::StatusCode) -> bool {
+        if status == reqwest::StatusCode::NOT_FOUND {
+            return true;
         }
-        let endpoint = self.cfg.s3_endpoint.trim_end_matches('/');
-        let encoded_key = percent_encode(key.as_bytes(), PATH_ENCODE_SET).to_string();
-        if self.cfg.s3_force_path_style {
-            return Ok(format!("{endpoint}/{bucket}/{encoded_key}"));
+        status == reqwest::StatusCode::FORBIDDEN
+            && self.read_endpoint_for(bucket).is_some()
+            && !self.cfg.s3_read_signed
+    }
+
+    fn read_headers(
+        &self,
+        bucket: &str,
+        method: Method,
+        url: &str,
+        extra_signed_headers: &[aws_sigv4::Header<'_>],
+    ) -> Result<reqwest::header::HeaderMap, StorageError> {
+        if self.read_endpoint_for(bucket).is_some() && !self.cfg.s3_read_signed {
+            return Ok(reqwest::header::HeaderMap::new());
         }
-        validate_virtual_hosted_bucket(bucket)?;
-        let parsed = url::Url::parse(endpoint).map_err(|_| StorageError::InvalidS3Endpoint)?;
-        let scheme = parsed.scheme();
-        let host = parsed.host_str().ok_or(StorageError::InvalidS3Endpoint)?;
-        let port = parsed.port().map(|p| format!(":{p}")).unwrap_or_default();
-        let base_path = parsed.path().trim_end_matches('/');
-        Ok(format!(
-            "{scheme}://{bucket}.{host}{port}{base_path}/{encoded_key}"
-        ))
+        let signed = self.sign(method, url, &[], None, extra_signed_headers)?;
+        Ok(signed_headers(&signed, &self.cfg))
     }
 
     fn s3_bucket_url(&self, bucket: &str) -> Result<String, StorageError> {
@@ -408,15 +436,10 @@ impl Store {
     }
 
     async fn read_s3(&self, bucket: &str, key: &str) -> Result<Object, StorageError> {
-        let url = self.s3_url(bucket, key)?;
-        let signed = self.sign(Method::GET, &url, &[], None, &[])?;
-        let response = self
-            .client
-            .get(&url)
-            .headers(signed_headers(&signed, &self.cfg))
-            .send()
-            .await?;
-        if response.status() == reqwest::StatusCode::NOT_FOUND {
+        let url = self.s3_read_url(bucket, key)?;
+        let headers = self.read_headers(bucket, Method::GET, &url, &[])?;
+        let response = self.client.get(&url).headers(headers).send().await?;
+        if self.read_status_is_miss(bucket, response.status()) {
             return Err(StorageError::NotFound);
         }
         if !response.status().is_success() {
@@ -484,14 +507,13 @@ impl Store {
         key: &str,
         range_header: Option<&str>,
     ) -> Result<StreamObject, StorageError> {
-        let url = self.s3_url(bucket, key)?;
+        let url = self.s3_read_url(bucket, key)?;
         let range_extra = range_header.map(|value| aws_sigv4::Header {
             name: "Range",
             value,
         });
         let extra = range_extra.as_slice();
-        let signed = self.sign(Method::GET, &url, &[], None, extra)?;
-        let mut headers = signed_headers(&signed, &self.cfg);
+        let mut headers = self.read_headers(bucket, Method::GET, &url, extra)?;
         if let Some(range_value) = range_header {
             headers.insert(
                 header::RANGE,
@@ -501,7 +523,7 @@ impl Store {
             );
         }
         let response = self.client.get(&url).headers(headers).send().await?;
-        if response.status() == reqwest::StatusCode::NOT_FOUND {
+        if self.read_status_is_miss(bucket, response.status()) {
             return Err(StorageError::NotFound);
         }
         if !response.status().is_success() {
@@ -750,6 +772,42 @@ impl http_body::Body for ChannelBody {
     }
 }
 
+fn write_bucket_style(cfg: &Config) -> BucketStyle {
+    if cfg.s3_force_path_style {
+        BucketStyle::Path
+    } else {
+        BucketStyle::VirtualHosted
+    }
+}
+
+fn object_url(
+    endpoint: &str,
+    style: BucketStyle,
+    bucket: &str,
+    key: &str,
+) -> Result<String, StorageError> {
+    if endpoint.is_empty() {
+        return Err(StorageError::InvalidS3Endpoint);
+    }
+    let endpoint = endpoint.trim_end_matches('/');
+    let encoded_key = percent_encode(key.as_bytes(), PATH_ENCODE_SET).to_string();
+    match style {
+        BucketStyle::Path => Ok(format!("{endpoint}/{bucket}/{encoded_key}")),
+        BucketStyle::Rooted => Ok(format!("{endpoint}/{encoded_key}")),
+        BucketStyle::VirtualHosted => {
+            validate_virtual_hosted_bucket(bucket)?;
+            let parsed = url::Url::parse(endpoint).map_err(|_| StorageError::InvalidS3Endpoint)?;
+            let scheme = parsed.scheme();
+            let host = parsed.host_str().ok_or(StorageError::InvalidS3Endpoint)?;
+            let port = parsed.port().map(|p| format!(":{p}")).unwrap_or_default();
+            let base_path = parsed.path().trim_end_matches('/');
+            Ok(format!(
+                "{scheme}://{bucket}.{host}{port}{base_path}/{encoded_key}"
+            ))
+        }
+    }
+}
+
 fn signed_headers(signed: &aws_sigv4::SignedRequest, cfg: &Config) -> reqwest::header::HeaderMap {
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert(
@@ -858,7 +916,7 @@ fn reject_symlink_chain(path: &Path) -> Result<(), StorageError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{DeploymentMode, StorageBackend};
+    use crate::config::{BucketStyle, DeploymentMode, StorageBackend};
 
     fn test_config(root: &Path) -> Config {
         Config {
@@ -876,6 +934,10 @@ mod tests {
             s3_secret_access_key: String::new(),
             s3_session_token: String::new(),
             s3_force_path_style: true,
+            s3_read_endpoint: None,
+            s3_read_bucket: "cdn".to_owned(),
+            s3_read_bucket_style: BucketStyle::Path,
+            s3_read_signed: false,
             bucket_cdn: "cdn".to_owned(),
             bucket_uploads: "uploads".to_owned(),
             bucket_static: "static".to_owned(),
@@ -1059,5 +1121,447 @@ mod tests {
             )
             .await;
         assert!(result.is_err());
+    }
+
+    type CapturedRequests =
+        std::sync::Arc<tokio::sync::Mutex<Vec<(http::Method, http::Uri, http::HeaderMap)>>>;
+
+    async fn capture_server() -> (String, CapturedRequests) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let captured: CapturedRequests = std::sync::Arc::new(tokio::sync::Mutex::new(Vec::new()));
+        let handler = std::sync::Arc::clone(&captured);
+        let app = axum::Router::new().fallback(axum::routing::any(
+            move |request: axum::extract::Request| {
+                let captured = std::sync::Arc::clone(&handler);
+                async move {
+                    let (parts, _body) = request.into_parts();
+                    captured
+                        .lock()
+                        .await
+                        .push((parts.method, parts.uri, parts.headers));
+                    ([(header::CONTENT_TYPE, "image/png")], "payload")
+                }
+            },
+        ));
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        (format!("http://{addr}"), captured)
+    }
+
+    async fn status_server(status: u16) -> (String, CapturedRequests) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let captured: CapturedRequests = std::sync::Arc::new(tokio::sync::Mutex::new(Vec::new()));
+        let handler = std::sync::Arc::clone(&captured);
+        let app = axum::Router::new().fallback(axum::routing::any(
+            move |request: axum::extract::Request| {
+                let captured = std::sync::Arc::clone(&handler);
+                async move {
+                    let (parts, _body) = request.into_parts();
+                    captured
+                        .lock()
+                        .await
+                        .push((parts.method, parts.uri, parts.headers));
+                    (StatusCode::from_u16(status).unwrap(), "denied")
+                }
+            },
+        ));
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        (format!("http://{addr}"), captured)
+    }
+
+    fn s3_test_config(root: &Path, s3_endpoint: &str) -> Config {
+        let mut cfg = test_config(root);
+        cfg.storage_backend = StorageBackend::S3;
+        cfg.s3_endpoint = s3_endpoint.to_owned();
+        cfg.s3_access_key_id = "AKIAIOSFODNN7EXAMPLE".to_owned();
+        cfg.s3_secret_access_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY".to_owned();
+        cfg
+    }
+
+    async fn only_request(
+        captured: &CapturedRequests,
+    ) -> (http::Method, http::Uri, http::HeaderMap) {
+        let mut guard = captured.lock().await;
+        assert_eq!(1, guard.len(), "expected exactly one captured request");
+        guard.remove(0)
+    }
+
+    fn assert_unsigned(headers: &http::HeaderMap) {
+        assert!(headers.get(header::AUTHORIZATION).is_none());
+        assert!(headers.get("x-amz-date").is_none());
+        assert!(headers.get("x-amz-content-sha256").is_none());
+    }
+
+    fn assert_signed(headers: &http::HeaderMap) {
+        assert!(
+            headers
+                .get(header::AUTHORIZATION)
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .starts_with("AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/")
+        );
+        assert!(headers.get("x-amz-date").is_some());
+        assert!(headers.get("x-amz-content-sha256").is_some());
+    }
+
+    #[tokio::test]
+    async fn read_without_read_endpoint_hits_s3_endpoint_signed() {
+        let (s3, s3_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(s3_test_config(tmp.path(), &s3));
+
+        let object = store
+            .read_object("cdn", "attachments/1/2/a.png")
+            .await
+            .unwrap();
+
+        assert_eq!("payload", object.data);
+        let (method, uri, headers) = only_request(&s3_seen).await;
+        assert_eq!(http::Method::GET, method);
+        assert_eq!("/cdn/attachments/1/2/a.png", uri.path());
+        assert_signed(&headers);
+    }
+
+    #[tokio::test]
+    async fn read_endpoint_routes_fronted_bucket_to_cdn_unsigned() {
+        let (s3, s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        let store = Store::new(cfg);
+
+        let object = store
+            .read_object("cdn", "attachments/1/2/a.png")
+            .await
+            .unwrap();
+
+        assert_eq!("payload", object.data);
+        assert!(
+            s3_seen.lock().await.is_empty(),
+            "S3 endpoint must not be touched"
+        );
+        let (method, uri, headers) = only_request(&cdn_seen).await;
+        assert_eq!(http::Method::GET, method);
+        assert_eq!("/cdn/attachments/1/2/a.png", uri.path());
+        assert_unsigned(&headers);
+    }
+
+    #[tokio::test]
+    async fn read_endpoint_rooted_style_omits_bucket_segment() {
+        let (s3, _s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_bucket_style = BucketStyle::Rooted;
+        let store = Store::new(cfg);
+
+        store
+            .read_object("cdn", "attachments/1/2/a.png")
+            .await
+            .unwrap();
+
+        let (_, uri, _) = only_request(&cdn_seen).await;
+        assert_eq!("/attachments/1/2/a.png", uri.path());
+    }
+
+    #[test]
+    fn read_endpoint_virtual_style_uses_bucket_subdomain() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), "https://s3.example.test");
+        cfg.s3_read_endpoint = Some("https://cdn.example.net".to_owned());
+        cfg.s3_read_bucket_style = BucketStyle::VirtualHosted;
+        let store = Store::new(cfg);
+
+        assert_eq!(
+            "https://cdn.cdn.example.net/attachments/1/2/a.png",
+            store.s3_read_url("cdn", "attachments/1/2/a.png").unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn read_endpoint_never_redirects_other_buckets() {
+        let (s3, s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_bucket_style = BucketStyle::Rooted;
+        let store = Store::new(cfg);
+
+        store
+            .read_object("uploads", "fresh-upload-key")
+            .await
+            .unwrap();
+
+        assert!(
+            cdn_seen.lock().await.is_empty(),
+            "uploads must not hit the CDN"
+        );
+        let (_, uri, headers) = only_request(&s3_seen).await;
+        assert_eq!("/uploads/fresh-upload-key", uri.path());
+        assert_signed(&headers);
+    }
+
+    #[tokio::test]
+    async fn read_endpoint_never_affects_writes() {
+        let (s3, s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_bucket = "uploads".to_owned();
+        let store = Store::new(cfg);
+
+        let (tx, rx) = tokio::sync::mpsc::channel(2);
+        tokio::spawn(async move {
+            tx.send(Ok(Bytes::from_static(b"body"))).await.unwrap();
+        });
+        store
+            .relay_put_object(
+                "uploads",
+                "guild/x.bin",
+                RelayPutOptions {
+                    body: RelayBody::Streamed(rx),
+                    content_length: 4,
+                    content_type: Some("application/octet-stream".to_owned()),
+                    upload_id: None,
+                    part_number: None,
+                    timeout_ms: 5_000,
+                },
+            )
+            .await
+            .unwrap();
+
+        assert!(
+            cdn_seen.lock().await.is_empty(),
+            "writes must not hit the CDN"
+        );
+        let (method, uri, headers) = only_request(&s3_seen).await;
+        assert_eq!(http::Method::PUT, method);
+        assert_eq!("/uploads/guild/x.bin", uri.path());
+        assert_signed(&headers);
+    }
+
+    #[tokio::test]
+    async fn read_endpoint_signs_when_read_signed_enabled() {
+        let (s3, _s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let cdn_host = cdn.trim_start_matches("http://").to_owned();
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_signed = true;
+        let store = Store::new(cfg);
+
+        store.read_object("cdn", "a.png").await.unwrap();
+
+        let (_, _, headers) = only_request(&cdn_seen).await;
+        assert_signed(&headers);
+        assert_eq!(
+            cdn_host,
+            headers.get(header::HOST).unwrap().to_str().unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn unsigned_read_still_sends_range_header() {
+        let (s3, _s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        let store = Store::new(cfg);
+
+        store
+            .stream_object("cdn", "video.mp4", Some("bytes=10-19"))
+            .await
+            .unwrap();
+
+        let (_, _, headers) = only_request(&cdn_seen).await;
+        assert_eq!("bytes=10-19", headers.get(header::RANGE).unwrap());
+        assert_unsigned(&headers);
+    }
+
+    #[tokio::test]
+    async fn head_object_always_uses_origin_for_authoritative_length() {
+        let (s3, s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_bucket_style = BucketStyle::Rooted;
+        let store = Store::new(cfg);
+
+        store.head_object("cdn", "a.png").await.unwrap();
+
+        assert!(
+            cdn_seen.lock().await.is_empty(),
+            "HEAD must not hit the CDN"
+        );
+        let (method, uri, headers) = only_request(&s3_seen).await;
+        assert_eq!(http::Method::HEAD, method);
+        assert_eq!("/cdn/a.png", uri.path());
+        assert_signed(&headers);
+    }
+
+    #[tokio::test]
+    async fn body_reads_use_cdn_while_head_uses_origin() {
+        let (s3, s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_bucket_style = BucketStyle::Rooted;
+        let store = Store::new(cfg);
+
+        store.head_object("cdn", "video.mp4").await.unwrap();
+        store
+            .stream_object("cdn", "video.mp4", Some("bytes=0-3"))
+            .await
+            .unwrap();
+
+        let s3_reqs = s3_seen.lock().await.clone();
+        let cdn_reqs = cdn_seen.lock().await.clone();
+        assert_eq!(1, s3_reqs.len());
+        assert_eq!(http::Method::HEAD, s3_reqs[0].0);
+        assert_eq!(1, cdn_reqs.len());
+        assert_eq!(http::Method::GET, cdn_reqs[0].0);
+        assert_eq!("bytes=0-3", cdn_reqs[0].2.get(header::RANGE).unwrap());
+    }
+
+    #[tokio::test]
+    async fn unsigned_read_works_without_credentials() {
+        let (s3, _s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_access_key_id = String::new();
+        cfg.s3_secret_access_key = String::new();
+        let store = Store::new(cfg);
+
+        store.read_object("cdn", "a.png").await.unwrap();
+
+        let (_, _, headers) = only_request(&cdn_seen).await;
+        assert_unsigned(&headers);
+    }
+
+    #[test]
+    fn read_url_matches_write_url_shape_for_encoding_and_trailing_slash() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), "https://s3.example.test/");
+        cfg.s3_read_endpoint = Some("https://cdn.example.net/".to_owned());
+        let store = Store::new(cfg);
+        let key = "attachments/1/2/na me+ü.png";
+
+        assert_eq!(
+            "https://s3.example.test/uploads/attachments/1/2/na%20me%2B%C3%BC.png",
+            store.s3_url("uploads", key).unwrap()
+        );
+        assert_eq!(
+            "https://cdn.example.net/cdn/attachments/1/2/na%20me%2B%C3%BC.png",
+            store.s3_read_url("cdn", key).unwrap()
+        );
+    }
+
+    #[test]
+    fn read_url_rejects_unsafe_keys_and_buckets() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), "https://s3.example.test");
+        cfg.s3_read_endpoint = Some("https://cdn.example.net".to_owned());
+        cfg.s3_read_bucket_style = BucketStyle::Rooted;
+        let store = Store::new(cfg);
+
+        assert!(store.s3_read_url("cdn", "../escape").is_err());
+        assert!(store.s3_read_url("cdn", "/leading").is_err());
+    }
+
+    #[test]
+    fn read_url_validates_bucket_inside_the_read_endpoint_branch() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), "https://s3.example.test");
+        cfg.s3_read_endpoint = Some("https://cdn.example.net".to_owned());
+        cfg.s3_read_bucket = "..".to_owned();
+        cfg.s3_read_bucket_style = BucketStyle::Rooted;
+        let store = Store::new(cfg);
+
+        assert!(store.read_endpoint_for("..").is_some());
+        assert!(store.s3_read_url("..", "a.png").is_err());
+    }
+
+    #[tokio::test]
+    async fn unsigned_cdn_read_treats_403_as_not_found() {
+        let (s3, _s3_seen) = capture_server().await;
+        let (cdn, cdn_seen) = status_server(403).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_bucket_style = BucketStyle::Rooted;
+        let store = Store::new(cfg);
+
+        let err = store
+            .read_object("cdn", "avatars/1/hash")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, StorageError::NotFound), "got {err:?}");
+        assert_eq!(1, cdn_seen.lock().await.len());
+
+        let stream = store.stream_object("cdn", "avatars/1/hash", None).await;
+        assert!(
+            matches!(stream, Err(StorageError::NotFound)),
+            "stream_object should map 403 to NotFound too"
+        );
+    }
+
+    #[tokio::test]
+    async fn signed_cdn_read_keeps_403_as_an_error() {
+        let (s3, _s3_seen) = capture_server().await;
+        let (cdn, _cdn_seen) = status_server(403).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        cfg.s3_read_signed = true;
+        let store = Store::new(cfg);
+
+        let err = store
+            .read_object("cdn", "avatars/1/hash")
+            .await
+            .unwrap_err();
+        assert!(!matches!(err, StorageError::NotFound), "got {err:?}");
+    }
+
+    #[tokio::test]
+    async fn origin_read_keeps_403_as_an_error() {
+        let (s3, _s3_seen) = status_server(403).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(s3_test_config(tmp.path(), &s3));
+
+        let err = store
+            .read_object("cdn", "avatars/1/hash")
+            .await
+            .unwrap_err();
+        assert!(!matches!(err, StorageError::NotFound), "got {err:?}");
+    }
+
+    #[tokio::test]
+    async fn unfronted_bucket_keeps_403_as_an_error() {
+        let (s3, _s3_seen) = status_server(403).await;
+        let (cdn, cdn_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = s3_test_config(tmp.path(), &s3);
+        cfg.s3_read_endpoint = Some(cdn.clone());
+        let store = Store::new(cfg);
+
+        let err = store.read_object("uploads", "fresh").await.unwrap_err();
+        assert!(!matches!(err, StorageError::NotFound), "got {err:?}");
+        assert!(cdn_seen.lock().await.is_empty());
     }
 }

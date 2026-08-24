@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import type {Readable} from 'node:stream';
 import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -24,7 +25,7 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type {ApiContext} from '../../ApiContext';
-import {type ChannelID, createChannelID, type MessageID, type UserID} from '../../BrandedTypes';
+import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '../../BrandedTypes';
 import {Config} from '../../Config';
 import type {IChannelRepository} from '../../channel/IChannelRepository';
 import type {ChannelService} from '../../channel/services/ChannelService';
@@ -48,6 +49,8 @@ import type {IUserContentRepository} from '../repositories/IUserContentRepositor
 import {UserHarvest, type UserHarvestResponse} from '../UserHarvestModel';
 import {UserHarvestRepository} from '../UserHarvestRepository';
 import {BaseUserUpdatePropagator} from './BaseUserUpdatePropagator';
+import {verifyHarvestDownloadToken} from './HarvestDownloadToken';
+import {buildHarvestDownloadUrl} from './HarvestDownloadUrl';
 
 export interface SavedMessageEntry {
 	channelId: ChannelID;
@@ -472,15 +475,72 @@ export class UserContentService {
 			throw new HarvestExpiredError();
 		}
 		const ZIP_EXPIRY_MS = ms('7 days');
-		const downloadUrl = await storageService.getPresignedDownloadURL({
-			bucket: Config.s3.buckets.harvests,
-			key: harvest.storageKey,
-			expiresIn: ZIP_EXPIRY_MS / 1000,
+		const downloadUrl = await buildHarvestDownloadUrl({
+			userId,
+			harvestId,
+			storageKey: harvest.storageKey,
+			expiresInSeconds: ZIP_EXPIRY_MS / 1000,
+			storageService,
 		});
 		const expiresAt = new Date(Date.now() + ZIP_EXPIRY_MS);
 		return {
 			download_url: downloadUrl,
 			expires_at: expiresAt.toISOString(),
+		};
+	}
+
+	async streamHarvestDownload(params: {
+		harvestId: bigint;
+		token: string;
+		range?: string;
+		storageService: IStorageService;
+	}): Promise<{
+		body: Readable;
+		contentLength: number;
+		contentRange?: string | null;
+		contentType?: string | null;
+		filename: string;
+	} | null> {
+		if (Config.presignedHarvestDownloadsEnabled) {
+			return null;
+		}
+		const payload = verifyHarvestDownloadToken(params.token, Config.auth.connectionInitiationSecret);
+		if (!payload || payload.harvestId !== params.harvestId.toString()) {
+			Logger.debug({harvestId: params.harvestId.toString()}, 'Harvest download rejected: invalid or expired token');
+			return null;
+		}
+		let userId: UserID;
+		try {
+			userId = createUserID(BigInt(payload.userId));
+		} catch {
+			return null;
+		}
+		const harvestRepository = new UserHarvestRepository();
+		const harvest = await harvestRepository.findByUserAndHarvestId(userId, params.harvestId);
+		if (!harvest || !harvest.completedAt || !harvest.storageKey || harvest.failedAt) {
+			return null;
+		}
+		if (harvest.downloadUrlExpiresAt && harvest.downloadUrlExpiresAt < new Date()) {
+			return null;
+		}
+		if (harvest.storageKey !== payload.storageKey) {
+			Logger.debug({harvestId: params.harvestId.toString()}, 'Harvest download rejected: storage key mismatch');
+			return null;
+		}
+		const object = await params.storageService.streamObject({
+			bucket: Config.s3.buckets.harvests,
+			key: harvest.storageKey,
+			range: params.range,
+		});
+		if (!object) {
+			return null;
+		}
+		return {
+			body: object.body,
+			contentLength: object.contentLength,
+			contentRange: object.contentRange,
+			contentType: object.contentType ?? 'application/zip',
+			filename: `fluxer-data-${params.harvestId}.zip`,
 		};
 	}
 

@@ -50,6 +50,7 @@ import type {User} from '../../models/User';
 import type {UserGuildSettings} from '../../models/UserGuildSettings';
 import type {UserSettings} from '../../models/UserSettings';
 import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
+import {buildHarvestDownloadUrl} from '../../user/services/HarvestDownloadUrl';
 import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
 import {createArchiveJsonBuffer} from '../utils/ArchiveJson';
 import {appendAssetToArchive, buildHashedAssetKey, getAnimatedAssetExtension} from '../utils/AssetArchiveHelpers';
@@ -685,10 +686,12 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 			contentType: 'application/zip',
 			expiresAt: expiresAt,
 		});
-		const downloadUrl = await storageService.getPresignedDownloadURL({
-			bucket: Config.s3.buckets.harvests,
-			key: storageKey,
-			expiresIn: ZIP_EXPIRY_MS / 1000,
+		const downloadUrl = await buildHarvestDownloadUrl({
+			userId,
+			harvestId,
+			storageKey,
+			expiresInSeconds: ZIP_EXPIRY_MS / 1000,
+			storageService,
 		});
 		return {fileSize, storageKey, expiresAt, downloadUrl};
 	} finally {

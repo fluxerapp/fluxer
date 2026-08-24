@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Readable} from 'node:stream';
+import {HARVEST_DOWNLOAD_PATH} from '@app/api/user/services/HarvestDownloadUrl';
 import {HarvestIdParam, MessageIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {
@@ -267,6 +269,50 @@ export function UserContentController(app: HonoApp) {
 				harvestId,
 			});
 			return ctx.json(harvest, 200);
+		},
+	);
+	app.get(
+		`${HARVEST_DOWNLOAD_PATH}/:harvestId`,
+		RateLimitMiddleware(RateLimitConfigs.USER_HARVEST_DOWNLOAD_FILE),
+		Validator('param', HarvestIdParam),
+		OpenAPI({
+			operationId: 'download_data_harvest_archive',
+			summary: 'Download data harvest archive',
+			responseSchema: null,
+			statusCode: 200,
+			security: [],
+			tags: ['Users'],
+			description:
+				'Streams a completed data harvest archive. Authorised by a signed, expiring token rather than a session, so the link works from the harvest completion email. Only active when presigned harvest downloads are disabled.',
+		}),
+		async (ctx) => {
+			const {harvestId} = ctx.req.valid('param');
+			const token = ctx.req.query('token');
+			if (!token) {
+				return ctx.text('Not Found', 404);
+			}
+			const result = await ctx.get('userContentRequestService').streamHarvestDownload({
+				harvestId,
+				token,
+				range: ctx.req.header('range') ?? undefined,
+				storageService: ctx.get('storageService'),
+			});
+			if (!result) {
+				return ctx.text('Not Found', 404);
+			}
+			const headers = new Headers();
+			headers.set('Content-Type', result.contentType ?? 'application/zip');
+			headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(result.filename)}"`);
+			headers.set('Content-Length', String(result.contentLength));
+			headers.set('Cache-Control', 'private, no-store');
+			headers.set('Accept-Ranges', 'bytes');
+			if (result.contentRange) {
+				headers.set('Content-Range', result.contentRange);
+			}
+			return new Response(Readable.toWeb(result.body) as ReadableStream, {
+				status: result.contentRange ? 206 : 200,
+				headers,
+			});
 		},
 	);
 	app.get(

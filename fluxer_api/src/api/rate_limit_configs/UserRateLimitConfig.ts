@@ -216,6 +216,10 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:harvest:download',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_HARVEST_DOWNLOAD_FILE: {
+		bucket: 'user:harvest:download_file',
+		config: {limit: 60, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	USER_ENTRANCE_SOUND_LIST: {
 		bucket: 'user:entrance_sound:list',
 		config: {limit: 30, windowMs: ms('1 minute')},

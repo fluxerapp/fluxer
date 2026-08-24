@@ -145,6 +145,15 @@ export class UserContentRequestService {
 		return this.userContentService.getHarvestDownloadUrl(params.userId, params.harvestId, params.storageService);
 	}
 
+	async streamHarvestDownload(params: {
+		harvestId: bigint;
+		token: string;
+		range?: string;
+		storageService: IStorageService;
+	}) {
+		return this.userContentService.streamHarvestDownload(params);
+	}
+
 	private async mapSavedMessageEntry(userId: UserID, entry: SavedMessageEntry): Promise<SavedMessageEntryResponse> {
 		return {
 			id: entry.messageId.toString(),

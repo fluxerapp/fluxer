@@ -101,6 +101,15 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
     } else {
         None
     };
+    if let Some(read_endpoint) = state.cfg.s3_read_endpoint.as_deref() {
+        info!(
+            endpoint = read_endpoint,
+            bucket = state.cfg.s3_read_bucket,
+            style = ?state.cfg.s3_read_bucket_style,
+            signed = state.cfg.s3_read_signed,
+            "object body reads served from the S3 read endpoint"
+        );
+    }
     let mut router = Router::new()
         .route("/_health", get(health))
         .route("/_metrics", get(metrics_handler))
