@@ -78,14 +78,10 @@ const MessageReactionItem = observer(
 		const {i18n} = useLingui();
 		const [hoverRef, isHovering] = useHover();
 		const [prevCount, setPrevCount] = useState(reaction.count);
-		const [animationSyncKey, setAnimationSyncKey] = useState(0);
 		const [emojiInfoOpen, setEmojiInfoOpen] = useState(false);
 		const [selectedEmoji, setSelectedEmoji] = useState<EmojiInfoData | null>(null);
 		const [tooltipHovering, setTooltipHovering] = useState(false);
 		const isMobile = MobileLayout.isMobileLayout();
-		const handleTooltipAnimationSync = useCallback(() => {
-			setAnimationSyncKey((prev) => prev + 1);
-		}, []);
 		useEffect(() => {
 			if (prevCount !== reaction.count) {
 				setPrevCount(reaction.count);
@@ -186,6 +182,7 @@ const MessageReactionItem = observer(
 								<ReactionImage
 									src={emojiUrl}
 									alt={emojiName}
+									aria-hidden={true}
 									draggable={false}
 									className={clsx('emoji', styles.emoji, reactionShouldBlur && matureStyles.matureBlurred)}
 									data-flx="channel.message-reactions.message-reaction-item.emoji"
@@ -251,8 +248,6 @@ const MessageReactionItem = observer(
 				message={message}
 				reaction={reaction}
 				hoveredEmojiUrl={emojiUrl}
-				animationSyncKey={animationSyncKey}
-				onRequestAnimationSync={handleTooltipAnimationSync}
 				onTooltipHoverChange={setTooltipHovering}
 				data-flx="channel.message-reactions.message-reaction-item.reaction-tooltip"
 			>

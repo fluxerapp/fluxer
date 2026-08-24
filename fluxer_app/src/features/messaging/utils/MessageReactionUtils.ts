@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import i18n from '@app/app/I18n';
-import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import Channels from '@app/features/channel/state/Channels';
 import type {UnicodeEmoji} from '@app/features/emoji/types/EmojiTypes';
 import EmojiCatalog from '@app/features/expressions/utils/EmojiCatalog';
-import * as EmojiImageUtils from '@app/features/expressions/utils/EmojiImageUtils';
 import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
-import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
-import {setUrlQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {getReactionKey, type ReactionEmoji} from '@app/features/messaging/utils/ReactionEmoji';
-import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
+import * as ReactionUtils from '@app/features/messaging/utils/ReactionUtils';
 import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, plural} from '@lingui/core/macro';
-import {useEffect, useState} from 'react';
 
 const REACTED_BY_DESCRIPTOR = msg({
 	message: '{emojiName} reacted by {reactors}',
@@ -97,10 +92,6 @@ export function getEmojiNameWithColons(emoji: ReactionEmoji): string {
 	return name ? `:${name}:` : surrogate;
 }
 
-function getCustomEmojiURL(id: string, animated: boolean, size: number): string {
-	return setUrlQueryParams(AvatarSourceUtils.getEmojiURL({id, animated}), {size, quality: 'lossless'});
-}
-
 export interface EmojiURLParams {
 	readonly emoji: ReactionEmoji;
 	readonly isHovering?: boolean;
@@ -116,26 +107,6 @@ export function useEmojiURL({
 	forceAnimate = false,
 	enabled = true,
 }: EmojiURLParams): string | null {
-	const shouldAnimate = useShouldAnimate({
-		kind: 'emoji',
-		isHovering: isHovering || forceAnimate,
-	});
-	const staticUrl =
-		emoji.id == null
-			? EmojiImageUtils.getEmojiURL(EmojiCatalog.normalizeShortcodeToSurrogate(emoji.name))
-			: getCustomEmojiURL(emoji.id, false, size);
-	const animatedUrl = emoji.id != null && emoji.animated ? getCustomEmojiURL(emoji.id, true, size) : null;
-	const [loadedAnimatedUrl, setLoadedAnimatedUrl] = useState<string | null>(() =>
-		ImageCacheUtils.hasImage(animatedUrl) ? animatedUrl : null,
-	);
-	useEffect(() => {
-		if (!enabled) return;
-		ImageCacheUtils.pinImage(staticUrl);
-	}, [enabled, staticUrl]);
-	useEffect(() => {
-		if (!enabled || !shouldAnimate || !animatedUrl) return;
-		return ImageCacheUtils.loadImage(animatedUrl, () => setLoadedAnimatedUrl(animatedUrl));
-	}, [animatedUrl, enabled, shouldAnimate]);
-	if (!enabled) return null;
-	return shouldAnimate && animatedUrl === loadedAnimatedUrl ? animatedUrl : staticUrl;
+	const url = ReactionUtils.useEmojiURL({emoji, isHovering, size, forceAnimate});
+	return enabled ? url : null;
 }
