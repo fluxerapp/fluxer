@@ -313,6 +313,7 @@ export const GuildListItemPresentation = forwardRef<
 		[backgroundImage, draggingCursor],
 	);
 	const guildIconTarget = useMemo(() => ({borderRadius: iconBorderRadius}), [iconBorderRadius]);
+	const hasPaintedIcon = backgroundImage != null;
 	return (
 		<LongPressable
 			{...domProps}
@@ -364,7 +365,7 @@ export const GuildListItemPresentation = forwardRef<
 					tabIndex={-1}
 					className={clsx(
 						styles.guildIcon,
-						guild.icon == null && styles.guildIconNoImage,
+						!hasPaintedIcon && styles.guildIconNoImage,
 						isSelected && styles.guildIconSelected,
 					)}
 					to={guildIconTarget}
@@ -374,7 +375,7 @@ export const GuildListItemPresentation = forwardRef<
 					style={guildIconStyle}
 					data-flx="app.sidebar-nav.guild-list-item-presentation.guild-icon"
 				>
-					{guild.icon == null && (
+					{!hasPaintedIcon && (
 						<span
 							className={styles.guildIconInitials}
 							data-flx="app.sidebar-nav.guild-list-item-presentation.guild-icon-initials"

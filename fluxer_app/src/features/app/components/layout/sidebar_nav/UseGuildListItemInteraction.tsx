@@ -55,13 +55,6 @@ function resolveGuildIconBackgroundImage(iconURL: string, displayedIconURL: stri
 	return `url(${displayedIconURL})`;
 }
 
-function resolveInitiallyLoadedImageURL(imageURL: string): string | null {
-	if (ImageCacheUtils.hasImage(imageURL)) {
-		return imageURL;
-	}
-	return null;
-}
-
 export function useGuildListItemInteraction({
 	guild,
 	isDesktopLayout,
@@ -79,16 +72,16 @@ export function useGuildListItemInteraction({
 	});
 	const iconURL = AvatarSourceUtils.getGuildIconURL(guild, false);
 	const hoverIconURL = AvatarSourceUtils.getGuildIconURL(guild, true);
-	const [loadedAnimatedURL, setLoadedAnimatedURL] = useState<string | null>(() =>
-		resolveInitiallyLoadedImageURL(hoverIconURL),
-	);
+	const isAnimatableIcon = hoverIconURL !== iconURL;
+	const [loadedAnimatedURL, setLoadedAnimatedURL] = useState<string | null>(null);
 	const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 	useEffect(() => ImageCacheUtils.pinImage(iconURL), [iconURL]);
 	useEffect(() => {
+		if (!isAnimatableIcon) return;
 		if (!isHovering && !contextMenuOpen) return;
 		if (loadedAnimatedURL === hoverIconURL) return;
 		return ImageCacheUtils.loadImage(hoverIconURL, () => setLoadedAnimatedURL(hoverIconURL));
-	}, [contextMenuOpen, hoverIconURL, isHovering, loadedAnimatedURL]);
+	}, [contextMenuOpen, hoverIconURL, isAnimatableIcon, isHovering, loadedAnimatedURL]);
 	const handleSelect = useCallback(() => {
 		markDirectSelection(DirectSelectionSurface.GUILD_RAIL);
 		preloadChannelNow();
@@ -126,7 +119,7 @@ export function useGuildListItemInteraction({
 		if (!isSortingList && isMobileExperience) setBottomSheetOpen(true);
 	}, [isMobileExperience, isSortingList]);
 	const handleCloseBottomSheet = useCallback(() => setBottomSheetOpen(false), []);
-	const shouldPlayAnimated = (isHovering || contextMenuOpen) && loadedAnimatedURL === hoverIconURL;
+	const shouldPlayAnimated = isAnimatableIcon && (isHovering || contextMenuOpen) && loadedAnimatedURL === hoverIconURL;
 	const displayedIconURL = resolveDisplayedGuildIconURL({hoverIconURL, iconURL, shouldPlayAnimated});
 	const backgroundImage = resolveGuildIconBackgroundImage(iconURL, displayedIconURL);
 	return {
