@@ -2,15 +2,11 @@
 
 import {EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {isAnimatedFile} from './AnimatedImageUtils';
-import {
-	isSvgFile,
-	readBlobAsBase64NoPrefix,
-	readBlobAsDataUrl,
-	readImageFileAsUploadDataUrl,
-} from './ImageUploadFileUtils';
+import {isSvgFile, readBlobAsBase64NoPrefix, readImageFileAsUploadDataUrl} from './ImageUploadFileUtils';
 
 const EMOJI_MAX_SIZE_FALLBACK = EMOJI_MAX_SIZE;
 const STICKER_MAX_SIZE_FALLBACK = STICKER_MAX_SIZE;
+const SOURCE_MAX_PIXELS = 32_000_000;
 const WEBP_QUALITY_STEPS = [0.92, 0.82, 0.72, 0.62, 0.52, 0.42];
 const JPEG_QUALITY_STEPS = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4];
 
@@ -66,34 +62,46 @@ export async function optimizeStickerImage(
 	return optimizeEmojiImage(file, maxSizeBytes, targetSize);
 }
 
+function loadImageElement(src: string): Promise<HTMLImageElement> {
+	return new Promise((resolve, reject) => {
+		const image = new Image();
+		image.onload = () => resolve(image);
+		image.onerror = () => reject(new Error('Failed to load image'));
+		image.src = src;
+	});
+}
+
 async function containToSquareBase64(
 	file: File,
 	target: number,
 	maxBytes: number,
 	preferredMime: StaticOutputMime,
 ): Promise<string> {
-	const dataUrl = await readBlobAsDataUrl(file);
-	const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-		const im = new Image();
-		im.crossOrigin = 'anonymous';
-		im.onload = () => resolve(im);
-		im.onerror = () => reject(new Error('Failed to load image'));
-		im.src = dataUrl;
-	});
 	const canvas = document.createElement('canvas');
 	canvas.width = target;
 	canvas.height = target;
 	const ctx = canvas.getContext('2d');
 	if (!ctx) throw new Error('Could not create canvas context');
-	ctx.clearRect(0, 0, target, target);
-	ctx.imageSmoothingEnabled = true;
-	ctx.imageSmoothingQuality = 'high';
-	const s = Math.min(target / img.width, target / img.height);
-	const dw = Math.max(1, Math.round(img.width * s));
-	const dh = Math.max(1, Math.round(img.height * s));
-	const dx = Math.floor((target - dw) / 2);
-	const dy = Math.floor((target - dh) / 2);
-	ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
+	const objectUrl = URL.createObjectURL(file);
+	try {
+		const img = await loadImageElement(objectUrl);
+		const sourcePixels = img.naturalWidth * img.naturalHeight;
+		if (sourcePixels === 0) throw new Error('Failed to load image');
+		if (sourcePixels > SOURCE_MAX_PIXELS) {
+			throw new Error(`Image is too large to process (${img.naturalWidth}x${img.naturalHeight})`);
+		}
+		ctx.clearRect(0, 0, target, target);
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = 'high';
+		const s = Math.min(target / img.naturalWidth, target / img.naturalHeight);
+		const dw = Math.max(1, Math.round(img.naturalWidth * s));
+		const dh = Math.max(1, Math.round(img.naturalHeight * s));
+		const dx = Math.floor((target - dw) / 2);
+		const dy = Math.floor((target - dh) / 2);
+		ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, dx, dy, dw, dh);
+	} finally {
+		URL.revokeObjectURL(objectUrl);
+	}
 
 	const hasTransparency = canvasHasTransparentPixels(ctx, target);
 	const attempts: Array<{mime: StaticOutputMime; quality?: number}> = [{mime: preferredMime}];

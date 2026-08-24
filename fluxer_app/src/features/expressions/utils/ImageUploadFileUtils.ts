@@ -26,7 +26,7 @@ export function getImageUploadMimeType(file: ImageUploadFileLike): string {
 	return 'image/png';
 }
 
-export function readBlobAsDataUrl(blob: Blob): Promise<string> {
+function readBlobAsDataUrl(blob: Blob): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
 		reader.onload = () => resolve(String(reader.result));
