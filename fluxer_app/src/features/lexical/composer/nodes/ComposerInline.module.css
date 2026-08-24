@@ -4,6 +4,7 @@
 	display: inline-block;
 	height: 1.375em;
 	width: auto;
+	aspect-ratio: 1 / 1;
 	max-height: 1.375em;
 	vertical-align: bottom;
 	object-fit: contain;
