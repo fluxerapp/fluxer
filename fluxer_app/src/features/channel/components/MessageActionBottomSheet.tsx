@@ -4,15 +4,14 @@ import styles from '@app/features/channel/components/MessageActionBottomSheet.mo
 import {useMessageActionMenuData} from '@app/features/channel/components/MessageActionMenu';
 import {MessageReactionsSheet} from '@app/features/channel/components/MessageReactionsSheet';
 import {
-	getQuickReactionEmojiSrc,
 	REACT_WITH_EMOJI_DESCRIPTOR,
 	renderQuickReactionEmoji,
+	useReactionMenuImagePreload,
 } from '@app/features/channel/components/QuickReactionsRow';
 import quickReactionStyles from '@app/features/channel/components/QuickReactionsRow.module.css';
 import type {Channel} from '@app/features/channel/models/Channel';
 import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
-import {useExpressionImagesPreload} from '@app/features/expressions/utils/ExpressionImageCache';
 import {COPY_LINK_DESCRIPTOR, OPEN_LINK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -109,11 +108,7 @@ export const MessageActionBottomSheet: React.FC<MessageActionBottomSheetProps> =
 				},
 			];
 		}, [handleCopyLink, handleOpenLink, i18n.locale, linkUrl]);
-		const quickReactionImageUrls = useMemo(
-			() => quickReactionEmojis.map((emoji) => getQuickReactionEmojiSrc(emoji)),
-			[quickReactionEmojis],
-		);
-		useExpressionImagesPreload(quickReactionImageUrls);
+		useReactionMenuImagePreload(quickReactionEmojis);
 		const visibleGroups = useMemo(
 			() => [...linkGroups, ...groups].filter((group) => group.items.length > 0),
 			[groups, linkGroups],
