@@ -1855,7 +1855,9 @@ export function createSubscriptionUpdatedEvent(options: {
 export function createSubscriptionDeletedEvent(options: {
 	subscriptionId?: string;
 	customerId?: string;
+	endedAt?: number;
 }): StripeWebhookEventData {
+	const nowSeconds = Math.floor(Date.now() / 1000);
 	return {
 		type: 'customer.subscription.deleted',
 		data: {
@@ -1864,7 +1866,8 @@ export function createSubscriptionDeletedEvent(options: {
 				object: 'subscription',
 				customer: options.customerId ?? 'cus_test_1',
 				status: 'canceled',
-				canceled_at: Math.floor(Date.now() / 1000),
+				canceled_at: nowSeconds,
+				ended_at: options.endedAt ?? nowSeconds,
 			},
 		},
 	};

@@ -474,6 +474,56 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(afterUser?.premiumType).toBe(UserPremiumTypes.LIFETIME);
 			expect(afterUser?.stripeSubscriptionId).toBeNull();
 		});
+		test('cuts premium off at the cancellation moment when the subscription is cancelled before its paid period ends', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const subscriptionId = 'sub_test_cancel_early';
+			const premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+			await userRepository.patchUpsert(
+				userId,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: 'cus_test_1',
+					premium_since: new Date(),
+					premium_until: premiumUntil,
+				},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const endedAt = Math.floor(Date.now() / 1000);
+			const eventData = createSubscriptionDeletedEvent({subscriptionId, endedAt});
+			const result = await sendWebhook(eventData);
+			expect(result.received).toBe(true);
+			const afterUser = await userRepository.findUnique(userId);
+			expect(afterUser?.premiumUntil?.getTime()).toBe(endedAt * 1000);
+			expect(afterUser?.premiumGraceEndsAt).toBeNull();
+			expect(afterUser?.stripeSubscriptionId).toBeNull();
+		});
+		test('grants standard grace when the subscription is cancelled at the end of its paid period', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const subscriptionId = 'sub_test_cancel_natural';
+			const premiumUntil = new Date(Date.now() - 60 * 1000);
+			await userRepository.patchUpsert(
+				userId,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: 'cus_test_1',
+					premium_since: new Date(),
+					premium_until: premiumUntil,
+				},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const endedAt = Math.floor(Date.now() / 1000);
+			const eventData = createSubscriptionDeletedEvent({subscriptionId, endedAt});
+			const result = await sendWebhook(eventData);
+			expect(result.received).toBe(true);
+			const afterUser = await userRepository.findUnique(userId);
+			expect(afterUser?.premiumUntil?.getTime()).toBe(premiumUntil.getTime());
+			expect(afterUser?.premiumGraceEndsAt).not.toBeNull();
+			expect(afterUser!.premiumGraceEndsAt!.getTime()).toBe(endedAt * 1000 + 3 * 24 * 60 * 60 * 1000);
+		});
 		test('processes donation subscription deletion', async () => {
 			const subscriptionId = 'sub_donor_delete_test';
 			const donorEmail = 'donor-delete@example.com';
