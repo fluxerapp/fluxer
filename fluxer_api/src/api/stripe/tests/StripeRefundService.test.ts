@@ -238,6 +238,22 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(response.refunded_amount_cents).toBe(2500);
 			expect(response.subscription_id).toBeNull();
 		});
+		test('requests one cent under the captured amount when the underlying charge was paid via PIX', async () => {
+			server.use(
+				...createStripeApiHandlers({charges: {ch_in_recent: {payment_method_details: {type: 'pix'}}}}).handlers,
+			);
+			server.use(
+				invoiceListHandler([buildInvoice({id: 'in_recent', paidAtSecondsAgo: SECONDS_PER_DAY, subscriptionId: null})]),
+				refundCreateHandler(),
+			);
+			const account = await createTestAccount(harness);
+			await setStripeIds(harness, account, {stripe_customer_id: MOCK_CUSTOMER_ID});
+			const response = await createBuilder<SelfServeRefundResponse>(harness, account.token)
+				.post('/premium/refund-latest')
+				.execute();
+			expect(response.invoice_amount_paid_cents).toBe(2500);
+			expect(response.refunded_amount_cents).toBe(2499);
+		});
 		test('refunds latest invoice and cancels subscription when present', async () => {
 			server.use(...createStripeApiHandlers().handlers);
 			server.use(

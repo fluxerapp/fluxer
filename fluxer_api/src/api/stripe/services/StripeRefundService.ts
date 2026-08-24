@@ -25,6 +25,7 @@ import type {StripeSubscriptionService} from './StripeSubscriptionService';
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 export const SELF_SERVE_REFUND_WINDOW_DAYS = 3;
 export const SELF_SERVE_REFUND_COOLDOWN_DAYS = 30;
+export const PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS = 1;
 
 interface RefundTarget {
 	invoice: Stripe.Invoice;
@@ -206,6 +207,30 @@ export class StripeRefundService {
 		};
 	}
 
+	private async resolveChargePaymentMethodType(stripe: Stripe, target: RefundTarget): Promise<string | null> {
+		try {
+			if (target.chargeId) {
+				const charge = await stripe.charges.retrieve(target.chargeId);
+				return charge.payment_method_details?.type ?? null;
+			}
+			if (target.paymentIntentId) {
+				const paymentIntent = await stripe.paymentIntents.retrieve(target.paymentIntentId, {
+					expand: ['latest_charge'],
+				});
+				const latestCharge = paymentIntent.latest_charge;
+				if (latestCharge && typeof latestCharge !== 'string') {
+					return latestCharge.payment_method_details?.type ?? null;
+				}
+			}
+		} catch (error) {
+			Logger.warn(
+				{error, chargeId: target.chargeId, paymentIntentId: target.paymentIntentId},
+				'Failed to resolve payment method type for self-serve refund',
+			);
+		}
+		return null;
+	}
+
 	private async countPriorTerminalFailures(invoiceId: string): Promise<number> {
 		const priorRefunds = await getBillingRepository().refunds.listByInvoice(invoiceId);
 		return priorRefunds.filter((r) => r.status === 'failed' || r.status === 'canceled').length;
@@ -273,12 +298,18 @@ export class StripeRefundService {
 			target.paymentIntentId ?? target.chargeId,
 			...(priorFailures > 0 ? [`retry-${priorFailures}`] : []),
 		].join(':');
+		const paymentMethodType = await this.resolveChargePaymentMethodType(stripe, target);
+		const isPix = paymentMethodType === 'pix';
+		const requestedAmountCents =
+			isPix && target.amountPaidCents > PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS
+				? target.amountPaidCents - PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS
+				: target.amountPaidCents;
 		let refund: Stripe.Response<Stripe.Refund>;
 		try {
 			refund = await stripe.refunds.create(
 				{
 					...(target.paymentIntentId ? {payment_intent: target.paymentIntentId} : {charge: target.chargeId!}),
-					amount: target.amountPaidCents,
+					amount: requestedAmountCents,
 					reason: 'requested_by_customer',
 					metadata: {
 						user_id: user.id.toString(),
