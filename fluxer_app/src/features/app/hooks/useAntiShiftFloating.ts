@@ -52,6 +52,7 @@ interface FloatingState {
 	isReady: boolean;
 	offsetX: number;
 	offsetY: number;
+	placement: Placement;
 }
 
 interface UseAntiShiftFloatingOptions {
@@ -280,7 +281,7 @@ export function useAntiShiftFloating(
 	const floatingRef = useRef<HTMLElement>(null);
 	const [state, setState] = useState<FloatingState>(() => {
 		const {x, y} = target ? getInitialGuess(target, placement, offsetMainAxis, offsetCrossAxis) : {x: -9999, y: -9999};
-		return {x, y, isReady: false, offsetX: 0, offsetY: 0};
+		return {x, y, isReady: false, offsetX: 0, offsetY: 0, placement};
 	});
 	const cleanupRef = useRef<(() => void) | null>(null);
 	const isCalculatingRef = useRef(false);
@@ -345,7 +346,11 @@ export function useAntiShiftFloating(
 					}),
 				);
 			}
-			const {x, y} = await computePosition(target, floating, {
+			const {
+				x,
+				y,
+				placement: resolvedPlacement,
+			} = await computePosition(target, floating, {
 				placement,
 				middleware,
 			});
@@ -387,11 +392,18 @@ export function useAntiShiftFloating(
 					prev.y === safeBasePosition.y &&
 					prev.isReady &&
 					prev.offsetX === nextOffset.x &&
-					prev.offsetY === nextOffset.y
+					prev.offsetY === nextOffset.y &&
+					prev.placement === resolvedPlacement
 				) {
 					return prev;
 				}
-				return {...safeBasePosition, isReady: true, offsetX: nextOffset.x, offsetY: nextOffset.y};
+				return {
+					...safeBasePosition,
+					isReady: true,
+					offsetX: nextOffset.x,
+					offsetY: nextOffset.y,
+					placement: resolvedPlacement,
+				};
 			});
 		} catch (error) {
 			logger.error('Error positioning floating element', error);

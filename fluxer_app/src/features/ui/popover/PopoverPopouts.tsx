@@ -198,7 +198,10 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 			constrainHeight,
 			enableSmartBoundary: true,
 		});
-		const resizePositionController = useMemo(() => ({begin: beginManualPositioning}), [beginManualPositioning]);
+		const resizePositionController = useMemo(
+			() => ({begin: beginManualPositioning, placement: state.placement}),
+			[beginManualPositioning, state.placement],
+		);
 		const {refs: focusRefs, context: focusContext} = useFloating({open: true});
 		useLayoutEffect(() => {
 			focusRefs.setReference(target);

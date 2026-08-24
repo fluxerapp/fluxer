@@ -1,0 +1,81 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.handle {
+	position: absolute;
+	z-index: 5;
+	border: none;
+	background: transparent;
+	padding: 0;
+	pointer-events: auto;
+	touch-action: none;
+}
+
+.handle:focus-visible {
+	outline: 0.125rem solid var(--focus-primary);
+	outline-offset: -0.125rem;
+}
+
+.edgeTop {
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 0.5rem;
+	cursor: n-resize;
+}
+
+.edgeBottom {
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 0.5rem;
+	cursor: s-resize;
+}
+
+.edgeLeft {
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 0.5rem;
+	cursor: w-resize;
+}
+
+.edgeRight {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 0.5rem;
+	cursor: e-resize;
+}
+
+.cornerTopLeft,
+.cornerTopRight,
+.cornerBottomLeft,
+.cornerBottomRight {
+	width: 1.25rem;
+	height: 1.25rem;
+	z-index: 6;
+}
+
+.cornerTopLeft {
+	top: 0;
+	left: 0;
+	cursor: nwse-resize;
+}
+
+.cornerTopRight {
+	top: 0;
+	right: 0;
+	cursor: nesw-resize;
+}
+
+.cornerBottomLeft {
+	bottom: 0;
+	left: 0;
+	cursor: nesw-resize;
+}
+
+.cornerBottomRight {
+	right: 0;
+	bottom: 0;
+	cursor: nwse-resize;
+}
