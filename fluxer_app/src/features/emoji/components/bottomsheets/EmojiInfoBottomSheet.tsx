@@ -3,12 +3,14 @@
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet.module.css';
 import Emoji from '@app/features/emoji/state/Emoji';
+import {
+	buildCustomEmojiURL,
+	CUSTOM_EMOJI_ENLARGED_IMAGE_RUNG,
+} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import Guilds from '@app/features/guild/state/Guilds';
-import {setUrlQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {Trans} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -46,19 +48,19 @@ interface EmojiInfoBottomSheetContentProps {
 }
 
 const EmojiInfoBottomSheetContent: React.FC<EmojiInfoBottomSheetContentProps> = observer(({emoji, onClose}) => {
-	const shouldAnimateEmoji = useShouldAnimate({kind: 'emoji'});
 	const isCustomEmoji = emoji.id != null;
+	const shouldAnimateEmoji = useShouldAnimate({kind: 'emoji', isAnimated: Boolean(emoji.animated)});
 	const emojiRecord = isCustomEmoji ? Emoji.getEmojiById(emoji.id!) : null;
 	const guildId = emojiRecord?.guildId;
 	const guild = guildId ? Guilds.getGuild(guildId) : null;
 	const defaultEmojiSurrogate = isCustomEmoji ? null : UnicodeEmojis.normalizeEmojiNameToSurrogate(emoji.name);
 	const emojiUrl = useMemo(() => {
 		if (isCustomEmoji) {
-			const url = AvatarUtils.getEmojiURL({
+			return buildCustomEmojiURL({
 				id: emoji.id!,
 				animated: Boolean(emoji.animated) && shouldAnimateEmoji,
+				size: CUSTOM_EMOJI_ENLARGED_IMAGE_RUNG,
 			});
-			return setUrlQueryParams(url, {size: 240, quality: 'lossless'});
 		}
 		return EmojiUtils.getEmojiURL(defaultEmojiSurrogate ?? emoji.name);
 	}, [emoji.id, emoji.name, emoji.animated, isCustomEmoji, defaultEmojiSurrogate, shouldAnimateEmoji]);

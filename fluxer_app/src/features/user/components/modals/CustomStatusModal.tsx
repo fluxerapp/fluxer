@@ -14,6 +14,7 @@ import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
+import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import {getEmojiURL} from '@app/features/expressions/utils/EmojiUtils';
 import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import {Button} from '@app/features/ui/button/Button';
@@ -30,7 +31,6 @@ import {ProfilePreview} from '@app/features/user/components/profile/ProfilePrevi
 import {type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {getDaysBetween} from '@fluxer/date_utils/src/DateComparison';
 import {getFormattedShortDate, getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
@@ -249,7 +249,7 @@ export const CustomStatusModal = observer(() => {
 			if (emoji) {
 				return (
 					<img
-						src={AvatarUtils.getEmojiURL({
+						src={buildCustomEmojiURL({
 							id: draftStatus.emojiId,
 							animated: Boolean(emoji.animated) && shouldAnimateEmojiPreview,
 						})}

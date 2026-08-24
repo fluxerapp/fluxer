@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import type {GuildEmoji as WireGuildEmoji} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
@@ -21,10 +21,7 @@ export class GuildEmoji {
 		this.name = data.name;
 		this.uniqueName = data.name;
 		this.allNamesString = `:${data.name}:`;
-		this.url = AvatarUtils.getEmojiURL({
-			id: data.id,
-			animated: data.animated,
-		});
+		this.url = buildCustomEmojiURL({id: data.id, animated: data.animated});
 		this.animated = data.animated;
 		this.nsfw = data.nsfw;
 		this.user = data.user;
