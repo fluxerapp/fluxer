@@ -31,8 +31,8 @@ interface ChannelStickersAreaProps {
 
 export const ChannelStickersArea: React.FC<ChannelStickersAreaProps> = observer(({channelId, hasAttachments}) => {
 	const {i18n} = useLingui();
-	const {shouldAnimate, interactionHandlers} = useStickerAnimation();
 	const sticker = ChannelSticker.getPendingSticker(channelId);
+	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker?.animated ?? false});
 	const [previousSticker, setPreviousSticker] = useState(sticker);
 	useEffect(() => {
 		if (previousSticker && !sticker) {
@@ -62,6 +62,7 @@ export const ChannelStickersArea: React.FC<ChannelStickersAreaProps> = observer(
 	const stickerUrl = AvatarUtils.getStickerURL({
 		id: sticker.id,
 		animated: shouldAnimate,
+		isAnimatable: sticker.animated,
 		size: 320,
 	});
 	return (
