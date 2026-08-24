@@ -28,7 +28,7 @@ function parseBorderRadius(radius: string | undefined) {
 
 export class FocusRingContextManager {
 	targetElement?: Element;
-	targetAncestry?: FocusRingAncestry;
+	ancestorChain?: FocusRingAncestry;
 	boundingBox?: DOMRect;
 	className?: string;
 	offset: Offset | number = 0;
@@ -40,9 +40,9 @@ export class FocusRingContextManager {
 		this.container = element;
 	}
 
-	showElement(element: Element, opts: FocusRingShowOpts = {}) {
+	showForElement(element: Element, opts: FocusRingShowOpts = {}) {
 		this.targetElement = element;
-		this.targetAncestry = this.getElementAncestors(this.targetElement);
+		this.ancestorChain = this.collectAncestorChain(this.targetElement);
 		this.boundingBox = undefined;
 		this.className = opts.className;
 		this.offset = opts.offset ?? 0;
@@ -53,7 +53,7 @@ export class FocusRingContextManager {
 
 	hide() {
 		this.targetElement = undefined;
-		this.targetAncestry = undefined;
+		this.ancestorChain = undefined;
 		this.boundingBox = undefined;
 		this.className = undefined;
 		this.offset = 0;
@@ -65,7 +65,7 @@ export class FocusRingContextManager {
 		return this.targetElement != null || this.boundingBox != null;
 	}
 
-	private getElementAncestors(element?: Element): FocusRingAncestry {
+	private collectAncestorChain(element?: Element): FocusRingAncestry {
 		if (element == null) return {elements: [], styles: []};
 		const elements: Array<Element> = [];
 		const styles: Array<CSSStyleDeclaration> = [];
@@ -78,7 +78,7 @@ export class FocusRingContextManager {
 		return {elements, styles};
 	}
 
-	private getNextZIndexForAncestry(ancestry: FocusRingAncestry) {
+	private resolveStackingLayer(ancestry: FocusRingAncestry) {
 		for (let i = 0; i < ancestry.elements.length; i++) {
 			const element = ancestry.elements[i];
 			const style = ancestry.styles[i];
@@ -89,7 +89,7 @@ export class FocusRingContextManager {
 		return undefined;
 	}
 
-	private getBorderRadius(ancestry: FocusRingAncestry) {
+	private readCornerRadii(ancestry: FocusRingAncestry) {
 		const topLeft = parseBorderRadius(ancestry.styles[0]?.borderTopLeftRadius) ?? '0';
 		const topRight = parseBorderRadius(ancestry.styles[0]?.borderTopRightRadius) ?? '0';
 		const bottomRight = parseBorderRadius(ancestry.styles[0]?.borderBottomRightRadius) ?? '0';
@@ -100,7 +100,7 @@ export class FocusRingContextManager {
 		return `${topLeft} ${topRight} ${bottomRight} ${bottomLeft}`;
 	}
 
-	private makePositionFromDOMRect(rect: DOMRect) {
+	private computeRingBox(rect: DOMRect) {
 		if (this.container == null) return {};
 		const containerRect = this.container.getBoundingClientRect();
 		const {scrollTop, scrollLeft} = this.container;
@@ -131,17 +131,17 @@ export class FocusRingContextManager {
 		let styles = {};
 		if (this.boundingBox != null) {
 			styles = {
-				...this.makePositionFromDOMRect(this.boundingBox),
+				...this.computeRingBox(this.boundingBox),
 				zIndex: this.zIndex,
 				[FOCUS_RING_COLOR_CSS_PROPERTY]: 'var(--focus-primary)',
 			};
 		}
-		if (this.targetElement != null && this.targetAncestry != null) {
+		if (this.targetElement != null && this.ancestorChain != null) {
 			styles = {
-				...this.makePositionFromDOMRect(this.targetElement.getBoundingClientRect()),
-				zIndex: this.zIndex ?? this.getNextZIndexForAncestry(this.targetAncestry),
+				...this.computeRingBox(this.targetElement.getBoundingClientRect()),
+				zIndex: this.zIndex ?? this.resolveStackingLayer(this.ancestorChain),
 				[FOCUS_RING_COLOR_CSS_PROPERTY]: 'var(--focus-primary)',
-				[FOCUS_RING_RADIUS_CSS_PROPERTY]: this.getBorderRadius(this.targetAncestry),
+				[FOCUS_RING_RADIUS_CSS_PROPERTY]: this.readCornerRadii(this.ancestorChain),
 			};
 		}
 		return styles;
