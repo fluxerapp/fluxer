@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	buildMediaProxyURL,
+	resolvePreferredImageFormat,
+	stripMediaProxyParams,
+} from '@app/features/messaging/utils/MediaProxyUtils';
 import type {MediaViewerItem} from '@app/features/ui/state/MediaViewer';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -70,4 +75,80 @@ export function findViewerItemIndex(items: ReadonlyArray<MediaViewerItem>, attac
 		0,
 		items.findIndex((item) => item.attachmentId === attachmentId),
 	);
+}
+
+export function getBaseProxyURL(src: string): string {
+	if (src.startsWith('blob:')) {
+		return src;
+	}
+	return stripMediaProxyParams(src);
+}
+
+function normalizeContentType(contentType?: string): string | undefined {
+	return contentType?.toLowerCase().split(';')[0]?.trim() || undefined;
+}
+
+function inferImageContentTypeFromURL(src: string): string | undefined {
+	try {
+		const path = new URL(src).pathname.toLowerCase();
+		if (path.endsWith('.png')) return 'image/png';
+		if (path.endsWith('.jpg') || path.endsWith('.jpeg')) return 'image/jpeg';
+		if (path.endsWith('.webp')) return 'image/webp';
+		if (path.endsWith('.gif')) return 'image/gif';
+		if (path.endsWith('.svg')) return 'image/svg+xml';
+		if (path.endsWith('.avif')) return 'image/avif';
+		if (path.endsWith('.jxl')) return 'image/jxl';
+	} catch {
+		return undefined;
+	}
+	return undefined;
+}
+
+function resolveViewerStaticImageFormat(contentType: string | undefined, src: string): 'webp' | undefined {
+	const normalizedContentType = normalizeContentType(contentType) ?? inferImageContentTypeFromURL(src);
+	switch (normalizedContentType) {
+		case 'image/png':
+		case 'image/jpeg':
+		case 'image/webp':
+		case 'image/gif':
+		case 'image/svg+xml':
+			return undefined;
+		default:
+			return resolvePreferredImageFormat(normalizedContentType);
+	}
+}
+
+function buildViewerStaticImageURL(item: MediaViewerItem): string {
+	if (item.src.startsWith('blob:')) {
+		return item.src;
+	}
+	const baseProxyURL = getBaseProxyURL(item.src);
+	return buildMediaProxyURL(baseProxyURL, {
+		format: resolveViewerStaticImageFormat(item.contentType, baseProxyURL),
+	});
+}
+
+export function isGifvRenderedAsImage(item: MediaViewerItem): boolean {
+	return item.type === 'gifv' && (item.src.endsWith('.gif') || item.originalSrc.endsWith('.gif'));
+}
+
+export function isViewerImageItem(item: MediaViewerItem): boolean {
+	return item.type === 'image' || item.type === 'gif' || isGifvRenderedAsImage(item);
+}
+
+export function buildViewerMediaURL(item: MediaViewerItem): string {
+	if (item.src.startsWith('blob:')) {
+		return item.src;
+	}
+	const baseProxyURL = getBaseProxyURL(item.src);
+	if (item.animated || item.type === 'gif') {
+		return buildMediaProxyURL(baseProxyURL, {
+			format: resolvePreferredImageFormat(item.contentType),
+			animated: true,
+		});
+	}
+	if (item.type === 'gifv' || item.type === 'video' || item.type === 'audio') {
+		return baseProxyURL;
+	}
+	return buildViewerStaticImageURL(item);
 }

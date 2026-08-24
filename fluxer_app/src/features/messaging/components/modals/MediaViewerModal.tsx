@@ -21,11 +21,13 @@ import {openExternalUrlWithWarning} from '@app/features/messaging/utils/External
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
+import {buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {
-	buildMediaProxyURL,
-	resolvePreferredImageFormat,
-	stripMediaProxyParams,
-} from '@app/features/messaging/utils/MediaProxyUtils';
+	buildViewerMediaURL,
+	getBaseProxyURL,
+	isGifvRenderedAsImage,
+	isViewerImageItem,
+} from '@app/features/messaging/utils/MediaViewerItemUtils';
 import {
 	copyMediaLinkToClipboard,
 	copyMediaToClipboard,
@@ -40,10 +42,9 @@ import {PortalHostContext} from '@app/features/ui/overlay/PortalHostContext';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import MediaViewer, {type MediaViewerItem} from '@app/features/ui/state/MediaViewer';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import {getNativePlatformSync, isNativeWindows} from '@app/features/ui/utils/NativeUtils';
+import {snapMediaProxyImageSize} from '@app/features/user/utils/AvatarUtils';
 import {AudioPlayer} from '@app/features/voice/components/media_player/components/AudioPlayer';
 import {VideoPlayer} from '@app/features/voice/components/media_player/components/VideoPlayer';
-import {resolveDevicePixelRatio} from '@app/features/voice/DevicePixelRatio';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {untracked} from 'mobx';
@@ -122,111 +123,29 @@ interface MobileMediaOptionsSheetProps {
 	sourceChannel?: Channel | null;
 }
 
-function getBaseProxyURL(src: string): string {
-	if (src.startsWith('blob:')) {
-		return src;
-	}
-	return stripMediaProxyParams(src);
-}
+const MEDIA_VIEWER_THUMBNAIL_SIZE = 44;
 
-function normalizeContentType(contentType?: string): string | undefined {
-	return contentType?.toLowerCase().split(';')[0]?.trim() || undefined;
-}
+type RenderReadyImageProps = ImgHTMLAttributes<HTMLImageElement>;
 
-function inferImageContentTypeFromURL(src: string): string | undefined {
-	try {
-		const path = new URL(src).pathname.toLowerCase();
-		if (path.endsWith('.png')) return 'image/png';
-		if (path.endsWith('.jpg') || path.endsWith('.jpeg')) return 'image/jpeg';
-		if (path.endsWith('.webp')) return 'image/webp';
-		if (path.endsWith('.gif')) return 'image/gif';
-		if (path.endsWith('.svg')) return 'image/svg+xml';
-		if (path.endsWith('.avif')) return 'image/avif';
-		if (path.endsWith('.jxl')) return 'image/jxl';
-	} catch {
-		return undefined;
-	}
-	return undefined;
-}
-
-function resolveViewerStaticImageFormat(contentType: string | undefined, src: string): 'webp' | undefined {
-	const normalizedContentType = normalizeContentType(contentType) ?? inferImageContentTypeFromURL(src);
-	switch (normalizedContentType) {
-		case 'image/png':
-		case 'image/jpeg':
-		case 'image/webp':
-		case 'image/gif':
-		case 'image/svg+xml':
-			return undefined;
-		default:
-			return resolvePreferredImageFormat(normalizedContentType);
-	}
-}
-
-function buildViewerStaticImageURL(item: MediaViewerItem): string {
-	if (item.src.startsWith('blob:')) {
-		return item.src;
-	}
-	const baseProxyURL = getBaseProxyURL(item.src);
-	return buildMediaProxyURL(baseProxyURL, {
-		format: resolveViewerStaticImageFormat(item.contentType, baseProxyURL),
-	});
-}
-
-const SHARP_CANVAS_MAX_SIDE = 8192;
-const SHARP_CANVAS_MAX_PIXELS = 32_000_000;
-const USE_SHARP_CANVAS_FOR_PLATFORM = isNativeWindows(getNativePlatformSync());
-const MEDIA_VIEWER_ANIMATION_SESSION_PARAM = 'flx_viewer_session';
-
-type RenderReadyImageProps = ImgHTMLAttributes<HTMLImageElement> & {
-	sharpenWhenZoomed?: boolean;
-};
-
-function shouldUseSharpCanvasForItem(item: MediaViewerItem, src: string): boolean {
-	const contentType = normalizeContentType(item.contentType) ?? inferImageContentTypeFromURL(src);
-	return USE_SHARP_CANVAS_FOR_PLATFORM && item.type === 'image' && !item.animated && contentType !== 'image/svg+xml';
-}
-
-function appendMediaViewerAnimationSession(src: string, sessionId: number): string {
-	if (!src || src.startsWith('blob:')) {
-		return src;
-	}
-	try {
-		const url = new URL(src);
-		url.searchParams.set(MEDIA_VIEWER_ANIMATION_SESSION_PARAM, sessionId.toString());
-		return url.toString();
-	} catch {
-		return src;
-	}
-}
-
-function getSharpCanvasSize(width: number, height: number, dpr: number): {height: number; width: number} | null {
-	const canvasWidth = Math.max(1, Math.round(width * dpr));
-	const canvasHeight = Math.max(1, Math.round(height * dpr));
-	if (
-		canvasWidth > SHARP_CANVAS_MAX_SIDE ||
-		canvasHeight > SHARP_CANVAS_MAX_SIDE ||
-		canvasWidth * canvasHeight > SHARP_CANVAS_MAX_PIXELS
-	) {
-		return null;
-	}
-	return {height: canvasHeight, width: canvasWidth};
-}
+const isImagePainted = (image: HTMLImageElement | null): image is HTMLImageElement =>
+	image?.complete === true && image.naturalWidth > 0;
 
 const RenderReadyImage: FC<RenderReadyImageProps> = ({
 	className,
 	onError,
 	onLoad,
-	sharpenWhenZoomed = false,
 	src,
 	...imageProps
 }: RenderReadyImageProps) => {
 	const [isReady, setIsReady] = useState(false);
-	const [canvasPortalTarget, setCanvasPortalTarget] = useState<HTMLElement | null>(null);
-	const [isSharpCanvasActive, setIsSharpCanvasActive] = useState(false);
-	const [isSharpCanvasVisible, setIsSharpCanvasVisible] = useState(false);
+	const [renderedSource, setRenderedSource] = useState(src);
+	const [decodedBeforeSwap, setDecodedBeforeSwap] = useState(() => ImageCacheUtils.hasImage(src));
+	if (renderedSource !== src) {
+		setRenderedSource(src);
+		setDecodedBeforeSwap(ImageCacheUtils.hasImage(src));
+	}
+	const shouldMountPlaceholder = !decodedBeforeSwap && !isReady;
 	const imageRef = useRef<HTMLImageElement | null>(null);
-	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const readyTokenRef = useRef(0);
 	const markReady = useCallback((image: HTMLImageElement) => {
 		const token = ++readyTokenRef.current;
@@ -248,8 +167,10 @@ const RenderReadyImage: FC<RenderReadyImageProps> = ({
 	}, []);
 	const handleLoad = useCallback(
 		(event: SyntheticEvent<HTMLImageElement>) => {
+			const image = event.currentTarget;
+			ImageCacheUtils.rememberImage(image.getAttribute('src'), image);
 			onLoad?.(event);
-			markReady(event.currentTarget);
+			markReady(image);
 		},
 		[markReady, onLoad],
 	);
@@ -260,170 +181,34 @@ const RenderReadyImage: FC<RenderReadyImageProps> = ({
 		},
 		[onError],
 	);
-	useEffect(() => {
+	useLayoutEffect(() => {
 		readyTokenRef.current += 1;
-		setIsReady(false);
 		const image = imageRef.current;
-		if (image?.complete && image.naturalWidth > 0) {
-			markReady(image);
+		if (!isImagePainted(image)) {
+			setIsReady(false);
+			return () => {
+				readyTokenRef.current += 1;
+			};
 		}
+		ImageCacheUtils.rememberImage(image.getAttribute('src'), image);
+		setIsReady(true);
+		markReady(image);
 		return () => {
 			readyTokenRef.current += 1;
 		};
 	}, [markReady, src]);
-	const drawSharpCanvas = useCallback((): boolean => {
-		const image = imageRef.current;
-		const canvas = canvasRef.current;
-		if (!image || !canvas || !image.complete || image.naturalWidth <= 0 || image.naturalHeight <= 0) return false;
-		const ownerWindow = image.ownerDocument.defaultView;
-		if (!ownerWindow) return false;
-		const imageRect = image.getBoundingClientRect();
-		const clipElement = image.closest('[data-flx*="pan-zoom-surface"]') as HTMLElement | null;
-		const clipRect = clipElement?.getBoundingClientRect();
-		const visibleLeft = Math.max(imageRect.left, clipRect?.left ?? imageRect.left);
-		const visibleTop = Math.max(imageRect.top, clipRect?.top ?? imageRect.top);
-		const visibleRight = Math.min(imageRect.right, clipRect?.right ?? imageRect.right);
-		const visibleBottom = Math.min(imageRect.bottom, clipRect?.bottom ?? imageRect.bottom);
-		const visibleWidth = visibleRight - visibleLeft;
-		const visibleHeight = visibleBottom - visibleTop;
-		if (imageRect.width <= 0 || imageRect.height <= 0 || visibleWidth <= 0 || visibleHeight <= 0) return false;
-		const canvasSize = getSharpCanvasSize(visibleWidth, visibleHeight, resolveDevicePixelRatio(ownerWindow));
-		if (!canvasSize) return false;
-		canvas.style.left = `${visibleLeft}px`;
-		canvas.style.top = `${visibleTop}px`;
-		canvas.style.width = `${visibleWidth}px`;
-		canvas.style.height = `${visibleHeight}px`;
-		if (canvas.width !== canvasSize.width) canvas.width = canvasSize.width;
-		if (canvas.height !== canvasSize.height) canvas.height = canvasSize.height;
-		const context = canvas.getContext('2d');
-		if (!context) return false;
-		const sourceX = ((visibleLeft - imageRect.left) / imageRect.width) * image.naturalWidth;
-		const sourceY = ((visibleTop - imageRect.top) / imageRect.height) * image.naturalHeight;
-		const sourceWidth = (visibleWidth / imageRect.width) * image.naturalWidth;
-		const sourceHeight = (visibleHeight / imageRect.height) * image.naturalHeight;
-		context.imageSmoothingEnabled = true;
-		context.imageSmoothingQuality = 'high';
-		context.clearRect(0, 0, canvas.width, canvas.height);
-		try {
-			context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
-		} catch {
-			return false;
-		}
-		return true;
-	}, []);
-	useEffect(() => {
-		if (!sharpenWhenZoomed) {
-			setCanvasPortalTarget(null);
-			return;
-		}
-		setCanvasPortalTarget(imageRef.current?.ownerDocument.body ?? null);
-	}, [sharpenWhenZoomed, src]);
-	useEffect(() => {
-		if (!sharpenWhenZoomed || !isReady) {
-			setIsSharpCanvasActive(false);
-			return;
-		}
-		const image = imageRef.current;
-		const ownerWindow = image?.ownerDocument.defaultView;
-		if (!image || !ownerWindow) {
-			setIsSharpCanvasActive(false);
-			return;
-		}
-		const surface = image.closest('[data-flx*="pan-zoom-surface"], [data-zoom-state]') as HTMLElement | null;
-		const mediaContainer = image.closest(
-			'[data-flx="messaging.media-modal.wrapped-children.media-container"]',
-		) as HTMLElement | null;
-		const updateActiveState = () => {
-			setIsSharpCanvasActive(
-				surface?.getAttribute('data-zoom-state') === 'zoomed' &&
-					mediaContainer?.getAttribute('data-media-rotation-active') !== 'true',
-			);
-		};
-		updateActiveState();
-		const observer = new ownerWindow.MutationObserver(updateActiveState);
-		if (surface) observer.observe(surface, {attributes: true, attributeFilter: ['data-zoom-state']});
-		if (mediaContainer) {
-			observer.observe(mediaContainer, {attributes: true, attributeFilter: ['data-media-rotation-active']});
-		}
-		return () => observer.disconnect();
-	}, [isReady, sharpenWhenZoomed, src]);
-	useLayoutEffect(() => {
-		if (!isReady || !isSharpCanvasActive || !canvasPortalTarget) {
-			setIsSharpCanvasVisible(false);
-			return;
-		}
-		const image = imageRef.current;
-		const canvas = canvasRef.current;
-		const ownerWindow = image?.ownerDocument.defaultView;
-		if (!image || !canvas || !ownerWindow) {
-			setIsSharpCanvasVisible(false);
-			return;
-		}
-		let animationFrame: number | null = null;
-		let disposed = false;
-		const scheduleDraw = () => {
-			if (disposed || animationFrame != null) return;
-			animationFrame = ownerWindow.requestAnimationFrame(() => {
-				animationFrame = null;
-				if (disposed) return;
-				setIsSharpCanvasVisible(drawSharpCanvas());
-			});
-		};
-		const surface = image.closest('[data-flx*="pan-zoom-surface"], [data-zoom-state]') as HTMLElement | null;
-		const mutationObserver = new ownerWindow.MutationObserver(scheduleDraw);
-		if (surface) {
-			mutationObserver.observe(surface, {
-				subtree: true,
-				attributes: true,
-				attributeFilter: ['style', 'class', 'data-zoom-state', 'data-dragging'],
-			});
-		}
-		const ResizeObserverConstructor = ownerWindow.ResizeObserver;
-		const resizeObserver = ResizeObserverConstructor ? new ResizeObserverConstructor(scheduleDraw) : null;
-		resizeObserver?.observe(image);
-		if (surface) resizeObserver?.observe(surface);
-		ownerWindow.addEventListener('resize', scheduleDraw);
-		scheduleDraw();
-		return () => {
-			disposed = true;
-			if (animationFrame != null) {
-				ownerWindow.cancelAnimationFrame(animationFrame);
-			}
-			mutationObserver.disconnect();
-			resizeObserver?.disconnect();
-			ownerWindow.removeEventListener('resize', scheduleDraw);
-		};
-	}, [canvasPortalTarget, drawSharpCanvas, isReady, isSharpCanvasActive, src]);
-	const imageClassName =
-		[
-			className,
-			isReady ? undefined : styles.imagePending,
-			isReady && isSharpCanvasActive && isSharpCanvasVisible ? styles.sharpCanvasSourceHidden : undefined,
-		]
-			.filter(Boolean)
-			.join(' ') || undefined;
+	const imageClassName = [className, isReady ? undefined : styles.imagePending].filter(Boolean).join(' ') || undefined;
 	return (
 		<>
-			{!isReady && (
+			{shouldMountPlaceholder && (
 				<span
-					className={styles.imageSpinnerOverlay}
+					className={styles.placeholder}
 					aria-hidden="true"
-					data-flx="messaging.media-viewer-modal.render-ready-image.image-spinner-overlay"
+					data-flx="messaging.media-viewer-modal.render-ready-image.placeholder"
 				>
 					<Spinner size="large" data-flx="messaging.media-viewer-modal.render-ready-image.spinner" />
 				</span>
 			)}
-			{isReady &&
-				isSharpCanvasActive &&
-				canvasPortalTarget &&
-				createPortal(
-					<canvas
-						ref={canvasRef}
-						className={styles.sharpCanvasLayer}
-						data-flx="messaging.media-viewer-modal.render-ready-image.sharp-canvas"
-					/>,
-					canvasPortalTarget,
-				)}
 			<img
 				data-flx="messaging.media-viewer-modal.render-ready-image.img"
 				{...imageProps}
@@ -488,12 +273,11 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 });
 const MediaViewerModalComponent: FC = observer(() => {
 	const {i18n} = useLingui();
-	const {isOpen, items, currentIndex, sessionId, channelId, messageId, message, sourceChannel} = MediaViewer;
+	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel} = MediaViewer;
 	const {enabled: isMobile} = MobileLayout;
 	const [isMediaMenuOpen, setIsMediaMenuOpen] = useState(false);
 	const currentItem = items[currentIndex];
-	const currentGifvIsActualGif =
-		currentItem?.type === 'gifv' && (currentItem.src.endsWith('.gif') || currentItem.originalSrc.endsWith('.gif'));
+	const currentGifvIsActualGif = currentItem != null && isGifvRenderedAsImage(currentItem);
 	useBottomSheetBackHandler(isOpen, MediaViewerCommands.closeMediaViewer);
 	useEffect(() => {
 		if (!isOpen) return;
@@ -504,36 +288,17 @@ const MediaViewerModalComponent: FC = observer(() => {
 	}, [isOpen]);
 	useEffect(() => {
 		if (!isOpen || items.length <= 1) return;
-		const preloadIndices = [currentIndex - 1, currentIndex + 1].filter(
-			(i) => i >= 0 && i < items.length && i !== currentIndex,
-		);
-		for (const idx of preloadIndices) {
-			const item = items[idx];
-			if (!item) continue;
-			if (item.type === 'image' || item.type === 'gif') {
-				const isItemBlob = item.src.startsWith('blob:');
-				if (isItemBlob) continue;
-				const baseProxyURL = getBaseProxyURL(item.src);
-				const shouldRequestAnimated = item.animated || item.type === 'gif';
-				let preloadSrc: string;
-				if (shouldRequestAnimated) {
-					preloadSrc = buildMediaProxyURL(baseProxyURL, {
-						format: resolvePreferredImageFormat(item.contentType),
-						animated: true,
-					});
-				} else {
-					preloadSrc = buildViewerStaticImageURL(item);
-				}
-				if (!ImageCacheUtils.hasImage(preloadSrc)) {
-					ImageCacheUtils.loadImage(preloadSrc, () => {});
-				}
-			} else if (item.type === 'gifv' || item.type === 'video') {
-				const video = document.createElement('video');
-				video.preload = 'metadata';
-				video.src = item.src;
-				video.load();
-			}
-		}
+		const count = items.length;
+		const adjacentIndices =
+			count === 2 ? [(currentIndex + 1) % count] : [(currentIndex - 1 + count) % count, (currentIndex + 1) % count];
+		const unpinCallbacks = adjacentIndices.map((index) => {
+			const item = items[index];
+			if (!item || !isViewerImageItem(item) || item.src.startsWith('blob:')) return () => {};
+			return ImageCacheUtils.pinImage(buildViewerMediaURL(item));
+		});
+		return () => {
+			for (const unpin of unpinCallbacks) unpin();
+		};
 	}, [isOpen, currentIndex, items]);
 	const defaultName = useMemo(() => {
 		if (!currentItem) return '';
@@ -705,58 +470,28 @@ const MediaViewerModalComponent: FC = observer(() => {
 			onForwardSuccess: handleForwardSuccess,
 		});
 	}, [forwardMediaSelection, message, sourceChannel]);
-	const isBlob = currentItem?.src.startsWith('blob:');
-	const imageSrc = useMemo(() => {
-		if (!currentItem) return '';
-		if (isBlob) {
-			return currentItem.src;
-		}
-		const baseProxyURL = getBaseProxyURL(currentItem.src);
-		const shouldRequestAnimated = currentItem.animated || currentItem.type === 'gif';
-		const shouldStartAnimationFromViewerOpen =
-			currentItem.type === 'gif' || currentGifvIsActualGif || (currentItem.type === 'image' && currentItem.animated);
-		if (shouldRequestAnimated) {
-			const animatedSrc = buildMediaProxyURL(baseProxyURL, {
-				format: resolvePreferredImageFormat(currentItem.contentType),
-				animated: true,
-			});
-			return shouldStartAnimationFromViewerOpen
-				? appendMediaViewerAnimationSession(animatedSrc, sessionId)
-				: animatedSrc;
-		}
-		if (currentItem.type === 'gifv' || currentItem.type === 'video' || currentItem.type === 'audio') {
-			return baseProxyURL;
-		}
-		return buildViewerStaticImageURL(currentItem);
-	}, [currentGifvIsActualGif, currentItem, isBlob, sessionId]);
-	const thumbnails = useMemo(
-		() =>
-			items.map((item, index) => {
-				const name =
-					item.filename ||
-					item.originalSrc.split('/').pop()?.split('?')[0] ||
-					i18n._(ATTACHMENT_DESCRIPTOR, {index1: index + 1});
-				if ((item.type === 'image' || item.type === 'gif' || item.animated) && !item.src.startsWith('blob:')) {
-					const baseProxyURL = getBaseProxyURL(item.src);
-					return {
-						src: buildMediaProxyURL(baseProxyURL, {
-							format: resolvePreferredImageFormat(item.contentType),
-							width: 320,
-							height: 320,
-							animated: Boolean(item.animated || item.type === 'gif'),
-						}),
-						alt: name,
-						type: item.type,
-					};
-				}
+	const imageSrc = useMemo(() => (currentItem ? buildViewerMediaURL(currentItem) : ''), [currentItem]);
+	const thumbnails = useMemo(() => {
+		const snappedThumbnailSize = snapMediaProxyImageSize(MEDIA_VIEWER_THUMBNAIL_SIZE);
+		return items.map((item, index) => {
+			const name =
+				item.filename ||
+				item.originalSrc.split('/').pop()?.split('?')[0] ||
+				i18n._(ATTACHMENT_DESCRIPTOR, {index1: index + 1});
+			if ((item.type === 'image' || item.type === 'gif' || item.animated) && !item.src.startsWith('blob:')) {
 				return {
-					src: item.src,
+					src: buildStaticGifPreviewURL(item.src, snappedThumbnailSize, snappedThumbnailSize),
 					alt: name,
 					type: item.type,
 				};
-			}),
-		[items, i18n.locale],
-	);
+			}
+			return {
+				src: item.src,
+				alt: name,
+				type: item.type,
+			};
+		});
+	}, [items, i18n.locale]);
 	if (!isOpen || !currentItem) {
 		return null;
 	}
@@ -854,6 +589,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 						width={currentItem.naturalWidth}
 						height={currentItem.naturalHeight}
 						duration={currentItem.duration}
+						initialTime={currentItem.initialTime}
 						autoPlay
 						fillContainer
 						isMobile={isMobile}
@@ -895,7 +631,6 @@ const MediaViewerModalComponent: FC = observer(() => {
 				width={currentItem.naturalWidth}
 				height={currentItem.naturalHeight}
 				className={styles.image}
-				sharpenWhenZoomed={shouldUseSharpCanvasForItem(currentItem, imageSrc)}
 				style={{
 					width: 'auto',
 					height: 'auto',

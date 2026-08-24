@@ -28,14 +28,4 @@ describe('MediaViewer state', () => {
 		expect(Object.isFrozen(MediaViewer.items)).toBe(true);
 		expect(Object.isFrozen(MediaViewer.items[0])).toBe(true);
 	});
-
-	it('increments the viewer session for every open', () => {
-		const initialSessionId = MediaViewer.sessionId;
-		MediaViewer.open([createItem()], 0);
-		const firstSessionId = MediaViewer.sessionId;
-		MediaViewer.close();
-		MediaViewer.open([createItem()], 0);
-		expect(firstSessionId).toBe(initialSessionId + 1);
-		expect(MediaViewer.sessionId).toBe(firstSessionId + 1);
-	});
 });

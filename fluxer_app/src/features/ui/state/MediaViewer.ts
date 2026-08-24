@@ -32,7 +32,6 @@ class MediaViewer {
 	isOpen: boolean = false;
 	items: ReadonlyArray<MediaViewerItem> = [];
 	currentIndex: number = 0;
-	sessionId: number = 0;
 	channelId?: string = undefined;
 	messageId?: string = undefined;
 	message?: Message = undefined;
@@ -59,7 +58,6 @@ class MediaViewer {
 		sourceChannel?: Channel | null,
 	): void {
 		this.isOpen = true;
-		this.sessionId += 1;
 		this.items = copyMediaViewerItems(items);
 		this.currentIndex = currentIndex;
 		this.channelId = channelId;
