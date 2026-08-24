@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {type AutocompleteOption, isEmoji, isMeme, isSticker} from '@app/features/channel/components/Autocomplete';
 import styles from '@app/features/channel/components/AutocompleteEmoji.module.css';
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
+import {AutocompleteMemePreview} from '@app/features/channel/components/AutocompleteMemePreview';
 import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
@@ -16,13 +16,12 @@ import {
 	MEDIA_DESCRIPTOR,
 	STICKERS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {MusicNoteIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useRef} from 'react';
 
 const DEFAULT_EMOJI_DESCRIPTOR = msg({
 	message: 'Default emoji',
@@ -34,53 +33,53 @@ const SectionHeading = observer(({children}: {children: React.ReactNode}) => (
 	</div>
 ));
 const AutocompleteEmojiIcon = observer(({emoji}: {emoji: FlatEmoji}) => {
-	const shouldAnimate = useShouldAnimate({kind: 'emoji'});
+	const isAnimatable = Boolean(emoji.animated);
+	const shouldAnimate = useShouldAnimate({
+		kind: 'emoji',
+		isAnimated: isAnimatable,
+	});
 	const {url: fallbackDisplayUrl} = getEmojiDisplayData(emoji);
-	const displayUrl = emoji.id
-		? AvatarUtils.getEmojiURL({id: emoji.id, animated: Boolean(emoji.animated) && shouldAnimate})
-		: (fallbackDisplayUrl ?? '');
+	const displayUrl =
+		getEmojiRenderUrl({
+			id: emoji.id,
+			surrogateUrl: fallbackDisplayUrl ?? null,
+			isAnimatable,
+			animated: shouldAnimate,
+			jumbo: false,
+		}) ?? '';
 	return (
 		<img
 			draggable={false}
 			className={styles.emojiIcon}
 			src={displayUrl}
 			alt={emoji.name}
+			aria-hidden={true}
 			data-flx="channel.autocomplete-emoji.emoji-icon"
 		/>
 	);
 });
 const AutocompleteStickerIcon = observer(
 	({sticker, isInteracting}: {sticker: GuildSticker; isInteracting: boolean}) => {
-		const {shouldAnimate} = useStickerAnimation({isInteracting});
+		const {shouldAnimate} = useStickerAnimation({isInteracting, isAnimated: sticker.animated});
 		return (
 			<div className={styles.stickerIconWrapper} data-flx="channel.autocomplete-emoji.sticker-icon-wrapper">
 				<img
 					draggable={false}
 					className={styles.stickerIcon}
-					src={AvatarUtils.getStickerURL({id: sticker.id, animated: shouldAnimate, size: 320})}
+					src={AvatarUtils.getStickerURL({
+						id: sticker.id,
+						animated: shouldAnimate,
+						isAnimatable: sticker.animated,
+						size: 320,
+					})}
 					alt={sticker.name}
+					aria-hidden={true}
 					data-flx="channel.autocomplete-emoji.sticker-icon"
 				/>
 			</div>
 		);
 	},
 );
-const AutocompleteMemeVideo = ({src}: {src: string}) => {
-	const videoRef = useRef<HTMLVideoElement>(null);
-	const playbackAllowed = useAnimatedMediaVideoPlayback(videoRef);
-	return (
-		<video
-			ref={videoRef}
-			src={src}
-			className={styles.memeVideo}
-			muted
-			autoPlay={playbackAllowed}
-			loop
-			playsInline
-			data-flx="channel.autocomplete-emoji.meme-video"
-		/>
-	);
-};
 export const AutocompleteEmoji = observer(
 	({
 		onSelect,
@@ -214,31 +213,10 @@ export const AutocompleteEmoji = observer(
 									description={option.meme.tags.length > 0 ? option.meme.tags.join(', ') : undefined}
 									icon={
 										<div className={styles.memeIconWrapper} data-flx="channel.autocomplete-emoji.meme-icon-wrapper">
-											{option.meme.contentType.startsWith('video/') || option.meme.contentType.includes('gif') ? (
-												<AutocompleteMemeVideo
-													src={option.meme.url}
-													data-flx="channel.autocomplete-emoji.autocomplete-meme-video"
-												/>
-											) : option.meme.contentType.startsWith('audio/') ? (
-												<div
-													className={styles.audioIconWrapper}
-													data-flx="channel.autocomplete-emoji.audio-icon-wrapper"
-												>
-													<MusicNoteIcon
-														className={styles.audioIcon}
-														weight="fill"
-														data-flx="channel.autocomplete-emoji.audio-icon"
-													/>
-												</div>
-											) : (
-												<img
-													draggable={false}
-													className={styles.memeIcon}
-													src={option.meme.url}
-													alt={option.meme.name}
-													data-flx="channel.autocomplete-emoji.meme-icon"
-												/>
-											)}
+											<AutocompleteMemePreview
+												meme={option.meme}
+												data-flx="channel.autocomplete-emoji.autocomplete-meme-preview"
+											/>
 										</div>
 									}
 									isKeyboardSelected={currentIndex === keyboardFocusIndex}

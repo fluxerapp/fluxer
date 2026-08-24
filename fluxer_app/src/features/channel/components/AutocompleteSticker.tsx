@@ -10,15 +10,16 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 const AutocompleteStickerIcon = observer(
-	({id, name, isInteracting}: {id: string; name: string; isInteracting: boolean}) => {
-		const {shouldAnimate} = useStickerAnimation({isInteracting});
+	({id, name, animated, isInteracting}: {id: string; name: string; animated: boolean; isInteracting: boolean}) => {
+		const {shouldAnimate} = useStickerAnimation({isInteracting, isAnimated: animated});
 		return (
 			<div className={styles.stickerIconWrapper} data-flx="channel.autocomplete-sticker.sticker-icon-wrapper">
 				<img
 					draggable={false}
 					className={styles.stickerIcon}
-					src={AvatarUtils.getStickerURL({id, animated: shouldAnimate, size: 320})}
+					src={AvatarUtils.getStickerURL({id, animated: shouldAnimate, isAnimatable: animated, size: 320})}
 					alt={name}
+					aria-hidden={true}
 					data-flx="channel.autocomplete-sticker.sticker-icon"
 				/>
 			</div>
@@ -58,6 +59,7 @@ export const AutocompleteSticker = observer(
 					<AutocompleteStickerIcon
 						id={option.sticker.id}
 						name={option.sticker.name}
+						animated={option.sticker.animated}
 						isInteracting={index === keyboardFocusIndex || index === hoverIndex}
 						data-flx="channel.autocomplete-sticker.autocomplete-sticker-icon"
 					/>
