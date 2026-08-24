@@ -50,10 +50,6 @@ interface SessionStartDiscriminatorService extends Pick<IDiscriminatorService, '
 
 interface SessionStartPaymentRepository extends Pick<PaymentRepository, 'hasEverPaidSuccessfully'> {}
 
-interface SessionStartPneumaticPostService {
-	considerPlutoniumMobileBetaDispatch(user: User, settings: UserData['settings']): Promise<void>;
-}
-
 interface SessionStartDeps {
 	userRepository: SessionStartUserRepository;
 	guildRepository: SessionStartGuildRepository;
@@ -61,7 +57,6 @@ interface SessionStartDeps {
 	gatewayService: SessionStartGatewayService;
 	discriminatorService: SessionStartDiscriminatorService;
 	paymentRepository: SessionStartPaymentRepository;
-	pneumaticPostService: SessionStartPneumaticPostService;
 }
 
 interface ProcessSessionStartParams {
@@ -284,9 +279,6 @@ export class RpcSessionStartService {
 				}
 			});
 		}
-		await timings.time('consider_pneumatic_post_dispatches', async () => {
-			await this.deps.pneumaticPostService.considerPlutoniumMobileBetaDispatch(user, userData.settings);
-		});
 		return {user, flagsToUpdate, timings: timings.finalize()};
 	}
 

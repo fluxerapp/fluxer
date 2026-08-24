@@ -40,7 +40,6 @@ import {
 import {Config} from '../Config';
 import {mapChannelToResponse} from '../channel/ChannelMappers';
 import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {ChannelService} from '../channel/services/ChannelService';
 import {buildBroadcastMessageData} from '../channel/services/message/MessageGatewayDispatch';
 import {ensurePersonalNotesChannelExists} from '../channel/services/PersonalNotesChannelRepair';
 import {mapFavoriteMemeToResponse} from '../favorite_meme/FavoriteMemeModel';
@@ -83,12 +82,9 @@ import type {BotAuthService} from '../oauth/BotAuthService';
 import {sendApnsPush} from '../push/ApnsPushService';
 import {encodeReadStatesResponseProto, mapReadStateResponse} from '../read_state/ReadStateResponseMapper';
 import type {ReadStateService} from '../read_state/ReadStateService';
-import {PneumaticPostRepository} from '../system/PneumaticPostRepository';
-import {PneumaticPostService} from '../system/PneumaticPostService';
 import type {IUserRepository} from '../user/IUserRepository';
 import {PaymentRepository} from '../user/repositories/PaymentRepository';
 import {CustomStatusValidator} from '../user/services/CustomStatusValidator';
-import type {UserChannelService} from '../user/services/UserChannelService';
 import {getCachedUserPartialResponse} from '../user/UserCacheHelpers';
 import {
 	mapRelationshipToResponse,
@@ -247,8 +243,6 @@ export class RpcService {
 		private webhookRepository: IWebhookRepository,
 		private storageService: IStorageService,
 		private avatarService: AvatarService,
-		private channelService: ChannelService,
-		private userChannelService: UserChannelService,
 		private rateLimitService: IRateLimitService,
 		private readonly limitConfigService: LimitConfigService,
 		private readonly kvClient: IKVProvider,
@@ -270,13 +264,6 @@ export class RpcService {
 			gatewayService: this.gatewayService,
 			discriminatorService: this.discriminatorService,
 			paymentRepository: new PaymentRepository(),
-			pneumaticPostService: new PneumaticPostService({
-				repository: new PneumaticPostRepository(),
-				userRepository: this.userRepository,
-				userChannelService: this.userChannelService,
-				channelService: this.channelService,
-				userCacheService: this.userCacheService,
-			}),
 		});
 	}
 

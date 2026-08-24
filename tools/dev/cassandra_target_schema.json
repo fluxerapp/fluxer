@@ -8031,49 +8031,6 @@
 			"options": "default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
 		},
 		{
-			"name": "pneumatic_post_deliveries",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "dispatch_key",
-					"type": "text"
-				},
-				{
-					"name": "status",
-					"type": "text"
-				},
-				{
-					"name": "claimed_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "sent_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "channel_id",
-					"type": "bigint"
-				},
-				{
-					"name": "message_id",
-					"type": "bigint"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				},
-				{
-					"name": "error_message",
-					"type": "text"
-				}
-			],
-			"primary_key": "((user_id), dispatch_key)",
-			"options": "CLUSTERING ORDER BY (dispatch_key ASC)"
-		},
-		{
 			"name": "user_connections",
 			"columns": [
 				{

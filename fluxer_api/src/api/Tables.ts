@@ -245,7 +245,6 @@ import {
 	VISIONARY_SLOT_COLUMNS,
 	type VisionarySlotRow,
 } from './database/types/PaymentTypes';
-import {PNEUMATIC_POST_DELIVERY_COLUMNS, type PneumaticPostDeliveryRow} from './database/types/PneumaticPostTypes';
 import {
 	DSA_REPORT_EMAIL_VERIFICATION_COLUMNS,
 	DSA_REPORT_TICKET_COLUMNS,
@@ -432,11 +431,6 @@ export const UserContactChangeLogs = defineTable<UserContactChangeLogRow, 'user_
 	name: 'user_contact_change_logs',
 	columns: USER_CONTACT_CHANGE_LOG_COLUMNS,
 	primaryKey: ['user_id', 'event_id'],
-});
-export const PneumaticPostDeliveries = defineTable<PneumaticPostDeliveryRow, 'user_id' | 'dispatch_key'>({
-	name: 'pneumatic_post_deliveries',
-	columns: PNEUMATIC_POST_DELIVERY_COLUMNS,
-	primaryKey: ['user_id', 'dispatch_key'],
 });
 export const UserConnections = defineTable<UserConnectionRow, 'user_id' | 'connection_type' | 'connection_id'>({
 	name: 'user_connections',

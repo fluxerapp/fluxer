@@ -683,8 +683,6 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 			webhookRepository,
 			storageService,
 			avatarService,
-			channelService,
-			userService.channelService,
 			rateLimitService,
 			limitConfigService,
 			kvClient,
