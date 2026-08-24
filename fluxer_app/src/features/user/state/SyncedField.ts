@@ -223,7 +223,7 @@ export async function makeSyncedField<
 		reaction(
 			() => ({
 				snapshot: getRemoteSnapshot(),
-				userId: SessionManager.userId,
+				userId: SessionManager?.userId ?? null,
 				hydrated: UserSettings.isHydrated(),
 			}),
 			({snapshot, userId, hydrated}) => {
