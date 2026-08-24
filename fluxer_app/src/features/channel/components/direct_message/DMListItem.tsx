@@ -132,7 +132,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		: TypingIndicator.isTyping(channel.id, recipientId);
 	const hasUnreadMessages = () => ReadStates.hasUnread(channel.id);
 	const isMobile = MobileLayout.isMobileLayout();
-	const isMuted = UserGuildSettings.isChannelMuted(null, channel.id);
+	const isMuted = UserGuildSettings.isChannelDirectlyMuted(null, channel.id);
 	const mentionCount = ReadStates.getMentionCount(channel.id);
 	const unreadState = getChannelUnreadState({
 		unreadCount: ReadStates.getUnreadCount(channel.id),

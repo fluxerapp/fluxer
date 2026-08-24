@@ -75,8 +75,8 @@ const setBadge = (badge: number): void => {
 export const AppBadge: React.FC = observer(() => {
 	const relationships = Relationships.getRelationships();
 	const unreadMessageBadgeEnabled = Notification.unreadMessageBadgeEnabled;
-	const mentionCount = GuildReadState.getTotalMentionCount();
-	const hasUnread = GuildReadState.hasAnyUnread;
+	const mentionCount = GuildReadState.mentionCountAcrossGuilds();
+	const hasUnread = GuildReadState.anyGuildUnread;
 	const pendingCount = RuntimeConfig.directMessagesDisabled
 		? 0
 		: relationships.filter((relationship) => relationship.type === RelationshipTypes.INCOMING_REQUEST).length;

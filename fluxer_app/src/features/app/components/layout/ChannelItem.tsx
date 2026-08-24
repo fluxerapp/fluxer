@@ -238,7 +238,7 @@ export const ChannelItem = observer(
 		const canInvite = InviteUtils.canInviteToChannel(channel.id, channel.guildId);
 		const mobileLayout = MobileLayout;
 		const isMuted = UserGuildSettings.isGuildOrChannelMuted(guild.id, channel.id);
-		const isChannelDirectlyMuted = UserGuildSettings.isChannelMuted(guild.id, channel.id);
+		const isChannelDirectlyMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, channel.id);
 		const currentUserCount =
 			channelIsVoice && channel.userLimit != null && channel.userLimit > 0
 				? Object.keys(MediaEngine.getAllVoiceStatesInChannel(guild.id, channel.id)).length

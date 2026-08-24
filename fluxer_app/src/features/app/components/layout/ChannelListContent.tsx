@@ -164,7 +164,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	const {i18n} = useLingui();
 	const channels = Channels.getGuildChannels(guild.id);
 	const location = useLocation();
-	const userGuildSettings = UserGuildSettings.getSettings(guild.id);
+	const userGuildSettings = UserGuildSettings.getSettingsForScope(guild.id);
 	const isDraggingAnything = useDragLayer((monitor) => {
 		if (!monitor.isDragging()) return false;
 		const itemType = monitor.getItemType();
@@ -337,7 +337,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		const unreadCount = ReadStates.getUnreadCount(channelId);
 		const mentionCount = ReadStates.getMentionCount(channelId);
 		const isMuted =
-			UserGuildSettings.isCategoryMuted(guild.id, channelId) || UserGuildSettings.isChannelMuted(guild.id, channelId);
+			UserGuildSettings.isParentCategoryMuted(guild.id, channelId) || UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
 		const channel = Channels.getChannel(channelId);
 		const unreadBadgesLevel = channel
 			? UserGuildSettings.resolvedUnreadBadgesLevel({
@@ -360,13 +360,13 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	for (const group of channelGroups) {
 		const isCollapsed = group.category ? (collapsedCategories?.has(group.category.id) ?? false) : false;
 		const isNullSpace = !group.category;
-		const isCategoryMuted = group.category ? UserGuildSettings.isChannelMuted(guild.id, group.category.id) : false;
+		const isCategoryMuted = group.category ? UserGuildSettings.isChannelDirectlyMuted(guild.id, group.category.id) : false;
 		let filteredTextChannels: Array<Channel>;
 		let filteredVoiceChannels: Array<Channel>;
 		if (hideMutedChannels) {
 			filteredTextChannels = [];
 			for (const ch of group.textChannels) {
-				const isMuted = UserGuildSettings.isChannelMuted(guild.id, ch.id);
+				const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
 				if (
 					shouldShowChannelWhenHidingMutedChannels({
 						isMuted,
@@ -380,7 +380,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			}
 			filteredVoiceChannels = [];
 			for (const ch of group.voiceChannels) {
-				const isMuted = UserGuildSettings.isChannelMuted(guild.id, ch.id);
+				const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
 				if (
 					shouldShowChannelWhenHidingMutedChannels({
 						isMuted,

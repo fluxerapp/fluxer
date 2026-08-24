@@ -419,7 +419,7 @@ function handleIncomingTtsMessage(message: Message): void {
 	}
 	if (
 		UserGuildSettings.isGuildOrChannelMuted(channel.guildId ?? null, channel.id) ||
-		UserGuildSettings.isCategoryMuted(channel.guildId ?? null, channel.id)
+		UserGuildSettings.isParentCategoryMuted(channel.guildId ?? null, channel.id)
 	) {
 		return;
 	}

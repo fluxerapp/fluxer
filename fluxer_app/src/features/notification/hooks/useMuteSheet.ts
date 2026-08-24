@@ -43,7 +43,7 @@ export function useMuteSheet(params: UseMuteSheetParams): UseMuteSheetReturn {
 	const additionalMutePayload = isGuildMode ? undefined : params.additionalMutePayload;
 	const {onMuteSuccess, onUnmuteSuccess, onClose} = params;
 	const muteConfig = isGuildMode
-		? UserGuildSettings.getSettings(guildId)?.mute_config
+		? UserGuildSettings.getSettingsForScope(guildId)?.mute_config
 		: UserGuildSettings.getChannelOverride(guildId, channelId!)?.mute_config;
 	const openMuteSheet = useCallback(() => {
 		setMuteSheetOpen(true);

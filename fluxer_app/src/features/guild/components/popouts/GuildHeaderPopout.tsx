@@ -171,11 +171,11 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 		canCreateExpressions ||
 		canBanMembers;
 	const canEditCommunityProfile = Users.getCurrentUser()?.isClaimed() ?? true;
-	const settings = UserGuildSettings.getSettings(guild.id);
+	const settings = UserGuildSettings.getSettingsForScope(guild.id);
 	const hideMutedChannels = settings?.hide_muted_channels ?? false;
 	const handleToggleHideMutedChannels = useCallback(
 		(checked: boolean) => {
-			const currentSettings = UserGuildSettings.getSettings(guild.id);
+			const currentSettings = UserGuildSettings.getSettingsForScope(guild.id);
 			const currentValue = currentSettings?.hide_muted_channels ?? false;
 			if (checked === currentValue) return;
 			UserGuildSettingsCommands.toggleHideMutedChannels(guild.id);

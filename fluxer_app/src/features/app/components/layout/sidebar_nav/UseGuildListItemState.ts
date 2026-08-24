@@ -107,9 +107,9 @@ export function useGuildListItemState({
 	isSelected,
 	selectedGuildIndex,
 }: UseGuildListItemStateOptions): GuildListItemState {
-	const hasUnreadMessages = GuildReadState.hasUnread(guild.id);
-	const mentionCount = GuildReadState.getMentionCount(guild.id);
-	const settings = UserGuildSettings.getSettings(guild.id);
+	const hasUnreadMessages = GuildReadState.guildIsUnread(guild.id);
+	const mentionCount = GuildReadState.mentionCountForGuild(guild.id);
+	const settings = UserGuildSettings.getSettingsForScope(guild.id);
 	const isMuted = settings.muted;
 	const muteConfig = settings.mute_config;
 	let muteEndTime: string | null = null;

@@ -34,7 +34,7 @@ export const FavoritesGuildHeaderBottomSheet: React.FC<FavoritesGuildHeaderBotto
 	({isOpen, onClose}) => {
 		const {i18n} = useLingui();
 		const hideMutedChannels = Favorites.hideMutedChannels;
-		const settings = UserGuildSettings.getSettings(FAVORITES_GUILD_ID);
+		const settings = UserGuildSettings.getSettingsForScope(FAVORITES_GUILD_ID);
 		const isMuted = settings?.muted ?? false;
 		const handleAddChannel = () => {
 			ModalCommands.pushAfterBottomSheetClose(

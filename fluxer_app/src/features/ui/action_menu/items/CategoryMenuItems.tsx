@@ -113,7 +113,7 @@ export const MarkCategoryAsReadMenuItem: React.FC<CategoryMenuItemProps> = obser
 export const CollapseCategoryMenuItem: React.FC<CategoryMenuItemProps> = observer(({category, onClose}) => {
 	const {i18n} = useLingui();
 	const guildId = category.guildId!;
-	const isCollapsed = UserGuildSettings.isChannelCollapsed(guildId, category.id);
+	const isCollapsed = UserGuildSettings.isChannelSectionCollapsed(guildId, category.id);
 	const handleToggleCollapse = useCallback(() => {
 		UserGuildSettingsCommands.toggleChannelCollapsed(guildId, category.id);
 		onClose();
@@ -138,7 +138,7 @@ export const CollapseAllCategoriesMenuItem: React.FC<CategoryMenuItemProps> = ob
 	);
 	const allCategoriesCollapsed = useMemo(() => {
 		if (categoryIds.length === 0) return false;
-		return categoryIds.every((categoryId) => UserGuildSettings.isChannelCollapsed(guildId, categoryId));
+		return categoryIds.every((categoryId) => UserGuildSettings.isChannelSectionCollapsed(guildId, categoryId));
 	}, [guildId, categoryIds]);
 	const handleToggleCollapseAll = useCallback(() => {
 		UserGuildSettingsCommands.toggleAllCategoriesCollapsed(guildId, categoryIds);

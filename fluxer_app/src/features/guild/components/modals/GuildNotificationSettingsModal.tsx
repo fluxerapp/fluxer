@@ -166,7 +166,7 @@ export const GuildNotificationSettingsModal = observer(({guildId}: {guildId: str
 	const {i18n} = useLingui();
 	const muteChannelLabel = i18n._(MUTE_CHANNEL_DESCRIPTOR);
 	const guild = Guilds.getGuild(guildId);
-	const settings = UserGuildSettings.getSettings(guildId);
+	const settings = UserGuildSettings.getSettingsForScope(guildId);
 	if (!guild || !settings) return null;
 	const channels = Channels.getGuildChannels(guildId);
 	const categories = channels.filter((c) => c.type === ChannelTypes.GUILD_CATEGORY);

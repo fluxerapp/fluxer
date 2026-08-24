@@ -231,8 +231,8 @@ export class ReadStateEntry {
 		const userId = currentUser.id;
 		const guildId = this.guildId;
 		const channelId = this.channelId;
-		const suppressEveryone = recomputeMentions ? UserGuildSettings.isSuppressEveryoneEnabled(guildId) : false;
-		const suppressRoles = recomputeMentions ? UserGuildSettings.isSuppressRolesEnabled(guildId) : false;
+		const suppressEveryone = recomputeMentions ? UserGuildSettings.isEveryoneMentionSuppressed(guildId) : false;
+		const suppressRoles = recomputeMentions ? UserGuildSettings.isRoleMentionSuppressed(guildId) : false;
 		const isMuted = recomputeMentions ? UserGuildSettings.isGuildOrChannelMuted(guildId, channelId) : false;
 		const member = recomputeMentions && guildId ? GuildMembers.getMember(guildId, userId) : null;
 		const memberRoles = member?.roles ?? null;
@@ -285,8 +285,8 @@ export class ReadStateEntry {
 
 	shouldMentionFor(message: MessageModel | WireMessage, userId: string, isPrivate: boolean): boolean {
 		const authorBlocked = Relationships.isBlocked(message.author.id);
-		const suppressEveryone = UserGuildSettings.isSuppressEveryoneEnabled(this.guildId);
-		const suppressRoles = UserGuildSettings.isSuppressRolesEnabled(this.guildId);
+		const suppressEveryone = UserGuildSettings.isEveryoneMentionSuppressed(this.guildId);
+		const suppressRoles = UserGuildSettings.isRoleMentionSuppressed(this.guildId);
 		const mentions = message.mentions;
 		const mentionEveryone = 'mentionEveryone' in message ? message.mentionEveryone : message.mention_everyone;
 		const mentionRoles = 'mentionRoles' in message ? message.mentionRoles : message.mention_roles;

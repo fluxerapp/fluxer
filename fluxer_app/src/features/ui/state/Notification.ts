@@ -223,7 +223,7 @@ class NotificationState {
 	}
 
 	private shouldNotifyBasedOnSettings(channel: Channel, messageRecord: Message, currentUser: User): boolean {
-		const level = UserGuildSettings.resolvedMessageNotifications({
+		const level = UserGuildSettings.resolveEffectiveMessageNotifications({
 			id: channel.id,
 			guildId: channel.guildId,
 			parentId: channel.parentId ?? undefined,
@@ -261,7 +261,7 @@ class NotificationState {
 			return null;
 		}
 		if (
-			UserGuildSettings.allowNoMessages({
+			UserGuildSettings.resolvesToNoMessages({
 				id: channel.id,
 				guildId: channel.guildId,
 				parentId: channel.parentId ?? undefined,

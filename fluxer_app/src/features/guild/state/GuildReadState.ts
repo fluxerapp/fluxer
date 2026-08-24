@@ -20,18 +20,18 @@ const PRIVATE_CHANNEL_SENTINEL = ME;
 
 class GuildReadStateEntry {
 	unread = observable.box(false);
-	unreadChannelId = observable.box<ChannelId | null>(null);
+	firstUnreadChannelId = observable.box<ChannelId | null>(null);
 	mentionCount = observable.box(0);
 	mentionChannels = observable.set(new Set<ChannelId>());
-	sentinel = observable.box(0);
+	changeTicket = observable.box(0);
 
-	incrementSentinel(): void {
-		this.sentinel.set(this.sentinel.get() + 1);
+	bumpChangeTicket(): void {
+		this.changeTicket.set(this.changeTicket.get() + 1);
 	}
 
 	reset(): void {
 		this.unread.set(false);
-		this.unreadChannelId.set(null);
+		this.firstUnreadChannelId.set(null);
 		this.mentionCount.set(0);
 		this.mentionChannels.clear();
 	}
@@ -43,12 +43,12 @@ type ContributeChannel = {
 	guildId?: string | null;
 	parentId?: string | null;
 	isPrivate(): boolean;
-	isGuildVocal?(): boolean;
+	isGuildAudioChannel?(): boolean;
 };
 
 function isChannelMutedForUnread(channel: ContributeChannel): boolean {
 	if (channel.isPrivate()) return false;
-	return UserGuildSettings.isGuildOrCategoryOrChannelMuted(channel.guildId ?? null, channel.id);
+	return UserGuildSettings.isMutedAtAnyLevel(channel.guildId ?? null, channel.id);
 }
 
 function resolveUnreadBadgesLevel(channel: ContributeChannel): number | null {
@@ -77,7 +77,7 @@ function getChannelContribution(channel: ContributeChannel, channelId: string): 
 
 class GuildReadState {
 	private readonly guildStates = observable.map(new Map<GuildId, GuildReadStateEntry>());
-	private readonly unreadGuilds = observable.set(new Set<GuildId>());
+	private readonly unreadGuildIds = observable.set(new Set<GuildId>());
 	updateCounter = 0;
 	private readStateReactionInstalled = false;
 
@@ -156,9 +156,9 @@ class GuildReadState {
 		this.updateCounter++;
 	}
 
-	private incrementSentinel(guildId: string | null): void {
+	private bumpChangeTicket(guildId: string | null): void {
 		const state = this.getOrCreate(guildId);
-		state.incrementSentinel();
+		state.bumpChangeTicket();
 		this.notifyChange();
 	}
 
@@ -166,18 +166,18 @@ class GuildReadState {
 		const id = guildId ?? PRIVATE_CHANNEL_SENTINEL;
 		const state = this.getOrCreate(id);
 		const previousUnread = state.unread.get();
-		const previousUnreadChannelId = state.unreadChannelId.get();
+		const previousFirstUnread = state.firstUnreadChannelId.get();
 		const previousMentionCount = state.mentionCount.get();
 		const mentionChannelUpdates = new Map<ChannelId, boolean>();
 		let foundUnread = false;
-		let shouldClearUnreadChannelId = false;
-		let nextUnreadChannelId = previousUnreadChannelId;
+		let shouldClearFirstUnread = false;
+		let nextFirstUnread = previousFirstUnread;
 		for (const channelId of channelIds) {
 			const channel = Channels.getChannel(channelId);
 			if (channel == null) {
 				mentionChannelUpdates.set(channelId, false);
-				if (nextUnreadChannelId === channelId) {
-					shouldClearUnreadChannelId = true;
+				if (nextFirstUnread === channelId) {
+					shouldClearFirstUnread = true;
 				}
 				continue;
 			}
@@ -194,14 +194,14 @@ class GuildReadState {
 			mentionChannelUpdates.set(channelId, contribution.mentionAllowed);
 			if (guildId != null && !foundUnread && contribution.unreadAllowed) {
 				foundUnread = true;
-				nextUnreadChannelId = channelId;
-			} else if (!contribution.unreadAllowed && nextUnreadChannelId === channelId) {
-				shouldClearUnreadChannelId = true;
+				nextFirstUnread = channelId;
+			} else if (!contribution.unreadAllowed && nextFirstUnread === channelId) {
+				shouldClearFirstUnread = true;
 			}
 		}
 		const nextUnread = foundUnread;
-		if (!nextUnread && shouldClearUnreadChannelId) {
-			nextUnreadChannelId = null;
+		if (!nextUnread && shouldClearFirstUnread) {
+			nextFirstUnread = null;
 		}
 		if (previousUnread && !nextUnread) {
 			return this.recomputeAll(guildId);
@@ -219,9 +219,7 @@ class GuildReadState {
 			}
 		}
 		const changed =
-			nextUnread !== previousUnread ||
-			nextUnreadChannelId !== previousUnreadChannelId ||
-			mentionTotal !== previousMentionCount;
+			nextUnread !== previousUnread || nextFirstUnread !== previousFirstUnread || mentionTotal !== previousMentionCount;
 		if (!changed && mentionChannelUpdates.size === 0) {
 			return false;
 		}
@@ -237,16 +235,16 @@ class GuildReadState {
 				return;
 			}
 			state.unread.set(nextUnread);
-			state.unreadChannelId.set(nextUnreadChannelId);
+			state.firstUnreadChannelId.set(nextFirstUnread);
 			state.mentionCount.set(mentionTotal);
 			if (id !== PRIVATE_CHANNEL_SENTINEL) {
 				if (nextUnread) {
-					this.unreadGuilds.add(id as GuildId);
+					this.unreadGuildIds.add(id as GuildId);
 				} else {
-					this.unreadGuilds.delete(id as GuildId);
+					this.unreadGuildIds.delete(id as GuildId);
 				}
 			}
-			this.incrementSentinel(guildId);
+			this.bumpChangeTicket(guildId);
 		});
 		return changed;
 	}
@@ -264,11 +262,11 @@ class GuildReadState {
 				}
 				if (!newState.unread.get() && contribution.unreadAllowed) {
 					newState.unread.set(true);
-					newState.unreadChannelId.set(channel.id as ChannelId);
+					newState.firstUnreadChannelId.set(channel.id as ChannelId);
 				}
 			}
 		} else {
-			const isGuildMuted = UserGuildSettings.isMuted(guildId);
+			const isGuildMuted = UserGuildSettings.isWholeGuildMuted(guildId);
 			if (isGuildMuted && skipIfMuted) {
 				return false;
 			}
@@ -281,7 +279,7 @@ class GuildReadState {
 				}
 				if (!newState.unread.get() && contribution.unreadAllowed) {
 					newState.unread.set(true);
-					newState.unreadChannelId.set(channel.id as ChannelId);
+					newState.firstUnreadChannelId.set(channel.id as ChannelId);
 				}
 			}
 		}
@@ -292,7 +290,7 @@ class GuildReadState {
 	private commitState(guildId: string, newState: GuildReadStateEntry, prevState: GuildReadStateEntry): boolean {
 		if (
 			newState.unread.get() === prevState.unread.get() &&
-			newState.unreadChannelId.get() === prevState.unreadChannelId.get() &&
+			newState.firstUnreadChannelId.get() === prevState.firstUnreadChannelId.get() &&
 			newState.mentionCount.get() === prevState.mentionCount.get()
 		) {
 			return false;
@@ -301,12 +299,12 @@ class GuildReadState {
 			this.guildStates.set(guildId as GuildId, newState);
 			if (guildId !== PRIVATE_CHANNEL_SENTINEL) {
 				if (newState.unread.get()) {
-					this.unreadGuilds.add(guildId as GuildId);
+					this.unreadGuildIds.add(guildId as GuildId);
 				} else {
-					this.unreadGuilds.delete(guildId as GuildId);
+					this.unreadGuildIds.delete(guildId as GuildId);
 				}
 			}
-			this.incrementSentinel(guildId === PRIVATE_CHANNEL_SENTINEL ? null : guildId);
+			this.bumpChangeTicket(guildId === PRIVATE_CHANNEL_SENTINEL ? null : guildId);
 		});
 		return true;
 	}
@@ -335,21 +333,21 @@ class GuildReadState {
 		}
 	}
 
-	get hasAnyUnread(): boolean {
-		return this.unreadGuilds.size > 0;
+	get anyGuildUnread(): boolean {
+		return this.unreadGuildIds.size > 0;
 	}
 
-	hasUnread(guildId: string): boolean {
-		return this.unreadGuilds.has(guildId as GuildId);
+	guildIsUnread(guildId: string): boolean {
+		return this.unreadGuildIds.has(guildId as GuildId);
 	}
 
-	getMentionCount(guildId: string | null): number {
+	mentionCountForGuild(guildId: string | null): number {
 		const id = guildId ?? PRIVATE_CHANNEL_SENTINEL;
 		const state = this.guildStates.get(id as GuildId);
 		return state?.mentionCount.get() ?? 0;
 	}
 
-	getTotalMentionCount(excludePrivate = false): number {
+	mentionCountAcrossGuilds(excludePrivate = false): number {
 		let total = 0;
 		for (const [guildId, state] of this.guildStates.entries()) {
 			if (excludePrivate && guildId === PRIVATE_CHANNEL_SENTINEL) continue;
@@ -358,22 +356,22 @@ class GuildReadState {
 		return total;
 	}
 
-	getPrivateChannelMentionCount(): number {
+	directMessageMentionCount(): number {
 		const state = this.guildStates.get(PRIVATE_CHANNEL_SENTINEL as GuildId);
 		return state?.mentionCount.get() ?? 0;
 	}
 
-	getMentionCountForPrivateChannel(channelId: string): number {
+	directMessageMentionCountFor(channelId: string): number {
 		return ReadStates.getMentionCount(channelId);
 	}
 
-	getGuildChangeSentinel(guildId: string | null): number {
+	guildChangeTicketFor(guildId: string | null): number {
 		const id = guildId ?? PRIVATE_CHANNEL_SENTINEL;
 		const state = this.guildStates.get(id as GuildId);
-		return state?.sentinel.get() ?? 0;
+		return state?.changeTicket.get() ?? 0;
 	}
 
-	getGuildHasUnreadIgnoreMuted(guildId: string): boolean {
+	guildUnreadIgnoringMute(guildId: string): boolean {
 		const channels = Channels.getGuildChannels(guildId);
 		for (const channel of channels) {
 			if (!GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
@@ -388,7 +386,7 @@ class GuildReadState {
 
 	handleConnectionOpen(): void {
 		this.guildStates.clear();
-		this.unreadGuilds.clear();
+		this.unreadGuildIds.clear();
 		this.updateCounter = 0;
 		this.recomputeAll(null);
 		for (const guildId of Guilds.getGuildIds()) {
@@ -411,7 +409,7 @@ class GuildReadState {
 		};
 	}): void {
 		this.guildStates.delete(action.guild.id as GuildId);
-		this.unreadGuilds.delete(action.guild.id as GuildId);
+		this.unreadGuildIds.delete(action.guild.id as GuildId);
 		this.notifyChange();
 	}
 
@@ -459,7 +457,7 @@ class GuildReadState {
 		this.handleConnectionOpen();
 	}
 
-	handleWindowFocus(): void {
+	handleWindowFocused(): void {
 		this.notifyChange();
 	}
 

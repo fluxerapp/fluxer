@@ -34,7 +34,7 @@ interface GuildFolderContextMenuProps {
 }
 
 function guildHasUnreadState(guildId: string): boolean {
-	return GuildReadState.hasUnread(guildId) || GuildReadState.getGuildHasUnreadIgnoreMuted(guildId);
+	return GuildReadState.guildIsUnread(guildId) || GuildReadState.guildUnreadIgnoringMute(guildId);
 }
 
 export const GuildFolderContextMenu: React.FC<GuildFolderContextMenuProps> = observer(({folder, guilds, onClose}) => {

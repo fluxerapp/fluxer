@@ -316,8 +316,8 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 			}) as CSSProperties,
 		[folderColor],
 	);
-	const hasUnreadMessages = guilds.some((guild) => GuildReadState.hasUnread(guild.id));
-	const totalMentionCount = guilds.reduce((sum, guild) => sum + GuildReadState.getMentionCount(guild.id), 0);
+	const hasUnreadMessages = guilds.some((guild) => GuildReadState.guildIsUnread(guild.id));
+	const totalMentionCount = guilds.reduce((sum, guild) => sum + GuildReadState.mentionCountForGuild(guild.id), 0);
 	let folderScrollTargetRef: React.RefCallback<HTMLElement> | null = null;
 	if (registerScrollTarget != null) {
 		folderScrollTargetRef = registerScrollTarget(folderId);

@@ -665,7 +665,7 @@ function getDMScrollIndicatorSeverity(channelId: string): ScrollIndicatorSeverit
 	const unreadState = getChannelUnreadState({
 		unreadCount: ReadStates.getPrivateChannelUnreadCount(channelId),
 		mentionCount,
-		isMuted: UserGuildSettings.isChannelMuted(null, channelId),
+		isMuted: UserGuildSettings.isChannelDirectlyMuted(null, channelId),
 		showFadedUnreadOnMutedChannels: Accessibility.showFadedUnreadOnMutedChannels,
 	});
 	if (mentionCount > 0) return 'mention';
@@ -674,8 +674,8 @@ function getDMScrollIndicatorSeverity(channelId: string): ScrollIndicatorSeverit
 }
 
 function getGuildScrollIndicatorSeverity(guildId: string): ScrollIndicatorSeverity | null {
-	if (GuildReadState.getMentionCount(guildId) > 0) return 'mention';
-	if (GuildReadState.hasUnread(guildId)) return 'unread';
+	if (GuildReadState.mentionCountForGuild(guildId) > 0) return 'mention';
+	if (GuildReadState.guildIsUnread(guildId)) return 'unread';
 	return null;
 }
 
@@ -1327,10 +1327,10 @@ const GUILD_RAIL_INDICATORS_BY_TOKEN: Record<string, SkeletonGuildRailItemIndica
 function resolveGuildRailIndicator(guildIds: ReadonlyArray<string>): SkeletonGuildRailItemIndicator {
 	let hasUnread = false;
 	for (const guildId of guildIds) {
-		if (GuildReadState.getMentionCount(guildId) > 0) {
+		if (GuildReadState.mentionCountForGuild(guildId) > 0) {
 			return SkeletonGuildRailItemIndicator.MENTION;
 		}
-		if (GuildReadState.hasUnread(guildId)) {
+		if (GuildReadState.guildIsUnread(guildId)) {
 			hasUnread = true;
 		}
 	}

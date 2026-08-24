@@ -206,11 +206,11 @@ const FavoriteChannelResolvedItem = observer(
 		const channelDisplayName = channel.isPrivate() ? ChannelUtils.getDMDisplayName(channel) : channel.name;
 		const displayName = favoriteChannel.nickname || channelDisplayName || i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);
 		const isChannelDirectlyMuted = channel.guildId
-			? UserGuildSettings.isChannelMuted(channel.guildId, channel.id)
+			? UserGuildSettings.isChannelDirectlyMuted(channel.guildId, channel.id)
 			: false;
 		const isMuted =
 			isChannelDirectlyMuted ||
-			(channel.guildId ? UserGuildSettings.isCategoryMuted(channel.guildId, channel.id) : false);
+			(channel.guildId ? UserGuildSettings.isParentCategoryMuted(channel.guildId, channel.id) : false);
 		const unreadBadgesLevel = channel.guildId
 			? UserGuildSettings.resolvedUnreadBadgesLevel({
 					id: channel.id,

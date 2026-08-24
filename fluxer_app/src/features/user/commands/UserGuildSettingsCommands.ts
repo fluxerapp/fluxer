@@ -127,7 +127,7 @@ export function updateGuildSettings(
 	updates: UserGuildSettingsPartial,
 	options?: PersistenceOptions,
 ): void {
-	UserGuildSettings.getSettings(guildId);
+	UserGuildSettings.getSettingsForScope(guildId);
 	UserGuildSettings.updateGuildSettings(guildId, updates as Partial<GatewayGuildSettings>);
 	scheduleUpdate(guildId, updates, options);
 }
@@ -139,7 +139,7 @@ export function bulkUpdateGuildSettings(
 	const uniqueGuildIds = Array.from(new Set(guildIds));
 	if (uniqueGuildIds.length === 0) return;
 	for (const guildId of uniqueGuildIds) {
-		UserGuildSettings.getSettings(guildId);
+		UserGuildSettings.getSettingsForScope(guildId);
 		UserGuildSettings.updateGuildSettings(guildId, updates as Partial<GatewayGuildSettings>);
 		const key = getUpdateKey(guildId);
 		addPendingPayload(key, updates);
@@ -148,7 +148,7 @@ export function bulkUpdateGuildSettings(
 }
 
 export function toggleHideMutedChannels(guildId: string | null): void {
-	const currentSettings = UserGuildSettings.getSettings(guildId);
+	const currentSettings = UserGuildSettings.getSettingsForScope(guildId);
 	const newValue = !currentSettings.hide_muted_channels;
 	updateGuildSettings(guildId, {hide_muted_channels: newValue});
 }
@@ -159,7 +159,7 @@ export function updateChannelOverride(
 	override: ChannelOverrideUpdate,
 	options?: PersistenceOptions,
 ): void {
-	const currentSettings = UserGuildSettings.getSettings(guildId);
+	const currentSettings = UserGuildSettings.getSettingsForScope(guildId);
 	const currentOverride = UserGuildSettings.getChannelOverride(guildId, channelId);
 	let newOverride: ChannelOverride | null = null;
 	if (override != null) {
@@ -182,7 +182,7 @@ export function bulkUpdateChannelOverrides(
 ): void {
 	const uniqueChannelIds = Array.from(new Set(channelIds));
 	if (uniqueChannelIds.length === 0) return;
-	const currentSettings = UserGuildSettings.getSettings(guildId);
+	const currentSettings = UserGuildSettings.getSettingsForScope(guildId);
 	const newChannelOverrides: Record<string, ChannelOverride> = {...(currentSettings.channel_overrides ?? {})};
 	for (const channelId of uniqueChannelIds) {
 		const currentOverride = UserGuildSettings.getChannelOverride(guildId, channelId);
@@ -196,7 +196,7 @@ export function bulkUpdateChannelOverrides(
 }
 
 export function toggleChannelCollapsed(guildId: string | null, channelId: string): void {
-	const isCollapsed = UserGuildSettings.isChannelCollapsed(guildId, channelId);
+	const isCollapsed = UserGuildSettings.isChannelSectionCollapsed(guildId, channelId);
 	updateChannelOverride(guildId, channelId, {collapsed: !isCollapsed});
 }
 
@@ -228,7 +228,7 @@ export function updateUnreadBadgesLevel(
 }
 
 export function toggleChannelMuted(guildId: string | null, channelId: string, options?: PersistenceOptions): void {
-	const isMuted = UserGuildSettings.isChannelMuted(guildId, channelId);
+	const isMuted = UserGuildSettings.isChannelDirectlyMuted(guildId, channelId);
 	updateChannelOverride(guildId, channelId, {muted: !isMuted}, options);
 }
 
@@ -236,13 +236,13 @@ export function toggleAllCategoriesCollapsed(guildId: string | null, categoryIds
 	const uniqueCategoryIds = Array.from(new Set(categoryIds));
 	if (uniqueCategoryIds.length === 0) return;
 	const allCollapsed = uniqueCategoryIds.every((categoryId) =>
-		UserGuildSettings.isChannelCollapsed(guildId, categoryId),
+		UserGuildSettings.isChannelSectionCollapsed(guildId, categoryId),
 	);
 	const newCollapsedState = !allCollapsed;
 	for (const categoryId of uniqueCategoryIds) {
 		UserGuildSettings.updateChannelOverride(guildId, categoryId, {collapsed: newCollapsedState});
 	}
-	const currentSettings = UserGuildSettings.getSettings(guildId);
+	const currentSettings = UserGuildSettings.getSettingsForScope(guildId);
 	const newChannelOverrides: Record<string, ChannelOverride> = {...(currentSettings.channel_overrides ?? {})};
 	for (const categoryId of uniqueCategoryIds) {
 		const currentOverride = newChannelOverrides[categoryId];

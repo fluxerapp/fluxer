@@ -148,7 +148,7 @@ export const InvitePeopleMenuItem: React.FC<GuildMenuItemProps> = observer(({gui
 });
 export const MuteCommunityMenuItem: React.FC<GuildMenuItemProps> = observer(({guild, onClose}) => {
 	const {i18n} = useLingui();
-	const settings = UserGuildSettings.getSettings(guild.id);
+	const settings = UserGuildSettings.getSettingsForScope(guild.id);
 	const isMuted = settings?.muted ?? false;
 	const muteConfig = settings?.mute_config;
 	const mutedText = getMutedText(isMuted, muteConfig);
@@ -219,7 +219,7 @@ export const MuteCommunityMenuItem: React.FC<GuildMenuItemProps> = observer(({gu
 });
 export const NotificationSettingsMenuItem: React.FC<GuildMenuItemProps> = observer(({guild, onClose}) => {
 	const {i18n} = useLingui();
-	const settings = UserGuildSettings.getSettings(guild.id);
+	const settings = UserGuildSettings.getSettingsForScope(guild.id);
 	const suppressEveryone = settings?.suppress_everyone ?? false;
 	const suppressRoles = settings?.suppress_roles ?? false;
 	const mobilePush = settings?.mobile_push ?? true;
@@ -323,11 +323,11 @@ export const NotificationSettingsMenuItem: React.FC<GuildMenuItemProps> = observ
 });
 export const HideMutedChannelsMenuItem: React.FC<GuildMenuItemProps> = observer(({guild}) => {
 	const {i18n} = useLingui();
-	const settings = UserGuildSettings.getSettings(guild.id);
+	const settings = UserGuildSettings.getSettingsForScope(guild.id);
 	const hideMutedChannels = settings?.hide_muted_channels ?? false;
 	const handleToggle = useCallback(
 		(checked: boolean) => {
-			const currentSettings = UserGuildSettings.getSettings(guild.id);
+			const currentSettings = UserGuildSettings.getSettingsForScope(guild.id);
 			const currentValue = currentSettings?.hide_muted_channels ?? false;
 			if (checked === currentValue) return;
 			UserGuildSettingsCommands.toggleHideMutedChannels(guild.id);

@@ -132,11 +132,11 @@ function getCategoryMenuState(category: Channel): CategoryMenuState {
 		(ch) => ch.parentId === category.id && ch.type !== ChannelTypes.GUILD_CATEGORY,
 	);
 	const hasUnread = channelsInCategory.some((ch) => ReadStates.hasUnread(ch.id));
-	const isCollapsed = UserGuildSettings.isChannelCollapsed(guildId, category.id);
+	const isCollapsed = UserGuildSettings.isChannelSectionCollapsed(guildId, category.id);
 	const categoryIds = channels.filter((ch) => ch.type === ChannelTypes.GUILD_CATEGORY).map((ch) => ch.id);
 	const allCategoriesCollapsed =
 		categoryIds.length > 0
-			? categoryIds.every((categoryId) => UserGuildSettings.isChannelCollapsed(guildId, categoryId))
+			? categoryIds.every((categoryId) => UserGuildSettings.isChannelSectionCollapsed(guildId, categoryId))
 			: false;
 	const categoryOverride = UserGuildSettings.getChannelOverride(guildId, category.id);
 	const isMuted = categoryOverride?.muted ?? false;
