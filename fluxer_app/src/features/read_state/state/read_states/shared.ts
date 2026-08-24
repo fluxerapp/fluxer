@@ -64,7 +64,7 @@ export interface PendingAck {
 
 export interface ArchivedReadState {
 	ackMessageId: string | null;
-	ackPinTimestamp: number;
+	acknowledgedPinTimestamp: number;
 	readStateKnown: boolean;
 }
 

@@ -59,7 +59,7 @@ export const FluxerButtonContextMenu: React.FC<FluxerButtonContextMenuProps> = o
 	const unreadGuildChannelIds: Array<string> = [];
 	for (const guild of guilds) {
 		for (const channel of Channels.getGuildChannels(guild.id)) {
-			if (ReadStates.hasUnreadOrMentions(channel.id)) {
+			if (ReadStates.isUnreadOrMentioned(channel.id)) {
 				unreadGuildChannelIds.push(channel.id);
 			}
 		}

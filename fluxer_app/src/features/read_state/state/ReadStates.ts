@@ -50,9 +50,9 @@ import {observable, runInAction} from 'mobx';
 
 export type {GatewayReadState};
 
-const logger = new Logger('ReadStates');
-
 export type {UnreadJumpAnchor};
+
+const logger = new Logger('ReadStates');
 
 class ReadStates {
 	private readonly states = new Map<ChannelId, ReadStateEntry>();
@@ -128,7 +128,7 @@ class ReadStates {
 
 	private refreshMentionChannel(channelId: string): void {
 		const state = this.states.get(channelId as ChannelId);
-		if (state != null && state.mentionCount > 0 && state.canHaveMentions()) {
+		if (state != null && state.mentionCount > 0 && state.supportsMentions()) {
 			this.mentionChannels.add(channelId as ChannelId);
 		} else {
 			this.mentionChannels.delete(channelId as ChannelId);
@@ -243,7 +243,7 @@ class ReadStates {
 		}
 		this.archivedStates.set(channelId as ChannelId, {
 			ackMessageId: entry.ackMessageId,
-			ackPinTimestamp: entry.ackPinTimestamp,
+			acknowledgedPinTimestamp: entry.acknowledgedPinTimestamp,
 			readStateKnown: entry.readStateKnown,
 		});
 	}
@@ -267,7 +267,7 @@ class ReadStates {
 		const ids: Array<ChannelId> = [];
 		for (const channelId of Array.from(this.mentionChannels)) {
 			const state = this.getIfExists(channelId);
-			if (state?.canHaveMentions()) {
+			if (state?.supportsMentions()) {
 				ids.push(channelId);
 			} else {
 				this.mentionChannels.delete(channelId);
@@ -290,7 +290,7 @@ class ReadStates {
 	getMentionCount(channelId: string): number {
 		this.versionBox.get();
 		const state = this.getIfExists(channelId);
-		if (state == null || !state.canHaveMentions()) return 0;
+		if (state == null || !state.supportsMentions()) return 0;
 		return state.mentionCount;
 	}
 
@@ -321,14 +321,14 @@ class ReadStates {
 	getPrivateChannelMentionCount(channelId: string): number {
 		this.privateChannelVersionBox.get();
 		const state = this.getIfExists(channelId);
-		if (state == null || !state.canHaveMentions()) return 0;
+		if (state == null || !state.supportsMentions()) return 0;
 		return state.mentionCount;
 	}
 
-	hasUnreadOrMentions(channelId: string): boolean {
+	isUnreadOrMentioned(channelId: string): boolean {
 		this.versionBox.get();
 		const state = this.getIfExists(channelId);
-		return !!(state?.canBeUnread() && state.hasUnreadOrMentions());
+		return !!(state?.canBeUnread() && state.isUnreadOrMentioned());
 	}
 
 	ackMessageId(channelId: string): string | null {
@@ -343,12 +343,12 @@ class ReadStates {
 
 	getOldestUnreadMessageId(channelId: string): string | null {
 		const state = this.getIfExists(channelId);
-		return state?.canTrackUnreads() ? state.oldestUnreadMessageId : null;
+		return state?.supportsUnreadTracking() ? state.oldestUnreadMessageId : null;
 	}
 
 	getVisualUnreadMessageId(channelId: string): string | null {
 		const state = this.getIfExists(channelId);
-		return state?.canTrackUnreads() ? state.visualUnreadMessageId : null;
+		return state?.supportsUnreadTracking() ? state.visualUnreadMessageId : null;
 	}
 
 	getUnreadJumpAnchor(channelId: string): UnreadJumpAnchor | null {
@@ -358,7 +358,7 @@ class ReadStates {
 		}
 		return resolveUnreadJumpAnchor({
 			canBeUnread: state.canBeUnread(),
-			canTrackUnreads: state.canTrackUnreads(),
+			canTrackUnreads: state.supportsUnreadTracking(),
 			hasUnread: state.hasUnread(),
 			oldestUnreadMessageId: state.oldestUnreadMessageId,
 			ackMessageId: state.ackMessageId,
@@ -395,7 +395,7 @@ class ReadStates {
 
 	hasUnreadPins(channelId: string): boolean {
 		const state = this.getIfExists(channelId);
-		return !!(state?.canBeUnread() && state.lastPinTimestamp > state.ackPinTimestamp);
+		return !!(state?.canBeUnread() && state.lastPinTimestamp > state.acknowledgedPinTimestamp);
 	}
 
 	ackPins(channelId: string): void {
@@ -424,7 +424,7 @@ class ReadStates {
 				state.readStateKnown = true;
 				this.setMentionCount(state, readState.mention_count ?? 0);
 				state.ackMessageId = readState.last_message_id ?? null;
-				state.ackPinTimestamp = parseTimestamp(readState.last_pin_timestamp);
+				state.acknowledgedPinTimestamp = parseTimestamp(readState.last_pin_timestamp);
 				state.serverVersion = readState.version ?? null;
 			}
 			for (const channel of action.channels) {
@@ -432,7 +432,7 @@ class ReadStates {
 				const state = this.get(channel.id);
 				state.lastMessageId = channel.last_message_id ?? null;
 				state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
-				state._guildId = channel.guild_id ?? null;
+				state.storedGuildId = channel.guild_id ?? null;
 				if (!channelsWithReadState.has(channel.id as ChannelId)) {
 					this.setMentionCount(state, 0);
 				}
@@ -455,7 +455,7 @@ class ReadStates {
 					const state = this.get(channel.id);
 					state.lastMessageId = channel.last_message_id ?? null;
 					state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
-					state._guildId = action.guild.id;
+					state.storedGuildId = action.guild.id;
 					this.refreshUnreadEstimate(state);
 					this.refreshMentionChannel(channel.id);
 				}
@@ -466,7 +466,7 @@ class ReadStates {
 
 	handleLoadMessages(action: {channelId: string; isAfter?: boolean; messages: Array<WireMessage>}): void {
 		const state = this.get(action.channelId);
-		state.loadedMessages = true;
+		state.messagesLoaded = true;
 		const messages = Messages.getMessages(action.channelId);
 		const newestMessage = messages.last();
 		if (newestMessage != null && isNewerMessageId(newestMessage.id, state.lastMessageId)) {
@@ -484,12 +484,12 @@ class ReadStates {
 	handleIncomingMessage(action: {channelId: string; message: WireMessage}): void {
 		const state = this.get(action.channelId);
 		if (action.message.guild_id != null) {
-			state._guildId = action.message.guild_id;
+			state.storedGuildId = action.message.guild_id;
 		}
 		const previousLastMessageId = state.lastMessageId;
 		const currentUser = Users.getCurrentUser();
 		const authorBlocked = Relationships.isBlocked(action.message.author.id);
-		const hadUnreadOrMentions = state.hasUnreadOrMentions();
+		const hadUnreadOrMentions = state.isUnreadOrMentioned();
 		if (isNewerMessageId(action.message.id, state.lastMessageId)) {
 			state.lastMessageId = action.message.id;
 		}
@@ -540,7 +540,7 @@ class ReadStates {
 					state.ackMessageId = previousLastMessageId;
 					state.readStateKnown = true;
 				}
-				if (state.oldestUnreadMessageId == null || state.oldestUnreadMessageIdStale) {
+				if (state.oldestUnreadMessageId == null || state.oldestUnreadNeedsRecompute) {
 					state.oldestUnreadMessageId = action.message.id;
 				}
 				state.unreadCount++;
@@ -563,11 +563,11 @@ class ReadStates {
 		const state = this.get(action.channel.id);
 		state.lastMessageId = action.channel.last_message_id ?? null;
 		state.lastPinTimestamp = parseTimestamp(action.channel.last_pin_timestamp);
-		state._guildId = action.channel.guild_id ?? null;
+		state.storedGuildId = action.channel.guild_id ?? null;
 		const archivedState = this.archivedStates.get(action.channel.id as ChannelId);
 		if (archivedState != null) {
 			state.ackMessageId = archivedState.ackMessageId;
-			state.ackPinTimestamp = archivedState.ackPinTimestamp;
+			state.acknowledgedPinTimestamp = archivedState.acknowledgedPinTimestamp;
 			state.readStateKnown = archivedState.readStateKnown;
 			this.archivedStates.delete(action.channel.id as ChannelId);
 		}
@@ -600,7 +600,7 @@ class ReadStates {
 			let changed = false;
 			if (guildId != null) {
 				changed = state.guildId !== guildId;
-				state._guildId = guildId;
+				state.storedGuildId = guildId;
 			}
 			if (isNewerMessageId(lastMessageId, state.lastMessageId)) {
 				state.lastMessageId = lastMessageId;
@@ -746,7 +746,7 @@ class ReadStates {
 			case 'applyManualAck':
 				state.readStateKnown = true;
 				state.clearStickyUnread();
-				state.isManualAck = true;
+				state.ackedManually = true;
 				state.rebuild(action.messageId, {recomputeMentions: true});
 				state.serverVersion = action.version ?? state.serverVersion;
 				this.cancelPendingAck(action.channelId);
@@ -793,15 +793,15 @@ class ReadStates {
 
 	handleClearManualAck(action: {channelId: string}): void {
 		const state = this.get(action.channelId);
-		if (state.isManualAck) {
-			state.isManualAck = false;
+		if (state.ackedManually) {
+			state.ackedManually = false;
 			this.notifyChange(action.channelId);
 		}
 	}
 
 	handleRelationshipUpdate(): void {
 		for (const state of this.states.values()) {
-			if (state.hasUnreadOrMentions()) {
+			if (state.isUnreadOrMentioned()) {
 				state.rebuild(undefined, {recomputeMentions: true});
 			}
 		}
@@ -832,9 +832,9 @@ class ReadStates {
 			requestedMessageId: messageId,
 			lastMessageId: state.lastMessageId,
 			ackMessageId: state.ackMessageId,
-			isManualAck: state.isManualAck,
-			loadedMessages: state.loadedMessages,
-			canTrackUnreads: state.canTrackUnreads(),
+			ackedManually: state.ackedManually,
+			messagesLoaded: state.messagesLoaded,
+			supportsUnreadTracking: state.supportsUnreadTracking(),
 			hasMentions: state.hasMentions(),
 			hasOldestUnreadMessage: state.oldestUnreadMessageId != null,
 			hasStickyUnreadMessage: state.stickyUnreadMessageId != null,
@@ -856,7 +856,7 @@ class ReadStates {
 		state.ackMessageId = decision.messageId;
 		state.oldestUnreadMessageId = null;
 		if (decision.shouldClearManualAck) {
-			state.isManualAck = false;
+			state.ackedManually = false;
 			state.clearStickyUnread();
 		}
 		this.cancelPendingAckIfCovered(state.channelId, decision.messageId);
@@ -866,10 +866,10 @@ class ReadStates {
 	private applyPinAck(state: ReadStateEntry, timestamp?: string | null): boolean {
 		const newTimestamp = timestamp == null ? state.lastPinTimestamp : parseTimestamp(timestamp);
 		const ackTimestamp = newTimestamp !== 0 ? newTimestamp : state.lastPinTimestamp;
-		if (state.ackPinTimestamp === ackTimestamp) {
+		if (state.acknowledgedPinTimestamp === ackTimestamp) {
 			return false;
 		}
-		state.ackPinTimestamp = ackTimestamp;
+		state.acknowledgedPinTimestamp = ackTimestamp;
 		return true;
 	}
 
@@ -895,7 +895,7 @@ class ReadStates {
 		this.pendingAcks.set(channelId as ChannelId, pending);
 		const state = this.getIfExists(channelId);
 		if (state != null) {
-			state.outgoingAck = pending.messageId;
+			state.inFlightAckMessageId = pending.messageId;
 		}
 		this.scheduleAckFlush();
 	}
@@ -938,7 +938,7 @@ class ReadStates {
 		const deleted = this.pendingAcks.delete(channelId as ChannelId);
 		const state = this.getIfExists(channelId);
 		if (state != null) {
-			state.outgoingAck = null;
+			state.inFlightAckMessageId = null;
 		}
 		if (deleted) {
 			this.scheduleAckFlush();
@@ -988,8 +988,8 @@ class ReadStates {
 				if (current?.messageId === entry.messageId) {
 					this.pendingAcks.delete(entry.channelId as ChannelId);
 					const state = this.getIfExists(entry.channelId);
-					if (state?.outgoingAck === entry.messageId) {
-						state.outgoingAck = null;
+					if (state?.inFlightAckMessageId === entry.messageId) {
+						state.inFlightAckMessageId = null;
 					}
 				}
 			}

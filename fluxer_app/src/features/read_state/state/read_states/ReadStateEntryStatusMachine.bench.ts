@@ -12,7 +12,7 @@ const INPUTS = Object.freeze(
 		switch (index % 6) {
 			case 0:
 				return {
-					canTrackUnreads: false,
+					supportsUnreadTracking: false,
 					hasBlockedDirectMessageRecipient: false,
 					readStateKnown: true,
 					lastMessageId: LAST_ID,
@@ -21,7 +21,7 @@ const INPUTS = Object.freeze(
 				};
 			case 1:
 				return {
-					canTrackUnreads: true,
+					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: true,
 					readStateKnown: true,
 					lastMessageId: LAST_ID,
@@ -30,7 +30,7 @@ const INPUTS = Object.freeze(
 				};
 			case 2:
 				return {
-					canTrackUnreads: true,
+					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
 					readStateKnown: false,
 					lastMessageId: LAST_ID,
@@ -39,7 +39,7 @@ const INPUTS = Object.freeze(
 				};
 			case 3:
 				return {
-					canTrackUnreads: true,
+					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
 					readStateKnown: true,
 					lastMessageId: null,
@@ -48,7 +48,7 @@ const INPUTS = Object.freeze(
 				};
 			case 4:
 				return {
-					canTrackUnreads: true,
+					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
 					readStateKnown: true,
 					lastMessageId: LAST_ID,
@@ -57,7 +57,7 @@ const INPUTS = Object.freeze(
 				};
 			default:
 				return {
-					canTrackUnreads: true,
+					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
 					readStateKnown: true,
 					lastMessageId: LAST_ID,
@@ -72,7 +72,7 @@ describe('ReadStateEntryStatusMachine benchmarks', () => {
 	bench('resolves 100k mixed read-state entry statuses', () => {
 		let unreadOrMentionCount = 0;
 		for (const input of INPUTS) {
-			if (resolveReadStateEntryStatus(input).hasUnreadOrMentions) {
+			if (resolveReadStateEntryStatus(input).isUnreadOrMentioned) {
 				unreadOrMentionCount++;
 			}
 		}

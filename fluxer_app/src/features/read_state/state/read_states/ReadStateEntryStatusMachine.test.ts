@@ -17,7 +17,7 @@ const LAST_ID = fromTimestamp(BASE_TIMESTAMP + 2000);
 
 function input(overrides: Partial<ReadStateEntryStatusInput> = {}): ReadStateEntryStatusInput {
 	return {
-		canTrackUnreads: true,
+		supportsUnreadTracking: true,
 		hasBlockedDirectMessageRecipient: false,
 		readStateKnown: true,
 		lastMessageId: LAST_ID,
@@ -33,7 +33,7 @@ function expectResolvedState(overrides: Partial<ReadStateEntryStatusInput>, expe
 
 describe('readStateEntryStatusMachine', () => {
 	it('routes the read-state status by priority', () => {
-		expectResolvedState({canTrackUnreads: false, mentionCount: 1, ackMessageId: ACK_ID}, 'untracked');
+		expectResolvedState({supportsUnreadTracking: false, mentionCount: 1, ackMessageId: ACK_ID}, 'untracked');
 		expectResolvedState({hasBlockedDirectMessageRecipient: true, mentionCount: 1, ackMessageId: ACK_ID}, 'blocked');
 		expectResolvedState({readStateKnown: false, ackMessageId: ACK_ID}, 'unknown');
 		expectResolvedState({lastMessageId: null, ackMessageId: ACK_ID}, 'unknown');
@@ -45,28 +45,28 @@ describe('readStateEntryStatusMachine', () => {
 		expect(resolveReadStateEntryStatus(input({ackMessageId: ACK_ID, mentionCount: 2}))).toMatchObject({
 			state: 'unread',
 			canBeUnread: true,
-			canHaveMentions: true,
+			supportsMentions: true,
 			hasUnread: true,
 			hasMentions: true,
-			hasUnreadOrMentions: true,
+			isUnreadOrMentioned: true,
 		});
 		expect(resolveReadStateEntryStatus(input({hasBlockedDirectMessageRecipient: true, mentionCount: 2}))).toMatchObject(
 			{
 				state: 'blocked',
 				canBeUnread: true,
-				canHaveMentions: false,
+				supportsMentions: false,
 				hasUnread: false,
 				hasMentions: true,
-				hasUnreadOrMentions: false,
+				isUnreadOrMentioned: false,
 			},
 		);
-		expect(resolveReadStateEntryStatus(input({canTrackUnreads: false, mentionCount: 2}))).toMatchObject({
+		expect(resolveReadStateEntryStatus(input({supportsUnreadTracking: false, mentionCount: 2}))).toMatchObject({
 			state: 'untracked',
 			canBeUnread: false,
-			canHaveMentions: false,
+			supportsMentions: false,
 			hasUnread: false,
 			hasMentions: true,
-			hasUnreadOrMentions: false,
+			isUnreadOrMentioned: false,
 		});
 	});
 
@@ -81,7 +81,7 @@ describe('readStateEntryStatusMachine', () => {
 
 		expect(selectReadStateEntryStatusModel(unreadSnapshot)).toMatchObject({
 			state: 'unread',
-			hasUnreadOrMentions: true,
+			isUnreadOrMentioned: true,
 		});
 	});
 });

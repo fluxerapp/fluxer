@@ -379,7 +379,7 @@ class GuildReadState {
 			if (!GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
 				continue;
 			}
-			if (ReadStates.hasUnreadOrMentions(channel.id)) {
+			if (ReadStates.isUnreadOrMentioned(channel.id)) {
 				return true;
 			}
 		}

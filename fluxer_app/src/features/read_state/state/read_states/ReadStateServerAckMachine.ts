@@ -68,7 +68,7 @@ export const readStateServerAckMachine = setup({
 	},
 	guards: {
 		hasStaleVersion: ({context}) => hasStaleVersion(context),
-		isManualAck: ({context}) => context.manual,
+		ackedManually: ({context}) => context.manual,
 		isOlderThanCurrentAck: ({context}) => isOlderThanCurrentAck(context),
 		isCurrentAck: ({context}) => isCurrentAck(context),
 	},
@@ -80,7 +80,7 @@ export const readStateServerAckMachine = setup({
 		routing: {
 			always: [
 				{guard: 'hasStaleVersion', target: 'staleVersion'},
-				{guard: 'isManualAck', target: 'manualAck'},
+				{guard: 'ackedManually', target: 'manualAck'},
 				{guard: 'isOlderThanCurrentAck', target: 'olderMessage'},
 				{guard: 'isCurrentAck', target: 'currentAck'},
 				{target: 'newerAck'},

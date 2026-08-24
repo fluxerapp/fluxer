@@ -4,7 +4,7 @@ import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from '
 import {compareMessageIds} from './shared';
 
 export interface ReadStateEntryStatusInput {
-	canTrackUnreads: boolean;
+	supportsUnreadTracking: boolean;
 	hasBlockedDirectMessageRecipient: boolean;
 	readStateKnown: boolean;
 	lastMessageId: string | null;
@@ -22,10 +22,10 @@ export type ReadStateEntryStatusValue = 'untracked' | 'blocked' | 'unknown' | 'r
 export interface ReadStateEntryStatusModel {
 	state: ReadStateEntryStatusValue;
 	canBeUnread: boolean;
-	canHaveMentions: boolean;
+	supportsMentions: boolean;
 	hasUnread: boolean;
 	hasMentions: boolean;
-	hasUnreadOrMentions: boolean;
+	isUnreadOrMentioned: boolean;
 }
 
 function getStatusValue(snapshot: ReadStateEntryStatusSnapshot): ReadStateEntryStatusValue {
@@ -49,7 +49,7 @@ function isUnread(context: ReadStateEntryStatusInput): boolean {
 }
 
 function getStatusValueFromInput(input: ReadStateEntryStatusInput): ReadStateEntryStatusValue {
-	if (!input.canTrackUnreads) return 'untracked';
+	if (!input.supportsUnreadTracking) return 'untracked';
 	if (input.hasBlockedDirectMessageRecipient) return 'blocked';
 	if (!input.readStateKnown || input.lastMessageId == null) return 'unknown';
 	if (isUnread(input)) return 'unread';
@@ -62,15 +62,15 @@ function buildStatusModel(
 ): ReadStateEntryStatusModel {
 	const hasMentions = input.mentionCount > 0;
 	const canBeUnread = state !== 'untracked';
-	const canHaveMentions = hasMentions && state !== 'untracked' && state !== 'blocked';
+	const supportsMentions = hasMentions && state !== 'untracked' && state !== 'blocked';
 	const hasUnread = state === 'unread';
 	return {
 		state,
 		canBeUnread,
-		canHaveMentions,
+		supportsMentions,
 		hasUnread,
 		hasMentions,
-		hasUnreadOrMentions: hasUnread || canHaveMentions,
+		isUnreadOrMentioned: hasUnread || supportsMentions,
 	};
 }
 
@@ -87,7 +87,7 @@ export const readStateEntryStatusMachine = setup({
 		}),
 	},
 	guards: {
-		isUntracked: ({context}) => !context.canTrackUnreads,
+		isUntracked: ({context}) => !context.supportsUnreadTracking,
 		isBlocked: ({context}) => context.hasBlockedDirectMessageRecipient,
 		isUnknown: ({context}) => !context.readStateKnown || context.lastMessageId == null,
 		isUnread: ({context}) => isUnread(context),

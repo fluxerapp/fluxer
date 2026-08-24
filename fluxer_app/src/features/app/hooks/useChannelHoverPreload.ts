@@ -4,7 +4,6 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {ensureMembersForMessages} from '@app/features/messaging/commands/MessageCommands';
 import Messages from '@app/features/messaging/state/MessagingMessages';
-import ReadStates from '@app/features/read_state/state/ReadStates';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {useCallback, useEffect, useRef} from 'react';
 
@@ -57,8 +56,7 @@ export function useChannelHoverPreload({
 			return;
 		}
 		if (preloadMessages) {
-			const unreadAnchor = ReadStates.getUnreadJumpAnchor(channel.id);
-			if (!Messages.preloadLatestPage(channel.id, guild?.id ?? channel.guildId ?? null, unreadAnchor)) {
+			if (!Messages.preloadLatestPage(channel.id, guild?.id ?? channel.guildId ?? null)) {
 				ensureMembersForCachedChannelMessages(channel.id);
 			}
 		}

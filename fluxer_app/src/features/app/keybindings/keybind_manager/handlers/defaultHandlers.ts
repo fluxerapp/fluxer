@@ -349,7 +349,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const inboxTab = Inbox.selectedTab;
 		if (inboxTab === 'unreadChannels') {
-			const unreadChannelId = ReadStates.getChannelIds().find((channelId) => ReadStates.hasUnreadOrMentions(channelId));
+			const unreadChannelId = ReadStates.getChannelIds().find((channelId) => ReadStates.isUnreadOrMentioned(channelId));
 			if (unreadChannelId) {
 				ReadStateCommands.ack(unreadChannelId, true, true);
 			}

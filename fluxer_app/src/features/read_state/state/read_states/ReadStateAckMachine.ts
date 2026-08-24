@@ -7,9 +7,9 @@ export interface ReadStateAckInput {
 	requestedMessageId?: string | null;
 	lastMessageId: string | null;
 	ackMessageId: string | null;
-	isManualAck: boolean;
-	loadedMessages: boolean;
-	canTrackUnreads: boolean;
+	ackedManually: boolean;
+	messagesLoaded: boolean;
+	supportsUnreadTracking: boolean;
 	hasMentions: boolean;
 	hasOldestUnreadMessage: boolean;
 	hasStickyUnreadMessage: boolean;
@@ -80,9 +80,9 @@ export const readStateAckMachine = setup({
 		}),
 	},
 	guards: {
-		isManualAckHeld: ({context}) => !isOverrideAck(context) && context.isManualAck,
-		isNotLoaded: ({context}) => !isOverrideAck(context) && !context.loadedMessages,
-		isUntracked: ({context}) => !isOverrideAck(context) && !context.canTrackUnreads,
+		isManualAckHeld: ({context}) => !isOverrideAck(context) && context.ackedManually,
+		isNotLoaded: ({context}) => !isOverrideAck(context) && !context.messagesLoaded,
+		isUntracked: ({context}) => !isOverrideAck(context) && !context.supportsUnreadTracking,
 		isMissingMessage: ({context}) => getFinalMessageId(context) == null,
 		isOlderThanCurrentAck: ({context}) => {
 			const finalMessageId = getFinalMessageId(context);

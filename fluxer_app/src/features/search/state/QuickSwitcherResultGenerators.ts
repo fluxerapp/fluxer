@@ -123,7 +123,7 @@ function generateUnreadResults(
 			if (excludedIds.has(channelId) || additionalExcludedChannelIds.has(channelId)) {
 				return false;
 			}
-			return ReadStates.hasUnreadOrMentions(channelId);
+			return ReadStates.isUnreadOrMentioned(channelId);
 		})
 		.map((channelId) => Channels.getChannel(channelId))
 		.filter((channel): channel is Channel => channel != null)

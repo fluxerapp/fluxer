@@ -102,7 +102,7 @@ interface MessagesStateSnapshot {
 	editingMessageId: string | null;
 	currentUser: User | undefined;
 	isEstimated: boolean;
-	isManualAck: boolean;
+	ackedManually: boolean;
 }
 
 interface MessagesProps {
@@ -132,7 +132,7 @@ const readFromState = (channelId: string): MessagesStateSnapshot => {
 		editingMessageId: MessageEdit.getEditingMessageId(channelId),
 		currentUser: Users.currentUser ?? undefined,
 		isEstimated: ReadStates.getIfExists(channelId)?.estimated ?? false,
-		isManualAck: ReadStates.getIfExists(channelId)?.isManualAck ?? false,
+		ackedManually: ReadStates.getIfExists(channelId)?.ackedManually ?? false,
 	};
 };
 
@@ -185,7 +185,7 @@ export const Messages = observer(function Messages({
 		windowFocused: isWindowFocused,
 		atBottom: true,
 		textChatVisible: true,
-		manualAck: state.isManualAck,
+		manualAck: state.ackedManually,
 		blockingModalOpen: isModalOpen || MediaViewer.isOpen,
 	});
 	const jumpHighlightTimeoutRef = useRef<number | null>(null);
@@ -498,7 +498,7 @@ export const Messages = observer(function Messages({
 	useEffect(() => {
 		return () => {
 			const readState = ReadStates.getIfExists(channel.id);
-			if (readState?.isManualAck) {
+			if (readState?.ackedManually) {
 				ReadStateCommands.clearManualAck(channel.id);
 			}
 			ReadStateCommands.clearStickyUnread(channel.id);

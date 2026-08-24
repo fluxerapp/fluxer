@@ -20,9 +20,9 @@ function input(overrides: Partial<ReadStateAckInput> = {}): ReadStateAckInput {
 		requestedMessageId: NEWER_ID,
 		lastMessageId: NEWER_ID,
 		ackMessageId: ACK_ID,
-		isManualAck: false,
-		loadedMessages: true,
-		canTrackUnreads: true,
+		ackedManually: false,
+		messagesLoaded: true,
+		supportsUnreadTracking: true,
 		hasMentions: false,
 		hasOldestUnreadMessage: false,
 		hasStickyUnreadMessage: false,
@@ -53,30 +53,30 @@ describe('readStateAckMachine', () => {
 	});
 
 	it('blocks automatic ack while manual ack is held, messages are unloaded, or the channel is untracked', () => {
-		expect(resolveReadStateAckDecision(input({isManualAck: true}))).toEqual({
+		expect(resolveReadStateAckDecision(input({ackedManually: true}))).toEqual({
 			type: 'ignored',
 			reason: 'manualAck',
 		});
-		expect(resolveReadStateAckDecision(input({loadedMessages: false}))).toEqual({
+		expect(resolveReadStateAckDecision(input({messagesLoaded: false}))).toEqual({
 			type: 'ignored',
 			reason: 'notLoaded',
 		});
-		expect(resolveReadStateAckDecision(input({canTrackUnreads: false}))).toEqual({
+		expect(resolveReadStateAckDecision(input({supportsUnreadTracking: false}))).toEqual({
 			type: 'ignored',
 			reason: 'untracked',
 		});
 	});
 
 	it('lets local, forced, and explicit user acknowledgements override automatic ack guards', () => {
-		expect(resolveReadStateAckDecision(input({isManualAck: true, isExplicitUserAction: true}))).toMatchObject({
+		expect(resolveReadStateAckDecision(input({ackedManually: true, isExplicitUserAction: true}))).toMatchObject({
 			type: 'ack',
 			shouldClearManualAck: true,
 		});
-		expect(resolveReadStateAckDecision(input({loadedMessages: false, local: true}))).toMatchObject({
+		expect(resolveReadStateAckDecision(input({messagesLoaded: false, local: true}))).toMatchObject({
 			type: 'ack',
 			shouldClearManualAck: true,
 		});
-		expect(resolveReadStateAckDecision(input({canTrackUnreads: false, force: true}))).toMatchObject({
+		expect(resolveReadStateAckDecision(input({supportsUnreadTracking: false, force: true}))).toMatchObject({
 			type: 'ack',
 			shouldClearManualAck: true,
 		});
@@ -125,12 +125,12 @@ describe('readStateAckMachine', () => {
 	});
 
 	it('updates the decision from later ack input', () => {
-		const ignoredSnapshot = createReadStateAckSnapshot(input({isManualAck: true}));
+		const ignoredSnapshot = createReadStateAckSnapshot(input({ackedManually: true}));
 		expect(selectReadStateAckDecision(ignoredSnapshot)).toEqual({type: 'ignored', reason: 'manualAck'});
 
 		const ackSnapshot = transitionReadStateAckSnapshot(ignoredSnapshot, {
 			type: 'readStateAck.updated',
-			input: input({isManualAck: false}),
+			input: input({ackedManually: false}),
 		});
 
 		expect(selectReadStateAckDecision(ackSnapshot)).toMatchObject({
