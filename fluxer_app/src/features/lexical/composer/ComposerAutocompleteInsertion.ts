@@ -28,6 +28,10 @@ export function getComposerAutocompleteReplacementStart(
 	if (type === 'commandArg') {
 		return Math.max(0, textUpToCursor.length - (matchedArgument == null ? 0 : matchedArgument.length));
 	}
+	if (type === 'emojiReaction') {
+		const whole = match[0] == null ? '' : match[0];
+		return Math.max(0, (match.index == null ? 0 : match.index) + (whole.length - whole.trimStart().length));
+	}
 	return Math.max(0, (match.index == null ? 0 : match.index) + (matchedPrefix == null ? 0 : matchedPrefix.length));
 }
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getComposerAutocompleteReplacementStart} from '@app/features/lexical/composer/ComposerAutocompleteInsertion';
 import {detectAutocompleteTrigger} from '@app/features/messaging/utils/SlashCommandUtils';
 import type {MenuTextMatch} from '@lexical/react/LexicalTypeaheadMenuPlugin';
 
@@ -8,8 +9,7 @@ export function buildComposerMenuMatch(fullText: string, anchorText: string): Me
 	if (trigger == null) {
 		return null;
 	}
-	const matchStart =
-		(trigger.match.index == null ? 0 : trigger.match.index) + (trigger.match[1] == null ? 0 : trigger.match[1].length);
+	const matchStart = getComposerAutocompleteReplacementStart(fullText, trigger.type, trigger.match);
 	const tokenLength = fullText.length - matchStart;
 	const leadOffset = Math.max(0, anchorText.length - tokenLength);
 	return {
