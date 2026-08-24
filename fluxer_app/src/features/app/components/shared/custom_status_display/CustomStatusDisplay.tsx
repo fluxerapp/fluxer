@@ -99,7 +99,7 @@ const StatusEmojiWithTooltip = observer(
 				return `:${status.emojiName}:`;
 			}
 			if (status.emojiName) {
-				return UnicodeEmojis.convertSurrogateToName(status.emojiName, true, status.emojiName);
+				return UnicodeEmojis.nameForSurrogate(status.emojiName, true, status.emojiName);
 			}
 			return '';
 		};

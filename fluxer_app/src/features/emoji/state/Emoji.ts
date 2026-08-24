@@ -50,8 +50,8 @@ function toFlatUnicodeEmoji(unicodeEmoji: UnicodeEmoji): FlatEmoji {
 		url: unicodeEmoji.url || undefined,
 		useSpriteSheet: unicodeEmoji.useSpriteSheet,
 		index: unicodeEmoji.index,
-		diversityIndex: unicodeEmoji.diversityIndex,
-		hasDiversity: unicodeEmoji.hasDiversity,
+		skinToneIndex: unicodeEmoji.skinToneIndex,
+		hasSkinTones: unicodeEmoji.hasSkinTones,
 	};
 }
 
@@ -392,8 +392,8 @@ class Emoji {
 		if (emoji.id) {
 			return `<${emoji.animated ? 'a' : ''}:${emoji.uniqueName}:${emoji.id}>`;
 		}
-		if (emoji.hasDiversity && this.skinTone) {
-			const skinToneName = UnicodeEmojis.convertSurrogateToName(this.skinTone, false);
+		if (emoji.hasSkinTones && this.skinTone) {
+			const skinToneName = UnicodeEmojis.nameForSurrogate(this.skinTone, false);
 			if (skinToneName) {
 				return `:${emoji.uniqueName}::${skinToneName}:`;
 			}

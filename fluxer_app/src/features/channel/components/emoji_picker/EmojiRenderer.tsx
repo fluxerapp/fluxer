@@ -139,8 +139,8 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 				/>,
 			);
 		}
-		const hasDiversity = emoji.hasDiversity && skinTone;
-		const index = hasDiversity ? emoji.diversityIndex : emoji.index;
+		const hasSkinTones = emoji.hasSkinTones && skinTone;
+		const index = hasSkinTones ? emoji.skinToneIndex : emoji.index;
 		if (isFirefoxBrowser()) {
 			const {url} = getEmojiDisplayDataWithSkinTone(emoji, skinTone);
 			if (url) {
@@ -166,12 +166,12 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 				/>,
 			);
 		}
-		const perRow = hasDiversity ? EMOJI_SPRITES.DiversityPerRow : EMOJI_SPRITES.NonDiversityPerRow;
+		const perRow = hasSkinTones ? EMOJI_SPRITES.SkinTonePerRow : EMOJI_SPRITES.BasePerRow;
 		const rows = Math.ceil(
-			(hasDiversity ? UnicodeEmojis.numDiversitySprites : UnicodeEmojis.numNonDiversitySprites) / perRow,
+			(hasSkinTones ? UnicodeEmojis.skinToneSpriteCount : UnicodeEmojis.baseSpriteCount) / perRow,
 		);
 		const spriteStyle = {
-			backgroundImage: getSpriteSheetBackground(hasDiversity ? skinTone : ''),
+			backgroundImage: getSpriteSheetBackground(hasSkinTones ? skinTone : ''),
 			...getEmojiSpriteSheetLayout(index, perRow, rows),
 		};
 		return renderButton(

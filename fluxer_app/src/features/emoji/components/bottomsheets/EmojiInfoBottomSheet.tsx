@@ -66,7 +66,7 @@ const EmojiInfoBottomSheetContent: React.FC<EmojiInfoBottomSheetContentProps> = 
 		if (isCustomEmoji) {
 			return `:${emoji.name}:`;
 		}
-		return UnicodeEmojis.convertSurrogateToName(defaultEmojiSurrogate ?? emoji.name, true, `:${emoji.name}:`);
+		return UnicodeEmojis.nameForSurrogate(defaultEmojiSurrogate ?? emoji.name, true, `:${emoji.name}:`);
 	};
 	const emojiName = getEmojiDisplayName();
 	const renderSubtext = () => {

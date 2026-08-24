@@ -194,7 +194,7 @@ function shortcutToEmoji(shortcut: string): string | null {
 	if (!name) {
 		return null;
 	}
-	const surrogate = UnicodeEmojis.convertNameToSurrogate(name);
+	const surrogate = UnicodeEmojis.surrogateForName(name);
 	return surrogate || null;
 }
 
@@ -202,7 +202,7 @@ function matchEmoticonAt(content: string, index: number): {shortcut: string; emo
 	if (!hasLeadingBoundary(content, index)) {
 		return null;
 	}
-	const match = UnicodeEmojis.EMOJI_SHORTCUT_RE.exec(content.slice(index));
+	const match = UnicodeEmojis.EMOTICON_PREFIX_RE.exec(content.slice(index));
 	if (match == null) {
 		return null;
 	}

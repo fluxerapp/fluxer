@@ -6,8 +6,8 @@ import sharp from 'sharp';
 import {convertToCodePoints} from '../src/features/expressions/utils/EmojiCodepointUtils';
 
 const EMOJI_SPRITES = {
-	nonDiversityPerRow: 42,
-	diversityPerRow: 10,
+	basePerRow: 42,
+	skinTonePerRow: 10,
 	pickerPerRow: 11,
 	pickerCount: 50,
 } as const;
@@ -173,10 +173,10 @@ async function generateMainSpriteSheet(
 			base.push({surrogates: obj.surrogates});
 		}
 	}
-	await renderSpriteSheet(base, EMOJI_SPRITES.nonDiversityPerRow, 'spritesheet-emoji', outputDir);
+	await renderSpriteSheet(base, EMOJI_SPRITES.basePerRow, 'spritesheet-emoji', outputDir);
 }
 
-async function generateDiversitySpriteSheets(
+async function generateSkinToneSpriteSheets(
 	emojiData: Record<string, Array<EmojiObject>>,
 	outputDir: string,
 ): Promise<void> {
@@ -195,7 +195,7 @@ async function generateDiversitySpriteSheets(
 		if (skinEntries.length === 0) {
 			continue;
 		}
-		await renderSpriteSheet(skinEntries, EMOJI_SPRITES.diversityPerRow, `spritesheet-${skinCodepoint}`, outputDir);
+		await renderSpriteSheet(skinEntries, EMOJI_SPRITES.skinTonePerRow, `spritesheet-${skinCodepoint}`, outputDir);
 	}
 }
 
@@ -245,8 +245,8 @@ async function main(): Promise<void> {
 	const emojiData: Record<string, Array<EmojiObject>> = JSON.parse(readFileSync(emojiDataPath, 'utf-8'));
 	console.log('Generating main sprite sheet...');
 	await generateMainSpriteSheet(emojiData, outputDir);
-	console.log('Generating diversity sprite sheets...');
-	await generateDiversitySpriteSheets(emojiData, outputDir);
+	console.log('Generating skin tone sprite sheets...');
+	await generateSkinToneSpriteSheets(emojiData, outputDir);
 	console.log('Generating picker sprite sheet...');
 	await generatePickerSpriteSheet(outputDir);
 	console.log('Emoji sprites generated successfully.');

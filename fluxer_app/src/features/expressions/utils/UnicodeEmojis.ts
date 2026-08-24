@@ -51,8 +51,8 @@ const FLAGS_DESCRIPTOR = msg({
 	comment: 'Unicode emoji category label.',
 });
 export const EMOJI_SPRITES = {
-	NonDiversityPerRow: 42,
-	DiversityPerRow: 10,
+	BasePerRow: 42,
+	SkinTonePerRow: 10,
 	PickerPerRow: 11,
 	PickerCount: 50,
 };
@@ -69,12 +69,12 @@ class UnicodeEmojiClass {
 	allNamesString: string;
 	defaultUrl?: string;
 	surrogates: string;
-	hasDiversity: boolean;
+	hasSkinTones: boolean;
 	managed: boolean;
 	useSpriteSheet: boolean;
 	index?: number;
-	diversityIndex?: number;
-	diversitiesByName: Record<
+	skinToneIndex?: number;
+	skinTonesByName: Record<
 		string,
 		{
 			url: string;
@@ -82,12 +82,12 @@ class UnicodeEmojiClass {
 			surrogatePair: string;
 		}
 	>;
-	urlForDiversitySurrogate: Record<string, string>;
+	urlBySkinToneSurrogate: Record<string, string>;
 
 	constructor(emojiObject: {
 		names: Array<string>;
 		surrogates: string;
-		hasDiversity?: boolean;
+		hasSkinTones?: boolean;
 		keywords?: Array<string>;
 		skins?: Array<{
 			surrogates: string;
@@ -103,22 +103,22 @@ class UnicodeEmojiClass {
 		this.surrogates = surrogates;
 		this.useSpriteSheet = false;
 		this.index = undefined;
-		this.diversityIndex = undefined;
-		this.urlForDiversitySurrogate = {};
-		this.diversitiesByName = {};
-		this.hasDiversity = emojiObject.hasDiversity || !!(emojiObject.skins && emojiObject.skins.length > 0);
+		this.skinToneIndex = undefined;
+		this.urlBySkinToneSurrogate = {};
+		this.skinTonesByName = {};
+		this.hasSkinTones = emojiObject.hasSkinTones || !!(emojiObject.skins && emojiObject.skins.length > 0);
 		this.managed = true;
-		if (this.hasDiversity && emojiObject.skins) {
+		if (this.hasSkinTones && emojiObject.skins) {
 			SKIN_TONE_SURROGATES.forEach((skinTone, index) => {
 				const skinData = emojiObject.skins?.[index];
 				if (skinData) {
 					const surrogatePair = skinData.surrogates;
 					const url = EmojiUtils.getEmojiURL(surrogatePair);
 					if (url) {
-						this.urlForDiversitySurrogate[skinTone] = url;
+						this.urlBySkinToneSurrogate[skinTone] = url;
 						names.forEach((name) => {
 							const skinName = `${name}::skin-tone-${index + 1}`;
-							this.diversitiesByName[skinName] = {
+							this.skinTonesByName[skinName] = {
 								name: skinName,
 								surrogatePair,
 								url,
@@ -130,9 +130,9 @@ class UnicodeEmojiClass {
 		}
 	}
 
-	setSpriteSheetIndex(index: number, isDiversity = false) {
-		if (isDiversity) {
-			this.diversityIndex = index;
+	setSpriteSheetIndex(index: number, isSkinTone = false) {
+		if (isSkinTone) {
+			this.skinToneIndex = index;
 		} else {
 			this.index = index;
 		}
@@ -148,11 +148,11 @@ class UnicodeEmojiClass {
 			allNamesString: this.allNamesString,
 			url: this.defaultUrl,
 			surrogates: this.surrogates,
-			hasDiversity: this.hasDiversity,
+			hasSkinTones: this.hasSkinTones,
 			managed: this.managed,
 			useSpriteSheet: this.useSpriteSheet,
 			index: this.index,
-			diversityIndex: this.diversityIndex,
+			skinToneIndex: this.skinToneIndex,
 		};
 	}
 }
@@ -167,8 +167,8 @@ interface EmojiIndex {
 	canonicalSurrogateToName: Record<string, string>;
 	shortcutToName: Record<string, string>;
 	emojis: Array<UnicodeEmoji>;
-	numDiversitySprites: number;
-	numNonDiversitySprites: number;
+	skinToneSpriteCount: number;
+	baseSpriteCount: number;
 	emojiSurrogateRegex: RegExp;
 	emojiShortcutRegex: RegExp;
 }
@@ -185,16 +185,16 @@ function buildEmojiIndex(): EmojiIndex {
 	const canonicalSurrogateToName: Record<string, string> = {};
 	const shortcutToName: Record<string, string> = {};
 	const emojis: Array<UnicodeEmoji> = [];
-	let numDiversitySprites = 0;
-	let numNonDiversitySprites = 0;
+	let skinToneSpriteCount = 0;
+	let baseSpriteCount = 0;
 
 	Object.entries(emojiData.categories).forEach(([category, emojiObjects]) => {
 		emojisByCategory[category] = emojiObjects.map((emojiObject) => {
 			const emoji = new UnicodeEmojiClass(emojiObject);
-			if (emoji.hasDiversity) {
-				emoji.setSpriteSheetIndex(numDiversitySprites++, true);
+			if (emoji.hasSkinTones) {
+				emoji.setSpriteSheetIndex(skinToneSpriteCount++, true);
 			}
-			emoji.setSpriteSheetIndex(numNonDiversitySprites++, false);
+			emoji.setSpriteSheetIndex(baseSpriteCount++, false);
 			surrogateToName[emoji.surrogates] = emoji.uniqueName;
 			canonicalSurrogateToName[toCanonicalSurrogate(emoji.surrogates)] = emoji.uniqueName;
 			const emojiJson = emoji.toJSON();
@@ -203,18 +203,18 @@ function buildEmojiIndex(): EmojiIndex {
 				shortcodeNameToEmoji[name] = emojiJson;
 				nameToSurrogate[name] = emoji.surrogates;
 			});
-			Object.values(emoji.diversitiesByName).forEach((diversity) => {
+			Object.values(emoji.skinTonesByName).forEach((skinToneEntry) => {
 				const skinTonedEmoji: UnicodeEmoji = {
 					...emojiJson,
-					name: diversity.name,
-					surrogates: diversity.surrogatePair,
-					url: diversity.url,
+					name: skinToneEntry.name,
+					surrogates: skinToneEntry.surrogatePair,
+					url: skinToneEntry.url,
 				};
-				nameToEmoji[diversity.name] = skinTonedEmoji;
-				shortcodeNameToEmoji[diversity.name] = skinTonedEmoji;
-				nameToSurrogate[diversity.name] = diversity.surrogatePair;
-				surrogateToName[diversity.surrogatePair] = diversity.name;
-				canonicalSurrogateToName[toCanonicalSurrogate(diversity.surrogatePair)] = diversity.name;
+				nameToEmoji[skinToneEntry.name] = skinTonedEmoji;
+				shortcodeNameToEmoji[skinToneEntry.name] = skinTonedEmoji;
+				nameToSurrogate[skinToneEntry.name] = skinToneEntry.surrogatePair;
+				surrogateToName[skinToneEntry.surrogatePair] = skinToneEntry.name;
+				canonicalSurrogateToName[toCanonicalSurrogate(skinToneEntry.surrogatePair)] = skinToneEntry.name;
 			});
 			categoryByEmojiName[emoji.uniqueName] = category;
 			emojis.push(emojiJson);
@@ -273,8 +273,8 @@ function buildEmojiIndex(): EmojiIndex {
 		canonicalSurrogateToName,
 		shortcutToName,
 		emojis,
-		numDiversitySprites,
-		numNonDiversitySprites,
+		skinToneSpriteCount,
+		baseSpriteCount,
 		emojiSurrogateRegex: new RegExp(`(${surrogateAlternation})`, 'g'),
 		emojiShortcutRegex: new RegExp(`^(${shortcutAlternation})`),
 	};
@@ -288,8 +288,7 @@ function getEmojiIndex(): EmojiIndex {
 const lookupSurrogateName = (surrogate: string): string | null =>
 	getEmojiIndex().canonicalSurrogateToName[toCanonicalSurrogate(surrogate)] ?? null;
 
-const EMOJI_NAME_RE = /^:([^\s:]+?(?:::skin-tone-\d)?):/;
-const EMOJI_NAME_AND_DIVERSITY_RE = /^:([^\s:]+?(?:::skin-tone-\d)?):/;
+const EMOJI_SHORTCODE_RE = /^:([^\s:]+(?:::skin-tone-[0-9])?):/;
 const categoryIcons = {
 	people: SmileyIcon,
 	nature: LeafIcon,
@@ -332,20 +331,17 @@ export default {
 	getByName: (emojiName: string): UnicodeEmoji | null => getEmojiIndex().nameToEmoji[emojiName] || null,
 	getByCategory: (emojiCategory: string): ReadonlyArray<UnicodeEmoji> | null =>
 		getEmojiIndex().emojisByCategory[emojiCategory] || null,
-	translateInlineEmojiToSurrogates: (content: string): string => {
-		return content.replace(
-			EMOJI_NAME_AND_DIVERSITY_RE,
-			(original, emoji) => getEmojiIndex().nameToSurrogate[emoji] || original,
-		);
+	shortcodeTextToSurrogates: (content: string): string => {
+		return content.replace(EMOJI_SHORTCODE_RE, (original, emoji) => getEmojiIndex().nameToSurrogate[emoji] || original);
 	},
-	translateSurrogatesToInlineEmoji: (content: string): string => {
+	surrogateTextToShortcodes: (content: string): string => {
 		const index = getEmojiIndex();
 		return content.replace(index.emojiSurrogateRegex, (_, surrogate) => {
 			const name = index.surrogateToName[surrogate];
 			return name ? `:${name}:` : surrogate;
 		});
 	},
-	convertNameToSurrogate: (emojiName: string, defaultSurrogate = ''): string => {
+	surrogateForName: (emojiName: string, defaultSurrogate = ''): string => {
 		return getEmojiIndex().nameToSurrogate[emojiName] || defaultSurrogate;
 	},
 	normalizeEmojiNameToSurrogate: (emojiName: string): string => {
@@ -354,7 +350,7 @@ export default {
 			trimmed.startsWith(':') && trimmed.endsWith(':') && trimmed.length > 2 ? trimmed.slice(1, -1) : trimmed;
 		return getEmojiIndex().nameToSurrogate[name] || trimmed;
 	},
-	convertSurrogateToName: (surrogate: string, includeColons = true, defaultName = ''): string => {
+	nameForSurrogate: (surrogate: string, includeColons = true, defaultName = ''): string => {
 		const name = lookupSurrogateName(surrogate);
 		if (!name) return defaultName;
 		return includeColons ? `:${name}:` : name;
@@ -394,15 +390,14 @@ export default {
 		const skinToneEmojiName = `${baseName}::${skinToneName}`;
 		return index.nameToEmoji[skinToneEmojiName] || null;
 	},
-	get numDiversitySprites(): number {
-		return getEmojiIndex().numDiversitySprites;
+	get skinToneSpriteCount(): number {
+		return getEmojiIndex().skinToneSpriteCount;
 	},
-	get numNonDiversitySprites(): number {
-		return getEmojiIndex().numNonDiversitySprites;
+	get baseSpriteCount(): number {
+		return getEmojiIndex().baseSpriteCount;
 	},
-	EMOJI_NAME_RE,
-	EMOJI_NAME_AND_DIVERSITY_RE,
-	get EMOJI_SHORTCUT_RE(): RegExp {
+	EMOJI_SHORTCODE_RE,
+	get EMOTICON_PREFIX_RE(): RegExp {
 		return getEmojiIndex().emojiShortcutRegex;
 	},
 	get EMOJI_SURROGATE_RE(): RegExp {

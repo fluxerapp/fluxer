@@ -23,7 +23,7 @@ export function shouldRenderAsJumboEmojis(nodes: ReadonlyArray<Node>): boolean {
 			return false;
 		}
 		const content = (node as TextNode).content;
-		if (UnicodeEmojis.EMOJI_NAME_RE.test(content)) {
+		if (UnicodeEmojis.EMOJI_SHORTCODE_RE.test(content)) {
 			emojiCount++;
 			if (emojiCount > MAX_JUMBO_EMOJI_COUNT) return false;
 			continue;
