@@ -42,9 +42,8 @@ const ensureServiceWorkerReady: Promise<void> = Promise.resolve();
 const SERVICE_WORKER_VERSION = typeof __FLUXER_SW_VERSION__ === 'string' ? __FLUXER_SW_VERSION__ : 'dev';
 const PRECACHE_MANIFEST = typeof __FLUXER_PRECACHE_MANIFEST__ === 'undefined' ? [] : __FLUXER_PRECACHE_MANIFEST__;
 const PRECACHE_CACHE = `${WORKER_CACHE_PREFIX}-precache-${SERVICE_WORKER_VERSION}`;
-const ASSET_CACHE = `${WORKER_CACHE_PREFIX}-assets-${SERVICE_WORKER_VERSION}`;
 const NAVIGATION_CACHE = `${WORKER_CACHE_PREFIX}-navigation-${SERVICE_WORKER_VERSION}`;
-const EXPECTED_CACHES = new Set([PRECACHE_CACHE, ASSET_CACHE, NAVIGATION_CACHE]);
+const EXPECTED_CACHES = new Set([PRECACHE_CACHE, NAVIGATION_CACHE]);
 const NAVIGATION_NETWORK_TIMEOUT_MS = 650;
 const serviceWorkerCaches = self.caches;
 const isNativeDesktopUserAgent = (userAgent: string): boolean => /\bElectron\/\d+(?:\.\d+)*/.test(userAgent);
@@ -80,20 +79,7 @@ const appShellRuntime: AppShellRuntime = {
 		void log('warn', 'app shell cache put failed', {error: describeError(error)});
 	},
 };
-const pruneCacheEntries = async (cache: Cache, maxEntries: number): Promise<void> => {
-	const keys = await cache.keys();
-	const overflow = keys.length - maxEntries;
-	if (overflow <= 0) {
-		return;
-	}
-	await Promise.all(keys.slice(0, overflow).map((request) => cache.delete(request)));
-};
-const cacheRequest = async (
-	cacheName: string,
-	request: Request | string,
-	response: Response,
-	maxEntries?: number,
-): Promise<void> => {
+const cacheRequest = async (cacheName: string, request: Request | string, response: Response): Promise<void> => {
 	if (!isCacheableResponse(response)) {
 		return;
 	}
@@ -103,9 +89,6 @@ const cacheRequest = async (
 		}
 		const cache = await serviceWorkerCaches.open(cacheName);
 		await cache.put(request, response.clone());
-		if (maxEntries != null) {
-			await pruneCacheEntries(cache, maxEntries);
-		}
 	} catch (error) {
 		await log('warn', 'cache put failed', {cacheName, error: describeError(error)});
 	}
@@ -123,15 +106,6 @@ const cleanupOldCaches = async (): Promise<void> => {
 			return serviceWorkerCaches.delete(name);
 		}),
 	);
-};
-const fetchCacheFirst = async (request: Request): Promise<Response> => {
-	const cached = await serviceWorkerCaches?.match(request);
-	if (cached) {
-		return cached;
-	}
-	const response = await fetch(request);
-	await cacheRequest(ASSET_CACHE, request, response);
-	return response;
 };
 const fetchNetworkFirst = async (request: Request): Promise<Response> => {
 	try {
@@ -175,10 +149,6 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 	const route = getWorkerFetchRoute(request, self.location.origin);
 	if (route === 'navigation') {
 		event.respondWith(fetchAppShellNavigation(appShellRuntime, request));
-		return;
-	}
-	if (route === 'static-asset') {
-		event.respondWith(fetchCacheFirst(request));
 		return;
 	}
 	if (route === 'metadata') {
