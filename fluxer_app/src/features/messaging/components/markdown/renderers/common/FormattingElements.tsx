@@ -93,17 +93,30 @@ export const SpoilerRenderer = observer(function SpoilerRenderer({
 	const wrapperClass = isBlock ? markupStyles.blockSpoilerWrapper : markupStyles.spoilerWrapper;
 	const spoilerClass = isBlock ? markupStyles.blockSpoiler : markupStyles.spoiler;
 	const shouldReveal = !hidden || autoRevealed;
+	const revealTriggerProps = shouldReveal
+		? {}
+		: {
+				onClick: handleClick,
+				onKeyDown: handleKeyDown,
+				role: 'button',
+				'aria-label': i18n._(CLICK_TO_REVEAL_SPOILER_DESCRIPTOR),
+			};
 	return (
 		<span
 			key={id}
 			className={wrapperClass}
 			data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.span"
 		>
-			{shouldReveal ? (
+			<FocusRing
+				offset={-2}
+				data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.focus-ring"
+			>
 				<span
 					className={spoilerClass}
 					data-revealed={shouldReveal}
-					data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.span--2"
+					tabIndex={shouldReveal ? -1 : 0}
+					{...revealTriggerProps}
+					data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.button.click"
 				>
 					<span
 						className={markupStyles.spoilerContent}
@@ -113,31 +126,7 @@ export const SpoilerRenderer = observer(function SpoilerRenderer({
 						{renderChildren(node.children)}
 					</span>
 				</span>
-			) : (
-				<FocusRing
-					offset={-2}
-					data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.focus-ring"
-				>
-					<span
-						className={spoilerClass}
-						data-revealed={shouldReveal}
-						onClick={handleClick}
-						onKeyDown={handleKeyDown}
-						role="button"
-						tabIndex={0}
-						aria-label={i18n._(CLICK_TO_REVEAL_SPOILER_DESCRIPTOR)}
-						data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.button.click"
-					>
-						<span
-							className={markupStyles.spoilerContent}
-							aria-hidden
-							data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.span--4"
-						>
-							{renderChildren(node.children)}
-						</span>
-					</span>
-				</FocusRing>
-			)}
+			</FocusRing>
 		</span>
 	);
 });

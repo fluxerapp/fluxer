@@ -6,6 +6,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import type {FC, ReactNode} from 'react';
+import {useCallback, useLayoutEffect, useRef} from 'react';
 
 const REVEAL_SPOILER_DESCRIPTOR = msg({
 	message: 'Reveal spoiler',
@@ -27,9 +28,26 @@ interface SpoilerOverlayProps {
 
 export const SpoilerOverlay: FC<SpoilerOverlayProps> = ({hidden, onReveal, children, label, inline, className}) => {
 	const {i18n} = useLingui();
+	const wrapperElementRef = useRef<HTMLDivElement | null>(null);
+	const pendingFocusHandoffRef = useRef(false);
 	const ariaLabel = label ?? i18n._(REVEAL_SPOILER_DESCRIPTOR);
+	const handleRevealRequest = useCallback(() => {
+		pendingFocusHandoffRef.current = true;
+		onReveal();
+	}, [onReveal]);
+	useLayoutEffect(() => {
+		if (hidden) {
+			pendingFocusHandoffRef.current = false;
+			return;
+		}
+		if (!pendingFocusHandoffRef.current) return;
+		pendingFocusHandoffRef.current = false;
+		wrapperElementRef.current?.focus({preventScroll: true});
+	}, [hidden]);
 	return (
 		<div
+			ref={wrapperElementRef}
+			tabIndex={-1}
 			className={clsx(styles.container, inline && styles.inline, hidden && styles.hidden, className)}
 			data-flx="app.spoiler-overlay.container"
 		>
@@ -41,7 +59,7 @@ export const SpoilerOverlay: FC<SpoilerOverlayProps> = ({hidden, onReveal, child
 					<button
 						type="button"
 						className={styles.overlayButton}
-						onClick={onReveal}
+						onClick={handleRevealRequest}
 						aria-label={ariaLabel}
 						data-flx="app.spoiler-overlay.overlay-button.reveal"
 					>
