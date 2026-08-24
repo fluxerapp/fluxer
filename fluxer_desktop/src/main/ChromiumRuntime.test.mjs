@@ -87,3 +87,19 @@ describe('ChromiumRuntime Windows capture policy', () => {
 		assert.deepEqual([...features], ['ExistingFeature']);
 	});
 });
+
+describe('ChromiumRuntime configured switch allowlist', () => {
+	test('rejects settings-supplied switches that would disable or shrink the HTTP cache', () => {
+		const {appendedSwitches, module} = loadChromiumRuntime('win32');
+
+		module.appendConfiguredChromiumSwitches([
+			'disable-http-cache',
+			'disk-cache-size',
+			'disk-cache-dir',
+			'disable-gpu-shader-disk-cache',
+			'disable_metal',
+		]);
+
+		assert.deepEqual(appendedSwitches, [{name: 'disable_metal', value: undefined}]);
+	});
+});
