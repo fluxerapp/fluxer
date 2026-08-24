@@ -142,15 +142,14 @@ function matchGuildMembers(membersToUse: Array<GuildMember>, parsedQuery: Parsed
 	return matchedMembers;
 }
 
-export function searchGuildMembers(
-	membersToUse: Array<GuildMember>,
-	parsedQuery: ParsedMentionQuery,
-	limit: number,
-): Array<GuildMember> {
-	const matchedMembers = matchGuildMembers(membersToUse, parsedQuery);
-	return [...matchedMembers]
-		.sort((a, b) => getMemberDisplayName(a).toLowerCase().localeCompare(getMemberDisplayName(b).toLowerCase()))
-		.slice(0, limit);
+export function buildMemberSearchRank(members: ReadonlyArray<GuildMember>): Map<string, number> {
+	const rank = new Map<string, number>();
+	for (const member of members) {
+		if (!rank.has(member.user.id)) {
+			rank.set(member.user.id, rank.size);
+		}
+	}
+	return rank;
 }
 
 export function filterGuildMembers(

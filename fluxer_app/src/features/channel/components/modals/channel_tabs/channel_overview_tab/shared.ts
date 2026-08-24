@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelRtcRegion} from '@app/features/channel/commands/ChannelCommands';
-import type {TriggerType} from '@app/features/messaging/hooks/useTextareaAutocomplete';
+import type {TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {VOICE_CHANNEL_BITRATE_MAX, VOICE_CHANNEL_BITRATE_MIN} from '@fluxer/constants/src/LimitConstants';
 
