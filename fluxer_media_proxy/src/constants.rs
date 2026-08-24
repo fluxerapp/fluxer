@@ -63,6 +63,15 @@ pub const IMAGE_SIZES: &[u32] = &[
     512, 600, 640, 1024, 1280, 1536, 2048, 3072, 4096, 8192, 16384,
 ];
 
+pub fn snap_to_image_ladder(value: u32) -> u32 {
+    let largest = IMAGE_SIZES[IMAGE_SIZES.len() - 1];
+    IMAGE_SIZES
+        .iter()
+        .copied()
+        .find(|rung| value <= *rung)
+        .unwrap_or(largest)
+}
+
 pub fn parse_image_size(raw: Option<&str>) -> u32 {
     let Some(text) = raw else {
         return DEFAULT_IMAGE_SIZE;
@@ -70,11 +79,7 @@ pub fn parse_image_size(raw: Option<&str>) -> u32 {
     let Ok(value) = text.parse::<u32>() else {
         return DEFAULT_IMAGE_SIZE;
     };
-    if IMAGE_SIZES.contains(&value) {
-        value
-    } else {
-        DEFAULT_IMAGE_SIZE
-    }
+    snap_to_image_ladder(value)
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -182,12 +187,80 @@ pub fn clamp_size(raw_target: u32, kind: AssetKind) -> u32 {
 mod tests {
     use super::*;
 
+    fn asset_cache_key(raw: Option<&str>, kind: AssetKind) -> u32 {
+        clamp_size(parse_image_size(raw), kind)
+    }
+
     #[test]
-    fn image_size_whitelist() {
+    fn image_size_snaps_up_to_the_next_rung() {
         assert_eq!(128, parse_image_size(None));
         assert_eq!(640, parse_image_size(Some("640")));
-        assert_eq!(128, parse_image_size(Some("641")));
+        assert_eq!(1024, parse_image_size(Some("641")));
+        assert_eq!(1024, parse_image_size(Some("1000")));
+        assert_eq!(16, parse_image_size(Some("0")));
+        assert_eq!(16384, parse_image_size(Some("99999")));
         assert_eq!(128, parse_image_size(Some("not-a-number")));
+    }
+
+    #[test]
+    fn off_ladder_size_never_serves_fewer_pixels_than_requested() {
+        for requested in 1..=4096u32 {
+            let served = parse_image_size(Some(&requested.to_string()));
+            assert!(
+                served >= requested,
+                "size={requested} served {served}, a silent downscale"
+            );
+        }
+    }
+
+    #[test]
+    fn every_rung_snaps_to_itself() {
+        for rung in IMAGE_SIZES {
+            assert_eq!(*rung, parse_image_size(Some(&rung.to_string())));
+        }
+    }
+
+    #[test]
+    fn snapping_is_idempotent() {
+        for raw in [0u32, 1, 17, 641, 1000, 4097, 99999] {
+            let once = parse_image_size(Some(&raw.to_string()));
+            let twice = parse_image_size(Some(&once.to_string()));
+            assert_eq!(once, twice, "size={raw} did not settle");
+        }
+    }
+
+    #[test]
+    fn sub_minimum_sizes_collapse_to_one_avatar_cache_key() {
+        let canonical = asset_cache_key(Some("128"), AssetKind::Avatar);
+        assert_eq!(128, canonical);
+        for below in IMAGE_SIZES.iter().take_while(|rung| **rung < 128) {
+            assert_eq!(
+                canonical,
+                asset_cache_key(Some(&below.to_string()), AssetKind::Avatar),
+                "size={below} minted a second avatar cache key"
+            );
+        }
+    }
+
+    #[test]
+    fn sub_minimum_sizes_collapse_to_one_banner_cache_key() {
+        let canonical = asset_cache_key(Some("480"), AssetKind::Banner);
+        assert_eq!(480, canonical);
+        for below in IMAGE_SIZES.iter().take_while(|rung| **rung < 480) {
+            assert_eq!(
+                canonical,
+                asset_cache_key(Some(&below.to_string()), AssetKind::Banner),
+                "size={below} minted a second banner cache key"
+            );
+        }
+    }
+
+    #[test]
+    fn oversize_requests_collapse_onto_the_kind_maximum() {
+        assert_eq!(1024, asset_cache_key(Some("99999"), AssetKind::Avatar));
+        assert_eq!(1024, asset_cache_key(Some("1024"), AssetKind::Avatar));
+        assert_eq!(512, asset_cache_key(Some("99999"), AssetKind::Emoji));
+        assert_eq!(512, asset_cache_key(Some("99999"), AssetKind::Sticker));
     }
 
     #[test]

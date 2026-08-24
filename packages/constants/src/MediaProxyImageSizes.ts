@@ -33,9 +33,13 @@ const MEDIA_PROXY_IMAGE_SIZE_QUERY_VALUES = [
 	'3072',
 	'4096',
 	'8192',
-	'12000',
+	'16384',
 ] as const;
 
 export type MediaProxyImageSizeQueryValue = (typeof MEDIA_PROXY_IMAGE_SIZE_QUERY_VALUES)[number];
 type ParseNumericLiteral<T extends string> = T extends `${infer N extends number}` ? N : never;
 export type MediaProxyImageSize = ParseNumericLiteral<MediaProxyImageSizeQueryValue>;
+
+export const MEDIA_PROXY_IMAGE_SIZES: ReadonlyArray<MediaProxyImageSize> = MEDIA_PROXY_IMAGE_SIZE_QUERY_VALUES.map(
+	(value) => Number(value) as MediaProxyImageSize,
+);

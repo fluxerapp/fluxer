@@ -1,9 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MediaCapabilities, probeMediaCapabilities} from '@app/features/voice/utils/MediaCapabilities';
+import {MEDIA_PROXY_IMAGE_SIZES, type MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 
-if (typeof window !== 'undefined') {
-	void probeMediaCapabilities();
+export const MEDIA_PROXY_IMAGE_SIZE_LADDER = MEDIA_PROXY_IMAGE_SIZES;
+
+export const LARGEST_MEDIA_PROXY_IMAGE_SIZE = MEDIA_PROXY_IMAGE_SIZE_LADDER[MEDIA_PROXY_IMAGE_SIZE_LADDER.length - 1];
+const MEDIA_PROXY_DOWNSCALE_TOLERANCE = 1.1;
+const MEDIA_PROXY_DOWNSCALE_MIN_DPR = 2;
+
+export function snapMediaProxyImageSize(cssPixels: number, allowDownscale = false): MediaProxyImageSize {
+	const devicePixelRatio = mediaDevicePixelRatio();
+	const target = cssPixels * devicePixelRatio;
+	if (allowDownscale && devicePixelRatio >= MEDIA_PROXY_DOWNSCALE_MIN_DPR) {
+		let below: MediaProxyImageSize | undefined;
+		for (const rung of MEDIA_PROXY_IMAGE_SIZE_LADDER) {
+			if (rung > target) break;
+			below = rung;
+		}
+		if (below !== undefined && target / below <= MEDIA_PROXY_DOWNSCALE_TOLERANCE) return below;
+	}
+	return MEDIA_PROXY_IMAGE_SIZE_LADDER.find((rung) => target <= rung) ?? LARGEST_MEDIA_PROXY_IMAGE_SIZE;
 }
 
 export interface MediaProxyOptions {
@@ -14,19 +30,14 @@ export interface MediaProxyOptions {
 	animated?: boolean;
 }
 
-const NATIVE_PREFERRED_FORMATS: ReadonlyMap<string, 'avif' | 'jxl'> = new Map([
-	['image/jxl', 'jxl'],
-	['image/avif', 'avif'],
-]);
-
-export function resolvePreferredImageFormat(sourceContentType?: string): 'webp' | undefined {
-	if (!sourceContentType) return 'webp';
-	const normalized = sourceContentType.toLowerCase().split(';')[0]!.trim();
-	const native = NATIVE_PREFERRED_FORMATS.get(normalized);
-	if (!native) return 'webp';
-	const caps = MediaCapabilities.getSync();
-	if (caps?.[native]) return undefined;
+export function resolvePreferredImageFormat(_sourceContentType?: string): 'webp' {
 	return 'webp';
+}
+
+export function mediaDevicePixelRatio(): number {
+	if (typeof window === 'undefined') return 1;
+	const ratio = window.devicePixelRatio;
+	return Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
 }
 
 type FitInsideMediaProxyOptions = MediaProxyOptions & {
@@ -39,25 +50,35 @@ function isSvgProxyUrl(url: URL): boolean {
 	return path.endsWith('.svg');
 }
 
+function resolveProxyDimension(value: number | undefined): number | undefined {
+	if (value === undefined || !Number.isFinite(value)) return undefined;
+	const pixels = Math.ceil(value);
+	return pixels > 0 ? pixels : undefined;
+}
+
 function appendMediaProxyParams(url: URL, options: MediaProxyOptions): void {
-	if (isSvgProxyUrl(url)) {
+	if (url.protocol === 'data:' || url.protocol === 'blob:' || isSvgProxyUrl(url)) {
 		return;
 	}
-	const {width, height, format, quality, animated} = options;
+	const {format, quality, animated} = options;
+	const width = resolveProxyDimension(options.width);
+	const height = resolveProxyDimension(options.height);
 	if (format) {
-		url.searchParams.append('format', format);
+		url.searchParams.set('format', format);
 	}
 	if (width !== undefined) {
-		url.searchParams.append('width', width.toString());
+		url.searchParams.set('width', width.toString());
 	}
 	if (height !== undefined) {
-		url.searchParams.append('height', height.toString());
+		url.searchParams.set('height', height.toString());
 	}
 	if (quality) {
-		url.searchParams.append('quality', quality);
+		url.searchParams.set('quality', quality);
 	}
-	if (animated !== undefined) {
-		url.searchParams.append('animated', animated.toString());
+	if (animated === true) {
+		url.searchParams.set('animated', 'true');
+	} else {
+		url.searchParams.delete('animated');
 	}
 }
 
@@ -83,6 +104,29 @@ export function buildFitInsideMediaProxyURL(originalUrl: string, options: FitIns
 	return url.toString();
 }
 
+function readProxyDimensionParam(url: URL, key: 'width' | 'height'): number | undefined {
+	const raw = url.searchParams.get(key);
+	if (raw === null) return undefined;
+	return resolveProxyDimension(Number(raw));
+}
+
+function carriedProxyDimensions(proxyURL: string): {width?: number; height?: number} | undefined {
+	let parsed: URL;
+	try {
+		parsed = new URL(proxyURL);
+	} catch {
+		return undefined;
+	}
+	const width = readProxyDimensionParam(parsed, 'width');
+	const height = readProxyDimensionParam(parsed, 'height');
+	if (width === undefined && height === undefined) return undefined;
+	return {width, height};
+}
+
+function variantDimensions(proxyURL: string, width?: number, height?: number): {width?: number; height?: number} {
+	return carriedProxyDimensions(proxyURL) ?? {width, height};
+}
+
 export function stripMediaProxyParams(proxyURL: string): string {
 	const url = new URL(proxyURL);
 	url.searchParams.delete('width');
@@ -95,40 +139,44 @@ export function stripMediaProxyParams(proxyURL: string): string {
 
 export function buildAnimatedImageProxyURL(proxyURL: string, width?: number, height?: number): string {
 	if (!proxyURL) return proxyURL;
+	const target = variantDimensions(proxyURL, width, height);
 	const baseURL = stripMediaProxyParams(proxyURL);
 	return buildMediaProxyURL(baseURL, {
-		width,
-		height,
+		width: target.width,
+		height: target.height,
 		animated: true,
 	});
 }
 
 export function buildFittedAnimatedImageProxyURL(proxyURL: string, width?: number, height?: number): string {
 	if (!proxyURL) return proxyURL;
+	const target = variantDimensions(proxyURL, width, height);
 	const baseURL = stripMediaProxyParams(proxyURL);
 	return buildFitInsideMediaProxyURL(baseURL, {
-		width,
-		height,
+		width: target.width,
+		height: target.height,
 		animated: true,
 	});
 }
 
 export function buildStaticGifPreviewURL(proxyURL: string, width?: number, height?: number): string {
 	if (!proxyURL) return proxyURL;
+	const target = variantDimensions(proxyURL, width, height);
 	return buildMediaProxyURL(stripMediaProxyParams(proxyURL), {
 		format: 'webp',
-		width,
-		height,
+		width: target.width,
+		height: target.height,
 		animated: false,
 	});
 }
 
 export function buildFittedStaticGifPreviewURL(proxyURL: string, width?: number, height?: number): string {
 	if (!proxyURL) return proxyURL;
+	const target = variantDimensions(proxyURL, width, height);
 	return buildFitInsideMediaProxyURL(stripMediaProxyParams(proxyURL), {
 		format: 'webp',
-		width,
-		height,
+		width: target.width,
+		height: target.height,
 		animated: false,
 	});
 }
