@@ -128,6 +128,8 @@ interface MediaOverlayActionsProps {
 	onForward?: () => void;
 	onClose: () => void;
 	canReset?: boolean;
+	canZoomIn?: boolean;
+	canZoomOut?: boolean;
 	enableZoomControls?: boolean;
 	onPointerEnter?: () => void;
 	onPointerLeave?: () => void;
@@ -151,6 +153,8 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 		onForward,
 		onClose,
 		canReset = false,
+		canZoomIn = true,
+		canZoomOut = true,
 		enableZoomControls = false,
 		onPointerEnter,
 		onPointerLeave,
@@ -304,7 +308,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 					}
 					label={i18n._(ZOOM_IN_DESCRIPTOR)}
 					onClick={onZoomIn ?? (() => {})}
-					disabled={!enableZoomControls || !onZoomIn}
+					disabled={!enableZoomControls || !onZoomIn || !canZoomIn}
 					data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button--4"
 				/>
 				<OverlayTooltipButton
@@ -317,7 +321,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 					}
 					label={i18n._(ZOOM_OUT_DESCRIPTOR)}
 					onClick={onZoomOut ?? (() => {})}
-					disabled={!enableZoomControls || !onZoomOut}
+					disabled={!enableZoomControls || !onZoomOut || !canZoomOut}
 					data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button--5"
 				/>
 				{(onReply || onForward) && (

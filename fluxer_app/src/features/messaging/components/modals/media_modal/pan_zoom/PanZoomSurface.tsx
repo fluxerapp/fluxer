@@ -30,7 +30,6 @@ interface PanZoomSurfaceProps
 	minScale?: number;
 	maxScale?: number;
 	zoomedScale?: number;
-	preferNaturalZoomScale?: boolean;
 	disabled?: boolean;
 	panDisabled?: boolean;
 	wheelEnabled?: boolean;
@@ -79,7 +78,6 @@ export const PanZoomSurface = memo(
 			minScale,
 			maxScale,
 			zoomedScale,
-			preferNaturalZoomScale,
 			disabled,
 			panDisabled,
 			wheelEnabled,
@@ -100,7 +98,6 @@ export const PanZoomSurface = memo(
 			minScale,
 			maxScale,
 			zoomedScale,
-			preferNaturalZoomScale,
 			disabled,
 			panDisabled,
 			wheelEnabled,

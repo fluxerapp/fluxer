@@ -8,10 +8,10 @@ import {
 	getAnchoredZoomPoint,
 	getCentroid,
 	getDistance,
-	getWheelZoomFactor,
 	isDefaultTransform,
 	MIN_ZOOM_SCALE,
 	type PanZoomMetrics,
+	TAP_MOVE_THRESHOLD,
 } from './PanZoomMath';
 
 const METRICS: PanZoomMetrics = {
@@ -42,10 +42,12 @@ describe('PanZoomMath', () => {
 		expect(clampScale(2.5, 1, 5)).toBe(2.5);
 		expect(clampScale(8, 1, 5)).toBe(5);
 	});
-	it('accelerates trackpad pinch wheel zoom without changing normal wheel speed', () => {
-		expect(getWheelZoomFactor(-5, false)).toBeCloseTo(1.0075, 4);
-		expect(getWheelZoomFactor(-5, true)).toBeGreaterThan(1.06);
-		expect(getWheelZoomFactor(-200, true)).toBeCloseTo(Math.exp(0.22), 5);
+	it('treats a drag under twenty pixels as a tap', () => {
+		expect(TAP_MOVE_THRESHOLD).toBe(20);
+	});
+	it('pins an axis whose zoomed content still fits inside the viewport', () => {
+		const portrait: PanZoomMetrics = {viewportWidth: 800, viewportHeight: 600, contentWidth: 300, contentHeight: 600};
+		expect(clampPanForScale({x: 400, y: 600}, 2.5, portrait)).toEqual({x: 0, y: 450});
 	});
 	it('detects the centered default transform with a small epsilon', () => {
 		expect(isDefaultTransform({scale: 1.005, x: 0.004, y: -0.003})).toBe(true);

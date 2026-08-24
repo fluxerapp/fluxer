@@ -33,6 +33,14 @@ describe('media viewer pan zoom stability', () => {
 		expect(modalSource).toContain('const isMobileVideo = Boolean(isMobile && mediaType ===');
 		expect(modalSource).toContain('{isMobile && !isMobileVideo ? (');
 	});
+	it('stamps the pan-zoom measured-box marker on the rotation container', () => {
+		const hookSource = sourceFile('pan_zoom/usePanZoomSurface.ts');
+		const modalSource = sourceFile('../MediaModal.tsx');
+		const selectorMatch = hookSource.match(/MEASURED_BOX_SELECTOR = '\[([a-z-]+)\]'/);
+		expect(selectorMatch).not.toBeNull();
+		const markerAttribute = selectorMatch?.[1] ?? 'missing-marker';
+		expect(modalSource).toMatch(new RegExp(`styles\\.mediaContainer[^<]*\\b${markerAttribute}=`));
+	});
 	it('floors the media-fit clamps with a length-typed zero so they resolve to valid lengths', () => {
 		const modalCss = sourceFile('../MediaModal.module.css');
 		expect(modalCss).toMatch(/--media-fit-max-width:\s*max\(0px,/);

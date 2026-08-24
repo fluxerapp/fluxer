@@ -64,6 +64,8 @@ interface MobileMediaActionsProps {
 	onForward?: () => void;
 	onClose: () => void;
 	canReset?: boolean;
+	canZoomIn?: boolean;
+	canZoomOut?: boolean;
 	enableZoomControls?: boolean;
 	onPointerEnter?: () => void;
 	onPointerLeave?: () => void;
@@ -93,6 +95,8 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 		onForward,
 		onClose,
 		canReset = false,
+		canZoomIn = true,
+		canZoomOut = true,
 		enableZoomControls = false,
 		onPointerEnter,
 		onPointerLeave,
@@ -276,7 +280,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 										),
 										label: i18n._(ZOOM_IN_DESCRIPTOR),
 										action: onZoomIn ?? (() => undefined),
-										disabled: !onZoomIn,
+										disabled: !onZoomIn || !canZoomIn,
 									}),
 									createItem({
 										id: 'media-zoom-out',
@@ -289,7 +293,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 										),
 										label: i18n._(ZOOM_OUT_DESCRIPTOR),
 										action: onZoomOut ?? (() => undefined),
-										disabled: !onZoomOut,
+										disabled: !onZoomOut || !canZoomOut,
 									}),
 								]
 							: [],
@@ -333,6 +337,8 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 				]),
 			[
 				canReset,
+				canZoomIn,
+				canZoomOut,
 				createItem,
 				enableZoomControls,
 				favoriteLabel,
