@@ -13,6 +13,7 @@ import {
 	transitionSearchMachineSnapshot,
 } from '@app/features/channel/components/SearchStateMachine';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {getChannelSearchContextId} from '@app/features/channel/state/ChannelSearch';
 import Channels from '@app/features/channel/state/Channels';
 import {getChannelSearchIndexingPollInterval} from '@app/features/channel/utils/ChannelSearchPolling';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
@@ -269,7 +270,7 @@ export const useChannelSearch = ({
 			currentSegmentsRef.current = segments;
 			currentFiltersRef.current = null;
 			const params = parseSearchQueryWithSegments(query, segments, {
-				channelId: channel.id,
+				historyKey: getChannelSearchContextId(channel) ?? undefined,
 				guildId: channel.guildId ?? null,
 			});
 			await executeSearch(params, page, overrides);
@@ -293,7 +294,7 @@ export const useChannelSearch = ({
 				executeSearch(params, page);
 			} else if (currentQueryRef.current) {
 				const params = parseSearchQueryWithSegments(currentQueryRef.current, currentSegmentsRef.current, {
-					channelId: channel.id,
+					historyKey: getChannelSearchContextId(channel) ?? undefined,
 					guildId: channel.guildId ?? null,
 				});
 				executeSearch(params, page);
@@ -364,7 +365,7 @@ export const useChannelSearch = ({
 					params = filtersToParams(currentFiltersRef.current);
 				} else {
 					params = parseSearchQueryWithSegments(currentQueryRef.current, currentSegmentsRef.current, {
-						channelId: channel.id,
+						historyKey: getChannelSearchContextId(channel) ?? undefined,
 						guildId: channel.guildId ?? null,
 					});
 				}

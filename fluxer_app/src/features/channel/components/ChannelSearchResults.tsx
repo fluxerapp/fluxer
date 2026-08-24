@@ -254,7 +254,7 @@ export const ChannelSearchResults = observer(
 			(page: number, scopeOverride?: MessageSearchScope | null): MessageSearchParams => {
 				const params: MessageSearchParams = {
 					...parseSearchQueryWithSegments(currentSearchQuery.current, currentSearchSegments.current, {
-						channelId: channelId.current,
+						historyKey: contextId ?? undefined,
 						guildId: channelGuildId.current,
 					}),
 					page,
@@ -265,7 +265,7 @@ export const ChannelSearchResults = observer(
 				applyMatureContentToParamsIfNeeded(params, channelId.current);
 				return params;
 			},
-			[applyScopeToParams],
+			[applyScopeToParams, contextId],
 		);
 		const performSearch = useCallback(
 			async (page = 1, sortOverride?: ChannelSearchSortMode, scopeOverride?: MessageSearchScope | null) => {
