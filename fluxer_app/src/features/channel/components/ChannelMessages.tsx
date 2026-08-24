@@ -218,22 +218,22 @@ export const Messages = observer(function Messages({
 		messages: safeMessages,
 		channel,
 		compact: state.messageDisplayCompact,
-		hasUnreads: state.unreadCount > 0,
-		focusId: null,
-		placeholderHeight: placeholderSpecs.totalHeight,
-		canLoadMore: true,
+		hasPendingUnreads: state.unreadCount > 0,
+		focusAnchorId: null,
+		unloadedSpacerHeight: placeholderSpecs.totalHeight,
+		allowHistoryFetch: true,
 		windowId,
-		handleScrollToBottom: () => {
+		notifyPinnedToBottom: () => {
 			runInAction(() => {
 				state.isAtBottom = true;
 			});
 		},
-		handleScrollFromBottom: () => {
+		notifyUnpinnedFromBottom: () => {
 			runInAction(() => {
 				state.isAtBottom = false;
 			});
 		},
-		additionalMessagePadding: 48,
+		extraListPadding: 48,
 		canAutoAck,
 		handleJumpHighlight,
 	});
@@ -359,8 +359,8 @@ export const Messages = observer(function Messages({
 		const onForceJumpToPresent = () => {
 			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		};
-		const onScrollPageUp = () => scrollManager.scrollPageUp(true);
-		const onScrollPageDown = () => scrollManager.scrollPageDown(true);
+		const onScrollPageUp = () => scrollManager.pageBackward(true);
+		const onScrollPageDown = () => scrollManager.pageForward(true);
 		const onLayoutResized = (payload?: unknown) => {
 			const data = payload as {channelId?: string} | undefined;
 			if (data?.channelId && data.channelId !== channel.id) return;
@@ -395,7 +395,7 @@ export const Messages = observer(function Messages({
 			if (bottomMostVisibleMessage) {
 				const messageId = bottomMostVisibleMessage.dataset.messageId;
 				if (messageId) {
-					scrollManager.focusOnMessage(messageId);
+					scrollManager.focusRequestForMessage(messageId);
 				}
 			}
 		};
@@ -461,7 +461,7 @@ export const Messages = observer(function Messages({
 		containerRef: scrollManager.ref,
 		channelId: channel.id,
 		onFocusMessage: (messageId) => {
-			scrollManager.focusOnMessage(messageId);
+			scrollManager.focusRequestForMessage(messageId);
 		},
 		onLoadMoreBefore: () => {
 			scrollManager.loadMoreForKeyboardNavigation(false);

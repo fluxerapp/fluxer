@@ -1,8 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {JumpTypes} from '@fluxer/constants/src/JumpConstants';
+import {NEW_MESSAGES_BAR_BUFFER} from '@fluxer/constants/src/LimitConstants';
 import {describe, expect, it} from 'vitest';
-import {resolveContainerResizeShift, type ScrollerState, shouldAnimateMessageJump} from './shared';
+import {
+	CENTRE_ALIGNMENT_LIFT,
+	MESSAGE_REVEAL_PADDING,
+	resolveContainerResizeShift,
+	type ScrollerState,
+	shouldAnimateMessageJump,
+} from './shared';
+
+describe('the scroll geometry constants', () => {
+	it('lifts a centred node by exactly eight pixels', () => {
+		expect(CENTRE_ALIGNMENT_LIFT).toBe(8);
+	});
+
+	it('keeps the two centre paddings distinct, with the unread buffer the larger of the two', () => {
+		expect(MESSAGE_REVEAL_PADDING).toBe(16);
+		expect(NEW_MESSAGES_BAR_BUFFER).toBe(32);
+		expect(NEW_MESSAGES_BAR_BUFFER).toBeGreaterThan(MESSAGE_REVEAL_PADDING);
+	});
+});
 
 describe('shouldAnimateMessageJump', () => {
 	it('animates only for explicit ANIMATED jumps', () => {
