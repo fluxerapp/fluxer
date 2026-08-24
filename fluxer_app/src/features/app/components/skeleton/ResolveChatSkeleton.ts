@@ -22,6 +22,7 @@ export const ChatSkeletonChannelKind = SkeletonChannelProjectionKind;
 export type ChatSkeletonChannelKind = SkeletonChannelProjectionKind;
 
 export interface ChatSkeletonPresentation {
+	readonly channelId: string | null;
 	readonly channelKind: ChatSkeletonChannelKind;
 	readonly showMemberList: boolean;
 	readonly showTopic: boolean;
@@ -114,6 +115,7 @@ export function resolveChatSkeletonPresentation(pathname: string, canFitMemberLi
 		headerTopicWidthPx = rememberedProjection.topicWidthPx;
 	}
 	return {
+		channelId,
 		channelKind,
 		showMemberList: resolveMemberListVisibility(
 			channelId,

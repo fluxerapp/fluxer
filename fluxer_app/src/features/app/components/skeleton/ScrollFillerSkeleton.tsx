@@ -52,10 +52,7 @@ function CozyScrollFillerSkeletonGroup({
 	return (
 		<flx-message-list-skeleton-group
 			className={flxElementClassName(styles.messageGroup)}
-			style={{
-				marginBottom: resolveSkeletonGroupMarginBottom(groupIndex, groupCount, groupSpacing),
-				containIntrinsicSize: `auto ${remFromPx(group.height)}`,
-			}}
+			style={{marginBottom: resolveSkeletonGroupMarginBottom(groupIndex, groupCount, groupSpacing)}}
 			data-flx="app.skeleton.scroll-filler-skeleton.cozy-scroll-filler-skeleton-group.message-group"
 		>
 			<flx-message-list-skeleton-group-row
@@ -173,10 +170,7 @@ function CompactScrollFillerSkeletonGroup({
 	return (
 		<flx-message-list-skeleton-group
 			className={flxElementClassName(styles.messageGroup)}
-			style={{
-				marginBottom: resolveSkeletonGroupMarginBottom(groupIndex, groupCount, groupSpacing),
-				containIntrinsicSize: `auto ${remFromPx(group.height)}`,
-			}}
+			style={{marginBottom: resolveSkeletonGroupMarginBottom(groupIndex, groupCount, groupSpacing)}}
 			data-flx="app.skeleton.scroll-filler-skeleton.compact-scroll-filler-skeleton-group.message-group"
 		>
 			<flx-message-list-skeleton-compact-messages
@@ -242,7 +236,7 @@ export const ScrollFillerSkeleton = ({
 }: PlaceholderSpecs) => (
 	<flx-message-list-skeleton
 		className={flxElementClassName(styles.wrapper, compact && styles.wrapperCompact)}
-		style={{minHeight: remFromPx(totalHeight)}}
+		style={{height: remFromPx(totalHeight)}}
 		data-flx="app.skeleton.scroll-filler-skeleton.wrapper"
 	>
 		{groups.map((group, groupIndex) => {

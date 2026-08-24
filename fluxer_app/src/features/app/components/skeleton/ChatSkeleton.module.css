@@ -182,7 +182,7 @@
 	overflow: hidden;
 	padding-left: var(--chat-mobile-horizontal-padding);
 	padding-right: var(--chat-mobile-horizontal-padding);
-	padding-bottom: var(--messages-bottom-clearance);
+	padding-bottom: calc(var(--messages-bottom-clearance) - var(--message-filler-padding-bottom));
 }
 
 @media (min-width: 768px) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/skeleton/ChatSkeleton.module.css';
-import {usePlaceholderSpecs} from '@app/features/app/components/skeleton/PlaceholderSpecs';
+import {useMessageListPlaceholderSpecs} from '@app/features/app/components/skeleton/PlaceholderSpecs';
 import {
 	ChatSkeletonChannelKind,
 	type ChatSkeletonPresentation,
@@ -33,8 +33,6 @@ import {flxElementClassName} from '@app/lib/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {Fragment, useState} from 'react';
-
-const MESSAGE_LIST_SEED_KEY = 'chat-skeleton-message-list';
 
 const HEADER_BACK_ICON_SIZE = skeletonSurfaceVar('--channel-header-back-icon-size');
 const HEADER_ICON_SIZE = skeletonSurfaceVar('--channel-header-icon-size');
@@ -176,12 +174,11 @@ export const ChatSkeleton = observer(function ChatSkeleton({presentation}: ChatS
 		composerActionCount = composerLayout.mobileActionCount;
 		composerDividerVisible = false;
 	}
-	const messageSpecs = usePlaceholderSpecs({
+	const messageSpecs = useMessageListPlaceholderSpecs({
+		channelId: presentation.channelId,
 		compact: messagePresentation.compact,
 		compactAvatarsVisible: messagePresentation.compactAvatarsVisible,
 		groupSpacing: messagePresentation.groupSpacingPx,
-		viewportHeightPx: messagePresentation.viewportHeightPx,
-		seedKey: MESSAGE_LIST_SEED_KEY,
 	});
 	const rootStyle: ChatSkeletonRootStyle = {
 		'--chat-horizontal-padding': remFromPx(messagePresentation.messageGutterPx),

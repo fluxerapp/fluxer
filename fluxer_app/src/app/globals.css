@@ -186,6 +186,7 @@ var {
 	--typing-indicator-height: 1rem;
 	--typing-pill-height: 1rem;
 	--slowmode-indicator-height: 1rem;
+	--message-filler-padding-bottom: 0.75rem;
 	--scroller-spacer-height: 1.75rem;
 	--typing-avatar-size: 0.75rem;
 	--typing-indicator-animation-size: 1rem;
@@ -681,9 +682,11 @@ img::before {
 	}
 }
 
-html.reduced-motion * {
-	animation-duration: 0.01ms;
-	animation-iteration-count: 1;
-	transition-duration: 0.01ms;
-	scroll-behavior: auto;
+html.reduced-motion *,
+html.reduced-motion *::before,
+html.reduced-motion *::after {
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.01ms !important;
+	scroll-behavior: auto !important;
 }

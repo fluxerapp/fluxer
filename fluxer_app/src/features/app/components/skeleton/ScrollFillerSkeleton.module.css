@@ -1,16 +1,19 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .wrapper {
+	box-sizing: border-box;
 	pointer-events: none;
 	user-select: none;
 	-webkit-user-select: none;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
+	flex-shrink: 0;
 	position: relative;
 	overflow: hidden;
+	contain: strict;
 	padding-top: 1rem;
-	padding-bottom: 0.75rem;
+	padding-bottom: var(--message-filler-padding-bottom);
 	margin-left: calc(-1 * var(--message-mobile-margin));
 	margin-right: calc(-1 * var(--message-mobile-margin));
 	padding-left: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
@@ -44,7 +47,6 @@
 .messageGroup {
 	position: relative;
 	z-index: 0;
-	content-visibility: auto;
 }
 
 .group {

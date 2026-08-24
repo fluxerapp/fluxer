@@ -309,6 +309,7 @@ export type ThemeVariableName =
 	| "--message-failed-indicator-font-size"
 	| "--message-failed-indicator-gap"
 	| "--message-failed-opacity"
+	| "--message-filler-padding-bottom"
 	| "--message-group-spacing"
 	| "--message-gutter"
 	| "--message-highlight-bar-width"
@@ -768,6 +769,7 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--message-failed-indicator-font-size", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-failed-indicator-gap", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-failed-opacity", kind: "number", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
+	{name: "--message-filler-padding-bottom", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "globals"},
 	{name: "--message-group-spacing", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "runtime-accessibility"},
 	{name: "--message-gutter", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "message-layout"},
 	{name: "--message-highlight-bar-width", kind: "dimension", groupId: "messages", groupLabel: "Messages", source: "features/theme/styles/Message.module.css"},
@@ -1228,6 +1230,7 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--message-failed-indicator-font-size",
 	"--message-failed-indicator-gap",
 	"--message-failed-opacity",
+	"--message-filler-padding-bottom",
 	"--message-group-spacing",
 	"--message-gutter",
 	"--message-highlight-bar-width",
@@ -1879,6 +1882,7 @@ export const THEME_STUDIO_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, 
 	"--message-failed-indicator-font-size": "0.75rem",
 	"--message-failed-indicator-gap": "0.375rem",
 	"--message-failed-opacity": "0.5",
+	"--message-filler-padding-bottom": "0.75rem",
 	"--message-group-spacing": "1rem",
 	"--message-gutter": "0.75rem",
 	"--message-highlight-bar-width": "0.125rem",
@@ -2339,6 +2343,7 @@ export const THEME_STUDIO_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string,
 	"--message-failed-indicator-font-size": "0.75rem",
 	"--message-failed-indicator-gap": "0.375rem",
 	"--message-failed-opacity": "0.5",
+	"--message-filler-padding-bottom": "0.75rem",
 	"--message-group-spacing": "1rem",
 	"--message-gutter": "0.75rem",
 	"--message-highlight-bar-width": "0.125rem",

@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	getRememberedSkeletonMessagePresentation,
+	resolveDefaultSkeletonChatViewportHeightPx,
+} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {createSkeletonRandomFromKey} from '@app/features/app/components/skeleton/SkeletonSeed';
 import {MESSAGE_LAYOUT_SPEC} from '@app/features/theme/layout/MessageLayoutSpec';
 import {REM_BASE_PX} from '@app/features/theme/layout/RemFromPx';
-import {useMemo} from 'react';
+import {useMemo, useState} from 'react';
 
 function pxFromRemLength(value: `${number}rem`): number {
 	return Math.round(Number.parseFloat(value) * REM_BASE_PX);
@@ -35,29 +39,35 @@ export interface PlaceholderSpecs {
 	readonly groupSpacing: number;
 }
 
+export const FILLER_WRAPPER_PADDING_TOP = '1rem' as const;
+export const FILLER_WRAPPER_PADDING_BOTTOM = '0.75rem' as const;
+export const FILLER_WRAPPER_VERTICAL_PADDING =
+	pxFromRemLength(FILLER_WRAPPER_PADDING_TOP) + pxFromRemLength(FILLER_WRAPPER_PADDING_BOTTOM);
 const MESSAGE_LINE_HEIGHT = pxFromRemLength(MESSAGE_LAYOUT_SPEC.lineHeight);
 const MESSAGE_ROW_VERTICAL_PADDING = pxFromRemLength(MESSAGE_LAYOUT_SPEC.spacingY) * 2;
 const MESSAGE_HEIGHT_COMPACT = MESSAGE_LINE_HEIGHT + MESSAGE_ROW_VERTICAL_PADDING;
 const COZY_LEAD_MESSAGE_HEIGHT = MESSAGE_LINE_HEIGHT * 2 + MESSAGE_ROW_VERTICAL_PADDING;
 const COZY_GROUPED_MESSAGE_HEIGHT = MESSAGE_LINE_HEIGHT + MESSAGE_ROW_VERTICAL_PADDING;
-const SKELETON_PADDING_TOP = pxFromRemLength('1rem');
-const SKELETON_PADDING_BOTTOM = pxFromRemLength('0.75rem');
-const COZY_SKELETON_VERTICAL_PADDING = SKELETON_PADDING_TOP + SKELETON_PADDING_BOTTOM;
 const ATTACHMENT_MARGIN = 8;
 const ATTACHMENT_WIDTH_MIN = 140;
 const ATTACHMENT_WIDTH_MAX = 400;
 const ATTACHMENT_HEIGHT_MIN = 100;
-const ATTACHMENT_HEIGHT_MAX = 250;
+const ATTACHMENT_HEIGHT_MAX = 320;
 const USERNAME_WIDTH_MIN = 48;
 const USERNAME_WIDTH_RANGE = 36;
 const TIMESTAMP_WIDTH_MIN = 8;
 const TIMESTAMP_WIDTH_RANGE = 12;
 const LINE_WIDTH_MIN = 75;
 const LINE_WIDTH_RANGE = 18;
-const MIN_MESSAGE_GROUPS = 8;
-const MAX_MESSAGE_GROUPS = 64;
+const MIN_MESSAGE_GROUPS = 10;
+const MAX_MESSAGE_GROUPS = 30;
 const GROUP_LINE_RANGE = 4;
 const ATTACHMENT_GROUPS = 8;
+const GROUP_COUNT_OVERSHOOT = 1.05;
+const COZY_GROUP_COUNT_FACTOR = 0.87;
+const MIN_ESTIMATED_VIEWPORT_HEIGHT = 400;
+const MEAN_GROUP_LINE_COUNT = (1 + GROUP_LINE_RANGE) / 2;
+const MESSAGE_LIST_FALLBACK_SEED_KEY = 'message-list-placeholder';
 
 interface PlaceholderGenerationOptions {
 	readonly compact: boolean;
@@ -72,17 +82,22 @@ function randomInRange(random: () => number, min: number, max: number): number {
 	return Math.floor(random() * (max - min + 1)) + min;
 }
 
-function resolveShortestGroupHeight(compact: boolean): number {
+export function resolveAverageGroupHeight(compact: boolean): number {
 	if (compact) {
-		return MESSAGE_HEIGHT_COMPACT;
+		return MESSAGE_HEIGHT_COMPACT * MEAN_GROUP_LINE_COUNT;
 	}
-	return COZY_LEAD_MESSAGE_HEIGHT;
+	return COZY_LEAD_MESSAGE_HEIGHT + COZY_GROUPED_MESSAGE_HEIGHT * (MEAN_GROUP_LINE_COUNT - 1);
 }
 
-function resolvePlaceholderMessageGroups(compact: boolean, viewportHeightPx: number): number {
-	const shortestGroupHeight = resolveShortestGroupHeight(compact);
-	const groups = Math.ceil(Math.max(0, viewportHeightPx) / shortestGroupHeight);
-	return Math.min(MAX_MESSAGE_GROUPS, Math.max(MIN_MESSAGE_GROUPS, groups));
+export function resolvePlaceholderMessageGroups(compact: boolean, viewportHeightPx: number): number {
+	const usableHeight = Math.max(viewportHeightPx, MIN_ESTIMATED_VIEWPORT_HEIGHT);
+	const rows = Math.ceil(usableHeight / resolveAverageGroupHeight(compact));
+	const clamped = Math.min(MAX_MESSAGE_GROUPS, Math.max(MIN_MESSAGE_GROUPS, Math.ceil(GROUP_COUNT_OVERSHOOT * rows)));
+	return compact ? clamped : Math.round(COZY_GROUP_COUNT_FACTOR * clamped);
+}
+
+export function resolvePlaceholderAttachmentCount(messageGroups: number): number {
+	return Math.max(1, Math.round((messageGroups / MAX_MESSAGE_GROUPS) * ATTACHMENT_GROUPS));
 }
 
 function resolvePlaceholderDensityKey(compact: boolean): string {
@@ -95,7 +110,7 @@ function resolvePlaceholderDensityKey(compact: boolean): string {
 function generatePlaceholderSpecs(options: PlaceholderGenerationOptions): PlaceholderSpecs {
 	const {compact, compactAvatarsVisible, messageGroups, attachments, groupSpacing, random} = options;
 	const groups: Array<MutablePlaceholderMessageGroup> = [];
-	let totalHeight = compact ? 0 : COZY_SKELETON_VERTICAL_PADDING;
+	let totalHeight = FILLER_WRAPPER_VERTICAL_PADDING;
 	for (let index = 0; index < messageGroups; index++) {
 		const lineCount = Math.floor(random() * GROUP_LINE_RANGE) + 1;
 		const lineWidths: Array<number> = [];
@@ -131,7 +146,7 @@ function generatePlaceholderSpecs(options: PlaceholderGenerationOptions): Placeh
 	return {compact, compactAvatarsVisible, groups, totalHeight, groupSpacing};
 }
 
-export interface PlaceholderSpecsOptions {
+interface PlaceholderSpecsOptions {
 	readonly compact: boolean;
 	readonly compactAvatarsVisible: boolean;
 	readonly groupSpacing: number;
@@ -139,7 +154,7 @@ export interface PlaceholderSpecsOptions {
 	readonly seedKey: string;
 }
 
-export function usePlaceholderSpecs({
+function usePlaceholderSpecs({
 	compact,
 	compactAvatarsVisible,
 	groupSpacing,
@@ -153,10 +168,35 @@ export function usePlaceholderSpecs({
 				compact,
 				compactAvatarsVisible,
 				messageGroups,
-				attachments: Math.min(ATTACHMENT_GROUPS, messageGroups),
+				attachments: Math.min(messageGroups, resolvePlaceholderAttachmentCount(messageGroups)),
 				groupSpacing,
 				random: createSkeletonRandomFromKey([seedKey, resolvePlaceholderDensityKey(compact), groupSpacing].join('|')),
 			}),
 		[compact, compactAvatarsVisible, groupSpacing, messageGroups, seedKey],
 	);
+}
+
+export interface MessageListPlaceholderSpecsOptions {
+	readonly channelId: string | null;
+	readonly compact: boolean;
+	readonly compactAvatarsVisible: boolean;
+	readonly groupSpacing: number;
+}
+
+export function useMessageListPlaceholderSpecs({
+	channelId,
+	compact,
+	compactAvatarsVisible,
+	groupSpacing,
+}: MessageListPlaceholderSpecsOptions): PlaceholderSpecs {
+	const [viewportHeightPx] = useState(
+		() => getRememberedSkeletonMessagePresentation()?.viewportHeightPx ?? resolveDefaultSkeletonChatViewportHeightPx(),
+	);
+	return usePlaceholderSpecs({
+		compact,
+		compactAvatarsVisible,
+		groupSpacing,
+		viewportHeightPx,
+		seedKey: channelId ?? MESSAGE_LIST_FALLBACK_SEED_KEY,
+	});
 }

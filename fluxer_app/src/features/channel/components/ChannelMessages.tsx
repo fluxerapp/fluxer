@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {usePlaceholderSpecs} from '@app/features/app/components/skeleton/PlaceholderSpecs';
+import {useMessageListPlaceholderSpecs} from '@app/features/app/components/skeleton/PlaceholderSpecs';
 import {ScrollFillerSkeleton} from '@app/features/app/components/skeleton/ScrollFillerSkeleton';
-import {
-	reportSkeletonMessagePresentation,
-	resolveDefaultSkeletonChatViewportHeightPx,
-} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {reportSkeletonMessagePresentation} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {measureSkeletonHeightPx, useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import {renderChannelStream} from '@app/features/channel/components/ChannelMessageStream';
 import styles from '@app/features/channel/components/ChannelMessages.module.css';
@@ -176,12 +173,11 @@ export const Messages = observer(function Messages({
 	const isModalOpen = Modal.hasModalOpen();
 	const isGatewayConnected = GatewayConnection.isConnected;
 	const selectedChannelId = SelectedChannel.currentChannelId;
-	const placeholderSpecs = usePlaceholderSpecs({
+	const placeholderSpecs = useMessageListPlaceholderSpecs({
+		channelId: channel.id,
 		compact: state.messageDisplayCompact,
 		compactAvatarsVisible: Accessibility.showUserAvatarsInCompactMode,
 		groupSpacing: state.messageGroupSpacing,
-		viewportHeightPx: resolveDefaultSkeletonChatViewportHeightPx(),
-		seedKey: channel.id,
 	});
 	const safeMessages = state.messages ?? MessagesState.getMessages(channel.id);
 	const canAutoAck = shouldAutoAck({
