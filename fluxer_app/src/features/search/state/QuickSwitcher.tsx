@@ -328,7 +328,7 @@ class QuickSwitcher {
 		const rawSearch = query['slice'](1).trim();
 		if (rawSearch.length === 0) {
 			if (this.memberSearchContext) {
-				this.memberSearchContext.clearQuery();
+				this.memberSearchContext.cancelSearch();
 			}
 			if (this.memberFetchDebounceTimer) {
 				clearTimeout(this.memberFetchDebounceTimer);
@@ -351,7 +351,7 @@ class QuickSwitcher {
 				});
 			}, MEMBER_SEARCH_LIMIT);
 		}
-		this.memberSearchContext.setQuery(rawSearch);
+		this.memberSearchContext.beginSearch(rawSearch);
 		if (this.memberFetchDebounceTimer) {
 			clearTimeout(this.memberFetchDebounceTimer);
 		}

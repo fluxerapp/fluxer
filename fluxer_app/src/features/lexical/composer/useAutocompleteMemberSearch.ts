@@ -85,7 +85,7 @@ export function useAutocompleteMemberSearch({
 		}
 		if (!isMemberSearchTrigger(triggerType) || guildId == null) {
 			currentGuildIdRef.current = null;
-			context.clearQuery();
+			context.cancelSearch();
 			setResults([]);
 			if (debounceTimerRef.current != null) {
 				clearTimeout(debounceTimerRef.current);
@@ -94,7 +94,7 @@ export function useAutocompleteMemberSearch({
 			return;
 		}
 		currentGuildIdRef.current = guildId;
-		context.setQuery(matchedText, {guild: guildId}, new Set(), new Set(), MentionFrecency.getBoosters(guildId));
+		context.beginSearch(matchedText, {guild: guildId}, new Set(), new Set(), MentionFrecency.getBoosters(guildId));
 		if (debounceTimerRef.current != null) {
 			clearTimeout(debounceTimerRef.current);
 		}
@@ -147,13 +147,13 @@ export function useAutocompleteSlotMemberSearch({
 		}
 		if (slotContext == null || slotContext.optionType !== 'user' || guildId == null) {
 			currentGuildIdRef.current = null;
-			context.clearQuery();
+			context.cancelSearch();
 			setResults([]);
 			return;
 		}
 		const query = normalizeSlotAutocompleteQuery(slotContext);
 		currentGuildIdRef.current = guildId;
-		context.setQuery(query, {guild: guildId}, new Set(), new Set(), MentionFrecency.getBoosters(guildId));
+		context.beginSearch(query, {guild: guildId}, new Set(), new Set(), MentionFrecency.getBoosters(guildId));
 		debounceTimerRef.current = setTimeout(() => {
 			void MemberSearch.fetchMembersInBackground(query, [guildId]);
 			debounceTimerRef.current = null;

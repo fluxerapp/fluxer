@@ -251,7 +251,7 @@ export function useMessageSearchAutocomplete({
 			memberFetchQueryRef.current = '';
 			const context = searchContextRef.current;
 			if (context) {
-				context.clearQuery();
+				context.cancelSearch();
 			}
 			setMemberSearchResults([]);
 			return;
@@ -261,7 +261,7 @@ export function useMessageSearchAutocomplete({
 			memberFetchQueryRef.current = '';
 			const context = searchContextRef.current;
 			if (context) {
-				context.clearQuery();
+				context.cancelSearch();
 			}
 			setMemberSearchResults([]);
 			return;
@@ -273,14 +273,14 @@ export function useMessageSearchAutocomplete({
 		if (searchQuery.length === 0) {
 			memberFetchQueryRef.current = '';
 			if (context) {
-				context.clearQuery();
+				context.cancelSearch();
 			}
 			setMemberSearchResults([]);
 			return;
 		}
 		const boosters = buildUserSearchBoosters(channel, currentGuildIdForScope, plan.mode);
 		if (context) {
-			context.setQuery(searchQuery, plan.workerFilters, new Set(), new Set(), boosters);
+			context.beginSearch(searchQuery, plan.workerFilters, new Set(), new Set(), boosters);
 		}
 		if (!plan.guildsToSearch || plan.guildsToSearch.length === 0) {
 			memberFetchQueryRef.current = searchQuery;
@@ -311,7 +311,7 @@ export function useMessageSearchAutocomplete({
 		if (autocompleteType !== 'users' || !currentFilter) {
 			const context = searchContextRef.current;
 			if (context) {
-				context.clearQuery();
+				context.cancelSearch();
 			}
 			setMemberSearchResults([]);
 			memberFetchQueryRef.current = '';

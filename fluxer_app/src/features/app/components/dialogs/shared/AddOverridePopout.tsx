@@ -155,11 +155,11 @@ export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(func
 		}
 		const context = searchContextRef.current;
 		if (queryForServer.length === 0) {
-			context?.clearQuery();
+			context?.cancelSearch();
 			setServerMemberIds([]);
 			return;
 		}
-		context?.setQuery(queryForServer, {guild: guildId});
+		context?.beginSearch(queryForServer, {guild: guildId});
 		if (GuildMembers.isGuildFullyLoaded(guildId)) {
 			return;
 		}

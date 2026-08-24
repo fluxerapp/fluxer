@@ -291,7 +291,7 @@ export function useTextareaAutocomplete({
 			autocompleteTriggerType === 'commandArg';
 		if (!isMentionTrigger || !channel?.guildId) {
 			currentGuildIdRef.current = null;
-			context.clearQuery();
+			context.cancelSearch();
 			setMemberSearchResults([]);
 			setIsMemberSearchLoading(false);
 			if (memberFetchDebounceTimerRef.current) {
@@ -309,7 +309,7 @@ export function useTextareaAutocomplete({
 		}
 		setIsMemberSearchLoading(true);
 		const boosters = MentionFrecency.getBoosters(guildId);
-		context.setQuery(searchQuery, {guild: guildId}, new Set(), new Set(), boosters);
+		context.beginSearch(searchQuery, {guild: guildId}, new Set(), new Set(), boosters);
 		if (memberFetchDebounceTimerRef.current) {
 			clearTimeout(memberFetchDebounceTimerRef.current);
 		}

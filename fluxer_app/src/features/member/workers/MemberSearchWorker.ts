@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export enum MessageTypes {
-	UPDATE_USERS = 'UPDATE_USERS',
-	USER_RESULTS = 'USER_RESULTS',
-	QUERY_SET = 'QUERY_SET',
-	QUERY_CLEAR = 'QUERY_CLEAR',
+	INGEST_DIRECTORY = 'INGEST_DIRECTORY',
+	MATCHES_READY = 'MATCHES_READY',
+	SEARCH_BEGIN = 'SEARCH_BEGIN',
+	SEARCH_CANCEL = 'SEARCH_CANCEL',
 }
 
 interface TransformedUser {
@@ -23,7 +23,7 @@ interface TransformedUser {
 interface SearchResult {
 	id: string;
 	username: string;
-	comparator: string;
+	rankLabel: string;
 	score: number;
 	isBot?: boolean;
 }
@@ -54,7 +54,19 @@ interface UpdateUsersPayload {
 	users: Array<TransformedUser>;
 }
 
-const userIndex: Map<string, TransformedUser> = new Map();
+interface SearchForm {
+	value: string;
+	lower: string;
+	stripped: string;
+}
+
+interface IndexedUser {
+	user: TransformedUser;
+	named: Array<SearchForm>;
+	perGuild: Record<string, SearchForm> | null;
+}
+
+const userIndex: Map<string, IndexedUser> = new Map();
 const activeQueries: Map<string, SearchQuery> = new Map();
 const pendingSearches: Set<string> = new Set();
 const SCORE_EXACT_PREFIX = 10;
@@ -65,43 +77,59 @@ const FRIEND_KEY = 'isFriend';
 const BOT_KEY = 'isBot';
 const USERNAME_KEY = 'username';
 const IGNORED_KEYS = new Set([BOT_KEY, FRIEND_KEY, USERNAME_KEY, 'guildIds', 'guildNicknames']);
+const COMBINING_MARKS = /[\u0300-\u036f]/g;
 
-function getSearchValues(user: TransformedUser, filters?: SearchFilters): Array<string> {
-	const values: Array<string> = [];
-	if (user.username.length > 0) {
-		values.push(user.username);
+function stripCombiningMarks(text: string): string {
+	const decomposed = text.normalize('NFD');
+	const withoutMarks = decomposed.replace(COMBINING_MARKS, '');
+	if (withoutMarks.length === decomposed.length) {
+		return text;
 	}
-	for (const key of Object.keys(user)) {
-		if (IGNORED_KEYS.has(key) || key === '_delete' || key === '_removeGuild') {
-			continue;
-		}
-		const value = user[key];
-		if (typeof value === 'string' && value.length > 0) {
-			values.push(value);
-		}
+	return withoutMarks.normalize('NFC');
+}
+
+function toSearchForm(value: string): SearchForm {
+	const lower = value.toLowerCase();
+	return {value, lower, stripped: stripCombiningMarks(lower)};
+}
+
+function indexUser(user: TransformedUser): IndexedUser {
+	const named: Array<SearchForm> = [];
+	if (user.username.length > 0) {
+		named.push(toSearchForm(user.username));
+	}
+	const globalName = user.globalName;
+	if (typeof globalName === 'string' && globalName.length > 0) {
+		named.push(toSearchForm(globalName));
 	}
 	const guildNicknames = user.guildNicknames;
 	if (guildNicknames == null) {
-		return values;
+		return {user, named, perGuild: null};
+	}
+	let perGuild: Record<string, SearchForm> | null = null;
+	for (const [guildId, nickname] of Object.entries(guildNicknames)) {
+		if (typeof nickname !== 'string' || nickname.length === 0) {
+			continue;
+		}
+		if (perGuild == null) {
+			perGuild = {};
+		}
+		perGuild[guildId] = toSearchForm(nickname);
+	}
+	return {user, named, perGuild};
+}
+
+function getSearchForms(entry: IndexedUser, filters?: SearchFilters): Array<SearchForm> {
+	const {named, perGuild} = entry;
+	if (perGuild == null) {
+		return named;
 	}
 	const guildId = filters == null ? null : filters.guild;
 	if (guildId != null && guildId.length > 0) {
-		const nickname = guildNicknames[guildId];
-		if (typeof nickname === 'string' && nickname.length > 0) {
-			values.push(nickname);
-		}
-		return values;
+		const nickname = perGuild[guildId];
+		return nickname == null ? named : [...named, nickname];
 	}
-	for (const nickname of Object.values(guildNicknames)) {
-		if (typeof nickname === 'string' && nickname.length > 0) {
-			values.push(nickname);
-		}
-	}
-	return values;
-}
-
-function escapeRegex(text: string): string {
-	return text.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
+	return [...named, ...Object.values(perGuild)];
 }
 
 function fuzzyMatch(needle: string, haystack: string): boolean {
@@ -121,10 +149,10 @@ function fuzzyMatch(needle: string, haystack: string): boolean {
 
 function sortByMatchScore(a: SearchResult, b: SearchResult): number {
 	if (a.score === b.score) {
-		const aComp = a.comparator.toLowerCase();
-		const bComp = b.comparator.toLowerCase();
-		if (aComp < bComp) return -1;
-		if (aComp > bComp) return 1;
+		const aLabel = a.rankLabel.toLowerCase();
+		const bLabel = b.rankLabel.toLowerCase();
+		if (aLabel < bLabel) return -1;
+		if (aLabel > bLabel) return 1;
 		return 0;
 	}
 	return b.score - a.score;
@@ -141,24 +169,24 @@ function normalizeSearchLimit(limit: number): number {
 	return Math.min(normalizedLimit, MAX_SEARCH_RESULTS);
 }
 
-function insertSearchResult(results: Array<SearchResult>, candidate: SearchResult, limit: number): void {
-	if (results.length === 0) {
-		results.push(candidate);
+function insertSearchResult(shortlist: Array<SearchResult>, candidate: SearchResult, limit: number): void {
+	if (shortlist.length === 0) {
+		shortlist.push(candidate);
 		return;
 	}
-	let insertIndex = results.length;
-	for (let index = 0; index < results.length; index += 1) {
-		if (sortByMatchScore(candidate, results[index]) < 0) {
+	let insertIndex = shortlist.length;
+	for (let index = 0; index < shortlist.length; index += 1) {
+		if (sortByMatchScore(candidate, shortlist[index]) < 0) {
 			insertIndex = index;
 			break;
 		}
 	}
-	if (insertIndex === results.length && results.length >= limit) {
+	if (insertIndex === shortlist.length && shortlist.length >= limit) {
 		return;
 	}
-	results.splice(insertIndex, 0, candidate);
-	if (results.length > limit) {
-		results.pop();
+	shortlist.splice(insertIndex, 0, candidate);
+	if (shortlist.length > limit) {
+		shortlist.pop();
 	}
 }
 
@@ -180,26 +208,26 @@ function shouldIncludeUser(
 	return true;
 }
 
-function calculateScore(baseScore: number, booster?: number): number {
-	return baseScore * (booster ?? 1);
+function calculateScore(tierScore: number, booster?: number): number {
+	return tierScore * (booster ?? 1);
 }
 
-function postSearchResults(uuid: string, results: Array<SearchResult>, generation: number): void {
-	const payload = results.map((r) => ({
-		id: r.id,
-		username: r.username,
-		isBot: r.isBot,
+function postSearchResults(uuid: string, shortlist: Array<SearchResult>, generation: number): void {
+	const payload = shortlist.map((hit) => ({
+		id: hit.id,
+		username: hit.username,
+		isBot: hit.isBot,
 	}));
 	const message: WorkerMessage<typeof payload> = {
 		uuid,
-		type: MessageTypes.USER_RESULTS,
+		type: MessageTypes.MATCHES_READY,
 		payload,
 		generation,
 	};
 	postMessage(message);
 }
 
-function getEmptyQueryComparator(user: TransformedUser, filters?: SearchFilters): string {
+function getFallbackLabel(user: TransformedUser, filters?: SearchFilters): string {
 	const guildNicknames = user.guildNicknames;
 	const guildId = filters == null ? null : filters.guild;
 	if (guildNicknames != null && guildId != null && guildId.length > 0) {
@@ -214,82 +242,108 @@ function getEmptyQueryComparator(user: TransformedUser, filters?: SearchFilters)
 	return user.username;
 }
 
+function scoreSearchForm(form: SearchForm, loweredQuery: string, strippedQuery: string): number {
+	const needsStrippedPass = form.stripped !== form.lower || strippedQuery !== loweredQuery;
+	if (form.lower.startsWith(loweredQuery)) {
+		return SCORE_EXACT_PREFIX;
+	}
+	if (needsStrippedPass && form.stripped.startsWith(strippedQuery)) {
+		return SCORE_EXACT_PREFIX;
+	}
+	if (form.lower.includes(loweredQuery)) {
+		return SCORE_CONTAINS;
+	}
+	if (needsStrippedPass && form.stripped.includes(strippedQuery)) {
+		return SCORE_CONTAINS;
+	}
+	if (fuzzyMatch(loweredQuery, form.lower)) {
+		return SCORE_FUZZY;
+	}
+	if (needsStrippedPass && fuzzyMatch(strippedQuery, form.stripped)) {
+		return SCORE_FUZZY;
+	}
+	return 0;
+}
+
 function executeSearch(uuid: string, searchQuery: SearchQuery): void {
 	const {query, limit, filters, blacklist, whitelist, boosters, generation = 0} = searchQuery;
 	const normalizedLimit = normalizeSearchLimit(limit);
-	const results: Array<SearchResult> = [];
+	const hits: Array<SearchResult> = [];
 	if (normalizedLimit === 0) {
-		postSearchResults(uuid, results, generation);
+		postSearchResults(uuid, hits, generation);
 		return;
 	}
 	if (query === '') {
-		userIndex.forEach((user, userId) => {
+		userIndex.forEach((entry, userId) => {
+			const user = entry.user;
 			if (!shouldIncludeUser(userId, user, filters, blacklist, whitelist)) {
 				return;
 			}
 			insertSearchResult(
-				results,
+				hits,
 				{
 					id: userId,
 					username: user.username,
-					comparator: getEmptyQueryComparator(user, filters),
+					rankLabel: getFallbackLabel(user, filters),
 					score: 0,
 					isBot: user.isBot,
 				},
 				normalizedLimit,
 			);
 		});
-		postSearchResults(uuid, results, generation);
+		postSearchResults(uuid, hits, generation);
 		return;
 	}
-	const exactPrefixRegex = new RegExp(`^${escapeRegex(query)}`, 'i');
-	const containsRegex = new RegExp(escapeRegex(query), 'i');
-	const queryLower = query.toLowerCase();
-	userIndex.forEach((user, userId) => {
+	const loweredQuery = query.toLowerCase();
+	const strippedQuery = stripCombiningMarks(loweredQuery);
+	userIndex.forEach((entry, userId) => {
+		const user = entry.user;
 		if (!shouldIncludeUser(userId, user, filters, blacklist, whitelist)) {
 			return;
 		}
-		const username = user.username;
-		let bestMatch: SearchResult | null = null;
-		for (const value of getSearchValues(user, filters)) {
-			let matchResult: SearchResult | null = null;
-			if (exactPrefixRegex.test(value)) {
-				matchResult = {
+		const booster = boosters == null ? undefined : boosters[userId];
+		if (query === userId) {
+			insertSearchResult(
+				hits,
+				{
 					id: userId,
-					username,
-					comparator: value,
-					score: calculateScore(SCORE_EXACT_PREFIX, boosters?.[userId]),
+					username: user.username,
+					rankLabel: getFallbackLabel(user, filters),
+					score: calculateScore(SCORE_EXACT_PREFIX, booster),
 					isBot: user.isBot,
-				};
-			} else if (containsRegex.test(value)) {
-				matchResult = {
-					id: userId,
-					username,
-					comparator: value,
-					score: calculateScore(SCORE_CONTAINS, boosters?.[userId]),
-					isBot: user.isBot,
-				};
-			} else if (fuzzyMatch(queryLower, value.toLowerCase())) {
-				matchResult = {
-					id: userId,
-					username,
-					comparator: value,
-					score: calculateScore(SCORE_FUZZY, boosters?.[userId]),
-					isBot: user.isBot,
-				};
-			}
-			if (matchResult && (!bestMatch || bestMatch.score < matchResult.score)) {
-				bestMatch = matchResult;
+				},
+				normalizedLimit,
+			);
+			return;
+		}
+		let bestScore = 0;
+		let bestForm: SearchForm | null = null;
+		for (const form of getSearchForms(entry, filters)) {
+			const score = scoreSearchForm(form, loweredQuery, strippedQuery);
+			if (score > bestScore) {
+				bestScore = score;
+				bestForm = form;
 			}
 		}
-		if (bestMatch) {
-			insertSearchResult(results, bestMatch, normalizedLimit);
+		if (bestForm == null) {
+			return;
 		}
+		insertSearchResult(
+			hits,
+			{
+				id: userId,
+				username: user.username,
+				rankLabel: bestForm.value,
+				score: calculateScore(bestScore, booster),
+				isBot: user.isBot,
+			},
+			normalizedLimit,
+		);
 	});
-	postSearchResults(uuid, results, generation);
+	postSearchResults(uuid, hits, generation);
 }
 
-function updateUsers(users: Array<TransformedUser>): void {
+function applyUserUpdates(users: Array<TransformedUser>): void {
 	let shouldTriggerSearch = false;
 	const updatedGuilds = new Set<string>();
 	for (const update of users) {
@@ -299,11 +353,11 @@ function updateUsers(users: Array<TransformedUser>): void {
 			shouldTriggerSearch = true;
 			continue;
 		}
-		const existingUser = userIndex.get(userId);
-		if (update._removeGuild && existingUser == null) {
+		const existingEntry = userIndex.get(userId);
+		if (update._removeGuild && existingEntry == null) {
 			continue;
 		}
-		const baseUser: TransformedUser = existingUser == null ? {id: userId, username: ''} : existingUser;
+		const baseUser: TransformedUser = existingEntry == null ? {id: userId, username: ''} : existingEntry.user;
 		const mergedUser: TransformedUser = {...baseUser, ...update};
 		if (update._removeGuild && baseUser.username.length > 0) {
 			mergedUser.username = baseUser.username;
@@ -345,7 +399,7 @@ function updateUsers(users: Array<TransformedUser>): void {
 		}
 		const wasFriend = Boolean(baseUser.isFriend);
 		const isFriendNow = Boolean(mergedUser.isFriend);
-		userIndex.set(userId, mergedUser);
+		userIndex.set(userId, indexUser(mergedUser));
 		if (activeQueries.size > 0) {
 			if (isFriendNow || wasFriend !== isFriendNow) {
 				shouldTriggerSearch = true;
@@ -374,12 +428,12 @@ function updateUsers(users: Array<TransformedUser>): void {
 	}
 }
 
-function setQuery(uuid: string, query: SearchQuery): void {
+function registerQuery(uuid: string, query: SearchQuery): void {
 	activeQueries.set(uuid, query);
 	executeSearch(uuid, query);
 }
 
-function clearQuery(uuid: string): void {
+function unregisterQuery(uuid: string): void {
 	activeQueries.delete(uuid);
 	pendingSearches.delete(uuid);
 }
@@ -409,21 +463,21 @@ addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
 	}
 	const {uuid, type, payload} = data;
 	switch (type) {
-		case MessageTypes.UPDATE_USERS: {
+		case MessageTypes.INGEST_DIRECTORY: {
 			const p = payload as UpdateUsersPayload | undefined;
 			if (p?.users) {
-				updateUsers(p.users);
+				applyUserUpdates(p.users);
 			}
 			break;
 		}
-		case MessageTypes.QUERY_SET: {
+		case MessageTypes.SEARCH_BEGIN: {
 			if (!uuid) return;
-			setQuery(uuid, payload as SearchQuery);
+			registerQuery(uuid, payload as SearchQuery);
 			break;
 		}
-		case MessageTypes.QUERY_CLEAR: {
+		case MessageTypes.SEARCH_CANCEL: {
 			if (!uuid) return;
-			clearQuery(uuid);
+			unregisterQuery(uuid);
 			break;
 		}
 	}
