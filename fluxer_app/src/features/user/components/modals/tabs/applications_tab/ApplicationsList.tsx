@@ -63,8 +63,6 @@ export const ApplicationsList: React.FC<ApplicationsListProps> = observer(({appl
 											src={avatarUrl}
 											alt=""
 											className={styles.itemAvatar}
-											loading="lazy"
-											decoding="async"
 											draggable={false}
 											data-flx="user.applications-tab.applications-list.item-avatar"
 										/>

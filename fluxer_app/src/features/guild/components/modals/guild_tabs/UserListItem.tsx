@@ -75,13 +75,7 @@ export const UserListItem: React.FC<UserListItemProps> = observer(
 				<div className={styles.memberMain} data-flx="guild.guild-tabs.user-list-item.member-main">
 					<div className={styles.avatarWrapper} data-flx="guild.guild-tabs.user-list-item.avatar-wrapper">
 						{avatarUrl ? (
-							<img
-								src={avatarUrl}
-								alt=""
-								className={styles.avatar}
-								loading="lazy"
-								data-flx="guild.guild-tabs.user-list-item.avatar"
-							/>
+							<img src={avatarUrl} alt="" className={styles.avatar} data-flx="guild.guild-tabs.user-list-item.avatar" />
 						) : (
 							<div className={styles.avatarPlaceholder} data-flx="guild.guild-tabs.user-list-item.avatar-placeholder">
 								{resolvedDisplayName[0].toUpperCase()}

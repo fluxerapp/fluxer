@@ -166,13 +166,7 @@ export const InviteListItem: React.FC<{
 				</span>
 				{inviter && avatarUrl ? (
 					<>
-						<img
-							src={avatarUrl}
-							alt=""
-							className={styles.avatar}
-							loading="lazy"
-							data-flx="invite.invite-list-item.avatar"
-						/>
+						<img src={avatarUrl} alt="" className={styles.avatar} data-flx="invite.invite-list-item.avatar" />
 						<span className={styles.username} data-flx="invite.invite-list-item.username">
 							{inviterDisplayName}
 						</span>
