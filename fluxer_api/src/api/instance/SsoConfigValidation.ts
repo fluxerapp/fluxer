@@ -25,6 +25,10 @@ interface NormalizedSsoConfigValidationResult extends SsoConfigValidationInput {
 
 let ssoRequestUrlPolicy: RequestUrlPolicy | null = null;
 
+export function resetSsoRequestUrlPolicyForTesting(): void {
+	ssoRequestUrlPolicy = null;
+}
+
 export function getSsoRequestUrlPolicy(): RequestUrlPolicy {
 	if (ssoRequestUrlPolicy === null) {
 		ssoRequestUrlPolicy = createPublicInternetRequestUrlPolicy({

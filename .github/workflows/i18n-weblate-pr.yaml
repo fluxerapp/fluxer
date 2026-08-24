@@ -63,7 +63,7 @@ jobs:
 
       - name: Install dependencies
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          tools/ci/run.sh ci
           --step install_dependencies
 
       - name: Compile translated catalogs

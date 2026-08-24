@@ -119,7 +119,7 @@ jobs:
       - matrix
     runs-on: ${{ matrix.os }}
     environment: desktop-releases
-    timeout-minutes: 60
+    timeout-minutes: 180
     permissions:
       actions: read
       contents: read
@@ -508,7 +508,7 @@ jobs:
       - build
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
-    timeout-minutes: 60
+    timeout-minutes: 180
     permissions:
       contents: read
     env:

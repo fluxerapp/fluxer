@@ -53,14 +53,14 @@ jobs:
       - name: set variables
         id: vars
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
+          tools/ci/run.sh build-app-proxy
           --step set_metadata
           --build-version "${{ inputs['build-version'] }}"
 
   build:
     name: build app-proxy (amd64)
     needs: meta
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
       actions: read
@@ -76,7 +76,7 @@ jobs:
           toolchain: "1.93.0"
       - name: prepare docker config
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
+          tools/ci/run.sh build-app-proxy
           --step prepare_docker_config
       - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
       - name: configure ghcr auth
@@ -84,24 +84,24 @@ jobs:
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
+          tools/ci/run.sh build-app-proxy
           --step configure_ghcr_auth
 
       - name: build and push image + extract assets
         env:
           BUILD_VERSION: ${{ needs.meta.outputs.build_version }}
           PUBLIC_ASSET_BASE_URL: https://fluxerstatic.com
-          CACHE_FROM: type=gha,scope=fluxer-app-proxy
-          CACHE_TO: type=gha,scope=fluxer-app-proxy,mode=max
+          CACHE_FROM: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-amd64
+          CACHE_TO: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-amd64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
+          tools/ci/run.sh build-app-proxy
           --step build_and_extract
 
       - name: generate asset manifest
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
+          tools/ci/run.sh build-app-proxy
           --step generate_asset_manifest
 
       - name: upload assets to S3 static bucket
@@ -111,13 +111,13 @@ jobs:
           S3_ENDPOINT: ${{ vars.STATIC_S3_ENDPOINT }}
           STATIC_BUCKET: ${{ vars.STATIC_S3_BUCKET }}
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
+          tools/ci/run.sh build-app-proxy
           --step upload_assets
 
   build-arm64:
     name: build app-proxy (arm64)
     needs: meta
-    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
     permissions:
       actions: read
@@ -145,8 +145,8 @@ jobs:
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
             PUBLIC_ASSET_BASE_URL=https://fluxerstatic.com
             BUNDLE_LOCAL_ASSETS=false
-          cache-from: type=gha,scope=fluxer-app-proxy-arm64
-          cache-to: type=gha,scope=fluxer-app-proxy-arm64,mode=max,ignore-error=true
+          cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-arm64
+          cache-to: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-arm64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
         env:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
@@ -203,7 +203,7 @@ jobs:
           VERSION: ${{ needs.meta.outputs.build_version }}
           RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          tools/ci/run.sh release
           publish
           --component fluxer-app-proxy
           --build-version "${VERSION}"

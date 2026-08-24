@@ -306,3 +306,20 @@ export function getLiveKitServiceInstance(): ILiveKitService | null {
 export function getVoiceRoomStoreInstance(): IVoiceRoomStore | null {
 	return voiceRoomStoreInstance;
 }
+
+export function resetServiceRegistryForTesting(): void {
+	_kvClient = null;
+	_snowflakeService = null;
+	_billingRepository = null;
+	_blueskyOAuthService = undefined;
+	_blueskyOAuthInitializationPromise = null;
+	_blueskyOAuthConfigSignature = null;
+	_blueskyOAuthInitializationSignature = null;
+	_disabledBlueskyOAuthService = undefined;
+	voiceTopology = null;
+	voiceAvailabilityService = null;
+	liveKitServiceInstance = null;
+	voiceRoomStoreInstance = null;
+	voiceConfigSubscriber = null;
+	voiceInitializationPromise = null;
+}

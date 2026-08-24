@@ -97,7 +97,7 @@ import {
 	getSnowflakeService,
 	getWorkerService,
 } from './ServiceRegistry';
-import {singleton} from './Singleton';
+import {clearSingletonsForTesting, singleton} from './Singleton';
 
 export const getUserRepository = singleton(() => new UserRepository(getKVClient()));
 export const getGuildRepository = singleton(() => new GuildRepository());
@@ -121,7 +121,10 @@ export const getPasswordChangeRepository = singleton(() => new PasswordChangeRep
 const getUserContactChangeLogRepository = singleton(() => new UserContactChangeLogRepository());
 export const getDonationRepository = singleton(() => new DonationRepository());
 const getAdminApiKeyRepository = singleton(() => new AdminApiKeyRepository());
-export const getInstanceConfigRepository = singleton(() => new InstanceConfigRepository(getKVClient()));
+export const getInstanceConfigRepository = singleton(
+	() => new InstanceConfigRepository(getKVClient()),
+	(repository) => repository.shutdown(),
+);
 export const getGatewayRolloutConfigPublisher = singleton(
 	() =>
 		new GatewayRolloutConfigPublisher(
@@ -200,6 +203,7 @@ const getDownloadsStorageService: () => IStorageService = (() => {
 export const getErrorI18nService = singleton(() => new ErrorI18nService());
 export const getLimitConfigService = singleton(
 	() => new LimitConfigService(getInstanceConfigRepository(), getCacheService(), getKVClient()),
+	(service) => service.shutdown(),
 );
 export const getPurgeQueue: () => IPurgeQueue = singleton(() =>
 	Config.bunny.purgeEnabled ? new BunnyPurgeQueue(getKVClient()) : new NoopPurgeQueue(),
@@ -433,4 +437,21 @@ export async function initializeServiceSingletons(): Promise<void> {
 		})();
 	}
 	await serviceSingletonInitializationPromise;
+}
+
+export function resetServiceSingletonsForTesting(): void {
+	activityTracker?.shutdown();
+	clearSingletonsForTesting();
+	_virusScanInitPromise = null;
+	serviceSingletonInitializationPromise = null;
+	bulkMessageDeletionQueue = null;
+	bulkMessageDeletionQueueClient = null;
+	premiumStateQueue = null;
+	premiumStateQueueClient = null;
+	activityTracker = null;
+	activityTrackerClient = null;
+	activityBuffer = null;
+	activityBufferClient = null;
+	accountDeletionQueue = null;
+	accountDeletionQueueClient = null;
 }

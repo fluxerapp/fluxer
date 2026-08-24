@@ -144,6 +144,17 @@ export class PhraseBlocklistCache {
 		return this.rawPhraseSet.size;
 	}
 
+	resetForTesting(): void {
+		this.shutdown();
+		this.rawPhrases = [];
+		this.rawPhraseSet = new Set();
+		this.rebuildMatchers();
+		this.kvClient = null;
+		this.subscriberInitialized = false;
+		this.consecutiveFailures = 0;
+		this.isInitialized = false;
+	}
+
 	shutdown(): void {
 		if (this.kvSubscription && this.messageHandler) {
 			this.kvSubscription.off('message', this.messageHandler);

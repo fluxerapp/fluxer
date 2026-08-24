@@ -26,6 +26,10 @@ const FETCH_APPLICATIONS_BY_IDS_CQL = Applications.selectCql({
 
 let cachedAdminSecretHash: string | null = null;
 
+export function resetAdminSecretHashForTesting(): void {
+	cachedAdminSecretHash = null;
+}
+
 async function getAdminSecretHash(): Promise<string | null> {
 	const secret = Config.admin.oauthClientSecret;
 	if (!secret) {

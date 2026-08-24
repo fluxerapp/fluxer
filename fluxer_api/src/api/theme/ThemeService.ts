@@ -5,7 +5,20 @@ import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeToo
 import {Config} from '../Config';
 import type {IStorageService} from '../infrastructure/IStorageService';
 
-const MAX_CSS_BYTES = 8 * 1024 * 1024;
+export const THEME_CSS_MAX_BYTES = 8 * 1024 * 1024;
+
+let themeCssMaxBytesOverride: number | undefined;
+
+export function setThemeCssMaxBytesForTesting(bytes: number | undefined): void {
+	themeCssMaxBytesOverride = bytes;
+}
+
+export function resolveThemeCssMaxBytes(): number {
+	if (Config.dev.testModeEnabled && themeCssMaxBytesOverride !== undefined) {
+		return themeCssMaxBytesOverride;
+	}
+	return THEME_CSS_MAX_BYTES;
+}
 
 export class ThemeService {
 	constructor(private readonly storageService: IStorageService) {}
@@ -14,7 +27,7 @@ export class ThemeService {
 		id: string;
 	}> {
 		const cssBytes = Buffer.from(css, 'utf-8');
-		if (cssBytes.length > MAX_CSS_BYTES) {
+		if (cssBytes.length > resolveThemeCssMaxBytes()) {
 			throw new FileSizeTooLargeError();
 		}
 		const themeId = randomBytes(8).toString('hex');

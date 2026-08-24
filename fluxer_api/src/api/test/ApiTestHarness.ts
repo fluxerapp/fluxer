@@ -42,6 +42,7 @@ import {NoopLogger} from './mocks/NoopLogger';
 import {NoopUnfurlerService} from './mocks/NoopUnfurlerService';
 import {NoopGatewayService} from './NoopGatewayService';
 import {NoopWorkerService} from './NoopWorkerService';
+import {resetServiceStateForTesting} from './ResetServiceState';
 import {InMemorySearchProvider} from './search/InMemorySearchProvider';
 import {TestMediaService} from './TestMediaService';
 
@@ -91,6 +92,7 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 	const mockBlueskyOAuthService = new MockBlueskyOAuthService();
 	setInjectedBlueskyOAuthService(mockBlueskyOAuthService);
 	setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
+	resetServiceStateForTesting();
 	const {
 		app,
 		initialize: initializeApp,
@@ -152,6 +154,7 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 		setInjectedMediaService(new TestMediaService(fallbackStorageService));
 		setInjectedSearchProviderService(new NullSearchProvider());
 		setInjectedBlueskyOAuthService(new MockBlueskyOAuthService());
+		resetServiceStateForTesting();
 		resetApiServicesForTesting();
 	}
 	async function requestJson(params: {

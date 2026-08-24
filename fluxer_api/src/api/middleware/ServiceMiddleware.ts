@@ -763,3 +763,15 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	ctx.set('ncmecSubmissionService', getNcmecSubmissionService());
 	await next();
 });
+
+export function resetServiceMiddlewareForTesting(): void {
+	shutdownReportService();
+	_inboundSmsChallengeService = null;
+	_registrationEventsRepository = null;
+	_riskAssessmentRepository = null;
+	_historicalOutcomeRepository = null;
+	_suspiciousIpRepository = null;
+	_ipInfoService = null;
+	_registrationRiskEvaluator = null;
+	_liveKitWebhookService = null;
+}

@@ -28,3 +28,7 @@ export function isIpBanExempt(ip: string | null | undefined): boolean {
 	const key = getSameIpDecisionKey(ip);
 	return key !== null && getExemptDecisionKeys().has(key);
 }
+
+export function resetIpBanExemptionsForTesting(): void {
+	exemptDecisionKeys = null;
+}

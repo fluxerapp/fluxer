@@ -146,6 +146,17 @@ class UrlBlocklistCache {
 		};
 	}
 
+	resetForTesting(): void {
+		this.shutdown();
+		this.exactUrls = new Set();
+		this.blockedDomains = new Set();
+		this.kvClient = null;
+		this.storageService = null;
+		this.subscriberInitialized = false;
+		this.consecutiveFailures = 0;
+		this.isInitialized = false;
+	}
+
 	shutdown(): void {
 		if (this.kvSubscription && this.messageHandler) {
 			this.kvSubscription.off('message', this.messageHandler);

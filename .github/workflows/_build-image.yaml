@@ -80,7 +80,7 @@ jobs:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
           FLUXER_BUILD_VERSION: ${{ inputs['build-version'] }}
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- resolve-calver
+          tools/ci/run.sh resolve-calver
           --github-output
 
   build:
@@ -97,9 +97,9 @@ jobs:
       matrix:
         include:
           - platform: amd64
-            runner: blacksmith-4vcpu-ubuntu-2404
+            runner: ubuntu-24.04
           - platform: arm64
-            runner: blacksmith-4vcpu-ubuntu-2404-arm
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         env:
@@ -121,8 +121,8 @@ jobs:
           build-args: |
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
             ${{ inputs.extra-build-args }}
-          cache-from: type=gha,scope=${{ inputs.image }}-${{ matrix.platform }}
-          cache-to: type=gha,scope=${{ inputs.image }}-${{ matrix.platform }},mode=max,ignore-error=true
+          cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/${{ inputs.image }}:buildcache-${{ matrix.platform }}
+          cache-to: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/${{ inputs.image }}:buildcache-${{ matrix.platform }},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
         env:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
@@ -176,7 +176,7 @@ jobs:
           VERSION: ${{ needs.meta.outputs.build_version }}
           RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}
         run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          tools/ci/run.sh release
           publish
           --component "${{ inputs.image }}"
           --build-version "${VERSION}"

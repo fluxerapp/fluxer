@@ -45,6 +45,10 @@ class SudoModeService {
 
 let sudoModeServiceInstance: SudoModeService | null = null;
 
+export function resetSudoModeServiceForTesting(): void {
+	sudoModeServiceInstance = null;
+}
+
 export function getSudoModeService(): SudoModeService {
 	if (!sudoModeServiceInstance) {
 		sudoModeServiceInstance = new SudoModeService();

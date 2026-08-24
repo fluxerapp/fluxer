@@ -174,6 +174,10 @@ export class LimitConfigService {
 	}
 }
 
+export function resetGlobalLimitConfigServiceForTesting(): void {
+	globalLimitConfigService = null;
+}
+
 export function getGlobalLimitConfigSnapshot(): LimitConfigSnapshot {
 	if (!globalLimitConfigService) {
 		throw new Error('LimitConfigService global instance has not been initialized');

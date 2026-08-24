@@ -10,7 +10,7 @@
 	"main": "dist/main/index.js",
 	"scripts": {
 		"build": "node scripts/build.mjs",
-		"set-channel": "cargo run --manifest-path ../tools/ci/Cargo.toml -- build-desktop --step set_build_channel",
+		"set-channel": "../tools/ci/run.sh build-desktop --step set_build_channel",
 		"test": "cargo test --manifest-path native/rust/Cargo.toml",
 		"typecheck": "tsgo --noEmit"
 	},

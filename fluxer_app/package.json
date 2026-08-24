@@ -16,7 +16,7 @@
 	},
 	"scripts": {
 		"build": "pnpm wasm:codegen && pnpm generate:colors && pnpm generate:message-layout && pnpm generate:theme-variables && pnpm generate:masks && pnpm generate:css-types && pnpm lingui:compile && rm -rf dist && rspack build --mode production && pnpm tsx scripts/build-sw.mjs",
-		"dev": "TOKIO_WORKER_THREADS=4 RAYON_NUM_THREADS=4 cargo run --manifest-path ../tools/ci/Cargo.toml -- app-dev-server",
+		"dev": "TOKIO_WORKER_THREADS=4 RAYON_NUM_THREADS=4 ../tools/ci/run.sh app-dev-server",
 		"test": "vitest run",
 		"bench:member-list": "vitest bench --run src/features/member/utils/MemberListRangeUtils.bench.ts",
 		"bench:gif-picker": "vitest bench --run src/features/channel/components/pickers/gif/GifPickerStateMachine.bench.ts src/features/channel/components/pickers/gif/GifPickerGridData.bench.ts src/features/channel/components/pickers/gif/GifPickerLoadingSkeletonGridLayout.bench.ts src/features/channel/components/pickers/shared/TileFlowSolver.bench.ts",
@@ -46,7 +46,7 @@
 		"wasm:bench:download-realmedia": "node scripts/BenchLibfluxcore.mjs --download-realmedia",
 		"wasm:bench:highres": "pnpm wasm:codegen && node scripts/BenchLibfluxcore.mjs --profile=highres",
 		"wasm:bench:realmedia": "pnpm wasm:codegen && node scripts/BenchLibfluxcore.mjs --profile=realmedia --offline",
-		"wasm:codegen": "cargo run --locked --manifest-path ../tools/ci/Cargo.toml -- build-app-wasm",
+		"wasm:codegen": "../tools/ci/run.sh build-app-wasm",
 		"wasm:codegen:simd": "FLUXCORE_WASM_SIMD=1 pnpm wasm:codegen"
 	},
 	"browserslist": [

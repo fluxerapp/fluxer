@@ -142,8 +142,7 @@ fn build_markdown_parser_wasm(app_dir: &Path) -> Result<()> {
     let rust_source_dir = app_dir.join("../packages/markdown_parser/rust");
     let bytes_path =
         app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts");
-    let temp = TempDir::new().context("Failed to create source temp directory")?;
-    let target_dir = temp.path().join("target");
+    let target_dir = rust_source_dir.join("target");
 
     run_command(apply_wasm_c_toolchain(
         CommandSpec::new("cargo")

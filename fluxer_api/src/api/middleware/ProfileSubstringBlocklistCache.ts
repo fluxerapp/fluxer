@@ -180,6 +180,15 @@ export class ProfileSubstringBlocklistCache {
 		return !!canonical && this.getMatchersForCheck(scope).some((matchers) => matchers.rawSet.has(canonical));
 	}
 
+	resetForTesting(): void {
+		this.shutdown();
+		this.byScope = new Map();
+		this.kvClient = null;
+		this.subscriberInitialized = false;
+		this.consecutiveFailures = 0;
+		this.isInitialized = false;
+	}
+
 	shutdown(): void {
 		if (this.kvSubscription && this.messageHandler) {
 			this.kvSubscription.off('message', this.messageHandler);
