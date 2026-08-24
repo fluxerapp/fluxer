@@ -50,7 +50,7 @@
 }
 
 :global(html.reduced-motion) .heart {
-	animation: nekoHeartFade 0.8s ease-out forwards;
+	animation: nekoHeartFade 0.8s ease-out forwards !important;
 }
 
 @keyframes nekoHeartFade {

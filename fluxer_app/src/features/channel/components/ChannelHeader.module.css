@@ -156,6 +156,11 @@
 	animation: callBannerRing 1.6s ease-in-out infinite;
 }
 
+:global(html.reduced-motion) .callBannerAvatarPending::before {
+	animation: none;
+	opacity: 0.7;
+}
+
 .callBannerAvatarPending .callBannerAvatar {
 	filter: grayscale(0.75);
 	opacity: 0.75;

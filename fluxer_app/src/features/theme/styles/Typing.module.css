@@ -20,8 +20,8 @@
 }
 
 :global(html.reduced-motion) .dot {
-	animation-duration: 1s;
-	animation-iteration-count: infinite;
+	animation-duration: 1s !important;
+	animation-iteration-count: infinite !important;
 }
 
 :global(html:not(.window-focused):not(.unfocused-fully-interactive)) .dot {
