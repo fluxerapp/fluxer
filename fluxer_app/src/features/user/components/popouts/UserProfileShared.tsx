@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BLUESKY_PROVIDER_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import {AddRoleButton, RoleList} from '@app/features/guild/components/RoleManagement';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
@@ -117,38 +116,7 @@ export const UserProfileBio: React.FC<{
 	const bioContent = resolvedProfile?.bio ?? '';
 	const shouldTruncate = !!onShowMore;
 	const bioRef = useRef<HTMLDivElement | null>(null);
-	const bioEmojiAnimationRef = useRef<{bioContent: string; shouldAnimate: boolean} | null>(null);
 	const [isBioTruncated, setIsBioTruncated] = useState(false);
-	const [isBioInteracting, setIsBioInteracting] = useState(false);
-	const shouldAnimateEmoji = useShouldAnimate({
-		kind: 'emoji',
-		isHovering: isBioInteracting,
-		isFocused: isBioInteracting,
-	});
-	const updateBioEmojiAnimation = useCallback(
-		(shouldAnimate: boolean) => {
-			const previousRequest = bioEmojiAnimationRef.current;
-			if (previousRequest?.bioContent === bioContent && previousRequest.shouldAnimate === shouldAnimate) {
-				return;
-			}
-			bioEmojiAnimationRef.current = {bioContent, shouldAnimate};
-			const bioElement = bioRef.current;
-			if (!bioElement) {
-				return;
-			}
-			const emojiImages = bioElement.querySelectorAll<HTMLImageElement>('img[data-emoji-id][data-animated="true"]');
-			for (const emojiImage of emojiImages) {
-				const url = new URL(emojiImage.src, window.location.origin);
-				const nextAnimated = shouldAnimate.toString();
-				if (url.searchParams.get('animated') === nextAnimated) {
-					continue;
-				}
-				url.searchParams.set('animated', nextAnimated);
-				emojiImage.src = url.toString();
-			}
-		},
-		[bioContent],
-	);
 	const checkBioTruncation = useCallback(() => {
 		if (!shouldTruncate || !bioContent) {
 			setIsBioTruncated(false);
@@ -193,39 +161,6 @@ export const UserProfileBio: React.FC<{
 			resizeObserver.disconnect();
 		};
 	}, [bioContent, checkBioTruncation, shouldTruncate]);
-	useEffect(() => {
-		updateBioEmojiAnimation(shouldAnimateEmoji);
-	}, [bioContent, shouldAnimateEmoji, updateBioEmojiAnimation]);
-	useEffect(() => {
-		const bioElement = bioRef.current;
-		if (!bioElement) {
-			return;
-		}
-		const handlePointerEnter = () => {
-			setIsBioInteracting(true);
-		};
-		const handlePointerLeave = () => {
-			setIsBioInteracting(false);
-		};
-		const handleFocusIn = () => {
-			setIsBioInteracting(true);
-		};
-		const handleFocusOut = (event: FocusEvent) => {
-			if (!bioElement.contains(event.relatedTarget as Node | null)) {
-				setIsBioInteracting(false);
-			}
-		};
-		bioElement.addEventListener('pointerenter', handlePointerEnter);
-		bioElement.addEventListener('pointerleave', handlePointerLeave);
-		bioElement.addEventListener('focusin', handleFocusIn);
-		bioElement.addEventListener('focusout', handleFocusOut);
-		return () => {
-			bioElement.removeEventListener('pointerenter', handlePointerEnter);
-			bioElement.removeEventListener('pointerleave', handlePointerLeave);
-			bioElement.removeEventListener('focusin', handleFocusIn);
-			bioElement.removeEventListener('focusout', handleFocusOut);
-		};
-	}, [bioContent]);
 	if (!bioContent) {
 		return null;
 	}
