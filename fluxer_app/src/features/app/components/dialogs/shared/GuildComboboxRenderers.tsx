@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getInitialsFromName, truncateInitials} from '@app/features/guild/utils/GuildInitialsUtils';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {clsx} from 'clsx';
 import type React from 'react';
 
@@ -26,6 +26,8 @@ export interface GuildComboboxRenderersConfig<T extends GuildComboboxOption> {
 	getNotice?: (option: T, disabled: boolean) => React.ReactNode;
 }
 
+const ROW_INITIALS_MAX_LENGTH = 1;
+
 const renderRow = <T extends GuildComboboxOption>(
 	option: T,
 	disabled: boolean,
@@ -34,9 +36,8 @@ const renderRow = <T extends GuildComboboxOption>(
 	getNotice?: (option: T, disabled: boolean) => React.ReactNode,
 ) => {
 	const isGlobal = !option.value;
-	const iconUrl =
-		option.iconUrl ?? (option.icon ? AvatarUtils.getGuildIconURL({id: option.value, icon: option.icon}) : null);
-	const initial = option.label.charAt(0).toUpperCase();
+	const iconUrl = option.iconUrl ?? null;
+	const initial = truncateInitials(getInitialsFromName(option.label), ROW_INITIALS_MAX_LENGTH).toUpperCase();
 	const notice = getNotice?.(option, disabled);
 	return (
 		<div
