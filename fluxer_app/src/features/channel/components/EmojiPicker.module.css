@@ -236,6 +236,7 @@
 .headerIcon {
 	height: 1rem;
 	width: 1rem;
+	color: var(--text-primary-muted);
 }
 
 .caretIcon {
@@ -384,6 +385,11 @@
 	width: 100%;
 }
 
+.emojiGridFixedTrack {
+	grid-auto-flow: column;
+	justify-content: start;
+}
+
 .emojiGridCategory {
 	margin-bottom: 1rem;
 }
@@ -435,6 +441,15 @@
 	max-width: 2.5rem;
 	max-height: 2.5rem;
 	object-fit: contain;
+}
+
+.emojiImageLoading {
+	color: transparent;
+	object-position: 6.25rem;
+	background-color: var(--background-modifier-accent);
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	border-radius: 0.125rem;
 }
 
 .spriteEmoji {

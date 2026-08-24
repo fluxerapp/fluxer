@@ -4,7 +4,6 @@ import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {
 	CATEGORY_HEADER_HEIGHT,
 	EMOJI_ROW_HEIGHT,
-	OVERSCAN_ROWS,
 } from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import {EmojiRenderer} from '@app/features/channel/components/emoji_picker/EmojiRenderer';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -13,11 +12,10 @@ import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
-import {observeIntersection} from '@app/features/platform/utils/SharedIntersectionObserver';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {CaretDownIcon, ClockIcon, StarIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import React, {useEffect, useRef, useState} from 'react';
+import React from 'react';
 
 export type VirtualRow =
 	| {type: 'header'; category: string; name: string; guildId?: string; index: number}
@@ -32,9 +30,8 @@ interface VirtualRowRendererProps {
 	shouldAnimate: boolean;
 	gridColumns?: number;
 	gridWidth?: number;
-	hoveredEmoji: FlatEmoji | null;
-	selectedRow: number;
-	selectedColumn: number;
+	cellTrackWidth?: number;
+	selectedColumnInRow: number;
 	emojiRowIndex: number;
 	shouldScrollOnSelection?: boolean;
 	emojiRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
@@ -50,8 +47,8 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 		shouldAnimate,
 		gridColumns = 9,
 		gridWidth,
-		selectedRow,
-		selectedColumn,
+		cellTrackWidth,
+		selectedColumnInRow,
 		emojiRowIndex,
 		shouldScrollOnSelection = false,
 		emojiRefs,
@@ -98,7 +95,6 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 				<button
 					type="button"
 					onClick={handleToggleCategory}
-					className={styles.categoryTitle}
 					style={{
 						height: remFromPx(CATEGORY_HEADER_HEIGHT),
 						display: 'flex',
@@ -146,6 +142,7 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 				</button>
 			);
 		}
+		const hasFixedTrack = cellTrackWidth != null && cellTrackWidth > 0;
 		return (
 			<div
 				style={{
@@ -155,20 +152,22 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 				data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.div--2"
 			>
 				<div
-					className={styles.emojiGrid}
+					className={hasFixedTrack ? `${styles.emojiGrid} ${styles.emojiGridFixedTrack}` : styles.emojiGrid}
 					style={{
-						gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
+						gridTemplateColumns: hasFixedTrack
+							? `repeat(auto-fill, ${remFromPx(cellTrackWidth)})`
+							: `repeat(${gridColumns}, minmax(0, 1fr))`,
 						marginInline: gridWidth ? 'auto' : undefined,
 						width: gridWidth ? `${gridWidth}px` : undefined,
 					}}
 					data-flx="channel.emoji-picker.virtual-row.virtual-row-renderer.emoji-grid"
 				>
 					{row.emojis.map((emoji, colIndex) => {
-						const isSelected = emojiRowIndex === selectedRow && colIndex === selectedColumn;
+						const isSelected = colIndex === selectedColumnInRow;
 						const shouldHighlight = isSelected;
 						return (
 							<EmojiRenderer
-								key={emoji.name}
+								key={emoji.id ?? emoji.uniqueName}
 								emoji={emoji}
 								handleHover={(e) => handleHover(e, emojiRowIndex, colIndex)}
 								handleSelect={handleSelect}
@@ -204,7 +203,7 @@ interface VirtualizedRowProps {
 	allowAnimation: boolean;
 	gridColumns?: number;
 	gridWidth?: number;
-	hoveredEmoji: FlatEmoji | null;
+	cellTrackWidth?: number;
 	selectedRow: number;
 	selectedColumn: number;
 	emojiRowIndex: number;
@@ -222,79 +221,31 @@ export const VirtualizedRow: React.FC<VirtualizedRowProps> = observer(
 		allowAnimation,
 		gridColumns,
 		gridWidth,
-		hoveredEmoji,
+		cellTrackWidth,
 		selectedRow,
 		selectedColumn,
 		emojiRowIndex,
 		shouldScrollOnSelection = false,
 		emojiRefs,
 	}) => {
-		const [isVisible, setIsVisible] = useState(false);
-		const [isInViewport, setIsInViewport] = useState(false);
-		const placeholderRef = useRef<HTMLDivElement>(null);
-		useEffect(() => {
-			const placeholder = placeholderRef.current;
-			if (!placeholder) return;
-			const root = placeholder.closest('[data-emoji-picker-scroll-root]') as Element | null;
-			const overscanDistance = OVERSCAN_ROWS * EMOJI_ROW_HEIGHT;
-			const unobserveVisibility = observeIntersection(
-				placeholder,
-				(entry) => {
-					if (entry.isIntersecting) {
-						setIsVisible(true);
-					} else {
-						const rect = entry.boundingClientRect;
-						const rootTop = entry.rootBounds?.top ?? 0;
-						const rootBottom = entry.rootBounds?.bottom ?? window.innerHeight;
-						if (rect.bottom < rootTop - overscanDistance || rect.top > rootBottom + overscanDistance) {
-							setIsVisible(false);
-						}
-					}
-				},
-				{root, rootMargin: `${OVERSCAN_ROWS * EMOJI_ROW_HEIGHT}px 0px`, threshold: 0},
-			);
-			const unobserveAnimation = observeIntersection(
-				placeholder,
-				(entry) => {
-					setIsInViewport(entry.isIntersecting);
-				},
-				{root, rootMargin: '0px', threshold: 0},
-			);
-			return () => {
-				unobserveVisibility();
-				unobserveAnimation();
-			};
-		}, []);
-		const height = row.type === 'header' ? CATEGORY_HEADER_HEIGHT : EMOJI_ROW_HEIGHT;
-		if (!isVisible) {
-			return (
-				<div
-					ref={placeholderRef}
-					style={{height: remFromPx(height)}}
-					data-flx="channel.emoji-picker.virtual-row.virtualized-row.div"
-				/>
-			);
-		}
+		const selectedColumnInRow = emojiRowIndex === selectedRow ? selectedColumn : -1;
 		return (
-			<div ref={placeholderRef} data-flx="channel.emoji-picker.virtual-row.virtualized-row.div--2">
-				<VirtualRowRenderer
-					row={row}
-					handleHover={handleHover}
-					handleSelect={handleSelect}
-					skinTone={skinTone}
-					channel={channel}
-					shouldAnimate={allowAnimation && isInViewport}
-					gridColumns={gridColumns}
-					gridWidth={gridWidth}
-					hoveredEmoji={hoveredEmoji}
-					selectedRow={selectedRow}
-					selectedColumn={selectedColumn}
-					emojiRowIndex={emojiRowIndex}
-					shouldScrollOnSelection={shouldScrollOnSelection}
-					emojiRefs={emojiRefs}
-					data-flx="channel.emoji-picker.virtual-row.virtualized-row.virtual-row-renderer"
-				/>
-			</div>
+			<VirtualRowRenderer
+				row={row}
+				handleHover={handleHover}
+				handleSelect={handleSelect}
+				skinTone={skinTone}
+				channel={channel}
+				shouldAnimate={allowAnimation}
+				gridColumns={gridColumns}
+				gridWidth={gridWidth}
+				cellTrackWidth={cellTrackWidth}
+				selectedColumnInRow={selectedColumnInRow}
+				emojiRowIndex={emojiRowIndex}
+				shouldScrollOnSelection={shouldScrollOnSelection}
+				emojiRefs={emojiRefs}
+				data-flx="channel.emoji-picker.virtual-row.virtualized-row.virtual-row-renderer"
+			/>
 		);
 	},
 );

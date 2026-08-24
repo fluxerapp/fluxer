@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {convertToCodePoints} from '@app/features/expressions/utils/EmojiCodepointUtils';
-import {REM_BASE_PX, remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {getRemScaleForDocument, remFromPx} from '@app/features/theme/layout/RemFromPx';
 import sprite1f3fb2x from '@app/media/images/emoji-sprites/spritesheet-1f3fb@2x.png';
 import sprite1f3fb1x from '@app/media/images/emoji-sprites/spritesheet-1f3fb.png';
 import sprite1f3fc2x from '@app/media/images/emoji-sprites/spritesheet-1f3fc@2x.png';
@@ -23,26 +23,88 @@ export const EMOJI_PICKER_CUSTOM_EMOJI_SIZE = 48;
 export const CATEGORY_HEADER_HEIGHT = 32;
 export const EMOJIS_PER_ROW = 9;
 const EMOJIS_PER_ROW_MIN = 5;
-export const OVERSCAN_ROWS = 5;
+export const EMOJI_SECTION_GAP = 12;
+const CATEGORY_HEADER_GAP = 8;
 
-const EMOJI_GRID_INLINE_PADDING = 16;
 const EMOJI_GRID_MIN_CELL_WIDTH = EMOJI_ROW_HEIGHT;
-
-function getRemScale(): number {
-	if (typeof document === 'undefined') return 1;
-	const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
-	if (Number.isFinite(rootFontSize) && rootFontSize > 0) {
-		return rootFontSize / REM_BASE_PX;
-	}
-	return 1;
-}
+export const EMOJI_GRID_TRACK_WIDTH = EMOJI_GRID_MIN_CELL_WIDTH;
+export const EMOJI_GRID_SCROLLER_PADDING_WIDTH = 8;
 
 export function getEmojiGridColumns(containerWidth: number): number {
 	if (containerWidth <= 0) return EMOJIS_PER_ROW;
-	const remScale = getRemScale();
-	const availableWidth = Math.max(0, containerWidth - EMOJI_GRID_INLINE_PADDING * remScale);
-	const columns = Math.floor(availableWidth / (EMOJI_GRID_MIN_CELL_WIDTH * remScale));
+	const remScale = getRemScaleForDocument(typeof document === 'undefined' ? null : document);
+	const columns = Math.floor(containerWidth / (EMOJI_GRID_MIN_CELL_WIDTH * remScale));
 	return Math.max(EMOJIS_PER_ROW_MIN, columns);
+}
+
+export type EmojiRowKind = 'header' | 'emoji-row';
+
+export interface EmojiRowMetrics {
+	remScale: number;
+	sectionGap: number;
+}
+
+export interface EmojiRowWindow {
+	firstRow: number;
+	lastRow: number;
+}
+
+export function buildEmojiRowOffsets(
+	rowKinds: ReadonlyArray<EmojiRowKind>,
+	{remScale, sectionGap}: EmojiRowMetrics,
+): Array<number> {
+	const rowOffsets = new Array<number>(rowKinds.length + 1);
+	rowOffsets[0] = 0;
+	let runningOffset = 0;
+	for (let rowIndex = 0; rowIndex < rowKinds.length; rowIndex += 1) {
+		if (rowKinds[rowIndex] === 'header') {
+			runningOffset += (CATEGORY_HEADER_HEIGHT + CATEGORY_HEADER_GAP) * remScale;
+		} else {
+			runningOffset += EMOJI_ROW_HEIGHT * remScale;
+			if (rowKinds[rowIndex + 1] === 'header') {
+				runningOffset += sectionGap;
+			}
+		}
+		rowOffsets[rowIndex + 1] = runningOffset;
+	}
+	return rowOffsets;
+}
+
+export function findEmojiRowForOffset(rowOffsets: ReadonlyArray<number>, pixel: number): number {
+	const lastRow = rowOffsets.length - 2;
+	if (lastRow < 0 || pixel <= 0) {
+		return 0;
+	}
+	if (pixel >= rowOffsets[lastRow + 1]!) {
+		return lastRow;
+	}
+	let low = 0;
+	let high = lastRow;
+	while (low < high) {
+		const mid = (low + high + 1) >> 1;
+		if (rowOffsets[mid]! <= pixel) {
+			low = mid;
+		} else {
+			high = mid - 1;
+		}
+	}
+	return low;
+}
+
+export function getEmojiRowWindow(
+	rowOffsets: ReadonlyArray<number>,
+	scrollTop: number,
+	viewportHeight: number,
+): EmojiRowWindow {
+	const totalRows = rowOffsets.length - 1;
+	if (totalRows <= 0 || !(viewportHeight > 0)) {
+		return {firstRow: 0, lastRow: -1};
+	}
+	const safeScrollTop = Number.isFinite(scrollTop) ? Math.max(0, scrollTop) : 0;
+	return {
+		firstRow: findEmojiRowForOffset(rowOffsets, safeScrollTop),
+		lastRow: findEmojiRowForOffset(rowOffsets, safeScrollTop + viewportHeight),
+	};
 }
 
 export const getEmojiSpriteSheetLayout = (index: number, perRow: number, rows: number): CSSProperties => {

@@ -5,6 +5,11 @@ import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstant
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {EmojiPickerCategoryList} from '@app/features/channel/components/emoji_picker/EmojiPickerCategoryList';
+import {
+	buildEmojiRowOffsets,
+	type EmojiRowKind,
+	getEmojiRowWindow,
+} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import {EmojiPickerSearchBar} from '@app/features/channel/components/emoji_picker/EmojiPickerSearchBar';
 import {useEmojiCategories} from '@app/features/channel/components/emoji_picker/hooks/useEmojiCategories';
 import {useVirtualRows} from '@app/features/channel/components/emoji_picker/hooks/useVirtualRows';
@@ -26,16 +31,17 @@ import {
 	shouldShowEmojiPremiumUpsell,
 } from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
+import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {usePremiumUpsellData} from '@app/features/premium/hooks/usePremiumUpsellData';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
-import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore} from 'react';
 
 function getVisibleViewportWidth(): number {
 	if (typeof window === 'undefined') {
@@ -67,9 +73,10 @@ export const MobileEmojiPicker = observer(
 		const scrollerRef = useRef<ScrollerHandle>(null);
 		const searchInputRef = useRef<HTMLInputElement>(null);
 		const emojiRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
-		const {viewportSize, handleResize} = useScrollerViewport(scrollerRef);
+		const {viewportSize, scrollTop, handleScroll, handleResize} = useScrollerViewport(scrollerRef);
 		const channel = channelId ? (Channels.getChannel(channelId) ?? null) : null;
-		const categoryRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+		const rowListRef = useRef<HTMLDivElement>(null);
+		const [listMetrics, setListMetrics] = useState({origin: 0, viewportHeight: 0});
 		const [emojiDataVersion, setEmojiDataVersion] = useState(0);
 		const permissionVersion = useSyncExternalStore(Permission.subscribe.bind(Permission), () => Permission.version);
 		const getEmojiAvailability = useCallback(
@@ -119,7 +126,13 @@ export const MobileEmojiPicker = observer(
 				const key = emoji.id ?? emoji.uniqueName ?? emoji.name ?? `${emoji.guildId ?? 'unicode'}-mobile`;
 				const {url: fallbackDisplayUrl} = getEmojiDisplayDataWithSkinTone(emoji, skinTone);
 				const displayUrl = emoji.id
-					? AvatarUtils.getEmojiURL({id: emoji.id, animated: Boolean(emoji.animated) && shouldAnimateEmoji})
+					? getEmojiRenderUrl({
+							id: emoji.id,
+							surrogateUrl: null,
+							isAnimatable: Boolean(emoji.animated),
+							animated: shouldAnimateEmoji,
+							jumbo: false,
+						})
 					: fallbackDisplayUrl;
 				let content: React.ReactNode;
 				if (displayUrl) {
@@ -127,7 +140,6 @@ export const MobileEmojiPicker = observer(
 						<img
 							src={displayUrl}
 							alt={emoji.name}
-							loading="lazy"
 							data-flx="channel.mobile-emoji-picker.render-emoji-preview-item.img"
 						/>
 					);
@@ -220,15 +232,50 @@ export const MobileEmojiPicker = observer(
 			shouldShowEmojiPremiumUpsell(channel) &&
 			!normalizedSearchTerm &&
 			lockedEmojiCount > 0;
-		const handleCategoryClick = (category: string) => {
-			const element = categoryRefs.current.get(category);
-			if (element) {
-				scrollerRef.current?.revealElement({node: element, preferStartEdge: true});
+		const categoryRowIndexes = useMemo(() => {
+			const categories = new Map<string, number>();
+			for (let rowIndex = 0; rowIndex < pickerRows.length; rowIndex += 1) {
+				const row = pickerRows[rowIndex];
+				if (row.type === 'header') {
+					categories.set(row.category, rowIndex);
+				}
 			}
+			return categories;
+		}, [pickerRows]);
+		const remScale = getAppRemScale();
+		const rowOffsets = useMemo(() => {
+			const rowKinds = pickerRows.map((row): EmojiRowKind => row.type);
+			return buildEmojiRowOffsets(rowKinds, {remScale, sectionGap: 0});
+		}, [pickerRows, remScale, zoomLevel]);
+		const contentHeight = rowOffsets[rowOffsets.length - 1]!;
+		useLayoutEffect(() => {
+			const rowListNode = rowListRef.current;
+			const scrollerNode = scrollerRef.current?.getViewportElement();
+			if (!rowListNode || !scrollerNode) {
+				return;
+			}
+			const origin = Math.round(
+				rowListNode.getBoundingClientRect().top - scrollerNode.getBoundingClientRect().top + scrollerNode.scrollTop,
+			);
+			const viewportHeight = scrollerNode.clientHeight;
+			setListMetrics((current) =>
+				current.origin === origin && current.viewportHeight === viewportHeight ? current : {origin, viewportHeight},
+			);
+		});
+		const rowWindow = useMemo(
+			() => getEmojiRowWindow(rowOffsets, scrollTop - listMetrics.origin, listMetrics.viewportHeight),
+			[rowOffsets, scrollTop, listMetrics],
+		);
+		const handleCategoryClick = (category: string) => {
+			const rowIndex = categoryRowIndexes.get(category);
+			if (rowIndex == null) {
+				return;
+			}
+			scrollerRef.current?.scrollTo({to: listMetrics.origin + rowOffsets[rowIndex]!});
 		};
-		const handleHover = (emoji: FlatEmoji | null) => {
+		const handleHover = useCallback((emoji: FlatEmoji | null) => {
 			setHoveredEmoji(emoji);
-		};
+		}, []);
 		const searchBar = !hideSearchBar ? (
 			<EmojiPickerSearchBar
 				searchTerm={searchTerm}
@@ -256,7 +303,7 @@ export const MobileEmojiPicker = observer(
 								ref={scrollerRef}
 								className={`${mobileStyles.list} ${mobileStyles.listWrapper}`}
 								key="mobile-emoji_picker-scroller"
-								data-emoji-picker-scroll-root="true"
+								onScroll={handleScroll}
 								onResize={handleResize}
 								data-flx="channel.mobile-emoji-picker.scroller"
 							>
@@ -269,38 +316,40 @@ export const MobileEmojiPicker = observer(
 										data-flx="channel.mobile-emoji-picker.premium-upsell-banner"
 									/>
 								)}
-								{pickerRows.map((row) => (
-									<div
-										key={`${row.type}-${row.index}`}
-										ref={
-											row.type === 'header'
-												? (el) => {
-														if (el && 'category' in row) {
-															categoryRefs.current.set(row.category, el);
-														}
-													}
-												: undefined
-										}
-										data-flx="channel.mobile-emoji-picker.div--4"
-									>
-										<VirtualizedRow
-											row={row}
-											handleHover={handleHover}
-											handleSelect={handleSelect}
-											skinTone={skinTone}
-											channel={channel}
-											allowAnimation={shouldAnimateEmoji}
-											gridColumns={gridColumns}
-											gridWidth={gridWidth}
-											hoveredEmoji={hoveredEmoji}
-											selectedRow={-1}
-											selectedColumn={-1}
-											emojiRowIndex={0}
-											emojiRefs={emojiRefs}
-											data-flx="channel.mobile-emoji-picker.virtualized-row"
-										/>
-									</div>
-								))}
+								<div
+									ref={rowListRef}
+									style={{position: 'relative', flexShrink: 0, height: `${contentHeight}px`}}
+									data-flx="channel.mobile-emoji-picker.row-list"
+								>
+									{pickerRows.slice(rowWindow.firstRow, rowWindow.lastRow + 1).map((row, windowIndex) => (
+										<div
+											key={`${row.type}-${row.index}`}
+											style={{
+												position: 'absolute',
+												left: 0,
+												right: 0,
+												transform: `translateY(${rowOffsets[rowWindow.firstRow + windowIndex]!}px)`,
+											}}
+											data-flx="channel.mobile-emoji-picker.div--4"
+										>
+											<VirtualizedRow
+												row={row}
+												handleHover={handleHover}
+												handleSelect={handleSelect}
+												skinTone={skinTone}
+												channel={channel}
+												allowAnimation={shouldAnimateEmoji}
+												gridColumns={gridColumns}
+												gridWidth={gridWidth}
+												selectedRow={-1}
+												selectedColumn={-1}
+												emojiRowIndex={0}
+												emojiRefs={emojiRefs}
+												data-flx="channel.mobile-emoji-picker.virtualized-row"
+											/>
+										</div>
+									))}
+								</div>
 							</Scroller>
 						</div>
 					</div>
