@@ -2,93 +2,56 @@
 
 import {LRUCache} from 'lru-cache';
 
-interface ImageCacheEntry {
-	src: string;
-	naturalWidth: number;
-	naturalHeight: number;
-	pin: HTMLImageElement;
-}
-
 export interface CachedImageSize {
 	width: number;
 	height: number;
 }
 
-interface PendingImageSubscriber {
+interface ImageSubscriber {
 	onLoad: () => void;
 	onError: (() => void) | undefined;
 }
 
-interface PendingImageLoad {
+interface ImageCacheEntry {
+	src: string;
+	loaded: boolean;
+	width: number;
+	height: number;
 	image: HTMLImageElement | null;
-	subscribers: Set<PendingImageSubscriber>;
-	active: boolean;
-	timeoutId: number;
+	subscribers: Set<ImageSubscriber>;
 	failedAttempts: number;
+	retryDelayMs: number;
+	loadTimeoutId: number;
 	retryTimeoutId: number;
 	connectivityListener: (() => void) | null;
 }
 
-const MAX_CACHE_ENTRIES = 500;
-const MAX_CACHE_BYTES = 64 * 1024 * 1024;
-const MAX_CACHE_ENTRY_BYTES = 16 * 1024 * 1024;
-const FALLBACK_IMAGE_BYTES = 256 * 1024;
-const MAX_PENDING_IMAGE_LOADS = 64;
-const MAX_ACTIVE_IMAGE_LOADS = 4;
-const MAX_PENDING_IMAGE_CALLBACKS = 1024;
-const MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD = 256;
+const MAX_CACHE_ENTRIES = 1000;
 const MAX_IMAGE_SOURCE_LENGTH = 16 * 1024;
+const MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD = 256;
 const IMAGE_LOAD_TIMEOUT_MS = 30_000;
-const IMAGE_LOAD_ACTIVATION_TIMEOUT_MS = 10_000;
 const IMAGE_RETRY_ATTEMPT_LIMIT = 5;
 const IMAGE_RETRY_INITIAL_DELAY_MS = 500;
-const IMAGE_RETRY_MAX_DELAY_MS = 15_000;
-
-const getDimensionByteSize = (width: number, height: number): number | null => {
-	if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0) {
-		return null;
-	}
-	const byteSize = width * height * 4;
-	if (!Number.isSafeInteger(byteSize) || byteSize <= 0) return null;
-	return byteSize;
-};
-
-const getImageByteSize = (image: HTMLImageElement): number | null =>
-	getDimensionByteSize(image.naturalWidth, image.naturalHeight);
-
-const estimateImageBytes = (entry: ImageCacheEntry): number => {
-	const byteSize = getDimensionByteSize(entry.naturalWidth, entry.naturalHeight);
-	if (byteSize == null) return MAX_CACHE_ENTRY_BYTES + FALLBACK_IMAGE_BYTES;
-	return byteSize;
-};
-
-const createImagePin = (src: string, image: HTMLImageElement): HTMLImageElement => {
-	if (image.parentNode == null) return image;
-	const pin = new Image();
-	pin.decoding = 'async';
-	pin.src = src;
-	return pin;
-};
+const IMAGE_RETRY_MAX_DELAY_MS = IMAGE_RETRY_INITIAL_DELAY_MS * 10;
 
 const imageCache = new LRUCache<string, ImageCacheEntry>({
 	max: MAX_CACHE_ENTRIES,
-	maxSize: MAX_CACHE_BYTES,
-	maxEntrySize: MAX_CACHE_ENTRY_BYTES,
-	sizeCalculation: estimateImageBytes,
+	disposeAfter: (entry: ImageCacheEntry) => {
+		abandonEntry(entry);
+	},
 });
-const pendingImageLoads = new Map<string, PendingImageLoad>();
-let activeImageLoadCount = 0;
-let pendingImageCallbackCount = 0;
 
-const isLoadedImage = (image?: HTMLImageElement): image is HTMLImageElement => {
-	if (!image) return false;
-	return image.complete && image.naturalWidth > 0;
-};
-const isCacheableImage = (image: HTMLImageElement): boolean => {
-	const byteSize = getImageByteSize(image);
-	return byteSize != null && byteSize <= MAX_CACHE_ENTRY_BYTES;
-};
 const imageSourceEncoder = new TextEncoder();
+
+const acceptsImageSource = (src: string | null | undefined): src is string =>
+	typeof src === 'string' &&
+	src.length > 0 &&
+	src.length <= MAX_IMAGE_SOURCE_LENGTH &&
+	imageSourceEncoder.encode(src).byteLength <= MAX_IMAGE_SOURCE_LENGTH;
+
+const isLoadedImage = (image: HTMLImageElement | null | undefined): image is HTMLImageElement =>
+	image?.complete === true && image.naturalWidth > 0;
+
 const imageHasSource = (image: HTMLImageElement, src: string): boolean => {
 	if (image.currentSrc.length > 0) {
 		try {
@@ -97,147 +60,38 @@ const imageHasSource = (image: HTMLImageElement, src: string): boolean => {
 			return image.currentSrc === src;
 		}
 	}
-	const attributeSource = image.getAttribute('src');
-	if (attributeSource === src) return true;
+	if (image.getAttribute('src') === src) return true;
 	return image.src === src;
 };
-const acceptsImageSource = (src: string | null): src is string => {
-	return (
-		typeof src === 'string' &&
-		src.length > 0 &&
-		src.length <= MAX_IMAGE_SOURCE_LENGTH &&
-		imageSourceEncoder.encode(src).byteLength <= MAX_IMAGE_SOURCE_LENGTH
-	);
-};
-const isCached = (src: string | null): boolean => {
-	if (!acceptsImageSource(src)) return false;
-	const entry = imageCache.get(src);
-	if (!entry) return false;
-	if (entry.src === src && entry.naturalWidth > 0 && entry.naturalHeight > 0) return true;
-	imageCache.delete(src);
-	return false;
-};
 
-export function hasImage(src: string | null): boolean {
-	return isCached(src);
-}
+const ownsCacheKey = (entry: ImageCacheEntry): boolean => imageCache.peek(entry.src) === entry;
 
-export function getImageSize(src: string | null): CachedImageSize | undefined {
-	if (!acceptsImageSource(src)) return undefined;
-	const entry = imageCache.get(src);
-	if (!entry) return undefined;
-	if (entry.src === src && entry.naturalWidth > 0 && entry.naturalHeight > 0) {
-		return {width: entry.naturalWidth, height: entry.naturalHeight};
+function clearRetryState(entry: ImageCacheEntry): void {
+	if (entry.retryTimeoutId !== 0) {
+		window.clearTimeout(entry.retryTimeoutId);
+		entry.retryTimeoutId = 0;
 	}
-	imageCache.delete(src);
-	return undefined;
-}
-
-export function rememberImage(src: string | null, image: HTMLImageElement): void {
-	const currentPendingLoad = acceptsImageSource(src) ? pendingImageLoads.get(src) : undefined;
-	if (!acceptsImageSource(src) || !imageHasSource(image, src) || !isLoadedImage(image)) {
-		if (typeof src === 'string' && currentPendingLoad != null && currentPendingLoad.image === image) {
-			settlePendingImageLoad(src, currentPendingLoad, false, null);
-		}
-		return;
-	}
-	if (isCacheableImage(image)) {
-		imageCache.set(src, {
-			src,
-			naturalWidth: image.naturalWidth,
-			naturalHeight: image.naturalHeight,
-			pin: createImagePin(src, image),
-		});
-	}
-	if (!currentPendingLoad) return;
-	settlePendingImageLoad(src, currentPendingLoad, true, image);
-}
-
-export function forgetImage(src: string | null): void {
-	if (!acceptsImageSource(src)) return;
-	imageCache.delete(src);
-	const currentPendingLoad = pendingImageLoads.get(src);
-	if (!currentPendingLoad) return;
-	settlePendingImageLoad(src, currentPendingLoad, false, null);
-}
-
-function retainPendingImageCallback(): void {
-	pendingImageCallbackCount += 1;
-}
-
-function releasePendingImageCallbacks(count: number): void {
-	pendingImageCallbackCount -= count;
-	if (pendingImageCallbackCount < 0) throw new Error('Pending image callback count became negative');
-}
-
-function releaseActiveImageLoad(): void {
-	activeImageLoadCount -= 1;
-	if (activeImageLoadCount < 0) throw new Error('Active image load count became negative');
-}
-
-function clearRetryState(pendingLoad: PendingImageLoad): void {
-	window.clearTimeout(pendingLoad.retryTimeoutId);
-	pendingLoad.retryTimeoutId = 0;
-	if (pendingLoad.connectivityListener != null) {
-		window.removeEventListener('online', pendingLoad.connectivityListener);
-		pendingLoad.connectivityListener = null;
+	if (entry.connectivityListener != null) {
+		window.removeEventListener('online', entry.connectivityListener);
+		entry.connectivityListener = null;
 	}
 }
 
-function retryDelayForAttempt(failedAttempts: number): number {
-	return Math.min(IMAGE_RETRY_INITIAL_DELAY_MS * 2 ** (failedAttempts - 1), IMAGE_RETRY_MAX_DELAY_MS);
+function detachImageLoad(entry: ImageCacheEntry): void {
+	if (entry.loadTimeoutId !== 0) {
+		window.clearTimeout(entry.loadTimeoutId);
+		entry.loadTimeoutId = 0;
+	}
+	if (entry.image != null) {
+		entry.image.onload = null;
+		entry.image.onerror = null;
+		entry.image = null;
+	}
 }
 
-function scheduleImageLoadRetry(src: string, pendingLoad: PendingImageLoad): boolean {
-	if (pendingLoad.failedAttempts >= IMAGE_RETRY_ATTEMPT_LIMIT) return false;
-	pendingLoad.failedAttempts += 1;
-	window.clearTimeout(pendingLoad.timeoutId);
-	pendingLoad.timeoutId = 0;
-	if (pendingLoad.image != null) {
-		pendingLoad.image.onload = null;
-		pendingLoad.image.onerror = null;
-		pendingLoad.image.src = 'data:,';
-		pendingLoad.image = null;
-	}
-	if (pendingLoad.active) {
-		pendingLoad.active = false;
-		releaseActiveImageLoad();
-	}
-	const resume = (): void => {
-		clearRetryState(pendingLoad);
-		if (pendingImageLoads.get(src) !== pendingLoad) return;
-		pendingLoad.timeoutId = window.setTimeout(() => {
-			settlePendingImageLoad(src, pendingLoad, false, null);
-		}, IMAGE_LOAD_ACTIVATION_TIMEOUT_MS);
-		pumpPendingImageLoads();
-	};
-	if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-		pendingLoad.connectivityListener = resume;
-		window.addEventListener('online', resume, {once: true});
-	} else {
-		pendingLoad.retryTimeoutId = window.setTimeout(resume, retryDelayForAttempt(pendingLoad.failedAttempts));
-	}
-	pumpPendingImageLoads();
-	return true;
-}
-
-function detachPendingImageLoad(src: string, pendingLoad: PendingImageLoad): boolean {
-	if (pendingImageLoads.get(src) !== pendingLoad) return false;
-	pendingImageLoads.delete(src);
-	window.clearTimeout(pendingLoad.timeoutId);
-	clearRetryState(pendingLoad);
-	if (pendingLoad.image != null) {
-		pendingLoad.image.onload = null;
-		pendingLoad.image.onerror = null;
-	}
-	if (pendingLoad.active) releaseActiveImageLoad();
-	return true;
-}
-
-function notifyPendingImageSubscribers(pendingLoad: PendingImageLoad, loaded: boolean): void {
-	const subscribers = [...pendingLoad.subscribers];
-	pendingLoad.subscribers.clear();
-	releasePendingImageCallbacks(subscribers.length);
+function notifySubscribers(entry: ImageCacheEntry, loaded: boolean): void {
+	const subscribers = [...entry.subscribers];
+	entry.subscribers.clear();
 	const failures: Array<unknown> = [];
 	for (const subscriber of subscribers) {
 		try {
@@ -250,78 +104,95 @@ function notifyPendingImageSubscribers(pendingLoad: PendingImageLoad, loaded: bo
 	if (failures.length > 0) throw new AggregateError(failures, 'Image load callbacks failed');
 }
 
-function settlePendingImageLoad(
-	src: string,
-	pendingLoad: PendingImageLoad,
-	loaded: boolean,
-	loadedImage: HTMLImageElement | null,
-): void {
-	if (!detachPendingImageLoad(src, pendingLoad)) return;
-	if (pendingLoad.image != null && pendingLoad.image !== loadedImage) pendingLoad.image.src = 'data:,';
-	try {
-		notifyPendingImageSubscribers(pendingLoad, loaded);
-	} finally {
-		pumpPendingImageLoads();
-	}
+function abandonEntry(entry: ImageCacheEntry): void {
+	clearRetryState(entry);
+	detachImageLoad(entry);
+	notifySubscribers(entry, false);
 }
 
-function discardPendingImageLoad(src: string, pendingLoad: PendingImageLoad): void {
-	if (!detachPendingImageLoad(src, pendingLoad)) return;
-	if (pendingLoad.image != null) pendingLoad.image.src = 'data:,';
-	const subscriberCount = pendingLoad.subscribers.size;
-	pendingLoad.subscribers.clear();
-	releasePendingImageCallbacks(subscriberCount);
-	pumpPendingImageLoads();
+function failEntry(entry: ImageCacheEntry): void {
+	if (ownsCacheKey(entry)) imageCache.delete(entry.src);
+	abandonEntry(entry);
 }
 
-function activatePendingImageLoad(src: string, pendingLoad: PendingImageLoad): void {
-	if (pendingLoad.active || pendingImageLoads.get(src) !== pendingLoad) return;
-	pendingLoad.active = true;
-	activeImageLoadCount += 1;
-	if (activeImageLoadCount > MAX_ACTIVE_IMAGE_LOADS) throw new Error('Active image load count exceeds its limit');
-	window.clearTimeout(pendingLoad.timeoutId);
-	pendingLoad.timeoutId = window.setTimeout(() => {
-		settlePendingImageLoad(src, pendingLoad, false, null);
-	}, IMAGE_LOAD_TIMEOUT_MS);
+function settleLoaded(entry: ImageCacheEntry, image: HTMLImageElement): void {
+	clearRetryState(entry);
+	detachImageLoad(entry);
+	entry.loaded = true;
+	entry.width = image.naturalWidth;
+	entry.height = image.naturalHeight;
+	entry.failedAttempts = 0;
+	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
+	notifySubscribers(entry, true);
+}
+
+function retryDelayForAttempt(entry: ImageCacheEntry): number {
+	const growth = 2 * entry.retryDelayMs * Math.random();
+	entry.retryDelayMs = Math.min(entry.retryDelayMs + growth, IMAGE_RETRY_MAX_DELAY_MS);
+	return entry.retryDelayMs;
+}
+
+function startImageLoad(entry: ImageCacheEntry): void {
 	const image = new Image();
 	image.decoding = 'async';
-	pendingLoad.image = image;
+	entry.image = image;
+	entry.loadTimeoutId = window.setTimeout(() => {
+		entry.loadTimeoutId = 0;
+		failEntry(entry);
+	}, IMAGE_LOAD_TIMEOUT_MS);
 	image.onload = () => {
-		if (pendingImageLoads.get(src) !== pendingLoad) return;
-		rememberImage(src, image);
+		detachImageLoad(entry);
+		if (!isLoadedImage(image)) {
+			scheduleRetryOrFail(entry);
+			return;
+		}
+		settleLoaded(entry, image);
 	};
 	image.onerror = () => {
-		if (pendingImageLoads.get(src) !== pendingLoad) return;
-		imageCache.delete(src);
-		if (scheduleImageLoadRetry(src, pendingLoad)) return;
-		settlePendingImageLoad(src, pendingLoad, false, null);
+		detachImageLoad(entry);
+		scheduleRetryOrFail(entry);
 	};
-	image.src = src;
+	image.src = entry.src;
 }
 
-function pumpPendingImageLoads(): void {
-	if (activeImageLoadCount >= MAX_ACTIVE_IMAGE_LOADS) return;
-	for (const [src, pendingLoad] of pendingImageLoads) {
-		if (activeImageLoadCount >= MAX_ACTIVE_IMAGE_LOADS) return;
-		if (!pendingLoad.active) activatePendingImageLoad(src, pendingLoad);
+function scheduleRetryOrFail(entry: ImageCacheEntry): void {
+	if (entry.failedAttempts >= IMAGE_RETRY_ATTEMPT_LIMIT) {
+		failEntry(entry);
+		return;
 	}
+	entry.failedAttempts += 1;
+	const resume = (): void => {
+		clearRetryState(entry);
+		if (!ownsCacheKey(entry)) {
+			abandonEntry(entry);
+			return;
+		}
+		startImageLoad(entry);
+	};
+	if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+		entry.connectivityListener = resume;
+		window.addEventListener('online', resume, {once: true});
+		return;
+	}
+	entry.retryTimeoutId = window.setTimeout(resume, retryDelayForAttempt(entry));
 }
 
-function createPendingImageLoad(src: string): PendingImageLoad {
-	const pendingLoad: PendingImageLoad = {
+function createEntry(src: string): ImageCacheEntry {
+	const entry: ImageCacheEntry = {
+		src,
+		loaded: false,
+		width: 0,
+		height: 0,
 		image: null,
 		subscribers: new Set(),
-		active: false,
-		timeoutId: 0,
 		failedAttempts: 0,
+		retryDelayMs: IMAGE_RETRY_INITIAL_DELAY_MS,
+		loadTimeoutId: 0,
 		retryTimeoutId: 0,
 		connectivityListener: null,
 	};
-	pendingLoad.timeoutId = window.setTimeout(() => {
-		settlePendingImageLoad(src, pendingLoad, false, null);
-	}, IMAGE_LOAD_ACTIVATION_TIMEOUT_MS);
-	pendingImageLoads.set(src, pendingLoad);
-	return pendingLoad;
+	imageCache.set(src, entry);
+	return entry;
 }
 
 function rejectImageLoad(onError: (() => void) | undefined): () => void {
@@ -329,47 +200,59 @@ function rejectImageLoad(onError: (() => void) | undefined): () => void {
 	return () => {};
 }
 
-export function loadImage(src: string | null, onLoad: () => void, onError?: () => void): () => void {
+export function hasImage(src: string | null | undefined): boolean {
+	if (!acceptsImageSource(src)) return false;
+	return imageCache.get(src)?.loaded === true;
+}
+
+export function getImageSize(src: string | null | undefined): CachedImageSize | undefined {
+	if (!acceptsImageSource(src)) return undefined;
+	const entry = imageCache.get(src);
+	if (entry == null || !entry.loaded || entry.width <= 0 || entry.height <= 0) return undefined;
+	return {width: entry.width, height: entry.height};
+}
+
+export function rememberImage(src: string | null | undefined, image: HTMLImageElement): void {
+	if (!acceptsImageSource(src) || !imageHasSource(image, src) || !isLoadedImage(image)) return;
+	const entry = imageCache.get(src) ?? createEntry(src);
+	if (entry.loaded) return;
+	settleLoaded(entry, image);
+}
+
+export function forgetImage(src: string | null | undefined): void {
+	if (!acceptsImageSource(src)) return;
+	const entry = imageCache.get(src);
+	if (entry == null) return;
+	failEntry(entry);
+}
+
+export function loadImage(src: string | null | undefined, onLoad: () => void, onError?: () => void): () => void {
 	if (!acceptsImageSource(src)) return rejectImageLoad(onError);
-	if (isCached(src)) {
+	const cached = imageCache.get(src);
+	if (cached?.loaded === true) {
 		onLoad();
 		return () => {};
 	}
-	let pendingLoad = pendingImageLoads.get(src);
-	if (!pendingLoad) {
-		if (pendingImageLoads.size >= MAX_PENDING_IMAGE_LOADS) return rejectImageLoad(onError);
-		pendingLoad = createPendingImageLoad(src);
-	}
-	if (
-		pendingLoad.subscribers.size >= MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD ||
-		pendingImageCallbackCount >= MAX_PENDING_IMAGE_CALLBACKS
-	) {
-		if (pendingLoad.subscribers.size === 0) discardPendingImageLoad(src, pendingLoad);
+	if (cached != null && cached.subscribers.size >= MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD) {
 		return rejectImageLoad(onError);
 	}
-	const subscriber: PendingImageSubscriber = {onLoad, onError};
-	pendingLoad.subscribers.add(subscriber);
-	retainPendingImageCallback();
-	pumpPendingImageLoads();
+	const entry = cached ?? createEntry(src);
+	const subscriber: ImageSubscriber = {onLoad, onError};
+	entry.subscribers.add(subscriber);
+	if (cached == null) startImageLoad(entry);
 	return () => {
-		if (!pendingLoad.subscribers.delete(subscriber)) return;
-		releasePendingImageCallbacks(1);
-		if (pendingImageLoads.get(src) === pendingLoad && pendingLoad.subscribers.size === 0) {
-			discardPendingImageLoad(src, pendingLoad);
-		}
+		entry.subscribers.delete(subscriber);
 	};
 }
 
-export function pinImage(src: string | null): () => void {
+export function pinImage(src: string | null | undefined): () => void {
 	return loadImage(src, () => {});
 }
 
+export function warmImage(src: string | null | undefined): void {
+	loadImage(src, () => {});
+}
+
 export function _clearForTests(): void {
-	for (const [src, pendingLoad] of pendingImageLoads) {
-		discardPendingImageLoad(src, pendingLoad);
-	}
 	imageCache.clear();
-	if (pendingImageLoads.size !== 0) throw new Error('Image cache retained pending loads after clear');
-	if (activeImageLoadCount !== 0) throw new Error('Image cache retained active loads after clear');
-	if (pendingImageCallbackCount !== 0) throw new Error('Image cache retained callbacks after clear');
 }
