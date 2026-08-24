@@ -62,10 +62,10 @@ export function saveCurrentVoiceSessionRestoreSnapshot(): void {
 }
 
 export function createVoiceSessionRestoreSync(): VoiceSessionRestoreSyncHandle {
-	let previousState = readVoiceSessionRestoreSyncState();
+	let previousState: VoiceSessionRestoreSyncState | null = null;
 	const syncVoiceSessionRestore = () => {
 		const currentState = readVoiceSessionRestoreSyncState();
-		if (areVoiceSessionRestoreSyncStatesEqual(previousState, currentState)) {
+		if (previousState !== null && areVoiceSessionRestoreSyncStatesEqual(previousState, currentState)) {
 			return;
 		}
 		previousState = currentState;
