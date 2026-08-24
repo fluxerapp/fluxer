@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
+import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/GifPicker.module.css';
 import memeStyles from '@app/features/channel/components/MemesPicker.module.css';
 import {PickerEmptyState} from '@app/features/channel/components/shared/PickerEmptyState';
@@ -19,6 +19,8 @@ import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {AUDIO_DESCRIPTOR, GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
+import {buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {DeleteIcon, EditIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -31,7 +33,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {GifIcon, ImageIcon, MusicNoteIcon, SmileySadIcon, VideoCameraIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import {AnimatePresence, motion} from 'framer-motion';
+import {AnimatePresence} from 'framer-motion';
 import {matchSorter} from 'match-sorter';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -92,6 +94,8 @@ const EDIT_SAVED_MEDIA_DESCRIPTOR = msg({
 	message: 'Edit saved media',
 	comment: 'Button or menu action label in the channel and chat mobile memes picker. Keep it concise.',
 });
+
+const GRID_ITEM_PRELOAD_ROOT_MARGIN = '800px 0px';
 
 type ContentType = 'all' | 'image' | 'video' | 'audio' | 'gif';
 
@@ -414,14 +418,20 @@ const MemeGridRenderer = observer(({memes}: {memes: Array<GridItemProps>}) => {
 const GridItem = observer(
 	({title, onClick, onLongPress, url, width, height, contentType, duration, filename, isGifv}: GridItemProps) => {
 		const {i18n} = useLingui();
-		const [isVisible, setIsVisible] = useState(false);
-		const mediaRef = useRef<HTMLDivElement>(null);
+		const {ref: mediaRef, isNearViewport: isVisible} = useNearViewport<HTMLDivElement>({
+			rememberKey: url,
+			rootMargin: GRID_ITEM_PRELOAD_ROOT_MARGIN,
+		});
 		const videoRef = useRef<HTMLVideoElement>(null);
 		const accessibleName = title || filename;
-		const isVideo = contentType.startsWith('video/') || contentType.includes('gif');
+		const isVideo = contentType.startsWith('video/');
 		const isAudio = contentType.startsWith('audio/');
+		const isGifImage = !isVideo && contentType.toLowerCase().includes('gif');
+		const shouldAnimateGif = useShouldAnimate({kind: 'gif', isAnimated: !isAudio && (isVideo || isGifImage)});
+		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(url) : url;
 		const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {
 			enabled: isVisible && !isAudio && isVideo,
+			shouldPlay: shouldAnimateGif,
 		});
 		const handleClick = () => {
 			onClick();
@@ -431,27 +441,6 @@ const GridItem = observer(
 			event.preventDefault();
 			handleClick();
 		};
-		useEffect(() => {
-			const mediaElement = mediaRef.current;
-			if (!mediaElement) return;
-			const observer = new IntersectionObserver(
-				(entries) => {
-					entries.forEach((entry) => {
-						if (entry.isIntersecting) {
-							setIsVisible(true);
-						}
-					});
-				},
-				{
-					rootMargin: '800px 0px',
-					threshold: 0,
-				},
-			);
-			observer.observe(mediaElement);
-			return () => {
-				observer.disconnect();
-			};
-		}, []);
 		return (
 			<LongPressable
 				onLongPress={onLongPress}
@@ -464,14 +453,7 @@ const GridItem = observer(
 				onKeyDown={handleKeyDown}
 				data-flx="channel.mobile-memes-picker.grid-item.grid-item.click"
 			>
-				<motion.div
-					className={memeStyles.fullSize}
-					initial={Accessibility.useReducedMotion ? {opacity: 1} : {opacity: 0}}
-					animate={{opacity: 1}}
-					exit={Accessibility.useReducedMotion ? {opacity: 1} : {opacity: 0}}
-					transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
-					data-flx="channel.mobile-memes-picker.grid-item.div"
-				>
+				<div className={memeStyles.fullSize} data-flx="channel.mobile-memes-picker.grid-item.div">
 					{isGifv && <GifIndicator data-flx="channel.mobile-memes-picker.grid-item.gif-indicator" />}
 					<div
 						ref={mediaRef}
@@ -482,13 +464,13 @@ const GridItem = observer(
 							<video
 								ref={videoRef}
 								className={styles.gif}
-								autoPlay={videoPlaybackAllowed}
+								autoPlay={shouldAnimateGif && videoPlaybackAllowed}
 								loop={true}
 								muted={true}
 								playsInline={true}
 								disablePictureInPicture={true}
 								disableRemotePlayback={true}
-								preload="auto"
+								preload={shouldAnimateGif ? 'auto' : 'metadata'}
 								src={url}
 								data-flx="channel.mobile-memes-picker.grid-item.gif"
 							/>
@@ -496,9 +478,8 @@ const GridItem = observer(
 						{isVisible && !isAudio && !isVideo && (
 							<img
 								className={styles.gif}
-								src={url}
+								src={thumbnailSrc}
 								alt={title}
-								loading="lazy"
 								data-flx="channel.mobile-memes-picker.grid-item.gif--2"
 							/>
 						)}
@@ -526,7 +507,7 @@ const GridItem = observer(
 							</div>
 						)}
 					</div>
-				</motion.div>
+				</div>
 			</LongPressable>
 		);
 	},
