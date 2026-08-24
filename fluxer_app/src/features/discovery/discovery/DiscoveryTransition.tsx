@@ -44,7 +44,7 @@ export const DiscoveryTransition = observer(function DiscoveryTransition({
 	children,
 }: DiscoveryTransitionProps) {
 	const surfaceRef = useRef<HTMLDivElement | null>(null);
-	const settledKeyRef = useRef<string | null>(null);
+	const settledKeyRef = useRef(transitionKey);
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	useLayoutEffect(() => {
 		const surface = surfaceRef.current;
