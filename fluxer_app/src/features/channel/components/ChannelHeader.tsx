@@ -260,9 +260,6 @@ export const ChannelHeader = observer(
 		);
 		const handleSearchSubmit = useCallback(() => {
 			const query = latestSearchQueryRef.current;
-			if (!query.trim()) {
-				return;
-			}
 			if (onSearchSubmit) {
 				onSearchSubmit(query, latestSearchSegmentsRef.current);
 				return;

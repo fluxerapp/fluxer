@@ -20,13 +20,16 @@ import {
 	renderScopeIcon,
 	renderSortIcon,
 } from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
+import {shouldSearchResultRowJump} from '@app/features/channel/components/channel_search_results/SearchResultRowClick';
 import {SearchResultsHeader} from '@app/features/channel/components/channel_search_results/SearchResultsHeader';
 import {SearchResultsPagination} from '@app/features/channel/components/channel_search_results/SearchResultsPagination';
 import {
 	SearchEmptyState,
 	SearchErrorState,
 	SearchIndexingState,
+	SearchUnappliedQueryState,
 } from '@app/features/channel/components/channel_search_results/SearchResultsStateViews';
+import {useChannelSearchHighlight} from '@app/features/channel/components/channel_search_results/useChannelSearchHighlight';
 import type {MessageGroupRenderWrapperProps} from '@app/features/channel/components/MessageGroup';
 import {
 	buildSearchResultGroups,
@@ -47,17 +50,13 @@ import * as MessageCommands from '@app/features/messaging/commands/MessageComman
 import {MessageContextPrefix} from '@app/features/messaging/components/message_context_prefix/MessageContextPrefix';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
 import {useMessageSelectionCopyForMessages} from '@app/features/messaging/hooks/useMessageSelectionCopy';
+import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {
-	applyChannelSearchHighlight,
-	clearChannelSearchHighlight,
-} from '@app/features/messaging/utils/ChannelSearchHighlight';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {getCollapsedMessageGroupKey} from '@app/features/messaging/utils/MessageGroupingUtils';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {SearchResultOpenFailedModal} from '@app/features/search/components/alerts/SearchResultOpenFailedModal';
-import {tokenizeSearchQuery} from '@app/features/search/utils/SearchQueryTokenizer';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import {
 	isIndexing,
@@ -95,6 +94,10 @@ export const ChannelSearchResults = observer(
 	({channel, searchQuery, searchSegments, onClose, refreshKey}: ChannelSearchResultsProps) => {
 		const {i18n} = useLingui();
 		const scrollerRef = useRef<ScrollerHandle | null>(null);
+		const resolveSearchResultsScrollSurface = useMemo(
+			() => () => scrollerRef.current?.getViewportElement() ?? null,
+			[],
+		);
 		const pollingTimeout = useRef<number | null>(null);
 		const currentChannelId = useRef(channel.id);
 		const currentSearchQuery = useRef(searchQuery);
@@ -114,6 +117,7 @@ export const ChannelSearchResults = observer(
 		const machineState = searchContext?.machineState ?? {status: 'loading' as const};
 		const scrollPosition = searchContext?.scrollPosition ?? 0;
 		const lastKnownScrollPosition = useRef(scrollPosition);
+		const unsearchableQuery = searchContext?.unsearchableQuery ?? '';
 		const successMachineState = machineState.status === 'success' ? machineState : null;
 		const indexingMachineState = machineState.status === 'indexing' ? machineState : null;
 		const normalizedRefreshKey = refreshKey ?? null;
@@ -559,6 +563,16 @@ export const ChannelSearchResults = observer(
 			},
 			[ensureSearchChannelReady, navigateToSearchMessage, showSearchResultOpenFailedModal],
 		);
+		const handleResultRowClick = useCallback(
+			(event: React.MouseEvent<HTMLDivElement>, targetChannel: Channel, message: Message) => {
+				if (!shouldSearchResultRowJump(event.target as Node, event.currentTarget)) {
+					event.stopPropagation();
+					return;
+				}
+				void handleSearchMessageJump(targetChannel, message);
+			},
+			[handleSearchMessageJump],
+		);
 		const handlePaginationJump = useCallback(
 			(page: number) => {
 				resetScrollerToTop();
@@ -567,6 +581,14 @@ export const ChannelSearchResults = observer(
 			[resetScrollerToTop, performSearch],
 		);
 		const renderContent = useCallback(() => {
+			if (unsearchableQuery !== '') {
+				return (
+					<SearchUnappliedQueryState
+						query={unsearchableQuery}
+						data-flx="channel.channel-search-results.render-content.search-unapplied-query-state"
+					/>
+				);
+			}
 			switch (machineState.status) {
 				case 'idle':
 				case 'loading':
@@ -592,132 +614,147 @@ export const ChannelSearchResults = observer(
 							value={collapsedMessageVisibility}
 							data-flx="channel.channel-search-results.render-content.collapsed-message-visibility-provider"
 						>
-							<Scroller
-								ref={setScrollerRef}
-								className={styles.resultsScroller}
-								onScroll={handleScrollerScroll}
-								fade={false}
-								key="channel-search-results-scroller-desktop"
-								onCopy={onCopySelectedMessages}
-								data-message-selection-root="true"
-								data-flx="channel.channel-search-results.render-content.results-scroller"
-							>
-								{resultGroups.map((resultGroup) => {
-									const renderData = getSearchResultChannelRenderData(
-										resultGroup.channelId,
-										searchChannelsById,
-										(activeScope ?? DEFAULT_SCOPE_VALUE) as MessageSearchScope,
-									);
-									if (!renderData) return null;
-									const {messageChannel, showGuildMeta} = renderData;
-									const renderMessageActions = (message: Message) => (
-										<FocusRing
-											offset={-2}
-											ringClassName={styles.focusRingTight}
-											data-flx="channel.channel-search-results.render-message-actions.focus-ring"
-										>
-											<button
-												type="button"
-												className={styles.jumpButton}
-												onClick={() => {
-													void handleSearchMessageJump(messageChannel, message);
-												}}
-												data-flx="channel.channel-search-results.render-message-actions.jump-button"
+							<NearViewportSurfaceContext.Provider value={resolveSearchResultsScrollSurface}>
+								<Scroller
+									ref={setScrollerRef}
+									className={styles.resultsScroller}
+									onScroll={handleScrollerScroll}
+									fade={false}
+									key="channel-search-results-scroller-desktop"
+									onCopy={onCopySelectedMessages}
+									data-message-selection-root="true"
+									data-flx="channel.channel-search-results.render-content.results-scroller"
+								>
+									{resultGroups.map((resultGroup) => {
+										const renderData = getSearchResultChannelRenderData(
+											resultGroup.channelId,
+											searchChannelsById,
+											(activeScope ?? DEFAULT_SCOPE_VALUE) as MessageSearchScope,
+										);
+										if (!renderData) return null;
+										const {messageChannel, showGuildMeta} = renderData;
+										const renderMessageActions = (message: Message) => (
+											<FocusRing
+												offset={-2}
+												ringClassName={styles.focusRingTight}
+												data-flx="channel.channel-search-results.render-message-actions.focus-ring"
 											>
-												{i18n._(JUMP_DESCRIPTOR)}
-											</button>
-										</FocusRing>
-									);
-									const renderMessageWrapper = ({
-										message,
-										index,
-										isGroupStart,
-										children,
-									}: MessageGroupRenderWrapperProps) => (
-										<div
-											data-message-index={index}
-											data-message-id={message.id}
-											data-is-group-start={isGroupStart}
-											className={styles.messageItem}
-											data-flx="channel.channel-search-results.render-message-wrapper.message-item"
-										>
-											{children}
-										</div>
-									);
-									return (
-										<React.Fragment key={resultGroup.key}>
-											<MessageContextPrefix
-												channel={messageChannel}
-												showGuildMeta={showGuildMeta}
-												onClick={() => {
-													void handleSearchChannelOpen(messageChannel);
+												<button
+													type="button"
+													className={styles.jumpButton}
+													onClick={() => {
+														void handleSearchMessageJump(messageChannel, message);
+													}}
+													data-flx="channel.channel-search-results.render-message-actions.jump-button"
+												>
+													{i18n._(JUMP_DESCRIPTOR)}
+												</button>
+											</FocusRing>
+										);
+										const renderMessageWrapper = ({
+											message,
+											index,
+											isGroupStart,
+											children,
+										}: MessageGroupRenderWrapperProps) => (
+											// biome-ignore lint/a11y/noStaticElementInteractions: mouse convenience; the row's Jump button is the keyboard affordance.
+											// biome-ignore lint/a11y/useKeyWithClickEvents: mouse convenience; the row's Jump button is the keyboard affordance.
+											<div
+												data-message-index={index}
+												data-message-id={message.id}
+												data-is-group-start={isGroupStart}
+												className={styles.messageItem}
+												onClick={(event) => {
+													handleResultRowClick(event, messageChannel, message);
 												}}
-												data-flx="channel.channel-search-results.render-content.message-context-prefix"
-											/>
-											<SearchResultMessageList
-												channel={messageChannel}
-												messages={resultGroup.messages}
-												revealedGroupKeys={revealedGroupKeys}
-												onGroupRevealChange={handleCollapsedGroupRevealChange}
-												collapsedGroupClassName={styles.collapsedMessageGroup}
-												messagePreviewContext={MessagePreviewContext.LIST_POPOUT}
-												messageBehaviorOverrides={DETACHED_MESSAGE_BEHAVIOR}
-												messageActionsClassName={styles.actionButtons}
-												renderMessageActions={renderMessageActions}
-												renderMessageWrapper={renderMessageWrapper}
-												spammerOverrideVersion={spammerOverrideVersion}
-												renderMessage={(message) => (
-													<div
-														className={styles.messageItem}
-														data-message-id={message.id}
-														data-is-group-start="true"
-														data-flx="channel.channel-search-results.render-content.message-item"
-													>
-														<MessageComponent
-															message={message}
-															channel={messageChannel}
-															previewContext={MessagePreviewContext.LIST_POPOUT}
-															behaviorOverrides={DETACHED_MESSAGE_BEHAVIOR}
-															data-flx="channel.channel-search-results.render-content.message-component"
-														/>
+												data-flx="channel.channel-search-results.render-message-wrapper.message-item"
+											>
+												{children}
+											</div>
+										);
+										return (
+											<React.Fragment key={resultGroup.key}>
+												<MessageContextPrefix
+													channel={messageChannel}
+													showGuildMeta={showGuildMeta}
+													onClick={() => {
+														void handleSearchChannelOpen(messageChannel);
+													}}
+													data-flx="channel.channel-search-results.render-content.message-context-prefix"
+												/>
+												<SearchResultMessageList
+													channel={messageChannel}
+													messages={resultGroup.messages}
+													revealedGroupKeys={revealedGroupKeys}
+													onGroupRevealChange={handleCollapsedGroupRevealChange}
+													collapsedGroupClassName={styles.collapsedMessageGroup}
+													messagePreviewContext={MessagePreviewContext.LIST_POPOUT}
+													messageBehaviorOverrides={DETACHED_MESSAGE_BEHAVIOR}
+													messageActionsClassName={styles.actionButtons}
+													renderMessageActions={renderMessageActions}
+													renderMessageWrapper={renderMessageWrapper}
+													spammerOverrideVersion={spammerOverrideVersion}
+													renderMessage={(message) => (
+														// biome-ignore lint/a11y/noStaticElementInteractions: mouse convenience; the row's Jump button is the keyboard affordance.
+														// biome-ignore lint/a11y/useKeyWithClickEvents: mouse convenience; the row's Jump button is the keyboard affordance.
 														<div
-															className={styles.actionButtons}
-															data-flx="channel.channel-search-results.render-content.action-buttons"
+															className={styles.messageItem}
+															data-message-id={message.id}
+															data-is-group-start="true"
+															onClick={(event) => {
+																handleResultRowClick(event, messageChannel, message);
+															}}
+															data-flx="channel.channel-search-results.render-content.message-item"
 														>
-															{renderMessageActions(message)}
+															<MessageComponent
+																message={message}
+																channel={messageChannel}
+																previewContext={MessagePreviewContext.LIST_POPOUT}
+																behaviorOverrides={DETACHED_MESSAGE_BEHAVIOR}
+																data-flx="channel.channel-search-results.render-content.message-component"
+															/>
+															<div
+																className={styles.actionButtons}
+																data-flx="channel.channel-search-results.render-content.action-buttons"
+															>
+																{renderMessageActions(message)}
+															</div>
 														</div>
-													</div>
-												)}
-												data-flx="channel.channel-search-results.render-content.search-result-message-list"
-											/>
-										</React.Fragment>
-									);
-								})}
-								<div
-									className={styles.resultsSpacer}
-									data-flx="channel.channel-search-results.render-content.results-spacer"
-								/>
-								<SearchResultsPagination
-									currentPage={currentPage}
-									totalPages={totalPages}
-									visiblePageSlots={visiblePageSlots}
-									onJumpToPage={handlePaginationJump}
-									data-flx="channel.channel-search-results.render-content.search-results-pagination"
-								/>
-							</Scroller>
+													)}
+													data-flx="channel.channel-search-results.render-content.search-result-message-list"
+												/>
+											</React.Fragment>
+										);
+									})}
+									<div
+										className={styles.resultsSpacer}
+										data-flx="channel.channel-search-results.render-content.results-spacer"
+									/>
+									<SearchResultsPagination
+										currentPage={currentPage}
+										totalPages={totalPages}
+										visiblePageSlots={visiblePageSlots}
+										onJumpToPage={handlePaginationJump}
+										data-flx="channel.channel-search-results.render-content.search-results-pagination"
+									/>
+								</Scroller>
+							</NearViewportSurfaceContext.Provider>
 						</CollapsedMessageVisibilityProvider>
 					);
 				}
 			}
 		}, [
+			unsearchableQuery,
 			machineState,
 			performSearch,
 			setScrollerRef,
+			resolveSearchResultsScrollSurface,
 			handleScrollerScroll,
 			visiblePageSlots,
 			activeScope,
 			handleSearchChannelOpen,
 			handleSearchMessageJump,
+			handleResultRowClick,
 			handlePaginationJump,
 			onCopySelectedMessages,
 			collapsedMessageVisibility,
@@ -822,24 +859,12 @@ export const ChannelSearchResults = observer(
 				updateScrollPosition(lastKnownScrollPosition.current);
 			};
 		}, [stopPolling, updateScrollPosition]);
-		useEffect(() => {
-			if (machineState.status !== 'success' || !searchQuery.trim()) {
-				clearChannelSearchHighlight();
-				return;
-			}
-			const scrollerNode = scrollerRef.current?.getViewportElement();
-			if (!scrollerNode) return;
-			const timer = setTimeout(() => {
-				const terms = tokenizeSearchQuery(searchQuery);
-				if (terms.length > 0) {
-					applyChannelSearchHighlight(scrollerNode, terms);
-				}
-			}, 50);
-			return () => {
-				clearTimeout(timer);
-				clearChannelSearchHighlight();
-			};
-		}, [machineState.status, searchQuery, successMachineState?.results]);
+		useChannelSearchHighlight({
+			isSuccess: machineState.status === 'success',
+			searchQuery,
+			resultsRevision: successMachineState?.results,
+			getHighlightRoot: () => scrollerRef.current?.getViewportElement() ?? null,
+		});
 		return (
 			<div className={styles.container} data-flx="channel.channel-search-results.container">
 				<SearchResultsHeader
