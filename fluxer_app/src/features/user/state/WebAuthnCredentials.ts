@@ -24,7 +24,7 @@ class WebAuthnCredentials {
 		logger.debug(`Set WebAuthn credentials: ${credentials.length}`);
 	}
 
-	handleConnectionOpen(credentials: ReadonlyArray<WebAuthnCredential> | undefined): void {
+	handleGatewayReady(credentials: ReadonlyArray<WebAuthnCredential> | undefined): void {
 		this.setCredentials(credentials ?? []);
 	}
 

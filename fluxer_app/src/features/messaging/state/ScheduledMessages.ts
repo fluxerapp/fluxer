@@ -32,7 +32,7 @@ class ScheduledMessages {
 		this.scheduledMessages = [];
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.scheduledMessages = [];
 		this.fetched = false;
 		this.fetching = false;

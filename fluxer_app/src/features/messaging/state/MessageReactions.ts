@@ -178,7 +178,7 @@ export class MessageReactionsManager {
 		return entry;
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		const messageIds = Array.from(this.messageStates.keys());
 		const reactionKeys = Array.from(this.reactors.keys());
 		for (const key of reactionKeys) this.retireReactionEntry(key);

@@ -27,7 +27,7 @@ class GuildList {
 	}
 
 	@action
-	handleConnectionOpen(guilds: ReadonlyArray<GuildReadyData>): void {
+	handleGatewayReady(guilds: ReadonlyArray<GuildReadyData>): void {
 		const availableGuilds: Array<Guild> = [];
 		for (const guild of guilds) {
 			if (guild.unavailable) continue;

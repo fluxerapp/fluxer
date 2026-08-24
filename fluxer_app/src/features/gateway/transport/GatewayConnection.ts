@@ -24,6 +24,7 @@ import {
 	type GatewayVoiceStateUpdateParams,
 } from '@app/features/gateway/transport/GatewaySocket';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
+import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch from '@app/features/member/state/MemberSearch';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
@@ -74,6 +75,7 @@ class GatewayConnection {
 	private isFatalCrashInProgress: boolean = false;
 	private connectionInterrupted: boolean = false;
 	private connectionGraceTimer: number | null = null;
+	private previousSessionId: string | null = null;
 
 	constructor() {
 		makeAutoObservable<
@@ -87,6 +89,7 @@ class GatewayConnection {
 			| 'beginConnectionGrace'
 			| 'clearConnectionGrace'
 			| 'connectionGraceTimer'
+			| 'previousSessionId'
 		>(
 			this,
 			{
@@ -94,11 +97,12 @@ class GatewayConnection {
 				beginConnectionGrace: action.bound,
 				clearConnectionGrace: action.bound,
 				connectionGraceTimer: false,
+				previousSessionId: false,
 				setToken: action.bound,
 				sendInvisiblePresenceForCurrentSession: action.bound,
 				retireCurrentSession: action.bound,
 				logout: action.bound,
-				handleConnectionOpen: action.bound,
+				handleGatewayReady: action.bound,
 				handleConnectionResumed: action.bound,
 				handleConnectionClosed: action.bound,
 				cleanupSocket: action.bound,
@@ -187,8 +191,10 @@ class GatewayConnection {
 	private createHandlerContext(): GatewayHandlerContext {
 		return {
 			socket: this.socket,
-			previousSessionId: null,
-			setPreviousSessionId: (_id: string) => {},
+			previousSessionId: this.previousSessionId,
+			setPreviousSessionId: (id: string) => {
+				this.previousSessionId = id;
+			},
 			setReady: () => {
 				runInAction(() => {
 					this.isReady = true;
@@ -359,7 +365,7 @@ class GatewayConnection {
 				const readyData = data as {
 					session_id: string;
 				};
-				this.handleConnectionOpen(readyData.session_id);
+				this.handleGatewayReady(readyData.session_id);
 			}),
 		);
 		socket.on(
@@ -581,7 +587,7 @@ class GatewayConnection {
 		this.completedGuildSyncSessions = {};
 	}
 
-	handleConnectionOpen(sessionId: string): void {
+	handleGatewayReady(sessionId: string): void {
 		this.isConnected = true;
 		this.isConnecting = false;
 		this.isReady = true;
@@ -592,6 +598,7 @@ class GatewayConnection {
 		TypingIndicator.reset();
 		QuickSwitcher.recomputeIfOpen();
 		this.flushPendingGuildSync();
+		GuildMembers.handleConnectionResumed();
 	}
 
 	handleConnectionResumed(): void {
@@ -604,6 +611,7 @@ class GatewayConnection {
 		TypingIndicator.reset();
 		QuickSwitcher.recomputeIfOpen();
 		this.flushPendingGuildSync();
+		GuildMembers.handleConnectionResumed();
 	}
 
 	handleConnectionClosed(code: number): void {

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import Authentication from '@app/features/auth/state/Authentication';
 import {User} from '@app/features/user/models/User';
 import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
@@ -94,7 +93,7 @@ class Users {
 	}
 
 	@action
-	handleConnectionOpen(currentUser: UserPrivate): void {
+	handleGatewayReady(currentUser: UserPrivate): void {
 		const userRecord = new User(currentUser);
 		this.users = {
 			[currentUser.id]: userRecord,
@@ -102,6 +101,7 @@ class Users {
 		this.userCount = 1;
 		if (!userRecord.isClaimed()) {
 			setTimeout(async () => {
+				const {openClaimAccountModal} = await import('@app/features/auth/components/modals/ClaimAccountModal');
 				openClaimAccountModal();
 			}, 1000);
 		}

@@ -91,7 +91,7 @@ class Sticker {
 		return this.sortByFrecency(filtered);
 	}
 
-	handleConnectionOpen(guilds: ReadonlyArray<GuildReadyData>): void {
+	handleGatewayReady(guilds: ReadonlyArray<GuildReadyData>): void {
 		this.guildStickers.clear();
 		this.stickerById.clear();
 		for (const guild of guilds) {

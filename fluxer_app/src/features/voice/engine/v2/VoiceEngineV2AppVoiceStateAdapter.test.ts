@@ -40,7 +40,7 @@ function guild(id: string, voiceStates: ReadonlyArray<VoiceState> = []): GuildRe
 describe('VoiceEngineV2AppVoiceStateAdapter', () => {
 	it('keeps gateway voice-state indexes as immutable replacement projections', () => {
 		const adapter = new VoiceEngineV2AppVoiceStateAdapter();
-		adapter.handleConnectionOpen([
+		adapter.handleGatewayReady([
 			guild('guild-1', [voiceState({connection_id: 'connection-1', channel_id: 'channel-1'})]),
 		]);
 		const before = adapter.getConnectionVoiceStates();

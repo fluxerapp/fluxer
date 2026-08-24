@@ -235,7 +235,7 @@ class Channels {
 	}
 
 	@action
-	handleConnectionOpen({channels}: {channels: ReadonlyArray<WireChannel>}): void {
+	handleGatewayReady({channels}: {channels: ReadonlyArray<WireChannel>}): void {
 		this.channelsById.clear();
 		this.channelsByGuildId.clear();
 		this.privateChannelList = EMPTY_CHANNELS;

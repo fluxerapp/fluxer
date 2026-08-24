@@ -336,7 +336,7 @@ class MemberSearch {
 		updateMembers(allMembers);
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		if (worker) {
 			this.terminate();
 		}

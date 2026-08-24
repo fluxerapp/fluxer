@@ -59,7 +59,7 @@ class GuildCount {
 		this.scheduleFlush();
 	}
 
-	handleConnectionOpen(guilds: ReadonlyArray<HydratableGuild>): void {
+	handleGatewayReady(guilds: ReadonlyArray<HydratableGuild>): void {
 		this.hydrate(guilds);
 	}
 

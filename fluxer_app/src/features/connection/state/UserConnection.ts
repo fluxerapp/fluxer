@@ -62,7 +62,7 @@ class UserConnection {
 		this.fetched = false;
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.reset();
 	}
 }

@@ -43,7 +43,7 @@ class SavedMessages {
 		this.fetched = false;
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.savedMessages = [];
 		this.missingSavedMessages = [];
 		this.fetched = false;

@@ -104,7 +104,7 @@ class ChannelPins {
 		};
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.channelPins = {};
 		this.channelState = {};
 	}

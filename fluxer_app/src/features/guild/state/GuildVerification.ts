@@ -41,7 +41,7 @@ class GuildVerification {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.recomputeAll();
 	}
 

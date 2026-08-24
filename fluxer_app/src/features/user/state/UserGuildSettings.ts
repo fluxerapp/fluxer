@@ -128,7 +128,7 @@ class UserGuildSettings {
 			updateGuildSettings: action,
 			updateChannelOverride: action,
 			updateChannelOverrides: action,
-			handleConnectionOpen: action,
+			handleGatewayReady: action,
 			notifyChange: action,
 		});
 	}
@@ -564,7 +564,7 @@ class UserGuildSettings {
 		);
 	}
 
-	handleConnectionOpen(userGuildSettings: Array<GatewayGuildSettings>): void {
+	handleGatewayReady(userGuildSettings: Array<GatewayGuildSettings>): void {
 		this.clearAllTimers();
 		this.guildSettings.clear();
 		this.mutedChannelsByGuild.clear();

@@ -1845,8 +1845,8 @@ class MediaEngineFacade extends Store {
 		);
 	}
 
-	handleConnectionOpen(guilds: Array<GuildReadyData>): void {
-		voiceEngineV2AppVoiceStateAdapter.handleConnectionOpen(guilds);
+	handleGatewayReady(guilds: Array<GuildReadyData>): void {
+		voiceEngineV2AppVoiceStateAdapter.handleGatewayReady(guilds);
 	}
 
 	handleGuildCreate(guild: GuildReadyData): void {

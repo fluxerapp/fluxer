@@ -256,11 +256,7 @@ class Presence {
 		this.bumpPresenceVersion();
 	}
 
-	handleConnectionOpen(
-		user: UserPrivate,
-		guilds: Array<GuildReadyData>,
-		presences?: ReadonlyArray<WirePresence>,
-	): void {
+	handleGatewayReady(user: UserPrivate, guilds: Array<GuildReadyData>, presences?: ReadonlyArray<WirePresence>): void {
 		TransientPresence.clear();
 		const localStatus = LocalPresence.getStatus();
 		const localCustomStatus = LocalPresence.customStatus;

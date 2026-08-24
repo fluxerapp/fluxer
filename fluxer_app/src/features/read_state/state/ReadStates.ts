@@ -12,10 +12,6 @@ import {ReadStateEntry} from '@app/features/read_state/state/read_states/ReadSta
 import {resolveReadStateIncomingMessageDecision} from '@app/features/read_state/state/read_states/ReadStateIncomingMessageMachine';
 import {resolveReadStateServerAckDecision} from '@app/features/read_state/state/read_states/ReadStateServerAckMachine';
 import {
-	resolveUnreadJumpAnchor,
-	type UnreadJumpAnchor,
-} from '@app/features/read_state/state/read_states/ReadStateUnreadAnchor';
-import {
 	ACK_BATCH_DELAY_MS,
 	ACK_BATCH_SIZE,
 	ACK_RETRY_BASE_DELAY_MS,
@@ -49,8 +45,6 @@ import {decodeReadStateProto} from '@fluxer/schema/src/domains/read_state/ReadSt
 import {observable, runInAction} from 'mobx';
 
 export type {GatewayReadState};
-
-export type {UnreadJumpAnchor};
 
 const logger = new Logger('ReadStates');
 
@@ -351,20 +345,6 @@ class ReadStates {
 		return state?.supportsUnreadTracking() ? state.visualUnreadMessageId : null;
 	}
 
-	getUnreadJumpAnchor(channelId: string): UnreadJumpAnchor | null {
-		const state = this.getIfExists(channelId);
-		if (state == null) {
-			return null;
-		}
-		return resolveUnreadJumpAnchor({
-			canBeUnread: state.canBeUnread(),
-			canTrackUnreads: state.supportsUnreadTracking(),
-			hasUnread: state.hasUnread(),
-			oldestUnreadMessageId: state.oldestUnreadMessageId,
-			ackMessageId: state.ackMessageId,
-		});
-	}
-
 	getChannelIds(): Array<ChannelId> {
 		return Array.from(this.states.keys());
 	}
@@ -409,7 +389,7 @@ class ReadStates {
 		this.notifyChange(channelId);
 	}
 
-	handleConnectionOpen(action: {
+	handleGatewayReady(action: {
 		readState: Array<GatewayReadState>;
 		readStateProto?: string;
 		channels: Array<ChannelPayload>;

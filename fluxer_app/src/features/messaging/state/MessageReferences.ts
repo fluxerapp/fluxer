@@ -185,7 +185,7 @@ class MessageReferences {
 		this.cleanupChannelMessages(channelId);
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.deletedMessageIds.clear();
 		this.cachedMessages.clear();
 		this.referenceVersions.clear();

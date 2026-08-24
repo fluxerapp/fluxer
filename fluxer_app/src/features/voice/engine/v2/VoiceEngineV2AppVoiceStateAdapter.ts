@@ -95,7 +95,7 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 		return connectionId != null && this.ignoredConnectionIds.has(connectionId);
 	}
 
-	handleConnectionOpen(guilds: Array<GuildReadyData>): void {
+	handleGatewayReady(guilds: Array<GuildReadyData>): void {
 		this.send({
 			type: 'connection.open',
 			guilds: guilds.map((guild) => filterIgnoredGuildVoiceStates(this.ignoredConnectionIds, guild)),

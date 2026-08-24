@@ -23,7 +23,7 @@ class UserProfile {
 		return this.profiles[userId]?.[guildId ?? ME] ?? null;
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		Object.values(this.profileTimeouts).forEach(clearTimeout);
 		this.profiles = {};
 		this.profileTimeouts = {};

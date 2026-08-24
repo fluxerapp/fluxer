@@ -96,7 +96,7 @@ class MentionFeed {
 		}
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.recentMentions = [];
 		this.fetched = false;
 		this.hasMore = true;

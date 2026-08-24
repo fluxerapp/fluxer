@@ -447,7 +447,7 @@ class Emoji {
 		UnicodeEmojis.setDefaultSkinTone(skinTone);
 	}
 
-	handleConnectionOpen({guilds}: {guilds: ReadonlyArray<GuildReadyData>}): void {
+	handleGatewayReady({guilds}: {guilds: ReadonlyArray<GuildReadyData>}): void {
 		emojiGuildRegistry.reset();
 		for (const guild of guilds) {
 			emojiGuildRegistry.updateGuild(guild.id, guild.emojis);

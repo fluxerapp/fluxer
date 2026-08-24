@@ -86,7 +86,7 @@ class Permission {
 		return PermissionUtils.isRoleHigher(wireGuild, me.id, myHighestRole, otherHighestRole);
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.rebuildPermissions();
 	}
 

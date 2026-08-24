@@ -595,7 +595,7 @@ class UserSettingsState {
 		LocalPresence.updatePresence();
 	}
 
-	handleConnectionOpen(userSettings: unknown): void {
+	handleGatewayReady(userSettings: unknown): void {
 		this.updateUserSettings(userSettings);
 	}
 

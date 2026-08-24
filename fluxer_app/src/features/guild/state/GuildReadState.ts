@@ -112,7 +112,7 @@ class GuildReadState {
 			() => {
 				const {all, changes} = ReadStates.consumePendingChanges();
 				if (all) {
-					this.handleConnectionOpen();
+					this.handleGatewayReady();
 					return;
 				}
 				if (changes.length === 0) {
@@ -384,7 +384,7 @@ class GuildReadState {
 		return false;
 	}
 
-	handleConnectionOpen(): void {
+	handleGatewayReady(): void {
 		this.guildStates.clear();
 		this.unreadGuildIds.clear();
 		this.updateCounter = 0;
@@ -454,7 +454,7 @@ class GuildReadState {
 	}
 
 	handleRecomputeAll(): void {
-		this.handleConnectionOpen();
+		this.handleGatewayReady();
 	}
 
 	handleWindowFocused(): void {

@@ -296,7 +296,7 @@ class Messages {
 	}
 
 	@action
-	handleConnectionOpen(): boolean {
+	handleGatewayReady(): boolean {
 		const selectedChannelId = SelectedChannel.currentChannelId;
 		let didHydrateSelectedChannel = false;
 		if (selectedChannelId) {

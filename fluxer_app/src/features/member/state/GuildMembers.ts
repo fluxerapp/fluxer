@@ -132,7 +132,7 @@ class GuildMembers {
 		return Object.keys(this.members[guildId] ?? {}).length;
 	}
 
-	handleConnectionOpen(guilds: Array<GuildReadyData>): void {
+	handleGatewayReady(guilds: Array<GuildReadyData>): void {
 		this.members = {};
 		this.nonMembers = {};
 		this.loadedGuilds.clear();

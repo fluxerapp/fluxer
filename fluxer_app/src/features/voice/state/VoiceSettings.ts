@@ -610,7 +610,7 @@ class VoiceSettings {
 		this.adaptiveScreenShareQualityPrefV2 = value;
 	}
 
-	handleConnectionOpen(user: UserPrivate): void {
+	handleGatewayReady(user: UserPrivate): void {
 		if (this.isUserPremium(user.premium_type)) {
 			return;
 		}
