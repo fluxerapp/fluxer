@@ -4,12 +4,14 @@
 	position: relative;
 	display: flex;
 	flex-direction: column;
+	gap: inherit;
 	overflow: hidden;
 }
 
 .pane {
 	display: flex;
 	flex-direction: column;
+	gap: inherit;
 	flex: 0 0 auto;
 	width: 100%;
 }
