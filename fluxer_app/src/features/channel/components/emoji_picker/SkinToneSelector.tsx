@@ -96,11 +96,14 @@ export const SkinToneSelector = observer(() => {
 		}
 	}, []);
 	useEffect(() => {
+		if (!isOpen) {
+			return undefined;
+		}
 		document.addEventListener('mousedown', handleClickOutside);
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [handleClickOutside]);
+	}, [handleClickOutside, isOpen]);
 	return (
 		<div
 			ref={selectorRef}
