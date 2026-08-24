@@ -11,14 +11,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 env:
   GHCR_REGISTRY: ghcr.io/${{ github.repository_owner }}
-  CARGO_PROFILE_DEV_DEBUG: '0'
-  CARGO_PROFILE_TEST_DEBUG: '0'
-  CARGO_INCREMENTAL: '0'
 
 jobs:
   typecheck:
