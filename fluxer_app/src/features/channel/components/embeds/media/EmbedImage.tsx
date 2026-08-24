@@ -16,10 +16,13 @@ import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttach
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import {useMediaLoading} from '@app/features/messaging/hooks/useMediaLoading';
+import {useMediaViewerHoverWarm} from '@app/features/messaging/hooks/useMediaViewerHoverWarm';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
+import {EMBED_MAX_HEIGHT, EMBED_MAX_WIDTH} from '@app/features/messaging/utils/MediaDimensionConfig';
+import {resolveProxyRequestSize} from '@app/features/messaging/utils/MediaProxyRequestSize';
 import {buildStaticGifPreviewURL, stripMediaProxyParams} from '@app/features/messaging/utils/MediaProxyUtils';
 import {attachmentsToViewerItems, findViewerItemIndex} from '@app/features/messaging/utils/MediaViewerItemUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -27,13 +30,13 @@ import {MediaContextMenu} from '@app/features/ui/action_menu/MediaContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import MobileLayout from '@app/features/ui/state/MobileLayout';
+import type {MediaViewerItem} from '@app/features/ui/state/MediaViewer';
 import {createCalculator} from '@app/features/ui/utils/DimensionUtils';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
-import {motion} from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import {type FC, useCallback, useMemo, useState} from 'react';
 
@@ -41,25 +44,51 @@ const OPEN_IMAGE_IN_FULL_VIEW_DESCRIPTOR = msg({
 	message: 'Open image in full view',
 	comment: 'Button or menu action label in the channel and chat embed image. Keep it concise.',
 });
-const LOADING_DESCRIPTOR = msg({
-	message: 'Loading: {alt}',
-	comment: 'Short label in the channel and chat embed image. Keep it concise. Preserve {alt}; it is inserted by code.',
-});
-const LOADING_IMAGE_DESCRIPTOR = msg({
-	message: 'Loading image',
-	comment: 'Short label in the channel and chat embed image. Keep it concise.',
-});
 const IMAGE_DESCRIPTOR = msg({
 	message: 'Image',
 	comment: 'Short label in the channel and chat embed image. Keep it concise.',
 });
-const IMAGE_CONFIG = {
-	MAX_WIDTH: 400,
-} as const;
 const imageCalculator = createCalculator({
-	maxWidth: IMAGE_CONFIG.MAX_WIDTH,
+	maxWidth: EMBED_MAX_WIDTH,
+	maxHeight: EMBED_MAX_HEIGHT,
 	responsive: true,
 });
+
+const NO_MEDIA_ATTACHMENTS: ReadonlyArray<MessageAttachment> = Object.freeze([]);
+
+interface EmbedImageWarmInput {
+	src: string;
+	originalSrc: string;
+	naturalWidth: number;
+	naturalHeight: number;
+	contentHash?: string | null;
+	embedIndex?: number;
+	attachmentId?: string;
+	animated: boolean;
+	mediaAttachments: ReadonlyArray<MessageAttachment>;
+}
+
+export function resolveEmbedImageWarmItem(input: EmbedImageWarmInput): MediaViewerItem | null {
+	if (input.mediaAttachments.length > 0) {
+		const items = attachmentsToViewerItems(input.mediaAttachments);
+		return items[findViewerItemIndex(items, input.attachmentId)] ?? null;
+	}
+	if (input.src.length === 0) {
+		return null;
+	}
+	return {
+		src: input.src,
+		originalSrc: input.originalSrc,
+		naturalWidth: input.naturalWidth,
+		naturalHeight: input.naturalHeight,
+		type: 'image',
+		contentHash: input.contentHash,
+		embedIndex: input.embedIndex,
+		expiresAt: undefined,
+		expired: undefined,
+		animated: input.animated,
+	};
+}
 
 interface ImagePreviewHandlerProps {
 	src: string;
@@ -75,6 +104,8 @@ interface ImagePreviewHandlerProps {
 	message?: Message;
 	animated?: boolean;
 	mediaAttachments?: ReadonlyArray<MessageAttachment>;
+	onViewerWarmEnter?: () => void;
+	onViewerWarmLeave?: () => void;
 	children: React.ReactNode;
 }
 
@@ -111,7 +142,9 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 		attachmentId,
 		message,
 		animated,
-		mediaAttachments = [],
+		mediaAttachments = NO_MEDIA_ATTACHMENTS,
+		onViewerWarmEnter,
+		onViewerWarmLeave,
 		children,
 	}) => {
 		const {i18n} = useLingui();
@@ -197,6 +230,8 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 					onMouseDown={openInBrowser.onMouseDown}
 					onAuxClick={openInBrowser.onAuxClick}
 					onKeyDown={openImagePreview}
+					onMouseEnter={onViewerWarmEnter}
+					onMouseLeave={onViewerWarmLeave}
 					data-flx="channel.embeds.media.embed-image.image-preview-handler.image-preview-handler.open-image-preview.button"
 				>
 					{children}
@@ -227,16 +262,15 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 		message,
 		contentHash,
 		onDelete,
-		mediaAttachments = [],
+		mediaAttachments = NO_MEDIA_ATTACHMENTS,
 		isPreview,
 		snapshotIndex,
 		animated = false,
 	}) => {
 		const {i18n} = useLingui();
 		const messageViewContext = useMaybeMessageViewContext();
-		const isMobile = MobileLayout.enabled;
 		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
-		const shouldAnimateImage = useShouldAnimate({kind: 'gif'});
+		const shouldAnimateImage = useShouldAnimate({kind: 'gif', isAnimated: animated});
 		const {style: containerStyle, dimensions} = imageCalculator.calculate(
 			{width, height},
 			{
@@ -245,18 +279,48 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 				aspectRatio: true,
 			},
 		);
+		const previewSize = useMemo(
+			() => resolveProxyRequestSize(dimensions.width, dimensions.height, naturalWidth, naturalHeight),
+			[dimensions.width, dimensions.height, naturalHeight, naturalWidth],
+		);
 		const effectiveSrc = useMemo(() => {
 			if (!animated || shouldAnimateImage || src.startsWith('blob:')) return src;
-			return buildStaticGifPreviewURL(src, Math.round(dimensions.width * 2), Math.round(dimensions.height * 2));
-		}, [animated, dimensions.height, dimensions.width, shouldAnimateImage, src]);
+			return buildStaticGifPreviewURL(src, previewSize?.width, previewSize?.height);
+		}, [animated, previewSize, shouldAnimateImage, src]);
 		const staticPreviewSrc = useMemo(() => {
 			if (!animated || src.startsWith('blob:')) return src;
-			return buildStaticGifPreviewURL(src, Math.round(dimensions.width * 2), Math.round(dimensions.height * 2));
-		}, [animated, dimensions.height, dimensions.width, src]);
-		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
-			disabled: !isMobile,
-			rememberKey: effectiveSrc,
+			return buildStaticGifPreviewURL(src, previewSize?.width, previewSize?.height);
+		}, [animated, previewSize, src]);
+		const viewerWarmItem = useMemo(
+			() =>
+				resolveEmbedImageWarmItem({
+					src,
+					originalSrc,
+					naturalWidth,
+					naturalHeight,
+					contentHash,
+					embedIndex,
+					attachmentId,
+					animated,
+					mediaAttachments,
+				}),
+			[
+				animated,
+				attachmentId,
+				contentHash,
+				embedIndex,
+				mediaAttachments,
+				naturalHeight,
+				naturalWidth,
+				originalSrc,
+				src,
+			],
+		);
+		const {scheduleViewerWarm, cancelViewerWarm} = useMediaViewerHoverWarm(viewerWarmItem, {
+			allowAnimated: shouldAnimateImage,
+			enabled: !shouldBlur,
 		});
+		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: effectiveSrc});
 		const shouldLoadMedia = isNearViewport && !shouldBlur;
 		const staticImageSrc = animated && !src.startsWith('blob:') ? staticPreviewSrc : effectiveSrc;
 		const animatedImageSource =
@@ -264,7 +328,6 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 		const {
 			loaded,
 			error,
-			cachedOnMount,
 			thumbHashURL,
 			ref: mediaRef,
 			onLoad: handleImageLoad,
@@ -398,7 +461,8 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 												src={thumbHashURL}
 												className={styles.thumbHashImage}
 												alt=""
-												loading={isMobile ? 'lazy' : 'eager'}
+												aria-hidden={true}
+												loading="eager"
 												style={{filter: 'blur(40px)'}}
 												data-flx="channel.embeds.media.embed-image.thumb-hash-image"
 											/>
@@ -461,42 +525,48 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 								message={message}
 								mediaAttachments={mediaAttachments}
 								animated={animated}
+								onViewerWarmEnter={scheduleViewerWarm}
+								onViewerWarmLeave={cancelViewerWarm}
 								data-flx="channel.embeds.media.embed-image.image-preview-handler"
 							>
 								<div
 									className={styles.imageInnerContainer}
 									data-flx="channel.embeds.media.embed-image.image-inner-container"
 								>
-									{shouldRenderPlaceholder && thumbHashURL && (
-										<div
-											className={styles.thumbHashContainer}
-											data-flx="channel.embeds.media.embed-image.thumb-hash-container--2"
-										>
-											<img
-												src={thumbHashURL}
-												className={styles.thumbHashImage}
-												alt={alt ? i18n._(LOADING_DESCRIPTOR, {alt}) : i18n._(LOADING_IMAGE_DESCRIPTOR)}
-												loading={isMobile ? 'lazy' : 'eager'}
-												data-flx="channel.embeds.media.embed-image.thumb-hash-image--2"
-											/>
-										</div>
-									)}
-									<motion.img
+									<img
 										alt={alt || i18n._(IMAGE_DESCRIPTOR)}
 										src={shouldLoadMedia ? staticImageSrc : undefined}
 										ref={mediaRef}
 										width={naturalWidth}
 										height={naturalHeight}
 										className={clsx(styles.imageElement, className)}
-										loading={isMobile ? 'lazy' : 'eager'}
+										loading="eager"
 										tabIndex={-1}
 										onLoad={handleImageLoad}
 										onError={handleImageError}
-										initial={{opacity: cachedOnMount ? 1 : 0}}
-										animate={{opacity: shouldRenderPlaceholder ? 0 : 1}}
-										transition={{duration: cachedOnMount || Accessibility.useReducedMotion ? 0 : 0.2}}
 										data-flx="channel.embeds.media.embed-image.image-element"
 									/>
+									<AnimatePresence data-flx="channel.embeds.media.embed-image.animate-presence">
+										{shouldRenderPlaceholder && thumbHashURL && (
+											<motion.div
+												key="thumb-hash"
+												className={styles.thumbHashContainer}
+												initial={{opacity: 1}}
+												exit={{opacity: 0}}
+												transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
+												data-flx="channel.embeds.media.embed-image.thumb-hash-container--2"
+											>
+												<img
+													src={thumbHashURL}
+													className={styles.thumbHashImage}
+													alt=""
+													aria-hidden={true}
+													loading="eager"
+													data-flx="channel.embeds.media.embed-image.thumb-hash-image--2"
+												/>
+											</motion.div>
+										)}
+									</AnimatePresence>
 									{animatedImageSource.length > 0 && (
 										<motion.img
 											alt=""
@@ -506,7 +576,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 											width={naturalWidth}
 											height={naturalHeight}
 											className={clsx(styles.imageElement, styles.animatedImageElement)}
-											loading={isMobile ? 'lazy' : 'eager'}
+											loading="eager"
 											tabIndex={-1}
 											onLoad={handleAnimatedImageLoad}
 											onError={handleAnimatedImageError}
