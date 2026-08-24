@@ -12,20 +12,18 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 env:
   GHCR_REGISTRY: ghcr.io/${{ github.repository_owner }}
-  CARGO_PROFILE_DEV_DEBUG: none
-  CARGO_PROFILE_TEST_DEBUG: none
+  CARGO_PROFILE_DEV_DEBUG: '0'
+  CARGO_PROFILE_TEST_DEBUG: '0'
   CARGO_INCREMENTAL: '0'
 
 jobs:
   typecheck:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
-    env:
-      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -35,6 +33,9 @@ jobs:
         with:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
+
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
 
       - name: Restore ci helper
         id: ci-helper
@@ -79,7 +80,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
       PNPM_TEST_WORKSPACE_CONCURRENCY: '2'
     steps:
       - name: Checkout code
@@ -90,6 +90,9 @@ jobs:
         with:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
+
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
 
       - name: Restore ci helper
         id: ci-helper
@@ -214,8 +217,6 @@ jobs:
   gateway:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
-    env:
-      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -232,6 +233,9 @@ jobs:
             fluxer_gateway/native/guild_member_list_oset_nif -> target
             fluxer_gateway/native/push_markdown_plaintext_nif -> target
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
 
       - name: Restore ci helper
         id: ci-helper
@@ -299,8 +303,6 @@ jobs:
   knip:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
-    env:
-      FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -310,6 +312,9 @@ jobs:
         with:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
+
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
 
       - name: Restore ci helper
         id: ci-helper
