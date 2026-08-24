@@ -51,6 +51,35 @@ function desktopBucketPrefix(test?: boolean): string {
 	return test ? DESKTOP_TEST_BUCKET_PREFIX : DESKTOP_BUCKET_PREFIX;
 }
 
+const MUTABLE_DOWNLOAD_CACHE_CONTROL = 'public, max-age=300';
+const VERSIONED_ARTIFACT_CACHE_CONTROL = 'public, max-age=31536000';
+
+function isDesktopReleaseFeedFilename(filename: string): boolean {
+	return (
+		filename === 'manifest.json' ||
+		filename.endsWith('.yml') ||
+		filename.endsWith('.yaml') ||
+		filename.startsWith('RELEASES') ||
+		(filename.startsWith('releases') && filename.endsWith('.json')) ||
+		(filename.startsWith('assets') && filename.endsWith('.json'))
+	);
+}
+
+function isVersionedDesktopArtifactKey(key: string): boolean {
+	if (!key.startsWith(`${DESKTOP_BUCKET_PREFIX}/`)) {
+		return false;
+	}
+	const filename = key.split('/').pop() ?? '';
+	if (filename.length === 0) {
+		return false;
+	}
+	return !isDesktopReleaseFeedFilename(filename);
+}
+
+export function downloadCacheControlForKey(key: string): string {
+	return isVersionedDesktopArtifactKey(key) ? VERSIONED_ARTIFACT_CACHE_CONTROL : MUTABLE_DOWNLOAD_CACHE_CONTROL;
+}
+
 function desktopArtifactPrefix(params: {
 	channel: DesktopChannel;
 	plat: DesktopPlatform;
@@ -108,6 +137,7 @@ type VersionInfo = {
 	files: Record<string, VersionFile>;
 };
 export type DesktopChecksumFile = {
+	key: string;
 	filename: string;
 	sha256: string;
 	body: string;
@@ -461,7 +491,7 @@ export class DownloadService {
 			return null;
 		}
 		const filename = this.filenameFromKey(key);
-		return this.buildDesktopChecksumFile(filename, file.sha256);
+		return this.buildDesktopChecksumFile(key, filename, file.sha256);
 	}
 
 	async resolveVersionedDesktopChecksumFile(params: {
@@ -479,14 +509,14 @@ export class DownloadService {
 		const filename = this.filenameFromKey(key);
 		const objectSha256 = await this.readDesktopSha256ForArtifactKey(key);
 		if (objectSha256) {
-			return this.buildDesktopChecksumFile(filename, objectSha256);
+			return this.buildDesktopChecksumFile(key, filename, objectSha256);
 		}
 		const latest = await this.getLatestDesktopVersion(params);
 		const file = latest?.version === params.version ? latest.files[params.format] : undefined;
 		if (!file?.sha256 || !this.isValidSha256(file.sha256)) {
 			return null;
 		}
-		return this.buildDesktopChecksumFile(filename, file.sha256);
+		return this.buildDesktopChecksumFile(key, filename, file.sha256);
 	}
 
 	async resolveDownloadKey(params: {path: string; test?: boolean}): Promise<string | null> {
@@ -1151,8 +1181,9 @@ export class DownloadService {
 		return key.split('/').pop() ?? 'download';
 	}
 
-	private buildDesktopChecksumFile(filename: string, sha256: string): DesktopChecksumFile {
+	private buildDesktopChecksumFile(key: string, filename: string, sha256: string): DesktopChecksumFile {
 		return {
+			key,
 			filename,
 			sha256,
 			body: `${sha256}  ${filename}\n`,

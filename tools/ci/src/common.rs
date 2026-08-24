@@ -469,25 +469,6 @@ where
     Ok(())
 }
 
-pub(crate) async fn upload_directory_to_s3_overwrite<F>(
-    client: &S3Client,
-    bucket: &str,
-    prefix: &str,
-    root: &Path,
-    include: F,
-) -> Result<()>
-where
-    F: Fn(&Path) -> bool,
-{
-    let plan = directory_upload_plan(prefix, root, include)?;
-    let stats = upload_s3_plan_overwrite(client, bucket, plan).await?;
-    println!(
-        "Overwrite upload complete for s3://{bucket}/{prefix}: uploaded {}",
-        stats.uploaded
-    );
-    Ok(())
-}
-
 pub(crate) async fn upload_s3_plan_append_only(
     client: &S3Client,
     bucket: &str,

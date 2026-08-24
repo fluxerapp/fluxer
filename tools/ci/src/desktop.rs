@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{
-    CalverEnv, CommandSpec, append_github_env, append_github_output, append_github_path, capture,
-    collect_files, command_succeeds, copy_dir_contents, count_files, count_files_min_depth,
-    download_file, download_s3_prefix, env_bool, env_string, join_s3_key, output_bytes,
-    output_text, parse_bool, path_to_s3_key, remove_dir_if_exists, remove_file_if_exists,
-    require_any_env, require_env, require_home, resolve_calver, run_command, runner_temp,
-    s3_client, title_case, trim_option, upload_directory_to_s3, upload_directory_to_s3_overwrite,
+    CalverEnv, CommandSpec, S3UploadPlanItem, append_github_env, append_github_output,
+    append_github_path, capture, collect_files, command_succeeds, copy_dir_contents, count_files,
+    count_files_min_depth, directory_upload_plan, download_file, download_s3_prefix, env_bool,
+    env_string, join_s3_key, output_bytes, output_text, parse_bool, path_to_s3_key,
+    remove_dir_if_exists, remove_file_if_exists, require_any_env, require_env, require_home,
+    resolve_calver, run_command, runner_temp, s3_client, title_case, trim_option,
+    upload_directory_to_s3, upload_s3_plan_append_only, upload_s3_plan_overwrite,
 };
 use crate::functions::write_json_pretty;
 use anyhow::{Context, Result, anyhow, bail, ensure};
@@ -3090,11 +3091,62 @@ async fn upload_payload_directory<F>(
 where
     F: Fn(&Path) -> bool,
 {
+    let plan = desktop_payload_upload_plan(s3_prefix, payload_root, include)?;
     if overwrite_existing {
-        upload_directory_to_s3_overwrite(client, bucket, s3_prefix, payload_root, include).await
+        let stats = upload_s3_plan_overwrite(client, bucket, plan).await?;
+        println!(
+            "Overwrite upload complete for s3://{bucket}/{s3_prefix}: uploaded {}",
+            stats.uploaded
+        );
     } else {
-        upload_directory_to_s3(client, bucket, s3_prefix, payload_root, include).await
+        let stats = upload_s3_plan_append_only(client, bucket, plan).await?;
+        println!(
+            "Append-only upload complete for s3://{bucket}/{s3_prefix}: uploaded {}, skipped existing {}",
+            stats.uploaded, stats.skipped_existing
+        );
     }
+    Ok(())
+}
+
+fn desktop_payload_upload_plan<F>(
+    s3_prefix: &str,
+    payload_root: &Path,
+    include: F,
+) -> Result<Vec<S3UploadPlanItem>>
+where
+    F: Fn(&Path) -> bool,
+{
+    Ok(directory_upload_plan(s3_prefix, payload_root, include)?
+        .into_iter()
+        .map(|item| {
+            let cache_control = desktop_object_cache_control(&item.key);
+            item.with_cache_control(cache_control)
+        })
+        .collect())
+}
+
+pub(crate) const MUTABLE_DOWNLOAD_CACHE_CONTROL: &str = "public, max-age=300";
+pub(crate) const VERSIONED_ARTIFACT_CACHE_CONTROL: &str = "public, max-age=31536000";
+
+fn desktop_object_cache_control(key: &str) -> &'static str {
+    if is_versioned_desktop_artifact_key(key) {
+        VERSIONED_ARTIFACT_CACHE_CONTROL
+    } else {
+        MUTABLE_DOWNLOAD_CACHE_CONTROL
+    }
+}
+
+fn is_versioned_desktop_artifact_key(key: &str) -> bool {
+    if !key.starts_with("desktop/") {
+        return false;
+    }
+    let Some(filename) = key.rsplit('/').next() else {
+        return false;
+    };
+    if filename.is_empty() {
+        return false;
+    }
+    !is_payload_metadata_key(Path::new(filename)) && !filename.ends_with(".yaml")
 }
 
 fn should_overwrite_payload(s3_prefix: &str, test_build: bool) -> bool {
@@ -3320,6 +3372,68 @@ mod tests {
     use super::*;
     use crate::common::{directory_upload_plan, parse_version_instant, s3_directory_prefix};
     use chrono::{DateTime, TimeZone, Utc};
+
+    #[test]
+    fn every_uploaded_desktop_object_carries_a_cache_instruction() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("desktop").join("stable").join("darwin");
+        fs::create_dir_all(root.join("arm64")).unwrap();
+        fs::write(root.join("arm64").join("Fluxer-1.2.3-arm64.dmg"), "dmg").unwrap();
+        fs::write(root.join("arm64").join("manifest.json"), "{}").unwrap();
+        fs::write(root.join("arm64").join("latest-mac.yml"), "version: 1").unwrap();
+
+        let plan =
+            desktop_payload_upload_plan("desktop", temp.path().join("desktop").as_path(), |_| true)
+                .unwrap();
+
+        assert!(
+            !plan.is_empty(),
+            "the sample payload produced no upload plan"
+        );
+        for item in &plan {
+            assert!(
+                item.cache_control.is_some(),
+                "{} would be stored with no cache instruction at all",
+                item.key
+            );
+        }
+    }
+
+    #[test]
+    fn the_stored_lifetime_follows_the_key_not_the_upload_batch() {
+        assert_eq!(
+            desktop_object_cache_control("desktop/stable/darwin/arm64/Fluxer-1.2.3-arm64.dmg"),
+            VERSIONED_ARTIFACT_CACHE_CONTROL
+        );
+        assert_eq!(
+            desktop_object_cache_control(
+                "desktop/stable/darwin/arm64/Fluxer-1.2.3-arm64.dmg.sha256"
+            ),
+            VERSIONED_ARTIFACT_CACHE_CONTROL
+        );
+        assert_eq!(
+            desktop_object_cache_control("desktop/stable/darwin/arm64/manifest.json"),
+            MUTABLE_DOWNLOAD_CACHE_CONTROL,
+            "the release pointer must stay reachable when it moves"
+        );
+        assert_eq!(
+            desktop_object_cache_control("desktop/stable/win32/x64/latest.yml"),
+            MUTABLE_DOWNLOAD_CACHE_CONTROL
+        );
+        assert_eq!(
+            desktop_object_cache_control("desktop/stable/win32/x64/RELEASES.json"),
+            MUTABLE_DOWNLOAD_CACHE_CONTROL
+        );
+        assert_eq!(
+            desktop_object_cache_control("desktop-test/canary/linux/x64/Fluxer-1.2.3.AppImage"),
+            MUTABLE_DOWNLOAD_CACHE_CONTROL,
+            "test artifacts are overwritten in place, so they are not immutable"
+        );
+        assert_ne!(
+            VERSIONED_ARTIFACT_CACHE_CONTROL, MUTABLE_DOWNLOAD_CACHE_CONTROL,
+            "the two policies collapsed into one, so this test proves nothing"
+        );
+    }
 
     fn dt(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(year, month, day, hour, minute, second)

@@ -18,7 +18,12 @@ import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
 import type {HonoEnv} from '../types/HonoEnv';
 import {Validator} from '../Validator';
 import type {DesktopChecksumFile, DownloadService, DownloadStreamResult} from './DownloadService';
-import {DESKTOP_REDIRECT_PREFIX, DOWNLOAD_PREFIX, UnsatisfiableRangeError} from './DownloadService';
+import {
+	DESKTOP_REDIRECT_PREFIX,
+	DOWNLOAD_PREFIX,
+	downloadCacheControlForKey,
+	UnsatisfiableRangeError,
+} from './DownloadService';
 
 function artifactFilename(key: string, filenameOverride?: string): string {
 	return filenameOverride ?? key.split('/').pop() ?? 'download';
@@ -290,7 +295,7 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 			if (!checksum) {
 				return ctx.text('Not Found', 404);
 			}
-			return checksumFileResponse(ctx, checksum, 'public, max-age=86400');
+			return checksumFileResponse(ctx, checksum, downloadCacheControlForKey(checksum.key));
 		},
 	);
 	routes.on(
@@ -316,7 +321,7 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 			if (!key) {
 				return ctx.text('Not Found', 404);
 			}
-			return streamArtifactResponse(ctx, downloadService, key, 'public, max-age=86400');
+			return streamArtifactResponse(ctx, downloadService, key, downloadCacheControlForKey(key));
 		},
 	);
 	routes.on(
@@ -340,7 +345,7 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 			if (!key) {
 				return ctx.text('Not Found', 404);
 			}
-			return streamArtifactResponse(ctx, downloadService, key, 'public, max-age=300');
+			return streamArtifactResponse(ctx, downloadService, key, downloadCacheControlForKey(key));
 		},
 	);
 }
