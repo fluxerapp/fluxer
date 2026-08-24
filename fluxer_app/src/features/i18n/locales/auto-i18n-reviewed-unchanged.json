@@ -1273,6 +1273,9 @@
         "msgid": "Are you sure you want to kick <0>{targetUserTag}</0> from the community? They will be able to rejoin with a new invite."
       },
       {
+        "msgid": "Attachment {pendingFilename}"
+      },
+      {
         "msgid": "Banned {targetUserTag} from the community"
       },
       {
@@ -1468,6 +1471,12 @@
         "msgid": "No optional services are available on this instance. You can skip this step."
       },
       {
+        "msgid": "No part of {query} could be applied. Fix the underlined value or add something to search for."
+      },
+      {
+        "msgid": "Nothing to search for"
+      },
+      {
         "msgid": "Open Settings"
       },
       {
@@ -1546,6 +1555,15 @@
         "msgid": "Resize expression picker from bottom right"
       },
       {
+        "msgid": "Resize expression picker from the left edge"
+      },
+      {
+        "msgid": "Resize expression picker from the right edge"
+      },
+      {
+        "msgid": "Resize expression picker from the top edge"
+      },
+      {
         "msgid": "Resize expression picker from top left"
       },
       {
@@ -1558,10 +1576,37 @@
         "msgid": "Resize inbox from bottom right"
       },
       {
+        "msgid": "Resize inbox from the left edge"
+      },
+      {
+        "msgid": "Resize inbox from the right edge"
+      },
+      {
+        "msgid": "Resize inbox from the top edge"
+      },
+      {
         "msgid": "Resize inbox from top left"
       },
       {
         "msgid": "Resize inbox from top right"
+      },
+      {
+        "msgid": "Resize pinned messages from bottom left"
+      },
+      {
+        "msgid": "Resize pinned messages from bottom right"
+      },
+      {
+        "msgid": "Resize pinned messages from the left edge"
+      },
+      {
+        "msgid": "Resize pinned messages from the right edge"
+      },
+      {
+        "msgid": "Resize pinned messages from top left"
+      },
+      {
+        "msgid": "Resize pinned messages from top right"
       },
       {
         "msgid": "Resize sidebar"
@@ -1583,6 +1628,9 @@
       },
       {
         "msgid": "Search filter: {filter}"
+      },
+      {
+        "msgid": "Search for {query}"
       },
       {
         "msgid": "Security key PIN"
@@ -1615,10 +1663,16 @@
         "msgid": "Show connection volume controls"
       },
       {
+        "msgid": "Show fewer filters"
+      },
+      {
         "msgid": "Show per-device participant volume sliders in voice menus"
       },
       {
         "msgid": "Show rich previews for YouTube links."
+      },
+      {
+        "msgid": "Show {count, plural, one {# more filter} other {# more filters}}"
       },
       {
         "msgid": "Sign-in details"
