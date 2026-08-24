@@ -41,14 +41,15 @@ import {normalizeSlotAutocompleteQuery as normalizeSlotQuery} from '@app/feature
 import type {SlashOptionalContext, SlashSlotAutocompleteContext} from '@app/features/lexical/composer/slashSlots';
 import {
 	type GifAutocompleteSearchState,
+	selectAutocompleteGifResults,
 	useAutocompleteGifSearch,
 } from '@app/features/lexical/composer/useAutocompleteGifSearch';
 import {
-	isMemberSearchTrigger,
 	useAutocompleteMemberSearch,
 	useAutocompleteSlotMemberSearch,
 } from '@app/features/lexical/composer/useAutocompleteMemberSearch';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
+import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {SearchContext} from '@app/features/member/state/MemberSearch';
 import * as HighlightCommands from '@app/features/messaging/commands/HighlightCommands';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
@@ -62,6 +63,7 @@ import {
 	buildCommandArgOptions,
 	buildEmojiAutocompleteOptions,
 	buildEmojiReactionOptions,
+	buildMemberSearchRank,
 	filterDMUsers,
 	filterGuildMembers,
 	MENTION_RESULT_LIMIT,
@@ -113,18 +115,45 @@ interface AutocompleteMenuState {
 	query: string;
 }
 
-interface MentionRankingSession {
-	key: string;
-	order: Map<string, number>;
-	nextRank: number;
-}
-
-function recordMentionMembers(session: MentionRankingSession, members: ReadonlyArray<GuildMember>): void {
-	for (const member of members) {
-		if (!session.order.has(member.user.id)) {
-			session.order.set(member.user.id, session.nextRank++);
-		}
+function buildRecentSpeakerOptions(
+	channel: Channel,
+	limit: number,
+): Array<{
+	type: 'mention';
+	kind: 'member';
+	member: GuildMember;
+}> {
+	const guildId = channel.guildId;
+	const messages = Messages.getCachedMessages(channel.id);
+	if (guildId == null || messages == null) {
+		return [];
 	}
+	const seen = new Set<string>();
+	const options: Array<{
+		type: 'mention';
+		kind: 'member';
+		member: GuildMember;
+	}> = [];
+	messages.forEach(
+		(message) => {
+			if (message.webhookId != null) {
+				return undefined;
+			}
+			const authorId = message.author.id;
+			if (seen.has(authorId)) {
+				return undefined;
+			}
+			seen.add(authorId);
+			const member = GuildMembers.getMember(guildId, authorId);
+			if (member != null) {
+				options.push({type: 'mention', kind: 'member', member});
+			}
+			return options.length < limit;
+		},
+		undefined,
+		true,
+	);
+	return options;
 }
 
 export type {TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
@@ -154,7 +183,6 @@ export function useLexicalAutocomplete({
 	const memberSearchContextRef = useRef<SearchContext | null>(null);
 	const currentGuildIdRef = useRef<string | null>(null);
 	const memberFetchDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const mentionSessionRef = useRef<MentionRankingSession>({key: '', order: new Map(), nextRank: 0});
 	const [slotAutocompleteContext, setSlotAutocompleteContext] = useState<SlashSlotAutocompleteContext | null>(null);
 	const slotAutocompleteContextRef = useRef<SlashSlotAutocompleteContext | null>(null);
 	slotAutocompleteContextRef.current = slotAutocompleteContext;
@@ -231,16 +259,8 @@ export function useLexicalAutocomplete({
 		return match != null && match.length > 0 && match.length % 2 !== 0;
 	}, [textUpToCursor]);
 
-	const mentionSessionKey =
-		channel != null && channel.guildId != null && isMemberSearchTrigger(autocompleteTriggerType)
-			? `${channel.guildId}:${autocompleteTriggerMatchedText}`
-			: '';
-	if (mentionSessionRef.current.key !== mentionSessionKey) {
-		mentionSessionRef.current = {key: mentionSessionKey, order: new Map(), nextRank: 0};
-	}
-	const recordCurrentMentionMembers = useCallback((members: ReadonlyArray<GuildMember>): void => {
-		recordMentionMembers(mentionSessionRef.current, members);
-	}, []);
+	const memberSearchRank = useMemo(() => buildMemberSearchRank(memberSearchResults), [memberSearchResults]);
+	const slotMemberSearchRank = useMemo(() => buildMemberSearchRank(slotMemberSearchResults), [slotMemberSearchResults]);
 
 	useAutocompleteMemberSearch({
 		triggerType: autocompleteTriggerType,
@@ -334,9 +354,8 @@ export function useLexicalAutocomplete({
 					memberSearchResults,
 					canManageUser,
 					canViewChannel,
-					stableOrder: mentionSessionRef.current.order,
+					stableOrder: memberSearchRank,
 				});
-				recordCurrentMentionMembers(options.filter(isMentionMember).map((option) => option.member));
 				break;
 			}
 			case 'mention': {
@@ -353,14 +372,12 @@ export function useLexicalAutocomplete({
 					const userOptions = filterDMUsers(users, parsedQuery);
 					options = channel.isPersonalNotes() ? userOptions : [...userOptions, ...SPECIAL_MENTIONS];
 				} else {
-					const members = filterGuildMembers(
-						memberSearchResults,
-						parsedQuery,
-						true,
-						canViewChannel,
-						mentionSessionRef.current.order,
-					);
-					recordCurrentMentionMembers(members.map((option) => option.member));
+					const recentSpeakers =
+						matchedText.length === 0 ? buildRecentSpeakerOptions(channel, MENTION_RESULT_LIMIT) : [];
+					const members =
+						recentSpeakers.length > 0
+							? recentSpeakers
+							: filterGuildMembers(memberSearchResults, parsedQuery, true, canViewChannel, memberSearchRank);
 					const mentionableRoles = Guilds.getGuildRoles(channel.guildId).filter(
 						(role) => canMentionEveryone || role.mentionable,
 					);
@@ -462,15 +479,15 @@ export function useLexicalAutocomplete({
 			case 'gif': {
 				type = 'gif';
 				const searchQuery = (autocompleteTrigger.match[3] == null ? '' : autocompleteTrigger.match[3]).trim();
-				if (searchQuery.length > 0 && gifState.status === 'success' && gifState.query === searchQuery) {
-					options = gifState.results.slice(0, MENTION_RESULT_LIMIT).map((gif) => ({
+				options = selectAutocompleteGifResults(gifState, searchQuery)
+					.slice(0, MENTION_RESULT_LIMIT)
+					.map((gif) => ({
 						type: 'gif' as const,
 						gif: {
 							...gif,
 							title: gif.title || KlipyUtils.parseTitleFromUrl(gif.url),
 						},
 					}));
-				}
 				break;
 			}
 			case 'sticker': {
@@ -515,9 +532,9 @@ export function useLexicalAutocomplete({
 		gifState,
 		hasOpenCodeBlock,
 		i18n,
+		memberSearchRank,
 		memberSearchResults,
 		permissionVersion,
-		recordCurrentMentionMembers,
 	]);
 
 	useEffect(() => {
@@ -567,6 +584,7 @@ export function useLexicalAutocomplete({
 					memberSearchResults: slotMemberSearchResults,
 					canManageUser,
 					canViewChannel,
+					stableOrder: slotMemberSearchRank,
 				});
 			case 'channel':
 				return buildSlotChannelOptions(channel, query);
@@ -575,7 +593,7 @@ export function useLexicalAutocomplete({
 			default:
 				return [];
 		}
-	}, [canManageUser, canViewChannel, channel, slotAutocompleteContext, slotMemberSearchResults]);
+	}, [canManageUser, canViewChannel, channel, slotAutocompleteContext, slotMemberSearchRank, slotMemberSearchResults]);
 	const slotOptionalOptions = useMemo<Array<AutocompleteOption>>(() => {
 		if (slotOptionalContext == null) {
 			return [];
@@ -781,6 +799,7 @@ interface BuildSlotUserOptionsParams {
 	memberSearchResults: Array<GuildMember>;
 	canManageUser: (otherUserId: string, permission: bigint) => boolean;
 	canViewChannel: (userId: string) => boolean;
+	stableOrder: Map<string, number>;
 }
 
 function buildSlotUserOptions({
@@ -790,6 +809,7 @@ function buildSlotUserOptions({
 	memberSearchResults,
 	canManageUser,
 	canViewChannel,
+	stableOrder,
 }: BuildSlotUserOptionsParams): Array<AutocompleteOption> {
 	if (channel == null) {
 		return [];
@@ -803,6 +823,7 @@ function buildSlotUserOptions({
 			memberSearchResults,
 			canManageUser,
 			canViewChannel,
+			stableOrder,
 		});
 	}
 	const parsedQuery = parseMentionQuery(query);
@@ -810,7 +831,7 @@ function buildSlotUserOptions({
 		const users = channel.recipientIds.map((id) => Users.getUser(id)).filter((user): user is User => user != null);
 		return filterDMUsers(users, parsedQuery);
 	}
-	return filterGuildMembers(memberSearchResults, parsedQuery, true, canViewChannel);
+	return filterGuildMembers(memberSearchResults, parsedQuery, true, canViewChannel, stableOrder);
 }
 
 function buildSlotChannelOptions(channel: Channel | null, query: string): Array<AutocompleteOption> {
