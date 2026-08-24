@@ -22,6 +22,7 @@ import {
 	resolveMessageQueueRequestOutcomeDecision,
 	resolveMessageQueueSendExecutionDecision,
 } from '@app/features/messaging/state/MessageQueueStateMachine';
+import {planTextareaAttachmentCancellation} from '@app/features/messaging/state/TextareaAttachmentUploadCancellation';
 import {
 	type ChunkedUploadPart,
 	type ChunkedUploadPlan,
@@ -50,7 +51,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {formatUserSettingsPath} from '@app/features/user/components/settings_utils/SettingsConstants';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
-import {Queue, type QueueEntry} from '@app/lib/list/ListQueue';
+import {Queue} from '@app/lib/list/ListQueue';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
 	AllowedMentions,
@@ -253,10 +254,6 @@ const isTimeoutError = (error: unknown): boolean => {
 const isNetworkRequestError = (error: unknown): boolean => {
 	return error instanceof Error && error.message === 'Network error during request';
 };
-
-function isSendPayload(payload: MessageQueuePayload): payload is SendMessagePayload {
-	return payload.type === 'send';
-}
 
 function isRateLimitError(error: HttpError): boolean {
 	if (error.status !== 429) return false;
@@ -516,23 +513,6 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		this.abortControllers.delete(nonce);
 	}
 
-	cancelPendingSendRequests(channelId: string): Array<SendMessagePayload> {
-		const cancelled: Array<SendMessagePayload> = [];
-		const remaining: Array<QueueEntry<MessageQueuePayload, RestResponse<Message> | undefined>> = [];
-		while (this.queue.length > 0) {
-			const entry = this.queue.shift()!;
-			if (isSendPayload(entry.message) && entry.message.channelId === channelId) {
-				cancelled.push(entry.message);
-				this.cancelRequest(entry.message.nonce);
-			} else {
-				remaining.push(entry);
-			}
-		}
-		this.queue.push(...remaining);
-		logger.info('Cancel pending send requests', cancelled.length);
-		return cancelled;
-	}
-
 	async sendImmediately(payload: SendMessagePayload): Promise<RestResponse<Message> | undefined> {
 		while (true) {
 			const completion = await this.drainSendImmediately(payload);
@@ -713,16 +693,15 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	}
 
 	private cancelTextareaAttachmentUploads(attachmentIds: ReadonlyArray<number>): void {
-		const channelIds = new Set<string>();
-		for (const attachmentId of attachmentIds) {
-			const upload = this.textareaAttachmentUploads.get(attachmentId);
-			if (!upload) continue;
-			channelIds.add(upload.channelId);
-			upload.requestAbortController.abort();
+		const plan = planTextareaAttachmentCancellation(this.textareaAttachmentUploads, attachmentIds);
+		for (const {attachmentId, upload} of plan.cancelled) {
 			upload.abortController.abort();
 			this.textareaAttachmentUploads.delete(attachmentId);
 		}
-		for (const channelId of channelIds) {
+		for (const controller of plan.requestControllersToAbort) {
+			controller.abort();
+		}
+		for (const channelId of plan.channelIds) {
 			this.disposeTextareaAttachmentUploadPrunerIfIdle(channelId);
 		}
 	}
