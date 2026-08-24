@@ -28,6 +28,15 @@ jobs:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
 
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
+
+
+      - name: Build ci helper
+        if: steps.ci-helper.outputs.cache-hit != 'true'
+        run: cargo build --locked --package fluxer-ci
+
+
       - name: Install pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
@@ -38,18 +47,18 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step install_dependencies
+        run: |
+          "$FLUXER_CI_BIN" ci --step install_dependencies
 
       - name: Run typecheck
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step typecheck
+        run: |
+          "$FLUXER_CI_BIN" ci --step typecheck
 
   test:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      PNPM_TEST_WORKSPACE_CONCURRENCY: '2'
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -60,6 +69,14 @@ jobs:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
 
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
+
+
+      - name: Build ci helper
+        if: steps.ci-helper.outputs.cache-hit != 'true'
+        run: cargo build --locked --package fluxer-ci
+
       - name: Install pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
@@ -70,17 +87,16 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step install_dependencies
+        run: |
+          "$FLUXER_CI_BIN" ci --step install_dependencies
+
 
       - name: Run tests
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step test
+        run: |
+          "$FLUXER_CI_BIN" ci --step test
 
   rust:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout code
@@ -101,16 +117,6 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Cache cargo
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: rust-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            rust-${{ runner.os }}-
 
       - name: Install native dependencies
         run: |
@@ -130,11 +136,17 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
+      - name: Check formatting (desktop native)
+        run: cargo fmt --manifest-path fluxer_desktop/native/rust/Cargo.toml --all -- --check
+
       - name: Clippy (warnings as errors)
         run: cargo clippy --workspace -- -D warnings
 
       - name: Run tests
         run: cargo test --workspace
+
+      - name: Run desktop native tests
+        run: cargo test --manifest-path fluxer_desktop/native/rust/Cargo.toml
 
   gateway:
     runs-on: ubuntu-24.04
@@ -148,41 +160,37 @@ jobs:
         with:
           toolchain: "1.93.0"
 
+
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
+
+
+      - name: Build ci helper
+        if: steps.ci-helper.outputs.cache-hit != 'true'
+        run: cargo build --locked --package fluxer-ci
+
       - name: Set up Erlang
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
         with:
           otp-version: '28'
           rebar3-version: '3.24.0'
 
-      - name: Cache rebar3 dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: |
-            fluxer_gateway/_build
-            ~/.cache/rebar3
-          key: rebar3-${{ runner.os }}-${{ hashFiles('fluxer_gateway/rebar.lock') }}
-          restore-keys: |
-            rebar3-${{ runner.os }}-
 
       - name: Check formatting
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_fmt
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_fmt
 
       - name: Compile
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_compile
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_compile
 
       - name: Run dialyzer
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_dialyzer
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_dialyzer
 
       - name: Run eunit tests
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step gateway_eunit
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_eunit
 
   knip:
     runs-on: ubuntu-24.04
@@ -197,6 +205,14 @@ jobs:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
 
+      - name: Resolve ci helper path
+        run: echo "FLUXER_CI_BIN=$GITHUB_WORKSPACE/target/debug/fluxer-ci" >> "$GITHUB_ENV"
+
+
+      - name: Build ci helper
+        if: steps.ci-helper.outputs.cache-hit != 'true'
+        run: cargo build --locked --package fluxer-ci
+
       - name: Install pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
@@ -207,14 +223,13 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step install_dependencies
+        run: |
+          "$FLUXER_CI_BIN" ci --step install_dependencies
+
 
       - name: Run knip
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step knip
+        run: |
+          "$FLUXER_CI_BIN" ci --step knip
 
   i18n:
     runs-on: ubuntu-24.04
@@ -223,12 +238,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
-      - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: "1.93.0"
-          targets: wasm32-unknown-unknown
-
       - name: Install pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
@@ -239,9 +248,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
-          --step install_dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Compile locale catalogs
         run: pnpm i18n:compile
@@ -276,29 +283,6 @@ jobs:
       - name: Verify shipped fonts match the lockfile
         run: python3 tools/fonts/build_fonts.py --verify
 
-  ci-scripts:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: "1.93.0"
-          components: rustfmt
-
-      - name: Sync ci helper dependencies
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci-scripts
-          --step sync
-
-      - name: Run ci helper tests
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci-scripts
-          --step test
-
   helm-and-scripts:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -306,19 +290,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
-      - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: "1.93.0"
-
       - name: Install helm
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
 
       - name: Resolve Helm test build version
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- resolve-calver
-          --github-env
-          --env-name HELM_TEST_BUILD_VERSION
+        run: |
+          set -euo pipefail
+          read -r YEAR MONTH DAY TIME <<<"$(date -u '+%Y %m %d %H%M%S')"
+          echo "HELM_TEST_BUILD_VERSION=${YEAR}.$((10#$MONTH))${DAY}.$((10#$TIME))" >> "$GITHUB_ENV"
 
       - name: Helm dependency update (all charts)
         run: |
