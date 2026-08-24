@@ -37,3 +37,17 @@ export function getScaledMediaDimensions(
 		height: Math.max(1, Math.round(height * scale)),
 	};
 }
+
+export function hasRenderableLocalPreview(attachment: {
+	file: LocalPreviewFile;
+	previewURL: string | null;
+	thumbnailURL: string | null;
+}): boolean {
+	if (attachment.file.type.startsWith('video/')) {
+		return attachment.thumbnailURL !== null;
+	}
+	if (isEmbeddableImageFile(attachment.file)) {
+		return attachment.previewURL !== null;
+	}
+	return false;
+}

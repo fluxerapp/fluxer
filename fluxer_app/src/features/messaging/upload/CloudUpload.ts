@@ -17,6 +17,7 @@ import {filter, map, timeout as rxTimeout, take} from 'rxjs/operators';
 
 const logger = new Logger('CloudUpload');
 const hasDOM = true;
+const LOCAL_MEDIA_PROBE_TIMEOUT_MS = 10_000;
 
 export type UploadStatus = 'pending' | 'uploading' | 'failed' | 'sending';
 export type UploadStage = 'idle' | 'queued' | 'uploading' | 'processing' | 'completed' | 'failed' | 'canceled';
@@ -399,6 +400,7 @@ class CloudUploadManager {
 			this.attachmentIndex.set(att.id, att);
 		});
 		this.notifyTextareaListeners(upload.channelId);
+		desktopCompleteUpload(nonce);
 		this.setMessageUploadInternal(nonce, null);
 		this.messageUploadListeners.delete(nonce);
 	}
@@ -543,10 +545,11 @@ class CloudUploadManager {
 				const spoiler = file.name.startsWith('SPOILER_');
 				const canPreviewImage = shouldEagerlyPreviewLocalImage(file);
 				const canPreviewVideo = shouldEagerlyPreviewLocalVideo(file);
+				const previewURL = hasDOM && canPreviewImage ? URL.createObjectURL(file) : null;
 				if (hasDOM) {
 					try {
-						if (canPreviewImage) {
-							const dims = await this.getImageDimensions(file);
+						if (canPreviewImage && previewURL) {
+							const dims = await this.getImageDimensions(previewURL, file.name);
 							width = dims.width;
 							height = dims.height;
 						} else if (canPreviewVideo) {
@@ -559,8 +562,6 @@ class CloudUploadManager {
 						logger.warn('Error getting file data:', error);
 					}
 				}
-				const isPreviewableMedia = canPreviewImage || canPreviewVideo || (file.type.startsWith('audio/') && hasDOM);
-				const previewURL = hasDOM && isPreviewableMedia ? URL.createObjectURL(file) : null;
 				const flags = spoiler ? MessageAttachmentFlags.IS_SPOILER : 0;
 				const attachment: CloudAttachment = {
 					id: this.nextAttachmentId++,
@@ -585,25 +586,36 @@ class CloudUploadManager {
 		);
 	}
 
-	private async getImageDimensions(file: File): Promise<{
+	private async getImageDimensions(
+		sourceURL: string,
+		filename: string,
+	): Promise<{
 		width: number;
 		height: number;
 	}> {
 		if (!hasDOM) return {width: 0, height: 0};
-		return new Promise((resolve, reject) => {
-			const url = URL.createObjectURL(file);
-			const img = new Image();
-			img.onload = () => {
-				const {naturalWidth: width, naturalHeight: height} = img;
-				URL.revokeObjectURL(url);
-				resolve({width, height});
-			};
-			img.onerror = (error) => {
-				URL.revokeObjectURL(url);
-				reject(error);
-			};
-			img.src = url;
-		});
+		const img = new Image();
+		let probeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+		try {
+			return await new Promise<{width: number; height: number}>((resolve, reject) => {
+				probeTimeoutId = setTimeout(() => {
+					reject(new Error(`Timed out reading image dimensions for ${filename}`));
+				}, LOCAL_MEDIA_PROBE_TIMEOUT_MS);
+				img.onload = () => {
+					const {naturalWidth: width, naturalHeight: height} = img;
+					resolve({width, height});
+				};
+				img.onerror = (error) => {
+					reject(error);
+				};
+				img.src = sourceURL;
+			});
+		} finally {
+			if (probeTimeoutId !== null) clearTimeout(probeTimeoutId);
+			img.onload = null;
+			img.onerror = null;
+			img.removeAttribute('src');
+		}
 	}
 
 	private async getVideoData(file: File): Promise<{
@@ -612,52 +624,70 @@ class CloudUploadManager {
 		thumbnailURL: string | null;
 	}> {
 		if (!hasDOM) return {width: 0, height: 0, thumbnailURL: null};
-		return new Promise((resolve, reject) => {
-			const url = URL.createObjectURL(file);
-			const video = document.createElement('video');
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
-			video.addEventListener('loadedmetadata', () => {
-				const {videoWidth: width, videoHeight: height} = video;
-				if (!ctx) {
-					URL.revokeObjectURL(url);
-					resolve({width, height, thumbnailURL: null});
-					return;
-				}
-				video.currentTime = 0;
+		const url = URL.createObjectURL(file);
+		const video = document.createElement('video');
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		let probeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+		try {
+			return await new Promise<{width: number; height: number; thumbnailURL: string | null}>((resolve, reject) => {
+				let settled = false;
+				let capturing = false;
+				probeTimeoutId = setTimeout(() => {
+					if (settled) return;
+					settled = true;
+					reject(new Error(`Timed out reading video data for ${file.name}`));
+				}, LOCAL_MEDIA_PROBE_TIMEOUT_MS);
+				const finishWithoutThumbnail = () => {
+					if (settled) return;
+					settled = true;
+					resolve({width: video.videoWidth, height: video.videoHeight, thumbnailURL: null});
+				};
+				const drawThumbnailFrame = () => {
+					if (settled || capturing || !ctx) return;
+					const {videoWidth: width, videoHeight: height} = video;
+					const thumbnailDimensions = getScaledMediaDimensions(width, height);
+					if (thumbnailDimensions.width === 0 || thumbnailDimensions.height === 0) return;
+					capturing = true;
+					canvas.width = thumbnailDimensions.width;
+					canvas.height = thumbnailDimensions.height;
+					ctx.drawImage(video, 0, 0, thumbnailDimensions.width, thumbnailDimensions.height);
+					canvas.toBlob(
+						(blob) => {
+							if (settled) return;
+							settled = true;
+							resolve({width, height, thumbnailURL: blob ? URL.createObjectURL(blob) : null});
+						},
+						'image/jpeg',
+						0.8,
+					);
+				};
+				video.addEventListener('loadedmetadata', () => {
+					const thumbnailDimensions = ctx
+						? getScaledMediaDimensions(video.videoWidth, video.videoHeight)
+						: {width: 0, height: 0};
+					if (thumbnailDimensions.width === 0 || thumbnailDimensions.height === 0) {
+						finishWithoutThumbnail();
+						return;
+					}
+					video.currentTime = 0;
+				});
+				video.addEventListener('loadeddata', drawThumbnailFrame);
+				video.addEventListener('seeked', drawThumbnailFrame);
+				video.addEventListener('error', (e) => {
+					if (settled) return;
+					settled = true;
+					reject(e);
+				});
+				video.muted = true;
+				video.src = url;
 			});
-			video.addEventListener('seeked', () => {
-				const {videoWidth: width, videoHeight: height} = video;
-				if (!ctx) {
-					URL.revokeObjectURL(url);
-					resolve({width, height, thumbnailURL: null});
-					return;
-				}
-				const thumbnailDimensions = getScaledMediaDimensions(width, height);
-				if (thumbnailDimensions.width === 0 || thumbnailDimensions.height === 0) {
-					URL.revokeObjectURL(url);
-					resolve({width, height, thumbnailURL: null});
-					return;
-				}
-				canvas.width = thumbnailDimensions.width;
-				canvas.height = thumbnailDimensions.height;
-				ctx.drawImage(video, 0, 0, thumbnailDimensions.width, thumbnailDimensions.height);
-				canvas.toBlob(
-					(blob) => {
-						URL.revokeObjectURL(url);
-						const thumbnailURL = blob ? URL.createObjectURL(blob) : null;
-						resolve({width, height, thumbnailURL});
-					},
-					'image/jpeg',
-					0.8,
-				);
-			});
-			video.addEventListener('error', (e) => {
-				URL.revokeObjectURL(url);
-				reject(e);
-			});
-			video.src = url;
-		});
+		} finally {
+			if (probeTimeoutId !== null) clearTimeout(probeTimeoutId);
+			video.removeAttribute('src');
+			video.load();
+			URL.revokeObjectURL(url);
+		}
 	}
 }
 
