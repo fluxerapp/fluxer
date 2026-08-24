@@ -6,7 +6,6 @@ import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch, {type SearchContext, type TransformedMember} from '@app/features/member/state/MemberSearch';
-import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {parseChannelUrl} from '@app/features/navigation/utils/DeepLinkUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -19,7 +18,7 @@ import {
 	generateQueryModeResults,
 	resolveTransformedMember,
 } from '@app/features/search/state/QuickSwitcherResultGenerators';
-import {resolveRecomputedSelectedIndex} from '@app/features/search/state/QuickSwitcherSelection';
+import {hasSameResultIdentity, resolveRecomputedSelectedIndex} from '@app/features/search/state/QuickSwitcherSelection';
 import type {
 	CandidateSets,
 	ComputeResultsForQueryResult,
@@ -35,7 +34,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
+import {action, makeAutoObservable, runInAction} from 'mobx';
 
 const GO_TO_MESSAGE_DESCRIPTOR = msg({
 	message: 'Go to message',
@@ -49,6 +48,7 @@ class QuickSwitcher {
 	private logger = new Logger('QuickSwitcher');
 	private candidateSets: CandidateSets | null = null;
 	private candidateWarmupCancel: (() => void) | null = null;
+	private defaultResults: Array<QuickSwitcherResult> | null = null;
 	private modalPreloadPromise: Promise<QuickSwitcherModalModule> | null = null;
 	private modalPreloadCancel: (() => void) | null = null;
 	isOpen = false;
@@ -65,33 +65,23 @@ class QuickSwitcher {
 	constructor() {
 		makeAutoObservable<
 			this,
-			'candidateSets' | 'candidateWarmupCancel' | 'logger' | 'modalPreloadCancel' | 'modalPreloadPromise'
+			| 'candidateSets'
+			| 'candidateWarmupCancel'
+			| 'defaultResults'
+			| 'logger'
+			| 'modalPreloadCancel'
+			| 'modalPreloadPromise'
 		>(
 			this,
 			{
 				candidateSets: false,
 				candidateWarmupCancel: false,
+				defaultResults: false,
 				logger: false,
 				modalPreloadCancel: false,
 				modalPreloadPromise: false,
 			},
 			{autoBind: true},
-		);
-		reaction(
-			() => SelectedChannel.recentChannelVisits,
-			() => {
-				if (this.isOpen) {
-					this.recomputeIfOpen();
-				}
-			},
-		);
-		reaction(
-			() => [Navigation.guildId, Navigation.channelId],
-			() => {
-				if (this.isOpen) {
-					this.recomputeIfOpen();
-				}
-			},
 		);
 	}
 
@@ -102,7 +92,8 @@ class QuickSwitcher {
 
 	private handleLocaleChange(): void {
 		this.invalidateCandidateSets();
-		this.recomputeIfOpen({invalidateCandidates: false});
+		this.defaultResults = null;
+		this.recomputeIfOpen({force: true, invalidateCandidates: false});
 	}
 
 	preloadModal(): void {
@@ -171,6 +162,7 @@ class QuickSwitcher {
 		if (this.isOpen) return;
 		this.cancelCandidateWarmup();
 		this.candidateSets = null;
+		this.defaultResults = null;
 		this.isOpen = true;
 		this.query = '';
 		this.queryMode = null;
@@ -231,6 +223,7 @@ class QuickSwitcher {
 		this.cancelCandidateWarmup();
 		this.isOpen = false;
 		this.candidateSets = null;
+		this.defaultResults = null;
 		this.query = '';
 		this.queryMode = null;
 		this.results = [];
@@ -303,6 +296,7 @@ class QuickSwitcher {
 		if (!this.isOpen && query.length === 0) {
 			return;
 		}
+		this.defaultResults = null;
 		const {queryMode, results, selectedIndex} = this.computeResultsForQuery(query);
 		this.query = query;
 		this.queryMode = queryMode;
@@ -398,7 +392,7 @@ class QuickSwitcher {
 		this.selectedIndex = selectedIndex;
 	}
 
-	recomputeIfOpen(options: {invalidateCandidates?: boolean} = {}): void {
+	recomputeIfOpen(options: {force?: boolean; invalidateCandidates?: boolean} = {}): void {
 		if (!this.isOpen) {
 			return;
 		}
@@ -407,9 +401,19 @@ class QuickSwitcher {
 		}
 		const previous = this.results[this.selectedIndex];
 		const {queryMode, results, selectedIndex} = this.computeResultsForQuery(this.query);
+		if (!options.force && this.queryMode === queryMode && hasSameResultIdentity(this.results, results)) {
+			return;
+		}
 		this.queryMode = queryMode;
 		this.results = results;
 		this.selectedIndex = resolveRecomputedSelectedIndex(previous, results, selectedIndex);
+	}
+
+	private getDefaultResults(i18n: I18n): Array<QuickSwitcherResult> {
+		if (this.defaultResults == null || this.defaultResults.length === 0) {
+			this.defaultResults = generateDefaultResults(i18n);
+		}
+		return this.defaultResults;
 	}
 
 	private computeResultsForQuery(query: string): ComputeResultsForQueryResult {
@@ -430,11 +434,11 @@ class QuickSwitcher {
 			};
 		}
 		if (query['trim']().length === 0) {
-			const results = generateDefaultResults(i18n);
+			const defaultResults = this.getDefaultResults(i18n);
 			return {
 				queryMode: null,
-				results,
-				selectedIndex: getFirstSelectableIndex(results),
+				results: defaultResults,
+				selectedIndex: getFirstSelectableIndex(defaultResults),
 			};
 		}
 		const queryMode = this.getQueryMode(query);
@@ -445,7 +449,7 @@ class QuickSwitcher {
 			const sets = this.getCandidateSets(i18n);
 			results = generateQueryModeResults(queryMode, trimmedSearch, sets, i18n, this.memberSearchResults);
 		} else if (trimmedSearch.length === 0) {
-			results = generateDefaultResults(i18n);
+			results = this.getDefaultResults(i18n);
 		} else {
 			const sets = this.getCandidateSets(i18n);
 			results = generateGeneralResults(trimmedSearch, sets, i18n);
