@@ -2388,64 +2388,6 @@
         "msgctxt": "social_and_feeds.github",
         "msgid": "GitHub"
       }
-    ],
-    "zh-TW": [
-      {
-        "msgctxt": "footer.bluesky_social_media",
-        "msgid": "Bluesky"
-      },
-      {
-        "msgctxt": "platform_support.platforms.android.min_version",
-        "msgid": "Android 8+"
-      },
-      {
-        "msgctxt": "platform_support.platforms.android.name",
-        "msgid": "Android"
-      },
-      {
-        "msgctxt": "platform_support.platforms.ios.min_version",
-        "msgid": "iOS 15+"
-      },
-      {
-        "msgctxt": "platform_support.platforms.ios.min_version",
-        "msgid": "{ios}/{ipados} 15.6+"
-      },
-      {
-        "msgctxt": "platform_support.platforms.ios.name",
-        "msgid": "iOS"
-      },
-      {
-        "msgctxt": "platform_support.platforms.ios.testflight",
-        "msgid": "TestFlight"
-      },
-      {
-        "msgctxt": "platform_support.platforms.linux.name",
-        "msgid": "Linux"
-      },
-      {
-        "msgctxt": "platform_support.platforms.macos.apple_silicon",
-        "msgid": "Apple Silicon"
-      },
-      {
-        "msgctxt": "platform_support.platforms.macos.intel",
-        "msgid": "Intel"
-      },
-      {
-        "msgctxt": "platform_support.platforms.macos.name",
-        "msgid": "macOS"
-      },
-      {
-        "msgctxt": "platform_support.platforms.windows.name",
-        "msgid": "Windows"
-      },
-      {
-        "msgctxt": "social_and_feeds.bluesky.label",
-        "msgid": "Bluesky"
-      },
-      {
-        "msgctxt": "social_and_feeds.github",
-        "msgid": "GitHub"
-      }
     ]
   }
 }
