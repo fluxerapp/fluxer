@@ -17,7 +17,7 @@ import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
 import {addGiftCodeDuration} from '../../models/GiftCode';
 import type {User} from '../../models/User';
 import type {IUserRepository} from '../../user/IUserRepository';
-import {createPremiumClearPatch} from '../../user/UserHelpers';
+import {createPremiumClearPatch, getEffectivePremiumUntil} from '../../user/UserHelpers';
 import {mapUserToPrivateResponse} from '../../user/UserMappers';
 
 export class StripePremiumService {
@@ -228,6 +228,10 @@ export class StripePremiumService {
 			return false;
 		}
 		if (user.premiumType === UserPremiumTypes.LIFETIME) {
+			return false;
+		}
+		const effective = getEffectivePremiumUntil(user);
+		if (effective != null && Date.now() <= effective.getTime()) {
 			return false;
 		}
 		const updatedUser = await this.userRepository.patchUpsert(userId, createPremiumClearPatch(), user.toRow());

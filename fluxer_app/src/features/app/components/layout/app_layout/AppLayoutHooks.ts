@@ -112,9 +112,11 @@ export const useNagbarConditions = (): NagbarConditions => {
 		const now = new Date();
 		const expiryDate = new Date(user.premiumUntil);
 		const gracePeriodMs = 3 * MS_PER_DAY;
-		const graceEndDate = new Date(expiryDate.getTime() + gracePeriodMs);
+		const graceEndDate = user.premiumGraceEndsAt
+			? new Date(user.premiumGraceEndsAt)
+			: new Date(expiryDate.getTime() + gracePeriodMs);
 		const isInGracePeriod = now > expiryDate && now <= graceEndDate;
-		return isInGracePeriod;
+		return isInGracePeriod && !nagbarState.premiumGracePeriodDismissed;
 	})();
 	const canShowPremiumExpired = (() => {
 		if (isSelfHosted) return false;
@@ -125,11 +127,13 @@ export const useNagbarConditions = (): NagbarConditions => {
 		const expiryDate = new Date(user.premiumUntil);
 		const gracePeriodMs = 3 * MS_PER_DAY;
 		const expiredStateDurationMs = 30 * MS_PER_DAY;
-		const graceEndDate = new Date(expiryDate.getTime() + gracePeriodMs);
-		const expiredStateEndDate = new Date(expiryDate.getTime() + expiredStateDurationMs);
+		const graceEndDate = user.premiumGraceEndsAt
+			? new Date(user.premiumGraceEndsAt)
+			: new Date(expiryDate.getTime() + gracePeriodMs);
+		const expiredStateEndDate = new Date(graceEndDate.getTime() + expiredStateDurationMs);
 		const isExpired = now > graceEndDate;
 		const showExpiredState = isExpired && now <= expiredStateEndDate;
-		return showExpiredState;
+		return showExpiredState && !nagbarState.premiumExpiredDismissed;
 	})();
 	const canShowGiftInventory = (() => {
 		if (isSelfHosted) return false;

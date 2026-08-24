@@ -588,15 +588,20 @@ export class StripeSubscriptionWebhookHandler {
 			stripe_subscription_id: null,
 			premium_billing_cycle: null,
 		};
-		if (targetUser.premiumType !== UserPremiumTypes.LIFETIME) {
+		if (targetUser.premiumType === UserPremiumTypes.SUBSCRIPTION) {
 			const subscriptionEndedAt = subscription.ended_at ? new Date(subscription.ended_at * 1000) : new Date();
-			const cancelledBeforePeriodEnd =
-				targetUser.premiumUntil != null && subscriptionEndedAt.getTime() < targetUser.premiumUntil.getTime();
-			if (cancelledBeforePeriodEnd) {
-				updates.premium_until = subscriptionEndedAt;
-				updates.premium_grace_ends_at = null;
-			} else {
-				updates.premium_grace_ends_at = new Date(subscriptionEndedAt.getTime() + PREMIUM_GRACE_PERIOD_MS);
+			const alreadyAppliedEarlyCancellation =
+				targetUser.premiumUntil?.getTime() === subscriptionEndedAt.getTime() &&
+				targetUser.premiumGraceEndsAt?.getTime() === subscriptionEndedAt.getTime();
+			if (!alreadyAppliedEarlyCancellation) {
+				const cancelledBeforePeriodEnd =
+					targetUser.premiumUntil != null && subscriptionEndedAt.getTime() < targetUser.premiumUntil.getTime();
+				if (cancelledBeforePeriodEnd) {
+					updates.premium_until = subscriptionEndedAt;
+					updates.premium_grace_ends_at = subscriptionEndedAt;
+				} else {
+					updates.premium_grace_ends_at = new Date(subscriptionEndedAt.getTime() + PREMIUM_GRACE_PERIOD_MS);
+				}
 			}
 		}
 		const updatedUser = await this.userRepository.patchUpsert(targetUser.id, updates, targetUser.toRow());

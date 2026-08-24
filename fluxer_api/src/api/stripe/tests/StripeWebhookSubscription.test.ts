@@ -490,14 +490,16 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 				},
 				(await userRepository.findUnique(userId))!.toRow(),
 			);
-			const endedAt = Math.floor(Date.now() / 1000);
+			const endedAt = Math.floor(Date.now() / 1000) - 60;
 			const eventData = createSubscriptionDeletedEvent({subscriptionId, endedAt});
 			const result = await sendWebhook(eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumUntil?.getTime()).toBe(endedAt * 1000);
-			expect(afterUser?.premiumGraceEndsAt).toBeNull();
+			expect(afterUser?.premiumGraceEndsAt?.getTime()).toBe(endedAt * 1000);
 			expect(afterUser?.stripeSubscriptionId).toBeNull();
+			const {checkHasActivePaidPremium} = await import('../../user/UserHelpers');
+			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
 		});
 		test('grants standard grace when the subscription is cancelled at the end of its paid period', async () => {
 			const account = await createTestAccount(harness);
@@ -523,6 +525,8 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(afterUser?.premiumUntil?.getTime()).toBe(premiumUntil.getTime());
 			expect(afterUser?.premiumGraceEndsAt).not.toBeNull();
 			expect(afterUser!.premiumGraceEndsAt!.getTime()).toBe(endedAt * 1000 + 3 * 24 * 60 * 60 * 1000);
+			const {checkHasActivePaidPremium} = await import('../../user/UserHelpers');
+			expect(checkHasActivePaidPremium(afterUser!)).toBe(true);
 		});
 		test('processes donation subscription deletion', async () => {
 			const subscriptionId = 'sub_donor_delete_test';

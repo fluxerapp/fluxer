@@ -148,10 +148,12 @@ export class StripeSubscriptionService {
 				premium_grace_ends_at: null,
 			};
 			if (user.premiumType !== UserPremiumTypes.LIFETIME) {
+				const hasActiveGift =
+					user.premiumGiftExtensionEndsAt != null && user.premiumGiftExtensionEndsAt.getTime() > Date.now();
 				Object.assign(patch, {
-					premium_type: UserPremiumTypes.NONE,
-					premium_since: null,
-					premium_until: null,
+					premium_type: hasActiveGift ? user.premiumType : UserPremiumTypes.NONE,
+					premium_since: hasActiveGift ? user.premiumSince : null,
+					premium_until: new Date(),
 				});
 			}
 			const updatedUser = await this.userRepository.patchUpsert(userId, patch, user.toRow());

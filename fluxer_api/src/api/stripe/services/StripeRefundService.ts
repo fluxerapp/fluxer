@@ -227,6 +227,7 @@ export class StripeRefundService {
 				{error, chargeId: target.chargeId, paymentIntentId: target.paymentIntentId},
 				'Failed to resolve payment method type for self-serve refund',
 			);
+			throw new StripeError('Could not determine the payment method for this refund');
 		}
 		return null;
 	}

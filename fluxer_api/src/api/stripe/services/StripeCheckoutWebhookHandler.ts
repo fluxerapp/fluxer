@@ -582,6 +582,15 @@ export class StripeCheckoutWebhookHandler {
 		if (chargeId) {
 			await this.refundChargeForDuplicateSubscription(chargeId, session.id);
 		}
+		const latestUser = await this.userRepository.findUnique(payment.userId);
+		if (latestUser && latestUser.stripeSubscriptionId === subscriptionId) {
+			const restoredUser = await this.userRepository.patchUpsert(
+				payment.userId,
+				{stripe_subscription_id: existingSubscriptionId},
+				latestUser.toRow(),
+			);
+			await this.dispatchUser(restoredUser);
+		}
 		await this.userRepository.updatePayment({
 			...payment.toRow(),
 			stripe_customer_id: customerId,
