@@ -43,7 +43,7 @@ export const ProfileCardBanner: React.FC<ProfileCardBannerProps> = observer(
 		onAvatarClick,
 		onAvatarContextMenu,
 		onBannerContextMenu,
-		headerHeight = 140,
+		headerHeight = PROFILE_POPOUT_GEOMETRY.headerHeightPx,
 	}) => {
 		const bannerHeight = PROFILE_POPOUT_GEOMETRY.bannerHeightPx;
 		const reactId = useId();
@@ -65,12 +65,11 @@ export const ProfileCardBanner: React.FC<ProfileCardBannerProps> = observer(
 		});
 		const bannerStyle = useMemo<React.CSSProperties>(
 			() => ({
-				height: remFromPx(bannerHeight),
-				minHeight: remFromPx(bannerHeight),
+				height: '100%',
 				backgroundColor: bannerColor,
 				...(activeBannerUrl ? {backgroundImage: `url(${activeBannerUrl})`} : {}),
 			}),
-			[activeBannerUrl, bannerColor, bannerHeight],
+			[activeBannerUrl, bannerColor],
 		);
 		return (
 			<header
