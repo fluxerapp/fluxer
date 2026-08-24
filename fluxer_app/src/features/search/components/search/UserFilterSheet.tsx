@@ -144,6 +144,7 @@ export const UserFilterSheet: React.FC<UserFilterSheetProps> = observer(
 												user={user}
 												size={36}
 												status={null}
+												guildId={channel.guildId ?? null}
 												className={styles.avatar}
 												data-flx="search.search.user-filter-sheet.avatar"
 											/>
