@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {registerContextMenuUndoRedo} from '@app/features/lexical/LexicalUndoRedoRegistry';
-import {SearchFilterNode} from '@app/features/lexical/nodes/SearchFilterNode';
 import styles from '@app/features/lexical/search/LexicalSearchInput.module.css';
 import {
 	$applySearchSelectionRange,
+	$deleteSearchChipAtCaret,
 	$getSearchQuery,
 	$getSelectionRange,
 	$insertSearchText,
 	$replaceSearchDocumentFromQuery,
 	$selectOffset,
-	$selectSearchFilterBoundary,
-	registerSearchPillTransform,
-	resolveSearchFilterPointerBoundary,
-	type SearchFilterPointerBoundary,
+	registerSearchChipTransform,
 	SearchSelectionDirection,
 	type SearchSelectionRange,
 } from '@app/features/lexical/search/SearchEditorModel';
+import {SearchTokenNode} from '@app/features/lexical/search/SearchTokenNode';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {flxElementClassName} from '@app/lib/react';
@@ -31,10 +29,10 @@ import {mergeRegister} from '@lexical/utils';
 import {clsx} from 'clsx';
 import {
 	$addUpdateTag,
-	$getNearestNodeFromDOMNode,
 	$setSelection,
 	COMMAND_PRIORITY_HIGH,
 	COMPOSITION_END_COMMAND,
+	DELETE_CHARACTER_COMMAND,
 	type EditorState,
 	HISTORIC_TAG,
 	KEY_ARROW_DOWN_COMMAND,
@@ -123,19 +121,6 @@ interface SearchExternalValueOwnerRequest {
 	readonly focused: MutableCell<boolean>;
 }
 
-interface SearchFilterTargetRequest {
-	readonly root: HTMLElement;
-	readonly targetElement: Element | null;
-	readonly filterElement: HTMLElement | null;
-}
-
-interface SearchFilterPlacementRequest {
-	readonly root: HTMLElement;
-	readonly view: Window & typeof globalThis;
-	readonly filterElement: HTMLElement;
-	readonly clientX: number;
-}
-
 function isMatchingTouchTap(origin: TouchPointerOrigin, event: React.PointerEvent<HTMLElement>): boolean {
 	if (origin.pointerId !== event.pointerId) {
 		return false;
@@ -216,7 +201,7 @@ class SearchEditorUpdateOwner {
 
 	public register(): () => void {
 		return mergeRegister(
-			registerSearchPillTransform(this.#editor),
+			registerSearchChipTransform(this.#editor),
 			this.#editor.registerUpdateListener(this.handleUpdate),
 			this.#editor.registerCommand(PASTE_COMMAND, SearchPasteCommand.handle, COMMAND_PRIORITY_HIGH),
 		);
@@ -252,7 +237,7 @@ class SearchEditorUpdateOwner {
 	}
 }
 
-class SearchKeyboardCommandOwner {
+export class SearchKeyboardCommandOwner {
 	readonly #editor: LexicalEditor;
 	readonly #autocompleteOpen: MutableCell<boolean>;
 
@@ -266,8 +251,13 @@ class SearchKeyboardCommandOwner {
 			this.#editor.registerCommand(KEY_ENTER_COMMAND, this.handleEnter, COMMAND_PRIORITY_HIGH),
 			this.#editor.registerCommand(KEY_ARROW_UP_COMMAND, this.handleArrow, COMMAND_PRIORITY_HIGH),
 			this.#editor.registerCommand(KEY_ARROW_DOWN_COMMAND, this.handleArrow, COMMAND_PRIORITY_HIGH),
+			this.#editor.registerCommand(DELETE_CHARACTER_COMMAND, this.handleDeleteCharacter, COMMAND_PRIORITY_HIGH),
 		);
 	}
+
+	private readonly handleDeleteCharacter = (isBackward: boolean): boolean => {
+		return $deleteSearchChipAtCaret(!isBackward);
+	};
 
 	private readonly handleEnter = (event: KeyboardEvent | null): boolean => {
 		if (event == null) {
@@ -402,7 +392,7 @@ class SearchExternalValueOwner {
 class SearchPointerSelectionOwner {
 	constructor(private readonly editor: LexicalEditor) {}
 
-	public place(target: EventTarget | null, clientX: number): boolean {
+	public place(target: EventTarget | null): boolean {
 		const root = this.editor.getRootElement();
 		if (root == null) {
 			return false;
@@ -411,63 +401,10 @@ class SearchPointerSelectionOwner {
 		if (view == null || !(target instanceof view.Node)) {
 			return false;
 		}
-		const targetNode = target as Node;
-		const targetElement = this.resolveTargetElement(view, targetNode);
-		let filterElement: HTMLElement | null = null;
-		if (targetElement != null) {
-			filterElement = targetElement.closest<HTMLElement>('[data-lexical-search-filter="true"]');
-		}
-		const filterTarget = this.resolveFilterTarget({root, targetElement, filterElement});
-		if (filterTarget != null) {
-			return this.placeAtFilter({root, view, filterElement: filterTarget, clientX});
-		}
-		if (target === root || !root.contains(targetNode)) {
+		if (target === root || !root.contains(target as Node)) {
 			return this.placeAtEnd();
 		}
 		return false;
-	}
-
-	private resolveTargetElement(view: Window & typeof globalThis, targetNode: Node): Element | null {
-		if (targetNode instanceof view.Element) {
-			return targetNode as Element;
-		}
-		return targetNode.parentElement;
-	}
-
-	private resolveFilterTarget({root, targetElement, filterElement}: SearchFilterTargetRequest): HTMLElement | null {
-		if (filterElement == null || !root.contains(filterElement)) {
-			return null;
-		}
-		if (targetElement != null && targetElement.closest('button') != null) {
-			return null;
-		}
-		return filterElement;
-	}
-
-	private placeAtFilter({root, view, filterElement, clientX}: SearchFilterPlacementRequest): boolean {
-		const filterRect = filterElement.getBoundingClientRect();
-		let direction: 'ltr' | 'rtl' = 'ltr';
-		if (view.getComputedStyle(root).direction === 'rtl') {
-			direction = 'rtl';
-		}
-		const boundary = resolveSearchFilterPointerBoundary({
-			direction,
-			pointerX: clientX,
-			left: filterRect.left,
-			width: filterRect.width,
-		});
-		this.editor.update(() => this.selectFilterBoundary(filterElement, boundary), {discrete: true});
-		this.editor.focus();
-		return true;
-	}
-
-	private selectFilterBoundary(filterElement: HTMLElement, boundary: SearchFilterPointerBoundary): void {
-		const node = $getNearestNodeFromDOMNode(filterElement);
-		if (node != null) {
-			$selectSearchFilterBoundary(node, boundary);
-			return;
-		}
-		$selectOffset($getSearchQuery().length);
 	}
 
 	private placeAtEnd(): boolean {
@@ -482,9 +419,13 @@ const EDITOR_CONFIG: Omit<InitialConfigType, 'editorState'> = {
 	onError: (error: Error) => {
 		throw error;
 	},
-	nodes: [SearchFilterNode],
+	nodes: [SearchTokenNode],
 	theme: {
-		searchFilter: styles.filterHost,
+		searchTokenBase: styles.tokenBase,
+		searchTokenKey: styles.tokenKey,
+		searchTokenValue: styles.tokenValue,
+		searchTokenUnapplied: styles.tokenUnapplied,
+		searchTokenExclude: styles.tokenExclude,
 		paragraph: styles.paragraph,
 	},
 };
@@ -700,7 +641,7 @@ const SearchEditorInner = ({
 						};
 						return;
 					}
-					if (pointerSelectionOwner.place(event.target, event.clientX)) {
+					if (pointerSelectionOwner.place(event.target)) {
 						event.preventDefault();
 					}
 				}}
@@ -709,7 +650,7 @@ const SearchEditorInner = ({
 					touchPointerRef.current = null;
 					if (pending == null) return;
 					if (!isMatchingTouchTap(pending, event)) return;
-					if (pointerSelectionOwner.place(event.target, event.clientX)) {
+					if (pointerSelectionOwner.place(event.target)) {
 						event.preventDefault();
 					}
 				}}

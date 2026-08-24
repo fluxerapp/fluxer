@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {$createSearchFilterNode} from '@app/features/lexical/nodes/SearchFilterNode';
-import {tokenize} from '@app/features/search/utils/SearchQueryParser';
+import {$createSearchTokenNode, $isSearchTokenNode} from '@app/features/lexical/search/SearchTokenNode';
+import {resolveSearchChipDeletion, type SearchChipRole, tokenize} from '@app/features/search/utils/SearchQueryParser';
 import {
 	$createParagraphNode,
 	$createRangeSelection,
@@ -17,11 +17,11 @@ import {
 	type LexicalEditor,
 	type LexicalNode,
 	LineBreakNode,
+	ParagraphNode,
 	type PointType,
+	RootNode,
 	TextNode,
 } from 'lexical';
-
-const SEARCH_QUERY_QUOTE_CHARS = new Set(['"', '\u201c', '\u201d', '\u201f', '\u2033', '\u00ab', '\u00bb']);
 
 export const SearchSelectionDirection = Object.freeze({
 	BACKWARD: 'backward',
@@ -30,6 +30,18 @@ export const SearchSelectionDirection = Object.freeze({
 } as const);
 
 export type SearchSelectionDirection = (typeof SearchSelectionDirection)[keyof typeof SearchSelectionDirection];
+
+export interface SearchSelectionRange {
+	start: number;
+	end: number;
+	direction: SearchSelectionDirection;
+}
+
+interface SearchSegment {
+	readonly text: string;
+	readonly role: SearchChipRole | null;
+	readonly exclude: boolean;
+}
 
 function $ensureRootParagraph(): ElementNode {
 	const root = $getRoot();
@@ -42,44 +54,6 @@ function $ensureRootParagraph(): ElementNode {
 	root.append(paragraph);
 	return paragraph;
 }
-
-export interface SearchSelectionRange {
-	start: number;
-	end: number;
-	direction: SearchSelectionDirection;
-}
-
-export interface ResolveSearchFilterPointerBoundaryRequest {
-	readonly direction: 'ltr' | 'rtl';
-	readonly pointerX: number;
-	readonly left: number;
-	readonly width: number;
-}
-
-interface SetNonTextPointAtOffsetRequest {
-	readonly point: PointType;
-	readonly paragraph: ElementNode;
-	readonly children: ReadonlyArray<LexicalNode>;
-	readonly index: number;
-	readonly offset: number;
-	readonly accumulated: number;
-	readonly end: number;
-}
-
-interface SetPointAtChildBoundaryRequest {
-	readonly point: PointType;
-	readonly paragraph: ElementNode;
-	readonly children: ReadonlyArray<LexicalNode>;
-	readonly index: number;
-}
-
-export const SearchFilterPointerBoundary = Object.freeze({
-	BEFORE: 'before',
-	AFTER: 'after',
-} as const);
-
-export type SearchFilterPointerBoundary =
-	(typeof SearchFilterPointerBoundary)[keyof typeof SearchFilterPointerBoundary];
 
 function resolveSearchSelectionDirection(anchor: number, focus: number): SearchSelectionDirection {
 	if (anchor === focus) {
@@ -104,27 +78,19 @@ function resolveSearchCaretOffset(selection: number | SearchSelectionRange | nul
 	return selection.end;
 }
 
-export function resolveSearchFilterPointerBoundary({
-	direction,
-	pointerX,
-	left,
-	width,
-}: ResolveSearchFilterPointerBoundaryRequest): SearchFilterPointerBoundary {
-	const isVisualLeft = pointerX < left + width / 2;
-	let isLogicalBefore: boolean;
-	if (direction === 'rtl') {
-		isLogicalBefore = !isVisualLeft;
-	} else {
-		isLogicalBefore = isVisualLeft;
-	}
-	if (isLogicalBefore) {
-		return SearchFilterPointerBoundary.BEFORE;
-	}
-	return SearchFilterPointerBoundary.AFTER;
+export const SEARCH_INPUT_MAX_LENGTH = 2048;
+const SEARCH_INPUT_COUNTER_HEADROOM = Math.floor(SEARCH_INPUT_MAX_LENGTH / 10);
+
+export function shouldShowSearchInputCounter(currentLength: number): boolean {
+	return SEARCH_INPUT_MAX_LENGTH - currentLength <= SEARCH_INPUT_COUNTER_HEADROOM;
+}
+
+function clampSearchInputText(text: string): string {
+	return text.length > SEARCH_INPUT_MAX_LENGTH ? text.slice(0, SEARCH_INPUT_MAX_LENGTH) : text;
 }
 
 function normalizeSearchInputText(text: string): string {
-	return text.replace(/\r\n?|\n|\u2028|\u2029/g, ' ');
+	return text.replace(/[\r\n\u2028\u2029]/g, ' ');
 }
 
 export function $insertSearchText(text: string): boolean {
@@ -132,128 +98,140 @@ export function $insertSearchText(text: string): boolean {
 	if (!$isRangeSelection(selection)) {
 		return false;
 	}
-	selection.insertText(normalizeSearchInputText(text));
+	const documentLength = $getRoot().getTextContent().length;
+	const replacedLength = selection.getTextContent().length;
+	const available = SEARCH_INPUT_MAX_LENGTH - (documentLength - replacedLength);
+	if (available <= 0) {
+		return true;
+	}
+	const normalized = normalizeSearchInputText(text);
+	selection.insertText(normalized.length > available ? normalized.slice(0, available) : normalized);
 	return true;
 }
 
-function stripQuotes(value: string): string {
-	const opening = value[0];
-	if (opening == null || !SEARCH_QUERY_QUOTE_CHARS.has(opening)) {
-		return value;
-	}
-	const closing = value[value.length - 1];
-	const hasClosing = value.length >= 2 && closing != null && SEARCH_QUERY_QUOTE_CHARS.has(closing);
-	if (hasClosing) {
-		return value.slice(1, -1);
-	}
-	return value.slice(1);
-}
-
-function $buildParagraphChildren(query: string, selection: number | SearchSelectionRange | null): Array<LexicalNode> {
-	const {tokens} = tokenize(query);
-	const children: Array<LexicalNode> = [];
-	let pos = 0;
-	const pushText = (text: string) => {
+function buildSearchSegments(query: string): Array<SearchSegment> {
+	const {chips} = tokenize(query);
+	const segments: Array<SearchSegment> = [];
+	let position = 0;
+	const pushPlain = (text: string) => {
 		if (text.length > 0) {
-			children.push($createTextNode(text));
+			segments.push({text, role: null, exclude: false});
 		}
 	};
-	for (const tok of tokens) {
-		if (tok.start > pos) {
-			pushText(query.slice(pos, tok.start));
-		}
-		const raw = query.slice(tok.start, tok.end);
-		let selectionCutsToken: boolean;
-		if (typeof selection === 'number') {
-			selectionCutsToken = selection > tok.start && selection <= tok.end;
-		} else {
-			selectionCutsToken =
-				selection != null &&
-				((selection.start > tok.start && selection.start < tok.end) ||
-					(selection.end > tok.start && selection.end < tok.end));
-		}
-		const nextChar = query[tok.end];
-		const terminated = nextChar == null || nextChar === ' ';
-		if (selectionCutsToken || !terminated) {
-			pushText(raw);
-		} else {
-			children.push(
-				$createSearchFilterNode({
-					raw,
-					filterKey: tok.key,
-					value: stripQuotes(tok.value),
-					exclude: tok.exclude,
-				}),
-			);
-		}
-		pos = tok.end;
+	for (const chip of chips) {
+		pushPlain(query.slice(position, chip.start));
+		segments.push({text: query.slice(chip.start, chip.end), role: chip.role, exclude: chip.exclude});
+		position = chip.end;
 	}
-	if (pos < query.length) {
-		pushText(query.slice(pos));
+	pushPlain(query.slice(position));
+	return segments;
+}
+
+function $createSegmentNode(segment: SearchSegment): TextNode {
+	if (segment.role == null) {
+		return $createTextNode(segment.text);
 	}
-	return children;
+	return $createSearchTokenNode(segment.text, segment.role, segment.exclude);
+}
+
+function readSegmentRole(node: LexicalNode): SearchChipRole | null {
+	if ($isSearchTokenNode(node)) {
+		return node.getRole();
+	}
+	return null;
+}
+
+function readSegmentExclude(node: LexicalNode): boolean {
+	return $isSearchTokenNode(node) && node.getExclude();
+}
+
+function childrenMatchSegments(children: ReadonlyArray<LexicalNode>, segments: ReadonlyArray<SearchSegment>): boolean {
+	if (children.length !== segments.length) {
+		return false;
+	}
+	return segments.every((segment, index) => {
+		const child = children[index]!;
+		return (
+			child instanceof TextNode &&
+			child.getTextContent() === segment.text &&
+			readSegmentRole(child) === segment.role &&
+			readSegmentExclude(child) === segment.exclude
+		);
+	});
+}
+
+function $retextChildren(children: ReadonlyArray<LexicalNode>, segments: ReadonlyArray<SearchSegment>): boolean {
+	if (children.length !== segments.length) {
+		return false;
+	}
+	const rolesMatch = segments.every((segment, index) => {
+		const child = children[index]!;
+		return (
+			child instanceof TextNode &&
+			readSegmentRole(child) === segment.role &&
+			readSegmentExclude(child) === segment.exclude
+		);
+	});
+	if (!rolesMatch) {
+		return false;
+	}
+	for (const [index, segment] of segments.entries()) {
+		const child = children[index] as TextNode;
+		if (child.getTextContent() !== segment.text) {
+			child.setTextContent(segment.text);
+		}
+	}
+	return true;
+}
+
+function $reconcileSearchChips(paragraph: ElementNode): void {
+	const normalized = normalizeSearchInputText(paragraph.getTextContent());
+	const query = clampSearchInputText(normalized);
+	if (query.length === 0) {
+		return;
+	}
+	const segments = buildSearchSegments(query);
+	const children = paragraph.getChildren();
+	if (childrenMatchSegments(children, segments)) {
+		return;
+	}
+	const selection = $getSelectionRange();
+	if (!$retextChildren(children, segments)) {
+		paragraph.clear();
+		paragraph.append(...segments.map($createSegmentNode));
+	}
+	if (selection != null) {
+		$selectRange(selection.start, selection.end, selection.direction);
+	}
 }
 
 export function $getSearchQuery(): string {
-	return $getRoot()
-		.getTextContent()
-		.replace(/[\r\n\u2028\u2029]/g, ' ');
+	return normalizeSearchInputText($getRoot().getTextContent());
 }
 
-function $pillifyTextNode(node: TextNode): void {
-	const text = node.getTextContent();
-	if (!text.includes(':')) {
-		return;
-	}
-	const {tokens} = tokenize(text);
-	if (tokens.length === 0) {
-		return;
-	}
-	const selectionOffsets = readSearchTextNodeSelectionOffsets(node);
-	for (const tok of tokens) {
-		if (text[tok.end] !== ' ') {
-			continue;
-		}
-		if (selectionOffsets.some((offset) => offset > tok.start && offset <= tok.end)) {
-			continue;
-		}
-		const segments = node.splitText(tok.start, tok.end);
-		let tokenIndex = 0;
-		if (tok.start > 0) {
-			tokenIndex = 1;
-		}
-		const tokenNode = segments[tokenIndex];
-		if (tokenNode == null) {
-			return;
-		}
-		const raw = text.slice(tok.start, tok.end);
-		tokenNode.replace(
-			$createSearchFilterNode({
-				raw,
-				filterKey: tok.key,
-				value: stripQuotes(tok.value),
-				exclude: tok.exclude,
-			}),
-		);
-		return;
-	}
-}
-
-function readSearchTextNodeSelectionOffsets(node: TextNode): Array<number> {
+export function $deleteSearchChipAtCaret(isForward: boolean): boolean {
 	const selection = $getSelection();
-	const selectionOffsets: Array<number> = [];
-	if (!$isRangeSelection(selection)) {
-		return selectionOffsets;
+	if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+		return false;
 	}
-	for (const point of [selection.anchor, selection.focus]) {
-		if (point.type === 'text' && point.getNode().getKey() === node.getKey()) {
-			selectionOffsets.push(point.offset);
-		}
+	const range = $getSelectionRange();
+	if (range == null) {
+		return false;
 	}
-	return selectionOffsets;
+	const chip = resolveSearchChipDeletion($getSearchQuery(), range.start, isForward);
+	if (chip == null) {
+		return false;
+	}
+	$selectRange(chip.start, chip.end);
+	const chipSelection = $getSelection();
+	if (!$isRangeSelection(chipSelection)) {
+		return false;
+	}
+	chipSelection.removeText();
+	return true;
 }
 
-function refreshSearchPillsAfterComposition(editor: LexicalEditor): void {
+function refreshSearchChipsAfterComposition(editor: LexicalEditor): void {
 	queueMicrotask(() => {
 		editor.update(
 			() => {
@@ -266,25 +244,16 @@ function refreshSearchPillsAfterComposition(editor: LexicalEditor): void {
 	});
 }
 
-function $normalizeSearchTextNode(node: TextNode): boolean {
-	const text = node.getTextContent();
-	const normalized = normalizeSearchInputText(text);
-	if (normalized === text) {
-		return false;
-	}
-	node.setTextContent(normalized);
-	return true;
-}
-
-export function registerSearchPillTransform(editor: LexicalEditor): () => void {
-	const unregisterTransform = editor.registerNodeTransform(TextNode, (node) => {
+export function registerSearchChipTransform(editor: LexicalEditor): () => void {
+	const unregisterTransform = editor.registerNodeTransform(RootNode, (root) => {
 		if (editor.isComposing()) {
 			return;
 		}
-		if ($normalizeSearchTextNode(node)) {
-			return;
+		for (const child of root.getChildren()) {
+			if (child instanceof ParagraphNode) {
+				$reconcileSearchChips(child);
+			}
 		}
-		$pillifyTextNode(node);
 	});
 	const unregisterLineBreak = editor.registerNodeTransform(LineBreakNode, (node) => {
 		node.replace($createTextNode(' '));
@@ -292,7 +261,7 @@ export function registerSearchPillTransform(editor: LexicalEditor): () => void {
 	const unregisterCompositionEnd = editor.registerCommand(
 		COMPOSITION_END_COMMAND,
 		() => {
-			refreshSearchPillsAfterComposition(editor);
+			refreshSearchChipsAfterComposition(editor);
 			return false;
 		},
 		COMMAND_PRIORITY_HIGH,
@@ -356,72 +325,19 @@ function $setElementCaret(paragraph: ElementNode, index: number): void {
 	$setSelection(selection);
 }
 
-function resolveElementPointOffset(index: number, offset: number, accumulated: number): number {
-	if (offset - accumulated === 0) {
-		return index;
-	}
-	return index + 1;
-}
-
-function $setPointAtChildBoundary({point, paragraph, children, index}: SetPointAtChildBoundaryRequest): void {
-	const next = children[index + 1];
-	if (next instanceof TextNode) {
-		point.set(next.getKey(), 0, 'text');
-		return;
-	}
-	point.set(paragraph.getKey(), index + 1, 'element');
-}
-
 function $setPointAtOffset(point: PointType, paragraph: ElementNode, rawOffset: number): void {
 	const children = paragraph.getChildren();
 	const offset = Math.max(0, rawOffset);
 	let acc = 0;
-	for (const [index, child] of children.entries()) {
+	for (const child of children) {
 		const end = acc + child.getTextContent().length;
 		if (child instanceof TextNode && offset <= end) {
 			point.set(child.getKey(), Math.max(0, offset - acc), 'text');
 			return;
 		}
-		if (child instanceof TextNode) {
-			acc = end;
-			continue;
-		}
-		if (
-			$setNonTextPointAtOffset({
-				point,
-				paragraph,
-				children,
-				index,
-				offset,
-				accumulated: acc,
-				end,
-			})
-		) {
-			return;
-		}
 		acc = end;
 	}
 	point.set(paragraph.getKey(), children.length, 'element');
-}
-
-function $setNonTextPointAtOffset({
-	point,
-	paragraph,
-	children,
-	index,
-	offset,
-	accumulated,
-	end,
-}: SetNonTextPointAtOffsetRequest): boolean {
-	if (offset < end) {
-		point.set(paragraph.getKey(), resolveElementPointOffset(index, offset, accumulated), 'element');
-		return true;
-	}
-	if (offset === end) {
-		$setPointAtChildBoundary({point, paragraph, children, index});
-		return true;
-	}
-	return false;
 }
 
 function $selectRange(
@@ -450,22 +366,6 @@ function $selectRange(
 }
 
 export function $applySearchSelectionRange(range: SearchSelectionRange): void {
-	const paragraph = $ensureRootParagraph();
-	let endpoints: Array<number>;
-	if (range.start === range.end) {
-		endpoints = [range.start];
-	} else {
-		endpoints = [range.start, range.end];
-	}
-	let offset = 0;
-	for (const child of paragraph.getChildren()) {
-		const end = offset + child.getTextContent().length;
-		if (!(child instanceof TextNode) && endpoints.some((endpoint) => endpoint > offset && endpoint < end)) {
-			$replaceSearchDocumentFromQuery($getSearchQuery(), range);
-			return;
-		}
-		offset = end;
-	}
 	$selectRange(range.start, range.end, range.direction);
 }
 
@@ -473,38 +373,24 @@ export function $selectOffset(offset: number): void {
 	$selectRange(offset, offset);
 }
 
-export function $selectSearchFilterBoundary(node: LexicalNode, boundary: SearchFilterPointerBoundary): void {
-	const paragraph = $ensureRootParagraph();
-	let offset = 0;
-	for (const child of paragraph.getChildren()) {
-		if (!child.is(node)) {
-			offset += child.getTextContent().length;
-			continue;
-		}
-		if (boundary === SearchFilterPointerBoundary.AFTER) {
-			offset += child.getTextContent().length;
-		}
-		$selectOffset(offset);
-		return;
-	}
-	$selectOffset($getSearchQuery().length);
-}
-
 export function $replaceSearchDocumentFromQuery(query: string, selection: number | SearchSelectionRange | null): void {
 	const root = $getRoot();
 	root.clear();
 	const paragraph = $createParagraphNode();
 	root.append(paragraph);
-	const caretOffset = resolveSearchCaretOffset(selection);
-	const children = $buildParagraphChildren(query, selection);
+	const normalizedQuery = normalizeSearchInputText(query);
+	const children = buildSearchSegments(normalizedQuery).map($createSegmentNode);
 	if (children.length > 0) {
 		paragraph.append(...children);
 	}
+	const caretOffset = resolveSearchCaretOffset(selection);
 	if (typeof selection === 'object' && selection != null) {
 		$selectRange(selection.start, selection.end, selection.direction);
-	} else if (caretOffset != null) {
-		$selectOffset(Math.min(caretOffset, query.length));
-	} else {
-		$setElementCaret(paragraph, paragraph.getChildrenSize());
+		return;
 	}
+	if (caretOffset != null) {
+		$selectOffset(Math.min(caretOffset, normalizedQuery.length));
+		return;
+	}
+	$setElementCaret(paragraph, paragraph.getChildrenSize());
 }
