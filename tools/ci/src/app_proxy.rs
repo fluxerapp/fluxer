@@ -516,6 +516,14 @@ mod tests {
     }
 
     #[test]
+    fn uploaded_assets_carry_the_same_policy_the_app_proxy_serves() {
+        assert_eq!(
+            IMMUTABLE_ASSET_CACHE_CONTROL,
+            "public, max-age=31536000, immutable"
+        );
+    }
+
+    #[test]
     fn asset_upload_plan_rejects_manifest_entries_missing_on_disk() {
         let temp = tempfile::tempdir().unwrap();
         let dist = temp.path().join("dist");

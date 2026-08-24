@@ -22,7 +22,7 @@ export interface CacheHeadersOptions {
 }
 
 export function cacheHeaders(options: CacheHeadersOptions = {}): MiddlewareHandler {
-	const {staticCacheControl = 'public, max-age=31536000, immutable', defaultCacheControl = 'no-cache'} = options;
+	const {staticCacheControl = 'public, max-age=31536000', defaultCacheControl = 'no-cache'} = options;
 	return async (c, next) => {
 		await next();
 		const existingCacheControl = c.res.headers.get('Cache-Control');

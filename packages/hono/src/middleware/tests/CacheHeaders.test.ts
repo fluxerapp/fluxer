@@ -6,7 +6,7 @@ import {describe, expect, test} from 'vitest';
 
 describe('CacheHeaders Middleware', () => {
 	describe('static content caching', () => {
-		test('sets immutable cache for CSS files', async () => {
+		test('sets long-lived cache for CSS files', async () => {
 			const app = new Hono();
 			app.use('*', cacheHeaders());
 			app.get('/styles.css', () => {
@@ -15,9 +15,9 @@ describe('CacheHeaders Middleware', () => {
 				});
 			});
 			const response = await app.request('/styles.css');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
-		test('sets immutable cache for JavaScript files', async () => {
+		test('sets long-lived cache for JavaScript files', async () => {
 			const app = new Hono();
 			app.use('*', cacheHeaders());
 			app.get('/app.js', () => {
@@ -26,9 +26,9 @@ describe('CacheHeaders Middleware', () => {
 				});
 			});
 			const response = await app.request('/app.js');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
-		test('sets immutable cache for images', async () => {
+		test('sets long-lived cache for images', async () => {
 			const app = new Hono();
 			app.use('*', cacheHeaders());
 			app.get('/logo.png', (c) => {
@@ -36,9 +36,9 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/logo.png');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
-		test('sets immutable cache for fonts', async () => {
+		test('sets long-lived cache for fonts', async () => {
 			const app = new Hono();
 			app.use('*', cacheHeaders());
 			app.get('/font.woff2', (c) => {
@@ -46,9 +46,9 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/font.woff2');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
-		test('sets immutable cache for application/font-woff2', async () => {
+		test('sets long-lived cache for application/font-woff2', async () => {
 			const app = new Hono();
 			app.use('*', cacheHeaders());
 			app.get('/font.woff2', (c) => {
@@ -56,9 +56,9 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/font.woff2');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
-		test('sets immutable cache for video files', async () => {
+		test('sets long-lived cache for video files', async () => {
 			const app = new Hono();
 			app.use('*', cacheHeaders());
 			app.get('/video.mp4', (c) => {
@@ -66,9 +66,9 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/video.mp4');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
-		test('sets immutable cache for audio files', async () => {
+		test('sets long-lived cache for audio files', async () => {
 			const app = new Hono();
 			app.use('*', cacheHeaders());
 			app.get('/audio.mp3', (c) => {
@@ -76,7 +76,7 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/audio.mp3');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
 	});
 	describe('default caching', () => {
@@ -183,7 +183,7 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/photo.jpg');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
 		test('handles image/gif', async () => {
 			const app = new Hono();
@@ -193,7 +193,7 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/animation.gif');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
 		test('handles image/svg+xml', async () => {
 			const app = new Hono();
@@ -204,7 +204,7 @@ describe('CacheHeaders Middleware', () => {
 				});
 			});
 			const response = await app.request('/icon.svg');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
 		test('handles video/webm', async () => {
 			const app = new Hono();
@@ -214,7 +214,7 @@ describe('CacheHeaders Middleware', () => {
 				return c.body(new Uint8Array([1, 2, 3]));
 			});
 			const response = await app.request('/video.webm');
-			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+			expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000');
 		});
 	});
 });
