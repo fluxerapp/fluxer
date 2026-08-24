@@ -6,7 +6,7 @@ import Keybind, {
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
 import {replaceTextRange, setTextSelectionSoon} from '@app/features/messaging/utils/TextInputEditUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import type React from 'react';
 import {type KeyboardEvent, useCallback, useEffect} from 'react';
 
@@ -198,7 +198,7 @@ export const useMarkdownFormattingShortcut = ({
 			if (doesEventMatchShortcut(event, inboxCombo) && selectionStart === selectionEnd && value.trim().length === 0) {
 				event.preventDefault();
 				event.stopPropagation();
-				ComponentDispatch.dispatch('INBOX_OPEN');
+				ComponentBus.dispatch('INBOX_OPEN');
 				return;
 			}
 			for (const {combo: shortcutCombo, wrapper} of MARKDOWN_FORMATTING_SHORTCUTS) {

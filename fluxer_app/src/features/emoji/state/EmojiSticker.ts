@@ -5,7 +5,7 @@ import StickerPicker from '@app/features/emoji/state/StickerPicker';
 import {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import {patchGuildStickerCacheFromGateway} from '@app/features/expressions/state/GuildExpressionTabCache';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import type {GuildSticker as WireGuildSticker} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {makeAutoObservable} from 'mobx';
@@ -104,7 +104,7 @@ class Sticker {
 				}
 			}
 		}
-		ComponentDispatch.dispatch('STICKER_PICKER_RERENDER');
+		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 	}
 
 	handleGuildUpdate(guild: GuildStickersPayload): void {
@@ -125,7 +125,7 @@ class Sticker {
 			this.stickerById.delete(oldSticker.id);
 		}
 		this.guildStickers.delete(guildId);
-		ComponentDispatch.dispatch('STICKER_PICKER_RERENDER');
+		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 	}
 
 	private updateGuildStickers(guildId: string, guildStickers: ReadonlyArray<WireGuildSticker>): void {
@@ -139,7 +139,7 @@ class Sticker {
 		for (const sticker of sortedStickers) {
 			this.stickerById.set(sticker.id, sticker);
 		}
-		ComponentDispatch.dispatch('STICKER_PICKER_RERENDER');
+		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 	}
 
 	private sortByFrecency(stickers: ReadonlyArray<GuildSticker>): ReadonlyArray<GuildSticker> {

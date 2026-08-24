@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import {
 	consumeCompletedPremiumCheckoutReturnIntent,
@@ -53,7 +53,7 @@ export const PremiumCheckoutReturnWatcher = observer(() => {
 				<UserSettingsModal initialTab="plutonium" data-flx="premium.checkout-return-watcher.user-settings-modal" />
 			)),
 		);
-		ComponentDispatch.safeDispatch('USER_SETTINGS_TAB_SELECT', {tab: 'plutonium'});
+		ComponentBus.dispatchOrBuffer('USER_SETTINGS_TAB_SELECT', {tab: 'plutonium'});
 	}, [isPremium, currentUserId, showPremiumFeatures]);
 	return null;
 });

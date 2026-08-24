@@ -33,7 +33,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import GuildVerification from '@app/features/guild/state/GuildVerification';
 import {useMemberListVisible} from '@app/features/member/hooks/useMemberListVisible';
 import Permission from '@app/features/permissions/state/Permission';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {Button} from '@app/features/ui/button/Button';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -255,7 +255,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 	}, [handleOpenVoiceCallFromTextChat, handleOpenVoiceTextChat, isVoiceTextCallExpanded]);
 	useEffect(() => {
 		if (!isVoiceChannel) return;
-		return ComponentDispatch.subscribe('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', (payload?: unknown) => {
+		return ComponentBus.subscribe('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', (payload?: unknown) => {
 			const {channelId: targetChannelId} = (payload ?? {}) as {channelId?: string};
 			if (targetChannelId && targetChannelId !== channelId) return false;
 			handleToggleVoiceTextCallExpanded();

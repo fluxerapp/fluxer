@@ -31,7 +31,7 @@ import {
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {useScrollManager} from '@app/features/platform/utils/ScrollManager';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -400,14 +400,14 @@ export const Messages = observer(function Messages({
 			}
 		};
 		const dispatchUnsubs = [
-			ComponentDispatch.subscribe('SCROLLTO_PRESENT', onScrollToPresent),
-			ComponentDispatch.subscribe('MESSAGE_SENT', onMessageSent),
-			ComponentDispatch.subscribe('FORCE_JUMP_TO_PRESENT', onForceJumpToPresent),
-			ComponentDispatch.subscribe('ESCAPE_PRESSED', onEscapePressed),
-			ComponentDispatch.subscribe('SCROLL_PAGE_UP', onScrollPageUp),
-			ComponentDispatch.subscribe('SCROLL_PAGE_DOWN', onScrollPageDown),
-			ComponentDispatch.subscribe('LAYOUT_RESIZED', onLayoutResized),
-			ComponentDispatch.subscribe('FOCUS_BOTTOMMOST_MESSAGE', onFocusBottommostMessage),
+			ComponentBus.subscribe('SCROLL_TO_PRESENT', onScrollToPresent),
+			ComponentBus.subscribe('MESSAGE_SENT', onMessageSent),
+			ComponentBus.subscribe('FORCE_JUMP_TO_PRESENT', onForceJumpToPresent),
+			ComponentBus.subscribe('ESCAPE_PRESSED', onEscapePressed),
+			ComponentBus.subscribe('SCROLL_PAGE_UP', onScrollPageUp),
+			ComponentBus.subscribe('SCROLL_PAGE_DOWN', onScrollPageDown),
+			ComponentBus.subscribe('LAYOUT_RESIZED', onLayoutResized),
+			ComponentBus.subscribe('FOCUS_BOTTOMMOST_MESSAGE', onFocusBottommostMessage),
 		];
 		updateFromState();
 		return () => {
@@ -477,7 +477,7 @@ export const Messages = observer(function Messages({
 				return;
 			}
 			scrollManager.jumpCancel();
-			ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId: channel.id});
+			ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId: channel.id});
 		},
 		allowWhenInactive: true,
 	});

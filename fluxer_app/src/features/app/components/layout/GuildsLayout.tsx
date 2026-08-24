@@ -90,7 +90,7 @@ import {openMacPermissionsModal} from '@app/features/permissions/system/commands
 import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Platform} from '@app/features/platform/types/Platform';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 import {AxisOrientation, type VerticalEdge} from '@app/features/ui/AxisOrientation';
@@ -2166,7 +2166,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 	useEffect(() => {
 		if (prevNagbarCount.current !== activeNagbars.length) {
 			prevNagbarCount.current = activeNagbars.length;
-			ComponentDispatch.dispatch('LAYOUT_RESIZED');
+			ComponentBus.dispatch('LAYOUT_RESIZED');
 		}
 	}, [activeNagbars.length]);
 	useEffect(() => {

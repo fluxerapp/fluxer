@@ -22,7 +22,7 @@ import {
 	MEDIA_DESCRIPTOR,
 	STICKERS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {type SegmentedTab, SegmentedTabs} from '@app/features/ui/segmented_tabs/SegmentedTabs';
 import type {MessageDescriptor} from '@lingui/core';
@@ -81,7 +81,7 @@ const EXPRESSION_PICKER_CATEGORY_DESCRIPTORS: Array<ExpressionPickerCategoryDesc
 					if (StickerSendUtils.shouldSetPendingSticker(channelId)) {
 						StickerSendUtils.setPendingSticker(channelId, sticker);
 					} else {
-						ComponentDispatch.dispatch('STICKER_SELECT', {sticker});
+						ComponentBus.dispatch('STICKER_SELECT', {sticker});
 					}
 					if (!shiftKey) {
 						onClose?.();

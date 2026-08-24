@@ -15,7 +15,7 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {type CloudAttachment, CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {isEmbeddableImageFile} from '@app/features/messaging/utils/EmbeddableImageTypes';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -629,7 +629,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 			forceJumpFrameRef.current = null;
 			const messages = Messages.getMessages(channelIdRef.current);
 			if (messages.hasMoreAfter) {
-				ComponentDispatch.dispatch('FORCE_JUMP_TO_PRESENT');
+				ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT');
 			}
 		});
 	}, []);

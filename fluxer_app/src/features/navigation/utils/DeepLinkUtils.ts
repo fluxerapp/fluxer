@@ -8,7 +8,7 @@ import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -128,7 +128,7 @@ function openUserSettingsDeepLink(target: UserSettingsDeepLinkTarget): void {
 			}),
 		),
 	);
-	ComponentDispatch.safeDispatch('USER_SETTINGS_TAB_SELECT', {tab: target.tab, section: target.section});
+	ComponentBus.dispatchOrBuffer('USER_SETTINGS_TAB_SELECT', {tab: target.tab, section: target.section});
 }
 
 const navigateForTarget = (target: DeepLinkTarget) => {

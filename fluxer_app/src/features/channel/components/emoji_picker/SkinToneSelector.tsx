@@ -6,7 +6,7 @@ import {EMOJI_CLAP} from '@app/features/channel/components/emoji_picker/EmojiPic
 import * as EmojiCommands from '@app/features/emoji/commands/EmojiCommands';
 import Emoji from '@app/features/emoji/state/Emoji';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {SKIN_TONE_SURROGATES} from '@fluxer/constants/src/EmojiConstants';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -22,7 +22,7 @@ const SkinTonePicker = observer(({isOpen, onClose, skinTone}: SkinTonePickerProp
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const handleSelect = (surrogate: string) => {
 		EmojiCommands.setSkinTone(surrogate);
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 		onClose();
 	};
 	return (

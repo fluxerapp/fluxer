@@ -18,7 +18,7 @@ import {
 	MEDIA_DESCRIPTOR,
 	STICKERS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import type {ResizeEdge} from '@app/features/ui/floating_pane/FloatingPaneMath';
 import {useResizablePane} from '@app/features/ui/hooks/useResizablePane';
@@ -110,7 +110,7 @@ const createAllCategories = (i18n: I18n): Array<ExpressionPickerCategory> => [
 					if (StickerSendUtils.shouldSetPendingSticker(channelId)) {
 						StickerSendUtils.setPendingSticker(channelId, sticker);
 					} else {
-						ComponentDispatch.dispatch('STICKER_SELECT', {sticker});
+						ComponentBus.dispatch('STICKER_SELECT', {sticker});
 					}
 					if (onClose && !shiftKey) {
 						onClose();

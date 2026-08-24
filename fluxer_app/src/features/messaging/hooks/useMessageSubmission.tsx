@@ -7,7 +7,7 @@ import {Message} from '@app/features/messaging/models/MessagingMessage';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import {formatUploadingAttachmentSummary} from '@app/features/messaging/utils/UploadingAttachmentLabelUtils';
 import Permission from '@app/features/permissions/state/Permission';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
 import {SlowmodeRateLimitedModal} from '@app/features/slowmode/components/alerts/SlowmodeRateLimitedModal';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
@@ -153,7 +153,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				.catch(() => {
 					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
 				});
-			ComponentDispatch.dispatch('MESSAGE_SENT', {channelId: channel.id});
+			ComponentBus.dispatch('MESSAGE_SENT', {channelId: channel.id});
 			return true;
 		},
 		[channel?.id, i18n, referencedMessage, replyingMessage],
@@ -226,7 +226,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				.catch(() => {
 					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
 				});
-			ComponentDispatch.dispatch('MESSAGE_SENT', {channelId: channel.id});
+			ComponentBus.dispatch('MESSAGE_SENT', {channelId: channel.id});
 		},
 		[channel?.id, referencedMessage, replyingMessage],
 	);

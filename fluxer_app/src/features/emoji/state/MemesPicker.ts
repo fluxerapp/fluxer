@@ -13,7 +13,7 @@ import {
 } from '@app/features/emoji/state/UsageFrecency';
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {MemesPickerStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {makeAutoObservable} from 'mobx';
@@ -81,7 +81,7 @@ class MemesPicker {
 		} else {
 			this.favoriteMemes.push(memeKey);
 		}
-		ComponentDispatch.dispatch('MEMES_PICKER_RERENDER');
+		ComponentBus.dispatch('MEMES_PICKER_RERENDER');
 		logger.debug(`Toggled favorite meme: ${memeKey}`);
 	}
 
@@ -94,7 +94,7 @@ class MemesPicker {
 		} else {
 			this.collapsedCategories.push(category);
 		}
-		ComponentDispatch.dispatch('MEMES_PICKER_RERENDER');
+		ComponentBus.dispatch('MEMES_PICKER_RERENDER');
 		logger.debug(`Toggled category: ${category}`);
 	}
 

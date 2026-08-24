@@ -4,7 +4,7 @@ import {
 	getCachedDesktopTroubleshootingSettings,
 	getDesktopTroubleshootingSettings,
 } from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import type {RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -114,7 +114,7 @@ export const CodecSelectorSection = observer(() => {
 	}, []);
 	const openAdvancedSettingsTab = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
-		ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'advanced_settings'});
+		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'advanced_settings'});
 	}, []);
 	const hardwareAccelOff = isDesktopClient && hardwareAccelDisabled === true;
 	return (

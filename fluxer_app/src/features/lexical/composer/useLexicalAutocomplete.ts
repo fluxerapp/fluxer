@@ -78,7 +78,7 @@ import {
 import MentionFrecency from '@app/features/notification/state/MentionFrecency';
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import {formatUserTagForStreamerMode} from '@app/features/user/utils/DisplayNameUtils';
@@ -196,8 +196,8 @@ export function useLexicalAutocomplete({
 		function handleExpressionDataUpdated(): void {
 			setExpressionDataVersion((version) => version + 1);
 		}
-		const unsubscribeEmoji = ComponentDispatch.subscribe('EMOJI_PICKER_RERENDER', handleExpressionDataUpdated);
-		const unsubscribeSticker = ComponentDispatch.subscribe('STICKER_PICKER_RERENDER', handleExpressionDataUpdated);
+		const unsubscribeEmoji = ComponentBus.subscribe('EMOJI_PICKER_RERENDER', handleExpressionDataUpdated);
+		const unsubscribeSticker = ComponentBus.subscribe('STICKER_PICKER_RERENDER', handleExpressionDataUpdated);
 		return () => {
 			unsubscribeEmoji();
 			unsubscribeSticker();
@@ -652,17 +652,17 @@ export function useLexicalAutocomplete({
 				return;
 			}
 			if (isMeme(option)) {
-				ComponentDispatch.dispatch('FAVORITE_MEME_SELECT', {meme: option.meme, autoSend: true});
+				ComponentBus.dispatch('FAVORITE_MEME_SELECT', {meme: option.meme, autoSend: true});
 				handle.clear();
 				return;
 			}
 			if (isGif(option)) {
-				ComponentDispatch.dispatch('GIF_SELECT', {gif: option.gif, autoSend: true});
+				ComponentBus.dispatch('GIF_SELECT', {gif: option.gif, autoSend: true});
 				handle.clear();
 				return;
 			}
 			if (isSticker(option)) {
-				ComponentDispatch.dispatch('STICKER_SELECT', {sticker: option.sticker});
+				ComponentBus.dispatch('STICKER_SELECT', {sticker: option.sticker});
 				handle.clear();
 				return;
 			}

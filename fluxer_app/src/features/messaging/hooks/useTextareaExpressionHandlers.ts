@@ -10,7 +10,7 @@ import {
 	type PrepareTextareaTextChange,
 } from '@app/features/messaging/utils/TextareaNativeEditUtils';
 import {type MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -93,7 +93,7 @@ export const useTextareaExpressionHandlers = ({
 				appendText(gifUrl);
 			}
 		};
-		return ComponentDispatch.subscribe('GIF_SELECT', handleGifSelect);
+		return ComponentBus.subscribe('GIF_SELECT', handleGifSelect);
 	}, [appendText, sendOptimisticMessage, enabled]);
 	useEffect(() => {
 		const handleStickerSelect = (payload?: unknown) => {
@@ -104,7 +104,7 @@ export const useTextareaExpressionHandlers = ({
 			if (!sticker) return;
 			sendOptimisticMessage({content: '', stickers: [sticker.toJSON()]}, {hasAttachments: false});
 		};
-		return ComponentDispatch.subscribe('STICKER_SELECT', handleStickerSelect);
+		return ComponentBus.subscribe('STICKER_SELECT', handleStickerSelect);
 	}, [sendOptimisticMessage, enabled]);
 	useEffect(() => {
 		const handleFavoriteMemeSelect = (payload?: unknown) => {
@@ -144,7 +144,7 @@ export const useTextareaExpressionHandlers = ({
 				}
 			}
 		};
-		return ComponentDispatch.subscribe('FAVORITE_MEME_SELECT', handleFavoriteMemeSelect);
+		return ComponentBus.subscribe('FAVORITE_MEME_SELECT', handleFavoriteMemeSelect);
 	}, [appendText, canSendFavoriteMemeId, sendOptimisticMessage, enabled]);
 	useEffect(() => {
 		const handleInsertMention = (payload?: unknown) => {
@@ -184,6 +184,6 @@ export const useTextareaExpressionHandlers = ({
 				selectionStart: newText.length,
 			});
 		};
-		return ComponentDispatch.subscribe('INSERT_MENTION', handleInsertMention);
+		return ComponentBus.subscribe('INSERT_MENTION', handleInsertMention);
 	}, [insertSegment, previousValueRef, setValue, textareaRef, segmentManagerRef, prepareTextChange, enabled]);
 };

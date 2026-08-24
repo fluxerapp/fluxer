@@ -38,7 +38,7 @@ import {
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {getEmojiNameWithColons, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import {
 	AddReactionIcon,
@@ -438,7 +438,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 			);
 		}, [message, i18n]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('EMOJI_PICKER_OPEN', (payload?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('EMOJI_PICKER_OPEN', (payload?: unknown) => {
 				const data = (payload ?? {}) as {messageId?: string};
 				if (data.messageId === message.id && emojiPickerButtonRef.current) {
 					PopoutCommands.open({

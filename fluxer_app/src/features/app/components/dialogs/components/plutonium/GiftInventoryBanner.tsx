@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/dialogs/components/plutonium/GiftInventoryBanner.module.css';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import type {User} from '@app/features/user/models/User';
@@ -37,7 +37,7 @@ export const GiftInventoryBanner: React.FC<GiftInventoryBannerProps> = observer(
 				<Button
 					variant="secondary"
 					small
-					onClick={() => ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'gift_inventory'})}
+					onClick={() => ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'gift_inventory'})}
 					data-flx="app.plutonium.gift-inventory-banner.button.dispatch"
 				>
 					<Trans>View gifts</Trans>

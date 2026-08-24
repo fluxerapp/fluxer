@@ -15,7 +15,7 @@ import {
 import cardStyles from '@app/features/messaging/components/embeds/embed_card/EmbedCard.module.css';
 import {useEmbedSkeletonOverride} from '@app/features/messaging/components/embeds/embed_card/useEmbedSkeletonOverride';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {Button} from '@app/features/ui/button/Button';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -87,7 +87,7 @@ export const GiftEmbed = observer(function GiftEmbed({code}: GiftEmbedProps) {
 	useEffect(() => {
 		const isLoading = !!giftState?.loading;
 		if (prevLoadingRef.current && !isLoading && giftState) {
-			ComponentDispatch.dispatch('LAYOUT_RESIZED');
+			ComponentBus.dispatch('LAYOUT_RESIZED');
 		}
 		prevLoadingRef.current = isLoading;
 	}, [giftState?.loading]);

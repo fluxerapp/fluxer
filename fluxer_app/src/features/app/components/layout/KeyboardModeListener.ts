@@ -3,7 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import {CHANNEL_TEXTAREA_SELECTOR} from '@app/features/app/keybindings/utils/EditableElement';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {
@@ -61,7 +61,7 @@ export const KeyboardModeListener = observer(() => {
 					const composer = document.querySelector<HTMLTextAreaElement>(CHANNEL_TEXTAREA_SELECTOR);
 					if (canRedirectTabToComposer(composer)) {
 						event.preventDefault();
-						ComponentDispatch.dispatch('FOCUS_TEXTAREA', {enterKeyboardMode: true});
+						ComponentBus.dispatch('FOCUS_TEXTAREA', {enterKeyboardMode: true});
 						return;
 					}
 				}

@@ -3,7 +3,7 @@
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import type {ComponentActionType} from '@app/features/platform/utils/ComponentBus';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import {
 	type PopoutAnimationType,
@@ -373,8 +373,8 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 	useEffect(() => {
 		if (!props.subscribeTo) return;
 		const handler = () => toggle();
-		ComponentDispatch.subscribe(props.subscribeTo, handler);
-		return () => ComponentDispatch.unsubscribe(props.subscribeTo!, handler);
+		ComponentBus.subscribe(props.subscribeTo, handler);
+		return () => ComponentBus.unsubscribe(props.subscribeTo!, handler);
 	}, [props.subscribeTo, toggle]);
 	const childToRender =
 		(props.children as React.ReactNode) || (!props.closeOnChildrenUnmount ? state.lastValidChildren : null);

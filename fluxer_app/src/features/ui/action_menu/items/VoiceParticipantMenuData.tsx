@@ -43,7 +43,7 @@ import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {ChangeFriendNicknameModal} from '@app/features/relationship/components/modals/ChangeFriendNicknameModal';
 import Relationships from '@app/features/relationship/state/Relationships';
 import * as RelationshipActionUtils from '@app/features/relationship/utils/RelationshipActionUtils';
@@ -601,7 +601,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				label: i18n._(MENTION_DESCRIPTOR),
 				onClick: () => {
 					onClose();
-					ComponentDispatch.dispatch('INSERT_MENTION', {userId: user.id});
+					ComponentBus.dispatch('INSERT_MENTION', {userId: user.id});
 				},
 			});
 		}

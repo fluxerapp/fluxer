@@ -31,7 +31,7 @@ import {
 	SEARCH_SETTINGS_PLACEHOLDER_DESCRIPTOR,
 	SIGN_OUT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -223,7 +223,7 @@ const SidebarSections: React.FC<SidebarSectionsProps> = observer(
 				scrollSpyContext.scrollToSection(sectionId);
 				return;
 			}
-			ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: tabType, section: sectionId});
+			ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: tabType, section: sectionId});
 		};
 		return (
 			<SettingsModalSidebarSubItems

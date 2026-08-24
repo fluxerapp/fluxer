@@ -5,7 +5,7 @@ import {MobileSettingsView} from '@app/features/app/components/dialogs/component
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SettingsModalContainer} from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -141,7 +141,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 			}
 		}, [resolveVisibleTab, selectedTab]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('USER_SETTINGS_TAB_SELECT', (args?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('USER_SETTINGS_TAB_SELECT', (args?: unknown) => {
 				const {tab, section} = (args ?? {}) as {tab?: string; section?: string};
 				if (tab && typeof tab === 'string') {
 					const accountSection =

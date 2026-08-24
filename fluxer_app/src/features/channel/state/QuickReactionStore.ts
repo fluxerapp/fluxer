@@ -9,13 +9,13 @@ type QuickReactionSnapshot = ReadonlyArray<FlatEmoji>;
 type EmojiState = typeof import('@app/features/emoji/state/Emoji')['default'];
 type EmojiPickerState = typeof import('@app/features/emoji/state/EmojiPicker')['default'];
 type PermissionState = typeof import('@app/features/permissions/state/Permission')['default'];
-type ComponentDispatchState = typeof import('@app/features/platform/utils/ComponentBus')['ComponentDispatch'];
+type ComponentBusState = typeof import('@app/features/platform/utils/ComponentBus')['ComponentBus'];
 
 interface QuickReactionDependencies {
 	Emoji: EmojiState;
 	EmojiPicker: EmojiPickerState;
 	Permission: PermissionState;
-	ComponentDispatch: ComponentDispatchState;
+	ComponentBus: ComponentBusState;
 }
 
 const EMPTY_QUICK_REACTIONS: QuickReactionSnapshot = Object.freeze([]);
@@ -39,11 +39,11 @@ function loadQuickReactionDependencies(): Promise<QuickReactionDependencies> {
 					Emoji: emojiModule.default,
 					EmojiPicker: emojiPickerModule.default,
 					Permission: permissionModule.default,
-					ComponentDispatch: componentBusModule.ComponentDispatch,
+					ComponentBus: componentBusModule.ComponentBus,
 				};
 				if (!dependencies) {
 					dependencies = loaded;
-					loaded.ComponentDispatch.subscribe('EMOJI_PICKER_RERENDER', () => {
+					loaded.ComponentBus.subscribe('EMOJI_PICKER_RERENDER', () => {
 						cacheEpoch += 1;
 					});
 					loaded.Permission.subscribe(() => {

@@ -3,7 +3,7 @@
 import {SettingsSearch} from '@app/features/app/components/dialogs/components/SettingsSearch';
 import {SettingsHeadingLinkButton} from '@app/features/app/components/dialogs/shared/SettingsHeadingLinkButton';
 import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import styles from '@app/features/user/components/modals/tabs/AdvancedSettingsTab.module.css';
 import {AdvancedSettingRow} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow';
 import {
@@ -80,7 +80,7 @@ export const AdvancedSettingsTab = observer(() => {
 	const groups = useMemo(() => groupAdvancedItemsByCategory(remainingItems, tagLabels), [remainingItems, tagLabels]);
 	const showGroupLinks = groups.length > 1;
 	const handleOpenSource = useCallback((item: SearchableSettingItem) => {
-		ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {
+		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {
 			tab: getAdvancedSettingSourceTab(item),
 			section: getAdvancedSettingSourceSection(item),
 		});

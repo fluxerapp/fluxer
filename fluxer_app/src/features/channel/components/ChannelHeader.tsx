@@ -78,7 +78,7 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {goBackOr} from '@app/features/platform/components/router/NavigationAdapter';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {AddFriendsToGroupModal} from '@app/features/relationship/components/modals/AddFriendsToGroupModal';
 import Relationships from '@app/features/relationship/state/Relationships';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
@@ -329,11 +329,11 @@ export const ChannelHeader = observer(
 				setInitialTab(initialTab || 'members');
 				setChannelDetailsOpen(true);
 			};
-			return ComponentDispatch.subscribe('CHANNEL_DETAILS_OPEN', handleChannelDetailsOpen);
+			return ComponentBus.subscribe('CHANNEL_DETAILS_OPEN', handleChannelDetailsOpen);
 		}, []);
 		useEffect(() => {
 			if (!showMembersToggle) return;
-			return ComponentDispatch.subscribe('CHANNEL_MEMBER_LIST_TOGGLE', () => {
+			return ComponentBus.subscribe('CHANNEL_MEMBER_LIST_TOGGLE', () => {
 				if (canFitMemberList) {
 					if (memberListUsesChannelOverride) {
 						MemberList.toggleDefaultHiddenChannelMembers(memberListChannelId);

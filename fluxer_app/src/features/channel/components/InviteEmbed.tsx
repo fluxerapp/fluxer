@@ -49,7 +49,7 @@ import cardStyles from '@app/features/messaging/components/embeds/embed_card/Emb
 import {useEmbedSkeletonOverride} from '@app/features/messaging/components/embeds/embed_card/useEmbedSkeletonOverride';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {InviteEmbedContextMenu} from '@app/features/ui/action_menu/InviteEmbedContextMenu';
 import {Button} from '@app/features/ui/button/Button';
@@ -210,7 +210,7 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 	}, [code]);
 	useEffect(() => {
 		if (prevLoadingRef.current && !isLoading && currentChannelId) {
-			ComponentDispatch.dispatch('LAYOUT_RESIZED', {channelId: currentChannelId});
+			ComponentBus.dispatch('LAYOUT_RESIZED', {channelId: currentChannelId});
 		}
 		prevLoadingRef.current = isLoading;
 	}, [isLoading, currentChannelId]);

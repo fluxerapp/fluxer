@@ -22,7 +22,7 @@ import {
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {modal, push} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -173,7 +173,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 				return;
 			}
 			if (gif.favoriteGifLookup) {
-				ComponentDispatch.dispatch('GIF_SELECT', {
+				ComponentBus.dispatch('GIF_SELECT', {
 					gif,
 					autoSend: autoSendKlipyGifs && !shiftKey,
 				});
@@ -184,7 +184,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 			if (!shareId) return;
 			GifCommands.registerShare(shareId, searchTerm);
 			const shareUrl = GifSlugUtils.resolveShareUrl(provider, {url: gif.url, slug: shareId});
-			ComponentDispatch.dispatch('GIF_SELECT', {
+			ComponentBus.dispatch('GIF_SELECT', {
 				gif: {
 					...gif,
 					id: shareId,

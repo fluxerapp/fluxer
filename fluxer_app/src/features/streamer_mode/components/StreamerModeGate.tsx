@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import styles from '@app/features/streamer_mode/components/StreamerModeGate.module.css';
 import {Button} from '@app/features/ui/button/Button';
 import {msg} from '@lingui/core/macro';
@@ -28,7 +28,7 @@ const GO_TO_STREAMER_MODE_SETTINGS_DESCRIPTOR = msg({
 export const StreamerModeGate: React.FC = () => {
 	const {i18n} = useLingui();
 	const goToStreamerModeSettings = () => {
-		ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'appearance', section: 'streamer-mode'});
+		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'appearance', section: 'streamer-mode'});
 	};
 	return (
 		<div className={styles.screen} data-flx="streamer-mode.gate.screen">

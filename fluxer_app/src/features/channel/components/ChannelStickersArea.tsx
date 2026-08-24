@@ -4,7 +4,7 @@ import * as ChannelStickerCommands from '@app/features/channel/commands/ChannelS
 import styles from '@app/features/channel/components/ChannelStickersArea.module.css';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {StickerContextMenuItems} from '@app/features/ui/action_menu/items/StickerContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -36,9 +36,9 @@ export const ChannelStickersArea: React.FC<ChannelStickersAreaProps> = observer(
 	const [previousSticker, setPreviousSticker] = useState(sticker);
 	useEffect(() => {
 		if (previousSticker && !sticker) {
-			ComponentDispatch.dispatch('FORCE_JUMP_TO_PRESENT');
+			ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT');
 		} else if (!previousSticker && sticker) {
-			ComponentDispatch.dispatch('FORCE_JUMP_TO_PRESENT');
+			ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT');
 		}
 		setPreviousSticker(sticker);
 	}, [sticker, previousSticker]);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {useEffect, useRef} from 'react';
 
 export function useChannelSearchVisibility(channelId: string | null, visible: boolean): void {
@@ -10,6 +10,6 @@ export function useChannelSearchVisibility(channelId: string | null, visible: bo
 		previousVisibilityRef.current = {channelId, visible};
 		if (!channelId) return;
 		if (previousVisibility.channelId === channelId && previousVisibility.visible === visible) return;
-		ComponentDispatch.dispatch('LAYOUT_RESIZED', {channelId});
+		ComponentBus.dispatch('LAYOUT_RESIZED', {channelId});
 	}, [channelId, visible]);
 }

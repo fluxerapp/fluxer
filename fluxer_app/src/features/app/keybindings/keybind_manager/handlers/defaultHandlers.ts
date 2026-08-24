@@ -31,7 +31,7 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
@@ -128,7 +128,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('misc_search', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('MESSAGE_SEARCH_OPEN');
+		ComponentBus.dispatch('MESSAGE_SEARCH_OPEN');
 	});
 	host.register('voice_toggle_mute', ({type}) => {
 		if (type !== 'press') return;
@@ -283,13 +283,13 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('voice_toggle_soundboard', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('SOUNDBOARD_TOGGLE');
+		ComponentBus.dispatch('SOUNDBOARD_TOGGLE');
 	});
 	host.register('voice_toggle_compact_call_view', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', {channelId});
+		ComponentBus.dispatch('COMPACT_VOICE_CALL_EXPANSION_TOGGLE', {channelId});
 	});
 	host.register('chat_copy_channel_link', ({type}) => {
 		if (type !== 'press') return;
@@ -304,15 +304,15 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId});
+		ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
 	});
 	host.register('chat_scroll_up', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('SCROLL_PAGE_UP');
+		ComponentBus.dispatch('SCROLL_PAGE_UP');
 	});
 	host.register('chat_scroll_down', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('SCROLL_PAGE_DOWN');
+		ComponentBus.dispatch('SCROLL_PAGE_DOWN');
 	});
 	host.register('chat_jump_oldest_unread', ({type}) => {
 		if (type !== 'press') return;
@@ -328,7 +328,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (!channelId) return;
 		if (requestChannelComposerAffordanceDismissal(channelId)) return;
 		if (ReadStates.hasUnread(channelId)) {
-			ComponentDispatch.dispatch('ESCAPE_PRESSED', {channelId});
+			ComponentBus.dispatch('ESCAPE_PRESSED', {channelId});
 		}
 	});
 	host.register('chat_mark_guild_read', ({type}) => {
@@ -465,15 +465,15 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('chat_toggle_pins', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('CHANNEL_PINS_OPEN');
+		ComponentBus.dispatch('CHANNEL_PINS_OPEN');
 	});
 	host.register('chat_toggle_inbox', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('INBOX_OPEN');
+		ComponentBus.dispatch('INBOX_OPEN');
 	});
 	host.register('chat_toggle_member_list', ({type}) => {
 		if (type !== 'press') return;
-		ComponentDispatch.dispatch('CHANNEL_MEMBER_LIST_TOGGLE');
+		ComponentBus.dispatch('CHANNEL_MEMBER_LIST_TOGGLE');
 	});
 	host.register('chat_toggle_emoji', ({type}) => {
 		if (type !== 'press') return;
@@ -481,38 +481,38 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (!channelId) return;
 		const editingMessageId = MessageEdit.getEditingMessageId(channelId);
 		if (editingMessageId) {
-			ComponentDispatch.dispatch('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', {
+			ComponentBus.dispatch('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', {
 				channelId,
 				messageId: editingMessageId,
 				tab: 'emojis',
 			});
 			return;
 		}
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'emojis'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'emojis'});
 	});
 	host.register('chat_toggle_gif', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'gifs'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'gifs'});
 	});
 	host.register('chat_toggle_sticker', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'stickers'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'stickers'});
 	});
 	host.register('chat_toggle_saved_media', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'memes'});
+		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'memes'});
 	});
 	host.register('chat_send_voice_message', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId ?? Navigation.channelId;
 		if (!channelId) return;
-		const textareaResult = ComponentDispatch.dispatchToFirstResult(
+		const textareaResult = ComponentBus.dispatchToFirstResult(
 			'TEXTAREA_SEND_VOICE_MESSAGE',
 			{channelId},
 			(result) => result === true || result === false,
@@ -537,13 +537,13 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId});
+		ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
 	});
 	host.register('chat_upload', ({type}) => {
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentDispatch.dispatch('TEXTAREA_UPLOAD_FILE', {channelId});
+		ComponentBus.dispatch('TEXTAREA_UPLOAD_FILE', {channelId});
 	});
 	host.register('system_zoom_in', ({type}) => {
 		if (type !== 'press') return;

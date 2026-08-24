@@ -24,7 +24,7 @@ import type {LexicalSearchInputHandle} from '@app/features/lexical/search/Lexica
 import MemberSearch, {type SearchContext} from '@app/features/member/state/MemberSearch';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import SearchHistory, {type SearchHistoryEntry} from '@app/features/search/state/SearchHistory';
 import {
 	buildSearchSegmentsFromHints,
@@ -213,7 +213,7 @@ export function useMessageSearchAutocomplete({
 		}
 	}, [channel?.id, channel?.name, contextId, isInGuildChannel, onChange, value]);
 	useEffect(() => {
-		return ComponentDispatch.subscribe('MESSAGE_SEARCH_OPEN', () => {
+		return ComponentBus.subscribe('MESSAGE_SEARCH_OPEN', () => {
 			openSearchInput();
 		});
 	}, [openSearchInput]);

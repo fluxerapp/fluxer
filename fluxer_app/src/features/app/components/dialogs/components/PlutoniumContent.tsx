@@ -21,7 +21,7 @@ import {SubscriptionCard} from '@app/features/app/components/dialogs/components/
 import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import GeoIP from '@app/features/app/state/GeoIP';
 import Guilds from '@app/features/guild/state/Guilds';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {
@@ -122,7 +122,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 		perksSectionRef.current?.scrollIntoView({behavior: 'auto', block: 'start'});
 	}, []);
 	const navigateToRedeemGift = useCallback(() => {
-		ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'gift_inventory'});
+		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'gift_inventory'});
 	}, []);
 	const handleCancelSubscriptionConfirmed = useCallback(() => {
 		ModalCommands.push(

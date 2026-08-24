@@ -19,7 +19,7 @@ import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {AUDIO_DESCRIPTOR, GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {DeleteIcon, EditIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -269,7 +269,7 @@ export const MobileMemesPicker = observer(({onClose}: MobileMemesPickerProps = {
 				memeRecord: meme,
 				onClick: (event?: React.MouseEvent) => {
 					const shiftKey = event?.shiftKey ?? false;
-					ComponentDispatch.dispatch('FAVORITE_MEME_SELECT', {meme, autoSend: !shiftKey});
+					ComponentBus.dispatch('FAVORITE_MEME_SELECT', {meme, autoSend: !shiftKey});
 					if (!shiftKey) {
 						onClose?.();
 					}

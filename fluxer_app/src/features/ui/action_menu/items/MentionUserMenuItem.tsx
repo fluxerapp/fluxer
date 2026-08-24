@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {MentionUserIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import type {User} from '@app/features/user/models/User';
@@ -24,7 +24,7 @@ export const MentionUserMenuItem: React.FC<MentionUserMenuItemProps> = observer(
 	const {i18n} = useLingui();
 	const handleMentionUser = useCallback(() => {
 		onClose();
-		ComponentDispatch.dispatch('INSERT_MENTION', {userId: user.id});
+		ComponentBus.dispatch('INSERT_MENTION', {userId: user.id});
 	}, [user.id, onClose]);
 	return (
 		<MenuItem

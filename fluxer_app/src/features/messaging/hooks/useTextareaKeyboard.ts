@@ -5,7 +5,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
 import {insertTextAtCursor} from '@app/features/messaging/utils/TextInputEditUtils';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {canFocusTextarea, safeFocus} from '@app/features/platform/utils/InputFocusManager';
 import {isTextInputKeyEvent} from '@app/features/platform/utils/IsTextInputKeyEvent';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
@@ -138,7 +138,7 @@ export const useTextareaKeyboard = ({
 					MessageCommands.stopReply(channelId);
 				} else {
 					event.preventDefault();
-					ComponentDispatch.dispatch('ESCAPE_PRESSED');
+					ComponentBus.dispatch('ESCAPE_PRESSED');
 				}
 			}
 		};
@@ -154,7 +154,7 @@ export const useTextareaKeyboard = ({
 			}
 			if (KeyboardMode.keyboardModeEnabled) {
 				event.preventDefault();
-				ComponentDispatch.dispatch('FOCUS_BOTTOMMOST_MESSAGE', {channelId});
+				ComponentBus.dispatch('FOCUS_BOTTOMMOST_MESSAGE', {channelId});
 				return;
 			}
 			const message = getLastEditableMessage();

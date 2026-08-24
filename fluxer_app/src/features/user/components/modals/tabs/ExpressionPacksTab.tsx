@@ -13,7 +13,7 @@ import {EditPackModal} from '@app/features/expressions/components/modals/EditPac
 import {PackInviteModal} from '@app/features/expressions/components/modals/PackInviteModal';
 import Packs from '@app/features/expressions/state/ExpressionsPacks';
 import {NO_DESCRIPTION_PROVIDED_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -189,7 +189,7 @@ const ExpressionPacksTab: React.FC = observer(() => {
 					actions={[
 						{
 							text: i18n._(LEARN_ABOUT_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME}),
-							onClick: () => ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'plutonium'}),
+							onClick: () => ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'plutonium'}),
 							variant: 'primary',
 							fitContent: true,
 						},

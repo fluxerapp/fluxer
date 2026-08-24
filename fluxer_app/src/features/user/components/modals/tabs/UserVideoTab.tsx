@@ -11,7 +11,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -198,7 +198,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 			VoiceSettingsCommands.update({videoFrameRate: value, streamingMode: 'custom'});
 		}, []);
 		const handleOpenAdvancedVideoSettings = useCallback(() => {
-			ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {
+			ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {
 				tab: 'advanced_settings',
 				section: getAdvancedSettingsCategorySectionId('media'),
 			});

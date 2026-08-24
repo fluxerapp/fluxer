@@ -42,7 +42,7 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -728,12 +728,12 @@ export function revealMessage(channelId: string, messageId: string | null): void
 export function startReply(channelId: string, messageId: string, mentioning: boolean): void {
 	logger.debug(`Starting reply to message ${messageId} in channel ${channelId}, mentioning=${mentioning}`);
 	MessageReply.startReply(channelId, messageId, mentioning);
-	ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId});
+	ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
 	window.requestAnimationFrame(() => {
-		ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId});
+		ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
 	});
 	window.setTimeout(() => {
-		ComponentDispatch.dispatch('FOCUS_TEXTAREA', {channelId});
+		ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
 	}, 300);
 }
 

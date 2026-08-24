@@ -5,7 +5,7 @@ import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import type {ExpressionPickerTabType} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import {openPopout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -155,7 +155,7 @@ export const useTextareaExpressionPicker = ({
 		enabled,
 	]);
 	useEffect(() => {
-		const unsubscribe = ComponentDispatch.subscribe('EXPRESSION_PICKER_TAB_TOGGLE', (payload?: unknown) => {
+		const unsubscribe = ComponentBus.subscribe('EXPRESSION_PICKER_TAB_TOGGLE', (payload?: unknown) => {
 			const data = payload as {channelId?: string; tab?: ExpressionPickerTabType} | undefined;
 			if (!enabled) return;
 			if (!data || data.channelId !== channelId || !data.tab) return;

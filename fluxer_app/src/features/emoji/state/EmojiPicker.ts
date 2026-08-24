@@ -16,7 +16,7 @@ import {
 } from '@app/features/emoji/state/UsageFrecency';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {EmojiPickerStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {makeAutoObservable, untracked} from 'mobx';
@@ -125,7 +125,7 @@ class EmojiPicker {
 		this._favoriteSet = new Set(this.favoriteEmojis);
 		this._collapsedSet = new Set(this.collapsedCategories);
 		this.rankingDirty = true;
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}
 
 	getRanking(): UsageRanking {
@@ -167,7 +167,7 @@ class EmojiPicker {
 			this._favoriteSet.add(emojiKey);
 			this.favoriteEmojis.push(emojiKey);
 		}
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}
 
 	toggleCategory(category: string): void {
@@ -182,7 +182,7 @@ class EmojiPicker {
 			this._collapsedSet.add(category);
 			this.collapsedCategories.push(category);
 		}
-		ComponentDispatch.dispatch('EMOJI_PICKER_RERENDER');
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}
 
 	isFavorite(emoji: FlatEmoji): boolean {

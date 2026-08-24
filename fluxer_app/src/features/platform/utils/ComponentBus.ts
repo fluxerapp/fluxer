@@ -29,7 +29,7 @@ export type ComponentActionType =
 	| 'MESSAGE_SENT'
 	| 'OPEN_MEMES_TAB'
 	| 'POPOUT_CLOSE'
-	| 'SCROLLTO_PRESENT'
+	| 'SCROLL_TO_PRESENT'
 	| 'SCROLL_PAGE_DOWN'
 	| 'SCROLL_PAGE_UP'
 	| 'SOUNDBOARD_TOGGLE'
@@ -39,20 +39,20 @@ export type ComponentActionType =
 	| 'TEXTAREA_DISMISS_AFFORDANCE'
 	| 'TEXTAREA_UPLOAD_FILE'
 	| 'USER_SETTINGS_TAB_SELECT';
-type ComponentDispatchEvents = {
+type ComponentBusEvents = {
 	[K in ComponentActionType]: (...args: Array<unknown>) => unknown;
 };
 
-class Dispatch extends EventEmitter<ComponentDispatchEvents> {
-	private _savedDispatches: Partial<Record<ComponentActionType, Array<unknown>>> = {};
-	private logger = new Logger('ComponentDispatch');
+class Dispatch extends EventEmitter<ComponentBusEvents> {
+	private bufferedDispatches: Partial<Record<ComponentActionType, Array<unknown>>> = {};
+	private logger = new Logger('ComponentBus');
 
-	safeDispatch(type: ComponentActionType, args?: unknown) {
+	dispatchOrBuffer(type: ComponentActionType, args?: unknown) {
 		if (!this.hasSubscribers(type)) {
-			if (!this._savedDispatches[type]) {
-				this._savedDispatches[type] = [];
+			if (!this.bufferedDispatches[type]) {
+				this.bufferedDispatches[type] = [];
 			}
-			this._savedDispatches[type].push(args);
+			this.bufferedDispatches[type].push(args);
 			return;
 		}
 		this.dispatch(type, args);
@@ -62,7 +62,7 @@ class Dispatch extends EventEmitter<ComponentDispatchEvents> {
 		this.emit(type, args);
 	}
 
-	dispatchToLastSubscribed(type: ComponentActionType, args?: unknown) {
+	dispatchToNewestSubscriber(type: ComponentActionType, args?: unknown) {
 		const listeners = this.listeners(type);
 		if (listeners.length > 0) {
 			listeners[listeners.length - 1](args);
@@ -90,24 +90,24 @@ class Dispatch extends EventEmitter<ComponentDispatchEvents> {
 		return this.listenerCount(type) > 0;
 	}
 
-	private _checkSavedDispatches(type: ComponentActionType) {
-		if (this._savedDispatches[type]) {
-			for (const args of this._savedDispatches[type]) {
+	private flushBufferedDispatches(type: ComponentActionType) {
+		if (this.bufferedDispatches[type]) {
+			for (const args of this.bufferedDispatches[type]) {
 				this.dispatch(type, args);
 			}
-			delete this._savedDispatches[type];
+			delete this.bufferedDispatches[type];
 		}
 	}
 
 	subscribe(type: ComponentActionType, callback: (...args: Array<unknown>) => void): () => void {
 		if (this.listeners(type).includes(callback)) {
-			this.logger.warn('ComponentDispatch.subscribe: Attempting to add a duplicate listener', type);
+			this.logger.warn('Ignoring duplicate subscriber for component action', type);
 			return () => {
 				this.unsubscribe(type, callback);
 			};
 		}
 		this.on(type, callback);
-		this._checkSavedDispatches(type);
+		this.flushBufferedDispatches(type);
 		return () => {
 			this.unsubscribe(type, callback);
 		};
@@ -115,7 +115,7 @@ class Dispatch extends EventEmitter<ComponentDispatchEvents> {
 
 	subscribeOnce(type: ComponentActionType, callback: (...args: Array<unknown>) => void): () => void {
 		this.once(type, callback);
-		this._checkSavedDispatches(type);
+		this.flushBufferedDispatches(type);
 		return () => {
 			this.unsubscribe(type, callback);
 		};
@@ -130,4 +130,4 @@ class Dispatch extends EventEmitter<ComponentDispatchEvents> {
 	}
 }
 
-export const ComponentDispatch = new Dispatch();
+export const ComponentBus = new Dispatch();

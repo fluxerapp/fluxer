@@ -2,7 +2,7 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
@@ -64,7 +64,7 @@ export const TextToSpeech = observer(() => {
 		AccessibilityCommands.update({enableTTSCommand: value});
 	}, []);
 	const handleAccessibilityLinkClick = useCallback(() => {
-		ComponentDispatch.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'accessibility', section: 'tts'});
+		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'accessibility', section: 'tts'});
 	}, []);
 	const ttsNotificationMode = Notification.getTTSNotificationMode();
 	const ttsNotificationOptions: Array<RadioOption<TTSNotificationMode>> = [

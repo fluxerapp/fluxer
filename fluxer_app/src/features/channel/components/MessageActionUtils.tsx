@@ -24,7 +24,7 @@ import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtil
 import {type ReactionEmoji, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {getDefaultReplyMention} from '@app/features/notification/utils/MentionReplyPreferenceUtils';
 import Permission from '@app/features/permissions/state/Permission';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import Relationships from '@app/features/relationship/state/Relationships';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -128,7 +128,7 @@ export function canDeleteAttachmentUtil(message: Message | undefined): boolean {
 }
 
 export function requestOpenReactionPicker(messageId: string): void {
-	ComponentDispatch.dispatch('EMOJI_PICKER_OPEN', {messageId});
+	ComponentBus.dispatch('EMOJI_PICKER_OPEN', {messageId});
 }
 
 function messageElementSelector(messageId: string): string {
@@ -145,14 +145,14 @@ export function triggerAddReaction(message: Message): boolean {
 	}
 	const messageElement = document.querySelector<HTMLElement>(messageElementSelector(message.id));
 	if (!messageElement) {
-		ComponentDispatch.dispatch('EMOJI_PICKER_OPEN', {messageId: message.id});
+		ComponentBus.dispatch('EMOJI_PICKER_OPEN', {messageId: message.id});
 		return false;
 	}
 	const addReactionButton = messageElement.querySelector<HTMLButtonElement>(
 		'[data-action="message-add-reaction-button"]',
 	);
 	if (!addReactionButton) {
-		ComponentDispatch.dispatch('EMOJI_PICKER_OPEN', {messageId: message.id});
+		ComponentBus.dispatch('EMOJI_PICKER_OPEN', {messageId: message.id});
 		return false;
 	}
 	addReactionButton.click();

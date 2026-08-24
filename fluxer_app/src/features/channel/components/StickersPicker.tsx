@@ -25,7 +25,7 @@ import {
 	shouldShowStickerPremiumUpsell,
 } from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import Permission from '@app/features/permissions/state/Permission';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {usePremiumUpsellData} from '@app/features/premium/hooks/usePremiumUpsellData';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
@@ -101,7 +101,7 @@ export const StickersPicker = observer(
 			const handleStickerDataUpdated = () => {
 				setStickerDataVersion((version) => version + 1);
 			};
-			return ComponentDispatch.subscribe('STICKER_PICKER_RERENDER', handleStickerDataUpdated);
+			return ComponentBus.subscribe('STICKER_PICKER_RERENDER', handleStickerDataUpdated);
 		}, []);
 		useSearchInputAutofocus(searchInputRef);
 		const searchItems = useMemo(

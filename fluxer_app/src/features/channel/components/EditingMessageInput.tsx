@@ -23,7 +23,7 @@ import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import {applyMarkdownSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
-import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {openPopout} from '@app/features/ui/popover/PopoverPopout';
@@ -187,7 +187,7 @@ export const EditingMessageInput = observer(
 			setExpressionPickerOpen(false);
 		}, [channel.id, editingDisabled]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
 				const data = payload as {channelId?: string; enterKeyboardMode?: boolean} | undefined;
 				let requestedChannelId: string | null = null;
 				let enterKeyboardMode: boolean | null = null;
@@ -247,7 +247,7 @@ export const EditingMessageInput = observer(
 			);
 		}, [channel.id, editingDisabled, expressionPickerOpen, handleEmojiSelect]);
 		useEffect(() => {
-			const unsubscribe = ComponentDispatch.subscribe('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', (payload?: unknown) => {
+			const unsubscribe = ComponentBus.subscribe('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', (payload?: unknown) => {
 				const data = payload as {channelId?: string; messageId?: string; tab?: string} | undefined;
 				if (data == null || data.channelId !== channel.id || data.messageId !== message.id || data.tab !== 'emojis') {
 					return;
