@@ -113,10 +113,6 @@
 	border-radius: 50%;
 }
 
-.embedIconPending {
-	opacity: 0;
-}
-
 .embedTitle {
 	font-size: 1em;
 	font-weight: 600;

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {useAnimatedMediaPlaybackAllowed} from '@app/features/app/hooks/useAnimatedMediaPlayback';
+import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/embeds/ChannelEmbed.module.css';
 import {EmbedLink} from '@app/features/channel/components/embeds/channel_embed/EmbedLink';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
-import {useCachedImageLoaded} from '@app/features/messaging/hooks/useCachedImageLoaded';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import type {EmbedAuthor, EmbedField, EmbedFooter} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -13,6 +12,13 @@ import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {type FC, useMemo} from 'react';
+
+const STILL_EMBED_ICON_OPTIONS = {format: 'webp', animated: false} as const;
+
+const resolveEmbedIconSrc = (proxyIconUrl: string | undefined, allowMotion: boolean): string | undefined => {
+	if (!proxyIconUrl) return undefined;
+	return buildMediaProxyURL(proxyIconUrl, allowMotion ? {} : STILL_EMBED_ICON_OPTIONS);
+};
 
 export const EmbedProvider: FC<{provider?: EmbedAuthor}> = observer(({provider}) => {
 	if (!provider) return null;
@@ -29,18 +35,15 @@ export const EmbedProvider: FC<{provider?: EmbedAuthor}> = observer(({provider})
 	);
 });
 export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({author}) => {
-	const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed();
-	const iconSrc = author?.proxy_icon_url
-		? buildMediaProxyURL(author.proxy_icon_url, animatedMediaPlaybackAllowed ? {} : {format: 'webp', animated: false})
-		: undefined;
-	const iconLoaded = useCachedImageLoaded(iconSrc);
+	const allowIconMotion = useShouldAnimate({kind: 'gif'});
+	const iconSrc = resolveEmbedIconSrc(author?.proxy_icon_url, allowIconMotion);
 	if (!author) return null;
 	return (
 		<div className={styles.embedAuthor} data-flx="channel.embeds.embed.embed-author-component.embed-author">
 			{iconSrc && (
 				<img
 					alt=""
-					className={clsx(styles.embedAuthorIcon, !iconLoaded && styles.embedIconPending)}
+					className={styles.embedAuthorIcon}
 					src={iconSrc}
 					width={24}
 					height={24}
@@ -178,12 +181,9 @@ export const EmbedFooterComponent: FC<{
 	channelId?: string;
 }> = observer(({timestamp, footer, messageId, channelId}) => {
 	const {i18n} = useLingui();
-	const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed();
+	const allowIconMotion = useShouldAnimate({kind: 'gif'});
 	const formattedTimestamp = timestamp ? DateUtils.getRelativeDateString(timestamp, i18n) : undefined;
-	const iconSrc = footer?.proxy_icon_url
-		? buildMediaProxyURL(footer.proxy_icon_url, animatedMediaPlaybackAllowed ? {} : {format: 'webp', animated: false})
-		: undefined;
-	const iconLoaded = useCachedImageLoaded(iconSrc);
+	const iconSrc = resolveEmbedIconSrc(footer?.proxy_icon_url, allowIconMotion);
 	if (!(footer || formattedTimestamp)) return null;
 	return (
 		<div
@@ -193,7 +193,7 @@ export const EmbedFooterComponent: FC<{
 			{iconSrc && (
 				<img
 					alt=""
-					className={clsx(styles.embedFooterIcon, !iconLoaded && styles.embedIconPending)}
+					className={styles.embedFooterIcon}
 					src={iconSrc}
 					width={20}
 					height={20}
