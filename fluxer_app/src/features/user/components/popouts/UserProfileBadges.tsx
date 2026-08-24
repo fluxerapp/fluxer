@@ -19,6 +19,10 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
 
+const BADGE_ASSET_VERSION = '2';
+
+const badgeAssetUrl = (fileName: string) => cdnUrl(`badges/${fileName}?v=${BADGE_ASSET_VERSION}`);
+
 const STAFF_DESCRIPTOR = msg({
 	message: '{productName} Staff',
 	comment:
@@ -95,7 +99,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'staff',
-					iconUrl: cdnUrl('badges/staff.svg?v=2'),
+					iconUrl: badgeAssetUrl('staff.svg'),
 					tooltip: i18n._(STAFF_DESCRIPTOR, {productName: PRODUCT_NAME}),
 					url: Routes.careers(),
 				});
@@ -104,7 +108,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'ctp_member',
-					iconUrl: cdnUrl('badges/ctp.svg'),
+					iconUrl: badgeAssetUrl('ctp.svg'),
 					tooltip: i18n._(COMMUNITY_TEAM_DESCRIPTOR, {productName: PRODUCT_NAME}),
 				});
 			}
@@ -112,7 +116,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'partner',
-					iconUrl: cdnUrl('badges/partner.svg'),
+					iconUrl: badgeAssetUrl('partner.svg'),
 					tooltip: i18n._(PARTNER_DESCRIPTOR, {productName: PRODUCT_NAME}),
 					url: Routes.partners(),
 				});
@@ -121,7 +125,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'bug_hunter',
-					iconUrl: cdnUrl('badges/bug-hunter.svg'),
+					iconUrl: badgeAssetUrl('bug-hunter.svg'),
 					tooltip: i18n._(BUG_HUNTER_DESCRIPTOR, {productName: PRODUCT_NAME}),
 					url: Routes.bugs(),
 				});
@@ -147,7 +151,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'premium',
-					iconUrl: cdnUrl('badges/plutonium.svg'),
+					iconUrl: badgeAssetUrl('plutonium.svg'),
 					tooltip: tooltipText,
 					url: badgeUrl,
 				});
