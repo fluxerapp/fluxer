@@ -172,6 +172,11 @@
 	object-fit: cover;
 }
 
+img.entityIcon {
+	width: 100%;
+	height: 100%;
+}
+
 .themeIconSpot {
 	display: flex;
 	height: 5rem;
