@@ -15,6 +15,7 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {type CloudAttachment, CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {isEmbeddableImageFile} from '@app/features/messaging/utils/EmbeddableImageTypes';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {hasRenderableLocalPreview} from '@app/features/messaging/utils/LocalAttachmentPreviewUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -78,6 +79,11 @@ const EDIT_ATTACHMENT_DESCRIPTOR = msg({
 	message: 'Edit attachment',
 	comment: 'Button or menu action label in the channel attachment area. Keep it concise.',
 });
+const PENDING_ATTACHMENT_DESCRIPTOR = msg({
+	message: 'Attachment {pendingFilename}',
+	comment:
+		'Short label in the channel attachment area. Keep it concise. Preserve {pendingFilename}; it is inserted by code.',
+});
 const MESSAGE_SCROLLER_SELECTOR = '[data-flx="channel.messages.scroller"][data-fluxer-scroll-container="true"]';
 const MESSAGE_SCROLLER_BOTTOM_THRESHOLD = 16;
 const getActiveMessageScroller = (): HTMLElement | null =>
@@ -138,15 +144,6 @@ const getFileIcon = (file: File): Icon => {
 		return FileCodeIcon;
 	}
 	return FileIcon;
-};
-const isAttachmentMedia = (attachment: CloudAttachment): boolean => {
-	if (attachment.file.type.startsWith('video/')) {
-		return attachment.previewURL !== null || attachment.thumbnailURL !== null;
-	}
-	if (isEmbeddableImageFile(attachment.file)) {
-		return attachment.previewURL !== null;
-	}
-	return false;
 };
 const VideoPreviewModal = observer(({file, width, height}: {file: File; width: number; height: number}) => {
 	const {i18n} = useLingui();
@@ -377,7 +374,7 @@ const SortableAttachmentItem = observer(
 			opacity: isDragging ? 0.5 : 1,
 			cursor: isDragging ? 'grabbing' : 'default',
 		};
-		const isMedia = isAttachmentMedia(attachment);
+		const isMedia = hasRenderableLocalPreview(attachment);
 		const isHiddenSpoiler = isSpoiler && spoilerHidden;
 		const IconComponent = getFileIcon(attachment.file);
 		return (
@@ -405,6 +402,11 @@ const SortableAttachmentItem = observer(
 								type="button"
 								className={styles.clickableMedia}
 								onClick={handleClick}
+								aria-label={
+									isHiddenSpoiler
+										? undefined
+										: i18n._(PENDING_ATTACHMENT_DESCRIPTOR, {pendingFilename: attachment.filename})
+								}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.clickable-media.button"
 							>
 								<div
@@ -469,6 +471,11 @@ const SortableAttachmentItem = observer(
 								type="button"
 								className={styles.clickableMedia}
 								onClick={handleClick}
+								aria-label={
+									isHiddenSpoiler
+										? undefined
+										: i18n._(PENDING_ATTACHMENT_DESCRIPTOR, {pendingFilename: attachment.filename})
+								}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.clickable-media.button--2"
 							>
 								<div
@@ -716,7 +723,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 		</>
 	);
 });
-const ImageThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
+export const ImageThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
 	const [hasError, setHasError] = useState(false);
 	const src = attachment.previewURL;
 	if (hasError || !src) return null;
@@ -731,14 +738,15 @@ const ImageThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttach
 		/>
 	);
 });
-const VideoThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
+export const VideoThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
 	const [hasError, setHasError] = useState(false);
-	const src = attachment.thumbnailURL || attachment.previewURL;
+	const src = attachment.thumbnailURL;
 	if (hasError || !src) return null;
 	return (
 		<img
 			src={src}
 			alt={attachment.filename}
+			aria-hidden={true}
 			className={clsx(styles.media, spoiler && styles.spoiler)}
 			onError={() => setHasError(true)}
 			data-flx="channel.channel-attachment-area.video-thumbnail.media"
