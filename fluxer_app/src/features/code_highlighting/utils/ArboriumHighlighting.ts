@@ -135,6 +135,7 @@ const MAX_HIGHLIGHT_LANGUAGE_LENGTH = 128;
 
 interface HighlightCacheEntry {
 	promise: Promise<string | null>;
+	html: string | null;
 	retainedBytes: number;
 	subscribers: number;
 	settled: boolean;
@@ -343,6 +344,7 @@ function loadHighlightedHtml(language: string, source: string, signal?: AbortSig
 	}
 	const entry: HighlightCacheEntry = {
 		promise: Promise.resolve(null),
+		html: null,
 		retainedBytes: source.length * 2,
 		subscribers: 0,
 		settled: false,
@@ -358,6 +360,7 @@ function loadHighlightedHtml(language: string, source: string, signal?: AbortSig
 				removeHighlightCacheEntry(cacheKey, entry);
 				return highlightedHtml;
 			}
+			entry.html = highlightedHtml;
 			const nextRetainedBytes = (source.length + highlightedHtml.length) * 2;
 			highlightCacheBytes += nextRetainedBytes - entry.retainedBytes;
 			entry.retainedBytes = nextRetainedBytes;
@@ -466,10 +469,40 @@ export async function highlightCodeHtml(
 	}
 }
 
+interface RetainedHighlight {
+	cacheKey: string;
+	entry: HighlightCacheEntry;
+	html: string;
+}
+
+function findRetainedHighlight(language?: string | null, source?: string | null): RetainedHighlight | null {
+	if (!source || source.length > MAX_CACHED_SOURCE_LENGTH) {
+		return null;
+	}
+	const resolvedLanguage = resolveHighlightLanguage(language);
+	if (!resolvedLanguage || resolvedLanguage === PLAIN_TEXT_LANGUAGE) {
+		return null;
+	}
+	const cacheKey = getCacheKey(resolvedLanguage, source);
+	const entry = highlightCache.get(cacheKey);
+	if (entry === undefined || entry.html === null) {
+		return null;
+	}
+	return {cacheKey, entry, html: entry.html};
+}
+
 export function useArboriumHighlightedHtml(language?: string | null, source?: string | null): string {
 	const escapedHtml = useMemo(() => escapeCodeHtml(source ?? ''), [source]);
-	const [highlightedHtml, setHighlightedHtml] = useState(escapedHtml);
+	const [highlightedHtml, setHighlightedHtml] = useState(
+		() => findRetainedHighlight(language, source)?.html ?? escapedHtml,
+	);
 	useEffect(() => {
+		const retained = findRetainedHighlight(language, source);
+		if (retained !== null) {
+			touchHighlightCacheEntry(retained.cacheKey, retained.entry);
+			setHighlightedHtml(retained.html);
+			return;
+		}
 		let cancelled = false;
 		const controller = new AbortController();
 		setHighlightedHtml(escapedHtml);
