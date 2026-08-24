@@ -23,7 +23,7 @@ export const PinSystemMessage = observer(({message}: PinSystemMessageProps) => {
 	const jumpToMessage = useCallback(() => {
 		if (message.messageReference?.message_id) {
 			goToMessage(message.channelId, message.messageReference.message_id, {
-				returnTargetId: message.id,
+				returnToMessageId: message.id,
 				returnChannelId: message.channelId,
 			});
 		}

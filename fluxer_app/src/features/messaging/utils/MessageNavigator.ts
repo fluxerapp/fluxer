@@ -11,7 +11,7 @@ import {type JumpType, JumpTypes} from '@fluxer/constants/src/JumpConstants';
 interface MessageJumpOptions {
 	flash?: boolean;
 	offset?: number;
-	returnTargetId?: string;
+	returnToMessageId?: string;
 	returnChannelId?: string | null;
 	returnGuildId?: string | null;
 	jumpType?: JumpType;
@@ -34,20 +34,20 @@ function resolveReturnGuildId(
 }
 
 function resolveReturnChannelId(
-	returnTargetId: string | undefined,
+	returnToMessageId: string | undefined,
 	explicitChannelId: string | null | undefined,
 ): string | null | undefined {
-	if (!returnTargetId) return undefined;
+	if (!returnToMessageId) return undefined;
 	if (explicitChannelId != null) return explicitChannelId;
-	return Navigation.messageId === returnTargetId ? Navigation.channelId : undefined;
+	return Navigation.messageId === returnToMessageId ? Navigation.channelId : undefined;
 }
 
 function resolveSameChannelReturnChannelId(
 	targetChannelId: string,
-	returnTargetId: string | undefined,
+	returnToMessageId: string | undefined,
 	explicitReturnChannelId: string | null | undefined,
 ): string | undefined {
-	const returnChannelId = resolveReturnChannelId(returnTargetId, explicitReturnChannelId);
+	const returnChannelId = resolveReturnChannelId(returnToMessageId, explicitReturnChannelId);
 	return returnChannelId === targetChannelId ? returnChannelId : undefined;
 }
 
@@ -56,16 +56,16 @@ export function goToMessage(channelId: string, messageId: string, options?: Mess
 	const guildId = resolveGuildId(channelId, options?.viewContext);
 	const returnChannelId = resolveSameChannelReturnChannelId(
 		channelId,
-		options?.returnTargetId,
+		options?.returnToMessageId,
 		options?.returnChannelId,
 	);
-	const returnTargetId = returnChannelId ? options?.returnTargetId : undefined;
-	const returnGuildId = returnTargetId ? resolveReturnGuildId(returnChannelId, options?.returnGuildId) : undefined;
+	const returnToMessageId = returnChannelId ? options?.returnToMessageId : undefined;
+	const returnGuildId = returnToMessageId ? resolveReturnGuildId(returnChannelId, options?.returnGuildId) : undefined;
 	const dispatch = {
 		messageId,
 		flash: options?.flash ?? true,
 		offset: options?.offset,
-		returnTargetId,
+		returnToMessageId,
 		returnChannelId,
 		returnGuildId,
 		jumpType: isSameChannel ? (options?.jumpType ?? JumpTypes.ANIMATED) : JumpTypes.INSTANT,

@@ -48,7 +48,7 @@ export interface ScrollManagerProps {
 	handleScrollFromBottom: () => void;
 	additionalMessagePadding: number;
 	canAutoAck: boolean;
-	handleJumpHighlight: (messageId: string | null, jumpSequenceId: number) => void;
+	handleJumpHighlight: (messageId: string | null, jumpTicket: number) => void;
 }
 
 export class ScrollManager {
@@ -83,7 +83,7 @@ export class ScrollManager {
 	} | null = null;
 	private loadLastDirection: 'before' | 'after' | null = null;
 	private pinPreUpdateState: ScrollPinResult | null = null;
-	private jumpSequenceId: number | null = null;
+	private jumpTicket: number | null = null;
 	private jumpCallbackToken = 0;
 	private anchorAutomaticListeners: Array<(anchor: AnchorData | null, bottom: AnchorData | null) => void> = [];
 	private dimensionPersistDebounced: DebouncedFunction<() => void>;
@@ -91,7 +91,7 @@ export class ScrollManager {
 	constructor(props: ScrollManagerProps) {
 		this.props = props;
 		this.loadIsActive = props.messages.loadingMore;
-		if (props.messages.jumpTargetId != null) {
+		if (props.messages.jumpDestinationId != null) {
 			this.pinIsAtBottom = false;
 		} else {
 			const stored = Dimension.channelDimensionsFor(props.channel.id);
@@ -143,10 +143,10 @@ export class ScrollManager {
 		);
 	}
 
-	private jumpBegin(jumpSequenceId: number | null): number {
+	private jumpBegin(jumpTicket: number | null): number {
 		this.jumpCallbackToken += 1;
 		this.jumpIsActive = true;
-		this.jumpSequenceId = jumpSequenceId;
+		this.jumpTicket = jumpTicket;
 		return this.jumpCallbackToken;
 	}
 
@@ -160,7 +160,7 @@ export class ScrollManager {
 			this.ref.current?.cancelScroll();
 		}
 		this.jumpIsActive = false;
-		this.jumpSequenceId = null;
+		this.jumpTicket = null;
 	}
 
 	private pinComputeState(state: ScrollerState): ScrollPinResult {
@@ -310,7 +310,7 @@ export class ScrollManager {
 			if (idx === -1) {
 				return channel.id;
 			}
-			return messages.getByIndex(idx)?.id;
+			return messages.atIndex(idx)?.id;
 		};
 		while (true) {
 			const messageId = getMessageId(index);
@@ -341,8 +341,8 @@ export class ScrollManager {
 		const direction = isBefore ? 1 : -1;
 		const startIndex = isBefore ? 0 : messages.length - 1;
 		let anchor: AnchorData | null = null;
-		for (let i = startIndex; messages.getByIndex(i) != null; i += direction) {
-			const msg = messages.getByIndex(i)!;
+		for (let i = startIndex; messages.atIndex(i) != null; i += direction) {
+			const msg = messages.atIndex(i)!;
 			const data = this.anchorGetData(msg.id, scrollTop, undefined, layout);
 			if (data) {
 				anchor = data;
@@ -388,7 +388,7 @@ export class ScrollManager {
 			return;
 		}
 		this.jumpIsActive = false;
-		this.jumpSequenceId = null;
+		this.jumpTicket = null;
 		this.jumpCallbackToken += 1;
 		const state = this.scrollGetState();
 		const pinState = this.pinComputeState(state);
@@ -828,7 +828,7 @@ export class ScrollManager {
 	private jumpFixTarget(): void {
 		const {messages} = this.props;
 		const jumpToken = this.jumpCallbackToken;
-		const targetId = messages.jumpTargetId ? resolveJumpTargetId(messages) : null;
+		const targetId = messages.jumpDestinationId ? resolveJumpTargetId(messages) : null;
 		if (targetId) {
 			const element = this.layoutGetElementFromMessageId(targetId);
 			if (element) {
@@ -852,7 +852,7 @@ export class ScrollManager {
 		callback?: () => void,
 		animate = true,
 		suppressPadding = false,
-		jumpToken = this.jumpBegin(this.jumpSequenceId),
+		jumpToken = this.jumpBegin(this.jumpTicket),
 	): void {
 		const doc = this.scrollGetDocument();
 		const newMessagesBar = doc?.getElementById('new-messages-bar');
@@ -862,7 +862,7 @@ export class ScrollManager {
 				return;
 			}
 			this.jumpIsActive = false;
-			this.jumpSequenceId = null;
+			this.jumpTicket = null;
 			this.anchorSetAutomatic(this.anchorFindTopVisible());
 			callback?.();
 			if (this.jumpIsCurrent(jumpToken)) {
@@ -965,13 +965,13 @@ export class ScrollManager {
 		this.jumpStop(true);
 		Dimension.recordChannelDimensions(channel.id, 1, 1, 0);
 		if (messages.hasMoreAfter) {
-			MessageCommands.jumpToPresent(channel.id, MAX_MESSAGES_PER_CHANNEL);
+			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		} else {
 			this.pinIsScrollingProgrammatically = true;
 			this.pinIsAtBottom = true;
 			this.scrollTo(Number.MAX_SAFE_INTEGER, animate, () => {
 				this.jumpIsActive = false;
-				this.jumpSequenceId = null;
+				this.jumpTicket = null;
 				this.pinIsScrollingProgrammatically = false;
 				this.scrollHandle();
 			});
@@ -1001,8 +1001,8 @@ export class ScrollManager {
 			return false;
 		}
 		const {channel, messages} = this.props;
-		const returnTargetId = messages.jumpReturnTargetId;
-		if (!returnTargetId) {
+		const returnToMessageId = messages.jumpReturnMessageId;
+		if (!returnToMessageId) {
 			return false;
 		}
 		const returnChannelId = messages.jumpReturnChannelId ?? channel.id;
@@ -1016,11 +1016,11 @@ export class ScrollManager {
 		this.pinIsScrollingProgrammatically = false;
 		Messages.handleClearJumpTarget({channelId: channel.id, clearReturnTarget: true});
 		const dispatch = {
-			messageId: returnTargetId,
+			messageId: returnToMessageId,
 			flash: false,
 			jumpType: JumpTypes.INSTANT,
 		};
-		if (Navigation.channelId === returnChannelId && Navigation.messageId === returnTargetId) {
+		if (Navigation.channelId === returnChannelId && Navigation.messageId === returnToMessageId) {
 			MessageCommands.jumpToMessage({
 				channelId: returnChannelId,
 				...dispatch,
@@ -1028,12 +1028,12 @@ export class ScrollManager {
 			return true;
 		}
 		Messages.setPendingJumpDispatch(returnChannelId, dispatch);
-		NavigationCommands.navigateToMessage(returnGuildId, returnChannelId, returnTargetId, 'replace');
+		NavigationCommands.navigateToMessage(returnGuildId, returnChannelId, returnToMessageId, 'replace');
 		return true;
 	}
 
 	jumpCancel(): boolean {
-		if (this.lifecycleIsDisposed || (!this.jumpIsActive && this.props.messages.jumpTargetId == null)) {
+		if (this.lifecycleIsDisposed || (!this.jumpIsActive && this.props.messages.jumpDestinationId == null)) {
 			return false;
 		}
 		this.jumpStop(true);
@@ -1135,9 +1135,9 @@ export class ScrollManager {
 	scrollToMessage(messageId: string, animate = true): void {
 		const scrollerHandle = this.ref.current;
 		if (!scrollerHandle) return;
-		const {jumpFlash, jumpSequenceId, jumpTargetId} = this.props.messages;
-		const highlightTargetId = jumpFlash && jumpTargetId !== this.props.channel.id ? jumpTargetId : null;
-		this.props.handleJumpHighlight(highlightTargetId, jumpSequenceId);
+		const {jumpHighlight, jumpTicket, jumpDestinationId} = this.props.messages;
+		const highlightTargetId = jumpHighlight && jumpDestinationId !== this.props.channel.id ? jumpDestinationId : null;
+		this.props.handleJumpHighlight(highlightTargetId, jumpTicket);
 		if (messageId === this.props.channel.id) {
 			this.scrollTo(0);
 			return;
@@ -1145,7 +1145,7 @@ export class ScrollManager {
 		const element = this.layoutGetElementFromMessageId(messageId);
 		const scrollerNode = scrollerHandle.getViewportElement();
 		this.pinIsAtBottom = false;
-		const jumpToken = this.jumpBegin(this.props.messages.jumpSequenceId);
+		const jumpToken = this.jumpBegin(this.props.messages.jumpTicket);
 		const shouldContinue = () => this.jumpIsCurrent(jumpToken);
 		const onComplete = () => this.jumpComplete(element, jumpToken);
 		if (!element || !scrollerNode) {
@@ -1204,33 +1204,33 @@ export class ScrollManager {
 				return;
 			}
 		} else {
-			if (nextProps.messages.jumpTargetId == null) {
+			if (nextProps.messages.jumpDestinationId == null) {
 				this.scrollTo(Number.MAX_SAFE_INTEGER);
 			}
 			return;
 		}
-		if (nextProps.messages.jumpTargetId != null) {
+		if (nextProps.messages.jumpDestinationId != null) {
 			if (this.loadIsInProgress()) {
 				return;
 			}
 			const targetId = resolveJumpTargetId(nextProps.messages);
 			if (targetId == null) {
-				nextProps.handleJumpHighlight(null, nextProps.messages.jumpSequenceId);
+				nextProps.handleJumpHighlight(null, nextProps.messages.jumpTicket);
 				this.jumpStop();
 				return;
 			}
-			if (this.jumpSequenceId === nextProps.messages.jumpSequenceId) {
+			if (this.jumpTicket === nextProps.messages.jumpTicket) {
 				return;
 			}
-			if (nextProps.messages.jumpSequenceId === prevMessages.jumpSequenceId && this.jumpIsActiveNow()) {
+			if (nextProps.messages.jumpTicket === prevMessages.jumpTicket && this.jumpIsActiveNow()) {
 				return;
 			}
 			this.scrollToMessage(targetId, shouldAnimateMessageJump(nextProps.messages.jumpType));
 			return;
 		}
-		if (nextProps.messages.jumpedToPresent && prevMessages.jumpSequenceId !== nextProps.messages.jumpSequenceId) {
-			nextProps.handleJumpHighlight(null, nextProps.messages.jumpSequenceId);
-			this.jumpBegin(nextProps.messages.jumpSequenceId);
+		if (nextProps.messages.jumpedToPresent && prevMessages.jumpTicket !== nextProps.messages.jumpTicket) {
+			nextProps.handleJumpHighlight(null, nextProps.messages.jumpTicket);
+			this.jumpBegin(nextProps.messages.jumpTicket);
 			this.scrollTo(0);
 			this.scrollSetToBottom();
 			return;
@@ -1290,7 +1290,7 @@ export class ScrollManager {
 		this.anchorFetch = null;
 		this.anchorFetchFallback = null;
 		this.pinPreUpdateState = null;
-		this.jumpSequenceId = null;
+		this.jumpTicket = null;
 		this.jumpCallbackToken += 1;
 		for (const cb of this.anchorAutomaticListeners) {
 			this.anchorRemoveAutomaticListener(cb);

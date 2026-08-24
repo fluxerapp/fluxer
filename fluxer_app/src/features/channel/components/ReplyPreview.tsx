@@ -66,7 +66,7 @@ export const ReplyPreview = observer(
 		const jumpToRepliedMessage = useCallback(() => {
 			if (message.messageReference?.message_id) {
 				goToMessage(message.channelId, message.messageReference.message_id, {
-					returnTargetId: message.id,
+					returnToMessageId: message.id,
 					returnChannelId: message.channelId,
 				});
 			}

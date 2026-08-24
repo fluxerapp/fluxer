@@ -94,7 +94,7 @@ interface MessagesStateSnapshot {
 	lastReadStateMessageId: string | null;
 	messages: ChannelMessages;
 	messageVersion: number;
-	revealedMessageId: string | null;
+	unblurredMessageId: string | null;
 	permissionVersion: number;
 	messageGroupSpacing: number;
 	fontSize: number;
@@ -124,7 +124,7 @@ const readFromState = (channelId: string): MessagesStateSnapshot => {
 		lastReadStateMessageId: ReadStates.lastMessageId(channelId),
 		messages,
 		messageVersion: messages.version,
-		revealedMessageId: messages.revealedMessageId,
+		unblurredMessageId: messages.unblurredMessageId,
 		permissionVersion: Permission.version,
 		messageGroupSpacing: Accessibility.getMessageGroupSpacingValue(messageDisplayCompact),
 		fontSize: Accessibility.fontSize,
@@ -191,8 +191,8 @@ export const Messages = observer(function Messages({
 	const jumpHighlightTimeoutRef = useRef<number | null>(null);
 	const lastJumpSequenceKeyRef = useRef<string | null>(null);
 	const handleJumpHighlight = useCallback(
-		(targetMessageId: string | null, jumpSequenceId: number) => {
-			const jumpSequenceKey = `${channel.id}:${jumpSequenceId}`;
+		(targetMessageId: string | null, jumpTicket: number) => {
+			const jumpSequenceKey = `${channel.id}:${jumpTicket}`;
 			if (jumpSequenceKey === lastJumpSequenceKeyRef.current) return;
 			lastJumpSequenceKeyRef.current = jumpSequenceKey;
 			if (jumpHighlightTimeoutRef.current != null) {
@@ -290,7 +290,7 @@ export const Messages = observer(function Messages({
 	);
 	const onScrollToPresent = useCallback(() => {
 		if (state.messages?.hasMoreAfter) {
-			MessageCommands.jumpToPresent(channel.id, MAX_MESSAGES_PER_CHANNEL);
+			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		} else {
 			scrollManager.scrollSetToBottom(false);
 		}
@@ -316,7 +316,7 @@ export const Messages = observer(function Messages({
 	}, [channel.id, state.ackMessageId, state.oldestUnreadMessageId]);
 	const onScrollToPresentAndAck = useCallback(() => {
 		if (state.messages?.hasMoreAfter) {
-			MessageCommands.jumpToPresent(channel.id, MAX_MESSAGES_PER_CHANNEL);
+			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		} else {
 			scrollManager.scrollSetToBottom(false);
 		}
@@ -357,7 +357,7 @@ export const Messages = observer(function Messages({
 			MessageEdit.subscribe(updateFromState),
 		];
 		const onForceJumpToPresent = () => {
-			MessageCommands.jumpToPresent(channel.id, MAX_MESSAGES_PER_CHANNEL);
+			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		};
 		const onScrollPageUp = () => scrollManager.scrollPageUp(true);
 		const onScrollPageDown = () => scrollManager.scrollPageDown(true);
@@ -523,16 +523,16 @@ export const Messages = observer(function Messages({
 	}, [channel.id, state.messages?.ready, state.messageVersion]);
 	const immediateHighlightedMessageId = (() => {
 		const messages = state.messages;
-		if (!messages?.ready || !messages.jumped || !messages.jumpFlash || !messages.jumpTargetId) {
+		if (!messages?.ready || !messages.hasJumped || !messages.jumpHighlight || !messages.jumpDestinationId) {
 			return null;
 		}
-		return messages.jumpTargetId !== channel.id ? messages.jumpTargetId : null;
+		return messages.jumpDestinationId !== channel.id ? messages.jumpDestinationId : null;
 	})();
 	const highlightedMessageId = immediateHighlightedMessageId ?? state.highlightedMessageId;
 	const collapsedMessageVisibility = useMemo(
 		() => ({
 			isMessageRevealed: (message: Message) => {
-				if (!state.revealedMessageId || !state.messages || message.channelId !== channel.id) {
+				if (!state.unblurredMessageId || !state.messages || message.channelId !== channel.id) {
 					return false;
 				}
 				return (
@@ -541,11 +541,11 @@ export const Messages = observer(function Messages({
 						messages: state.messages,
 						messageId: message.id,
 						treatSpam: true,
-					}) === state.revealedMessageId
+					}) === state.unblurredMessageId
 				);
 			},
 		}),
-		[channel, state.messages, state.revealedMessageId, state.messageVersion, spammerOverrideVersion],
+		[channel, state.messages, state.unblurredMessageId, state.messageVersion, spammerOverrideVersion],
 	);
 	const {canChat, canAttachFiles} = useMemo(
 		() => checkPermissions(channel),
@@ -560,7 +560,7 @@ export const Messages = observer(function Messages({
 			highlightedMessageId,
 			messageDisplayCompact: state.messageDisplayCompact,
 			messageGroupSpacing: state.messageGroupSpacing,
-			revealedMessageId: state.revealedMessageId,
+			unblurredMessageId: state.unblurredMessageId,
 			onMessageEdit,
 			onReveal,
 		});
@@ -571,7 +571,7 @@ export const Messages = observer(function Messages({
 		highlightedMessageId,
 		state.messageDisplayCompact,
 		state.messageGroupSpacing,
-		state.revealedMessageId,
+		state.unblurredMessageId,
 		onMessageEdit,
 		onReveal,
 	]);

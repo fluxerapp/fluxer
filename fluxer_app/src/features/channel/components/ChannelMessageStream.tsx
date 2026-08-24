@@ -34,7 +34,7 @@ interface RenderChannelStreamProps {
 	highlightedMessageId: string | null;
 	messageDisplayCompact: boolean;
 	messageGroupSpacing: number;
-	revealedMessageId: string | null;
+	unblurredMessageId: string | null;
 	onMessageEdit?: (target: HTMLElement) => void;
 	onReveal?: (messageId: string | null) => void;
 	messageRowClassName?: string;
@@ -54,7 +54,7 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 		highlightedMessageId,
 		messageDisplayCompact,
 		messageGroupSpacing,
-		revealedMessageId,
+		unblurredMessageId,
 		onMessageEdit,
 		onReveal,
 		messageRowClassName,
@@ -182,14 +182,14 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 				registerKey(item.key, 'BlockedMessageGroups', i, {
 					groupId: item.key ?? null,
 					itemCount: Array.isArray(item.content) ? item.content.length : 0,
-					revealed: item.key === revealedMessageId,
+					revealed: item.key === unblurredMessageId,
 					variant,
 				});
 				pushSpacerIfNeeded('regular', item.key ?? `${variant}-${i}`);
 				nodes.push(
 					<BlockedMessageGroups
 						key={item.key}
-						revealed={item.key === revealedMessageId}
+						revealed={item.key === unblurredMessageId}
 						messageGroups={item.content as Array<ChannelStreamItem>}
 						onReveal={onReveal ?? (() => {})}
 						compact={messageDisplayCompact}

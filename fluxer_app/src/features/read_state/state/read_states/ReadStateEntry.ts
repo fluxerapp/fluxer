@@ -240,7 +240,7 @@ export class ReadStateEntry {
 		let loadedOlderMessages = false;
 		let oldestUnread: string | null = null;
 		let loadedUnreadCount = 0;
-		messages.forAll((message) => {
+		messages.forEachBuffered((message) => {
 			if (!foundAckMessage) {
 				foundAckMessage = message.id === this.storedAckMessageId;
 			} else if (this.storedOldestUnreadMessageId == null) {
@@ -273,8 +273,8 @@ export class ReadStateEntry {
 			}
 		});
 		const hasUnreadBoundary = foundAckMessage || loadedOlderMessages || !messages.hasMoreBefore;
-		const hasPresent = messages.hasPresent();
-		this.estimated = !hasPresent || !hasUnreadBoundary;
+		const hasNewestMessages = messages.hasNewestMessages();
+		this.estimated = !hasNewestMessages || !hasUnreadBoundary;
 		if (this.estimated) {
 			this.unreadCount = Math.max(previousUnreadCount, loadedUnreadCount);
 		} else {
@@ -323,7 +323,7 @@ export class ReadStateEntry {
 		const messages = Messages.getMessages(this.channelId);
 		const isPrivate = this.isPrivate;
 		let mentionCount = 0;
-		messages.forAll((message) => {
+		messages.forEachBuffered((message) => {
 			if (snowflakeTimestamp(message.id) <= ackTimestamp) {
 				return;
 			}

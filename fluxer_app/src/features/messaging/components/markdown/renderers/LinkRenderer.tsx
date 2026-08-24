@@ -208,7 +208,7 @@ interface JumpLinkMentionProps {
 	channel: Channel;
 	guild: Guild | null;
 	messageId?: string;
-	returnTargetId?: string;
+	returnToMessageId?: string;
 	returnChannelId?: string;
 	url: string;
 	i18n: I18n;
@@ -264,7 +264,7 @@ const JumpLinkMention = observer(function JumpLinkMention({
 	channel,
 	guild,
 	messageId,
-	returnTargetId,
+	returnToMessageId,
 	returnChannelId,
 	url,
 	i18n,
@@ -276,11 +276,11 @@ const JumpLinkMention = observer(function JumpLinkMention({
 			return;
 		}
 		if (messageId) {
-			goToMessage(channel.id, messageId, {returnTargetId, returnChannelId});
+			goToMessage(channel.id, messageId, {returnToMessageId, returnChannelId});
 			return;
 		}
 		NavigationCommands.selectChannel(channel.guildId ?? undefined, channel.id);
-	}, [channel, messageId, returnChannelId, returnTargetId]);
+	}, [channel, messageId, returnChannelId, returnToMessageId]);
 	const handleClick = useCallback(
 		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
 			if (!interactive) return;
@@ -674,7 +674,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 				channel={jumpChannel}
 				guild={jumpGuild}
 				messageId={messageJumpTarget?.messageId}
-				returnTargetId={options.messageId}
+				returnToMessageId={options.messageId}
 				returnChannelId={options.channelId}
 				url={url}
 				i18n={i18n}
@@ -828,7 +828,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 								return;
 							}
 							goToMessage(targetChannelId, targetMessageId, {
-								returnTargetId: options.messageId,
+								returnToMessageId: options.messageId,
 								returnChannelId: options.channelId,
 							});
 						};

@@ -445,7 +445,7 @@ const UnreadChannelCard = observer(function UnreadChannelCard({
 			highlightedMessageId: null,
 			messageDisplayCompact,
 			messageGroupSpacing,
-			revealedMessageId: null,
+			unblurredMessageId: null,
 			onMessageEdit: undefined,
 			onReveal: undefined,
 			messageRowClassName: styles.messageRow,

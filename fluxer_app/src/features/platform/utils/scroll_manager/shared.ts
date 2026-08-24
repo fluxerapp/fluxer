@@ -75,19 +75,19 @@ export function shouldAnimateMessageJump(jumpType: JumpType): boolean {
 }
 
 export function resolveJumpTargetId(messages: ChannelMessages): string | null {
-	const {jumpTargetId, jumpTargetOffset} = messages;
-	if (!jumpTargetId || !messages.ready) return null;
-	if (messages.has(jumpTargetId) || (!messages.hasMoreBefore && jumpTargetId === messages.channelId)) {
-		if (jumpTargetOffset === 0) {
-			return jumpTargetId;
+	const {jumpDestinationId, jumpDestinationOffset} = messages;
+	if (!jumpDestinationId || !messages.ready) return null;
+	if (messages.has(jumpDestinationId) || (!messages.hasMoreBefore && jumpDestinationId === messages.channelId)) {
+		if (jumpDestinationOffset === 0) {
+			return jumpDestinationId;
 		}
-		const index = messages.indexOf(jumpTargetId);
-		const targetMessage = messages.getByIndex(index + jumpTargetOffset);
-		return targetMessage?.id ?? jumpTargetId;
+		const index = messages.indexOf(jumpDestinationId);
+		const targetMessage = messages.atIndex(index + jumpDestinationOffset);
+		return targetMessage?.id ?? jumpDestinationId;
 	}
-	const allIds = [jumpTargetId, ...messages.map((m) => m.id)].sort(compare);
-	const jumpIndex = allIds.indexOf(jumpTargetId);
-	const offset = Math.abs(jumpTargetOffset) > 0 ? jumpTargetOffset : 1;
+	const allIds = [jumpDestinationId, ...messages.map((m) => m.id)].sort(compare);
+	const jumpIndex = allIds.indexOf(jumpDestinationId);
+	const offset = Math.abs(jumpDestinationOffset) > 0 ? jumpDestinationOffset : 1;
 	const closestId = allIds[jumpIndex + offset] ?? allIds[jumpIndex - 1];
 	return closestId ?? null;
 }

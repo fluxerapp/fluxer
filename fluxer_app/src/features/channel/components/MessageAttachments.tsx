@@ -120,7 +120,7 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 	const handleJumpToOriginal = useCallback(() => {
 		if (message.messageReference && sourceChannel) {
 			goToMessage(message.messageReference.channel_id, message.messageReference.message_id, {
-				returnTargetId: message.id,
+				returnToMessageId: message.id,
 				returnChannelId: message.channelId,
 			});
 		}

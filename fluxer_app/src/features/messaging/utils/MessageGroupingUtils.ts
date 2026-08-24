@@ -234,11 +234,11 @@ export function createChannelStream(props: {
 		if (groupId === message.id) {
 			lastMessageInGroup = message;
 		}
-		const {jumpSequenceId, jumpFlash, jumpTargetId} = messages;
-		if (jumpFlash && message.id === jumpTargetId && jumpSequenceId != null) {
-			messageItem.flashKey = jumpSequenceId;
+		const {jumpTicket, jumpHighlight, jumpDestinationId} = messages;
+		if (jumpHighlight && message.id === jumpDestinationId && jumpTicket != null) {
+			messageItem.flashKey = jumpTicket;
 		}
-		if (messages.jumpTargetId === message.id) {
+		if (messages.jumpDestinationId === message.id) {
 			messageItem.jumpTarget = true;
 		}
 		if (collapsedGroupItem !== null) {
