@@ -11,7 +11,6 @@ import accountStorage, {
 	type UserData,
 } from '@app/features/auth/state/AccountStorage';
 import Sudo from '@app/features/auth/state/AuthSudo';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {
 	type Account,
 	type AuthSessionMachineEvent,
@@ -31,7 +30,6 @@ import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
-import LayerManager from '@app/features/ui/state/LayerManager';
 import {action, makeAutoObservable} from 'mobx';
 
 export {type Account, SessionState};
@@ -99,10 +97,22 @@ function createDefaultAuthSessionDependencies(): AuthSessionDependencies {
 		appStorage: AppStorage,
 		http,
 		getRuntimeSnapshot: () => RuntimeConfig.getSnapshot(),
-		closeLayers: () => LayerManager.closeAll(),
+		closeLayers: () => {
+			void import('@app/features/ui/state/LayerManager').then((module) => {
+				module.default.closeAll();
+			});
+		},
 		clearSudoToken: () => Sudo.clearToken(),
-		sendInvisiblePresence: (reason) => GatewayConnection.sendInvisiblePresenceForCurrentSession(reason),
-		cleanupGatewaySession: () => GatewayConnection.logout(),
+		sendInvisiblePresence: (reason) => {
+			void import('@app/features/gateway/transport/GatewayConnection').then((module) => {
+				module.default.sendInvisiblePresenceForCurrentSession(reason);
+			});
+		},
+		cleanupGatewaySession: () => {
+			void import('@app/features/gateway/transport/GatewayConnection').then((module) => {
+				module.default.logout();
+			});
+		},
 		resetSyncedUserSettings: () => {
 			void import('@app/features/user/state/UserSettings').then((module) => {
 				module.default.handleAccountTransition();
