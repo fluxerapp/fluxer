@@ -106,9 +106,13 @@ export const MemeGridItem = observer(
 		const videoPool = useGifVideoPool();
 		const isAudio = meme.contentType.startsWith('audio/');
 		const isVideo = meme.contentType.startsWith('video/');
-		const shouldAnimateGif = useShouldAnimate({kind: 'gif', isHovering: isVideoPreviewActive});
-		const shouldRenderVideoPreview = !isAudio && isVideo && isVideoPreviewActive && shouldAnimateGif;
 		const isGifImage = !isVideo && meme.contentType.toLowerCase().includes('gif');
+		const shouldAnimateGif = useShouldAnimate({
+			kind: 'gif',
+			isAnimated: !isAudio && (isVideo || isGifImage),
+			isHovering: isVideoPreviewActive,
+		});
+		const shouldRenderVideoPreview = !isAudio && isVideo && isVideoPreviewActive && shouldAnimateGif;
 		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(meme.url) : meme.url;
 		const videoPreviewStartTime = meme.duration && meme.duration > 0 ? meme.duration / 2 : null;
 		usePooledVideo({
@@ -118,7 +122,6 @@ export const MemeGridItem = observer(
 			autoPlay: shouldRenderVideoPreview,
 			enabled: shouldRenderVideoPreview,
 			preload: 'auto',
-			useBlobCache: false,
 			playbackStartTime: videoPreviewStartTime ?? 0,
 		});
 		const clearHoverPreviewTimeout = useCallback(() => {

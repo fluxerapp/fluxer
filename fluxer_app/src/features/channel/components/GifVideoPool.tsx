@@ -40,36 +40,34 @@ export function safePause(video: HTMLVideoElement): void {
 }
 
 class ElementPool<T> {
-	private _elements: Array<T>;
-	private _createElement: () => T;
-	private _cleanElement: (element: T) => void;
+	private idleElements: Array<T>;
+	private spawnElement: () => T;
+	private recycleElement: (element: T) => void;
 
-	constructor(createElement: () => T, cleanElement: (element: T) => void) {
-		this._elements = [];
-		this._createElement = createElement;
-		this._cleanElement = cleanElement;
+	constructor(spawnElement: () => T, recycleElement: (element: T) => void) {
+		this.idleElements = [];
+		this.spawnElement = spawnElement;
+		this.recycleElement = recycleElement;
 	}
 
-	getElement(): T {
-		return this._elements.length === 0 ? this._createElement() : this._elements.pop()!;
+	takeElement(): T {
+		return this.idleElements.length === 0 ? this.spawnElement() : this.idleElements.pop()!;
 	}
 
-	poolElement(element: T): void {
-		this._cleanElement(element);
-		this._elements.push(element);
+	returnElement(element: T): void {
+		this.recycleElement(element);
+		this.idleElements.push(element);
 	}
 
-	clearPool(): void {
-		this._elements.length = 0;
+	dropAllElements(): void {
+		this.idleElements.length = 0;
 	}
 }
 
 interface PooledVideo {
-	getElement: (src?: string) => HTMLVideoElement;
-	poolElement: (element: HTMLVideoElement, src?: string) => void;
-	clearPool: () => void;
-	getBlobUrl: (src: string) => Promise<string>;
-	clearBlobCache: () => void;
+	takeElement: () => HTMLVideoElement;
+	returnElement: (element: HTMLVideoElement) => void;
+	dropAllElements: () => void;
 	registerActive: (element: HTMLVideoElement) => void;
 	unregisterActive: (element: HTMLVideoElement) => void;
 	pauseAll: () => void;
@@ -98,101 +96,32 @@ export const GifVideoPoolProvider = ({children}: {children: React.ReactNode}) =>
 				return video;
 			},
 			(video) => {
-				video.src = '';
 				video.oncanplay = null;
-				video.currentTime = 0;
+				video.removeAttribute('src');
+				video.load();
 				const {parentNode} = video;
 				if (parentNode != null) {
 					parentNode.removeChild(video);
 				}
 			},
 		);
-		const elementCache = new Map<string, HTMLVideoElement>();
-		const MAX_ELEMENTS = 16;
-		const blobCache = new Map<string, string>();
-		const inflight = new Map<string, Promise<string>>();
-		const MAX_BLOBS = 32;
 		const activeElements = new Set<HTMLVideoElement>();
 		let globallyPaused = !getAnimatedMediaPlaybackAllowed();
-		const evictOldestBlob = () => {
-			const oldest = blobCache.keys().next();
-			if (!oldest.done) {
-				const key = oldest.value;
-				const url = blobCache.get(key);
-				if (url) {
-					URL.revokeObjectURL(url);
-				}
-				blobCache.delete(key);
-			}
-		};
-		const getBlobUrl = async (src: string): Promise<string> => {
-			if (blobCache.has(src)) {
-				return blobCache.get(src)!;
-			}
-			if (inflight.has(src)) {
-				return inflight.get(src)!;
-			}
-			const promise = (async () => {
-				const response = await fetch(src, {cache: 'force-cache'});
-				const blob = await response.blob();
-				const url = URL.createObjectURL(blob);
-				if (blobCache.size >= MAX_BLOBS) {
-					evictOldestBlob();
-				}
-				blobCache.set(src, url);
-				return url;
-			})().finally(() => {
-				inflight.delete(src);
-			});
-			inflight.set(src, promise);
-			return promise;
-		};
 		return {
-			getElement(src?: string): HTMLVideoElement {
-				if (src && elementCache.has(src)) {
-					const el = elementCache.get(src)!;
-					elementCache.delete(src);
-					return el;
-				}
-				return basePool.getElement();
+			takeElement(): HTMLVideoElement {
+				return basePool.takeElement();
 			},
-			poolElement(element: HTMLVideoElement, src?: string): void {
+			returnElement(element: HTMLVideoElement): void {
 				activeElements.delete(element);
 				const {parentNode} = element;
 				if (parentNode != null) {
 					parentNode.removeChild(element);
 				}
-				if (src) {
-					element.oncanplay = null;
-					element.pause();
-					element.currentTime = 0;
-					element.src = '';
-					if (elementCache.size >= MAX_ELEMENTS) {
-						const oldestKey = elementCache.keys().next().value as string | undefined;
-						if (oldestKey) {
-							const oldest = elementCache.get(oldestKey);
-							if (oldest) {
-								basePool.poolElement(oldest);
-							}
-							elementCache.delete(oldestKey);
-						}
-					}
-					elementCache.set(src, element);
-					return;
-				}
-				basePool.poolElement(element);
+				basePool.returnElement(element);
 			},
-			clearPool(): void {
+			dropAllElements(): void {
 				activeElements.clear();
-				elementCache.forEach((el) => {
-					el.src = '';
-					el.oncanplay = null;
-				});
-				elementCache.clear();
-				basePool.clearPool();
-				blobCache.forEach((url) => URL.revokeObjectURL(url));
-				blobCache.clear();
-				inflight.clear();
+				basePool.dropAllElements();
 			},
 			registerActive(element: HTMLVideoElement) {
 				activeElements.add(element);
@@ -216,16 +145,11 @@ export const GifVideoPoolProvider = ({children}: {children: React.ReactNode}) =>
 			isGloballyPaused() {
 				return globallyPaused;
 			},
-			getBlobUrl,
-			clearBlobCache(): void {
-				blobCache.forEach((url) => URL.revokeObjectURL(url));
-				blobCache.clear();
-			},
 		};
 	});
 	useEffect(() => {
 		return () => {
-			videoPool.clearPool();
+			videoPool.dropAllElements();
 		};
 	}, [videoPool]);
 	return <GifVideoPoolContext.Provider value={videoPool}>{children}</GifVideoPoolContext.Provider>;
