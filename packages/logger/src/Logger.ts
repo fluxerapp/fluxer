@@ -91,12 +91,12 @@ function createPinoLogger(serviceName: string, options: LoggerOptions = {}): Pin
 		serializers: {
 			reason: (value) => {
 				if (value instanceof Error) {
-					return pino.stdSerializers.err(value);
+					return pino.stdSerializers.errWithCause(value);
 				}
 				return value;
 			},
-			err: pino.stdSerializers.err,
-			error: pino.stdSerializers.err,
+			err: pino.stdSerializers.errWithCause,
+			error: pino.stdSerializers.errWithCause,
 		},
 		timestamp: pino.stdTimeFunctions.isoTime,
 		base: {

@@ -256,33 +256,65 @@ function handleUnexpectedError<E extends BaseHonoEnv>(ctx: Context<E>): Response
 	});
 }
 
+interface ResolvedErrorResponse {
+	response: Response;
+	unexpected: boolean;
+}
+
+function resolveErrorResponse<E extends BaseHonoEnv>(err: Error, ctx: Context<E>): ResolvedErrorResponse {
+	if (err instanceof OAuth2Error) {
+		return {response: err.getResponse(), unexpected: false};
+	}
+	if (err instanceof FluxerError) {
+		return {response: handleFluxerError(err, ctx), unexpected: false};
+	}
+	const errorCode = resolveApiErrorCode(err);
+	if (errorCode) {
+		return {response: handleKnownErrorCode(err, errorCode, ctx), unexpected: false};
+	}
+	if (err instanceof HTTPException) {
+		return {response: handleHTTPException(err, ctx), unexpected: false};
+	}
+	if (isExpectedError(err)) {
+		return {
+			response: createJsonErrorResponse({
+				status: 400,
+				code: APIErrorCodes.GENERAL_ERROR,
+				message: err.message,
+			}),
+			unexpected: false,
+		};
+	}
+	return {response: handleUnexpectedError(ctx), unexpected: true};
+}
+
+function logErrorResponse<E extends BaseHonoEnv>(err: Error, resolved: ResolvedErrorResponse, ctx: Context<E>): void {
+	const status = resolved.response.status;
+	const details = {
+		err,
+		status,
+		method: ctx.req.method,
+		path: ctx.req.path,
+		requestId: ctx.get('requestId'),
+	};
+	if (resolved.unexpected) {
+		logger.error(details, 'Unhandled error occurred');
+		return;
+	}
+	if (status >= 500) {
+		logger.error(details, 'Request failed');
+		return;
+	}
+	logger.debug(details, 'Request rejected');
+}
+
 export function AppErrorHandler<E extends BaseHonoEnv = BaseHonoEnv>(
 	err: Error,
 	ctx: Context<E>,
 ): Response | Promise<Response> {
-	if (err instanceof OAuth2Error) {
-		return err.getResponse();
-	}
-	if (err instanceof FluxerError) {
-		return handleFluxerError(err, ctx);
-	}
-	const errorCode = resolveApiErrorCode(err);
-	if (errorCode) {
-		return handleKnownErrorCode(err, errorCode, ctx);
-	}
-	if (err instanceof HTTPException) {
-		return handleHTTPException(err, ctx);
-	}
-	if (isExpectedError(err)) {
-		logger.warn({err}, 'Expected error occurred');
-		return createJsonErrorResponse({
-			status: 400,
-			code: APIErrorCodes.GENERAL_ERROR,
-			message: err.message,
-		});
-	}
-	logger.error({err}, 'Unhandled error occurred');
-	return handleUnexpectedError(ctx);
+	const resolved = resolveErrorResponse(err, ctx);
+	logErrorResponse(err, resolved, ctx);
+	return resolved.response;
 }
 
 export function AppNotFoundHandler<E extends BaseHonoEnv = BaseHonoEnv>(ctx: Context<E>): Response | Promise<Response> {
