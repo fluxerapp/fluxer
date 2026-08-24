@@ -40,11 +40,26 @@ function syncRootClassAttribute(sourceValue: string, targetRoot: HTMLElement): v
 	targetRoot.removeAttribute('class');
 }
 
-function inlineStylesheetFallback(sourceLink: HTMLLinkElement, targetDocument: Document): void {
+interface DocumentStylesheetMirror {
+	mirroredLinks: WeakMap<Node, HTMLLinkElement>;
+	mirroredStyles: WeakMap<Node, HTMLStyleElement>;
+}
+
+const documentMirrors = new WeakMap<Document, DocumentStylesheetMirror>();
+
+function getDocumentMirror(targetDocument: Document): DocumentStylesheetMirror {
+	const existing = documentMirrors.get(targetDocument);
+	if (existing) return existing;
+	const stylesheetMirror: DocumentStylesheetMirror = {mirroredLinks: new WeakMap(), mirroredStyles: new WeakMap()};
+	documentMirrors.set(targetDocument, stylesheetMirror);
+	return stylesheetMirror;
+}
+
+function inlineStylesheetFallback(sourceLink: HTMLLinkElement, targetDocument: Document): HTMLStyleElement | null {
 	let cssText = '';
 	try {
 		const rules = sourceLink.sheet?.cssRules;
-		if (!rules) return;
+		if (!rules) return null;
 		const ruleTexts: Array<string> = [];
 		for (let index = 0; index < rules.length; index += 1) {
 			ruleTexts.push(rules[index].cssText);
@@ -52,14 +67,16 @@ function inlineStylesheetFallback(sourceLink: HTMLLinkElement, targetDocument: D
 		cssText = ruleTexts.join('\n');
 	} catch (error) {
 		logger.warn('Failed to inline popout stylesheet fallback', {href: sourceLink.href, error});
-		return;
+		return null;
 	}
 	const styleElement = targetDocument.createElement('style');
 	styleElement.textContent = cssText;
 	targetDocument.head.appendChild(styleElement);
+	return styleElement;
 }
 
 function copyLinkStylesheet(sourceLink: HTMLLinkElement, targetDocument: Document): void {
+	const stylesheetMirror = getDocumentMirror(targetDocument);
 	const linkElement = targetDocument.createElement('link');
 	linkElement.rel = 'stylesheet';
 	linkElement.href = sourceLink.href;
@@ -68,9 +85,21 @@ function copyLinkStylesheet(sourceLink: HTMLLinkElement, targetDocument: Documen
 	}
 	linkElement.addEventListener('error', () => {
 		linkElement.remove();
-		inlineStylesheetFallback(sourceLink, targetDocument);
+		stylesheetMirror.mirroredLinks.delete(sourceLink);
+		const fallbackStyle = inlineStylesheetFallback(sourceLink, targetDocument);
+		if (fallbackStyle) {
+			stylesheetMirror.mirroredStyles.set(sourceLink, fallbackStyle);
+		}
 	});
+	stylesheetMirror.mirroredLinks.set(sourceLink, linkElement);
 	targetDocument.head.appendChild(linkElement);
+}
+
+function copyStyleElement(sourceStyle: HTMLStyleElement, targetDocument: Document): void {
+	const styleElement = targetDocument.createElement('style');
+	styleElement.textContent = sourceStyle.textContent;
+	getDocumentMirror(targetDocument).mirroredStyles.set(sourceStyle, styleElement);
+	targetDocument.head.appendChild(styleElement);
 }
 
 export function copyStylesheetsIntoDocument(sourceDocument: Document, targetDocument: Document): void {
@@ -82,31 +111,24 @@ export function copyStylesheetsIntoDocument(sourceDocument: Document, targetDocu
 			copyLinkStylesheet(node, targetDocument);
 			continue;
 		}
-		const styleElement = targetDocument.createElement('style');
-		styleElement.textContent = node.textContent;
-		targetDocument.head.appendChild(styleElement);
+		if (node instanceof HTMLStyleElement) {
+			copyStyleElement(node, targetDocument);
+		}
 	}
-}
-
-function copyStyleElement(sourceStyle: HTMLStyleElement, targetDocument: Document): HTMLStyleElement {
-	const styleElement = targetDocument.createElement('style');
-	styleElement.textContent = sourceStyle.textContent;
-	targetDocument.head.appendChild(styleElement);
-	return styleElement;
 }
 
 export function observeDocumentStylesheets(sourceDocument: Document, targetDocument: Document): () => void {
 	if (typeof MutationObserver === 'undefined') {
 		return () => undefined;
 	}
-	const mirroredStyles = new WeakMap<Node, HTMLStyleElement>();
+	const stylesheetMirror = getDocumentMirror(targetDocument);
 	const observer = new MutationObserver((mutations) => {
 		for (const mutation of mutations) {
 			if (mutation.type === 'characterData' || mutation.target instanceof HTMLStyleElement) {
 				const sourceStyle =
 					mutation.target instanceof HTMLStyleElement ? mutation.target : mutation.target.parentElement;
 				if (sourceStyle instanceof HTMLStyleElement) {
-					const mirroredStyle = mirroredStyles.get(sourceStyle);
+					const mirroredStyle = stylesheetMirror.mirroredStyles.get(sourceStyle);
 					if (mirroredStyle) {
 						mirroredStyle.textContent = sourceStyle.textContent;
 					}
@@ -118,14 +140,19 @@ export function observeDocumentStylesheets(sourceDocument: Document, targetDocum
 					continue;
 				}
 				if (node instanceof HTMLStyleElement) {
-					mirroredStyles.set(node, copyStyleElement(node, targetDocument));
+					copyStyleElement(node, targetDocument);
 				}
 			}
 			for (const node of Array.from(mutation.removedNodes)) {
-				const mirroredStyle = mirroredStyles.get(node);
+				const mirroredStyle = stylesheetMirror.mirroredStyles.get(node);
 				if (mirroredStyle) {
 					mirroredStyle.remove();
-					mirroredStyles.delete(node);
+					stylesheetMirror.mirroredStyles.delete(node);
+				}
+				const mirroredLink = stylesheetMirror.mirroredLinks.get(node);
+				if (mirroredLink) {
+					mirroredLink.remove();
+					stylesheetMirror.mirroredLinks.delete(node);
 				}
 			}
 		}
