@@ -1,0 +1,70 @@
+[
+	{
+		"url": "https://static.example.com/a.gif",
+		"path": "https/static.example.com/a.gif"
+	},
+	{
+		"url": "https://EXAMPLE.com/a.gif",
+		"path": "https/example.com/a.gif"
+	},
+	{
+		"url": "https://example.com:443/a.gif",
+		"path": "https/example.com/a.gif"
+	},
+	{
+		"url": "http://example.com:80/a.gif",
+		"path": "http/example.com/a.gif"
+	},
+	{
+		"url": "https://example.com:8443/a.gif",
+		"path": "https/example.com:8443/a.gif"
+	},
+	{
+		"url": "https://example.com/a/./b/../c.gif",
+		"path": "https/example.com/a/c.gif"
+	},
+	{
+		"url": "https://example.com/a b.gif",
+		"path": "https/example.com/a%2520b.gif"
+	},
+	{
+		"url": "https://example.com/café.gif",
+		"path": "https/example.com/caf%25C3%25A9.gif"
+	},
+	{
+		"url": "https://☃.example.com/a.gif",
+		"path": "https/xn--n3h.example.com/a.gif"
+	},
+	{
+		"url": "https://example.com/a.gif?v=1&x=2",
+		"path": "%3Fv%3D1%26x%3D2/https/example.com/a.gif"
+	},
+	{
+		"url": "https://example.com/a.gif#anchor",
+		"path": "https/example.com/a.gif"
+	},
+	{
+		"url": "https://example.com/a.gif?v=1#anchor",
+		"path": "%3Fv%3D1/https/example.com/a.gif"
+	},
+	{
+		"url": "https://reader:secret@cdn.example.com/a.gif",
+		"path": "https/cdn.example.com/a.gif"
+	},
+	{
+		"url": "https://example.com/a.gif?",
+		"path": "https/example.com/a.gif"
+	},
+	{
+		"url": "https://[::1]:8443/a.gif",
+		"path": "https/[::1]:8443/a.gif"
+	},
+	{
+		"url": "https://example.com",
+		"path": "https/example.com"
+	},
+	{
+		"url": "https://example.com/p%2Fq.gif",
+		"path": "https/example.com/p%252Fq.gif"
+	}
+]

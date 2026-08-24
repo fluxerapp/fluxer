@@ -3,7 +3,7 @@
 use base64::prelude::*;
 use thiserror::Error;
 
-const V2_PREFIX: &str = "v2/";
+const OPAQUE_PREFIX: &str = "v2/";
 
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ExternalPathError {
@@ -15,9 +15,9 @@ pub enum ExternalPathError {
     InvalidUtf8,
 }
 
-pub fn build_v2_external_media_proxy_path(input_url: &str) -> String {
+pub fn build_opaque_external_media_proxy_path(input_url: &str) -> String {
     format!(
-        "{V2_PREFIX}{}",
+        "{OPAQUE_PREFIX}{}",
         BASE64_URL_SAFE_NO_PAD.encode(input_url.as_bytes())
     )
 }
@@ -51,13 +51,21 @@ pub fn build_external_media_proxy_path(input_url: &str) -> Result<String, Extern
     if scheme.is_empty() || remainder.is_empty() {
         return Err(ExternalPathError::InvalidExternalPath);
     }
-    let (authority_and_path, query) = match remainder.split_once('?') {
-        Some((head, tail)) => (head, Some(tail)),
-        None => (remainder, None),
+    let fetchable = match remainder.split_once('#') {
+        Some((head, _)) => head,
+        None => remainder,
     };
-    let (host, path) = match authority_and_path.split_once('/') {
-        Some((host, path)) => (host, path),
+    let (authority_and_path, query) = match fetchable.split_once('?') {
+        Some((head, tail)) => (head, (!tail.is_empty()).then_some(tail)),
+        None => (fetchable, None),
+    };
+    let (authority, path) = match authority_and_path.split_once('/') {
+        Some((authority, path)) => (authority, path),
         None => (authority_and_path, ""),
+    };
+    let host = match authority.rsplit_once('@') {
+        Some((_, after_credentials)) => after_credentials,
+        None => authority,
     };
     if host.is_empty() {
         return Err(ExternalPathError::InvalidExternalPath);
@@ -79,9 +87,9 @@ pub fn build_external_media_proxy_path(input_url: &str) -> Result<String, Extern
     Ok(segments.join("/"))
 }
 
-fn decode_v2(proxy_path: &str) -> Result<String, ExternalPathError> {
+fn decode_opaque(proxy_path: &str) -> Result<String, ExternalPathError> {
     let encoded = proxy_path
-        .strip_prefix(V2_PREFIX)
+        .strip_prefix(OPAQUE_PREFIX)
         .ok_or(ExternalPathError::InvalidExternalPath)?;
     if encoded.is_empty() {
         return Err(ExternalPathError::InvalidExternalPath);
@@ -129,7 +137,7 @@ pub fn percent_decode_string(input: &str, plus_as_space: bool) -> String {
     String::from_utf8_lossy(&percent_decode(input, plus_as_space)).into_owned()
 }
 
-fn legacy_protocol_index(parts: &[&str]) -> Option<usize> {
+fn segmented_protocol_index(parts: &[&str]) -> Option<usize> {
     for (index, part) in parts.iter().enumerate() {
         if part.is_empty() {
             continue;
@@ -149,10 +157,10 @@ fn legacy_protocol_index(parts: &[&str]) -> Option<usize> {
     None
 }
 
-fn reconstruct_legacy(proxy_path: &str) -> Result<String, ExternalPathError> {
+fn reconstruct_segmented(proxy_path: &str) -> Result<String, ExternalPathError> {
     let parts: Vec<&str> = proxy_path.split('/').collect();
     let protocol_index =
-        legacy_protocol_index(&parts).ok_or(ExternalPathError::InvalidExternalPath)?;
+        segmented_protocol_index(&parts).ok_or(ExternalPathError::InvalidExternalPath)?;
     if protocol_index + 1 >= parts.len() {
         return Err(ExternalPathError::InvalidExternalPath);
     }
@@ -170,10 +178,10 @@ fn reconstruct_legacy(proxy_path: &str) -> Result<String, ExternalPathError> {
 }
 
 pub fn reconstruct_original_url(proxy_path: &str) -> Result<String, ExternalPathError> {
-    if proxy_path.starts_with(V2_PREFIX) {
-        decode_v2(proxy_path)
+    if proxy_path.starts_with(OPAQUE_PREFIX) {
+        decode_opaque(proxy_path)
     } else {
-        reconstruct_legacy(proxy_path)
+        reconstruct_segmented(proxy_path)
     }
 }
 
@@ -218,6 +226,56 @@ mod tests {
             )
             .unwrap()
         );
+    }
+
+    #[test]
+    fn leaves_the_fragment_out_of_the_signed_path() {
+        assert_eq!(
+            build_external_media_proxy_path("https://example.com/a.gif").unwrap(),
+            build_external_media_proxy_path("https://example.com/a.gif#anchor").unwrap()
+        );
+        assert_eq!(
+            build_external_media_proxy_path("https://example.com/a.gif?v=1").unwrap(),
+            build_external_media_proxy_path("https://example.com/a.gif?v=1#anchor").unwrap()
+        );
+    }
+
+    #[test]
+    fn leaves_credentials_out_of_the_host_segment() {
+        assert_eq!(
+            "https/cdn.example.com/a.gif",
+            build_external_media_proxy_path("https://reader:secret@cdn.example.com/a.gif").unwrap()
+        );
+        assert_eq!(
+            "https/cdn.example.com/a.gif",
+            build_external_media_proxy_path("https://reader@cdn.example.com/a.gif").unwrap()
+        );
+    }
+
+    #[test]
+    fn leaves_out_a_query_that_reconstructs_to_nothing() {
+        assert_eq!(
+            build_external_media_proxy_path("https://example.com/a.gif").unwrap(),
+            build_external_media_proxy_path("https://example.com/a.gif?").unwrap()
+        );
+    }
+
+    #[test]
+    fn matches_the_typescript_builder_on_the_shared_vectors() {
+        let raw = include_str!("testdata/external_media_proxy_path_vectors.json");
+        let vectors: serde_json::Value = serde_json::from_str(raw).expect("vectors parse as json");
+        let vectors = vectors.as_array().expect("vectors are an array");
+        assert!(!vectors.is_empty());
+        for vector in vectors {
+            let original = vector["url"].as_str().expect("vector carries a url");
+            let expected = vector["path"].as_str().expect("vector carries a path");
+            let normalized = url::Url::parse(original).expect("vector url parses");
+            assert_eq!(
+                expected,
+                build_external_media_proxy_path(normalized.as_str()).expect("path builds"),
+                "vector {original}"
+            );
+        }
     }
 
     #[test]
@@ -269,7 +327,7 @@ mod tests {
 
     #[test]
     fn v2_path_roundtrip() {
-        let path = build_v2_external_media_proxy_path("https://example.com/a b.png?x=1");
+        let path = build_opaque_external_media_proxy_path("https://example.com/a b.png?x=1");
         let decoded = reconstruct_original_url(&path).unwrap();
         assert_eq!("https://example.com/a b.png?x=1", decoded);
     }

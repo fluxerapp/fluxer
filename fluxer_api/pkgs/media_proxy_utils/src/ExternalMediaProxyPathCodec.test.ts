@@ -2,7 +2,7 @@
 
 import {
 	buildExternalMediaProxyPath,
-	buildV2ExternalMediaProxyPath,
+	buildOpaqueExternalMediaProxyPath,
 	reconstructOriginalUrl,
 } from '@pkgs/media_proxy_utils/src/ExternalMediaProxyPathCodec';
 import {describe, expect, it} from 'vitest';
@@ -91,7 +91,7 @@ describe('reconstructOriginalUrl', () => {
 	});
 
 	it('still decodes v2 paths so links already sent keep working', () => {
-		expect(reconstructOriginalUrl(buildV2ExternalMediaProxyPath('https://example.com/a.png?x=1'))).toBe(
+		expect(reconstructOriginalUrl(buildOpaqueExternalMediaProxyPath('https://example.com/a.png?x=1'))).toBe(
 			'https://example.com/a.png?x=1',
 		);
 	});

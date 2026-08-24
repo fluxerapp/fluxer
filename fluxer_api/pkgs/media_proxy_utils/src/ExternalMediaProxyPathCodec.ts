@@ -2,21 +2,21 @@
 
 const BASE64_URL_PADDING_REGEX = /=*$/;
 const LEGACY_PROTOCOL_REGEX = /^[A-Za-z][A-Za-z0-9+.-]*$/;
-const V2_PATH_PREFIX = 'v2/';
+const OPAQUE_PATH_PREFIX = 'v2/';
 
-function encodeV2PathComponent(value: string): string {
+function encodeOpaquePathComponent(value: string): string {
 	return Buffer.from(value, 'utf8').toString('base64url').replace(BASE64_URL_PADDING_REGEX, '');
 }
 
-function decodeV2PathComponent(value: string): string {
+function decodeOpaquePathComponent(value: string): string {
 	return Buffer.from(value, 'base64url').toString('utf8');
 }
 
-function decodeLegacyComponent(component: string): string {
+function decodeSegmentedComponent(component: string): string {
 	return decodeURIComponent(component);
 }
 
-function getLegacyProtocolIndex(parts: Array<string>): number {
+function getSegmentedProtocolIndex(parts: Array<string>): number {
 	const firstPart = parts[0];
 	if (firstPart && LEGACY_PROTOCOL_REGEX.test(firstPart)) {
 		return 0;
@@ -33,15 +33,15 @@ function getLegacyProtocolIndex(parts: Array<string>): number {
 	throw new Error('Protocol is missing in the proxy URL path.');
 }
 
-interface LegacyHostAndPort {
+interface SegmentedHostAndPort {
 	hostname: string;
 	port: string;
 }
 
-function decodeLegacyHostAndPort(hostPart: string): LegacyHostAndPort {
+function decodeSegmentedHostAndPort(hostPart: string): SegmentedHostAndPort {
 	const separatorIndex = hostPart.lastIndexOf(':');
 	if (separatorIndex === -1) {
-		const hostname = decodeLegacyComponent(hostPart);
+		const hostname = decodeSegmentedComponent(hostPart);
 		if (!hostname) {
 			throw new Error('Hostname is invalid in the proxy URL path.');
 		}
@@ -53,14 +53,14 @@ function decodeLegacyHostAndPort(hostPart: string): LegacyHostAndPort {
 		throw new Error('Hostname is invalid in the proxy URL path.');
 	}
 	return {
-		hostname: decodeLegacyComponent(encodedHostname),
-		port: encodedPort ? decodeLegacyComponent(encodedPort) : '',
+		hostname: decodeSegmentedComponent(encodedHostname),
+		port: encodedPort ? decodeSegmentedComponent(encodedPort) : '',
 	};
 }
 
-function reconstructLegacyOriginalUrl(proxyUrlPath: string): string {
+function reconstructSegmentedOriginalUrl(proxyUrlPath: string): string {
 	const parts = proxyUrlPath.split('/');
-	const protocolIndex = getLegacyProtocolIndex(parts);
+	const protocolIndex = getSegmentedProtocolIndex(parts);
 	const protocol = parts[protocolIndex];
 	if (!protocol) {
 		throw new Error('Protocol is missing in the proxy URL path.');
@@ -71,24 +71,24 @@ function reconstructLegacyOriginalUrl(proxyUrlPath: string): string {
 	}
 	const encodedQuery = parts.slice(0, protocolIndex).join('/');
 	const encodedPath = parts.slice(protocolIndex + 2).join('/');
-	const query = encodedQuery ? decodeLegacyComponent(encodedQuery) : '';
-	const path = decodeLegacyComponent(encodedPath);
-	const {hostname, port} = decodeLegacyHostAndPort(hostPart);
+	const query = encodedQuery ? decodeSegmentedComponent(encodedQuery) : '';
+	const path = decodeSegmentedComponent(encodedPath);
+	const {hostname, port} = decodeSegmentedHostAndPort(hostPart);
 	const normalizedQuery = query.startsWith('?') ? query.slice(1) : query;
 	return `${protocol}://${hostname}${port ? `:${port}` : ''}/${path}${normalizedQuery ? `?${normalizedQuery}` : ''}`;
 }
 
-function reconstructV2OriginalUrl(proxyUrlPath: string): string {
-	const encodedOriginalUrl = proxyUrlPath.slice(V2_PATH_PREFIX.length);
+function reconstructOpaqueOriginalUrl(proxyUrlPath: string): string {
+	const encodedOriginalUrl = proxyUrlPath.slice(OPAQUE_PATH_PREFIX.length);
 	if (!encodedOriginalUrl) {
 		throw new Error('Encoded URL is missing in the proxy URL path.');
 	}
-	return decodeV2PathComponent(encodedOriginalUrl);
+	return decodeOpaquePathComponent(encodedOriginalUrl);
 }
 
-export function buildV2ExternalMediaProxyPath(inputUrl: string): string {
+export function buildOpaqueExternalMediaProxyPath(inputUrl: string): string {
 	const parsedUrl = new URL(inputUrl);
-	return `${V2_PATH_PREFIX}${encodeV2PathComponent(parsedUrl.toString())}`;
+	return `${OPAQUE_PATH_PREFIX}${encodeOpaquePathComponent(parsedUrl.toString())}`;
 }
 
 export function buildExternalMediaProxyPath(inputUrl: string): string {
@@ -109,9 +109,9 @@ export function buildExternalMediaProxyPath(inputUrl: string): string {
 }
 
 export function reconstructOriginalUrl(proxyUrlPath: string): string {
-	const reconstructedUrl = proxyUrlPath.startsWith(V2_PATH_PREFIX)
-		? reconstructV2OriginalUrl(proxyUrlPath)
-		: reconstructLegacyOriginalUrl(proxyUrlPath);
+	const reconstructedUrl = proxyUrlPath.startsWith(OPAQUE_PATH_PREFIX)
+		? reconstructOpaqueOriginalUrl(proxyUrlPath)
+		: reconstructSegmentedOriginalUrl(proxyUrlPath);
 	new URL(reconstructedUrl);
 	return reconstructedUrl;
 }
