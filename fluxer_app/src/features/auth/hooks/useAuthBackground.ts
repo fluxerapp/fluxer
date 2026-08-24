@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {useEffect, useState} from 'react';
 
 interface ImageDimensions {
@@ -12,62 +13,53 @@ interface PatternImageLoaderResult {
 }
 
 interface SplashImageLoaderResult {
-	loaded: boolean;
 	dimensions: ImageDimensions | null;
 }
 
 interface AuthBackgroundResult {
 	patternReady: boolean;
-	splashLoaded: boolean;
 	splashDimensions: ImageDimensions | null;
 }
 
 export function usePatternImageLoader(patternUrl: string): PatternImageLoaderResult {
-	const [patternReady, setPatternReady] = useState(false);
+	const [patternReady, setPatternReady] = useState(() => ImageCacheUtils.hasImage(patternUrl));
 	useEffect(() => {
-		const img = new Image();
-		const handleLoad = () => setPatternReady(true);
-		img.addEventListener('load', handleLoad, {once: true});
-		img.src = patternUrl;
-		return () => img.removeEventListener('load', handleLoad);
+		if (ImageCacheUtils.hasImage(patternUrl)) {
+			setPatternReady(true);
+			return;
+		}
+		setPatternReady(false);
+		return ImageCacheUtils.loadImage(patternUrl, () => setPatternReady(true));
 	}, [patternUrl]);
 	return {patternReady};
 }
 
 export function useSplashImageLoader(imageUrl: string | null): SplashImageLoaderResult {
-	const [loaded, setLoaded] = useState(false);
-	const [dimensions, setDimensions] = useState<ImageDimensions | null>(null);
+	const [dimensions, setDimensions] = useState<ImageDimensions | null>(
+		() => ImageCacheUtils.getImageSize(imageUrl) ?? null,
+	);
 	useEffect(() => {
-		if (!imageUrl) {
-			setLoaded(false);
-			setDimensions(null);
+		const cached = ImageCacheUtils.getImageSize(imageUrl);
+		if (cached) {
+			setDimensions(cached);
 			return;
 		}
-		let isMounted = true;
-		const img = new Image();
-		const handleLoad = () => {
-			if (!isMounted) return;
-			setLoaded(true);
-			setDimensions({
-				width: img.naturalWidth,
-				height: img.naturalHeight,
-			});
-		};
-		img.addEventListener('load', handleLoad, {once: true});
-		img.src = imageUrl;
-		return () => {
-			isMounted = false;
-		};
+		setDimensions(null);
+		if (!imageUrl) {
+			return;
+		}
+		return ImageCacheUtils.loadImage(imageUrl, () => {
+			setDimensions(ImageCacheUtils.getImageSize(imageUrl) ?? null);
+		});
 	}, [imageUrl]);
-	return {loaded, dimensions};
+	return {dimensions};
 }
 
 export function useAuthBackground(splashUrl: string | null, patternUrl: string): AuthBackgroundResult {
 	const {patternReady} = usePatternImageLoader(patternUrl);
-	const {loaded: splashLoaded, dimensions: splashDimensions} = useSplashImageLoader(splashUrl);
+	const {dimensions: splashDimensions} = useSplashImageLoader(splashUrl);
 	return {
 		patternReady,
-		splashLoaded,
 		splashDimensions,
 	};
 }

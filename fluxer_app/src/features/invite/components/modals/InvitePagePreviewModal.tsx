@@ -61,7 +61,7 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 			}
 			return null;
 		}, [previewSplashUrl, guild?.id, guild?.splash]);
-		const {patternReady, splashLoaded, splashDimensions} = useAuthBackground(splashUrl, foodPatternUrl);
+		const {patternReady, splashDimensions} = useAuthBackground(splashUrl, foodPatternUrl);
 		const shouldShowSplash = Boolean(splashUrl && splashDimensions);
 		const handleClose = useCallback(() => {
 			ModalCommands.pop();
@@ -122,7 +122,6 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 					<AuthBackground
 						className={clsx(styles.background, !shouldShowSplash && authLayoutStyles.patternHost)}
 						splashUrl={splashUrl}
-						splashLoaded={splashLoaded}
 						splashDimensions={splashDimensions}
 						patternReady={patternReady}
 						patternImageUrl={foodPatternUrl}

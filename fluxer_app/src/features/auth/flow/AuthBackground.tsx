@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/app/components/layout/AuthLayout.module.css';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
-import {motion} from 'framer-motion';
 import type React from 'react';
 
 const getSplashAlignmentStyles = (alignment: ValueOf<typeof GuildSplashCardAlignment>) => {
@@ -20,7 +18,6 @@ const getSplashAlignmentStyles = (alignment: ValueOf<typeof GuildSplashCardAlign
 
 export interface AuthBackgroundProps {
 	splashUrl: string | null;
-	splashLoaded: boolean;
 	splashDimensions?: {width: number; height: number} | null;
 	splashScale?: number | null;
 	patternReady: boolean;
@@ -32,7 +29,6 @@ export interface AuthBackgroundProps {
 
 export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 	splashUrl,
-	splashLoaded,
 	splashDimensions,
 	splashScale,
 	patternReady,
@@ -47,13 +43,7 @@ export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 		if (useFullCover) {
 			return (
 				<div className={className} data-flx="auth.flow.auth-background.div">
-					<motion.div
-						initial={{opacity: 0}}
-						animate={{opacity: splashLoaded ? 1 : 0}}
-						transition={{duration: Accessibility.useReducedMotion ? 0 : 0.5, ease: 'easeInOut'}}
-						style={{position: 'absolute', inset: 0}}
-						data-flx="auth.flow.auth-background.div--2"
-					>
+					<div style={{position: 'absolute', inset: 0}} data-flx="auth.flow.auth-background.div--2">
 						<img
 							src={splashUrl}
 							alt=""
@@ -68,17 +58,14 @@ export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 							data-flx="auth.flow.auth-background.img"
 						/>
 						<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay" />
-					</motion.div>
+					</div>
 				</div>
 			);
 		}
 		return (
 			<div className={styles.rightSplit} data-flx="auth.flow.auth-background.right-split">
-				<motion.div
+				<div
 					className={styles.splashImage}
-					initial={{opacity: 0}}
-					animate={{opacity: splashLoaded ? 1 : 0}}
-					transition={{duration: Accessibility.useReducedMotion ? 0 : 0.5, ease: 'easeInOut'}}
 					style={{
 						width: splashDimensions.width,
 						height: splashDimensions.height,
@@ -104,7 +91,7 @@ export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 						data-flx="auth.flow.auth-background.img--2"
 					/>
 					<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay--2" />
-				</motion.div>
+				</div>
 			</div>
 		);
 	}
