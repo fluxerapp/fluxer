@@ -2,14 +2,25 @@
 
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {DEFAULT_VOLUME} from '@app/features/voice/components/media_player/utils/MediaConstants';
+import {
+	armPendingSeekTarget,
+	clampMediaTime,
+	clearPendingSeekTarget,
+	detachMediaElementSource,
+	quantiseMediaTimeToSecond,
+	readPendingSeekTarget,
+} from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
 import {useInAppMediaSoundCapture} from '@app/features/voice/hooks/useInAppMediaSoundCapture';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
-const VOLUME_STORAGE_KEY = 'fluxer:media:volume';
-const MUTE_STORAGE_KEY = 'fluxer:media:muted';
-const PLAYBACK_RATE_STORAGE_KEY = 'fluxer:media:playbackRate';
+const PLAYBACK_RATE_STORAGE_KEY = 'fluxer:media:playbackRates';
 const logger = new Logger('useMediaPlayer');
+
+export type PlaybackHoldReason = 'user' | 'hidden-document' | 'seek';
+
+export type MediaPlaybackKind = 'video' | 'audio' | 'voice-message';
+
+export type MediaFailureCode = 'error' | 'abort' | 'emptied' | 'stalled';
 
 export interface MediaPlayerState {
 	isPlaying: boolean;
@@ -19,23 +30,19 @@ export interface MediaPlayerState {
 	isSeeking: boolean;
 	currentTime: number;
 	duration: number;
-	bufferedRanges: TimeRanges | null;
-	volume: number;
-	isMuted: boolean;
 	playbackRate: number;
 	error: Error | null;
+	failureCode: MediaFailureCode | null;
 }
 
 export interface UseMediaPlayerOptions {
+	mediaKind?: MediaPlaybackKind;
 	autoPlay?: boolean;
 	loop?: boolean;
-	muted?: boolean;
-	initialVolume?: number;
 	initialPlaybackRate?: number;
-	persistVolume?: boolean;
 	persistPlaybackRate?: boolean;
 	onEnded?: () => void;
-	onError?: (error: Error) => void;
+	onError?: (error: Error, code: MediaFailureCode) => void;
 	onPlay?: () => void;
 	onPause?: () => void;
 	onTimeUpdate?: (currentTime: number) => void;
@@ -46,65 +53,38 @@ export interface UseMediaPlayerReturn {
 	mediaRef: React.RefObject<HTMLMediaElement | null>;
 	state: MediaPlayerState;
 	play: () => Promise<void>;
-	pause: () => void;
+	pause: (reason?: PlaybackHoldReason) => void;
+	resumeHold: (reason: PlaybackHoldReason) => boolean;
+	releaseHold: (reason: PlaybackHoldReason) => boolean;
 	toggle: () => Promise<void>;
 	seek: (time: number) => void;
 	seekRelative: (delta: number) => void;
 	seekPercentage: (percentage: number) => void;
-	setVolume: (volume: number) => void;
-	toggleMute: () => void;
 	setPlaybackRate: (rate: number) => void;
 }
 
-function getStoredVolume(): number {
-	try {
-		const stored = AppStorage.getItem(VOLUME_STORAGE_KEY);
-		if (stored !== null) {
-			const value = parseFloat(stored);
-			if (Number.isFinite(value) && value >= 0 && value <= 1) {
-				return value;
-			}
-		}
-	} catch {}
-	return DEFAULT_VOLUME;
-}
-
-function getStoredMuted(): boolean {
-	try {
-		return AppStorage.getItem(MUTE_STORAGE_KEY) === 'true';
-	} catch {
-		return false;
-	}
-}
-
-function getStoredPlaybackRate(): number {
+function readStoredPlaybackRates(): Record<string, unknown> {
 	try {
 		const stored = AppStorage.getItem(PLAYBACK_RATE_STORAGE_KEY);
-		if (stored !== null) {
-			const value = parseFloat(stored);
-			if (Number.isFinite(value) && value >= 0.25 && value <= 4) {
-				return value;
-			}
-		}
+		if (stored === null) return {};
+		const parsed: unknown = JSON.parse(stored);
+		if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+		return parsed as Record<string, unknown>;
 	} catch {}
+	return {};
+}
+
+function getStoredPlaybackRate(kind: MediaPlaybackKind): number {
+	const value = readStoredPlaybackRates()[kind];
+	if (typeof value === 'number' && Number.isFinite(value) && value >= 0.25 && value <= 4) {
+		return value;
+	}
 	return 1;
 }
 
-function storeVolume(volume: number): void {
+function storePlaybackRate(kind: MediaPlaybackKind, rate: number): void {
 	try {
-		AppStorage.setItem(VOLUME_STORAGE_KEY, volume.toString());
-	} catch {}
-}
-
-function storeMuted(muted: boolean): void {
-	try {
-		AppStorage.setItem(MUTE_STORAGE_KEY, muted.toString());
-	} catch {}
-}
-
-function storePlaybackRate(rate: number): void {
-	try {
-		AppStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, rate.toString());
+		AppStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, JSON.stringify({...readStoredPlaybackRates(), [kind]: rate}));
 	} catch {}
 }
 
@@ -113,6 +93,10 @@ const isAbortError = (error: unknown): boolean => {
 	if (error.name === 'AbortError') return true;
 	return error.message.toLowerCase().includes('interrupted');
 };
+
+export const isAutoplayBlockedError = (error: unknown): boolean =>
+	error instanceof Error && error.name === 'NotAllowedError';
+
 const normalizeError = (error: unknown): Error => {
 	if (error instanceof Error) return error;
 	return new Error(typeof error === 'string' ? error : 'Unknown media error');
@@ -120,12 +104,10 @@ const normalizeError = (error: unknown): Error => {
 
 export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPlayerReturn {
 	const {
+		mediaKind = 'video',
 		autoPlay = false,
 		loop = false,
-		muted: initialMuted,
-		initialVolume,
 		initialPlaybackRate,
-		persistVolume = true,
 		persistPlaybackRate = true,
 		onEnded,
 		onError,
@@ -136,9 +118,9 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 	} = options;
 	const mediaRef = useRef<HTMLMediaElement | null>(null);
 	useInAppMediaSoundCapture(mediaRef);
-	const previousVolumeRef = useRef<number>(DEFAULT_VOLUME);
 	const callbacksRef = useRef({onEnded, onError, onPlay, onPause, onTimeUpdate, onLoadedMetadata});
 	callbacksRef.current = {onEnded, onError, onPlay, onPause, onTimeUpdate, onLoadedMetadata};
+	const initialElementSettingsRef = useRef({loop});
 	const [state, setState] = useState<MediaPlayerState>(() => ({
 		isPlaying: false,
 		isPaused: true,
@@ -147,24 +129,26 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		isSeeking: false,
 		currentTime: 0,
 		duration: 0,
-		bufferedRanges: null,
-		volume: initialVolume ?? (persistVolume ? getStoredVolume() : DEFAULT_VOLUME),
-		isMuted: initialMuted ?? (persistVolume ? getStoredMuted() : false),
-		playbackRate: initialPlaybackRate ?? (persistPlaybackRate ? getStoredPlaybackRate() : 1),
+		playbackRate: initialPlaybackRate ?? (persistPlaybackRate ? getStoredPlaybackRate(mediaKind) : 1),
 		error: null,
+		failureCode: null,
 	}));
+	const holdReasonRef = useRef<PlaybackHoldReason | null>(null);
+	const recoverPlaybackWhenReadyRef = useRef(false);
+	const initialPlaybackRateRef = useRef(state.playbackRate);
 	useEffect(() => {
 		const media = mediaRef.current;
 		if (!media) return;
-		media.volume = state.volume;
-		media.muted = state.isMuted;
-		media.playbackRate = state.playbackRate;
-		media.loop = loop;
+		const settings = initialElementSettingsRef.current;
+		media.defaultPlaybackRate = initialPlaybackRateRef.current;
+		media.playbackRate = initialPlaybackRateRef.current;
+		media.loop = settings.loop;
 	}, []);
 	useEffect(() => {
 		const media = mediaRef.current;
 		if (!media) return;
 		const handlePlay = () => {
+			holdReasonRef.current = null;
 			setState((prev) => ({
 				...prev,
 				isPlaying: true,
@@ -182,61 +166,91 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			callbacksRef.current.onPause?.();
 		};
 		const handleEnded = () => {
+			clearPendingSeekTarget(media);
+			holdReasonRef.current = null;
 			setState((prev) => ({
 				...prev,
 				isPlaying: false,
 				isPaused: true,
 				isEnded: true,
+				isBuffering: false,
 			}));
 			callbacksRef.current.onEnded?.();
 		};
 		const handleTimeUpdate = () => {
-			const currentTime = media.currentTime;
-			setState((prev) => ({
-				...prev,
-				currentTime,
-				bufferedRanges: media.buffered,
-			}));
-			callbacksRef.current.onTimeUpdate?.(currentTime);
+			const currentTime = quantiseMediaTimeToSecond(media.currentTime);
+			setState((prev) => (prev.currentTime === currentTime ? prev : {...prev, currentTime}));
+			callbacksRef.current.onTimeUpdate?.(media.currentTime);
+		};
+		const publishDuration = () => {
+			const duration = Number.isFinite(media.duration) ? media.duration : 0;
+			setState((prev) => (prev.duration === duration ? prev : {...prev, duration}));
 		};
 		const handleLoadedMetadata = () => {
-			const duration = media.duration;
-			setState((prev) => ({
-				...prev,
-				duration: Number.isFinite(duration) ? duration : 0,
-			}));
-			callbacksRef.current.onLoadedMetadata?.(duration, media);
+			publishDuration();
+			callbacksRef.current.onLoadedMetadata?.(media.duration, media);
 		};
 		const handleDurationChange = () => {
-			const duration = media.duration;
-			setState((prev) => ({
-				...prev,
-				duration: Number.isFinite(duration) ? duration : 0,
-			}));
-		};
-		const handleWaiting = () => {
-			setState((prev) => ({...prev, isBuffering: true}));
-		};
-		const handleCanPlay = () => {
-			setState((prev) => ({...prev, isBuffering: false}));
+			publishDuration();
 		};
 		const handleSeeking = () => {
-			setState((prev) => ({...prev, isSeeking: true}));
+			setState((prev) => (prev.isSeeking ? prev : {...prev, isSeeking: true}));
 		};
+		const handleWaiting = () => {
+			if (!media.paused) {
+				recoverPlaybackWhenReadyRef.current = true;
+			}
+			setState((prev) => (prev.isBuffering ? prev : {...prev, isBuffering: true}));
+		};
+		const handleReadyToPlay = () => {
+			setState((prev) =>
+				prev.isBuffering || prev.failureCode === 'stalled'
+					? {...prev, isBuffering: false, failureCode: prev.failureCode === 'stalled' ? null : prev.failureCode}
+					: prev,
+			);
+			if (!recoverPlaybackWhenReadyRef.current) return;
+			recoverPlaybackWhenReadyRef.current = false;
+			if (holdReasonRef.current !== null) return;
+			if (!media.paused) return;
+			void play();
+		};
+		const reportFailure = (code: MediaFailureCode) => {
+			recoverPlaybackWhenReadyRef.current = false;
+			const failure = new Error(`Media playback ${code}`);
+			setState((prev) => ({...prev, isBuffering: false, failureCode: code}));
+			callbacksRef.current.onError?.(failure, code);
+		};
+		const handleStalled = () => {
+			const failure = new Error('Media playback stalled');
+			setState((prev) => ({...prev, isBuffering: true, failureCode: 'stalled'}));
+			callbacksRef.current.onError?.(failure, 'stalled');
+		};
+		const handleAbort = () => reportFailure('abort');
+		const handleEmptied = () => reportFailure('emptied');
 		const handleSeeked = () => {
-			setState((prev) => ({...prev, isSeeking: false}));
-		};
-		const handleVolumeChange = () => {
-			setState((prev) => ({
-				...prev,
-				volume: media.volume,
-				isMuted: media.muted,
-			}));
+			clearPendingSeekTarget(media);
+			setState((prev) => (prev.isSeeking ? {...prev, isSeeking: false} : prev));
 		};
 		const handleRateChange = () => {
+			setState((prev) =>
+				prev.playbackRate === media.playbackRate ? prev : {...prev, playbackRate: media.playbackRate},
+			);
+		};
+		const handleResourceLoadStart = () => {
+			clearPendingSeekTarget(media);
+			holdReasonRef.current = null;
+			recoverPlaybackWhenReadyRef.current = false;
 			setState((prev) => ({
 				...prev,
-				playbackRate: media.playbackRate,
+				isPlaying: false,
+				isPaused: true,
+				isEnded: false,
+				isBuffering: false,
+				isSeeking: false,
+				currentTime: 0,
+				duration: 0,
+				error: null,
+				failureCode: null,
 			}));
 		};
 		const handleError = () => {
@@ -244,14 +258,9 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			const errorMessage = error
 				? new Error(error.message || 'Media playback error')
 				: new Error('Unknown media error');
-			setState((prev) => ({...prev, error: errorMessage}));
-			callbacksRef.current.onError?.(errorMessage);
-		};
-		const handleProgress = () => {
-			setState((prev) => ({
-				...prev,
-				bufferedRanges: media.buffered,
-			}));
+			recoverPlaybackWhenReadyRef.current = false;
+			setState((prev) => ({...prev, isBuffering: false, error: errorMessage, failureCode: 'error'}));
+			callbacksRef.current.onError?.(errorMessage, 'error');
 		};
 		media.addEventListener('play', handlePlay);
 		media.addEventListener('pause', handlePause);
@@ -260,15 +269,21 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		media.addEventListener('loadedmetadata', handleLoadedMetadata);
 		media.addEventListener('durationchange', handleDurationChange);
 		media.addEventListener('waiting', handleWaiting);
-		media.addEventListener('canplay', handleCanPlay);
+		media.addEventListener('canplay', handleReadyToPlay);
+		media.addEventListener('canplaythrough', handleReadyToPlay);
+		media.addEventListener('stalled', handleStalled);
+		media.addEventListener('abort', handleAbort);
+		media.addEventListener('emptied', handleEmptied);
 		media.addEventListener('seeking', handleSeeking);
 		media.addEventListener('seeked', handleSeeked);
-		media.addEventListener('volumechange', handleVolumeChange);
 		media.addEventListener('ratechange', handleRateChange);
 		media.addEventListener('error', handleError);
-		media.addEventListener('progress', handleProgress);
+		media.addEventListener('loadstart', handleResourceLoadStart);
 		if (media.readyState >= 1) {
 			handleLoadedMetadata();
+		}
+		if (!media.paused) {
+			setState((prev) => (prev.isPlaying ? prev : {...prev, isPlaying: true, isPaused: false, isEnded: false}));
 		}
 		return () => {
 			media.removeEventListener('play', handlePlay);
@@ -278,38 +293,64 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			media.removeEventListener('loadedmetadata', handleLoadedMetadata);
 			media.removeEventListener('durationchange', handleDurationChange);
 			media.removeEventListener('waiting', handleWaiting);
-			media.removeEventListener('canplay', handleCanPlay);
+			media.removeEventListener('canplay', handleReadyToPlay);
+			media.removeEventListener('canplaythrough', handleReadyToPlay);
+			media.removeEventListener('stalled', handleStalled);
+			media.removeEventListener('abort', handleAbort);
+			media.removeEventListener('emptied', handleEmptied);
 			media.removeEventListener('seeking', handleSeeking);
 			media.removeEventListener('seeked', handleSeeked);
-			media.removeEventListener('volumechange', handleVolumeChange);
 			media.removeEventListener('ratechange', handleRateChange);
 			media.removeEventListener('error', handleError);
-			media.removeEventListener('progress', handleProgress);
+			media.removeEventListener('loadstart', handleResourceLoadStart);
 		};
 	}, []);
 	useEffect(() => {
 		const media = mediaRef.current;
 		if (!media || !autoPlay) return;
-		const tryPlay = () => {
-			media.play().catch((error) => {
-				logger.debug('Autoplay prevented:', error);
+		let attempted = false;
+		const attemptAutoplay = () => {
+			if (attempted) return;
+			attempted = true;
+			const started = media.play();
+			if (started == null) return;
+			started.catch((error) => {
+				if (isAutoplayBlockedError(error) || isAbortError(error)) {
+					logger.debug('Autoplay was refused by the browser; leaving the video paused:', error);
+					return;
+				}
+				logger.error('Autoplay failed:', normalizeError(error));
 			});
 		};
-		tryPlay();
-		media.addEventListener('loadstart', tryPlay);
+		const attemptAutoplayOnSource = () => {
+			attempted = false;
+			attemptAutoplay();
+		};
+		attemptAutoplay();
+		media.addEventListener('loadstart', attemptAutoplayOnSource);
 		return () => {
-			media.removeEventListener('loadstart', tryPlay);
+			media.removeEventListener('loadstart', attemptAutoplayOnSource);
 		};
 	}, [autoPlay]);
+	useLayoutEffect(() => {
+		const media = mediaRef.current;
+		return () => {
+			detachMediaElementSource(media ?? mediaRef.current);
+		};
+	}, []);
 	const play = useCallback(async () => {
 		const media = mediaRef.current;
 		if (!media) return;
 		try {
 			await media.play();
-			setState((prev) => ({...prev, error: null}));
+			setState((prev) => (prev.error === null ? prev : {...prev, error: null}));
 		} catch (error) {
 			if (isAbortError(error)) {
 				logger.debug('Play interrupted before it could start:', error);
+				return;
+			}
+			if (isAutoplayBlockedError(error)) {
+				logger.debug('Play was refused by the browser:', error);
 				return;
 			}
 			const normalizedError = normalizeError(error);
@@ -317,10 +358,25 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			setState((prev) => ({...prev, error: normalizedError}));
 		}
 	}, []);
-	const pause = useCallback(() => {
+	const pause = useCallback((reason: PlaybackHoldReason = 'user') => {
 		const media = mediaRef.current;
 		if (!media) return;
+		holdReasonRef.current = reason;
 		media.pause();
+	}, []);
+	const resumeHold = useCallback(
+		(reason: PlaybackHoldReason) => {
+			if (holdReasonRef.current !== reason) return false;
+			holdReasonRef.current = null;
+			void play();
+			return true;
+		},
+		[play],
+	);
+	const releaseHold = useCallback((reason: PlaybackHoldReason) => {
+		if (holdReasonRef.current !== reason) return false;
+		holdReasonRef.current = null;
+		return true;
 	}, []);
 	const toggle = useCallback(async () => {
 		const media = mediaRef.current;
@@ -334,14 +390,15 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 	const seek = useCallback((time: number) => {
 		const media = mediaRef.current;
 		if (!media) return;
-		const clampedTime = Math.max(0, Math.min(time, media.duration || 0));
+		const clampedTime = clampMediaTime(time, media.duration);
+		armPendingSeekTarget(media, clampedTime);
 		media.currentTime = clampedTime;
 	}, []);
 	const seekRelative = useCallback(
 		(delta: number) => {
 			const media = mediaRef.current;
 			if (!media) return;
-			seek(media.currentTime + delta);
+			seek((readPendingSeekTarget(media) ?? media.currentTime) + delta);
 		},
 		[seek],
 	);
@@ -350,58 +407,33 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		if (!media || !Number.isFinite(media.duration)) return;
 		const clampedPercentage = Math.max(0, Math.min(100, percentage));
 		const time = (clampedPercentage / 100) * media.duration;
+		armPendingSeekTarget(media, time);
 		media.currentTime = time;
 	}, []);
-	const setVolume = useCallback(
-		(volume: number) => {
-			const media = mediaRef.current;
-			if (!media) return;
-			const clampedVolume = Math.max(0, Math.min(1, volume));
-			media.volume = clampedVolume;
-			if (clampedVolume > 0) {
-				previousVolumeRef.current = clampedVolume;
-			}
-			if (persistVolume) {
-				storeVolume(clampedVolume);
-			}
-		},
-		[persistVolume],
-	);
-	const toggleMute = useCallback(() => {
-		const media = mediaRef.current;
-		if (!media) return;
-		const newMuted = !media.muted;
-		media.muted = newMuted;
-		if (!newMuted && media.volume === 0) {
-			media.volume = previousVolumeRef.current || DEFAULT_VOLUME;
-		}
-		if (persistVolume) {
-			storeMuted(newMuted);
-		}
-	}, [persistVolume]);
 	const setPlaybackRate = useCallback(
 		(rate: number) => {
 			const media = mediaRef.current;
 			if (!media) return;
 			const clampedRate = Math.max(0.25, Math.min(4, rate));
+			media.defaultPlaybackRate = clampedRate;
 			media.playbackRate = clampedRate;
 			if (persistPlaybackRate) {
-				storePlaybackRate(clampedRate);
+				storePlaybackRate(mediaKind, clampedRate);
 			}
 		},
-		[persistPlaybackRate],
+		[mediaKind, persistPlaybackRate],
 	);
 	return {
 		mediaRef,
 		state,
 		play,
 		pause,
+		resumeHold,
+		releaseHold,
 		toggle,
 		seek,
 		seekRelative,
 		seekPercentage,
-		setVolume,
-		toggleMute,
 		setPlaybackRate,
 	};
 }

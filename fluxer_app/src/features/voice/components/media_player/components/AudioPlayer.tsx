@@ -9,11 +9,12 @@ import {MediaProgressBar} from '@app/features/voice/components/media_player/comp
 import {MediaVolumeControl} from '@app/features/voice/components/media_player/components/MediaVolumeControl';
 import {useMediaPlayer} from '@app/features/voice/components/media_player/hooks/useMediaPlayer';
 import {useMediaProgress} from '@app/features/voice/components/media_player/hooks/useMediaProgress';
+import {useMediaVolume} from '@app/features/voice/components/media_player/hooks/useMediaVolume';
+import {useMetadataPreload} from '@app/features/voice/components/media_player/hooks/useMetadataPreload';
 import {
 	AUDIO_PLAYBACK_RATES,
 	DEFAULT_SEEK_AMOUNT,
 } from '@app/features/voice/components/media_player/utils/MediaConstants';
-import AudioVolume from '@app/features/voice/state/AudioVolume';
 import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -56,11 +57,9 @@ export function AudioPlayer({
 	const [prePlayCurrentTime, setPrePlayCurrentTime] = useState(0);
 	const pendingPlayRef = useRef(false);
 	const pendingSeekPercentageRef = useRef<number | null>(null);
-	const [volume, setVolumeState] = useState(AudioVolume.volume);
-	const [isMuted, setIsMutedState] = useState(AudioVolume.isMuted);
 	const {mediaRef, state, play, toggle, seekRelative, setPlaybackRate} = useMediaPlayer({
+		mediaKind: 'audio',
 		autoPlay,
-		persistVolume: false,
 		persistPlaybackRate: true,
 	});
 	const {
@@ -76,27 +75,8 @@ export function AudioPlayer({
 		mediaRef,
 		initialDuration,
 	});
-	useEffect(() => {
-		const media = mediaRef.current;
-		if (!media) return;
-		media.volume = volume;
-		media.muted = isMuted;
-	}, [mediaRef, volume, isMuted]);
-	const setVolume = useCallback(
-		(newVolume: number) => {
-			const clamped = Math.max(0, Math.min(1, newVolume));
-			setVolumeState(clamped);
-			AudioVolume.setVolume(clamped);
-			if (isMuted && clamped > 0) {
-				setIsMutedState(false);
-			}
-		},
-		[isMuted],
-	);
-	const toggleMute = useCallback(() => {
-		setIsMutedState((prev) => !prev);
-		AudioVolume.toggleMute();
-	}, []);
+	const {volume, isMuted, setVolume, toggleMute} = useMediaVolume({mediaRef});
+	const {escalateToMetadata, sourceAttribute, preloadAttribute} = useMetadataPreload(src, hasStarted);
 	useEffect(() => {
 		if (hasStarted && pendingPlayRef.current) {
 			const timer = setTimeout(() => {
@@ -222,13 +202,14 @@ export function AudioPlayer({
 		<div
 			ref={containerRef}
 			className={clsx(styles.container, isMobile && styles.mobile, className)}
+			onPointerEnter={escalateToMetadata}
 			data-flx="voice.media-player.audio-player.container"
 		>
 			{/* biome-ignore lint/a11y/useMediaCaption: voice/audio attachments have no caption track source */}
 			<audio
 				ref={mediaRef as React.RefObject<HTMLAudioElement>}
-				src={hasStarted ? src : undefined}
-				preload="none"
+				src={sourceAttribute}
+				preload={preloadAttribute}
 				data-flx="voice.media-player.audio-player.audio"
 			/>
 			{title && (
@@ -242,6 +223,8 @@ export function AudioPlayer({
 					buffered={buffered}
 					currentTime={displayCurrentTime}
 					duration={displayDuration}
+					mediaRef={mediaRef}
+					isPlaying={state.isPlaying}
 					onSeek={handleSeek}
 					onSeekPreview={handleSeekPreview}
 					onSeekStart={startSeeking}

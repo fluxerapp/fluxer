@@ -17,8 +17,10 @@ import {MediaVolumeControl} from '@app/features/voice/components/media_player/co
 import {useMediaPlayer} from '@app/features/voice/components/media_player/hooks/useMediaPlayer';
 import {useMediaProgress} from '@app/features/voice/components/media_player/hooks/useMediaProgress';
 import {useMediaVolume} from '@app/features/voice/components/media_player/hooks/useMediaVolume';
+import {useMetadataPreload} from '@app/features/voice/components/media_player/hooks/useMetadataPreload';
 import styles from '@app/features/voice/components/media_player/InlineAudioPlayer.module.css';
 import {AUDIO_PLAYBACK_RATES} from '@app/features/voice/components/media_player/utils/MediaConstants';
+import {detachMediaElementSource} from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
 import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -26,7 +28,7 @@ import {DownloadSimpleIcon, PauseIcon, PlayIcon, StarIcon} from '@phosphor-icons
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import type React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 const AUDIO_PLAYER_DESCRIPTOR = msg({
 	message: 'Audio player',
@@ -95,7 +97,7 @@ export function InlineAudioPlayer({
 	const [hasStarted, setHasStarted] = useState(false);
 	const pendingPlayRef = useRef(false);
 	const {mediaRef, state, play, toggle, setPlaybackRate} = useMediaPlayer({
-		persistVolume: true,
+		mediaKind: 'audio',
 	});
 	const {
 		currentTime,
@@ -113,7 +115,14 @@ export function InlineAudioPlayer({
 	const {volume, isMuted, setVolume, toggleMute} = useMediaVolume({
 		mediaRef,
 	});
-	const displayDuration = initialDuration ?? duration;
+	const {escalateToMetadata, sourceAttribute, preloadAttribute} = useMetadataPreload(src, hasStarted);
+	const displayDuration = duration > 0 ? duration : (initialDuration ?? 0);
+	useLayoutEffect(() => {
+		const media = mediaRef.current;
+		return () => {
+			detachMediaElementSource(media ?? mediaRef.current);
+		};
+	}, [mediaRef, isMobile]);
 	const isLoading = hasStarted && state.isBuffering;
 	const isActive = state.isPlaying || isLoading;
 	const {name: fileName, extension: fileExtension} = extension
@@ -194,12 +203,13 @@ export function InlineAudioPlayer({
 					backgroundColor: isActive ? 'var(--brand-primary)' : 'var(--background-secondary)',
 				}}
 				transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2, ease: 'easeOut'}}
+				onPointerEnter={escalateToMetadata}
 				data-flx="voice.media-player.inline-audio-player.mobile-container.context-menu"
 			>
 				<audio
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
-					src={hasStarted ? src : undefined}
-					preload="none"
+					src={sourceAttribute}
+					preload={preloadAttribute}
 					data-flx="voice.media-player.inline-audio-player.audio"
 				>
 					<track kind="captions" data-flx="voice.media-player.inline-audio-player.track" />
@@ -320,12 +330,13 @@ export function InlineAudioPlayer({
 			onContextMenu={onContextMenu}
 			role="group"
 			aria-label={i18n._(AUDIO_PLAYER_DESCRIPTOR)}
+			onPointerEnter={escalateToMetadata}
 			data-flx="voice.media-player.inline-audio-player.container.context-menu"
 		>
 			<audio
 				ref={mediaRef as React.RefObject<HTMLAudioElement>}
-				src={hasStarted ? src : undefined}
-				preload="none"
+				src={sourceAttribute}
+				preload={preloadAttribute}
 				data-flx="voice.media-player.inline-audio-player.audio--2"
 			>
 				<track kind="captions" data-flx="voice.media-player.inline-audio-player.track--2" />
@@ -385,6 +396,8 @@ export function InlineAudioPlayer({
 					buffered={buffered}
 					currentTime={currentTime}
 					duration={displayDuration}
+					mediaRef={mediaRef}
+					isPlaying={state.isPlaying}
 					onSeek={handleSeek}
 					onSeekPreview={handleSeekPreview}
 					onSeekStart={startSeeking}

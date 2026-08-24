@@ -40,6 +40,7 @@
 	left: 0;
 	top: 0;
 	height: 100%;
+	width: var(--media-progress-value, 0%);
 	background-color: var(--brand-primary-light);
 	border-radius: var(--radius-full);
 	will-change: width;
@@ -48,6 +49,7 @@
 .thumb {
 	position: absolute;
 	top: 50%;
+	left: var(--media-progress-value, 0%);
 	width: 0.75rem;
 	height: 0.75rem;
 	background-color: var(--brand-primary-light);
@@ -68,6 +70,18 @@
 
 .container:not(.isDragging) .fill {
 	transition: width 100ms linear;
+}
+
+.container:not(.isDragging) .thumb {
+	transition:
+		opacity 150ms ease,
+		transform 150ms ease,
+		left 100ms linear;
+}
+
+.container[data-playhead-predicted='true']:not(.isDragging) .fill,
+.container[data-playhead-predicted='true']:not(.isDragging) .thumb {
+	transition: none;
 }
 
 .container:hover .thumb,

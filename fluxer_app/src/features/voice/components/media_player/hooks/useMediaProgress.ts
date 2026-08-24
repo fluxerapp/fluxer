@@ -1,25 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	areBufferedSpanFractionsEqual,
+	armPendingSeekTarget,
+	type BufferedSpanFraction,
 	clampMediaTime,
 	clampPercentage,
-	getBufferedPercentage,
+	clearPendingSeekTarget,
+	collectBufferedSpanFractions,
+	EMPTY_BUFFERED_SPANS,
 	getEffectiveMediaDuration,
+	readPendingSeekTarget,
 } from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
 import {useCallback, useEffect, useRef, useState} from 'react';
+
+const SEEK_SETTLED_TOLERANCE_SECONDS = 0.5;
 
 interface UseMediaProgressOptions {
 	mediaRef: React.RefObject<HTMLMediaElement | null>;
 	initialDuration?: number;
-	updateInterval?: number;
-	useRAF?: boolean;
 }
 
 export interface UseMediaProgressReturn {
 	currentTime: number;
 	duration: number;
 	progress: number;
-	buffered: number;
+	buffered: ReadonlyArray<BufferedSpanFraction>;
 	isSeeking: boolean;
 	previewSeekToPercentage: (percentage: number) => void;
 	seekToPercentage: (percentage: number) => void;
@@ -29,18 +35,15 @@ export interface UseMediaProgressReturn {
 }
 
 export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProgressReturn {
-	const {mediaRef, initialDuration, updateInterval = 100, useRAF = true} = options;
+	const {mediaRef, initialDuration} = options;
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(initialDuration ?? 0);
-	const [buffered, setBuffered] = useState(0);
+	const [buffered, setBuffered] = useState<ReadonlyArray<BufferedSpanFraction>>(EMPTY_BUFFERED_SPANS);
 	const [isSeeking, setIsSeeking] = useState(false);
 	const [pendingProgress, setPendingProgress] = useState<number | null>(null);
-	const rafRef = useRef<number | null>(null);
-	const intervalRef = useRef<number | null>(null);
-	const isSeekingRef = useRef(false);
+	const isDraggingRef = useRef(false);
+	const deferredSeekPercentageRef = useRef<number | null>(null);
 	const fallbackDurationRef = useRef(initialDuration ?? 0);
-	const pendingSeekPercentageRef = useRef<number | null>(null);
-	const lastRafUpdateAtRef = useRef(0);
 	useEffect(() => {
 		fallbackDurationRef.current = initialDuration ?? 0;
 	}, [initialDuration]);
@@ -48,6 +51,14 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 		setCurrentTime((previousCurrentTime) =>
 			previousCurrentTime === nextCurrentTime ? previousCurrentTime : nextCurrentTime,
 		);
+	}, []);
+	const setBufferedIfChanged = useCallback((nextBuffered: ReadonlyArray<BufferedSpanFraction>) => {
+		setBuffered((previousBuffered) =>
+			areBufferedSpanFractionsEqual(previousBuffered, nextBuffered) ? previousBuffered : nextBuffered,
+		);
+	}, []);
+	const setPendingProgressIfChanged = useCallback((nextProgress: number | null) => {
+		setPendingProgress((previousProgress) => (previousProgress === nextProgress ? previousProgress : nextProgress));
 	}, []);
 	const setDurationFromMedia = useCallback((rawDuration: number) => {
 		const hasRealDuration = Number.isFinite(rawDuration) && rawDuration > 0;
@@ -60,139 +71,91 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 			return previousDuration === nextDuration ? previousDuration : nextDuration;
 		});
 	}, []);
-	const setBufferedIfChanged = useCallback((nextBuffered: number) => {
-		setBuffered((previousBuffered) => (previousBuffered === nextBuffered ? previousBuffered : nextBuffered));
-	}, []);
-	const setPendingProgressIfChanged = useCallback((nextProgress: number | null) => {
-		setPendingProgress((previousProgress) => (previousProgress === nextProgress ? previousProgress : nextProgress));
-	}, []);
-	const updateProgress = useCallback(() => {
-		const media = mediaRef.current;
-		if (!media || isSeekingRef.current) return;
-		if (pendingSeekPercentageRef.current !== null) return;
-		const newCurrentTime = media.currentTime;
-		const rawDuration = media.duration;
-		const newBuffered = getBufferedPercentage(media);
-		setCurrentTimeIfChanged(newCurrentTime);
-		setDurationFromMedia(rawDuration);
-		setBufferedIfChanged(newBuffered);
-	}, [mediaRef, setBufferedIfChanged, setCurrentTimeIfChanged, setDurationFromMedia]);
 	useEffect(() => {
 		const media = mediaRef.current;
 		if (!media) return;
-		updateProgress();
-		const cancelRaf = () => {
-			if (rafRef.current !== null) {
-				cancelAnimationFrame(rafRef.current);
-				rafRef.current = null;
-			}
-		};
-		const cancelInterval = () => {
-			if (intervalRef.current !== null) {
-				clearInterval(intervalRef.current);
-				intervalRef.current = null;
-			}
-		};
-		const startRaf = () => {
-			if (rafRef.current !== null) return;
-			const tick = (timestamp: number) => {
-				if (timestamp - lastRafUpdateAtRef.current >= updateInterval) {
-					lastRafUpdateAtRef.current = timestamp;
-					updateProgress();
-				}
-				if (!media.paused && !media.ended) {
-					rafRef.current = requestAnimationFrame(tick);
-				} else {
-					rafRef.current = null;
-				}
-			};
-			rafRef.current = requestAnimationFrame(tick);
-		};
-		const startInterval = () => {
-			if (intervalRef.current !== null) return;
-			intervalRef.current = window.setInterval(updateProgress, updateInterval);
-		};
-		const startProgressUpdates = () => {
-			updateProgress();
-			if (useRAF) {
-				startRaf();
-			} else {
-				startInterval();
-			}
-		};
-		const stopProgressUpdates = () => {
-			updateProgress();
-			cancelRaf();
-			cancelInterval();
+		const applyDeferredSeek = () => {
+			const deferredPercentage = deferredSeekPercentageRef.current;
+			if (deferredPercentage === null) return;
+			const effectiveDuration = getEffectiveMediaDuration(media, 0);
+			if (effectiveDuration <= 0) return;
+			deferredSeekPercentageRef.current = null;
+			const time = (deferredPercentage / 100) * effectiveDuration;
+			armPendingSeekTarget(media, time);
+			media.currentTime = time;
+			setCurrentTimeIfChanged(time);
 		};
 		const handleLoadedMetadata = () => {
-			const rawDuration = media.duration;
-			if (Number.isFinite(rawDuration) && rawDuration > 0) {
-				setDuration((previousDuration) => (previousDuration === rawDuration ? previousDuration : rawDuration));
-				if (pendingSeekPercentageRef.current !== null) {
-					const time = (pendingSeekPercentageRef.current / 100) * rawDuration;
-					media.currentTime = time;
-					setCurrentTimeIfChanged(time);
-					pendingSeekPercentageRef.current = null;
-					setPendingProgressIfChanged(null);
-				}
-				return;
-			}
-			setDuration((previousDuration) => (previousDuration > 0 ? previousDuration : fallbackDurationRef.current));
+			setDurationFromMedia(media.duration);
+			applyDeferredSeek();
 		};
-		const handleProgress = () => {
-			setBufferedIfChanged(getBufferedPercentage(media));
+		const handleDurationChange = () => {
+			setDurationFromMedia(media.duration);
 		};
 		const handleTimeUpdate = () => {
-			if (!isSeekingRef.current && pendingSeekPercentageRef.current === null) {
-				setCurrentTimeIfChanged(media.currentTime);
+			const seekTarget = readPendingSeekTarget(media);
+			if (seekTarget !== null && Math.abs(media.currentTime - seekTarget) <= SEEK_SETTLED_TOLERANCE_SECONDS) {
+				clearPendingSeekTarget(media);
 			}
+			if (
+				isDraggingRef.current ||
+				readPendingSeekTarget(media) !== null ||
+				deferredSeekPercentageRef.current !== null
+			) {
+				return;
+			}
+			setCurrentTimeIfChanged(media.currentTime);
+			setPendingProgressIfChanged(null);
+		};
+		const handleProgress = () => {
+			setBufferedIfChanged(collectBufferedSpanFractions(media));
 		};
 		const handleSeeking = () => {
-			if (!isSeekingRef.current) {
+			if (!isDraggingRef.current) {
 				setIsSeeking(true);
 			}
 		};
 		const handleSeeked = () => {
-			if (!isSeekingRef.current) {
-				setIsSeeking(false);
-			}
+			clearPendingSeekTarget(media);
+			setCurrentTimeIfChanged(media.currentTime);
+			if (isDraggingRef.current) return;
+			setIsSeeking(false);
+			setPendingProgressIfChanged(null);
+		};
+		const handleEnded = () => {
+			clearPendingSeekTarget(media);
 			setCurrentTimeIfChanged(media.currentTime);
 		};
+		const handleEmptied = () => {
+			clearPendingSeekTarget(media);
+			deferredSeekPercentageRef.current = null;
+			setPendingProgressIfChanged(null);
+			setBufferedIfChanged(EMPTY_BUFFERED_SPANS);
+		};
 		media.addEventListener('loadedmetadata', handleLoadedMetadata);
-		media.addEventListener('progress', handleProgress);
+		media.addEventListener('durationchange', handleDurationChange);
 		media.addEventListener('timeupdate', handleTimeUpdate);
+		media.addEventListener('progress', handleProgress);
 		media.addEventListener('seeking', handleSeeking);
 		media.addEventListener('seeked', handleSeeked);
-		media.addEventListener('play', startProgressUpdates);
-		media.addEventListener('playing', startProgressUpdates);
-		media.addEventListener('pause', stopProgressUpdates);
-		media.addEventListener('ended', stopProgressUpdates);
-		if (!media.paused && !media.ended) {
-			startProgressUpdates();
+		media.addEventListener('ended', handleEnded);
+		media.addEventListener('emptied', handleEmptied);
+		setDurationFromMedia(media.duration);
+		if (media.readyState >= 1) {
+			setCurrentTimeIfChanged(media.currentTime);
+			setBufferedIfChanged(collectBufferedSpanFractions(media));
 		}
 		return () => {
 			media.removeEventListener('loadedmetadata', handleLoadedMetadata);
-			media.removeEventListener('progress', handleProgress);
+			media.removeEventListener('durationchange', handleDurationChange);
 			media.removeEventListener('timeupdate', handleTimeUpdate);
+			media.removeEventListener('progress', handleProgress);
 			media.removeEventListener('seeking', handleSeeking);
 			media.removeEventListener('seeked', handleSeeked);
-			media.removeEventListener('play', startProgressUpdates);
-			media.removeEventListener('playing', startProgressUpdates);
-			media.removeEventListener('pause', stopProgressUpdates);
-			media.removeEventListener('ended', stopProgressUpdates);
-			cancelRaf();
-			cancelInterval();
+			media.removeEventListener('ended', handleEnded);
+			media.removeEventListener('emptied', handleEmptied);
 		};
-	}, [
-		mediaRef,
-		setBufferedIfChanged,
-		setCurrentTimeIfChanged,
-		setPendingProgressIfChanged,
-		updateProgress,
-		updateInterval,
-		useRAF,
-	]);
+	}, [mediaRef, setBufferedIfChanged, setCurrentTimeIfChanged, setDurationFromMedia, setPendingProgressIfChanged]);
 	const previewSeekToPercentage = useCallback(
 		(percentage: number) => {
 			const clampedPercentage = clampPercentage(percentage);
@@ -211,13 +174,14 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 			const effectiveDuration = getEffectiveMediaDuration(media, 0);
 			if (media && effectiveDuration > 0) {
 				const time = (clampedPercentage / 100) * effectiveDuration;
+				deferredSeekPercentageRef.current = null;
+				armPendingSeekTarget(media, time);
 				media.currentTime = time;
 				setCurrentTimeIfChanged(time);
-				pendingSeekPercentageRef.current = null;
-				setPendingProgressIfChanged(null);
+				setPendingProgressIfChanged(clampedPercentage);
 				return;
 			}
-			pendingSeekPercentageRef.current = clampedPercentage;
+			deferredSeekPercentageRef.current = clampedPercentage;
 			setPendingProgressIfChanged(clampedPercentage);
 			const fallbackDuration = fallbackDurationRef.current;
 			if (fallbackDuration > 0) {
@@ -231,19 +195,27 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 			const media = mediaRef.current;
 			if (!media) return;
 			const clampedTime = clampMediaTime(time, media.duration);
+			armPendingSeekTarget(media, clampedTime);
 			media.currentTime = clampedTime;
 			setCurrentTimeIfChanged(clampedTime);
+			const effectiveDuration = getEffectiveMediaDuration(media, fallbackDurationRef.current);
+			if (effectiveDuration > 0) {
+				setPendingProgressIfChanged(clampPercentage((clampedTime / effectiveDuration) * 100));
+			}
 		},
-		[mediaRef, setCurrentTimeIfChanged],
+		[mediaRef, setCurrentTimeIfChanged, setPendingProgressIfChanged],
 	);
 	const startSeeking = useCallback(() => {
-		isSeekingRef.current = true;
+		isDraggingRef.current = true;
 		setIsSeeking(true);
 	}, []);
 	const endSeeking = useCallback(() => {
-		isSeekingRef.current = false;
+		isDraggingRef.current = false;
 		setIsSeeking(false);
-	}, []);
+		if (readPendingSeekTarget(mediaRef.current) === null) {
+			setPendingProgressIfChanged(null);
+		}
+	}, [mediaRef, setPendingProgressIfChanged]);
 	const progress = pendingProgress !== null ? pendingProgress : duration > 0 ? (currentTime / duration) * 100 : 0;
 	return {
 		currentTime,

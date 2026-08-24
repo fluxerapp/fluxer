@@ -4,15 +4,25 @@ import {SliderTooltipPortal} from '@app/features/ui/components/slider/SliderTool
 import {useSliderTooltip} from '@app/features/ui/components/slider/useSliderTooltip';
 import styles from '@app/features/voice/components/media_player/MediaProgressBar.module.css';
 import {
+	type BufferedSpanFraction,
 	clampPercentage,
+	EMPTY_BUFFERED_SPANS,
+	getEffectiveMediaDuration,
 	getSeekPercentageFromClientX,
+	stepPlayheadPrediction,
 } from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
 import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+
+export const PLAYHEAD_CSS_PROPERTY = '--media-progress-value';
+
+export interface MediaElementRef {
+	readonly current: HTMLMediaElement | null;
+}
 
 const MEDIA_PROGRESS_DESCRIPTOR = msg({
 	message: 'Media progress',
@@ -20,7 +30,7 @@ const MEDIA_PROGRESS_DESCRIPTOR = msg({
 });
 export interface MediaProgressBarProps {
 	progress: number;
-	buffered?: number;
+	buffered?: ReadonlyArray<BufferedSpanFraction>;
 	currentTime?: number;
 	duration?: number;
 	isSeeking?: boolean;
@@ -37,11 +47,13 @@ export interface MediaProgressBarProps {
 	className?: string;
 	compact?: boolean;
 	ariaLabel?: string;
+	mediaRef?: MediaElementRef;
+	isPlaying?: boolean;
 }
 
 export function MediaProgressBar({
 	progress,
-	buffered = 0,
+	buffered = EMPTY_BUFFERED_SPANS,
 	currentTime = 0,
 	duration = 0,
 	onSeek,
@@ -57,6 +69,8 @@ export function MediaProgressBar({
 	className,
 	compact = false,
 	ariaLabel,
+	mediaRef,
+	isPlaying = false,
 }: MediaProgressBarProps) {
 	const {i18n} = useLingui();
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -278,6 +292,74 @@ export function MediaProgressBar({
 	);
 	const displayProgress = clampPercentage(isDragging && hoverPosition !== null ? hoverPosition : progress);
 	const displayCurrentTime = duration > 0 ? (displayProgress / 100) * duration : currentTime;
+	const committedProgressRef = useRef(displayProgress);
+	const durationRef = useRef(duration);
+	useLayoutEffect(() => {
+		committedProgressRef.current = displayProgress;
+		durationRef.current = duration;
+		containerRef.current?.style.setProperty(PLAYHEAD_CSS_PROPERTY, `${displayProgress}%`);
+	});
+	const shouldPredictPlayhead = isPlaying && !isDragging && mediaRef != null;
+	useEffect(() => {
+		if (!shouldPredictPlayhead) return;
+		const container = containerRef.current;
+		const media = mediaRef?.current;
+		if (!container || !media) return;
+		let frame: number | null = null;
+		let predictedSeconds: number | null = null;
+		let lastFrameMs: number | null = null;
+		const writeCommittedValue = () => {
+			container.style.setProperty(PLAYHEAD_CSS_PROPERTY, `${committedProgressRef.current}%`);
+		};
+		const stop = () => {
+			if (frame !== null) {
+				cancelAnimationFrame(frame);
+				frame = null;
+			}
+			predictedSeconds = null;
+			lastFrameMs = null;
+			writeCommittedValue();
+		};
+		const tick = () => {
+			frame = null;
+			if (document.hidden) {
+				stop();
+				return;
+			}
+			const nowMs = performance.now();
+			const elapsedSeconds = lastFrameMs === null ? 0 : (nowMs - lastFrameMs) / 1000;
+			lastFrameMs = nowMs;
+			predictedSeconds = stepPlayheadPrediction({
+				predictedSeconds,
+				actualSeconds: media.currentTime,
+				elapsedSeconds,
+				playbackRate: media.playbackRate,
+			});
+			const totalSeconds = getEffectiveMediaDuration(media, durationRef.current);
+			if (totalSeconds > 0) {
+				container.style.setProperty(
+					PLAYHEAD_CSS_PROPERTY,
+					`${clampPercentage((predictedSeconds / totalSeconds) * 100)}%`,
+				);
+			}
+			frame = requestAnimationFrame(tick);
+		};
+		const handleVisibilityChange = () => {
+			if (document.hidden) {
+				stop();
+			} else if (frame === null) {
+				frame = requestAnimationFrame(tick);
+			}
+		};
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		if (!document.hidden) {
+			frame = requestAnimationFrame(tick);
+		}
+		return () => {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			stop();
+		};
+	}, [mediaRef, shouldPredictPlayhead]);
 	const renderTooltipContent = useCallback(
 		() => (
 			<div className={styles.tooltipPreviewContent} data-flx="voice.media-player.media-progress-bar.tooltip-content">
@@ -314,25 +396,21 @@ export function MediaProgressBar({
 			aria-valuenow={Math.round(displayProgress)}
 			aria-valuetext={formatDuration(displayCurrentTime)}
 			tabIndex={0}
+			data-playhead-predicted={shouldPredictPlayhead ? 'true' : undefined}
 			data-flx="voice.media-player.media-progress-bar.container.key-down"
 		>
 			<div className={styles.track} data-flx="voice.media-player.media-progress-bar.track">
-				<div
-					className={styles.buffered}
-					style={{width: `${buffered}%`}}
-					data-flx="voice.media-player.media-progress-bar.buffered"
-				/>
-				<div
-					className={styles.fill}
-					style={{width: `${displayProgress}%`}}
-					data-flx="voice.media-player.media-progress-bar.fill"
-				/>
+				{buffered.map((bufferedSpan, index) => (
+					<div
+						key={index}
+						className={styles.buffered}
+						style={{left: `${bufferedSpan.offset * 100}%`, width: `${bufferedSpan.span * 100}%`}}
+						data-flx="voice.media-player.media-progress-bar.buffered"
+					/>
+				))}
+				<div className={styles.fill} data-flx="voice.media-player.media-progress-bar.fill" />
 			</div>
-			<div
-				className={styles.thumb}
-				style={{left: `${displayProgress}%`}}
-				data-flx="voice.media-player.media-progress-bar.thumb"
-			/>
+			<div className={styles.thumb} data-flx="voice.media-player.media-progress-bar.thumb" />
 			{shouldRenderTooltip && (
 				<div
 					ref={tooltipAnchorRef}

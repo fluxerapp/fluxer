@@ -14,6 +14,7 @@ function signals(overrides: Partial<VideoPlayerRenderSignals> = {}): VideoPlayer
 	return {
 		autoPlay: false,
 		hasPlayed: false,
+		wantsMetadata: false,
 		isPlaying: false,
 		isPaused: true,
 		isEnded: false,
@@ -97,5 +98,57 @@ describe('VideoPlayerRenderStateMachine', () => {
 
 		snapshot = observePlayback(snapshot, true, true);
 		expect(selectVideoPlayerPlayPauseIndicator(snapshot)).toBeNull();
+	});
+});
+
+describe('video player preload rungs', () => {
+	it('holds a resting player at the bottom rung with nothing attached', () => {
+		const model = selectVideoPlayerRenderModel(signals());
+
+		expect(model.shouldAttachSource).toBe(false);
+		expect(model.preloadAttribute).toBe('none');
+	});
+
+	it('climbs to the metadata rung on interest without committing to playback', () => {
+		const model = selectVideoPlayerRenderModel(signals({wantsMetadata: true}));
+
+		expect(model.shouldAttachSource).toBe(true);
+		expect(model.preloadAttribute).toBe('metadata');
+		expect(model.shouldHideVideo).toBe(true);
+		expect(model.shouldShowPosterOverlay).toBe(true);
+	});
+
+	it('hands the element over to the browser once playback has started', () => {
+		const model = selectVideoPlayerRenderModel(signals({hasPlayed: true, wantsMetadata: true}));
+
+		expect(model.shouldAttachSource).toBe(true);
+		expect(model.preloadAttribute).toBeUndefined();
+	});
+
+	it('does not climb back down when playback pauses', () => {
+		const model = selectVideoPlayerRenderModel(
+			signals({hasPlayed: true, wantsMetadata: true, isPlaying: false, isPaused: true}),
+		);
+
+		expect(model.shouldAttachSource).toBe(true);
+		expect(model.preloadAttribute).toBeUndefined();
+	});
+
+	it('keeps an autoplaying player off the metadata rung, since it goes straight to playback', () => {
+		const resting = selectVideoPlayerRenderModel(signals({autoPlay: true}));
+		const playing = selectVideoPlayerRenderModel(signals({autoPlay: true, hasPlayed: true}));
+
+		expect(resting.preloadAttribute).toBe('none');
+		expect(playing.preloadAttribute).toBeUndefined();
+	});
+
+	it('separates the three rungs from one another', () => {
+		const rungs = [
+			selectVideoPlayerRenderModel(signals()).preloadAttribute,
+			selectVideoPlayerRenderModel(signals({wantsMetadata: true})).preloadAttribute,
+			selectVideoPlayerRenderModel(signals({hasPlayed: true})).preloadAttribute,
+		];
+
+		expect(rungs).toEqual(['none', 'metadata', undefined]);
 	});
 });
