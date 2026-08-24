@@ -1568,13 +1568,12 @@ async fn serve_asset_image(
         max_encode_frames: Some(app.cfg.max_encode_frames),
         max_encode_duration_ms: Some(app.cfg.max_encode_duration_ms),
     };
-    let cache_key = format!(
-        "asset:{}:{}:{}:{}:{}",
-        asset.storage_key,
-        selected.size.unwrap_or(0),
-        out_ext.name(),
-        quality,
-        animated
+    let cache_key = asset_transform_cache_key(
+        &asset.storage_key,
+        selected.size,
+        out_ext,
+        &quality,
+        animated,
     );
     if let Some(cached) = app.transform_cache.get(&cache_key) {
         metrics::GLOBAL
@@ -2144,7 +2143,7 @@ async fn serve_bytes_or_transform(app: &Arc<AppState>, request: ServeBytesReques
         let quality = params
             .get("quality")
             .cloned()
-            .unwrap_or_else(|| "lossless".to_owned());
+            .unwrap_or_else(|| "high".to_owned());
         let cache_key = transform_cache_key(TransformCacheKeyInput {
             route,
             cache_identity,
@@ -2267,10 +2266,14 @@ async fn serve_bytes_or_transform(app: &Arc<AppState>, request: ServeBytesReques
         format,
         &content_type,
     );
-    let quality = params
-        .get("quality")
-        .cloned()
-        .unwrap_or_else(|| default_transform_quality(format, animated, "lossless").to_owned());
+    let quality = params.get("quality").cloned().unwrap_or_else(|| {
+        default_transform_quality(
+            format,
+            animated,
+            transform_static_quality_default(source_format),
+        )
+        .to_owned()
+    });
     let effort = (route == TransformRoute::Attachment)
         .then(|| parse_effort(params))
         .flatten();
@@ -2636,6 +2639,8 @@ fn text_with_reason(status: StatusCode, body: &str, code: &'static str) -> Respo
     text_inner(status, body, Some(ErrorReason::new(code)))
 }
 
+const ERROR_CACHE_CONTROL: &str = "no-store";
+
 fn text_inner(status: StatusCode, body: &str, reason: Option<ErrorReason>) -> Response {
     let mut response = Response::new(Body::from(body.to_owned()));
     *response.status_mut() = status;
@@ -2649,6 +2654,10 @@ fn text_inner(status: StatusCode, body: &str, reason: Option<ErrorReason>) -> Re
         HeaderValue::from_static("nosniff"),
     );
     if status.is_client_error() || status.is_server_error() {
+        response.headers_mut().insert(
+            header::CACHE_CONTROL,
+            HeaderValue::from_static(ERROR_CACHE_CONTROL),
+        );
         response
             .extensions_mut()
             .insert(reason.unwrap_or_else(|| ErrorReason::new(canonical_reason_str(status))));
@@ -2668,6 +2677,12 @@ fn json_response(status: StatusCode, body: String) -> Response {
         header::CONTENT_TYPE,
         HeaderValue::from_static("application/json"),
     );
+    if status.is_client_error() || status.is_server_error() {
+        response.headers_mut().insert(
+            header::CACHE_CONTROL,
+            HeaderValue::from_static(ERROR_CACHE_CONTROL),
+        );
+    }
     response
 }
 
@@ -2685,7 +2700,6 @@ fn bool_param(params: &HashMap<String, String>, key: &str, default_value: bool) 
 fn animated_param(params: &HashMap<String, String>, default_value: bool) -> bool {
     params
         .get("animated")
-        .or_else(|| params.get("animatd"))
         .map(|raw| raw.eq_ignore_ascii_case("true") || raw == "1")
         .unwrap_or(default_value)
 }
@@ -2759,6 +2773,17 @@ fn default_transform_quality(format: AssetExtension, animated: bool, static_defa
         "auto"
     } else {
         static_default
+    }
+}
+
+fn transform_static_quality_default(source_ext: Option<AssetExtension>) -> &'static str {
+    if matches!(
+        source_ext,
+        Some(AssetExtension::Jpeg | AssetExtension::Heic | AssetExtension::Heif)
+    ) {
+        "high"
+    } else {
+        "lossless"
     }
 }
 
@@ -2974,6 +2999,20 @@ struct TransformCacheKeyInput<'a> {
     effort: Option<u8>,
 }
 
+fn asset_transform_cache_key(
+    storage_key: &str,
+    size: Option<u32>,
+    out_ext: AssetExtension,
+    quality: &str,
+    animated: bool,
+) -> String {
+    format!(
+        "asset:{storage_key}:{}:{}:{quality}:{animated}",
+        size.unwrap_or(0),
+        out_ext.name()
+    )
+}
+
 fn transform_cache_key(input: TransformCacheKeyInput<'_>) -> String {
     let prefix = match input.route {
         TransformRoute::Attachment => "attachment",
@@ -3083,6 +3122,211 @@ mod tests {
     use super::*;
     use base64::engine::general_purpose::STANDARD;
 
+    fn avatar_cache_key_for_requested_size(raw: &str) -> String {
+        let size = constants::parse_image_size(Some(raw));
+        let selected = output_format::select_url_variant(output_format::Input {
+            kind: AssetKind::Avatar,
+            original: AssetExtension::Webp,
+            requested_size: Some(size),
+            manual_format_override: None,
+        });
+        asset_transform_cache_key(
+            "avatars/852813040100737024/hash",
+            selected.size,
+            selected.format,
+            "high",
+            false,
+        )
+    }
+
+    #[test]
+    fn lossy_source_transform_defaults_to_lossy_output() {
+        for lossy in [
+            AssetExtension::Jpeg,
+            AssetExtension::Heic,
+            AssetExtension::Heif,
+        ] {
+            assert_eq!(
+                "high",
+                default_transform_quality(
+                    AssetExtension::Webp,
+                    false,
+                    transform_static_quality_default(Some(lossy))
+                ),
+                "{} source must not be re-encoded losslessly",
+                lossy.name()
+            );
+        }
+        for lossless in [
+            AssetExtension::Png,
+            AssetExtension::Apng,
+            AssetExtension::Gif,
+            AssetExtension::Avif,
+            AssetExtension::Webp,
+        ] {
+            assert_eq!(
+                "lossless",
+                default_transform_quality(
+                    AssetExtension::Webp,
+                    false,
+                    transform_static_quality_default(Some(lossless))
+                ),
+                "{} source must keep the lossless default",
+                lossless.name()
+            );
+        }
+        assert_eq!(
+            "lossless",
+            default_transform_quality(
+                AssetExtension::Webp,
+                false,
+                transform_static_quality_default(None)
+            )
+        );
+        assert_eq!(
+            "auto",
+            default_transform_quality(
+                AssetExtension::Webp,
+                true,
+                transform_static_quality_default(Some(AssetExtension::Jpeg))
+            )
+        );
+    }
+    const TRANSFORM_FIXTURE_JPEG_B64: &str = "/9j/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCAAbADADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwCLyfakMB9Kd/a8B+7Y3B/Kj+1rcplrO5B9lFe77VHgcnmQtD61XeP2q3PqlnHCZPs9ycYBAjB5P44qtPqUC3QgjtpZcjkqORxnp/8AXqfbw7lqjNq5WeP2qB4TV5b2OQgfY5F3EhS5Cg468n60yxheaaR1QGFizHL8/gOKmWJhFlRoSktC0tlcEZa5Ix7mmTw3W1Y4b2NVByxOQW+pweKLm6mjVtj4x04Bq/YSvPp8MkjbmYHJ6ZrzalRuNzWlT5XcoxWZkRXkkEjR/wDPLkdf7vrU7Wz6ltaUynyycK4Ix71fUc4ycD3rL8TzyxaJIsblQ7qjY7g9axdRvQ6Iwv1Kt/qul6aDGG+0SLwUiIIGfU9PyrJHiooT5dhGsZ52lufrWckafZAdozj/ABqrdHBwOwFPmbNY0oLof//Z";
+    const TRANSFORM_FIXTURE_PNG_B64: &str = "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwEAIAAACI8LKTAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRP///////wlY99wAAAAHdElNRQfqCBUDKiB6/yyRAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI2LTA4LTIxVDAzOjQyOjMyKzAwOjAwHW75GgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNi0wOC0yMVQwMzo0MjozMiswMDowMGwzQaYAAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjYtMDgtMjFUMDM6NDI6MzIrMDA6MDA7JmB5AAABR0lEQVRo3u3boRYBURCA4X/O2RUoyhYKRaYoZF3SPQLPsd5Al3SZopAVCmWLQlmBJ1gTZ8J8T/CfPbNz94aV75fwR/JZQbqwzvBL3i2oP6wz/JLnBpoz6wy/pBhCdrTO8Evue2iPrTP8ktsUOlvrDL/kcoVe1zrDrzjmFXIqYZBaZ/iVfHJIl9YZfskhg1FhneFXUq6gFjuokuz6MDlbZ/gVE6SIY16RlDnU4hSrFBOkkPUL5g3rDL9ighTxgBSxpBUxQYr4UFTEbV4RE6SIHaSIU0wRE6SQeQPWL+sMv+IVU8QrpogJUsQEKWRyhl3fOsOvuGooZFTAIbPO8Ct2kEIGKZxK6wy/4javkF4XLlfrDL+ks4Xb1DrDL2mP4b63zvBLsiMUQ+sMv6Q5g+fGOsMvqT/g3bLO8EvSBZS5dYZfAhC/RFX7AbalYE7qXJRZAAAAAElFTkSuQmCC";
+    const TRANSFORM_FIXTURE_MP4_B64: &str = "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";
+
+    async fn transform_qualities_reaching_the_encoder(
+        fixture_b64: &str,
+        content_type: &str,
+        filename: &str,
+    ) -> Vec<String> {
+        let tmp = tempfile::tempdir().unwrap();
+        let cfg =
+            upload_relay_test_config(tmp.path(), tmp.path(), b"01234567890123456789012345678901");
+        let app = test_app_state(cfg);
+        let params = HashMap::from([
+            ("format".to_owned(), "webp".to_owned()),
+            ("width".to_owned(), "32".to_owned()),
+        ]);
+        let headers = HeaderMap::new();
+        let response = serve_bytes_or_transform(
+            &app,
+            ServeBytesRequest {
+                method: Method::GET,
+                data: Bytes::from(STANDARD.decode(fixture_b64).unwrap()),
+                content_type: content_type.to_owned(),
+                cache_identity: filename,
+                filename,
+                route: TransformRoute::Attachment,
+                params: &params,
+                headers: &headers,
+            },
+        )
+        .await;
+        assert_eq!(
+            StatusCode::OK,
+            response.status(),
+            "{filename} did not reach the transform path"
+        );
+        ["lossless", "high", "auto", "low"]
+            .into_iter()
+            .filter(|quality| {
+                app.transform_cache
+                    .get(&transform_cache_key(TransformCacheKeyInput {
+                        route: TransformRoute::Attachment,
+                        cache_identity: filename,
+                        width: Some(32),
+                        height: None,
+                        format: AssetExtension::Webp,
+                        quality,
+                        animated: false,
+                        effort: None,
+                    }))
+                    .is_some()
+            })
+            .map(str::to_owned)
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn image_transform_route_sends_lossy_sources_to_a_lossy_encode() {
+        assert_eq!(
+            vec!["high".to_owned()],
+            transform_qualities_reaching_the_encoder(
+                TRANSFORM_FIXTURE_JPEG_B64,
+                "image/jpeg",
+                "photo.jpg"
+            )
+            .await,
+            "a jpeg attachment must not be re-encoded losslessly"
+        );
+        assert_eq!(
+            vec!["lossless".to_owned()],
+            transform_qualities_reaching_the_encoder(
+                TRANSFORM_FIXTURE_PNG_B64,
+                "image/png",
+                "art.png"
+            )
+            .await,
+            "a png attachment must keep the lossless encode"
+        );
+    }
+
+    #[tokio::test]
+    async fn video_poster_transform_route_sends_decoded_frames_to_a_lossy_encode() {
+        assert_eq!(
+            vec!["high".to_owned()],
+            transform_qualities_reaching_the_encoder(
+                TRANSFORM_FIXTURE_MP4_B64,
+                "video/mp4",
+                "clip.mp4"
+            )
+            .await,
+            "a decoded video frame is already lossy and must not be re-encoded losslessly"
+        );
+    }
+
+    #[test]
+    fn requested_sizes_off_the_ladder_share_the_cache_key_of_the_rung_they_snap_to() {
+        let canonical = avatar_cache_key_for_requested_size("1024");
+        assert_eq!(
+            "asset:avatars/852813040100737024/hash:1024:webp:high:false",
+            canonical
+        );
+        for raw in ["641", "700", "1000", "1023", "1024"] {
+            assert_eq!(
+                canonical,
+                avatar_cache_key_for_requested_size(raw),
+                "size={raw} minted a second cache key"
+            );
+        }
+        let floor = avatar_cache_key_for_requested_size("128");
+        assert_eq!(
+            "asset:avatars/852813040100737024/hash:128:webp:high:false",
+            floor
+        );
+        for raw in ["1", "17", "20", "100", "128"] {
+            assert_eq!(
+                floor,
+                avatar_cache_key_for_requested_size(raw),
+                "size={raw} minted a second cache key"
+            );
+        }
+    }
+
+    #[test]
+    fn requested_sizes_on_different_rungs_keep_distinct_cache_keys() {
+        assert_ne!(
+            avatar_cache_key_for_requested_size("300"),
+            avatar_cache_key_for_requested_size("512")
+        );
+        assert_ne!(
+            avatar_cache_key_for_requested_size("300"),
+            avatar_cache_key_for_requested_size("1000")
+        );
+    }
+
     async fn robots_header_for(mode: DeploymentMode) -> Option<String> {
         use axum::{body::Body, http::Request, routing::get};
         let router = Router::new()
@@ -3184,6 +3428,111 @@ mod tests {
             native_transforms: TimedSemaphore::new(cfg.max_native_transforms),
             cfg,
         })
+    }
+
+    fn static_mode_test_config(storage_root: &std::path::Path) -> Config {
+        Config::load_from_iter([
+            (
+                "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
+                "secret".to_owned(),
+            ),
+            ("FLUXER_MEDIA_PROXY_MODE".to_owned(), "static".to_owned()),
+            (
+                "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
+                "local".to_owned(),
+            ),
+            (
+                "FLUXER_MEDIA_PROXY_STORAGE_ROOT".to_owned(),
+                storage_root.display().to_string(),
+            ),
+        ])
+        .unwrap()
+    }
+
+    async fn static_mode_cache_control(
+        key: &str,
+        body: &[u8],
+        content_type: &str,
+    ) -> Option<String> {
+        use axum::{body::Body, http::Request};
+        let tmp = tempfile::tempdir().unwrap();
+        let cfg = static_mode_test_config(&tmp.path().canonicalize().unwrap());
+        let bucket = cfg.bucket_static.clone();
+        let state = test_app_state(cfg);
+        state
+            .store
+            .write_object(&bucket, key, body, content_type)
+            .await
+            .unwrap();
+        let router = Router::new()
+            .fallback(any(catch_all))
+            .with_state(Arc::clone(&state));
+        let response = tower::ServiceExt::oneshot(
+            router,
+            Request::builder()
+                .uri(format!("/{key}"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(StatusCode::OK, response.status(), "key={key}");
+        response
+            .headers()
+            .get(header::CACHE_CONTROL)
+            .map(|value| value.to_str().unwrap().to_owned())
+    }
+
+    #[tokio::test]
+    async fn static_mode_caches_every_asset_forever() {
+        assert_eq!(
+            Some("public, max-age=31536000".to_owned()),
+            static_mode_cache_control("avatars/0.png", b"\x89PNG\r\n\x1a\n", "image/png").await
+        );
+        assert_eq!(
+            Some("public, max-age=31536000".to_owned()),
+            static_mode_cache_control("web/favicon.ico", b"icon", "image/x-icon").await
+        );
+        assert_eq!(
+            Some("public, max-age=31536000".to_owned()),
+            static_mode_cache_control("emoji/1f600.svg", b"<svg/>", "image/svg+xml").await
+        );
+        assert_eq!(
+            Some("public, max-age=31536000".to_owned()),
+            static_mode_cache_control("web/NOTICE.md", b"notice", "text/markdown").await
+        );
+    }
+
+    #[tokio::test]
+    async fn static_mode_omits_expires_and_relies_on_cache_control() {
+        use axum::{body::Body, http::Request};
+        let tmp = tempfile::tempdir().unwrap();
+        let cfg = static_mode_test_config(&tmp.path().canonicalize().unwrap());
+        let bucket = cfg.bucket_static.clone();
+        let state = test_app_state(cfg);
+        state
+            .store
+            .write_object(&bucket, "avatars/0.png", b"png", "image/png")
+            .await
+            .unwrap();
+        let router = Router::new()
+            .fallback(any(catch_all))
+            .with_state(Arc::clone(&state));
+        let response = tower::ServiceExt::oneshot(
+            router,
+            Request::builder()
+                .uri("/avatars/0.png")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(StatusCode::OK, response.status());
+        assert!(response.headers().get(header::EXPIRES).is_none());
+        assert_eq!(
+            "public, max-age=31536000",
+            response.headers().get("CDN-Cache-Control").unwrap()
+        );
     }
 
     #[test]
@@ -3548,6 +3897,82 @@ mod tests {
         assert_eq!(b"abcd", body.as_ref());
     }
 
+    fn cache_control_of(response: &Response) -> &str {
+        response
+            .headers()
+            .get(header::CACHE_CONTROL)
+            .expect("cache-control is always set")
+            .to_str()
+            .expect("cache-control is ASCII")
+    }
+
+    #[tokio::test]
+    async fn external_streaming_response_caches_forever() {
+        for (content_type, expected) in [
+            ("video/mp4", "public, max-age=31536000, no-transform"),
+            ("image/webp", "public, max-age=31536000"),
+        ] {
+            let upstream = reqwest::Response::from(
+                http::Response::builder()
+                    .status(StatusCode::OK)
+                    .body("streamed bytes")
+                    .unwrap(),
+            );
+            let response =
+                external_streaming_response(Method::GET, upstream, 14, content_type, None);
+
+            assert_eq!(
+                expected,
+                cache_control_of(&response),
+                "content_type={content_type}"
+            );
+        }
+    }
+
+    #[test]
+    fn external_partial_response_caches_forever() {
+        let fetched = FetchedExternal {
+            url: "https://media.example.test/clip.webm".to_owned(),
+            status: StatusCode::PARTIAL_CONTENT,
+            body: ExternalBody::Buffered(Bytes::from_static(b"abcd")),
+            content_type: "video/webm".to_owned(),
+            content_range: Some("bytes 0-3/10".to_owned()),
+        };
+        let response = external_partial_response(Method::GET, fetched, None);
+
+        assert_eq!(
+            "public, max-age=31536000, no-transform",
+            cache_control_of(&response)
+        );
+    }
+
+    #[test]
+    fn stored_media_responses_cache_forever() {
+        let response = media_response(
+            Method::GET,
+            Bytes::from_static(b"stored bytes"),
+            "image/webp",
+            None,
+            None,
+        );
+        assert_eq!("public, max-age=31536000", cache_control_of(&response));
+
+        let streamable = media_response(
+            Method::GET,
+            Bytes::from_static(b"stored bytes"),
+            "video/mp4",
+            None,
+            None,
+        );
+        assert_eq!(
+            "public, max-age=31536000, no-transform",
+            cache_control_of(&streamable)
+        );
+
+        let head = passthrough_head_response("image/webp", 12, None, None);
+        assert_eq!("public, max-age=31536000", cache_control_of(&head));
+    }
+
     #[test]
     fn external_partial_response_uses_media_headers() {
         let fetched = FetchedExternal {
@@ -3777,6 +4202,28 @@ mod tests {
         );
     }
 
+    #[test]
+    fn error_responses_declare_an_explicit_no_store_policy() {
+        for status in [
+            StatusCode::NOT_FOUND,
+            StatusCode::BAD_GATEWAY,
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ] {
+            let response = text(status, "nope");
+            assert_eq!(
+                response.headers().get(header::CACHE_CONTROL).unwrap(),
+                "no-store",
+                "status {status} must not be cacheable"
+            );
+        }
+    }
+
+    #[test]
+    fn successful_text_responses_are_left_to_the_media_cache_policy() {
+        let response = text(StatusCode::OK, "fine");
+        assert!(response.headers().get(header::CACHE_CONTROL).is_none());
+    }
+
     #[tokio::test]
     async fn relay_put_rejects_streaming_body_shorter_than_declared() {
         let tmp = tempfile::tempdir().unwrap();
@@ -3917,6 +4364,10 @@ mod tests {
             )
         );
         assert!(animated_param(
+            &HashMap::from([("animated".to_owned(), "true".to_owned())]),
+            false
+        ));
+        assert!(!animated_param(
             &HashMap::from([("animatd".to_owned(), "true".to_owned())]),
             false
         ));
