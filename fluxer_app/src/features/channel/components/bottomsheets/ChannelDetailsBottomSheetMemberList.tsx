@@ -31,12 +31,13 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
 import {GuildFeatures, GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {MEDIA_PROXY_AVATAR_SIZE_DEFAULT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {isOfflineStatus} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef} from 'react';
 
 const COMMUNITY_OWNER_DESCRIPTOR = msg({
 	message: 'Community owner',
@@ -46,8 +47,6 @@ const MEMBER_ITEM_HEIGHT = 56;
 const INITIAL_MEMBER_RANGE: [number, number] = [0, MEMBER_LIST_RANGE_MAX_SPAN];
 const SCROLL_BUFFER_ROWS = 10;
 const SUBSCRIPTION_OVERSCAN_PAGES = 0;
-const AVATAR_DEFER_AFTER_SCROLL_IDLE_MS = 180;
-const MEMBER_LIST_AVATAR_MEDIA_SIZE = 80;
 
 function isScrollableOverflow(value: string): boolean {
 	return value === 'auto' || value === 'scroll' || value === 'overlay';
@@ -109,13 +108,11 @@ export const MobileMemberListItem = observer(
 		guild,
 		channelId,
 		member,
-		deferAvatarLoad = false,
 		onLongPress,
 	}: {
 		guild: Guild;
 		channelId: string;
 		member: GuildMember;
-		deferAvatarLoad?: boolean;
 		onLongPress?: (member: GuildMember) => void;
 	}) => {
 		const {i18n} = useLingui();
@@ -140,7 +137,7 @@ export const MobileMemberListItem = observer(
 					memberAvatar: member.avatar,
 					avatarUnset: member.isAvatarUnset(),
 					animated: false,
-					size: MEMBER_LIST_AVATAR_MEDIA_SIZE,
+					size: MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 				}),
 			[guild.id, member],
 		);
@@ -152,7 +149,7 @@ export const MobileMemberListItem = observer(
 					memberAvatar: member.avatar,
 					avatarUnset: member.isAvatarUnset(),
 					animated: true,
-					size: MEMBER_LIST_AVATAR_MEDIA_SIZE,
+					size: MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 				}),
 			[guild.id, member],
 		);
@@ -180,8 +177,8 @@ export const MobileMemberListItem = observer(
 						status={status}
 						avatarUrl={avatarUrl}
 						hoverAvatarUrl={hoverAvatarUrl}
-						mediaSize={MEMBER_LIST_AVATAR_MEDIA_SIZE}
-							data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.status-aware-avatar"
+						mediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
+						data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.status-aware-avatar"
 					/>
 					<div
 						className={styles.memberContent}
@@ -228,7 +225,6 @@ export const MobileMemberListItem = observer(
 								userId={member.user.id}
 								className={styles.memberCustomStatus}
 								showText={true}
-								deferMediaLoad={deferAvatarLoad}
 								data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.member-custom-status"
 							/>
 						)}
@@ -256,12 +252,11 @@ interface LazyMemberListGroupProps {
 	group: {id: string; count: number};
 	channelId: string;
 	members: Array<GuildMember>;
-	deferAvatarLoad?: boolean;
 	onMemberLongPress?: (member: GuildMember) => void;
 }
 
 const LazyMemberListGroup = observer(
-	({guild, group, channelId, members, deferAvatarLoad = false, onMemberLongPress}: LazyMemberListGroupProps) => {
+	({guild, group, channelId, members, onMemberLongPress}: LazyMemberListGroupProps) => {
 		const {i18n} = useLingui();
 		const groupName = (() => {
 			switch (group.id) {
@@ -296,7 +291,6 @@ const LazyMemberListGroup = observer(
 								guild={guild}
 								channelId={channelId}
 								member={member}
-								deferAvatarLoad={deferAvatarLoad}
 								onLongPress={onMemberLongPress}
 								data-flx="channel.channel-details-bottom-sheet-member-list.lazy-member-list-group.mobile-member-list-item"
 							/>
@@ -328,8 +322,6 @@ const LazyGuildMemberList = observer(
 		const subscribedRangesRef = useRef<Array<[number, number]>>([INITIAL_MEMBER_RANGE]);
 		const listContainerRef = useRef<HTMLDivElement | null>(null);
 		const scrollAnimationFrameRef = useRef<number | null>(null);
-		const avatarDeferTimerRef = useRef<number | null>(null);
-		const [deferAvatarLoad, setDeferAvatarLoad] = useState(false);
 		const memberListUpdatesDisabled = (guild.disabledOperations & GuildOperations.MEMBER_LIST_UPDATES) !== 0;
 		const currentUserId = Authentication.currentUserId;
 		const lacksMemberViewPermission =
@@ -366,16 +358,6 @@ const LazyGuildMemberList = observer(
 			},
 			[subscribe, totalRows],
 		);
-		const markAvatarLoadingDeferred = useCallback(() => {
-			setDeferAvatarLoad(true);
-			if (avatarDeferTimerRef.current != null) {
-				window.clearTimeout(avatarDeferTimerRef.current);
-			}
-			avatarDeferTimerRef.current = window.setTimeout(() => {
-				avatarDeferTimerRef.current = null;
-				setDeferAvatarLoad(false);
-			}, AVATAR_DEFER_AFTER_SCROLL_IDLE_MS);
-		}, []);
 		useEffect(() => {
 			if (!enabled || memberListUpdatesDisabled || lacksMemberViewPermission) {
 				return;
@@ -393,7 +375,6 @@ const LazyGuildMemberList = observer(
 				updateSubscribedRange(scrollParent.scrollTop, scrollParent.clientHeight);
 			};
 			const handleScroll = () => {
-				markAvatarLoadingDeferred();
 				if (scrollAnimationFrameRef.current !== null) {
 					return;
 				}
@@ -417,18 +398,8 @@ const LazyGuildMemberList = observer(
 					window.cancelAnimationFrame(scrollAnimationFrameRef.current);
 					scrollAnimationFrameRef.current = null;
 				}
-				if (avatarDeferTimerRef.current !== null) {
-					window.clearTimeout(avatarDeferTimerRef.current);
-					avatarDeferTimerRef.current = null;
-				}
 			};
-		}, [
-			enabled,
-			memberListUpdatesDisabled,
-			lacksMemberViewPermission,
-			updateSubscribedRange,
-			markAvatarLoadingDeferred,
-		]);
+		}, [enabled, memberListUpdatesDisabled, lacksMemberViewPermission, updateSubscribedRange]);
 		if (lacksMemberViewPermission) {
 			return (
 				<div
@@ -547,7 +518,6 @@ const LazyGuildMemberList = observer(
 							group={group}
 							channelId={channel.id}
 							members={members}
-							deferAvatarLoad={deferAvatarLoad}
 							onMemberLongPress={onMemberLongPress}
 							data-flx="channel.channel-details-bottom-sheet-member-list.lazy-guild-member-list.lazy-member-list-group"
 						/>

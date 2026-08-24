@@ -18,6 +18,8 @@ import {
 	MEMBER_LIST_GROUP_HEADER_HEIGHT_PX,
 	MEMBER_LIST_ITEM_HEIGHT_PX,
 	MEMBER_LIST_METRICS_STYLE,
+	MEMBER_LIST_SCROLL_CHUNK_PX,
+	MEMBER_LIST_SUBSCRIPTION_VIEWPORT_RATIO,
 } from '@app/features/channel/components/MemberListMetrics';
 import {
 	MemberListSkeleton,
@@ -28,8 +30,6 @@ import {MemberListUnavailableFallback} from '@app/features/channel/components/sh
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {resolveMemberListCustomStatus} from '@app/features/member/hooks/useMemberListCustomStatus';
-import {resolveMemberListPresence} from '@app/features/member/hooks/useMemberListPresence';
 import {useMemberListSubscription} from '@app/features/member/hooks/useMemberListSubscription';
 import {resolveMemberListViewportModel} from '@app/features/member/state/MemberListViewportStateMachine';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
@@ -38,6 +38,7 @@ import {
 	buildMemberListRowOffsets,
 	getGroupLayoutForRow,
 	getTotalRowsFromLayout,
+	quantizeMemberListScrollSpan,
 } from '@app/features/member/utils/MemberListLayout';
 import {
 	areNormalizedMemberListRangesEqual,
@@ -60,6 +61,7 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {MEDIA_PROXY_AVATAR_SIZE_DEFAULT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {useLingui as useLinguiRuntime} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
@@ -72,11 +74,10 @@ const INITIAL_RENDER_RANGE: [number, number] = [0, 64];
 const INITIAL_SUBSCRIPTION_RANGES = normalizeMemberListRanges([INITIAL_SUBSCRIPTION_RANGE]);
 const INITIAL_RENDER_RANGES = normalizeMemberListRanges([INITIAL_RENDER_RANGE]);
 const EMPTY_MEMBER_LIST_RANGES = normalizeMemberListRanges([]);
-const SUBSCRIPTION_BUFFER_ROWS = 12;
 const SUBSCRIPTION_OVERSCAN_PAGES = 0;
-const RENDER_BUFFER_ROWS = 6;
-const AVATAR_DEFER_AFTER_SCROLL_IDLE_MS = 180;
-const MEMBER_LIST_AVATAR_MEDIA_SIZE = 64;
+const MIN_SUBSCRIPTION_BUFFER_ROWS = 1;
+const RESIDENT_SUBSCRIPTION_RANGE: [number, number] = [0, MEMBER_LIST_RANGE_MAX_SPAN];
+const EMPTY_MEMBER_GROUPS: NonNullable<ReturnType<typeof MemberSidebar.getList>>['groups'] = [];
 
 function measureMemberGroupHeadingWidthPx(element: HTMLElement | null): number {
 	if (element == null) {
@@ -95,36 +96,41 @@ function measureMemberGroupHeadingWidthPx(element: HTMLElement | null): number {
 	return Math.round((right - left) / getRemScaleForDocument(element.ownerDocument));
 }
 
-function createGroupHeadingRegistrar(groupHeadingWidths: Map<string, number>): (node: HTMLDivElement | null) => void {
-	return (node) => {
-		if (node == null) {
-			return;
-		}
-		const groupId = node.dataset.memberGroupId;
-		if (groupId == null) {
-			return;
-		}
-		const widthPx = measureMemberGroupHeadingWidthPx(node);
-		if (widthPx !== SKELETON_UNMEASURED_WIDTH_PX) {
-			groupHeadingWidths.set(groupId, widthPx);
-		}
-	};
-}
-
 interface GroupHeadingWidthTracking {
-	contentKey: string;
 	groupHeadingWidths: Map<string, number>;
 	registerGroupHeading: (node: HTMLDivElement | null) => void;
+	captureGroupHeadingWidths: () => void;
 }
 
-function useGroupHeadingWidthTracking(contentKey: string): GroupHeadingWidthTracking {
+function useGroupHeadingWidthTracking(): GroupHeadingWidthTracking {
 	const trackingRef = useRef<GroupHeadingWidthTracking | null>(null);
-	if (trackingRef.current == null || trackingRef.current.contentKey !== contentKey) {
-		const groupHeadingWidths = trackingRef.current?.groupHeadingWidths ?? new Map<string, number>();
+	if (trackingRef.current == null) {
+		const groupHeadingWidths = new Map<string, number>();
+		const groupHeadingNodes = new Map<string, HTMLDivElement>();
 		trackingRef.current = {
-			contentKey,
 			groupHeadingWidths,
-			registerGroupHeading: createGroupHeadingRegistrar(groupHeadingWidths),
+			registerGroupHeading: (node) => {
+				if (node == null) {
+					return;
+				}
+				const groupId = node.dataset.memberGroupId;
+				if (groupId == null) {
+					return;
+				}
+				groupHeadingNodes.set(groupId, node);
+			},
+			captureGroupHeadingWidths: () => {
+				for (const [groupId, node] of groupHeadingNodes) {
+					if (!node.isConnected) {
+						groupHeadingNodes.delete(groupId);
+						continue;
+					}
+					const widthPx = measureMemberGroupHeadingWidthPx(node);
+					if (widthPx !== SKELETON_UNMEASURED_WIDTH_PX) {
+						groupHeadingWidths.set(groupId, widthPx);
+					}
+				}
+			},
 		};
 	}
 	return trackingRef.current;
@@ -211,12 +217,10 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 	const subscriptionRangesRef = useRef<NormalizedMemberListRanges>(INITIAL_SUBSCRIPTION_RANGES);
 	const renderRangesRef = useRef<NormalizedMemberListRanges>(INITIAL_RENDER_RANGES);
 	const scrollFrameRef = useRef<number | null>(null);
-	const avatarDeferTimerRef = useRef<number | null>(null);
-	const avatarDeferDeadlineRef = useRef(0);
 	const pendingScrollMetricsRef = useRef<{scrollTop: number; clientHeight: number} | null>(null);
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
+	const viewportHeightRef = useRef<number | null>(null);
 	const [renderWindowRanges, setRenderWindowRanges] = useState<NormalizedMemberListRanges>(INITIAL_RENDER_RANGES);
-	const [deferAvatarLoad, setDeferAvatarLoad] = useState(false);
 	const memberListIdentityKey = MemberSidebar.getListIdentityKey(guild.id, channel.id);
 	const memberListUpdatesDisabled = (guild.disabledOperations & GuildOperations.MEMBER_LIST_UPDATES) !== 0;
 	const currentUserId = Authentication.currentUserId;
@@ -229,10 +233,10 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 	});
 	const memberListState = MemberSidebar.getList(guild.id, channel.id);
 	const memberCount = memberListState?.memberCount ?? 0;
-	const groups = memberListState?.groups ?? [];
+	const groups = memberListState?.groups ?? EMPTY_MEMBER_GROUPS;
 	const populatedGroups = useMemo(() => groups.filter((group) => group.count > 0), [groups]);
 	const memberGroupCountsKey = populatedGroups.map((group) => `${group.id}:${group.count}`).join(',');
-	const {groupHeadingWidths, registerGroupHeading} = useGroupHeadingWidthTracking(memberGroupCountsKey);
+	const {groupHeadingWidths, registerGroupHeading, captureGroupHeadingWidths} = useGroupHeadingWidthTracking();
 	const memberSurfaceKind =
 		channel.type === ChannelTypes.GUILD_VOICE ? SkeletonMemberSurfaceKind.GUILD_VOICE : SkeletonMemberSurfaceKind.GUILD;
 	const rememberedMemberGroups = getRememberedSkeletonMemberGroups(channel.id, memberSurfaceKind);
@@ -248,6 +252,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 	const remScale = getAppRemScale();
 	const scaledMemberItemHeight = MEMBER_LIST_ITEM_HEIGHT_PX * remScale;
 	const scaledGroupHeaderHeight = MEMBER_LIST_GROUP_HEADER_HEIGHT_PX * remScale;
+	const scaledScrollChunk = MEMBER_LIST_SCROLL_CHUNK_PX * remScale;
 	const rowOffsets = useMemo(
 		() =>
 			layouts.length > 0
@@ -280,6 +285,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 			if (memberListUpdatesDisabled || lacksMemberViewPermission || !memberListState?.hasReceivedInitialPayload) {
 				return;
 			}
+			captureGroupHeadingWidths();
 			reportSkeletonMemberLayout(
 				channel.id,
 				memberSurfaceKind,
@@ -305,21 +311,29 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 	);
 	const commitRangeUpdate = useCallback(
 		(scrollTop: number, clientHeight: number) => {
-			const nextSubscriptionRanges = buildMemberListRangeWindow({
-				scrollTop,
-				clientHeight,
-				rowHeight: scaledMemberItemHeight,
-				rowOffsets,
-				bufferRows: SUBSCRIPTION_BUFFER_ROWS,
-				overscanPages: SUBSCRIPTION_OVERSCAN_PAGES,
-				totalRows: totalRows > 0 ? totalRows : undefined,
-			});
+			const subscriptionBufferRows = Math.max(
+				MIN_SUBSCRIPTION_BUFFER_ROWS,
+				Math.ceil((clientHeight * MEMBER_LIST_SUBSCRIPTION_VIEWPORT_RATIO) / scaledMemberItemHeight),
+			);
+			const nextSubscriptionRanges = normalizeMemberListRanges([
+				RESIDENT_SUBSCRIPTION_RANGE,
+				...buildMemberListRangeWindow({
+					scrollTop,
+					clientHeight,
+					rowHeight: scaledMemberItemHeight,
+					rowOffsets,
+					bufferRows: subscriptionBufferRows,
+					overscanPages: SUBSCRIPTION_OVERSCAN_PAGES,
+					totalRows: totalRows > 0 ? totalRows : undefined,
+				}),
+			]);
+			const renderSpan = quantizeMemberListScrollSpan(scrollTop, clientHeight, scaledScrollChunk);
 			const nextRenderRanges = buildMemberListRenderWindow({
-				scrollTop,
-				clientHeight,
+				scrollTop: renderSpan.top,
+				clientHeight: renderSpan.height,
 				rowHeight: scaledMemberItemHeight,
 				rowOffsets,
-				bufferRows: RENDER_BUFFER_ROWS,
+				bufferRows: 0,
 				totalRows: totalRows > 0 ? totalRows : undefined,
 			});
 			if (!areNormalizedMemberListRangesEqual(nextRenderRanges, renderRangesRef.current)) {
@@ -331,29 +345,8 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				subscribe(nextSubscriptionRanges);
 			}
 		},
-		[subscribe, totalRows, rowOffsets, scaledMemberItemHeight, zoomLevel],
+		[subscribe, totalRows, rowOffsets, scaledMemberItemHeight, scaledScrollChunk, zoomLevel],
 	);
-	const finishAvatarLoadingDeferralAfterIdle = useCallback(() => {
-		avatarDeferTimerRef.current = null;
-		const remainingMs = avatarDeferDeadlineRef.current - performance.now();
-		if (remainingMs > 0) {
-			avatarDeferTimerRef.current = window.setTimeout(finishAvatarLoadingDeferralAfterIdle, remainingMs);
-			return;
-		}
-		setDeferAvatarLoad(false);
-	}, []);
-	const markAvatarLoadingDeferred = useCallback(() => {
-		if (!deferAvatarLoad) {
-			setDeferAvatarLoad(true);
-		}
-		avatarDeferDeadlineRef.current = performance.now() + AVATAR_DEFER_AFTER_SCROLL_IDLE_MS;
-		if (avatarDeferTimerRef.current == null) {
-			avatarDeferTimerRef.current = window.setTimeout(
-				finishAvatarLoadingDeferralAfterIdle,
-				AVATAR_DEFER_AFTER_SCROLL_IDLE_MS,
-			);
-		}
-	}, [deferAvatarLoad, finishAvatarLoadingDeferralAfterIdle]);
 	const flushScrollRangeUpdate = useCallback(() => {
 		scrollFrameRef.current = null;
 		const metrics = pendingScrollMetricsRef.current;
@@ -383,20 +376,25 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 	const handleScroll = useCallback(
 		(event: UIEvent<HTMLDivElement>) => {
 			const target = event.currentTarget;
-			markAvatarLoadingDeferred();
-			scheduleRangeUpdate(target.scrollTop, target.clientHeight);
+			let viewportHeight = viewportHeightRef.current;
+			if (viewportHeight == null) {
+				viewportHeight = target.clientHeight;
+				viewportHeightRef.current = viewportHeight;
+			}
+			scheduleRangeUpdate(target.scrollTop, viewportHeight);
 		},
-		[markAvatarLoadingDeferred, scheduleRangeUpdate],
+		[scheduleRangeUpdate],
 	);
 	const handleResize = useCallback(() => {
+		viewportHeightRef.current = null;
 		scheduleRangeUpdateFromScroller();
 	}, [scheduleRangeUpdateFromScroller]);
 	useEffect(() => {
-		setDeferAvatarLoad(false);
 		const initialSubscriptionRanges = INITIAL_SUBSCRIPTION_RANGES;
 		const initialRenderRanges = INITIAL_RENDER_RANGES;
 		subscriptionRangesRef.current = initialSubscriptionRanges;
 		renderRangesRef.current = initialRenderRanges;
+		viewportHeightRef.current = null;
 		setRenderWindowRanges(initialRenderRanges);
 	}, [memberListIdentityKey, guild.id]);
 	useEffect(() => {
@@ -408,11 +406,6 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				window.cancelAnimationFrame(scrollFrameRef.current);
 				scrollFrameRef.current = null;
 			}
-			if (avatarDeferTimerRef.current != null) {
-				window.clearTimeout(avatarDeferTimerRef.current);
-				avatarDeferTimerRef.current = null;
-			}
-			avatarDeferDeadlineRef.current = 0;
 			pendingScrollMetricsRef.current = null;
 		};
 	}, [memberListIdentityKey, guild.id]);
@@ -457,6 +450,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 		);
 	}
 	const virtualRows: Array<ReactNode> = [];
+	const renderedMemberIds = new Set<string>();
 	for (const [rangeStart, rangeEnd] of renderRanges) {
 		const firstRow = Math.max(0, rangeStart);
 		const lastRow = totalRows > 0 ? Math.min(rangeEnd, totalRows - 1) : -1;
@@ -487,19 +481,17 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 					continue;
 				}
 				const user = member.user;
+				if (renderedMemberIds.has(user.id)) {
+					continue;
+				}
+				renderedMemberIds.add(user.id);
 				const displayName = member.nick
 					? NicknameUtils.formatNicknameForStreamerMode(member.nick)
 					: NicknameUtils.getNickname(user, guild.id);
-				const status = resolveMemberListPresence({guildId: guild.id, channelId: channel.id, userId: user.id});
-				const customStatus = resolveMemberListCustomStatus({
-					guildId: guild.id,
-					channelId: channel.id,
-					userId: user.id,
-				});
 				const roleColor = member.getColorString?.() ?? undefined;
 				virtualRows.push(
 					<div
-						key={`member-${rowIndex}-${user.id}`}
+						key={`member-${user.id}`}
 						className={clsx(styles.virtualRow, styles.virtualMemberRow)}
 						style={rowStyle}
 						data-flx="channel.channel-members.lazy-member-list.virtual-row.member"
@@ -509,15 +501,11 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 							channelId={channel.id}
 							guildId={guild.id}
 							guildMember={member}
-							status={status}
-							customStatus={customStatus}
 							isOwner={guild.isOwner(user.id)}
 							roleColor={roleColor}
 							displayName={displayName}
 							disableBackdrop={true}
-							deferAvatarLoad={deferAvatarLoad}
-							deferCustomStatusMedia={deferAvatarLoad}
-							avatarMediaSize={MEMBER_LIST_AVATAR_MEDIA_SIZE}
+							avatarMediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
 							data-flx="channel.channel-members.lazy-member-list.virtual-row.member-list-item"
 						/>
 					</div>,
@@ -542,7 +530,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				if (role) {
 					virtualRows.push(
 						<div
-							key={`group-${rowIndex}-${group.id}`}
+							key={`group-${group.id}`}
 							ref={registerGroupHeading}
 							data-member-group-id={group.id}
 							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
@@ -565,7 +553,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				} else {
 					virtualRows.push(
 						<div
-							key={`group-${rowIndex}-${group.id}`}
+							key={`group-${group.id}`}
 							ref={registerGroupHeading}
 							data-member-group-id={group.id}
 							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
@@ -601,19 +589,17 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				continue;
 			}
 			const user = member.user;
+			if (renderedMemberIds.has(user.id)) {
+				continue;
+			}
+			renderedMemberIds.add(user.id);
 			const displayName = member.nick
 				? NicknameUtils.formatNicknameForStreamerMode(member.nick)
 				: NicknameUtils.getNickname(user, guild.id);
-			const status = resolveMemberListPresence({guildId: guild.id, channelId: channel.id, userId: user.id});
-			const customStatus = resolveMemberListCustomStatus({
-				guildId: guild.id,
-				channelId: channel.id,
-				userId: user.id,
-			});
 			const roleColor = member.getColorString?.() ?? undefined;
 			virtualRows.push(
 				<div
-					key={`member-${rowIndex}-${user.id}`}
+					key={`member-${user.id}`}
 					className={clsx(styles.virtualRow, styles.virtualMemberRow)}
 					style={rowStyle}
 					data-flx="channel.channel-members.lazy-member-list.virtual-row.member--2"
@@ -623,15 +609,11 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 						channelId={channel.id}
 						guildId={guild.id}
 						guildMember={member}
-						status={status}
-						customStatus={customStatus}
 						isOwner={guild.isOwner(user.id)}
 						roleColor={roleColor}
 						displayName={displayName}
 						disableBackdrop={true}
-						deferAvatarLoad={deferAvatarLoad}
-						deferCustomStatusMedia={deferAvatarLoad}
-						avatarMediaSize={MEMBER_LIST_AVATAR_MEDIA_SIZE}
+						avatarMediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
 						data-flx="channel.channel-members.lazy-member-list.virtual-row.member-list-item--2"
 					/>
 				</div>,
@@ -672,8 +654,9 @@ const GroupDMChannelMembers = observer(function GroupDMChannelMembers({channel}:
 	const memberGroupContentKey = memberGroups
 		.map((group) => `${group.id}:${group.displayName}:${group.count}`)
 		.join(',');
-	const {groupHeadingWidths, registerGroupHeading} = useGroupHeadingWidthTracking(memberGroupContentKey);
+	const {groupHeadingWidths, registerGroupHeading, captureGroupHeadingWidths} = useGroupHeadingWidthTracking();
 	useSkeletonLayoutReport(() => {
+		captureGroupHeadingWidths();
 		reportSkeletonMemberLayout(
 			channel.id,
 			SkeletonMemberSurfaceKind.GROUP_DM,
