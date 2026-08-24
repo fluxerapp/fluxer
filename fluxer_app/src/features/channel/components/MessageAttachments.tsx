@@ -281,304 +281,295 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 interface ForwardedMessageContentProps {
 	message: Message;
 	snapshot: MessageSnapshot;
-	shouldAnimate: boolean;
-	interactionHandlers: Record<string, unknown>;
 	onDelete?: (bypassConfirm?: boolean) => void;
 }
 
-export const ForwardedMessageContent = observer(
-	({message, snapshot, shouldAnimate, interactionHandlers, onDelete}: ForwardedMessageContentProps) => {
-		const {i18n} = useLingui();
-		const snapshotIndex = 0;
-		const snapshotEditedTimestamp = snapshot.edited_timestamp ? new Date(snapshot.edited_timestamp) : null;
-		const copyText = useMemo(
-			() =>
-				buildMessageSnapshotCopyText(snapshot, {
-					channelId: message.channelId,
-					messageId: message.id,
-					i18n,
-				}),
-			[i18n.locale, message.channelId, message.id, snapshot],
-		);
-		return (
+export const ForwardedMessageContent = observer(({message, snapshot, onDelete}: ForwardedMessageContentProps) => {
+	const {i18n} = useLingui();
+	const snapshotIndex = 0;
+	const snapshotEditedTimestamp = snapshot.edited_timestamp ? new Date(snapshot.edited_timestamp) : null;
+	const copyText = useMemo(
+		() =>
+			buildMessageSnapshotCopyText(snapshot, {
+				channelId: message.channelId,
+				messageId: message.id,
+				i18n,
+			}),
+		[i18n.locale, message.channelId, message.id, snapshot],
+	);
+	return (
+		<div
+			className={styles.forwardedContainer}
+			data-message-copy-block={copyText ? 'true' : undefined}
+			data-message-copy-text={copyText || undefined}
+			data-flx="channel.message-attachments.forwarded-message-content.forwarded-container"
+		>
 			<div
-				className={styles.forwardedContainer}
-				data-message-copy-block={copyText ? 'true' : undefined}
-				data-message-copy-text={copyText || undefined}
-				data-flx="channel.message-attachments.forwarded-message-content.forwarded-container"
+				className={styles.forwardedBar}
+				data-flx="channel.message-attachments.forwarded-message-content.forwarded-bar"
+			/>
+			<div
+				className={styles.forwardedContent}
+				data-flx="channel.message-attachments.forwarded-message-content.forwarded-content"
 			>
 				<div
-					className={styles.forwardedBar}
-					data-flx="channel.message-attachments.forwarded-message-content.forwarded-bar"
-				/>
-				<div
-					className={styles.forwardedContent}
-					data-flx="channel.message-attachments.forwarded-message-content.forwarded-content"
+					className={styles.forwardedHeader}
+					data-flx="channel.message-attachments.forwarded-message-content.forwarded-header"
 				>
-					<div
-						className={styles.forwardedHeader}
-						data-flx="channel.message-attachments.forwarded-message-content.forwarded-header"
-					>
-						<ArrowBendUpRightIcon
-							className={styles.forwardedIcon}
-							weight="bold"
-							data-flx="channel.message-attachments.forwarded-message-content.forwarded-icon"
-						/>
-						<span
-							className={styles.forwardedLabel}
-							data-flx="channel.message-attachments.forwarded-message-content.forwarded-label"
-						>
-							<Trans>Forwarded</Trans>
-						</span>
-					</div>
-					{snapshot.content && (
-						<div
-							className={clsx(markupStyles.markup)}
-							data-search-highlight-scope="message"
-							data-flx="channel.message-attachments.forwarded-message-content.div"
-						>
-							<SafeMarkdown
-								content={snapshot.content}
-								options={{
-									context: MarkdownContext.STANDARD_WITH_JUMBO,
-									messageId: message.id,
-									channelId: message.channelId,
-									mentionChannels: snapshot.mention_channels,
-								}}
-								data-flx="channel.message-attachments.forwarded-message-content.safe-markdown"
-							/>
-							{snapshotEditedTimestamp && (
-								<TimestampWithTooltip
-									date={snapshotEditedTimestamp}
-									className={messageStyles.editedTimestamp}
-									data-flx="channel.message-attachments.forwarded-message-content.timestamp-with-tooltip"
-								>
-									<span
-										className={messageStyles.editedLabel}
-										data-flx="channel.message-attachments.forwarded-message-content.span"
-									>
-										{' '}
-										<Trans>(edited)</Trans>
-									</span>
-								</TimestampWithTooltip>
-							)}
-						</div>
-					)}
-					{snapshot.attachments && snapshot.attachments.length > 0 && (
-						<div
-							className={styles.attachmentsContainer}
-							data-flx="channel.message-attachments.forwarded-message-content.attachments-container"
-						>
-							{(() => {
-								const {enrichedAttachments, mediaAttachments, shouldUseMosaic} = getAttachmentRenderingState(
-									snapshot.attachments,
-								);
-								return (
-									<>
-										{shouldUseMosaic && (
-											<AttachmentMosaic
-												attachments={mediaAttachments}
-												message={message}
-												snapshotIndex={snapshotIndex}
-												onDelete={onDelete}
-												data-flx="channel.message-attachments.forwarded-message-content.attachment-mosaic"
-											/>
-										)}
-										{enrichedAttachments.map((attachment: MessageAttachment) => (
-											<Attachment
-												key={attachment.id}
-												attachment={attachment}
-												snapshotIndex={snapshotIndex}
-												message={message}
-												renderInMosaic={shouldUseMosaic}
-												onDelete={onDelete}
-												data-flx="channel.message-attachments.forwarded-message-content.attachment"
-											/>
-										))}
-									</>
-								);
-							})()}
-						</div>
-					)}
-					{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.getRenderEmbeds() && (
-						<div
-							className={styles.attachmentsContainer}
-							data-flx="channel.message-attachments.forwarded-message-content.attachments-container--2"
-						>
-							{snapshot.embeds.map((embed: MessageEmbed, index: number) => {
-								const embedKey = `${embed.id}-${index}`;
-								return (
-									<Embed
-										embed={embed}
-										key={embedKey}
-										message={message}
-										embedIndex={index}
-										contextualEmbeds={snapshot.embeds}
-										onDelete={onDelete}
-										isPreview={true}
-										data-flx="channel.message-attachments.forwarded-message-content.embed"
-									/>
-								);
-							})}
-						</div>
-					)}
-					{snapshot.stickers && snapshot.stickers.length > 0 && (
-						<div
-							className={styles.stickersContainer}
-							data-flx="channel.message-attachments.forwarded-message-content.stickers-container"
-						>
-							{snapshot.stickers.map((sticker: MessageStickerItem) => (
-								<StickerItem
-									key={sticker.id}
-									sticker={sticker}
-									message={message}
-									shouldAnimate={shouldAnimate}
-									interactionHandlers={interactionHandlers}
-									handleDelete={onDelete}
-									data-flx="channel.message-attachments.forwarded-message-content.sticker-item"
-								/>
-							))}
-						</div>
-					)}
-					<ForwardedFromSource
-						message={message}
-						data-flx="channel.message-attachments.forwarded-message-content.forwarded-from-source"
+					<ArrowBendUpRightIcon
+						className={styles.forwardedIcon}
+						weight="bold"
+						data-flx="channel.message-attachments.forwarded-message-content.forwarded-icon"
 					/>
+					<span
+						className={styles.forwardedLabel}
+						data-flx="channel.message-attachments.forwarded-message-content.forwarded-label"
+					>
+						<Trans>Forwarded</Trans>
+					</span>
 				</div>
+				{snapshot.content && (
+					<div
+						className={clsx(markupStyles.markup)}
+						data-search-highlight-scope="message"
+						data-flx="channel.message-attachments.forwarded-message-content.div"
+					>
+						<SafeMarkdown
+							content={snapshot.content}
+							options={{
+								context: MarkdownContext.STANDARD_WITH_JUMBO,
+								messageId: message.id,
+								channelId: message.channelId,
+								mentionChannels: snapshot.mention_channels,
+							}}
+							data-flx="channel.message-attachments.forwarded-message-content.safe-markdown"
+						/>
+						{snapshotEditedTimestamp && (
+							<TimestampWithTooltip
+								date={snapshotEditedTimestamp}
+								className={messageStyles.editedTimestamp}
+								data-flx="channel.message-attachments.forwarded-message-content.timestamp-with-tooltip"
+							>
+								<span
+									className={messageStyles.editedLabel}
+									data-flx="channel.message-attachments.forwarded-message-content.span"
+								>
+									{' '}
+									<Trans>(edited)</Trans>
+								</span>
+							</TimestampWithTooltip>
+						)}
+					</div>
+				)}
+				{snapshot.attachments && snapshot.attachments.length > 0 && (
+					<div
+						className={styles.attachmentsContainer}
+						data-flx="channel.message-attachments.forwarded-message-content.attachments-container"
+					>
+						{(() => {
+							const {enrichedAttachments, mediaAttachments, shouldUseMosaic} = getAttachmentRenderingState(
+								snapshot.attachments,
+							);
+							return (
+								<>
+									{shouldUseMosaic && (
+										<AttachmentMosaic
+											attachments={mediaAttachments}
+											message={message}
+											snapshotIndex={snapshotIndex}
+											onDelete={onDelete}
+											data-flx="channel.message-attachments.forwarded-message-content.attachment-mosaic"
+										/>
+									)}
+									{enrichedAttachments.map((attachment: MessageAttachment) => (
+										<Attachment
+											key={attachment.id}
+											attachment={attachment}
+											snapshotIndex={snapshotIndex}
+											message={message}
+											renderInMosaic={shouldUseMosaic}
+											onDelete={onDelete}
+											data-flx="channel.message-attachments.forwarded-message-content.attachment"
+										/>
+									))}
+								</>
+							);
+						})()}
+					</div>
+				)}
+				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.getRenderEmbeds() && (
+					<div
+						className={styles.attachmentsContainer}
+						data-flx="channel.message-attachments.forwarded-message-content.attachments-container--2"
+					>
+						{snapshot.embeds.map((embed: MessageEmbed, index: number) => {
+							const embedKey = `${embed.id}-${index}`;
+							return (
+								<Embed
+									embed={embed}
+									key={embedKey}
+									message={message}
+									embedIndex={index}
+									contextualEmbeds={snapshot.embeds}
+									onDelete={onDelete}
+									isPreview={true}
+									data-flx="channel.message-attachments.forwarded-message-content.embed"
+								/>
+							);
+						})}
+					</div>
+				)}
+				{snapshot.stickers && snapshot.stickers.length > 0 && (
+					<div
+						className={styles.stickersContainer}
+						data-flx="channel.message-attachments.forwarded-message-content.stickers-container"
+					>
+						{snapshot.stickers.map((sticker: MessageStickerItem) => (
+							<StickerItem
+								key={sticker.id}
+								sticker={sticker}
+								message={message}
+								handleDelete={onDelete}
+								data-flx="channel.message-attachments.forwarded-message-content.sticker-item"
+							/>
+						))}
+					</div>
+				)}
+				<ForwardedFromSource
+					message={message}
+					data-flx="channel.message-attachments.forwarded-message-content.forwarded-from-source"
+				/>
 			</div>
-		);
-	},
-);
+		</div>
+	);
+});
 
 interface StickerItemProps {
 	sticker: MessageStickerItem;
 	message: Message;
-	shouldAnimate: boolean;
-	interactionHandlers: Record<string, unknown>;
 	sourceChannel?: Channel | null;
 	handleDelete?: (bypassConfirm?: boolean) => void;
 }
 
-const StickerItem = observer(
-	({sticker, message, shouldAnimate, interactionHandlers, sourceChannel, handleDelete}: StickerItemProps) => {
-		const stickerUrl = AvatarUtils.getStickerURL({
+const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
+	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker.animated});
+	const stickerUrl = AvatarUtils.getStickerURL({
+		id: sticker.id,
+		animated: shouldAnimate,
+		isAnimatable: sticker.animated,
+		size: 320,
+	});
+	const stickerRecord = Sticker.getStickerById(sticker.id);
+	const guild = stickerRecord?.guildId ? Guilds.getGuild(stickerRecord.guildId) : null;
+	const isMature = !!stickerRecord?.nsfw || !!sticker.nsfw;
+	const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(isMature, message.channelId);
+	const tooltipContent = () => (
+		<div className={styles.stickerTooltip} data-flx="channel.message-attachments.tooltip-content.sticker-tooltip">
+			<span className={styles.stickerName} data-flx="channel.message-attachments.tooltip-content.sticker-name">
+				{sticker.name}
+			</span>
+			{guild && (
+				<div
+					className={styles.stickerGuildInfo}
+					data-flx="channel.message-attachments.tooltip-content.sticker-guild-info"
+				>
+					<GuildIcon
+						id={guild.id}
+						name={guild.name}
+						icon={guild.icon}
+						className={styles.stickerGuildIcon}
+						sizePx={16}
+						data-flx="channel.message-attachments.tooltip-content.sticker-guild-icon"
+					/>
+					<span
+						className={styles.stickerGuildName}
+						data-flx="channel.message-attachments.tooltip-content.sticker-guild-name"
+					>
+						{guild.name}
+					</span>
+				</div>
+			)}
+		</div>
+	);
+	const handleContextMenu = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		const stickerForMenu = stickerRecord ?? {
 			id: sticker.id,
-			animated: shouldAnimate,
-			size: 320,
-		});
-		const stickerRecord = Sticker.getStickerById(sticker.id);
-		const guild = stickerRecord?.guildId ? Guilds.getGuild(stickerRecord.guildId) : null;
-		const isMature = !!stickerRecord?.nsfw || !!sticker.nsfw;
-		const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(isMature, message.channelId);
-		const tooltipContent = () => (
-			<div className={styles.stickerTooltip} data-flx="channel.message-attachments.tooltip-content.sticker-tooltip">
-				<span className={styles.stickerName} data-flx="channel.message-attachments.tooltip-content.sticker-name">
-					{sticker.name}
-				</span>
-				{guild && (
-					<div
-						className={styles.stickerGuildInfo}
-						data-flx="channel.message-attachments.tooltip-content.sticker-guild-info"
-					>
-						<GuildIcon
-							id={guild.id}
-							name={guild.name}
-							icon={guild.icon}
-							className={styles.stickerGuildIcon}
-							sizePx={16}
-							data-flx="channel.message-attachments.tooltip-content.sticker-guild-icon"
-						/>
-						<span
-							className={styles.stickerGuildName}
-							data-flx="channel.message-attachments.tooltip-content.sticker-guild-name"
-						>
-							{guild.name}
-						</span>
-					</div>
-				)}
-			</div>
-		);
-		const handleContextMenu = (e: React.MouseEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
-			const stickerForMenu = stickerRecord ?? {
-				id: sticker.id,
-				guildId: '',
-				name: sticker.name,
-				description: '',
-				tags: [],
-				url: stickerUrl,
-				animated: sticker.animated,
-				nsfw: Boolean(sticker.nsfw),
-				user: undefined,
-			};
-			ContextMenuCommands.openFromEvent(e, ({onClose}) => (
-				<MessageContextMenu
-					message={message}
-					sourceChannel={sourceChannel}
-					onClose={onClose}
-					onDelete={handleDelete!}
-					inlineStickerOrEmojiItems={
-						<StickerInlineMenuItems
-							sticker={stickerForMenu}
-							onClose={onClose}
-							data-flx="channel.message-attachments.handle-context-menu.sticker-inline-menu-items"
-						/>
-					}
-					data-flx="channel.message-attachments.handle-context-menu.message-context-menu"
-				/>
-			));
+			guildId: '',
+			name: sticker.name,
+			description: '',
+			tags: [],
+			url: stickerUrl,
+			animated: sticker.animated,
+			nsfw: Boolean(sticker.nsfw),
+			user: undefined,
 		};
-		const handleRevealClick = useCallback(
-			(e: React.MouseEvent) => {
-				if (shouldBlur && canReveal) {
-					e.preventDefault();
-					e.stopPropagation();
-					reveal();
+		ContextMenuCommands.openFromEvent(e, ({onClose}) => (
+			<MessageContextMenu
+				message={message}
+				sourceChannel={sourceChannel}
+				onClose={onClose}
+				onDelete={handleDelete!}
+				inlineStickerOrEmojiItems={
+					<StickerInlineMenuItems
+						sticker={stickerForMenu}
+						onClose={onClose}
+						data-flx="channel.message-attachments.handle-context-menu.sticker-inline-menu-items"
+					/>
 				}
-			},
-			[shouldBlur, canReveal, reveal],
-		);
-		if (shouldBlock) {
-			return null;
-		}
-		const stickerImage = (
-			<img
-				src={stickerUrl}
-				alt={stickerRecord?.description || sticker.name}
-				className={clsx(styles.stickerImage, shouldBlur && matureStyles.matureStickerBlurred)}
-				width="160"
-				height="160"
-				data-flx="channel.message-attachments.sticker-item.sticker-image"
+				data-flx="channel.message-attachments.handle-context-menu.message-context-menu"
 			/>
-		);
-		return (
-			<Tooltip key={sticker.id} text={tooltipContent} data-flx="channel.message-attachments.sticker-item.tooltip">
-				<FocusRing data-flx="channel.message-attachments.sticker-item.focus-ring">
-					<button
-						type="button"
-						aria-label={stickerRecord?.description || sticker.name}
-						className={styles.stickerWrapper}
-						data-message-sticker="true"
-						onContextMenu={handleContextMenu}
-						onClick={handleRevealClick}
-						data-flx="channel.message-attachments.sticker-item.sticker-wrapper.reveal-click"
-						{...interactionHandlers}
-					>
-						{stickerImage}
-					</button>
-				</FocusRing>
-			</Tooltip>
-		);
-	},
-);
+		));
+	};
+	const handleRevealClick = useCallback(
+		(e: React.MouseEvent) => {
+			if (shouldBlur && canReveal) {
+				e.preventDefault();
+				e.stopPropagation();
+				reveal();
+			}
+		},
+		[shouldBlur, canReveal, reveal],
+	);
+	if (shouldBlock) {
+		return null;
+	}
+	const stickerImage = (
+		<img
+			src={stickerUrl}
+			alt={stickerRecord?.description || sticker.name}
+			className={clsx(styles.stickerImage, shouldBlur && matureStyles.matureStickerBlurred)}
+			width="160"
+			height="160"
+			data-flx="channel.message-attachments.sticker-item.sticker-image"
+		/>
+	);
+	return (
+		<Tooltip key={sticker.id} text={tooltipContent} data-flx="channel.message-attachments.sticker-item.tooltip">
+			<FocusRing data-flx="channel.message-attachments.sticker-item.focus-ring">
+				<button
+					type="button"
+					aria-label={stickerRecord?.description || sticker.name}
+					className={styles.stickerWrapper}
+					data-message-sticker="true"
+					onContextMenu={handleContextMenu}
+					onClick={handleRevealClick}
+					data-flx="channel.message-attachments.sticker-item.sticker-wrapper.reveal-click"
+					{...interactionHandlers}
+				>
+					{stickerImage}
+				</button>
+			</FocusRing>
+		</Tooltip>
+	);
+});
 export const MessageAttachments = observer(() => {
 	const {channel, message, handleDelete, previewContext, onPopoutToggle, suppressMessageActions} =
 		useMessageViewContext();
 	const isPreview = Boolean(previewContext);
 	const reactionsIsPreview = isPreview || Boolean(suppressMessageActions);
 	const reactions = useMessageReactionsSnapshot(message.id);
-	const {shouldAnimate, interactionHandlers} = useStickerAnimation();
 	const spoileredUrlEmbeds = useMemo(() => {
 		const embeddableCodeLinkContent = extractEmbeddableCodeLinkContent(message.content);
 		return {
@@ -593,8 +584,6 @@ export const MessageAttachments = observer(() => {
 				<ForwardedMessageContent
 					message={message}
 					snapshot={message.messageSnapshots[0]}
-					shouldAnimate={shouldAnimate}
-					interactionHandlers={interactionHandlers}
 					onDelete={handleDelete}
 					data-flx="channel.message-attachments.forwarded-message-content"
 				/>
@@ -648,8 +637,6 @@ export const MessageAttachments = observer(() => {
 							key={sticker.id}
 							sticker={sticker}
 							message={message}
-							shouldAnimate={shouldAnimate}
-							interactionHandlers={interactionHandlers}
 							sourceChannel={channel}
 							handleDelete={handleDelete}
 							data-flx="channel.message-attachments.sticker-item"

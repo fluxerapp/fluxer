@@ -2,11 +2,6 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {SILENT_MENTION} from '@app/features/app/config/I18nDisplayConstants';
-import {
-	getAnimatedMediaPlaybackAllowed,
-	subscribeAnimatedMediaPlaybackChange,
-	useAnimatedMediaPlaybackAllowed,
-} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
 import {CompactAuthorPrefix, CompactMessageLayout} from '@app/features/channel/components/CompactMessageLayout';
 import {EditingMessageInput} from '@app/features/channel/components/EditingMessageInput';
@@ -14,7 +9,6 @@ import {isMediaOnlyEmbed} from '@app/features/channel/components/embeds/EmbedRen
 import {MessageAttachments} from '@app/features/channel/components/MessageAttachments';
 import {MessageAuthorInfo} from '@app/features/channel/components/MessageAuthorInfo';
 import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
-import {shouldAnimateMessageEmojiByDefault} from '@app/features/channel/components/MessageEmojiAnimationUtils';
 import {MessageTimeoutIndicator} from '@app/features/channel/components/MessageTimeoutIndicator';
 import {MessageUsername} from '@app/features/channel/components/MessageUsername';
 import {useMessageViewContext} from '@app/features/channel/components/MessageViewContext';
@@ -55,9 +49,8 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowsClockwiseIcon, BellSlashIcon, EyeIcon, WarningCircleIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import {autorun} from 'mobx';
 import {observer} from 'mobx-react-lite';
-import {type MouseEvent, useCallback, useEffect, useMemo, useState} from 'react';
+import {type MouseEvent, useCallback, useMemo} from 'react';
 
 const JUMP_TO_MESSAGE_FROM_SENT_DESCRIPTOR = msg({
 	message: 'Jump to message from {displayName}, sent {formattedDate}',
@@ -86,22 +79,6 @@ const MessageStateToClassName: Record<string, string> = {
 	[MessageStates.FAILED]: styles.messageFailed,
 };
 const CUSTOM_EMOJI_MARKDOWN_PATTERN = /<a?:[a-zA-Z0-9_+-]{2,}:([0-9]+)>/g;
-const getDefaultMessageEmojiAnimationAllowed = (): boolean =>
-	shouldAnimateMessageEmojiByDefault({
-		animateEmojiSetting: UserSettings.getAnimateEmoji(),
-		animatedMediaPlaybackAllowed: getAnimatedMediaPlaybackAllowed(),
-	});
-const setMessageEmojiImagesAnimated = (messageId: string, shouldAnimate: boolean): void => {
-	const emojiImgs = document.querySelectorAll(
-		`img[data-message-id="${messageId}"][data-animated="true"]`,
-	) as NodeListOf<HTMLImageElement>;
-	for (const img of emojiImgs) {
-		const url = new URL(img.src, window.location.origin);
-		url.searchParams.set('animated', shouldAnimate.toString());
-		img.src = url.toString();
-	}
-};
-
 function messageContentCopyBlockProps(content: string): {
 	'data-message-copy-block'?: 'true';
 	'data-message-copy-text'?: string;
@@ -122,8 +99,6 @@ export const UserMessage = observer(() => {
 		previewOverrides,
 		onHeadingActivate,
 	} = useMessageViewContext();
-	const [animateEmoji, setAnimateEmoji] = useState(getDefaultMessageEmojiAnimationAllowed);
-	const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed();
 	const isEditing = MessageEdit.isEditing(message.channelId, message.id);
 	const userAuthor = Users.getUser(message.author.id);
 	const author = message.webhookId != null ? message.author : (userAuthor ?? message.author);
@@ -154,6 +129,15 @@ export const UserMessage = observer(() => {
 				context: MarkdownContext.STANDARD_WITH_JUMBO,
 			}),
 		[message.content],
+	);
+	const markdownOptions = useMemo(
+		() => ({
+			context: MarkdownContext.STANDARD_WITH_JUMBO,
+			messageId: message.id,
+			channelId: message.channelId,
+			mentionChannels: message.mentionChannels,
+		}),
+		[message.id, message.channelId, message.mentionChannels],
 	);
 	const shouldHideContent =
 		UserSettings.getRenderEmbeds() &&
@@ -312,12 +296,7 @@ export const UserMessage = observer(() => {
 			>
 				<SafeMarkdown
 					content={message.content}
-					options={{
-						context: MarkdownContext.STANDARD_WITH_JUMBO,
-						messageId: message.id,
-						channelId: message.channelId,
-						mentionChannels: message.mentionChannels,
-					}}
+					options={markdownOptions}
 					data-flx="channel.user-message.render-message-content.safe-markdown"
 				/>
 				{(message.editedTimestamp || message.isEditing) &&
@@ -346,6 +325,7 @@ export const UserMessage = observer(() => {
 	}, [
 		shouldShowEditingInput,
 		shouldHideContent,
+		markdownOptions,
 		message,
 		message.content,
 		message.id,
@@ -357,25 +337,6 @@ export const UserMessage = observer(() => {
 		onSubmit,
 		i18n,
 	]);
-	useEffect(() => {
-		if (animateEmoji) return;
-		setMessageEmojiImagesAnimated(message.id, animatedMediaPlaybackAllowed && isHovering);
-	}, [animateEmoji, animatedMediaPlaybackAllowed, isHovering, message.id]);
-	useEffect(() => {
-		const updateDefaultEmojiAnimation = () => {
-			const shouldAnimate = getDefaultMessageEmojiAnimationAllowed();
-			setAnimateEmoji(shouldAnimate);
-			setMessageEmojiImagesAnimated(message.id, shouldAnimate);
-		};
-		const disposer = autorun(() => {
-			updateDefaultEmojiAnimation();
-		});
-		const unsubscribePlayback = subscribeAnimatedMediaPlaybackChange(updateDefaultEmojiAnimation);
-		return () => {
-			disposer();
-			unsubscribePlayback();
-		};
-	}, [message.id]);
 	const renderFailedFooter = useCallback(() => {
 		if (!shouldShowFailedFooter) {
 			return null;
@@ -469,12 +430,7 @@ export const UserMessage = observer(() => {
 						>
 							<SafeMarkdown
 								content={message.content}
-								options={{
-									context: MarkdownContext.STANDARD_WITH_JUMBO,
-									messageId: message.id,
-									channelId: message.channelId,
-									mentionChannels: message.mentionChannels,
-								}}
+								options={markdownOptions}
 								data-flx="channel.user-message.safe-markdown"
 							/>
 						</div>
@@ -523,7 +479,6 @@ export const UserMessage = observer(() => {
 						message={message}
 						channelId={channel.id}
 						guildId={channel.guildId}
-						animateEmoji={animateEmoji}
 						messageDisplayCompact={messageDisplayCompact}
 						data-flx="channel.user-message.reply-preview"
 					/>
@@ -559,37 +514,30 @@ export const UserMessage = observer(() => {
 							>
 								{showMetadata && compactAuthorPrefix}
 								{!shouldHideContent && (
-									<>
-										<SafeMarkdown
-											content={message.content}
-											options={{
-												context: MarkdownContext.STANDARD_WITH_JUMBO,
-												messageId: message.id,
-												channelId: message.channelId,
-												mentionChannels: message.mentionChannels,
-											}}
-											data-flx="channel.user-message.safe-markdown--2"
-										/>
-										{(message.editedTimestamp || message.isEditing) &&
-											(message.isEditing ? (
-												<span className={styles.editedLabel} data-flx="channel.user-message.edited-label">
-													{' '}
-													{i18n._(EDITED_DESCRIPTOR)}
-												</span>
-											) : (
-												<TimestampWithTooltip
-													date={message.editedTimestamp!}
-													className={styles.editedTimestamp}
-													data-flx="channel.user-message.edited-timestamp"
-												>
-													<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--2">
-														{' '}
-														{i18n._(EDITED_DESCRIPTOR)}
-													</span>
-												</TimestampWithTooltip>
-											))}
-									</>
+									<SafeMarkdown
+										content={message.content}
+										options={markdownOptions}
+										data-flx="channel.user-message.safe-markdown--2"
+									/>
 								)}
+								{(message.editedTimestamp || message.isEditing) &&
+									(message.isEditing ? (
+										<span className={styles.editedLabel} data-flx="channel.user-message.edited-label">
+											{' '}
+											{i18n._(EDITED_DESCRIPTOR)}
+										</span>
+									) : (
+										<TimestampWithTooltip
+											date={message.editedTimestamp!}
+											className={styles.editedTimestamp}
+											data-flx="channel.user-message.edited-timestamp"
+										>
+											<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--2">
+												{' '}
+												{i18n._(EDITED_DESCRIPTOR)}
+											</span>
+										</TimestampWithTooltip>
+									))}
 							</div>
 						)
 					}
@@ -608,7 +556,6 @@ export const UserMessage = observer(() => {
 					message={message}
 					channelId={channel.id}
 					guildId={channel.guildId}
-					animateEmoji={animateEmoji}
 					messageDisplayCompact={messageDisplayCompact}
 					data-flx="channel.user-message.reply-preview--2"
 				/>
@@ -770,28 +717,32 @@ export const UserMessage = observer(() => {
 								/>
 							</Tooltip>
 						)}
-						{(message.editedTimestamp || message.isEditing) &&
-							(message.isEditing ? (
-								<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--3">
-									{' '}
-									{i18n._(EDITED_DESCRIPTOR)}
-								</span>
-							) : (
-								<TimestampWithTooltip
-									date={message.editedTimestamp!}
-									className={styles.editedTimestamp}
-									data-flx="channel.user-message.edited-timestamp--2"
-								>
-									<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--4">
-										{' '}
-										{i18n._(EDITED_DESCRIPTOR)}
-									</span>
-								</TimestampWithTooltip>
-							))}
 					</AuthorHeading>
 				)}
-				{((!message.content && !isEditing) || (shouldHideContent && !isEditing)) &&
-					shouldGroup &&
+				{shouldHideContent &&
+					!isEditing &&
+					message.content.length > 0 &&
+					(message.editedTimestamp || message.isEditing) &&
+					(message.isEditing ? (
+						<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--3">
+							{' '}
+							{i18n._(EDITED_DESCRIPTOR)}
+						</span>
+					) : (
+						<TimestampWithTooltip
+							date={message.editedTimestamp!}
+							className={styles.editedTimestamp}
+							data-flx="channel.user-message.edited-timestamp--2"
+						>
+							<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--4">
+								{' '}
+								{i18n._(EDITED_DESCRIPTOR)}
+							</span>
+						</TimestampWithTooltip>
+					))}
+				<MessageAttachments data-flx="channel.user-message.message-attachments--3" />
+				{message.content.length === 0 &&
+					!isEditing &&
 					(message.editedTimestamp || message.isEditing) &&
 					(message.isEditing ? (
 						<span className={styles.editedLabel} data-flx="channel.user-message.edited-label--5">
@@ -810,7 +761,6 @@ export const UserMessage = observer(() => {
 							</span>
 						</TimestampWithTooltip>
 					))}
-				<MessageAttachments data-flx="channel.user-message.message-attachments--3" />
 				{renderFailedFooter()}
 			</div>
 		</SpoilerSyncProvider>

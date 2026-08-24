@@ -47,13 +47,11 @@ export const ReplyPreview = observer(
 		message,
 		channelId,
 		guildId,
-		animateEmoji,
 		messageDisplayCompact,
 	}: {
 		message: Message;
 		channelId: string;
 		guildId?: string;
-		animateEmoji: boolean;
 		messageDisplayCompact: boolean;
 	}) => {
 		const {i18n} = useLingui();
@@ -63,14 +61,15 @@ export const ReplyPreview = observer(
 		);
 		const {isMessageRevealed} = useCollapsedMessageVisibility();
 		const resolvedGuildId = guildId ?? message.guildId ?? message.messageReference?.guild_id;
+		const referenceChannelId = message.messageReference?.channel_id ?? message.channelId;
 		const jumpToRepliedMessage = useCallback(() => {
 			if (message.messageReference?.message_id) {
-				goToMessage(message.channelId, message.messageReference.message_id, {
+				goToMessage(referenceChannelId, message.messageReference.message_id, {
 					returnToMessageId: message.id,
 					returnChannelId: message.channelId,
 				});
 			}
-		}, [message.channelId, message.id, message.messageReference]);
+		}, [referenceChannelId, message.channelId, message.id, message.messageReference]);
 		if (!message.messageReference) return null;
 		if (resolution.state !== MessageReferenceState.LOADED) {
 			const isDeleted = resolution.state === MessageReferenceState.DELETED;
@@ -253,7 +252,6 @@ export const ReplyPreview = observer(
 										context: MarkdownContext.RESTRICTED_INLINE_REPLY,
 										messageId: referencedMessage.id,
 										channelId,
-										disableAnimatedEmoji: !animateEmoji,
 										mentionChannels: referencedMessage.mentionChannels,
 									}}
 									data-flx="channel.reply-preview.safe-markdown"
