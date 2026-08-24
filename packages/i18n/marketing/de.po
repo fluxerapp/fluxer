@@ -2084,7 +2084,8 @@ msgstr "{ios}-App"
 msgctxt "platform_support.mobile.ios.testflight_body"
 msgid ""
 "The native {ios} app is in open beta on {testflight}, and anyone can join without an invite. Updates arrive automatically. It is not on the {app_store} yet, and will not be until version 1 is finished."
-msgstr "Die native {ios}-App ist auf {testflight} im offenen Beta-Test und jeder kann ohne Einladung teilnehmen. Updates kommen automatisch. Sie ist noch nicht im {app_store} und wird es erst sein, wenn Version 1 fertig ist."
+msgstr ""
+"Die native {ios}-App ist auf {testflight} im offenen Beta-Test und jeder kann ohne Einladung teilnehmen. Updates kommen automatisch. Sie ist noch nicht im {app_store} und wird es erst sein, wenn Version 1 fertig ist."
 
 #. Button label that opens the public TestFlight invitation for the iOS beta. Used both on the iOS row of the download page and on the automatic quick-download button in page heroes when the visitor is on an iPhone or iPad. Keep TestFlight as a proper name; keep it short and action-oriented. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.testflight_cta
@@ -2097,7 +2098,8 @@ msgstr "Nimm an der {testflight} Beta teil"
 msgctxt "platform_support.mobile.ios.web_app_callout"
 msgid ""
 "Prefer not to install a beta? The full {product_name} web app runs in Safari and can be added to your Home Screen."
-msgstr "Möchtest du keine Betaversion installieren? Die vollständige {product_name} Web-App läuft in Safari und kann zu deinem Home Screen hinzugefügt werden."
+msgstr ""
+"Möchtest du keine Betaversion installieren? Die vollständige {product_name} Web-App läuft in Safari und kann zu deinem Home Screen hinzugefügt werden."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2110,7 +2112,8 @@ msgstr "{android}-App"
 msgctxt "platform_support.mobile.android.beta_body"
 msgid ""
 "The {android} beta is an open build you install yourself. The recommended download suits most phones; other builds cover degoogled phones and older hardware."
-msgstr "Die {android}-Beta ist ein offener Build, den du selbst installierst. Der empfohlene Download passt für die meisten Handys; andere Builds sind für de-googled Phones und ältere Hardware."
+msgstr ""
+"Die {android}-Beta ist ein offener Build, den du selbst installierst. Der empfohlene Download passt für die meisten Handys; andere Builds sind für de-googled Phones und ältere Hardware."
 
 #. Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.android.cta
@@ -2136,14 +2139,6 @@ msgctxt "download.android.recommended_heading"
 msgid "Recommended"
 msgstr "Empfohlen"
 
-#. Body copy for the Obtainium section on the Android install methods page. Keep Obtainium as a proper name. Preserve placeholders exactly.
-#: fluxer_marketing/generated:download.android.obtainium_body
-msgctxt "download.android.obtainium_body"
-msgid ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
-msgstr ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
-
 #. Link label that adds the Firebase build of the Android beta to Obtainium. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.obtainium_fcm
 msgctxt "download.android.obtainium_fcm"
@@ -2161,21 +2156,24 @@ msgstr "Zu {obtainium} hinzufügen (degoogled phones)"
 msgctxt "download.android.flavour_fcm"
 msgid ""
 "For phones with {google_play_services}, such as Samsung and Pixel. Notifications arrive over Firebase Cloud Messaging."
-msgstr "Für Handys mit {google_play_services}, wie Samsung und Pixel. Benachrichtigungen kommen über Firebase Cloud Messaging."
+msgstr ""
+"Für Handys mit {google_play_services}, wie Samsung und Pixel. Benachrichtigungen kommen über Firebase Cloud Messaging."
 
 #. Explains which phones should choose the UnifiedPush build. Keep GrapheneOS and UnifiedPush as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.flavour_oss
 msgctxt "download.android.flavour_oss"
 msgid ""
 "For phones without {google_play_services}, such as {graphene_os}. Notifications arrive over {unified_push}, which you set up separately."
-msgstr "Für Handys ohne {google_play_services}, wie z. B. {graphene_os}. Benachrichtigungen kommen über {unified_push}, das du separat einrichtest."
+msgstr ""
+"Für Handys ohne {google_play_services}, wie z. B. {graphene_os}. Benachrichtigungen kommen über {unified_push}, das du separat einrichtest."
 
 #. Warning that the Firebase and UnifiedPush Android builds cannot be installed side by side.
 #: fluxer_marketing/generated:download.android.switch_warning
 msgctxt "download.android.switch_warning"
 msgid ""
 "The two builds are separate installs. Installing one replaces the other, so pick one and stay with it."
-msgstr "Die beiden Builds sind separate Installationen. Die Installation des einen ersetzt das andere, wähle also eins aus und bleibe dabei."
+msgstr ""
+"Die beiden Builds sind separate Installationen. Die Installation des einen ersetzt das andere, wähle also eins aus und bleibe dabei."
 
 #. Section heading above the table of individual Android build downloads. Keep it short.
 #: fluxer_marketing/generated:download.android.direct_heading
@@ -2188,14 +2186,16 @@ msgstr "Direkte Downloads"
 msgctxt "download.android.abi_help"
 msgid ""
 "Almost every phone made since 2016 needs arm64-v8a. Pick the universal build if you are unsure; it is much larger but works everywhere."
-msgstr "Fast jedes Smartphone, das seit 2016 hergestellt wurde, benötigt arm64-v8a. Wähle die universelle Version, wenn du unsicher bist; sie ist viel größer, funktioniert aber überall."
+msgstr ""
+"Fast jedes Smartphone, das seit 2016 hergestellt wurde, benötigt arm64-v8a. Wähle die universelle Version, wenn du unsicher bist; sie ist viel größer, funktioniert aber überall."
 
 #. Note stating that the app is not yet published in any app store. Keep the store names as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.stores_note
 msgctxt "download.android.stores_note"
 msgid ""
 "{product_name} is not on {google_play}, {f_droid}, {accrescent} or the {app_store} yet. Those come once version 1 is finished."
-msgstr "{product_name} ist noch nicht auf {google_play}, {f_droid}, {accrescent} oder im {app_store} verfügbar. Diese werden veröffentlicht, sobald Version 1 fertig ist."
+msgstr ""
+"{product_name} ist noch nicht auf {google_play}, {f_droid}, {accrescent} oder im {app_store} verfügbar. Diese werden veröffentlicht, sobald Version 1 fertig ist."
 
 #. Section heading above the Android signing certificate fingerprint. Keep it short.
 #: fluxer_marketing/generated:download.android.signing_heading
@@ -2208,14 +2208,16 @@ msgstr "Signatur überprüfen"
 msgctxt "download.android.signing_body"
 msgid ""
 "Every {android} release build is signed with this SHA-256 certificate fingerprint. Check it before installing a file you did not download from this page."
-msgstr "Jeder {android} Release-Build ist mit diesem SHA-256-Zertifikat-Fingerabdruck signiert. Überprüfe ihn, bevor du eine Datei installierst, die du nicht von dieser Seite heruntergeladen hast."
+msgstr ""
+"Jeder {android} Release-Build ist mit diesem SHA-256-Zertifikat-Fingerabdruck signiert. Überprüfe ihn, bevor du eine Datei installierst, die du nicht von dieser Seite heruntergeladen hast."
 
 #. Shown in place of the download table when the latest release could not be resolved. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.unavailable
 msgctxt "download.android.unavailable"
 msgid ""
 "The build list could not be loaded just now. All releases are always available on {github}."
-msgstr "Die Build-Liste konnte gerade nicht geladen werden. Alle Releases sind immer auf {github} verfügbar."
+msgstr ""
+"Die Build-Liste konnte gerade nicht geladen werden. Alle Releases sind immer auf {github} verfügbar."
 
 #. Primary button on the Android app row of the download page, and the label of the automatic quick-download button in page heroes for Android visitors. It opens the page listing every install method. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.get_cta
@@ -2228,14 +2230,16 @@ msgstr "Hol dir die {android} Beta"
 msgctxt "download.android.recommended_body"
 msgid ""
 "{obtainium} is the recommended way in. It installs the beta and updates it for you, so you never have to find and sideload a new file by hand."
-msgstr "{obtainium} ist der empfohlene Weg. Es installiert die Betaversion und aktualisiert sie für dich, sodass du nie wieder eine neue Datei manuell suchen und installieren musst."
+msgstr ""
+"{obtainium} ist der empfohlene Weg. Es installiert die Betaversion und aktualisiert sie für dich, sodass du nie wieder eine neue Datei manuell suchen und installieren musst."
 
 #. Lead sentence of the direct downloads section on the Android install methods page, making clear that manual downloads do not update themselves. Keep Obtainium as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.direct_body
 msgctxt "download.android.direct_body"
 msgid ""
 "If you would rather not use {obtainium}, download a build directly. You will need to repeat this for every update."
-msgstr "Wenn du {obtainium} nicht verwenden möchtest, lade eine Version direkt herunter. Du musst dies für jedes Update wiederholen."
+msgstr ""
+"Wenn du {obtainium} nicht verwenden möchtest, lade eine Version direkt herunter. Du musst dies für jedes Update wiederholen."
 
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.brand_colors_heading
