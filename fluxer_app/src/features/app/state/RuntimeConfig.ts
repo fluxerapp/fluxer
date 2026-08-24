@@ -201,15 +201,14 @@ function removeDocumentLink(rel: string): void {
 
 function upsertDocumentMeta(name: string, content: string): void {
 	if (typeof document === 'undefined') return;
-	const selector = `meta[name="${name}"][data-fluxer-branding="true"]`;
-	const existing = document.head.querySelector<HTMLMetaElement>(selector);
-	const meta = existing ?? document.createElement('meta');
+	const brandedMeta = document.head.querySelector<HTMLMetaElement>(`meta[name="${name}"][data-fluxer-branding="true"]`);
+	const meta = brandedMeta ?? document.createElement('meta');
 	meta.name = name;
 	meta.content = content;
 	meta.dataset.fluxerBranding = 'true';
-	if (!existing) {
-		document.head.appendChild(meta);
-	}
+	if (brandedMeta) return;
+	const precedingMeta = document.head.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+	document.head.insertBefore(meta, precedingMeta);
 }
 
 function removeDocumentMeta(name: string): void {
