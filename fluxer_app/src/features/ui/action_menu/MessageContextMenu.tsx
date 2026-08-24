@@ -4,14 +4,14 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {messageActionMenuItemIds, useMessageActionMenuData} from '@app/features/channel/components/MessageActionMenu';
 import {getEffectiveContent, triggerAddReaction} from '@app/features/channel/components/MessageActionUtils';
 import {
-	getQuickReactionEmojiSrc,
 	REACT_WITH_EMOJI_DESCRIPTOR,
 	renderQuickReactionEmoji,
+	useReactionMenuImagePreload,
+	useReactionSubmenuEmojiSrc,
 } from '@app/features/channel/components/QuickReactionsRow';
 import type {Channel} from '@app/features/channel/models/Channel';
 import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import {useExpressionImagesPreload} from '@app/features/expressions/utils/ExpressionImageCache';
 import {
 	COPY_LINK_DESCRIPTOR,
 	COPY_TEXT_DESCRIPTOR,
@@ -126,7 +126,7 @@ interface RemoveReactionsSubmenuProps {
 const RemoveReactionsSubmenuItem = observer(
 	({reaction, channelId, messageId}: {reaction: MessageReaction; channelId: string; messageId: string}) => {
 		const {i18n} = useLingui();
-		const emojiUrl = useEmojiURL({emoji: reaction.emoji, size: 32});
+		const emojiUrl = useEmojiURL({emoji: reaction.emoji});
 		const label = getEmojiNameWithColons(reaction.emoji);
 		if (reaction.count <= 0) {
 			return null;
@@ -188,10 +188,10 @@ const RemoveReactionsSubmenu = observer(({reactions, channelId, messageId}: Remo
 
 RemoveReactionsSubmenu.displayName = 'RemoveReactionsSubmenu';
 
-const AddReactionSubmenuItem = observer(
+export const AddReactionSubmenuItem = observer(
 	({emoji, onSelect}: {emoji: FlatEmoji; onSelect: (emoji: FlatEmoji) => void}) => {
 		const reactionEmoji = useMemo(() => toReactionEmoji(emoji), [emoji]);
-		const emojiUrl = useEmojiURL({emoji: reactionEmoji, size: 32});
+		const emojiUrl = useReactionSubmenuEmojiSrc(emoji);
 		const label = getEmojiNameWithColons(reactionEmoji);
 		const renderEmojiPreview = () => {
 			if (emojiUrl) {
@@ -427,14 +427,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 				quickReactionCount: 4,
 				submenuReactionCount: 16,
 			});
-		const preloadedReactionImageUrls = useMemo(
-			() =>
-				Array.from(
-					new Set([...quickReactionEmojis, ...submenuReactionEmojis].map((emoji) => getQuickReactionEmojiSrc(emoji))),
-				),
-			[quickReactionEmojis, submenuReactionEmojis],
-		);
-		useExpressionImagesPreload(preloadedReactionImageUrls);
+		useReactionMenuImagePreload(quickReactionEmojis, submenuReactionEmojis);
 		const handleQuickReact = useCallback(
 			(emoji: FlatEmoji) => {
 				EmojiPicker.trackEmoji(emoji);

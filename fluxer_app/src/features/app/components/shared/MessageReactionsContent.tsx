@@ -4,6 +4,7 @@ import {LongPressable} from '@app/features/app/components/LongPressable';
 import styles from '@app/features/app/components/shared/MessageReactionsContent.module.css';
 import {useHover} from '@app/features/app/hooks/useHover';
 import reactionStyles from '@app/features/channel/components/MessageReactions.module.css';
+import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
 import {
 	emojiEquals,
 	getEmojiName,
@@ -49,6 +50,7 @@ const ReactionFilterButton = observer(
 	({reaction, isSelected, onSelect, onContextMenu, showTooltip}: ReactionFilterButtonProps) => {
 		const {i18n} = useLingui();
 		const [hoverRef, isHovering] = useHover();
+		const emojiHasAnimatedVariant = reaction.emoji.animated === true;
 		const emojiName = getEmojiName(reaction.emoji);
 		const emojiUrl = useEmojiURL({emoji: reaction.emoji, isHovering});
 		const reactionCountText = plural(
@@ -67,7 +69,7 @@ const ReactionFilterButton = observer(
 					aria-pressed={isSelected}
 					onClick={onSelect}
 					onContextMenu={onContextMenu}
-					ref={hoverRef}
+					ref={emojiHasAnimatedVariant ? hoverRef : undefined}
 					className={clsx(
 						reactionStyles.reactionButton,
 						styles.filterButton,
@@ -80,10 +82,11 @@ const ReactionFilterButton = observer(
 						data-flx="app.message-reactions-content.reaction-filter-button.div"
 					>
 						{emojiUrl ? (
-							<img
+							<ReactionImage
 								className={clsx('emoji', reactionStyles.emoji)}
 								src={emojiUrl}
 								alt={emojiName}
+								aria-hidden={true}
 								draggable={false}
 								data-flx="app.message-reactions-content.reaction-filter-button.emoji"
 							/>
