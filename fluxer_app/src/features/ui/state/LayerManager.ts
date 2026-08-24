@@ -9,7 +9,6 @@ type LayerType = 'modal' | 'popout' | 'contextmenu';
 export interface Layer {
 	type: LayerType;
 	key: string | PopoutKey;
-	timestamp: number;
 	onClose?: () => void;
 }
 
@@ -34,21 +33,16 @@ class LayerManager {
 		if (event.key !== 'Escape') return;
 		const topLayer = this.getTopLayer();
 		if (!topLayer) return;
+		if (topLayer.type !== 'popout' && !topLayer.onClose) return;
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		if (topLayer.type === 'modal') {
-			if (topLayer.onClose) {
-				topLayer.onClose();
-			} else {
-				ModalCommands.pop();
-			}
-		} else if (topLayer.type === 'popout') {
+		if (topLayer.type === 'popout') {
 			topLayer.onClose?.();
 			this.removeLayer('popout', topLayer.key);
 			PopoutCommands.close(topLayer.key);
-		} else if (topLayer.type === 'contextmenu') {
-			topLayer.onClose?.();
+			return;
 		}
+		topLayer.onClose?.();
 	};
 
 	addLayer(type: LayerType, key: string | PopoutKey, onClose?: () => void) {
@@ -56,7 +50,6 @@ class LayerManager {
 		this.layers.push({
 			type,
 			key,
-			timestamp: Date.now(),
 			onClose,
 		});
 	}

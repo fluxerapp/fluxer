@@ -200,6 +200,10 @@ class ModalState {
 		});
 	}
 
+	getKeyAtStackIndex(stackIndex: number, ownerDocument: Document = document): string | undefined {
+		return this.modals.filter((modal) => modal.ownerDocument === ownerDocument)[stackIndex]?.key;
+	}
+
 	getModal(ownerDocument: Document = document): ModalEntry | undefined {
 		return this.modals.findLast((modal) => modal.ownerDocument === ownerDocument);
 	}

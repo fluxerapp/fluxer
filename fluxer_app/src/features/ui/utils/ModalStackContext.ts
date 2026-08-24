@@ -10,10 +10,12 @@ export interface ModalStackContextValue {
 	restoreFocusOnClose: boolean;
 }
 
-export const ModalStackContext = createContext<ModalStackContextValue>({
+export const UNSTACKED_MODAL_CONTEXT: ModalStackContextValue = {
 	stackIndex: 0,
 	isVisible: true,
 	needsBackdrop: true,
 	isTopmost: true,
 	restoreFocusOnClose: true,
-});
+};
+
+export const ModalStackContext = createContext<ModalStackContextValue>(UNSTACKED_MODAL_CONTEXT);
