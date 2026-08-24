@@ -3,7 +3,13 @@
 import {existsSync, mkdirSync, readdirSync, writeFileSync} from 'node:fs';
 import path, {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {CopyRspackPlugin, DefinePlugin, HtmlRspackPlugin, SwcJsMinimizerRspackPlugin} from '@rspack/core';
+import {
+	CopyRspackPlugin,
+	DefinePlugin,
+	HtmlRspackPlugin,
+	LightningCssMinimizerRspackPlugin,
+	SwcJsMinimizerRspackPlugin,
+} from '@rspack/core';
 import {createPoFileRule, getLinguiSwcPluginConfig} from './scripts/build/rspack/lingui.mjs';
 import {staticFilesPlugin} from './scripts/build/rspack/static-files.mjs';
 
@@ -579,6 +585,7 @@ export default () => {
 					mangle: true,
 					format: {comments: false},
 				}),
+				new LightningCssMinimizerRspackPlugin(),
 			],
 		},
 		devServer: {
