@@ -4,6 +4,8 @@ import {showGenericErrorModal} from '@app/features/app/components/alerts/Generic
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {BACKGROUND_MEDIA_MAX_SIZE_LABEL, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
+import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {GifPickerSelectModal} from '@app/features/expressions/components/modals/GifPickerSelectModal';
@@ -14,6 +16,7 @@ import {
 	TRY_AGAIN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {NearViewportSurfaceContext, useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
@@ -27,6 +30,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
@@ -157,6 +161,7 @@ const REPLACE_WITH_A_GIF_DESCRIPTOR = msg({
 	comment: 'Button or menu action label in the background image gallery modal. Keep it concise.',
 });
 const logger = new Logger('BackgroundImageGalleryModal');
+const TILE_PRELOAD_ROOT_MARGIN = '200px';
 
 interface BackgroundImage {
 	id: string;
@@ -186,40 +191,46 @@ function isAllowedBackgroundFile(file: File): boolean {
 }
 
 interface BackgroundItemProps {
-	background: BackgroundItemType;
+	item: BackgroundItemType;
 	isSelected: boolean;
-	onSelect: (background: BackgroundItemType) => void;
-	onContextMenu?: (event: React.MouseEvent, background: BackgroundImage) => void;
-	onDelete?: (background: BackgroundImage) => void;
+	onSelect: (item: BackgroundItemType) => void;
+	onContextMenu?: (event: React.MouseEvent, item: BackgroundImage) => void;
+	onDelete?: (item: BackgroundImage) => void;
 }
 
 const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
-	({background, isSelected, onSelect, onContextMenu, onDelete}) => {
+	({item, isSelected, onSelect, onContextMenu, onDelete}) => {
 		const {i18n} = useLingui();
-		const isBuiltIn = 'type' in background;
-		const Icon = isBuiltIn ? background.icon : undefined;
-		const [imageUrl, setImageUrl] = useState<string | null>(null);
-		const [isLoading, setIsLoading] = useState(!isBuiltIn);
+		const isBuiltIn = 'type' in item;
+		const Icon = isBuiltIn ? item.icon : undefined;
+		const isVideo = !isBuiltIn && item.mediaKind === 'video';
+		const cachedImageUrl = isBuiltIn ? null : BackgroundImageDB.getCachedBackgroundImageURL(item.id);
+		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
+			disabled: isBuiltIn,
+			rememberKey: isBuiltIn ? null : item.id,
+			rootMargin: TILE_PRELOAD_ROOT_MARGIN,
+		});
+		const shouldAnimate = useShouldAnimate({kind: 'gif', isAnimated: isVideo});
+		const videoRef = useRef<HTMLVideoElement>(null);
+		const [imageUrl, setImageUrl] = useState<string | null>(cachedImageUrl);
+		const [isLoading, setIsLoading] = useState(!isBuiltIn && cachedImageUrl == null && isNearViewport);
 		const [hasError, setHasError] = useState(false);
-		const objectUrlRef = useRef<string | null>(null);
 		const loadRequestIdRef = useRef(0);
+		useAnimatedMediaVideoPlayback(videoRef, {
+			enabled: isNearViewport && isVideo && imageUrl != null,
+			shouldPlay: shouldAnimate,
+			isAnimated: isVideo,
+		});
 		const loadImage = useCallback(() => {
 			if (isBuiltIn) return;
 			const requestId = ++loadRequestIdRef.current;
-			setIsLoading(true);
+			const cached = BackgroundImageDB.getCachedBackgroundImageURL(item.id);
+			setImageUrl(cached);
+			setIsLoading(cached == null);
 			setHasError(false);
-			BackgroundImageDB.getBackgroundImageURL(background.id)
+			BackgroundImageDB.getBackgroundImageURL(item.id)
 				.then((url) => {
-					if (requestId !== loadRequestIdRef.current) {
-						if (url) {
-							URL.revokeObjectURL(url);
-						}
-						return;
-					}
-					if (objectUrlRef.current) {
-						URL.revokeObjectURL(objectUrlRef.current);
-					}
-					objectUrlRef.current = url;
+					if (requestId !== loadRequestIdRef.current) return;
 					setImageUrl(url);
 					setIsLoading(false);
 				})
@@ -229,52 +240,50 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 					setHasError(true);
 					setIsLoading(false);
 				});
-		}, [isBuiltIn, background.id]);
+		}, [isBuiltIn, item.id]);
 		useEffect(() => {
+			if (!isNearViewport) return undefined;
 			loadImage();
 			return () => {
 				loadRequestIdRef.current += 1;
-				if (objectUrlRef.current) {
-					URL.revokeObjectURL(objectUrlRef.current);
-					objectUrlRef.current = null;
-				}
 			};
-		}, [loadImage]);
+		}, [isNearViewport, loadImage]);
 		const handleClick = useCallback(() => {
-			onSelect(background);
-		}, [background, onSelect]);
+			onSelect(item);
+		}, [item, onSelect]);
 		const handleKeyDown = useCallback(
 			(e: React.KeyboardEvent) => {
 				if (isKeyboardActivationKey(e.key)) {
 					e.preventDefault();
-					onSelect(background);
+					onSelect(item);
 				}
 			},
-			[background, onSelect],
+			[item, onSelect],
 		);
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
 				if (!isBuiltIn) {
-					onContextMenu?.(e, background as BackgroundImage);
+					onContextMenu?.(e, item as BackgroundImage);
 				}
 			},
-			[isBuiltIn, background, onContextMenu],
+			[isBuiltIn, item, onContextMenu],
 		);
 		const handleDelete = useCallback(
 			(e: React.MouseEvent) => {
 				e.preventDefault();
 				e.stopPropagation();
 				if (!isBuiltIn) {
-					onDelete?.(background as BackgroundImage);
+					onDelete?.(item as BackgroundImage);
 				}
 			},
-			[isBuiltIn, background, onDelete],
+			[isBuiltIn, item, onDelete],
 		);
 		const handleRetry = useCallback(() => {
 			loadImage();
 		}, [loadImage]);
 		return (
 			<div
+				ref={visibilityRef}
 				className={styles.backgroundItem}
 				style={{
 					borderColor: isSelected ? 'var(--brand-primary)' : 'var(--background-modifier-accent)',
@@ -312,7 +321,7 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 									className={styles.backgroundItemName}
 									data-flx="theme.background-image-gallery-modal.background-item.background-item-name"
 								>
-									{background.name}
+									{item.name}
 								</div>
 							</div>
 						</div>
@@ -360,17 +369,19 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 									</button>
 								</FocusRing>
 							</div>
-						) : imageUrl && background.mediaKind === 'video' ? (
+						) : isNearViewport && imageUrl && isVideo ? (
 							<video
-								src={imageUrl}
+								ref={videoRef}
 								className={styles.backgroundImage}
 								muted
 								loop
 								playsInline
-								autoPlay
+								preload={shouldAnimate ? 'auto' : 'metadata'}
+								autoPlay={shouldAnimate}
+								src={imageUrl}
 								data-flx="theme.background-image-gallery-modal.background-item.background-video"
 							/>
-						) : imageUrl ? (
+						) : isNearViewport && imageUrl ? (
 							<img
 								src={imageUrl}
 								alt={i18n._(BACKGROUND_DESCRIPTOR)}
@@ -433,6 +444,8 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 	const voiceSettings = VoiceSettings;
 	const {backgroundImageId, backgroundImages = []} = voiceSettings;
 	const isMountedRef = useRef(true);
+	const contentScrollerRef = useRef<ScrollerHandle>(null);
+	const resolveContentScrollSurface = useMemo(() => () => contentScrollerRef.current?.getViewportElement() ?? null, []);
 	const [isDragging, setIsDragging] = useState(false);
 	const dragCounterRef = useRef(0);
 	const maxBackgroundImages = useMemo(() => LimitResolver.resolve({key: 'max_custom_backgrounds', fallback: 1}), []);
@@ -744,251 +757,259 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 				title={i18n._(CHOOSE_BACKGROUND_DESCRIPTOR)}
 				data-flx="theme.background-image-gallery-modal.modal-header"
 			/>
-			<Modal.Content data-flx="theme.background-image-gallery-modal.modal-content">
-				<section
-					className={styles.selectionSection}
-					onDrop={handleDrop}
-					onDragEnter={handleDragEnter}
-					onDragLeave={handleDragLeave}
-					onDragOver={handleDragOver}
-					aria-label={i18n._(BACKGROUND_SELECTION_AREA_WITH_DRAG_AND_DROP_SUPPORT_DESCRIPTOR)}
-					data-flx="theme.background-image-gallery-modal.selection-section"
-				>
-					{isDragging && (
-						<div className={styles.dragOverlay} data-flx="theme.background-image-gallery-modal.drag-overlay">
-							<div className={styles.dragContent} data-flx="theme.background-image-gallery-modal.drag-content">
-								<PlusIcon
-									size={remFromPx(48)}
-									weight="bold"
-									className={styles.dragIcon}
-									data-flx="theme.background-image-gallery-modal.drag-icon"
-								/>
-								<div className={styles.dragText} data-flx="theme.background-image-gallery-modal.drag-text">
-									<Trans>Drop to upload background</Trans>
-								</div>
-							</div>
-						</div>
-					)}
-					{maxBackgroundImages === 1 ? (
-						<div
-							className={styles.freeUserContainer}
-							data-flx="theme.background-image-gallery-modal.free-user-container"
-						>
-							{sortedImages.length > 0 ? (
-								<div
-									className={styles.customBackgroundWrapper}
-									data-flx="theme.background-image-gallery-modal.custom-background-wrapper"
-								>
-									<BackgroundItem
-										key={sortedImages[0].id}
-										background={sortedImages[0]}
-										isSelected={backgroundImageId === sortedImages[0].id}
-										onSelect={handleBackgroundSelect}
-										onDelete={undefined}
-										data-flx="theme.background-image-gallery-modal.background-item.background-select"
+			<Modal.Content ref={contentScrollerRef} data-flx="theme.background-image-gallery-modal.modal-content">
+				<NearViewportSurfaceContext.Provider value={resolveContentScrollSurface}>
+					<section
+						className={styles.selectionSection}
+						onDrop={handleDrop}
+						onDragEnter={handleDragEnter}
+						onDragLeave={handleDragLeave}
+						onDragOver={handleDragOver}
+						aria-label={i18n._(BACKGROUND_SELECTION_AREA_WITH_DRAG_AND_DROP_SUPPORT_DESCRIPTOR)}
+						data-flx="theme.background-image-gallery-modal.selection-section"
+					>
+						{isDragging && (
+							<div className={styles.dragOverlay} data-flx="theme.background-image-gallery-modal.drag-overlay">
+								<div className={styles.dragContent} data-flx="theme.background-image-gallery-modal.drag-content">
+									<PlusIcon
+										size={remFromPx(48)}
+										weight="bold"
+										className={styles.dragIcon}
+										data-flx="theme.background-image-gallery-modal.drag-icon"
 									/>
-									<div className={styles.actionButtons} data-flx="theme.background-image-gallery-modal.action-buttons">
-										<Tooltip
-											text={i18n._(REPLACE_BACKGROUND_2_DESCRIPTOR)}
-											data-flx="theme.background-image-gallery-modal.tooltip"
-										>
-											<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring">
-												<button
-													type="button"
-													onClick={(e) => {
-														e.stopPropagation();
-														handleUploadClick(true);
-													}}
-													className={styles.actionButton}
-													aria-label={i18n._(REPLACE_BACKGROUND_2_DESCRIPTOR)}
-													data-flx="theme.background-image-gallery-modal.action-button.stop-propagation"
-												>
-													<ArrowsClockwiseIcon
-														size={remFromPx(16)}
-														weight="bold"
-														className={styles.actionButtonIcon}
-														data-flx="theme.background-image-gallery-modal.action-button-icon"
-													/>
-												</button>
-											</FocusRing>
-										</Tooltip>
-										<Tooltip
-											text={i18n._(REPLACE_WITH_A_GIF_DESCRIPTOR)}
-											data-flx="theme.background-image-gallery-modal.tooltip--gif"
-										>
-											<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring--gif-replace">
-												<button
-													type="button"
-													onClick={(e) => {
-														e.stopPropagation();
-														handlePickGifClick(true);
-													}}
-													className={styles.actionButton}
-													aria-label={i18n._(REPLACE_WITH_A_GIF_DESCRIPTOR)}
-													data-flx="theme.background-image-gallery-modal.action-button.pick-gif-click"
-												>
-													<GifIcon
-														size={remFromPx(16)}
-														weight="bold"
-														className={styles.actionButtonIcon}
-														data-flx="theme.background-image-gallery-modal.action-button-icon--gif"
-													/>
-												</button>
-											</FocusRing>
-										</Tooltip>
-										<Tooltip
-											text={i18n._(REMOVE_BACKGROUND_DESCRIPTOR)}
-											data-flx="theme.background-image-gallery-modal.tooltip--2"
-										>
-											<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring--2">
-												<button
-													type="button"
-													onClick={(e) => {
-														e.stopPropagation();
-														handleRemoveImage(sortedImages[0]);
-													}}
-													className={styles.actionButton}
-													aria-label={i18n._(REMOVE_BACKGROUND_DESCRIPTOR)}
-													data-flx="theme.background-image-gallery-modal.action-button.stop-propagation--2"
-												>
-													<TrashIcon
-														size={remFromPx(16)}
-														weight="bold"
-														className={styles.actionButtonIcon}
-														data-flx="theme.background-image-gallery-modal.action-button-icon--2"
-													/>
-												</button>
-											</FocusRing>
-										</Tooltip>
+									<div className={styles.dragText} data-flx="theme.background-image-gallery-modal.drag-text">
+										<Trans>Drop to upload background</Trans>
 									</div>
 								</div>
-							) : (
-								<div
-									className={styles.uploadPlaceholder}
-									onClick={() => handleUploadClick(false)}
-									onKeyDown={(e) => {
-										if (isKeyboardActivationKey(e.key)) {
-											e.preventDefault();
-											handleUploadClick(false);
-										}
-									}}
-									role="button"
-									tabIndex={0}
-									aria-label={i18n._(UPLOAD_CUSTOM_BACKGROUND_DESCRIPTOR)}
-									data-flx="theme.background-image-gallery-modal.upload-placeholder.upload-click"
-								>
+							</div>
+						)}
+						{maxBackgroundImages === 1 ? (
+							<div
+								className={styles.freeUserContainer}
+								data-flx="theme.background-image-gallery-modal.free-user-container"
+							>
+								{sortedImages.length > 0 ? (
 									<div
-										className={styles.uploadPlaceholderContent}
-										data-flx="theme.background-image-gallery-modal.upload-placeholder-content"
+										className={styles.customBackgroundWrapper}
+										data-flx="theme.background-image-gallery-modal.custom-background-wrapper"
 									>
-										<PlusIcon
-											size={remFromPx(48)}
-											weight="regular"
-											className={styles.uploadIcon}
-											data-flx="theme.background-image-gallery-modal.upload-icon"
+										<BackgroundItem
+											key={sortedImages[0].id}
+											item={sortedImages[0]}
+											isSelected={backgroundImageId === sortedImages[0].id}
+											onSelect={handleBackgroundSelect}
+											onDelete={undefined}
+											data-flx="theme.background-image-gallery-modal.background-item.background-select"
 										/>
 										<div
-											className={styles.uploadTextContainer}
-											data-flx="theme.background-image-gallery-modal.upload-text-container"
+											className={styles.actionButtons}
+											data-flx="theme.background-image-gallery-modal.action-buttons"
 										>
-											<div className={styles.uploadTitle} data-flx="theme.background-image-gallery-modal.upload-title">
-												<Trans>Upload custom background</Trans>
-											</div>
-											<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring--gif">
-												<button
-													type="button"
-													className={styles.gifLinkButton}
-													onClick={(e) => {
-														e.stopPropagation();
-														handlePickGifClick(false);
-													}}
-													data-flx="theme.background-image-gallery-modal.gif-link-button.pick-gif-click"
-												>
-													{i18n._(OR_PICK_A_GIF_FROM_PROVIDER_DESCRIPTOR, {
-														gifProviderName: RuntimeConfig.gifProviderDisplayName,
-													})}
-												</button>
-											</FocusRing>
+											<Tooltip
+												text={i18n._(REPLACE_BACKGROUND_2_DESCRIPTOR)}
+												data-flx="theme.background-image-gallery-modal.tooltip"
+											>
+												<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring">
+													<button
+														type="button"
+														onClick={(e) => {
+															e.stopPropagation();
+															handleUploadClick(true);
+														}}
+														className={styles.actionButton}
+														aria-label={i18n._(REPLACE_BACKGROUND_2_DESCRIPTOR)}
+														data-flx="theme.background-image-gallery-modal.action-button.stop-propagation"
+													>
+														<ArrowsClockwiseIcon
+															size={remFromPx(16)}
+															weight="bold"
+															className={styles.actionButtonIcon}
+															data-flx="theme.background-image-gallery-modal.action-button-icon"
+														/>
+													</button>
+												</FocusRing>
+											</Tooltip>
+											<Tooltip
+												text={i18n._(REPLACE_WITH_A_GIF_DESCRIPTOR)}
+												data-flx="theme.background-image-gallery-modal.tooltip--gif"
+											>
+												<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring--gif-replace">
+													<button
+														type="button"
+														onClick={(e) => {
+															e.stopPropagation();
+															handlePickGifClick(true);
+														}}
+														className={styles.actionButton}
+														aria-label={i18n._(REPLACE_WITH_A_GIF_DESCRIPTOR)}
+														data-flx="theme.background-image-gallery-modal.action-button.pick-gif-click"
+													>
+														<GifIcon
+															size={remFromPx(16)}
+															weight="bold"
+															className={styles.actionButtonIcon}
+															data-flx="theme.background-image-gallery-modal.action-button-icon--gif"
+														/>
+													</button>
+												</FocusRing>
+											</Tooltip>
+											<Tooltip
+												text={i18n._(REMOVE_BACKGROUND_DESCRIPTOR)}
+												data-flx="theme.background-image-gallery-modal.tooltip--2"
+											>
+												<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring--2">
+													<button
+														type="button"
+														onClick={(e) => {
+															e.stopPropagation();
+															handleRemoveImage(sortedImages[0]);
+														}}
+														className={styles.actionButton}
+														aria-label={i18n._(REMOVE_BACKGROUND_DESCRIPTOR)}
+														data-flx="theme.background-image-gallery-modal.action-button.stop-propagation--2"
+													>
+														<TrashIcon
+															size={remFromPx(16)}
+															weight="bold"
+															className={styles.actionButtonIcon}
+															data-flx="theme.background-image-gallery-modal.action-button-icon--2"
+														/>
+													</button>
+												</FocusRing>
+											</Tooltip>
 										</div>
 									</div>
+								) : (
+									<div
+										className={styles.uploadPlaceholder}
+										onClick={() => handleUploadClick(false)}
+										onKeyDown={(e) => {
+											if (isKeyboardActivationKey(e.key)) {
+												e.preventDefault();
+												handleUploadClick(false);
+											}
+										}}
+										role="button"
+										tabIndex={0}
+										aria-label={i18n._(UPLOAD_CUSTOM_BACKGROUND_DESCRIPTOR)}
+										data-flx="theme.background-image-gallery-modal.upload-placeholder.upload-click"
+									>
+										<div
+											className={styles.uploadPlaceholderContent}
+											data-flx="theme.background-image-gallery-modal.upload-placeholder-content"
+										>
+											<PlusIcon
+												size={remFromPx(48)}
+												weight="regular"
+												className={styles.uploadIcon}
+												data-flx="theme.background-image-gallery-modal.upload-icon"
+											/>
+											<div
+												className={styles.uploadTextContainer}
+												data-flx="theme.background-image-gallery-modal.upload-text-container"
+											>
+												<div
+													className={styles.uploadTitle}
+													data-flx="theme.background-image-gallery-modal.upload-title"
+												>
+													<Trans>Upload custom background</Trans>
+												</div>
+												<FocusRing offset={-2} data-flx="theme.background-image-gallery-modal.focus-ring--gif">
+													<button
+														type="button"
+														className={styles.gifLinkButton}
+														onClick={(e) => {
+															e.stopPropagation();
+															handlePickGifClick(false);
+														}}
+														data-flx="theme.background-image-gallery-modal.gif-link-button.pick-gif-click"
+													>
+														{i18n._(OR_PICK_A_GIF_FROM_PROVIDER_DESCRIPTOR, {
+															gifProviderName: RuntimeConfig.gifProviderDisplayName,
+														})}
+													</button>
+												</FocusRing>
+											</div>
+										</div>
+									</div>
+								)}
+								<div className={styles.builtInGrid} data-flx="theme.background-image-gallery-modal.built-in-grid">
+									{builtInBackgrounds
+										.filter((bg) => bg.type !== 'upload' && bg.type !== 'gif')
+										.map((background) => (
+											<BackgroundItem
+												key={background.id}
+												item={background}
+												isSelected={backgroundImageId === background.id}
+												onSelect={handleBackgroundSelect}
+												data-flx="theme.background-image-gallery-modal.background-item.background-select--2"
+											/>
+										))}
 								</div>
-							)}
-							<div className={styles.builtInGrid} data-flx="theme.background-image-gallery-modal.built-in-grid">
-								{builtInBackgrounds
-									.filter((bg) => bg.type !== 'upload' && bg.type !== 'gif')
-									.map((background) => (
-										<BackgroundItem
-											key={background.id}
-											background={background}
-											isSelected={backgroundImageId === background.id}
-											onSelect={handleBackgroundSelect}
-											data-flx="theme.background-image-gallery-modal.background-item.background-select--2"
-										/>
-									))}
 							</div>
-						</div>
-					) : (
-						<div className={styles.premiumGrid} data-flx="theme.background-image-gallery-modal.premium-grid">
-							{builtInBackgrounds.map((background) => (
-								<BackgroundItem
-									key={background.id}
-									background={background}
-									isSelected={backgroundImageId === background.id}
-									onSelect={handleBackgroundSelect}
-									data-flx="theme.background-image-gallery-modal.background-item.background-select--3"
-								/>
-							))}
-							{sortedImages.map((image) => (
-								<BackgroundItem
-									key={image.id}
-									background={image}
-									isSelected={backgroundImageId === image.id}
-									onSelect={handleBackgroundSelect}
-									onContextMenu={handleBackgroundContextMenu}
-									onDelete={handleRemoveImage}
-									data-flx="theme.background-image-gallery-modal.background-item.background-select--4"
-								/>
-							))}
-						</div>
-					)}
-					<div className={styles.statsText} data-flx="theme.background-image-gallery-modal.stats-text">
-						{backgroundCount === 1
-							? i18n._(CUSTOM_BACKGROUND_DESCRIPTOR, {backgroundCount, maxBackgroundImages})
-							: i18n._(CUSTOM_BACKGROUNDS_DESCRIPTOR, {backgroundCount, maxBackgroundImages})}
-					</div>
-					<div className={styles.infoText} data-flx="theme.background-image-gallery-modal.info-text">
-						<Trans>Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}.</Trans>
-					</div>
-					{maxBackgroundImages === 1 && shouldShowPremiumFeatures() && (
-						<div className={styles.premiumUpsell} data-flx="theme.background-image-gallery-modal.premium-upsell">
-							<div className={styles.premiumHeader} data-flx="theme.background-image-gallery-modal.premium-header">
-								<CrownIcon
-									weight="fill"
-									size={remFromPx(18)}
-									className={styles.premiumIcon}
-									data-flx="theme.background-image-gallery-modal.premium-icon"
-								/>
-								<span className={styles.premiumTitle} data-flx="theme.background-image-gallery-modal.premium-title">
-									{i18n._(UNLOCK_MORE_BACKGROUNDS_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
-								</span>
+						) : (
+							<div className={styles.premiumGrid} data-flx="theme.background-image-gallery-modal.premium-grid">
+								{builtInBackgrounds.map((background) => (
+									<BackgroundItem
+										key={background.id}
+										item={background}
+										isSelected={backgroundImageId === background.id}
+										onSelect={handleBackgroundSelect}
+										data-flx="theme.background-image-gallery-modal.background-item.background-select--3"
+									/>
+								))}
+								{sortedImages.map((image) => (
+									<BackgroundItem
+										key={image.id}
+										item={image}
+										isSelected={backgroundImageId === image.id}
+										onSelect={handleBackgroundSelect}
+										onContextMenu={handleBackgroundContextMenu}
+										onDelete={handleRemoveImage}
+										data-flx="theme.background-image-gallery-modal.background-item.background-select--4"
+									/>
+								))}
 							</div>
-							<p className={styles.premiumDesc} data-flx="theme.background-image-gallery-modal.premium-desc">
-								<Trans>
-									Upgrade to store up to 15 custom backgrounds and unlock HD video quality, higher frame rates, and
-									more.
-								</Trans>
-							</p>
-							<Button
-								variant="secondary"
-								small={true}
-								onClick={() => PremiumModalCommands.open()}
-								data-flx="theme.background-image-gallery-modal.button.open"
-							>
-								{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
-							</Button>
+						)}
+						<div className={styles.statsText} data-flx="theme.background-image-gallery-modal.stats-text">
+							{backgroundCount === 1
+								? i18n._(CUSTOM_BACKGROUND_DESCRIPTOR, {backgroundCount, maxBackgroundImages})
+								: i18n._(CUSTOM_BACKGROUNDS_DESCRIPTOR, {backgroundCount, maxBackgroundImages})}
 						</div>
-					)}
-				</section>
+						<div className={styles.infoText} data-flx="theme.background-image-gallery-modal.info-text">
+							<Trans>Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}.</Trans>
+						</div>
+						{maxBackgroundImages === 1 && shouldShowPremiumFeatures() && (
+							<div className={styles.premiumUpsell} data-flx="theme.background-image-gallery-modal.premium-upsell">
+								<div className={styles.premiumHeader} data-flx="theme.background-image-gallery-modal.premium-header">
+									<CrownIcon
+										weight="fill"
+										size={remFromPx(18)}
+										className={styles.premiumIcon}
+										data-flx="theme.background-image-gallery-modal.premium-icon"
+									/>
+									<span className={styles.premiumTitle} data-flx="theme.background-image-gallery-modal.premium-title">
+										{i18n._(UNLOCK_MORE_BACKGROUNDS_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+									</span>
+								</div>
+								<p className={styles.premiumDesc} data-flx="theme.background-image-gallery-modal.premium-desc">
+									<Trans>
+										Upgrade to store up to 15 custom backgrounds and unlock HD video quality, higher frame rates, and
+										more.
+									</Trans>
+								</p>
+								<Button
+									variant="secondary"
+									small={true}
+									onClick={() => PremiumModalCommands.open()}
+									data-flx="theme.background-image-gallery-modal.button.open"
+								>
+									{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+								</Button>
+							</div>
+						)}
+					</section>
+				</NearViewportSurfaceContext.Provider>
 			</Modal.Content>
 		</Modal.Root>
 	);
