@@ -52,7 +52,7 @@ export const KeyboardModeListener = observer(() => {
 	useEffect(() => {
 		let lastWindowFocusTime = document.hasFocus() ? 0 : -Infinity;
 		const REFOCUS_THRESHOLD_MS = 100;
-		const handleWindowFocus = () => {
+		const handleWindowFocused = () => {
 			lastWindowFocusTime = performance.now();
 		};
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -75,12 +75,12 @@ export const KeyboardModeListener = observer(() => {
 				KeyboardMode.exitKeyboardMode();
 			}
 		};
-		window.addEventListener('focus', handleWindowFocus);
+		window.addEventListener('focus', handleWindowFocused);
 		window.addEventListener('keydown', handleKeyDown, true);
 		window.addEventListener('mousedown', handlePointer, true);
 		window.addEventListener('pointerdown', handlePointer, true);
 		return () => {
-			window.removeEventListener('focus', handleWindowFocus);
+			window.removeEventListener('focus', handleWindowFocused);
 			window.removeEventListener('keydown', handleKeyDown, true);
 			window.removeEventListener('mousedown', handlePointer, true);
 			window.removeEventListener('pointerdown', handlePointer, true);

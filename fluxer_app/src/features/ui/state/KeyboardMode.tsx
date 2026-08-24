@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {KeyboardModeIntroModal} from '@app/features/input/components/modals/KeyboardModeIntroModal';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {registerKeyboardModeRestoreCallback, registerKeyboardModeStateResolver} from '@app/features/ui/state/Modal';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -35,7 +34,10 @@ class KeyboardMode {
 		});
 		if (showIntro && !this.introSeen) {
 			this.introSeen = true;
-			void import('@app/features/ui/commands/ModalCommands').then(({modal, push}) => {
+			void Promise.all([
+				import('@app/features/ui/commands/ModalCommands'),
+				import('@app/features/input/components/modals/KeyboardModeIntroModal'),
+			]).then(([{modal, push}, {KeyboardModeIntroModal}]) => {
 				push(modal(() => <KeyboardModeIntroModal data-flx="ui.keyboard-mode.keyboard-mode-intro-modal" />));
 			});
 		}
