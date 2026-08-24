@@ -10,15 +10,17 @@ import {SavedMessagesContent} from '@app/features/messaging/components/popouts/S
 import {ScheduledMessagesContent} from '@app/features/messaging/components/popouts/ScheduledMessagesContent';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import type {ResizeEdge} from '@app/features/ui/floating_pane/FloatingPaneMath';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING, useResizablePane} from '@app/features/ui/hooks/useResizablePane';
+import {
+	type ResizablePaneHandleLabels,
+	ResizablePaneHandles,
+} from '@app/features/ui/resizable_pane/ResizablePaneHandles';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
-import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {AtIcon, BellIcon, BookmarkSimpleIcon, CheckIcon, ClockIcon} from '@phosphor-icons/react';
@@ -51,6 +53,22 @@ const MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR = msg({
 	message: 'Mark all inbox channels as read',
 	comment: 'Accessible label and tooltip for the mark-all-as-read button in the inbox popout.',
 });
+const RESIZE_INBOX_TOP_DESCRIPTOR = msg({
+	message: 'Resize inbox from the top edge',
+	comment: 'Accessible label for the top resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_BOTTOM_DESCRIPTOR = msg({
+	message: 'Resize inbox from the bottom edge',
+	comment: 'Accessible label for the bottom resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_LEFT_DESCRIPTOR = msg({
+	message: 'Resize inbox from the left edge',
+	comment: 'Accessible label for the left resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_RIGHT_DESCRIPTOR = msg({
+	message: 'Resize inbox from the right edge',
+	comment: 'Accessible label for the right resize handle on the inbox popout.',
+});
 const RESIZE_INBOX_TOP_LEFT_DESCRIPTOR = msg({
 	message: 'Resize inbox from top left',
 	comment: 'Accessible label for the top-left resize handle on the inbox popout.',
@@ -72,12 +90,16 @@ const INBOX_POPOUT_DEFAULT_SIZE = {width: 600, height: 900};
 const INBOX_POPOUT_MIN_SIZE = {width: 440, height: 400};
 const INBOX_POPOUT_RESIZING_CLASS = 'inbox-popout-resizing';
 const INBOX_POPOUT_RESIZE_CURSOR_PROPERTY = '--inbox-popout-resize-cursor';
-const INBOX_RESIZE_HANDLES: ReadonlyArray<{edge: ResizeEdge; className: string; label: MessageDescriptor}> = [
-	{edge: 'top-left', className: styles.resizeCornerTopLeft, label: RESIZE_INBOX_TOP_LEFT_DESCRIPTOR},
-	{edge: 'top-right', className: styles.resizeCornerTopRight, label: RESIZE_INBOX_TOP_RIGHT_DESCRIPTOR},
-	{edge: 'bottom-left', className: styles.resizeCornerBottomLeft, label: RESIZE_INBOX_BOTTOM_LEFT_DESCRIPTOR},
-	{edge: 'bottom-right', className: styles.resizeCornerBottomRight, label: RESIZE_INBOX_BOTTOM_RIGHT_DESCRIPTOR},
-];
+const INBOX_RESIZE_HANDLE_LABELS: ResizablePaneHandleLabels = {
+	top: RESIZE_INBOX_TOP_DESCRIPTOR,
+	bottom: RESIZE_INBOX_BOTTOM_DESCRIPTOR,
+	left: RESIZE_INBOX_LEFT_DESCRIPTOR,
+	right: RESIZE_INBOX_RIGHT_DESCRIPTOR,
+	'top-left': RESIZE_INBOX_TOP_LEFT_DESCRIPTOR,
+	'top-right': RESIZE_INBOX_TOP_RIGHT_DESCRIPTOR,
+	'bottom-left': RESIZE_INBOX_BOTTOM_LEFT_DESCRIPTOR,
+	'bottom-right': RESIZE_INBOX_BOTTOM_RIGHT_DESCRIPTOR,
+};
 
 interface TabConfig {
 	key: InboxTab;
@@ -303,17 +325,11 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 				<div className={styles.mainPanel} data-flx="messaging.inbox-popout.main-panel">
 					{content}
 				</div>
-				{INBOX_RESIZE_HANDLES.map(({edge, className, label}) => (
-					<button
-						key={edge}
-						type="button"
-						aria-label={i18n._(label)}
-						aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Backspace Delete"
-						className={clsx(styles.resizeCorner, className)}
-						data-flx="messaging.inbox-popout.resize-corner.button"
-						{...getHandleProps(edge)}
-					/>
-				))}
+				<ResizablePaneHandles
+					getHandleProps={getHandleProps}
+					labels={INBOX_RESIZE_HANDLE_LABELS}
+					data-flx="messaging.inbox-popout.resizable-pane-handles"
+				/>
 			</div>
 		</FocusRingScope>
 	);

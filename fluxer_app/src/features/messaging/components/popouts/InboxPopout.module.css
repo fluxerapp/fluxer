@@ -136,47 +136,6 @@
 	width: 1rem;
 }
 
-.resizeCorner {
-	position: absolute;
-	width: 1.25rem;
-	height: 1.25rem;
-	z-index: 5;
-	border: none;
-	background: transparent;
-	padding: 0;
-	pointer-events: auto;
-	touch-action: none;
-}
-
-.resizeCorner:focus-visible {
-	outline: 0.125rem solid var(--focus-primary);
-	outline-offset: -0.125rem;
-}
-
-.resizeCornerTopLeft {
-	top: 0;
-	left: 0;
-	cursor: nwse-resize;
-}
-
-.resizeCornerTopRight {
-	top: 0;
-	right: 0;
-	cursor: nesw-resize;
-}
-
-.resizeCornerBottomLeft {
-	bottom: 0;
-	left: 0;
-	cursor: nesw-resize;
-}
-
-.resizeCornerBottomRight {
-	right: 0;
-	bottom: 0;
-	cursor: nwse-resize;
-}
-
 :global(html.inbox-popout-resizing),
 :global(html.inbox-popout-resizing) * {
 	cursor: var(--inbox-popout-resize-cursor, nwse-resize) !important;
