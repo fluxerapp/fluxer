@@ -20,7 +20,7 @@ export function extractTenorSlugId(url: string): string | null {
 		if (hostname !== 'tenor.com' && hostname !== 'www.tenor.com') {
 			return null;
 		}
-		const match = parsedUrl.pathname.match(/^\/(?:[a-z]{2}\/)?view\/([^/]+)/i);
+		const match = parsedUrl.pathname.match(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?view\/([^/]+)/i);
 		if (!match?.[1]) {
 			return null;
 		}
