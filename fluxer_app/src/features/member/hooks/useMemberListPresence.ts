@@ -42,40 +42,42 @@ export function useMemberListPresence({
 	userId,
 	enabled = true,
 }: UseMemberListPresenceOptions): StatusType {
+	const hasMemberListSource = guildId !== '';
 	const computeStatus = useCallback(
 		() =>
 			resolveMemberListPresence({
 				guildId,
 				channelId,
 				userId,
-				enabled,
+				enabled: hasMemberListSource,
 			}),
-		[channelId, enabled, guildId, userId],
+		[channelId, guildId, hasMemberListSource, userId],
 	);
-	const [status, setStatus] = useState<StatusType>(() => computeStatus());
+	const [status, setStatus] = useState<StatusType>(() => (enabled ? computeStatus() : StatusTypes.OFFLINE));
 	useEffect(() => {
-		setStatus(computeStatus());
-		let disposeMemberListReaction: (() => void) | undefined;
-		if (enabled) {
-			disposeMemberListReaction = reaction(
-				() => MemberSidebar.getPresence(guildId, channelId, userId),
-				() => setStatus(computeStatus()),
-				{fireImmediately: false},
-			);
+		if (!enabled) {
+			return;
 		}
-		const unsubscribePresence = Presence.subscribeToUserStatus(userId, () => {
-			setStatus(computeStatus());
-		});
-		const disposeTransient = reaction(
-			() => TransientPresence.getTransientStatus(userId),
-			() => setStatus(computeStatus()),
-			{fireImmediately: false},
-		);
+		let lastStatus = computeStatus();
+		setStatus(lastStatus);
+		const applyStatus = () => {
+			const nextStatus = computeStatus();
+			if (nextStatus === lastStatus) {
+				return;
+			}
+			lastStatus = nextStatus;
+			setStatus(nextStatus);
+		};
+		const disposeMemberListReaction = hasMemberListSource
+			? reaction(() => MemberSidebar.getPresence(guildId, channelId, userId), applyStatus)
+			: undefined;
+		const unsubscribePresence = Presence.subscribeToUserStatus(userId, applyStatus);
+		const disposeTransient = reaction(() => TransientPresence.getTransientStatus(userId), applyStatus);
 		return () => {
 			unsubscribePresence();
 			disposeTransient();
 			disposeMemberListReaction?.();
 		};
-	}, [computeStatus, enabled, guildId, channelId, userId]);
+	}, [computeStatus, enabled, hasMemberListSource, guildId, channelId, userId]);
 	return status;
 }
