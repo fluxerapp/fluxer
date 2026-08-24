@@ -688,7 +688,7 @@
 	.buttons:hover,
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message
-	.buttons:focus-within,
+	.buttons:has(:focus-visible),
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message.selected
 	.buttons,
@@ -703,7 +703,7 @@
 	.buttons:hover,
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.messageCompact
-	.buttons:focus-within,
+	.buttons:has(:focus-visible),
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.messageCompact.selected
 	.buttons,
