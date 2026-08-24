@@ -135,7 +135,14 @@ function addFilesFromDirectory(files, packageDir, relativeDir, predicate) {
 
 function collectRuntimeArtifactPaths(packageDir) {
 	const artifacts = new Set();
-	for (const fileName of ['index.js', 'index.d.ts', 'binding.js', 'binding.d.ts', 'loader-diagnostics.cjs', 'pure.cjs']) {
+	for (const fileName of [
+		'index.js',
+		'index.d.ts',
+		'binding.js',
+		'binding.d.ts',
+		'loader-diagnostics.cjs',
+		'pure.cjs',
+	]) {
 		if (fs.existsSync(path.join(packageDir, fileName))) {
 			artifacts.add(fileName);
 		}

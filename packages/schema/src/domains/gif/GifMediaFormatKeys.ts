@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const FORMAT_CONTENT_TYPES: Record<string, string> = {
+const FORMAT_CONTENT_TYPES: Record<string, string> = {
 	gif: 'image/gif',
 	loopedmp4: 'video/mp4',
 	mediumgif: 'image/gif',

@@ -8,11 +8,11 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import type {UserUpdateRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {ApiContext} from '../../ApiContext';
-import {Config} from '../../Config';
 import * as AuthPassword from '../../auth/AuthPassword';
 import * as AuthSession from '../../auth/AuthSession';
 import type {SudoVerificationResult} from '../../auth/services/SudoVerificationService';
 import {deriveSudoMethods, userHasMfa} from '../../auth/services/SudoVerificationService';
+import {Config} from '../../Config';
 import type {UserRow} from '../../database/types/UserTypes';
 import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
 import type {LimitConfigService} from '../../limits/LimitConfigService';

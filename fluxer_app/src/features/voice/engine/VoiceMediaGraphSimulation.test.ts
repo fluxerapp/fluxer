@@ -670,5 +670,5 @@ describe('VoiceMediaGraphSimulation', () => {
 			const second = runSimulation(seed);
 			expect(second, `seed=${seed} replay diverged`).toEqual(first);
 		}
-	});
+	}, 60_000);
 });

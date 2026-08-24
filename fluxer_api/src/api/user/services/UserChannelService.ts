@@ -23,7 +23,6 @@ import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
 import type {ChannelID, UserID} from '../../BrandedTypes';
 import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
 import {mapChannelToResponse} from '../../channel/ChannelMappers';
-import {SYSTEM_USER_ID} from '../../constants/Core';
 import type {IChannelRepository} from '../../channel/IChannelRepository';
 import type {ChannelService} from '../../channel/services/ChannelService';
 import {dispatchMessageCreateBroadcast} from '../../channel/services/message/MessageGatewayDispatch';
@@ -31,6 +30,7 @@ import {
 	createMessageResponseDataService,
 	messageResponseAccessForGuild,
 } from '../../channel/services/message/MessageResponseDataService';
+import {SYSTEM_USER_ID} from '../../constants/Core';
 import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
 import type {UserCacheService} from '../../infrastructure/UserCacheService';

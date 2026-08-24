@@ -5,6 +5,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount, unclaimAccount} from '../../auth/tests/AuthTestUtils';
+import {createChannelID, createUserID} from '../../BrandedTypes';
 import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
 import {
 	acceptInvite,
@@ -19,13 +20,12 @@ import {
 	type MinimalChannelResponse,
 	sendChannelMessage,
 } from '../../channel/tests/ChannelTestUtils';
-import {createChannelID, createUserID} from '../../BrandedTypes';
 import {SYSTEM_USER_ID} from '../../constants/Core';
-import {UserRepository} from '../../user/repositories/UserRepository';
 import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder} from '../../test/TestRequestBuilder';
+import {UserRepository} from '../../user/repositories/UserRepository';
 
 interface PrivateChannelsResponse extends Array<MinimalChannelResponse> {}
 

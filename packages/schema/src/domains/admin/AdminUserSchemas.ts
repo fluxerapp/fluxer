@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
 	PremiumFlags,
 	PremiumFlagsDescriptions,
@@ -8,7 +9,6 @@ import {
 	UserFlags,
 	UserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
 import {
 	createBitflagInt32Type,

@@ -145,7 +145,14 @@
 			"!fluxer_static",
 			"!packages/fonts",
 			"!fluxer_admin/static/htmx.min.js",
-			"!fluxer_api/src/api/openapi/openapi.json"
+			"!fluxer_api/src/api/openapi/openapi.json",
+			"!fluxer_api/pkgs/email/src/email_i18n/locales",
+			"!fluxer_api/pkgs/email/src/email_i18n/weblate",
+			"!fluxer_api/src/api/content_i18n/locales",
+			"!fluxer_api/src/api/content_i18n/weblate",
+			"!packages/errors/src/i18n/locales",
+			"!packages/errors/src/i18n/weblate",
+			"!**/auto-i18n-reviewed-unchanged.json"
 		],
 		"ignoreUnknown": true
 	}
