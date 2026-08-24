@@ -66,20 +66,20 @@ export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 	const {popouts} = Popout;
 	const isOpen = 'guild-header' in popouts;
 	const isMobile = MobileLayout.isMobileLayout();
+	const isDetachedBanner = guild.features.has(GuildFeatures.DETACHED_BANNER);
 	const staticBannerURL = useMemo(
 		() => AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}, false) || null,
 		[guild.banner, guild.id],
 	);
 	const animatedBannerURL = useMemo(
-		() => AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}, true) || null,
-		[guild.banner, guild.id],
+		() => (isDetachedBanner ? null : AvatarUtils.getGuildBannerURL({id: guild.id, banner: guild.banner}, true) || null),
+		[guild.banner, guild.id, isDetachedBanner],
 	);
 	const {hoverRef: bannerHoverRef, imageUrl: bannerURL} = useAnimatedImageUrl({
 		staticUrl: staticBannerURL,
 		animatedUrl: animatedBannerURL,
 		kind: 'gif',
 	});
-	const isDetachedBanner = guild.features.has(GuildFeatures.DETACHED_BANNER);
 	const showIntegratedBanner = Boolean(bannerURL && !isDetachedBanner);
 	const bannerAspectRatio =
 		guild.bannerWidth && guild.bannerHeight

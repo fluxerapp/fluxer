@@ -55,10 +55,16 @@ export const YouPage = observer(({onAvatarClick}: YouPageProps) => {
 		return normalizeCustomStatus(Presence.getCustomStatus(user.id));
 	}, [user]);
 	const hasCustomStatus = Boolean(normalizedCustomStatus);
-	const staticBannerUrl = user?.banner ? AvatarUtils.getUserBannerURL({id: user.id, banner: user.banner}, false) : null;
-	const animatedBannerUrl = user?.banner
-		? AvatarUtils.getUserBannerURL({id: user.id, banner: user.banner}, true)
-		: null;
+	const userId = user?.id;
+	const userBanner = user?.banner;
+	const staticBannerUrl = useMemo(
+		() => (userId && userBanner ? AvatarUtils.getUserBannerURL({id: userId, banner: userBanner}, false) : null),
+		[userId, userBanner],
+	);
+	const animatedBannerUrl = useMemo(
+		() => (userId && userBanner ? AvatarUtils.getUserBannerURL({id: userId, banner: userBanner}, true) : null),
+		[userId, userBanner],
+	);
 	const {hoverRef: bannerHoverRef, imageUrl: bannerUrl} = useAnimatedImageUrl({
 		staticUrl: staticBannerUrl,
 		animatedUrl: animatedBannerUrl,
