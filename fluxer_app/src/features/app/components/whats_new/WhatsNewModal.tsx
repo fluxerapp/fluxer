@@ -72,7 +72,7 @@ export function WhatsNewModal({entry}: WhatsNewModalProps) {
 		ModalCommands.pop();
 	}, [entry.id]);
 	const updateScrollHintVisibility = useCallback(() => {
-		const scrollerNode = scrollerRef.current?.getScrollerNode();
+		const scrollerNode = scrollerRef.current?.getViewportElement();
 		if (!scrollerNode) {
 			setIsScrollHintVisible(false);
 			return;
@@ -89,7 +89,7 @@ export function WhatsNewModal({entry}: WhatsNewModalProps) {
 		updateScrollHintVisibility();
 	}, [updateScrollHintVisibility]);
 	const handleScrollToBottom = useCallback(() => {
-		scrollerRef.current?.scrollToBottom({animate: true});
+		scrollerRef.current?.jumpToEndEdge({animate: true});
 	}, []);
 	useEffect(() => {
 		updateScrollHintVisibility();

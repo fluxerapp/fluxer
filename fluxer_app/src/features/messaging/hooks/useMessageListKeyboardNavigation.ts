@@ -18,10 +18,10 @@ interface MessageListKeyboardNavigationOptions {
 	allowWhenInactive?: boolean;
 }
 
-const getScrollerNode = (value: ScrollerHandle | HTMLElement | null | undefined): HTMLElement | null => {
+const getViewportElement = (value: ScrollerHandle | HTMLElement | null | undefined): HTMLElement | null => {
 	if (!value) return null;
-	if ('getScrollerNode' in value && typeof value.getScrollerNode === 'function') {
-		return value.getScrollerNode();
+	if ('getViewportElement' in value && typeof value.getViewportElement === 'function') {
+		return value.getViewportElement();
 	}
 	if (value instanceof HTMLElement) {
 		return value;
@@ -109,7 +109,7 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		const getMessageElementsSnapshot = (): MessageNodesSnapshot => {
 			const now = Date.now();
 			const cache = messageNodesCache;
-			const container = getScrollerNode(containerRef?.current ?? null);
+			const container = getViewportElement(containerRef?.current ?? null);
 			if (!container && containerRef) {
 				messageNodesCache = {
 					...EMPTY_MESSAGE_NODES_SNAPSHOT,
@@ -202,7 +202,7 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 			const isNavigationKey = delta !== 0;
 			if (isNavigationKey && hasShortcutModifier(event)) return;
 			if (!isNavigationKey && event.key !== 'Escape') return;
-			const container = getScrollerNode(containerRef?.current ?? null);
+			const container = getViewportElement(containerRef?.current ?? null);
 			if (container && !canHandleInsideContainer(container)) {
 				return;
 			}

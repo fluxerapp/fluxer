@@ -206,7 +206,7 @@ export const ChannelSearchResults = observer(
 			setSortMode(cachedSortMode);
 		}, [contextId, searchContext?.lastSearchSortMode]);
 		const getScrollPosition = useCallback((): number => {
-			const node = scrollerRef.current?.getScrollerNode();
+			const node = scrollerRef.current?.getViewportElement();
 			return node ? node.scrollTop : 0;
 		}, []);
 		const updateScrollPosition = useCallback(
@@ -827,7 +827,7 @@ export const ChannelSearchResults = observer(
 				clearChannelSearchHighlight();
 				return;
 			}
-			const scrollerNode = scrollerRef.current?.getScrollerNode();
+			const scrollerNode = scrollerRef.current?.getViewportElement();
 			if (!scrollerNode) return;
 			const timer = setTimeout(() => {
 				const terms = tokenizeSearchQuery(searchQuery);

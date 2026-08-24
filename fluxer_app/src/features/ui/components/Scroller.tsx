@@ -28,6 +28,7 @@ import {
 	useRef,
 	useState,
 } from 'react';
+import {flushSync} from 'react-dom';
 
 export interface ScrollerState {
 	scrollTop: number;
@@ -39,42 +40,43 @@ export interface ScrollerState {
 }
 
 export interface ScrollerHandle {
-	getScrollerNode(): HTMLElement | null;
-	getScrollerState(): ScrollerState;
+	getViewportElement(): HTMLElement | null;
+	readViewportMetrics(): ScrollerState;
 	cancelScroll(): void;
 	scrollTo(options: {to: number; animate?: boolean; callback?: () => void}): void;
 	mergeTo(options: {to: number; callback?: () => void}): void;
-	scrollIntoViewRect(options: {
+	revealRange(options: {
 		start: number;
 		end: number;
-		shouldScrollToStart?: boolean;
+		preferStartEdge?: boolean;
 		alignment?: 'start' | 'center' | 'end' | 'nearest';
 		padding?: number;
 		animate?: boolean;
 		callback?: () => void;
 	}): void;
-	scrollIntoViewNode(options: {
+	revealElement(options: {
 		node: HTMLElement;
-		shouldScrollToStart?: boolean;
+		preferStartEdge?: boolean;
 		alignment?: 'start' | 'center' | 'end' | 'nearest';
 		padding?: number;
 		animate?: boolean;
 		callback?: () => void;
 	}): void;
-	scrollPageUp(options?: {animate?: boolean; callback?: () => void}): void;
-	scrollPageDown(options?: {animate?: boolean; callback?: () => void}): void;
-	scrollToTop(options?: {animate?: boolean; callback?: () => void}): void;
-	scrollToBottom(options?: {animate?: boolean; callback?: () => void}): void;
-	isScrolledToTop(): boolean;
-	isScrolledToBottom(): boolean;
-	getDistanceFromTop(): number;
-	getDistanceFromBottom(): number;
+	pageBackward(options?: {animate?: boolean; callback?: () => void}): void;
+	pageForward(options?: {animate?: boolean; callback?: () => void}): void;
+	jumpToStartEdge(options?: {animate?: boolean; callback?: () => void}): void;
+	jumpToEndEdge(options?: {animate?: boolean; callback?: () => void}): void;
+	atStartEdge(): boolean;
+	atEndEdge(): boolean;
+	remainingToStartEdge(): number;
+	remainingToEndEdge(): number;
 }
 
 type ScrollAxis = 'vertical' | 'horizontal';
 type ScrollOverflow = 'scroll' | 'auto' | 'hidden';
 type ScrollbarTrackMode = 'overlay' | 'reserve';
 const LINE_DELTA_PX = 16;
+const RESIZE_OBSERVE_OPTIONS = Object.freeze({box: 'border-box'} as const);
 
 interface ScrollerProps
 	extends Omit<
@@ -323,6 +325,13 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 		},
 		[getMaxScroll],
 	);
+	const resolveScrollTarget = useCallback(
+		(node: HTMLDivElement, value: number): number => {
+			const max = getMaxScroll(node);
+			return value >= max ? max + 1 : Math.max(0, value);
+		},
+		[getMaxScroll],
+	);
 	const springScrollTo = useCallback(
 		(node: HTMLDivElement, target: number, callback?: () => void, config: SpringConfig = DEFAULT_SPRING) => {
 			cancelAnimation();
@@ -368,20 +377,24 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 		[cancelAnimation, clampToRange, getScrollPos, setScrollPos],
 	);
 	useLayoutEffect(() => {
-		const containerEl = rootRef.current;
+		const containerEl = scrollRef.current;
 		const contentEl = contentRef.current;
 		if (!containerEl || !contentEl) return;
 		const ownerWindow = containerEl.ownerDocument.defaultView ?? window;
 		const containerObserver = new ownerWindow.ResizeObserver((entries) => {
 			scheduleThumbRefresh();
 			for (const entry of entries) {
-				onResizeRef.current?.(entry, 'container');
+				flushSync(() => {
+					onResizeRef.current?.(entry, 'container');
+				});
 			}
 		});
 		const contentObserver = new ownerWindow.ResizeObserver((entries) => {
 			scheduleThumbRefresh();
 			for (const entry of entries) {
-				onResizeRef.current?.(entry, 'content');
+				flushSync(() => {
+					onResizeRef.current?.(entry, 'content');
+				});
 			}
 		});
 		const childObserver = new ownerWindow.ResizeObserver((entries) => {
@@ -417,8 +430,8 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				refreshThumbState();
 			});
 		});
-		containerObserver.observe(containerEl);
-		contentObserver.observe(contentEl);
+		containerObserver.observe(containerEl, RESIZE_OBSERVE_OPTIONS);
+		contentObserver.observe(contentEl, RESIZE_OBSERVE_OPTIONS);
 		syncChildObservers();
 		childListObserver.observe(contentEl, {childList: true, subtree: true});
 		refreshThumbState();
@@ -470,8 +483,8 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 	useImperativeHandle(
 		forwardedRef,
 		() => ({
-			getScrollerNode: () => scrollRef.current,
-			getScrollerState: () => getScrollState(scrollRef.current),
+			getViewportElement: () => scrollRef.current,
+			readViewportMetrics: () => getScrollState(scrollRef.current),
 			cancelScroll() {
 				cancelAnimation();
 			},
@@ -481,7 +494,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 					callback?.();
 					return;
 				}
-				const clampedTo = clampToRange(node, to);
+				const clampedTo = resolveScrollTarget(node, to);
 				if (!animate || !shouldAnimateScroll()) {
 					cancelAnimation();
 					setScrollPos(node, clampedTo);
@@ -496,11 +509,19 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 					callback?.();
 					return;
 				}
-				cancelAnimation();
-				setScrollPos(node, clampToRange(node, to));
+				const merged = clampToRange(node, to);
+				const anim = animRef.current;
+				if (anim == null) {
+					setScrollPos(node, merged);
+					callback?.();
+					return;
+				}
+				const delta = merged - getScrollPos(node);
+				setScrollPos(node, merged);
+				anim.target += delta;
 				callback?.();
 			},
-			scrollIntoViewRect({start, end, shouldScrollToStart = false, alignment, padding = 0, animate = false, callback}) {
+			revealRange({start, end, preferStartEdge = false, alignment, padding = 0, animate = false, callback}) {
 				const node = scrollRef.current;
 				if (!node) {
 					callback?.();
@@ -508,7 +529,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				}
 				const scrollPos = getScrollPos(node);
 				const viewportSize = orientation === 'vertical' ? node.offsetHeight : node.offsetWidth;
-				const resolvedAlignment = alignment ?? (shouldScrollToStart ? 'start' : 'nearest');
+				const resolvedAlignment = alignment ?? (preferStartEdge ? 'start' : 'nearest');
 				if (resolvedAlignment === 'center') {
 					const targetScroll = start - (viewportSize - (end - start)) / 2;
 					this.scrollTo({to: targetScroll, animate, callback});
@@ -537,14 +558,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				}
 				this.scrollTo({to: targetScroll, animate, callback});
 			},
-			scrollIntoViewNode({
-				node: targetNode,
-				shouldScrollToStart = false,
-				alignment,
-				padding = 0,
-				animate = false,
-				callback,
-			}) {
+			revealElement({node: targetNode, preferStartEdge = false, alignment, padding = 0, animate = false, callback}) {
 				const container = scrollRef.current;
 				if (!container) {
 					callback?.();
@@ -552,17 +566,17 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				}
 				const offset = measureElementOffset(targetNode, orientation, container);
 				const size = orientation === 'vertical' ? targetNode.offsetHeight : targetNode.offsetWidth;
-				this.scrollIntoViewRect({
+				this.revealRange({
 					start: offset,
 					end: offset + size,
-					shouldScrollToStart,
+					preferStartEdge,
 					alignment,
 					padding,
 					animate,
 					callback,
 				});
 			},
-			scrollPageUp({animate = false, callback} = {}) {
+			pageBackward({animate = false, callback} = {}) {
 				const node = scrollRef.current;
 				if (!node) {
 					callback?.();
@@ -573,7 +587,7 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				const target = Math.max(0, scrollPos - 0.9 * viewportSize);
 				this.scrollTo({to: target, animate, callback});
 			},
-			scrollPageDown({animate = false, callback} = {}) {
+			pageForward({animate = false, callback} = {}) {
 				const node = scrollRef.current;
 				if (!node) {
 					callback?.();
@@ -585,10 +599,10 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				const target = Math.min(maxScroll, scrollPos + 0.9 * viewportSize);
 				this.scrollTo({to: target, animate, callback});
 			},
-			scrollToTop({animate = false, callback} = {}) {
+			jumpToStartEdge({animate = false, callback} = {}) {
 				this.scrollTo({to: 0, animate, callback});
 			},
-			scrollToBottom({animate = false, callback} = {}) {
+			jumpToEndEdge({animate = false, callback} = {}) {
 				const node = scrollRef.current;
 				if (!node) {
 					callback?.();
@@ -596,24 +610,24 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				}
 				this.scrollTo({to: getMaxScroll(node), animate, callback});
 			},
-			isScrolledToTop() {
+			atStartEdge() {
 				const node = scrollRef.current;
 				if (!node) return false;
 				return getScrollPos(node) === 0;
 			},
-			isScrolledToBottom() {
+			atEndEdge() {
 				const node = scrollRef.current;
 				if (!node) return false;
 				const scrollPos = getScrollPos(node);
 				const maxScroll = getMaxScroll(node);
 				return scrollPos >= maxScroll;
 			},
-			getDistanceFromTop() {
+			remainingToStartEdge() {
 				const node = scrollRef.current;
 				if (!node) return 0;
 				return Math.max(0, getScrollPos(node));
 			},
-			getDistanceFromBottom() {
+			remainingToEndEdge() {
 				const node = scrollRef.current;
 				if (!node) return 0;
 				const scrollPos = getScrollPos(node);
@@ -621,7 +635,16 @@ export const Scroller = forwardRef<ScrollerHandle, ScrollerProps>(function Scrol
 				return Math.max(0, maxScroll - scrollPos);
 			},
 		}),
-		[orientation, cancelAnimation, clampToRange, getMaxScroll, getScrollPos, setScrollPos, springScrollTo],
+		[
+			orientation,
+			cancelAnimation,
+			clampToRange,
+			getMaxScroll,
+			getScrollPos,
+			resolveScrollTarget,
+			setScrollPos,
+			springScrollTo,
+		],
 	);
 	const handleScroll = useCallback(
 		(event: UIEvent<HTMLDivElement>) => {

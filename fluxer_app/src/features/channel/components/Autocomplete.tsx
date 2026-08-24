@@ -308,8 +308,8 @@ export const Autocomplete = observer(
 		const scrollChildIntoView = useCallback((node: HTMLElement | null, margin = 32) => {
 			if (!node) return;
 			const scroller = scrollerRef.current as ScrollerWithScrollableElement | null;
-			if (scroller && typeof scroller.scrollIntoViewNode === 'function') {
-				scroller.scrollIntoViewNode({node, padding: margin});
+			if (scroller && typeof scroller.revealElement === 'function') {
+				scroller.revealElement({node, padding: margin});
 				return;
 			}
 			let scrollerEl: HTMLElement | null = null;

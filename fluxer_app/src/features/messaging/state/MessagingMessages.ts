@@ -273,7 +273,7 @@ class Messages {
 		ChannelMessages.forEach((messages) => channelIds.push(messages.channelId));
 		for (const channelId of channelIds) {
 			this.clearMessages(channelId);
-			Dimension.clearChannelDimensions(channelId);
+			Dimension.forgetChannelDimensions(channelId);
 		}
 		this.messageRefsByAuthor.clear();
 		this.indexedAuthorsByChannel.clear();
@@ -314,7 +314,7 @@ class Messages {
 				didHydrateSelectedChannel = true;
 			} else {
 				this.clearMessages(messages.channelId);
-				Dimension.clearChannelDimensions(messages.channelId);
+				Dimension.forgetChannelDimensions(messages.channelId);
 			}
 		});
 		if (this.pendingFullHydration && !didHydrateSelectedChannel && selectedChannelId) {
@@ -357,7 +357,7 @@ class Messages {
 		const messages = ChannelMessages.getOrCreate(channelId);
 		this.commitMessages(messages.mutate({loadingMore: true, ready: false, error: false}));
 		if (forceScrollToBottom) {
-			Dimension.updateChannelDimensions(channelId, 1, 1, 0);
+			Dimension.recordChannelDimensions(channelId, 1, 1, 0);
 			MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 			return;
 		}
@@ -402,7 +402,7 @@ class Messages {
 			return false;
 		}
 		if (!GatewayConnection.isConnected || messages.loadingMore || messages.ready) {
-			if (messages.ready && Dimension.isAtBottom(channelId)) {
+			if (messages.ready && Dimension.channelPinnedToEnd(channelId)) {
 				this.commitMessages(messages.truncateTop(MAX_MESSAGES_PER_CHANNEL));
 				this.notifyChange();
 			}
@@ -450,7 +450,7 @@ class Messages {
 			const channel = Channels.getChannel(channelId);
 			if (channel && channel.guildId === guildId) {
 				this.clearMessages(channelId);
-				Dimension.clearChannelDimensions(channelId);
+				Dimension.forgetChannelDimensions(channelId);
 				didUpdate = true;
 				if (channelId === selectedChannelId) {
 					selectedChannelAffected = true;
@@ -593,7 +593,7 @@ class Messages {
 		if (!existing?.ready) {
 			return false;
 		}
-		const updated = existing.receiveMessage(action.message, Dimension.isAtBottom(action.channelId));
+		const updated = existing.receiveMessage(action.message, Dimension.channelPinnedToEnd(action.channelId));
 		this.commitMessages(updated);
 		this.notifyChange();
 		return false;
@@ -725,7 +725,7 @@ class Messages {
 		ChannelMessages.forEach(({channelId}) => {
 			if (Channels.getChannel(channelId) == null) {
 				this.clearMessages(channelId);
-				Dimension.clearChannelDimensions(channelId);
+				Dimension.forgetChannelDimensions(channelId);
 			}
 		});
 		this.notifyChange();

@@ -69,7 +69,7 @@ const AuthLayoutContent = observer(function AuthLayoutContent({children}: {child
 		};
 	}, []);
 	useEffect(() => {
-		scrollerRef.current?.scrollToTop();
+		scrollerRef.current?.jumpToStartEdge();
 	}, [location.pathname]);
 	const splashScale = useMemo(() => {
 		if (!splashDimensions) return null;

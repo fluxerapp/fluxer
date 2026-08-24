@@ -341,7 +341,7 @@ export const QuickSwitcherBottomSheet: React.FC<QuickSwitcherBottomSheetProps> =
 		shouldScrollToSelection.current = false;
 		const node = rowRefs.current[keyboardFocusIndex];
 		if (node) {
-			scrollerRef.current?.scrollIntoViewNode({node: node as HTMLElement, padding: 32});
+			scrollerRef.current?.revealElement({node: node as HTMLElement, padding: 32});
 		}
 	}, [keyboardFocusIndex, activeTab]);
 	const sections = useMemo(() => createSections(results), [results]);

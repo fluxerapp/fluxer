@@ -374,7 +374,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 		[flushScrollRangeUpdate],
 	);
 	const scheduleRangeUpdateFromScroller = useCallback(() => {
-		const scrollerState = scrollerRef.current?.getScrollerState();
+		const scrollerState = scrollerRef.current?.readViewportMetrics();
 		if (!scrollerState) {
 			return;
 		}

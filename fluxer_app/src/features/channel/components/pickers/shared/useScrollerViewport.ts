@@ -60,7 +60,7 @@ export function useScrollerViewport(scrollerRef: React.RefObject<ScrollerHandle 
 		[scheduleViewportSize],
 	);
 	useEffect(() => {
-		const state = scrollerRef.current?.getScrollerState();
+		const state = scrollerRef.current?.readViewportMetrics();
 		if (!state || state.offsetWidth === 0 || state.offsetHeight === 0) return;
 		scheduleViewportSize({width: state.offsetWidth, height: state.offsetHeight});
 	}, [scrollerRef, scheduleViewportSize]);

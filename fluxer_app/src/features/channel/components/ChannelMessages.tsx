@@ -254,7 +254,7 @@ export const Messages = observer(function Messages({
 	}, [channel.id, state]);
 	const onMessageEdit = useCallback(
 		(targetNode: HTMLElement) => {
-			const scrollerNode = scrollManager.ref.current?.getScrollerNode();
+			const scrollerNode = scrollManager.ref.current?.getViewportElement();
 			if (!scrollerNode) return;
 			if (scrollManager.pinIsAtBottomNow()) {
 				return;
@@ -272,7 +272,7 @@ export const Messages = observer(function Messages({
 			const isAbove = targetRect.top < scrollerRect.top;
 			const isBelow = targetRect.bottom > scrollerRect.bottom;
 			if (isAbove || isBelow) {
-				scrollManager.ref.current?.scrollIntoViewNode({
+				scrollManager.ref.current?.revealElement({
 					node: targetNode,
 					padding: 80,
 					animate: false,
@@ -369,7 +369,7 @@ export const Messages = observer(function Messages({
 		const onFocusBottommostMessage = (payload?: unknown) => {
 			const data = (payload ?? {}) as {channelId?: string};
 			if (!data.channelId || data.channelId !== channel.id) return;
-			const scroller = scrollManager.ref.current?.getScrollerNode();
+			const scroller = scrollManager.ref.current?.getViewportElement();
 			const scrollerInner = scrollerInnerRef.current;
 			if (!scroller || !scrollerInner) return;
 			const messageElements = scrollerInner.querySelectorAll<HTMLElement>('[data-message-id]');

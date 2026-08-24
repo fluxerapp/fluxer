@@ -367,7 +367,7 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 				clearChannelSearchHighlight();
 				return;
 			}
-			const container = scrollerRef.current?.getScrollerNode();
+			const container = scrollerRef.current?.getViewportElement();
 			if (!container) {
 				return;
 			}

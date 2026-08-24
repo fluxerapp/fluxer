@@ -734,7 +734,7 @@ export const UnreadChannelsContent = observer(function UnreadChannelsContent() {
 			const target = event.target as Element | null;
 			if (target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement) return;
 			if (target instanceof HTMLElement && target.isContentEditable) return;
-			const scrollerNode = scrollerRef.current?.getScrollerNode() ?? null;
+			const scrollerNode = scrollerRef.current?.getViewportElement() ?? null;
 			if (!scrollerNode) return;
 			if (target && !scrollerNode.contains(target) && document.activeElement !== document.body) return;
 			const sections = Array.from(scrollerNode.querySelectorAll<HTMLElement>('[data-inbox-channel-section]'));

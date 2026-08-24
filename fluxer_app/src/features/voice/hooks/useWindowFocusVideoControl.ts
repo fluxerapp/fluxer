@@ -46,7 +46,7 @@ export function useWindowFocusVideoControl({
 			}
 		};
 		const handleBlur = () => {
-			const node = scrollerRefRef.current.current?.getScrollerNode();
+			const node = scrollerRefRef.current.current?.getViewportElement();
 			if (document.activeElement instanceof HTMLElement && node?.contains(document.activeElement)) {
 				const scrollTop = node.scrollTop;
 				document.activeElement.blur();

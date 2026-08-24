@@ -125,7 +125,7 @@ export const SettingsModalDesktopScroll: React.FC<SettingsModalDesktopScrollProp
 			if (!scrollerRef) {
 				return;
 			}
-			const node = internalRef.current?.getScrollerNode() ?? null;
+			const node = internalRef.current?.getViewportElement() ?? null;
 			if (typeof scrollerRef === 'function') {
 				scrollerRef(node);
 			} else {

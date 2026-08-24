@@ -597,7 +597,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 	const getScrollElement = useCallback(() => {
 		const scroller = scrollerRef.current;
 		if (scroller == null) return null;
-		return scroller.getScrollerNode();
+		return scroller.getViewportElement();
 	}, []);
 	useDragAutoScroll({active: isDragging, axis: 'horizontal', getScrollElement});
 	channelIdRef.current = channelId;

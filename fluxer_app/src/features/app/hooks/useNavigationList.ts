@@ -265,7 +265,7 @@ function resolveScrollNode(scrollerRef: React.RefObject<ScrollerHandle | null>):
 	if (scroller == null) {
 		return null;
 	}
-	return scroller.getScrollerNode();
+	return scroller.getViewportElement();
 }
 
 interface ResolveNavigationRowNodeQuery {
@@ -311,7 +311,7 @@ function scrollNavigationRowIntoView({
 	if (node == null) {
 		return false;
 	}
-	scroller.scrollIntoViewNode({node, alignment: resolveNavigationScrollerAlignment(align)});
+	scroller.revealElement({node, alignment: resolveNavigationScrollerAlignment(align)});
 	return true;
 }
 

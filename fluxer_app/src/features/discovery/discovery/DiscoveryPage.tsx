@@ -104,7 +104,7 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 	const hasMore = guilds.length < Discovery.total;
 	const virtualizer = useVirtualizer({
 		count: rowCount,
-		getScrollElement: () => scrollerRef.current?.getScrollerNode() ?? null,
+		getScrollElement: () => scrollerRef.current?.getViewportElement() ?? null,
 		estimateSize: () => SKELETON_DISCOVERY_ESTIMATED_ROW_HEIGHT_PX,
 		overscan: OVERSCAN_ROWS,
 		scrollMargin: gridOffsetTop,
@@ -131,7 +131,7 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 			return;
 		}
 		setContainerWidth(node.getBoundingClientRect().width);
-		setGridOffsetTop(resolveScrollOffsetTop(node, scrollerRef.current?.getScrollerNode() ?? null));
+		setGridOffsetTop(resolveScrollOffsetTop(node, scrollerRef.current?.getViewportElement() ?? null));
 	}, []);
 	useEffect(() => {
 		if (!resultsColumnNode) return;
@@ -149,7 +149,7 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 	}, [resultsColumnNode, searchActive]);
 	useEffect(() => {
 		if (!resultsColumnNode) return;
-		setGridOffsetTop(resolveScrollOffsetTop(resultsColumnNode, scrollerRef.current?.getScrollerNode() ?? null));
+		setGridOffsetTop(resolveScrollOffsetTop(resultsColumnNode, scrollerRef.current?.getViewportElement() ?? null));
 	}, [resultsColumnNode, searchActive, containerWidth]);
 	const scrollResultsToTop = useCallback(() => {
 		scrollerRef.current?.scrollTo({to: 0});
@@ -185,7 +185,7 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 		if (searchActive || columns <= 0) {
 			return;
 		}
-		const viewportHeightPx = measureSkeletonHeightPx(scrollerRef.current?.getScrollerNode() ?? null);
+		const viewportHeightPx = measureSkeletonHeightPx(scrollerRef.current?.getViewportElement() ?? null);
 		reportSkeletonDiscoveryGrid(columns, Math.ceil(viewportHeightPx / SKELETON_DISCOVERY_ESTIMATED_ROW_HEIGHT_PX));
 	}, `${searchActive}:${columns}:${containerWidth}`);
 	const virtualRows = virtualizer.getVirtualItems();

@@ -467,7 +467,7 @@ export const GuildRailSkeleton: React.FC<GuildRailSkeletonProps> = ({
 	const [mountState] = useState(() => {
 		const rememberedLayout = getRememberedSkeletonGuildRailLayout();
 		const remScale = getRemScaleForDocument(document);
-		const liveScrollTop = Math.max(0, Dimension.getGuildListDimensions().scrollTop);
+		const liveScrollTop = Math.max(0, Dimension.currentGuildListDimensions().scrollTop);
 		let scrollTop = liveScrollTop;
 		if (liveScrollTop === 0 && rememberedLayout != null) {
 			scrollTop = rememberedLayout.scrollTopPx * remScale;

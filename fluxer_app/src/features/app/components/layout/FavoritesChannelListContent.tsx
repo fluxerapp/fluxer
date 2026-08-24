@@ -651,7 +651,7 @@ export const FavoritesChannelListContent = observer(() => {
 	const getScrollElement = useCallback(() => {
 		const scroller = scrollerRef.current;
 		if (scroller == null) return null;
-		return scroller.getScrollerNode();
+		return scroller.getViewportElement();
 	}, []);
 	useDragAutoScroll({active: isDraggingFavorite, getScrollElement});
 	const favorites = Favorites.sortedChannels;

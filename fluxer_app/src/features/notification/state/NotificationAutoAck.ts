@@ -48,7 +48,7 @@ class AutoAck {
 					if (!channelId) {
 						return {windowId, channelId: null, isAtBottom: false, canAutoAck: false};
 					}
-					const isAtBottom = Dimension.isAtBottom(channelId) ?? false;
+					const isAtBottom = Dimension.channelPinnedToEnd(channelId) ?? false;
 					const readState = ReadStates.getIfExists(channelId);
 					const ackedManually = readState?.ackedManually ?? false;
 					const channel = Channels.getChannel(channelId);

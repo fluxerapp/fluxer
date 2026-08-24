@@ -64,9 +64,9 @@ export const AutocompleteGif = observer(
 				if (!scrollerRef.current) {
 					return;
 				}
-				scrollerRef.current.scrollIntoViewNode({
+				scrollerRef.current.revealElement({
 					node: selectedElement,
-					shouldScrollToStart: false,
+					preferStartEdge: false,
 					padding: 0,
 				});
 			});

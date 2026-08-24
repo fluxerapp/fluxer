@@ -392,7 +392,7 @@ export const MobileSectionNav: React.FC<MobileSectionNavProps> = observer(
 		const scrollerRef = useRef<ScrollerHandle | null>(null);
 		useEffect(() => {
 			if (!activeSectionId) return;
-			const node = scrollerRef.current?.getScrollerNode();
+			const node = scrollerRef.current?.getViewportElement();
 			if (!node) return;
 			const activeButton = node.querySelector(`[data-section-id="${activeSectionId}"]`);
 			if (activeButton instanceof HTMLElement) {

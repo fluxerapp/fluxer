@@ -496,7 +496,7 @@ class ReadStates {
 		const decision = resolveReadStateIncomingMessageDecision({
 			isCurrentUserAuthor: currentUser != null && action.message.author.id === currentUser.id,
 			automaticAckEnabled: this.isAutomaticAckEnabled(action.channelId),
-			isAtBottom: Dimension.isAtBottom(action.channelId),
+			isAtBottom: Dimension.channelPinnedToEnd(action.channelId),
 			authorBlocked,
 			hadUnreadOrMentions,
 			readStateKnown: state.readStateKnown,

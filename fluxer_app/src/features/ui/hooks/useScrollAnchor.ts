@@ -71,7 +71,7 @@ function findScrollContainer(el: HTMLElement, selector: string | undefined): HTM
 function resolveScrollerNode(scrollerRef: RefObject<ScrollerHandle | null>): HTMLElement | null {
 	const scroller = scrollerRef.current;
 	if (scroller == null) return null;
-	return scroller.getScrollerNode();
+	return scroller.getViewportElement();
 }
 
 function compareListScrollAnchorPositions(left: ListScrollAnchorPosition, right: ListScrollAnchorPosition): number {

@@ -391,7 +391,7 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 		shouldScrollToSelection.current = false;
 		const node = rowRefs.current[keyboardFocusIndex];
 		if (node) {
-			scrollerRef.current?.scrollIntoViewNode({node: node as HTMLElement, padding: 32});
+			scrollerRef.current?.revealElement({node: node as HTMLElement, padding: 32});
 		}
 	}, [keyboardFocusIndex]);
 	const sections = useMemo(() => createSections(results), [results]);

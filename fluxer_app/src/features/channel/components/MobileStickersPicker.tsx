@@ -173,7 +173,7 @@ export const MobileStickersPicker = observer(
 		const handleCategoryClick = (category: string) => {
 			const element = categoryRefs.current.get(category);
 			if (element) {
-				scrollerRef.current?.scrollIntoViewNode({node: element, shouldScrollToStart: true});
+				scrollerRef.current?.revealElement({node: element, preferStartEdge: true});
 			}
 		};
 		const handleHover = (sticker: GuildSticker | null) => {

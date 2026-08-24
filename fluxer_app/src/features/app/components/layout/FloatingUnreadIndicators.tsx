@@ -164,7 +164,7 @@ function resolveScrollerNode(scroller: ScrollerHandle | null): HTMLElement | nul
 	if (scroller == null) {
 		return null;
 	}
-	return scroller.getScrollerNode();
+	return scroller.getViewportElement();
 }
 
 function resolveOwnerWindow(container: HTMLElement): Window & typeof globalThis {
@@ -221,7 +221,7 @@ function cancelOwnedSettleTimer(timer: OwnedSettleTimer | null): void {
 }
 
 function alignMountedTarget({animate, direction, scroller, targetNode}: AlignMountedTargetRequest): boolean {
-	const container = scroller.getScrollerNode();
+	const container = scroller.getViewportElement();
 	if (container == null) return false;
 	const containerRect = container.getBoundingClientRect();
 	const targetRect = targetNode.getBoundingClientRect();
@@ -451,7 +451,7 @@ export const FloatingUnreadIndicators = observer(
 				if (scrollTarget(edge.id, direction)) {
 					scheduleRefresh(FloatingUnreadRefreshScope.GEOMETRY);
 					if (scroller == null) return;
-					const scrollNode = scroller.getScrollerNode();
+					const scrollNode = scroller.getViewportElement();
 					if (scrollNode == null) return;
 					const ownerWindow = resolveOwnerWindow(scrollNode);
 					cancelOwnedAnimationFrame(targetAlignmentFrameRef.current);
@@ -467,7 +467,7 @@ export const FloatingUnreadIndicators = observer(
 				}
 				scheduleRefresh(FloatingUnreadRefreshScope.SCROLL);
 				if (scroller == null) return;
-				const scrollNode = scroller.getScrollerNode();
+				const scrollNode = scroller.getViewportElement();
 				if (scrollNode == null) return;
 				const ownerWindow = resolveOwnerWindow(scrollNode);
 				cancelOwnedSettleTimer(settleTimerRef.current);

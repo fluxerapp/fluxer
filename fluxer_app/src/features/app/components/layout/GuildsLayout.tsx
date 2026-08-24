@@ -184,7 +184,7 @@ function resolveGuildFolderId(folderId: number | null): number {
 
 function resolveGuildListScrollerNode(scroller: ScrollerHandle | null): HTMLElement | null {
 	if (scroller == null) return null;
-	return scroller.getScrollerNode();
+	return scroller.getViewportElement();
 }
 
 type GuildNavigationRow =
@@ -1583,7 +1583,7 @@ const GuildList = observer(() => {
 	const visibleDMListRows = useFrameBatchedDMListRows(targetDMListRows);
 	const shouldRenderGuildListItems = hasUnavailableGuilds || organizedItems.length > 0;
 	const initialGuildListScrollTop = useMemo(() => {
-		const liveScrollTop = untracked(() => Dimension.getGuildListDimensions().scrollTop);
+		const liveScrollTop = untracked(() => Dimension.currentGuildListDimensions().scrollTop);
 		if (liveScrollTop > 0) {
 			return liveScrollTop;
 		}
@@ -1859,7 +1859,7 @@ const GuildList = observer(() => {
 				const node = scrollTargetRegistry.getTargetNode(targetId);
 				const scroller = scrollRef.current;
 				if (node == null || scroller == null) return false;
-				scroller.scrollIntoViewNode({
+				scroller.revealElement({
 					node,
 					alignment,
 					animate: Accessibility.useSmoothScrolling,

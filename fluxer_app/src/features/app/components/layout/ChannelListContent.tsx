@@ -242,7 +242,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		() => [channels.length, ReadStates.version, userGuildSettings, hideMutedChannels, showFadedUnreadOnMutedChannels],
 		[channels.length, ReadStates.version, userGuildSettings, hideMutedChannels, showFadedUnreadOnMutedChannels],
 	);
-	const getChannelScrollContainer = useCallback(() => scrollerRef.current?.getScrollerNode() ?? null, [scrollerRef]);
+	const getChannelScrollContainer = useCallback(() => scrollerRef.current?.getViewportElement() ?? null, [scrollerRef]);
 	useDragAutoScroll({active: isDraggingAnything, getScrollElement: getChannelScrollContainer});
 	const handleChannelDrop = useCallback(
 		(item: DragItem, result: DropResult) => {
@@ -306,15 +306,15 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	}, [guild.id]);
 	const handleResize = useCallback((_entry: ResizeObserverEntry, _type: 'container' | 'content') => {
 		if (stickToBottomRef.current && scrollerRef.current) {
-			scrollerRef.current.scrollToBottom({animate: false});
+			scrollerRef.current.jumpToEndEdge({animate: false});
 		}
 	}, []);
 	useEffect(() => {
-		const guildDimensions = Dimension.getGuildDimensions(guild.id);
+		const guildDimensions = Dimension.guildDimensionsFor(guild.id);
 		if (guildDimensions.scrollTo) {
 			const element = document.querySelector(`[data-channel-id="${guildDimensions.scrollTo}"]`);
 			if (element && scrollerRef.current) {
-				scrollerRef.current.scrollIntoViewNode({node: element as HTMLElement, shouldScrollToStart: false});
+				scrollerRef.current.revealElement({node: element as HTMLElement, preferStartEdge: false});
 			}
 			DimensionCommands.clearChannelListScrollTo(guild.id);
 		} else if (guildDimensions.scrollTop && guildDimensions.scrollTop > 0 && scrollerRef.current) {
@@ -337,7 +337,8 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		const unreadCount = ReadStates.getUnreadCount(channelId);
 		const mentionCount = ReadStates.getMentionCount(channelId);
 		const isMuted =
-			UserGuildSettings.isParentCategoryMuted(guild.id, channelId) || UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
+			UserGuildSettings.isParentCategoryMuted(guild.id, channelId) ||
+			UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
 		const channel = Channels.getChannel(channelId);
 		const unreadBadgesLevel = channel
 			? UserGuildSettings.resolvedUnreadBadgesLevel({
@@ -360,7 +361,9 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	for (const group of channelGroups) {
 		const isCollapsed = group.category ? (collapsedCategories?.has(group.category.id) ?? false) : false;
 		const isNullSpace = !group.category;
-		const isCategoryMuted = group.category ? UserGuildSettings.isChannelDirectlyMuted(guild.id, group.category.id) : false;
+		const isCategoryMuted = group.category
+			? UserGuildSettings.isChannelDirectlyMuted(guild.id, group.category.id)
+			: false;
 		let filteredTextChannels: Array<Channel>;
 		let filteredVoiceChannels: Array<Channel>;
 		if (hideMutedChannels) {

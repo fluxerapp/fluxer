@@ -94,9 +94,9 @@ export class ScrollManager {
 		if (props.messages.jumpTargetId != null) {
 			this.pinIsAtBottom = false;
 		} else {
-			const stored = Dimension.getChannelDimensions(props.channel.id);
+			const stored = Dimension.channelDimensionsFor(props.channel.id);
 			this.restoreHadSavedPosition = stored != null;
-			const isAtBottom = Dimension.isAtBottom(props.channel.id);
+			const isAtBottom = Dimension.channelPinnedToEnd(props.channel.id);
 			this.pinIsAtBottom = isAtBottom ?? true;
 			this.restorePendingInitialScrollTop = this.pinIsAtBottom ? null : (stored?.scrollTop ?? null);
 		}
@@ -173,12 +173,12 @@ export class ScrollManager {
 	}
 
 	scrollGetDocument(): Document | undefined {
-		const node = this.ref.current?.getScrollerNode();
+		const node = this.ref.current?.getViewportElement();
 		return node?.ownerDocument;
 	}
 
 	scrollGetState(): ScrollerState {
-		return this.ref.current?.getScrollerState() ?? DEFAULT_SCROLLER_STATE;
+		return this.ref.current?.readViewportMetrics() ?? DEFAULT_SCROLLER_STATE;
 	}
 
 	private placeholderHeightGet(): number {
@@ -186,7 +186,7 @@ export class ScrollManager {
 		if (scrollerHandle == null) {
 			return this.props.placeholderHeight;
 		}
-		const scrollerNode = scrollerHandle.getScrollerNode();
+		const scrollerNode = scrollerHandle.getViewportElement();
 		if (scrollerNode == null) {
 			return this.props.placeholderHeight;
 		}
@@ -249,7 +249,7 @@ export class ScrollManager {
 		callback?: () => void,
 		shouldContinue?: () => boolean,
 	): void {
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if (!scrollerNode) {
 			callback?.();
 			return;
@@ -263,7 +263,7 @@ export class ScrollManager {
 
 	anchorGetData(messageId: string, scrollTop: number, clampTo?: number, layout?: ContainerLayout): AnchorData | null {
 		const element = this.layoutGetElementFromMessageId(messageId);
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if (!element || !scrollerNode) return null;
 		const offsetHeight = element.offsetHeight;
 		const offsetTop = this.layoutGetOffsetTop(element, scrollerNode, layout);
@@ -299,7 +299,7 @@ export class ScrollManager {
 		const {messages, hasUnreads, channel} = this.props;
 		const state = this.scrollGetState();
 		const {scrollTop, offsetHeight} = state;
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		const layout = scrollerNode ? this.layoutGetContainerLayout(scrollerNode) : undefined;
 		const buffer =
 			hasUnreads && scrollTop >= this.layoutGetNewMessageBarBuffer() ? this.layoutGetNewMessageBarBuffer() : 0;
@@ -336,7 +336,7 @@ export class ScrollManager {
 	anchorFindLoadMore(isBefore: boolean): AnchorData | null {
 		const {messages} = this.props;
 		const {scrollTop} = this.scrollGetState();
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		const layout = scrollerNode ? this.layoutGetContainerLayout(scrollerNode) : undefined;
 		const direction = isBefore ? 1 : -1;
 		const startIndex = isBefore ? 0 : messages.length - 1;
@@ -366,7 +366,7 @@ export class ScrollManager {
 			this.loadIsInProgress() ? null : this.anchorFetchFallback,
 			this.anchorAutomatic,
 		];
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if (!scrollerNode) return null;
 		const layout = this.layoutGetContainerLayout(scrollerNode);
 		for (const anchor of candidates) {
@@ -418,7 +418,7 @@ export class ScrollManager {
 			} else {
 				this.scrollMergeTo(fixedScrollTop, this.scrollHandle);
 			}
-			this.ref.current?.scrollIntoViewNode({
+			this.ref.current?.revealElement({
 				node,
 				padding: 16 + this.props.additionalMessagePadding,
 				callback: this.scrollHandle,
@@ -467,7 +467,7 @@ export class ScrollManager {
 	}
 
 	anchorUpdateFetch(scrollTop: number, offsetHeight: number, scrollHeight: number, passLayout?: ContainerLayout): void {
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if ((!this.anchorFetch && !this.anchorFetchFallback) || !scrollerNode) return;
 		const region = this.scrollIsInPlaceholderRegion({scrollTop, offsetHeight, scrollHeight});
 		const clampTo = region !== ScrollRegion.None ? offsetHeight : undefined;
@@ -481,7 +481,7 @@ export class ScrollManager {
 	}
 
 	anchorUpdateAutomatic(scrollTop: number, layout?: ContainerLayout): void {
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if (!this.anchorAutomatic || !scrollerNode) return;
 		const anchorData = this.anchorGetData(this.anchorAutomatic.id, scrollTop, undefined, layout);
 		if (!anchorData) {
@@ -573,7 +573,7 @@ export class ScrollManager {
 
 	private focusGetMessageIdInScroller(): string | null {
 		const focusedElement = document.activeElement;
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if (!focusedElement || !scrollerNode?.contains(focusedElement)) {
 			return null;
 		}
@@ -697,7 +697,7 @@ export class ScrollManager {
 			this.cacheScrollTop = state.scrollTop;
 			this.scrollFixPosition(state.offsetHeight, state.scrollHeight, isAtBottom);
 		} else {
-			if (event && event.target !== this.ref.current?.getScrollerNode()) {
+			if (event && event.target !== this.ref.current?.getViewportElement()) {
 				return;
 			}
 			if (this.cacheScrollTop !== state.scrollTop) {
@@ -833,7 +833,7 @@ export class ScrollManager {
 			const element = this.layoutGetElementFromMessageId(targetId);
 			if (element) {
 				const padding = this.jumpGetBreathingRoom();
-				const scrollerNode = this.ref.current?.getScrollerNode();
+				const scrollerNode = this.ref.current?.getViewportElement();
 				if (!scrollerNode) return;
 				const targetScrollTop = this.layoutGetNodeAlignedScrollTop(element, 'center', padding, scrollerNode);
 				this.scrollMergeTo(targetScrollTop, () => this.jumpComplete(element, jumpToken));
@@ -874,7 +874,7 @@ export class ScrollManager {
 		const padding = suppressPadding ? 0 : this.jumpGetBreathingRoom();
 		if (newMessagesBar) {
 			if (orientation === 'middle') {
-				const scrollerNode = this.ref.current?.getScrollerNode();
+				const scrollerNode = this.ref.current?.getViewportElement();
 				if (!scrollerNode) {
 					this.scrollTo(Number.MAX_SAFE_INTEGER, animate, onComplete);
 					return;
@@ -899,7 +899,7 @@ export class ScrollManager {
 
 	scrollToBelowUnreadDivider(): void {
 		const doc = this.scrollGetDocument();
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		const newMessagesBar = doc?.getElementById('new-messages-bar');
 		if (!scrollerNode || !newMessagesBar) {
 			this.scrollSetToBottom();
@@ -963,7 +963,7 @@ export class ScrollManager {
 		if (this.lifecycleIsDisposed) return;
 		const {messages, channel} = this.props;
 		this.jumpStop(true);
-		Dimension.updateChannelDimensions(channel.id, 1, 1, 0);
+		Dimension.recordChannelDimensions(channel.id, 1, 1, 0);
 		if (messages.hasMoreAfter) {
 			MessageCommands.jumpToPresent(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		} else {
@@ -1045,7 +1045,7 @@ export class ScrollManager {
 
 	layoutApplyShift(heightDelta: number): boolean {
 		if (this.lifecycleIsDisposed || !this.lifecycleIsInitialized()) return false;
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if (!scrollerNode) return false;
 		const action = resolveContainerResizeShift({
 			heightDelta,
@@ -1079,19 +1079,19 @@ export class ScrollManager {
 		const {channel} = this.props;
 		const placeholderHeight = this.placeholderHeightGet();
 		if (this.pinIsAtBottomNow()) {
-			Dimension.updateChannelDimensions(channel.id, 1, 1, 0, callback);
+			Dimension.recordChannelDimensions(channel.id, 1, 1, 0, callback);
 		} else {
 			const {scrollTop, scrollHeight, offsetHeight} = this.scrollGetState();
 			const adjustedScrollTop = scrollTop - placeholderHeight;
 			const adjustedScrollHeight = scrollHeight - placeholderHeight;
-			Dimension.updateChannelDimensions(channel.id, adjustedScrollTop, adjustedScrollHeight, offsetHeight, callback);
+			Dimension.recordChannelDimensions(channel.id, adjustedScrollTop, adjustedScrollHeight, offsetHeight, callback);
 		}
 	}
 
 	focusOnMessage(messageId: string): void {
 		const element = this.layoutGetElementFromMessageId(messageId);
 		if (!element) return;
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		if (!scrollerNode) return;
 		const elementOffset = this.layoutGetOffsetTop(element, scrollerNode);
 		const elementHeight = element.offsetHeight;
@@ -1125,11 +1125,11 @@ export class ScrollManager {
 	}
 
 	scrollPageUp(animate = false): void {
-		this.ref.current?.scrollPageUp({animate});
+		this.ref.current?.pageBackward({animate});
 	}
 
 	scrollPageDown(animate = false): void {
-		this.ref.current?.scrollPageDown({animate});
+		this.ref.current?.pageForward({animate});
 	}
 
 	scrollToMessage(messageId: string, animate = true): void {
@@ -1143,7 +1143,7 @@ export class ScrollManager {
 			return;
 		}
 		const element = this.layoutGetElementFromMessageId(messageId);
-		const scrollerNode = scrollerHandle.getScrollerNode();
+		const scrollerNode = scrollerHandle.getViewportElement();
 		this.pinIsAtBottom = false;
 		const jumpToken = this.jumpBegin(this.props.messages.jumpSequenceId);
 		const shouldContinue = () => this.jumpIsCurrent(jumpToken);
@@ -1174,7 +1174,7 @@ export class ScrollManager {
 			return;
 		}
 		const {scrollTop, offsetHeight, scrollHeight} = this.scrollGetState();
-		const scrollerNode = this.ref.current?.getScrollerNode();
+		const scrollerNode = this.ref.current?.getViewportElement();
 		const layout = scrollerNode ? this.layoutGetContainerLayout(scrollerNode) : undefined;
 		this.pinPreUpdateState = this.pinComputeState({scrollTop, offsetHeight, scrollHeight});
 		this.anchorUpdateFocus(focusId, scrollTop, offsetHeight, layout);
@@ -1247,7 +1247,7 @@ export class ScrollManager {
 		if (focusId != null && prevFocusId !== focusId) {
 			const el = this.layoutGetElementFromMessageId(focusId);
 			if (el) {
-				this.ref.current?.scrollIntoViewNode({
+				this.ref.current?.revealElement({
 					node: el,
 					padding: 16 + this.props.additionalMessagePadding,
 					callback: this.scrollHandle,
