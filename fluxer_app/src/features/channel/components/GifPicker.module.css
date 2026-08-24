@@ -225,6 +225,10 @@
 	z-index: 1;
 }
 
+.gifMediaContainerPlaceholder {
+	background-color: var(--background-tertiary);
+}
+
 .gridItemFavorites .gridItemBackdrop {
 	background-color: color-mix(in srgb, var(--brand-primary) 60%, transparent);
 }
