@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export interface ComputeColumnsOptions {
-	desiredItemWidth?: number;
-	maxColumns?: number;
+	targetTileWidth?: number;
+	maxLanes?: number;
 	minColumns?: number;
 }
 
 export function computeMasonryColumns(
 	containerWidth: number,
-	itemGutter: number,
+	tileSpacing: number,
 	options: ComputeColumnsOptions = {},
 ): number {
-	const desiredItemWidth = options.desiredItemWidth ?? 200;
-	const maxColumns = options.maxColumns ?? 8;
+	const targetTileWidth = options.targetTileWidth ?? 200;
+	const maxLanes = options.maxLanes ?? 8;
 	const minColumns = options.minColumns ?? 1;
 	if (containerWidth <= 0) return minColumns;
-	const columns = Math.floor((containerWidth + itemGutter) / (desiredItemWidth + itemGutter));
-	return Math.max(minColumns, Math.min(columns, maxColumns));
+	const columns = Math.floor((containerWidth + tileSpacing) / (targetTileWidth + tileSpacing));
+	return Math.max(minColumns, Math.min(columns, maxLanes));
 }

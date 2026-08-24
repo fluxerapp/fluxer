@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useMasonryGridNavigation} from '@app/features/app/hooks/useMasonryGridNavigation';
-import {MasonryListComputer} from '@app/features/channel/components/MasonryListComputer';
-import {MASONRY_OVERSCAN_PX, MASONRY_PADDING_PX} from '@app/features/channel/components/pickers/shared/PickerConstants';
+import {
+	MASONRY_OVERSCAN_PX,
+	MASONRY_PADDING_PX,
+	MASONRY_SCROLL_CHUNK_PX,
+} from '@app/features/channel/components/pickers/shared/PickerConstants';
+import {TileFlowSolver} from '@app/features/channel/components/TileFlowSolver';
 import type * as React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 type VisibleItemTuple = [itemKey: string, sectionIndex: number, itemIndex: number];
 
-interface Coords {
+interface TileBox {
 	position: 'absolute' | 'sticky';
 	left?: number;
 	right?: number;
@@ -17,18 +21,18 @@ interface Coords {
 	height: number;
 }
 
-type CoordsMap = Record<string, Coords>;
-type VisibleSections = Record<string, Array<VisibleItemTuple>>;
+type TileBoxMap = Record<string, TileBox>;
+type WindowedTiles = Record<string, Array<VisibleItemTuple>>;
 
-interface GridCoordinates {
+interface GridCell {
 	section: number;
 	row: number;
 	column: number;
 }
 
-interface GridData {
-	boundaries: Array<number>;
-	coordinates: Record<string, GridCoordinates>;
+interface NavGrid {
+	rowBase: Array<number>;
+	tileCells: Record<string, GridCell>;
 }
 
 export interface MasonryExtraSection {
@@ -43,12 +47,12 @@ export function MasonryVirtualGrid<T>({
 	data,
 	itemKeys,
 	columns,
-	itemGutter,
+	tileSpacing,
 	viewportWidth,
 	viewportHeight,
 	scrollTop,
-	getItemKey,
-	getItemHeight,
+	tileKeyOf,
+	tileHeightOf,
 	onSelectItemKey,
 	checkSuspension,
 	renderItem,
@@ -61,15 +65,15 @@ export function MasonryVirtualGrid<T>({
 	data: ReadonlyArray<T>;
 	itemKeys: ReadonlyArray<string>;
 	columns: number;
-	itemGutter: number;
+	tileSpacing: number;
 	viewportWidth: number;
 	viewportHeight: number;
 	scrollTop: number;
-	getItemKey: (item: T, index: number) => string;
-	getItemHeight: (item: T, index: number, columnWidth: number) => number;
+	tileKeyOf: (item: T, index: number) => string;
+	tileHeightOf: (item: T, index: number, laneWidth: number) => number;
 	onSelectItemKey: (itemKey: string) => void;
 	checkSuspension: () => boolean;
-	renderItem: (args: {item: T; itemKey: string; coords: Coords; isFocused: boolean; index: number}) => React.ReactNode;
+	renderItem: (args: {item: T; itemKey: string; coords: TileBox; isFocused: boolean; index: number}) => React.ReactNode;
 	onContentSizeChange?: (contentSize: number) => void;
 	extraSections?: ReadonlyArray<MasonryExtraSection>;
 	overscanPx?: number;
@@ -77,31 +81,31 @@ export function MasonryVirtualGrid<T>({
 	bottomPaddingPx?: number;
 }) {
 	const stableExtraSections = extraSections ?? EMPTY_EXTRA_SECTIONS;
-	const [masonryComputer] = useState(() => new MasonryListComputer());
+	const [masonrySolver] = useState(() => new TileFlowSolver());
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [version, setVersion] = useState(0);
 	useEffect(() => {
 		setVersion((v) => v + 1);
-	}, [data, columns, itemGutter, viewportWidth, viewportHeight, itemKeys, stableExtraSections]);
+	}, [data, columns, tileSpacing, viewportWidth, viewportHeight, itemKeys, stableExtraSections]);
 	const sectionCount = 1 + stableExtraSections.length;
-	const getItemKeyForComputer = useCallback(
+	const tileKeyForSolver = useCallback(
 		(sectionIndex: number, itemIndex: number): string | null => {
 			if (sectionIndex !== 0) return null;
 			const item = data[itemIndex];
-			return item != null ? getItemKey(item, itemIndex) : null;
+			return item != null ? tileKeyOf(item, itemIndex) : null;
 		},
-		[data, getItemKey],
+		[data, tileKeyOf],
 	);
-	const getItemHeightForComputer = useCallback(
-		(sectionIndex: number, itemIndex: number, columnWidth: number): number => {
+	const tileHeightForSolver = useCallback(
+		(sectionIndex: number, itemIndex: number, laneWidth: number): number => {
 			if (sectionIndex !== 0) return 0;
 			const item = data[itemIndex];
 			if (item == null) return 0;
-			return getItemHeight(item, itemIndex, columnWidth);
+			return tileHeightOf(item, itemIndex, laneWidth);
 		},
-		[data, getItemHeight],
+		[data, tileHeightOf],
 	);
-	const getSectionHeightForComputer = useCallback(
+	const sectionHeightForSolver = useCallback(
 		(sectionIndex: number): number => {
 			if (sectionIndex === 0) return 0;
 			const extra = stableExtraSections.find((s) => s.sectionIndex === sectionIndex);
@@ -109,54 +113,59 @@ export function MasonryVirtualGrid<T>({
 		},
 		[stableExtraSections],
 	);
+	const scrollChunkPx = Math.max(1, Math.min(MASONRY_SCROLL_CHUNK_PX, overscanPx));
+	const windowStartChunk = Math.floor(scrollTop / scrollChunkPx);
+	const windowEndChunk = Math.ceil((scrollTop + viewportHeight) / scrollChunkPx);
 	const masonryState = useMemo(() => {
 		if (viewportWidth <= 0 || viewportHeight <= 0) {
 			return {
-				coordsMap: {} as CoordsMap,
-				visibleSections: {} as VisibleSections,
-				totalHeight: 0,
-				gridData: null,
+				tileBoxes: {} as TileBoxMap,
+				windowedTiles: {} as WindowedTiles,
+				contentHeight: 0,
+				navGrid: null,
 			};
 		}
-		masonryComputer.mergeProps({
-			sections: [data.length, ...Array.from({length: sectionCount - 1}, () => 0)],
-			columns,
-			itemGutter,
-			getItemKey: getItemKeyForComputer,
-			getItemHeight: getItemHeightForComputer,
-			getSectionHeight: getSectionHeightForComputer,
-			bufferWidth: viewportWidth,
-			padding: {left: paddingPx, right: paddingPx, top: 0, bottom: 0},
-			version,
+		masonrySolver.applySettings({
+			sectionSizes: [data.length, ...Array.from({length: sectionCount - 1}, () => 0)],
+			laneCount: columns,
+			tileSpacing,
+			tileKeyOf: tileKeyForSolver,
+			tileHeightOf: tileHeightForSolver,
+			sectionHeightOf: sectionHeightForSolver,
+			viewportSpan: viewportWidth,
+			padBox: {left: paddingPx, right: paddingPx, top: 0, bottom: 0},
+			layoutStamp: version,
 		});
-		const start = Math.max(0, scrollTop - overscanPx);
-		const end = scrollTop + viewportHeight + overscanPx;
-		masonryComputer.computeVisibleSections(start, end);
-		const state = masonryComputer.getState() as {
-			coordsMap: CoordsMap;
-			visibleSections: VisibleSections;
-			totalHeight: number;
-			gridData: GridData;
+		const start = Math.max(0, windowStartChunk * scrollChunkPx - overscanPx);
+		const end = windowEndChunk * scrollChunkPx + overscanPx;
+		masonrySolver.selectWindow(start, end);
+		const state = masonrySolver.readLayout() as {
+			tileBoxes: TileBoxMap;
+			windowedTiles: WindowedTiles;
+			contentHeight: number;
+			navGrid: NavGrid;
 		};
 		return state;
 	}, [
-		masonryComputer,
+		masonrySolver,
 		data.length,
 		sectionCount,
 		columns,
-		itemGutter,
-		getItemKeyForComputer,
-		getItemHeightForComputer,
-		getSectionHeightForComputer,
+		tileSpacing,
+		tileKeyForSolver,
+		tileHeightForSolver,
+		sectionHeightForSolver,
 		viewportWidth,
 		viewportHeight,
-		scrollTop,
+		windowStartChunk,
+		windowEndChunk,
+		scrollChunkPx,
 		overscanPx,
 		paddingPx,
 		version,
 	]);
 	const {focusedItemKey} = useMasonryGridNavigation({
-		gridData: masonryState.gridData,
+		navGrid: masonryState.navGrid,
 		itemKeys,
 		columns,
 		onSelect: onSelectItemKey,
@@ -164,11 +173,11 @@ export function MasonryVirtualGrid<T>({
 		checkSuspension,
 	});
 	const topPadding = paddingPx;
-	const contentSize = masonryState.totalHeight + topPadding + bottomPaddingPx;
+	const contentSize = masonryState.contentHeight + topPadding + bottomPaddingPx;
 	useEffect(() => {
 		onContentSizeChange?.(contentSize);
 	}, [contentSize, onContentSizeChange]);
-	const visibleEntries = Object.entries(masonryState.visibleSections) as Array<[string, VisibleSections[string]]>;
+	const visibleEntries = Object.entries(masonryState.windowedTiles) as Array<[string, WindowedTiles[string]]>;
 	const parseSectionIndex = (sectionKey: string): number | null => {
 		const prefix = 'section-';
 		if (!sectionKey.startsWith(prefix)) return null;
@@ -189,7 +198,7 @@ export function MasonryVirtualGrid<T>({
 			data-flx="channel.pickers.masonry-virtual-grid.div"
 		>
 			{visibleEntries.flatMap(([sectionKey, items]): Array<React.ReactNode> => {
-				const sectionCoords = masonryState.coordsMap[sectionKey];
+				const sectionCoords = masonryState.tileBoxes[sectionKey];
 				if (!sectionCoords) return [];
 				const sectionTop = (sectionCoords.top ?? 0) + topPadding;
 				const sectionIndex = parseSectionIndex(sectionKey);
@@ -216,11 +225,11 @@ export function MasonryVirtualGrid<T>({
 				}
 				return items.flatMap(([itemKey, itemSectionIndex, itemIndex]): Array<React.ReactNode> => {
 					if (itemSectionIndex !== 0) return [];
-					const itemCoords = masonryState.coordsMap[itemKey];
+					const itemCoords = masonryState.tileBoxes[itemKey];
 					if (!itemCoords) return [];
 					const item = data[itemIndex];
 					if (item == null) return [];
-					const absoluteItemCoords: Coords = {
+					const absoluteItemCoords: TileBox = {
 						...itemCoords,
 						top: (itemCoords.top ?? 0) + sectionTop,
 					};

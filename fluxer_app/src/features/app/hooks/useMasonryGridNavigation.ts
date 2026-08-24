@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MasonryListComputer} from '@app/features/channel/components/MasonryListComputer';
+import type {TileFlowSolver} from '@app/features/channel/components/TileFlowSolver';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 interface UseMasonryGridNavigationOptions {
-	gridData: MasonryListComputer['gridData'] | null;
+	navGrid: TileFlowSolver['navGrid'] | null;
 	itemKeys: ReadonlyArray<string>;
 	columns: number;
 	onSelect?: (itemKey: string) => void;
@@ -15,15 +15,7 @@ interface UseMasonryGridNavigationOptions {
 }
 
 export const useMasonryGridNavigation = (options: UseMasonryGridNavigationOptions) => {
-	const {
-		gridData,
-		itemKeys,
-		columns,
-		onSelect,
-		containerRef,
-		isEnabled = true,
-		checkSuspension = () => false,
-	} = options;
+	const {navGrid, itemKeys, columns, onSelect, containerRef, isEnabled = true, checkSuspension = () => false} = options;
 	const [focusedItemKey, setFocusedItemKey] = useState<string | null>(null);
 	const focusedItemRef = useRef<string | null>(null);
 	useEffect(() => {
@@ -47,31 +39,31 @@ export const useMasonryGridNavigation = (options: UseMasonryGridNavigationOption
 	);
 	const getItemCoordinates = useCallback(
 		(itemKey: string) => {
-			if (!gridData) return null;
-			return gridData.coordinates[itemKey] || null;
+			if (!navGrid) return null;
+			return navGrid.tileCells[itemKey] || null;
 		},
-		[gridData],
+		[navGrid],
 	);
 	const findItemByCoordinates = useCallback(
 		(row: number, column: number): string | null => {
-			if (!gridData) return null;
+			if (!navGrid) return null;
 			for (const itemKey of itemKeys) {
-				const coords = gridData.coordinates[itemKey];
+				const coords = navGrid.tileCells[itemKey];
 				if (coords && coords.row === row && coords.column === column) {
 					return itemKey;
 				}
 			}
 			return null;
 		},
-		[gridData, itemKeys],
+		[navGrid, itemKeys],
 	);
 	const findNearestItemInColumn = useCallback(
 		(targetRow: number, targetColumn: number, direction: 1 | -1): string | null => {
-			if (!gridData) return null;
+			if (!navGrid) return null;
 			let bestItem: string | null = null;
 			let bestDistance = Number.POSITIVE_INFINITY;
 			for (const itemKey of itemKeys) {
-				const coords = gridData.coordinates[itemKey];
+				const coords = navGrid.tileCells[itemKey];
 				if (!coords || coords.column !== targetColumn) continue;
 				const rowDiff = coords.row - targetRow;
 				if ((direction > 0 && rowDiff > 0) || (direction < 0 && rowDiff < 0)) {
@@ -84,12 +76,12 @@ export const useMasonryGridNavigation = (options: UseMasonryGridNavigationOption
 			}
 			return bestItem;
 		},
-		[gridData, itemKeys],
+		[navGrid, itemKeys],
 	);
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
 			if (!isEnabled || checkSuspension()) return;
-			if (!gridData || itemKeys.length === 0) return;
+			if (!navGrid || itemKeys.length === 0) return;
 			const target = event.target as HTMLElement;
 			if (
 				target &&
@@ -172,7 +164,7 @@ export const useMasonryGridNavigation = (options: UseMasonryGridNavigationOption
 		[
 			isEnabled,
 			checkSuspension,
-			gridData,
+			navGrid,
 			itemKeys,
 			columns,
 			onSelect,

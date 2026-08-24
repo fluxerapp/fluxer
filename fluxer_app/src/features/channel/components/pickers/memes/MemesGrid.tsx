@@ -25,8 +25,8 @@ export const MemesGrid = observer(
 		scrollTop: number;
 		onContentSizeChange?: (contentSize: number) => void;
 	}) => {
-		const itemGutter = 8;
-		const columns = computeMasonryColumns(viewportWidth, itemGutter);
+		const tileSpacing = 8;
+		const columns = computeMasonryColumns(viewportWidth, tileSpacing);
 		const data = useMemo(
 			() =>
 				memes.map((meme) => ({
@@ -46,15 +46,15 @@ export const MemesGrid = observer(
 				data={data}
 				itemKeys={itemKeys}
 				columns={columns}
-				itemGutter={itemGutter}
+				tileSpacing={tileSpacing}
 				viewportWidth={viewportWidth}
 				viewportHeight={viewportHeight}
 				scrollTop={scrollTop}
 				onContentSizeChange={onContentSizeChange}
 				checkSuspension={() => QuickSwitcher.isOpen}
 				onSelectItemKey={handleSelectKey}
-				getItemKey={(item) => item.id}
-				getItemHeight={(item, _index, columnWidth) => columnWidth * (item.height / item.width)}
+				tileKeyOf={(item) => item.id}
+				tileHeightOf={(item, _index, laneWidth) => laneWidth * (item.height / item.width)}
 				renderItem={({item, itemKey, coords, isFocused}) => (
 					<MemeGridItem
 						key={itemKey}

@@ -22,7 +22,7 @@ export interface GifPickerLoadingSkeletonLayoutItem extends GifPickerLoadingSkel
 export interface GifPickerLoadingSkeletonLayoutInput {
 	viewportWidth: number;
 	viewportHeight: number;
-	itemGutter?: number;
+	tileSpacing?: number;
 	paddingPx?: number;
 	overscanPx?: number;
 }
@@ -61,19 +61,19 @@ export const GIF_PICKER_LOADING_SKELETON_GIF_SPECS: ReadonlyArray<GifPickerLoadi
 export function buildGifPickerLoadingSkeletonLayout({
 	viewportWidth,
 	viewportHeight,
-	itemGutter = 8,
+	tileSpacing = 8,
 	paddingPx = MASONRY_PADDING_PX,
 	overscanPx = MASONRY_PADDING_PX * 2,
 }: GifPickerLoadingSkeletonLayoutInput): Array<GifPickerLoadingSkeletonLayoutItem> {
 	if (viewportWidth <= 0 || viewportHeight <= 0) {
 		return [];
 	}
-	const columns = computeMasonryColumns(viewportWidth, itemGutter, {minColumns: 2});
-	const columnWidth = (viewportWidth - paddingPx * 2 - itemGutter * Math.max(0, columns - 1)) / Math.max(1, columns);
-	if (columnWidth <= 0) {
+	const columns = computeMasonryColumns(viewportWidth, tileSpacing, {minColumns: 2});
+	const laneWidth = (viewportWidth - paddingPx * 2 - tileSpacing * Math.max(0, columns - 1)) / Math.max(1, columns);
+	if (laneWidth <= 0) {
 		return [];
 	}
-	const columnHeights = Array.from({length: columns}, () => paddingPx);
+	const laneFill = Array.from({length: columns}, () => paddingPx);
 	const visibleBottom = viewportHeight + overscanPx;
 	const layout: Array<GifPickerLoadingSkeletonLayoutItem> = [];
 	for (let index = 0; index < GIF_PICKER_LOADING_SKELETON_GIF_SPECS.length; index += 1) {
@@ -81,11 +81,11 @@ export function buildGifPickerLoadingSkeletonLayout({
 		if (!spec) {
 			continue;
 		}
-		const column = findShortestColumnIndex(columnHeights);
-		const left = paddingPx + column * (columnWidth + itemGutter);
-		const top = columnHeights[column] ?? paddingPx;
-		const renderedHeight = columnWidth * (spec.height / spec.width);
-		columnHeights[column] = top + renderedHeight + itemGutter;
+		const column = findShortestColumnIndex(laneFill);
+		const left = paddingPx + column * (laneWidth + tileSpacing);
+		const top = laneFill[column] ?? paddingPx;
+		const renderedHeight = laneWidth * (spec.height / spec.width);
+		laneFill[column] = top + renderedHeight + tileSpacing;
 		if (top > visibleBottom) {
 			continue;
 		}
@@ -95,18 +95,18 @@ export function buildGifPickerLoadingSkeletonLayout({
 			column,
 			left,
 			top,
-			renderedWidth: columnWidth,
+			renderedWidth: laneWidth,
 			renderedHeight,
 		});
 	}
 	return layout;
 }
 
-function findShortestColumnIndex(columnHeights: ReadonlyArray<number>): number {
+function findShortestColumnIndex(laneFill: ReadonlyArray<number>): number {
 	let shortestColumn = 0;
-	let shortestHeight = columnHeights[0] ?? 0;
-	for (let column = 1; column < columnHeights.length; column += 1) {
-		const height = columnHeights[column];
+	let shortestHeight = laneFill[0] ?? 0;
+	for (let column = 1; column < laneFill.length; column += 1) {
+		const height = laneFill[column];
 		if (height < shortestHeight) {
 			shortestColumn = column;
 			shortestHeight = height;

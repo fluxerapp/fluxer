@@ -50,8 +50,8 @@ export const GifPickerGrid = observer(
 		onContentSizeChange?: (contentSize: number) => void;
 	}) => {
 		const {i18n} = useLingui();
-		const itemGutter = 8;
-		const columns = computeMasonryColumns(viewportWidth, itemGutter, {minColumns: 2});
+		const tileSpacing = 8;
+		const columns = computeMasonryColumns(viewportWidth, tileSpacing, {minColumns: 2});
 		const favoriteMemes = FavoriteMemes.memes;
 		const favoriteMemesVersion = favoriteMemes.length;
 		const favoriteGifs = FavoriteGif.favoriteGifs;
@@ -131,7 +131,7 @@ export const GifPickerGrid = observer(
 				data={data}
 				itemKeys={itemKeys}
 				columns={columns}
-				itemGutter={itemGutter}
+				tileSpacing={tileSpacing}
 				viewportWidth={viewportWidth}
 				viewportHeight={viewportHeight}
 				scrollTop={scrollTop}
@@ -141,13 +141,13 @@ export const GifPickerGrid = observer(
 				onSelectItemKey={(key) => {
 					handleSelectByKey(key);
 				}}
-				getItemKey={(item) => item.key}
-				getItemHeight={(item, _index, columnWidth) => {
+				tileKeyOf={(item) => item.key}
+				tileHeightOf={(item, _index, laneWidth) => {
 					if (item.type === 'gif') {
 						const g = item.gif;
-						return columnWidth * (g.height / g.width);
+						return laneWidth * (g.height / g.width);
 					}
-					return columnWidth * (item.height / item.width);
+					return laneWidth * (item.height / item.width);
 				}}
 				extraSections={[
 					{
