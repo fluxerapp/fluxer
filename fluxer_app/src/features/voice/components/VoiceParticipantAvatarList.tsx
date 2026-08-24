@@ -544,7 +544,7 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 			[avatarSize],
 		);
 		const shouldAnimateAvatarChanges = !Accessibility.useReducedMotion;
-		const {slots: animatedSlots, onSlotAnimationComplete} = useWrappedAvatarSlots(
+		const {slots: avatarSlots, onSlotAnimationComplete} = useWrappedAvatarSlots(
 			sortedEntries,
 			shouldAnimateAvatarChanges,
 		);
@@ -583,22 +583,38 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 			),
 			[avatarSize, guildId],
 		);
-		const finalAvatarNodes = sortedEntries.map((entry) => (
-			// biome-ignore lint/a11y/noStaticElementInteractions: wrapped voice avatars expose a pointer-only context menu.
-			<div
-				key={`${entry.userId}:${entry.connectionId}`}
-				className={styles.wrapAvatarSlot}
-				onContextMenu={(event) => handleContextMenu(event, entry)}
-				data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar-slot"
-			>
-				<div
-					className={styles.wrapAvatar}
-					data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar"
+		const avatarSlotNodes = avatarSlots.map((slot) => {
+			const isCollapsed = slot.phase === 'exiting';
+			const isEntering = slot.phase === 'entering';
+			return (
+				<motion.div
+					key={shouldAnimateAvatarChanges ? `${slot.key}:motion` : `${slot.key}:static`}
+					className={clsx(styles.wrapAvatarSlot, shouldAnimateAvatarChanges && styles.wrapAvatarSlotAnimated)}
+					onContextMenu={(event) => handleContextMenu(event, slot.entry)}
+					initial={shouldAnimateAvatarChanges && isEntering ? {width: 0, flexBasis: 0} : false}
+					animate={
+						shouldAnimateAvatarChanges
+							? {width: isCollapsed ? 0 : slotSize, flexBasis: isCollapsed ? 0 : slotSize}
+							: undefined
+					}
+					transition={WRAPPED_AVATAR_SLOT_TRANSITION}
+					onAnimationComplete={() => onSlotAnimationComplete(slot.key, slot.phase)}
+					data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar-slot"
 				>
-					{renderAvatar(entry)}
-				</div>
-			</div>
-		));
+					<motion.div
+						className={clsx(styles.wrapAvatar, shouldAnimateAvatarChanges && styles.wrapAvatarAnimated)}
+						initial={shouldAnimateAvatarChanges && isEntering ? {opacity: 0, scale: 0.92} : false}
+						animate={
+							shouldAnimateAvatarChanges ? {opacity: isCollapsed ? 0 : 1, scale: isCollapsed ? 0.9 : 1} : undefined
+						}
+						transition={WRAPPED_AVATAR_POP_TRANSITION}
+						data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar"
+					>
+						{renderAvatar(slot.entry)}
+					</motion.div>
+				</motion.div>
+			);
+		});
 		return (
 			<div
 				ref={containerRef}
@@ -606,39 +622,7 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 				style={listStyle}
 				data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-container"
 			>
-				{shouldAnimateAvatarChanges
-					? animatedSlots.map((slot) => {
-							const isCollapsed = slot.phase === 'exiting';
-							return (
-								<motion.div
-									key={slot.key}
-									className={clsx(styles.wrapAvatarSlot, styles.wrapAvatarSlotAnimated)}
-									onContextMenu={(event) => handleContextMenu(event, slot.entry)}
-									initial={slot.phase === 'entering' ? {width: 0, flexBasis: 0} : false}
-									animate={{
-										width: isCollapsed ? 0 : slotSize,
-										flexBasis: isCollapsed ? 0 : slotSize,
-									}}
-									transition={WRAPPED_AVATAR_SLOT_TRANSITION}
-									onAnimationComplete={() => onSlotAnimationComplete(slot.key, slot.phase)}
-									data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar-slot.motion"
-								>
-									<motion.div
-										className={clsx(styles.wrapAvatar, styles.wrapAvatarAnimated)}
-										initial={slot.phase === 'entering' ? {opacity: 0, scale: 0.92} : false}
-										animate={{
-											opacity: isCollapsed ? 0 : 1,
-											scale: isCollapsed ? 0.9 : 1,
-										}}
-										transition={WRAPPED_AVATAR_POP_TRANSITION}
-										data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.wrap-avatar.motion"
-									>
-										{renderAvatar(slot.entry)}
-									</motion.div>
-								</motion.div>
-							);
-						})
-					: finalAvatarNodes}
+				{avatarSlotNodes}
 			</div>
 		);
 	},
