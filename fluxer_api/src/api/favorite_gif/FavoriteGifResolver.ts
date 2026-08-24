@@ -2,6 +2,7 @@
 
 import {Logger} from '@fluxer/logger/src/Logger';
 import type {ResolvedGifEntrySchema} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
+import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 import type {GifMediaFormat, GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {EmbedMediaResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {tryExtractGifProviderSlug} from '../gif/GifProviderUtils';
@@ -10,17 +11,6 @@ import type {IGifProvider} from '../gif/IGifProvider';
 import type {IMediaService, MediaProxyMetadataResponse} from '../infrastructure/IMediaService';
 import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
 
-const PREVIEW_FORMAT_PRIORITY = ['webm', 'mp4', 'tinywebm', 'tinymp4', 'webp', 'gif', 'tinygif', 'nanogif'] as const;
-const FORMAT_CONTENT_TYPES: Record<string, string> = {
-	webm: 'video/webm',
-	tinywebm: 'video/webm',
-	mp4: 'video/mp4',
-	tinymp4: 'video/mp4',
-	webp: 'image/webp',
-	gif: 'image/gif',
-	tinygif: 'image/gif',
-	nanogif: 'image/gif',
-};
 const logger = new Logger('FavoriteGifResolver');
 
 function pickFavoriteGifPreviewFormat(
@@ -219,10 +209,6 @@ function directMediaFormatFromDetails({
 
 function isUsableGifMediaFormat(format: GifMediaFormat | undefined): format is GifMediaFormat {
 	return Boolean(format?.src && format.proxy_src && format.width > 0 && format.height > 0);
-}
-
-function inferFormatContentType(formatKey: string): string {
-	return FORMAT_CONTENT_TYPES[formatKey] ?? '';
 }
 
 function isRenderableMediaType(contentType: string | null | undefined): boolean {

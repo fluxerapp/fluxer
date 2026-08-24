@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::klipy::{KlipyClient, build_share_url, extract_slug_from_url};
+use crate::klipy::{KlipyClient, build_share_url, extract_slug_from_url, resolve_cache_key};
 use crate::media_proxy::MediaProxyUrlBuilder;
 use crate::types::{GifCategoryTag, GifItem, GifRequest, GifServiceResponse};
 use fluxer_svc::config::ServiceConfig;
@@ -310,7 +310,7 @@ impl GifsShard {
         locale: String,
         country: String,
     ) -> anyhow::Result<GifServiceResponse> {
-        let key = format!("resolve:{locale}:{country}:{url}");
+        let key = format!("resolve:{}", resolve_cache_key(&url));
         let this = self.clone();
         let gif = self
             .get_cached(

@@ -55,7 +55,7 @@ export const GifResponse = z.object({
 	media: z
 		.record(z.string(), GifMediaFormat)
 		.describe(
-			'Map of format-name → media descriptor. Keys are provider-issued format names (e.g. "webm", "mp4", "webp", "gif", "tinygif", "nanogif"). Clients without webm support should pick "webp" / "gif" / "tinygif" / "nanogif" in that order.',
+			'Map of format-name → media descriptor. Keys are a size prefix (none for full size, "medium", "tiny", "nano") joined to a codec name ("webm", "mp4", "webp", "gif"), plus "loopedmp4". Video keys are "webm" / "mp4" / "loopedmp4" / "mediumwebm" / "mediummp4" / "tinywebm" / "tinymp4" / "nanowebm" / "nanomp4"; image keys are "webp" / "gif" / "mediumwebp" / "mediumgif" / "tinywebp" / "tinygif" / "nanowebp" / "nanogif". Every key is optional, so clients must walk a priority list rather than index a single key. Clients that cannot decode the video keys should prefer "tinywebp" / "tinygif" / "mediumwebp" / "mediumgif" / "webp" / "gif" / "nanowebp" / "nanogif" in that order.',
 		),
 	placeholder: z
 		.string()
