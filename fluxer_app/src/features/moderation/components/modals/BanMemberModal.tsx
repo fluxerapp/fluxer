@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
+import {useSaveData} from '@app/features/app/hooks/useSaveData';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import {
 	CUSTOM_ELLIPSIS_DESCRIPTOR,
@@ -124,7 +126,9 @@ interface ComboboxOption {
 export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = observer(({guildId, targetUser}) => {
 	const {i18n} = useLingui();
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef);
+	const dataSaverOn = useSaveData();
+	const motionArtworkAllowed = !Accessibility.useReducedMotion && !dataSaverOn;
+	const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {enabled: motionArtworkAllowed});
 	const [reason, setReason] = useState('');
 	const [deleteMessageDays, setDeleteMessageDays] = useState<number>(1);
 	const [banDuration, setBanDuration] = useState<number>(0);
@@ -175,19 +179,29 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 			/>
 			<Modal.Content data-flx="moderation.ban-member-modal.modal-content">
 				<div className={styles.content} data-flx="moderation.ban-member-modal.content">
-					<video
-						ref={videoRef}
-						autoPlay={videoPlaybackAllowed}
-						loop
-						muted
-						playsInline
-						poster={bannedPoster}
-						className={styles.video}
-						data-flx="moderation.ban-member-modal.video"
-					>
-						<source src={bannedWebm} type="video/webm" data-flx="moderation.ban-member-modal.source.video-webm" />
-						<source src={bannedMp4} type="video/mp4" data-flx="moderation.ban-member-modal.source.video-mp4" />
-					</video>
+					{motionArtworkAllowed ? (
+						<video
+							ref={videoRef}
+							autoPlay={videoPlaybackAllowed}
+							loop
+							muted
+							playsInline
+							poster={bannedPoster}
+							className={styles.video}
+							data-flx="moderation.ban-member-modal.video"
+						>
+							<source src={bannedWebm} type="video/webm" data-flx="moderation.ban-member-modal.source.video-webm" />
+							<source src={bannedMp4} type="video/mp4" data-flx="moderation.ban-member-modal.source.video-mp4" />
+						</video>
+					) : (
+						<img
+							src={bannedPoster}
+							alt=""
+							aria-hidden={true}
+							className={styles.video}
+							data-flx="moderation.ban-member-modal.video-still"
+						/>
+					)}
 					<div data-flx="moderation.ban-member-modal.div">
 						<FormCombobox<number>
 							label={i18n._(BAN_DURATION_DESCRIPTOR)}
