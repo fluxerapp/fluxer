@@ -17,8 +17,9 @@ interface PendingMemberRequest {
 	reject: (error: Error) => void;
 	members: Array<GuildMember>;
 	receivedChunks: number;
-	expectedChunks: number;
 	requestedUserIds?: Set<string>;
+	markMissingAsNonMembers: boolean;
+	timeoutId: ReturnType<typeof setTimeout>;
 }
 
 const MEMBER_REQUEST_TIMEOUT = 30000;
@@ -83,12 +84,19 @@ class GuildMembers {
 	pendingRequests: Map<string, PendingMemberRequest> = new Map();
 	loadedGuilds: Set<string> = new Set();
 	private pendingMessageMemberHydration: Map<string, Set<string>> = new Map();
+	private inFlightMessageMembers: Map<string, Set<string>> = new Map();
+	private messageMemberRequestGeneration: number = 0;
 
 	constructor() {
-		makeAutoObservable<this, 'pendingMessageMemberHydration'>(
+		makeAutoObservable<
+			this,
+			'pendingMessageMemberHydration' | 'inFlightMessageMembers' | 'messageMemberRequestGeneration'
+		>(
 			this,
 			{
 				pendingMessageMemberHydration: false,
+				inFlightMessageMembers: false,
+				messageMemberRequestGeneration: false,
 			},
 			{autoBind: true},
 		);
@@ -127,8 +135,14 @@ class GuildMembers {
 	handleConnectionOpen(guilds: Array<GuildReadyData>): void {
 		this.members = {};
 		this.nonMembers = {};
-		this.pendingMessageMemberHydration.clear();
 		this.loadedGuilds.clear();
+		this.resetMessageMemberRequests();
+		const availableGuildIds = new Set(guilds.map((guild) => guild.id));
+		for (const guildId of Array.from(this.pendingMessageMemberHydration.keys())) {
+			if (!availableGuildIds.has(guildId)) {
+				this.pendingMessageMemberHydration.delete(guildId);
+			}
+		}
 		for (const guild of guilds) {
 			this.handleGuildCreate(guild);
 		}
@@ -138,14 +152,16 @@ class GuildMembers {
 		if (guild.unavailable) {
 			return;
 		}
-		const members: Members = {};
+		if (!this.members[guild.id]) {
+			this.members[guild.id] = {};
+		}
+		const members = this.members[guild.id];
 		cacheGuildMemberUsers(guild.members);
 		for (const member of guild.members) {
 			members[member.user.id] = new GuildMember(guild.id, member, {cacheUser: false});
 		}
 		addVoiceStateMembers(guild, members);
 		const missingVoiceStateMemberUserIds = getMissingVoiceStateMemberUserIds(guild, members);
-		this.members[guild.id] = members;
 		if (missingVoiceStateMemberUserIds.length > 0 && GatewayConnection.socket) {
 			void this.ensureMembersLoaded(guild.id, missingVoiceStateMemberUserIds).catch((error: unknown) => {
 				logger.warn('Failed to fetch missing voice members after guild create', {
@@ -157,7 +173,7 @@ class GuildMembers {
 		}
 		if (options?.synced || GatewayConnection.hasCompletedGuildSync(guild.id)) {
 			this.loadedGuilds.add(guild.id);
-			this.flushPendingMessageMemberHydration(guild.id);
+			void this.requestPendingMessageMembers(guild.id);
 		}
 	}
 
@@ -165,6 +181,7 @@ class GuildMembers {
 		delete this.members[guildId];
 		delete this.nonMembers[guildId];
 		this.pendingMessageMemberHydration.delete(guildId);
+		this.inFlightMessageMembers.delete(guildId);
 		this.loadedGuilds.delete(guildId);
 	}
 
@@ -242,6 +259,7 @@ class GuildMembers {
 				pending.members.push(...newMembers);
 				pending.receivedChunks++;
 				if (pending.receivedChunks >= chunkCount) {
+					clearTimeout(pending.timeoutId);
 					this.markNotFoundAsNonMembers(pending);
 					pending.resolve(pending.members);
 					this.pendingRequests.delete(nonce);
@@ -251,6 +269,9 @@ class GuildMembers {
 	}
 
 	private markNotFoundAsNonMembers(pending: PendingMemberRequest): void {
+		if (!pending.markMissingAsNonMembers) {
+			return;
+		}
 		const requested = pending.requestedUserIds;
 		if (!requested || requested.size === 0) {
 			return;
@@ -281,28 +302,36 @@ class GuildMembers {
 			limit?: number;
 			userIds?: Array<string>;
 			presences?: boolean;
+			markMissingAsNonMembers?: boolean;
 		},
 	): Promise<Array<GuildMember>> {
 		const userIds = options?.userIds;
 		if (userIds && userIds.length > MAX_USER_IDS_PER_REQUEST) {
-			const all: Array<GuildMember> = [];
+			const batches: Array<Promise<Array<GuildMember>>> = [];
 			for (let i = 0; i < userIds.length; i += MAX_USER_IDS_PER_REQUEST) {
 				const slice = userIds.slice(i, i + MAX_USER_IDS_PER_REQUEST);
-				const batch = await this.fetchMembers(guildId, {...options, userIds: slice});
-				all.push(...batch);
+				batches.push(this.fetchMembers(guildId, {...options, userIds: slice}));
 			}
-			return all;
+			const results = await Promise.all(batches);
+			return results.flat();
 		}
 		const nonce = generateMemberNonce();
 		return new Promise((resolve, reject) => {
+			const timeoutId = setTimeout(() => {
+				if (this.pendingRequests.has(nonce)) {
+					this.pendingRequests.delete(nonce);
+					reject(new Error('Request timed out'));
+				}
+			}, MEMBER_REQUEST_TIMEOUT);
 			this.pendingRequests.set(nonce, {
 				guildId,
 				resolve,
 				reject,
 				members: [],
 				receivedChunks: 0,
-				expectedChunks: 1,
 				requestedUserIds: userIds && userIds.length > 0 ? new Set(userIds) : undefined,
+				markMissingAsNonMembers: options?.markMissingAsNonMembers ?? false,
+				timeoutId,
 			});
 			const socket = GatewayConnection.socket;
 			const requestOptions: {
@@ -327,12 +356,6 @@ class GuildMembers {
 				requestOptions.userIds = userIds;
 			}
 			socket?.requestGuildMembers(requestOptions);
-			setTimeout(() => {
-				if (this.pendingRequests.has(nonce)) {
-					this.pendingRequests.delete(nonce);
-					reject(new Error('Request timed out'));
-				}
-			}, MEMBER_REQUEST_TIMEOUT);
 		});
 	}
 
@@ -340,7 +363,6 @@ class GuildMembers {
 		guildIds: Array<string>;
 		query?: string;
 		limit?: number;
-		userIds?: Array<string>;
 		presences?: boolean;
 	}): void {
 		const socket = GatewayConnection.socket;
@@ -355,7 +377,6 @@ class GuildMembers {
 			guildIds,
 			...(options.query !== undefined && {query: options.query}),
 			...(options.limit !== undefined && {limit: options.limit}),
-			...(options.userIds !== undefined && {userIds: options.userIds}),
 			...(options.presences !== undefined && {presences: options.presences}),
 		});
 	}
@@ -365,7 +386,7 @@ class GuildMembers {
 		if (missingIds.length === 0) {
 			return;
 		}
-		await this.fetchMembers(guildId, {userIds: missingIds});
+		await this.fetchMembers(guildId, {userIds: missingIds, markMissingAsNonMembers: true});
 	}
 
 	async ensureMembersLoadedForMessages(guildId: string, userIds: Array<string>): Promise<void> {
@@ -373,14 +394,23 @@ class GuildMembers {
 		if (missingIds.length === 0) {
 			return;
 		}
-		if (GatewayConnection.hasCompletedGuildSync(guildId)) {
-			await this.ensureMembersLoaded(guildId, missingIds);
-			return;
-		}
 		this.queuePendingMessageMemberHydration(guildId, missingIds);
-		if (SelectedGuild.selectedGuildId === guildId) {
+		if (!GatewayConnection.hasCompletedGuildSync(guildId) && SelectedGuild.selectedGuildId === guildId) {
 			GatewayConnection.syncGuildIfNeeded(guildId, 'message-member-hydration');
 		}
+		await this.requestPendingMessageMembers(guildId);
+	}
+
+	handleConnectionResumed(): void {
+		this.resetMessageMemberRequests();
+		for (const guildId of Array.from(this.pendingMessageMemberHydration.keys())) {
+			void this.requestPendingMessageMembers(guildId);
+		}
+	}
+
+	private resetMessageMemberRequests(): void {
+		this.messageMemberRequestGeneration += 1;
+		this.inFlightMessageMembers.clear();
 	}
 
 	private getMissingMemberIds(guildId: string, userIds: Array<string>): Array<string> {
@@ -400,21 +430,79 @@ class GuildMembers {
 		}
 	}
 
-	private flushPendingMessageMemberHydration(guildId: string): void {
+	private async requestPendingMessageMembers(guildId: string): Promise<void> {
+		if (!GatewayConnection.hasCompletedGuildSync(guildId)) {
+			return;
+		}
 		const pending = this.pendingMessageMemberHydration.get(guildId);
 		if (!pending || pending.size === 0) {
 			return;
 		}
-		this.pendingMessageMemberHydration.delete(guildId);
-		const missingIds = this.getMissingMemberIds(guildId, Array.from(pending));
-		if (missingIds.length === 0) {
+		const stillMissing = new Set(this.getMissingMemberIds(guildId, Array.from(pending)));
+		for (const userId of Array.from(pending)) {
+			if (!stillMissing.has(userId)) {
+				pending.delete(userId);
+			}
+		}
+		if (pending.size === 0) {
+			this.pendingMessageMemberHydration.delete(guildId);
 			return;
 		}
-		this.requestMembersInBackground({
-			guildIds: [guildId],
-			userIds: missingIds,
-			presences: true,
-		});
+		let inFlight = this.inFlightMessageMembers.get(guildId);
+		if (!inFlight) {
+			inFlight = new Set();
+			this.inFlightMessageMembers.set(guildId, inFlight);
+		}
+		const userIds = Array.from(pending).filter((userId) => !inFlight.has(userId));
+		if (userIds.length === 0) {
+			return;
+		}
+		for (const userId of userIds) {
+			inFlight.add(userId);
+		}
+		const generation = this.messageMemberRequestGeneration;
+		try {
+			await this.fetchMembers(guildId, {userIds, markMissingAsNonMembers: false});
+			if (generation === this.messageMemberRequestGeneration) {
+				this.forgetPendingMessageMembers(guildId, userIds);
+			}
+		} catch (error) {
+			logger.warn('Failed to hydrate message author members, will retry on the next load or reconnect', {
+				guildId,
+				userIds,
+				error,
+			});
+		} finally {
+			if (generation === this.messageMemberRequestGeneration) {
+				this.releaseInFlightMessageMembers(guildId, userIds);
+			}
+		}
+	}
+
+	private forgetPendingMessageMembers(guildId: string, userIds: Array<string>): void {
+		const pending = this.pendingMessageMemberHydration.get(guildId);
+		if (!pending) {
+			return;
+		}
+		for (const userId of userIds) {
+			pending.delete(userId);
+		}
+		if (pending.size === 0) {
+			this.pendingMessageMemberHydration.delete(guildId);
+		}
+	}
+
+	private releaseInFlightMessageMembers(guildId: string, userIds: Array<string>): void {
+		const inFlight = this.inFlightMessageMembers.get(guildId);
+		if (!inFlight) {
+			return;
+		}
+		for (const userId of userIds) {
+			inFlight.delete(userId);
+		}
+		if (inFlight.size === 0) {
+			this.inFlightMessageMembers.delete(guildId);
+		}
 	}
 
 	isGuildFullyLoaded(guildId: string): boolean {
