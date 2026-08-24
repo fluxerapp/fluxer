@@ -25,7 +25,7 @@ import type {StripeSubscriptionService} from './StripeSubscriptionService';
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 export const SELF_SERVE_REFUND_WINDOW_DAYS = 3;
 export const SELF_SERVE_REFUND_COOLDOWN_DAYS = 30;
-export const PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS = 1;
+const PIX_EXACT_AMOUNT_REFUND_SHORTFALL_CENTS = 1;
 
 interface RefundTarget {
 	invoice: Stripe.Invoice;
