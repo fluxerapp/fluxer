@@ -1,7 +1,0 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
-apiVersion: v2
-name: common
-description: Shared Helm templates for Fluxer services
-type: library
-version: 0.1.0

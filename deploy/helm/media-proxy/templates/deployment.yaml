@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
-{{include "fluxer.deployment" (dict "name" "media-proxy" "values" .Values.mediaProxy "context" .)}}
----
-{{include "fluxer.deployment" (dict "name" "static-proxy" "values" .Values.staticProxy "context" .)}}

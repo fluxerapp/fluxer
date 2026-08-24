@@ -1,9 +1,0 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
-{{ include "fluxer.deployment" (dict "name" "worker-realtime" "values" .Values.workerRealtime "context" .) }}
----
-{{ include "fluxer.deployment" (dict "name" "worker-unfurl" "values" .Values.workerUnfurl "context" .) }}
----
-{{ include "fluxer.deployment" (dict "name" "worker-lifecycle" "values" .Values.workerLifecycle "context" .) }}
----
-{{ include "fluxer.deployment" (dict "name" "worker-batch" "values" .Values.workerBatch "context" .) }}
