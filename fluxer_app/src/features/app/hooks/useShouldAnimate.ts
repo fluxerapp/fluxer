@@ -20,7 +20,6 @@ export interface UseShouldAnimateOptions {
 	isHovering?: boolean;
 	isFocused?: boolean;
 	entitlementOk?: boolean;
-	respectPlaybackAllowed?: boolean;
 }
 
 function isKeptUnderReducedMotion(kind: ShouldAnimateKind): boolean {
