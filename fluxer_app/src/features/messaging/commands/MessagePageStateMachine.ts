@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {calculateAroundPaginationState} from '@app/features/messaging/utils/MessagePaginationUtils';
+import {
+	type AroundPaginationState,
+	calculateAroundPaginationState,
+} from '@app/features/messaging/utils/MessagePaginationUtils';
+import {compare as compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MessagePageStateInput {
@@ -40,13 +44,12 @@ function getBasePageState(
 	const isBefore = context.before != null;
 	const isAfter = context.after != null;
 	const isReplacement = !isBefore && !isAfter;
-	const hasAround = context.aroundMessageId != null;
 	const pageFilled = context.messageCount === context.limit;
 	return {
 		isBefore,
 		isAfter,
-		hasMoreBefore: hasAround || (pageFilled && (isBefore || isReplacement)),
-		hasMoreAfter: hasAround || (isAfter && pageFilled),
+		hasMoreBefore: pageFilled && (isBefore || isReplacement),
+		hasMoreAfter: isAfter && pageFilled,
 	};
 }
 
@@ -58,12 +61,27 @@ function resolveMessagePageStateValue(input: MessagePageStateInput): MessagePage
 	return 'standard';
 }
 
+function getMissingAroundPageState(
+	input: MessagePageStateInput,
+	aroundState: AroundPaginationState,
+): Pick<MessagePageStateModel, 'hasMoreBefore' | 'hasMoreAfter'> {
+	if (input.messageCount === 0) {
+		return {hasMoreBefore: false, hasMoreAfter: false};
+	}
+	const fetchedPastTarget =
+		input.newestFetchedMessageId == null || compareSnowflakes(input.newestFetchedMessageId, input.aroundMessageId) > 0;
+	return {
+		hasMoreBefore: aroundState.hasMoreBefore,
+		hasMoreAfter: aroundState.expectedNewer > 0 && fetchedPastTarget && !aroundState.isAtKnownLatest,
+	};
+}
+
 function buildMessagePageState(state: MessagePageStateValue, input: MessagePageStateInput): MessagePageStateModel {
 	const base = getBasePageState(input);
-	if (state !== 'aroundFound') {
+	if (state === 'standard') {
 		return {
 			...base,
-			shouldWarnMissingAroundTarget: state === 'aroundMissing',
+			shouldWarnMissingAroundTarget: false,
 			aroundDebug: null,
 		};
 	}
@@ -74,6 +92,14 @@ function buildMessagePageState(state: MessagePageStateValue, input: MessagePageS
 		newestFetchedMessageId: input.newestFetchedMessageId,
 		knownLatestMessageId: input.knownLatestMessageId,
 	});
+	if (state === 'aroundMissing') {
+		return {
+			...base,
+			...getMissingAroundPageState(input, aroundState),
+			shouldWarnMissingAroundTarget: true,
+			aroundDebug: null,
+		};
+	}
 	return {
 		...base,
 		hasMoreBefore: aroundState.hasMoreBefore,
