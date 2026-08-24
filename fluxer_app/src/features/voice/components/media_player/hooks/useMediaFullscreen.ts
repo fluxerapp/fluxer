@@ -9,7 +9,7 @@ import {
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getFullscreenElement} from '@app/features/platform/utils/FullscreenMediaUtils';
 import type {ExtendedHTMLElement, ExtendedHTMLVideoElement} from '@app/types/browser.d';
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 const logger = new Logger('useMediaFullscreen');
 
@@ -76,6 +76,7 @@ export function useMediaFullscreen(options: UseMediaFullscreenOptions): UseMedia
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [supportsFullscreen, setSupportsFullscreen] = useState(() => supportsContainerFullscreenAPI());
 	const [useIOSFullscreen, setUseIOSFullscreen] = useState(false);
+	const claimedFullscreenHostRef = useRef<Element | null>(null);
 	useEffect(() => {
 		const hasContainerSupport = supportsContainerFullscreenAPI();
 		const hasIOSSupport = supportsIOSVideoFullscreen(videoRef?.current ?? null);
@@ -86,6 +87,7 @@ export function useMediaFullscreen(options: UseMediaFullscreenOptions): UseMedia
 		const handleFullscreenChange = () => {
 			const fullscreenElement = getFullscreenElement();
 			const isNowFullscreen = fullscreenElement === containerRef.current;
+			claimedFullscreenHostRef.current = isNowFullscreen ? fullscreenElement : null;
 			setIsFullscreen(isNowFullscreen);
 			onFullscreenChange?.(isNowFullscreen);
 		};
@@ -117,6 +119,16 @@ export function useMediaFullscreen(options: UseMediaFullscreenOptions): UseMedia
 			}
 		};
 	}, [containerRef, videoRef, onFullscreenChange]);
+	useEffect(() => {
+		return () => {
+			const claimedHost = claimedFullscreenHostRef.current;
+			claimedFullscreenHostRef.current = null;
+			if (claimedHost === null || getFullscreenElement() !== claimedHost) return;
+			exitFullscreenAPI().catch((error: unknown) => {
+				logger.error('Failed to release fullscreen on teardown:', error);
+			});
+		};
+	}, []);
 	const enterFullscreen = useCallback(async () => {
 		if (useIOSFullscreen && videoRef?.current) {
 			try {
