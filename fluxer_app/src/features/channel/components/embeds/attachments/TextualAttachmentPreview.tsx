@@ -26,6 +26,7 @@ import {
 } from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewUtils';
 import {TextualPreviewContextMenu} from '@app/features/channel/components/embeds/attachments/TextualPreviewContextMenu';
 import {useArboriumHighlightedHtml} from '@app/features/code_highlighting/utils/ArboriumHighlighting';
+import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import TextualPreview from '@app/features/messaging/state/TextualPreview';
 import {
 	shouldPreviewAttachment,
@@ -93,9 +94,12 @@ async function readPreviewText(response: Response): Promise<string> {
 
 export const TextualAttachmentPreview = observer(function TextualAttachmentPreview({
 	attachment,
-}: TextualAttachmentPreviewProps) {
+	spoilerHidden = false,
+}: TextualAttachmentPreviewProps & {spoilerHidden?: boolean}) {
 	const {i18n} = useLingui();
 	const shouldShowPreview = shouldPreviewAttachment(attachment);
+	const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: attachment.url});
+	const shouldFetchPreview = shouldShowPreview && isNearViewport && !spoilerHidden;
 	const isCsvPreview = useMemo(
 		() => isCsvAttachment(attachment),
 		[attachment.content_type, attachment.filename, attachment.title],
@@ -123,6 +127,9 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 		setIsFullscreenOpen(false);
 	}, [attachment.id]);
 	useEffect(() => {
+		if (!shouldFetchPreview) {
+			return;
+		}
 		if (!attachment.url) {
 			setStatus('error');
 			setPreviewError({type: 'network'});
@@ -164,7 +171,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 				setPreviewError({type: 'network', message: error?.message ?? 'Failed to load preview'});
 			});
 		return () => controller.abort();
-	}, [attachment.id, attachment.size, attachment.url]);
+	}, [attachment.id, attachment.size, attachment.url, shouldFetchPreview]);
 	const lineCount = useMemo(() => getLineCount(textContent), [textContent]);
 	const csvRows = useMemo(() => (isCsvPreview ? parseCsvRows(textContent) : null), [isCsvPreview, textContent]);
 	const csvRowCount = csvRows?.length ?? 0;
@@ -282,6 +289,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 	return (
 		<>
 			<div
+				ref={visibilityRef}
 				className={styles.textualPreview}
 				data-flx="channel.embeds.attachments.textual-attachment-preview.textual-preview"
 			>

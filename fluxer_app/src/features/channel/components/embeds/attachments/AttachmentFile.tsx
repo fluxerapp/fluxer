@@ -48,9 +48,10 @@ interface AttachmentFileProps {
 	attachment: MessageAttachment;
 	isPreview?: boolean;
 	message?: Message;
+	spoilerHidden?: boolean;
 }
 
-export const AttachmentFile = observer(({attachment, message, isPreview}: AttachmentFileProps) => {
+export const AttachmentFile = observer(({attachment, message, isPreview, spoilerHidden}: AttachmentFileProps) => {
 	const {i18n} = useLingui();
 	const {enabled: isMobile} = MobileLayout;
 	const isExpired = Boolean(attachment.expired);
@@ -247,6 +248,7 @@ export const AttachmentFile = observer(({attachment, message, isPreview}: Attach
 			{showTextPreview ? (
 				<TextualAttachmentPreview
 					attachment={attachment}
+					spoilerHidden={spoilerHidden}
 					data-flx="channel.embeds.attachments.attachment-file.textual-attachment-preview"
 				/>
 			) : (
