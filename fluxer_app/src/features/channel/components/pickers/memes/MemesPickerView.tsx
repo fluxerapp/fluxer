@@ -58,11 +58,11 @@ export const MemesPickerView = observer(({onClose}: MemesPickerProps = {}) => {
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const [estimatedContentSize, setEstimatedContentSize] = useState<number | null>(null);
 	useSearchInputAutofocus(searchInputRef);
-	const {viewportSize, scrollTop, handleScroll, handleResize, scrollToTop} = useScrollerViewport(scrollerRef);
-	useWindowFocusVideoControl({scrollerRef, videoPool, gifAutoPlay: false});
+	const {viewportSize, scrollTop, handleScroll, handleResize, jumpToStartEdge} = useScrollerViewport(scrollerRef);
+	useWindowFocusVideoControl({scrollerRef, videoPool});
 	useEffect(() => {
-		scrollToTop();
-	}, [state.selectedFilter, state.searchTerm, scrollToTop]);
+		jumpToStartEdge();
+	}, [state.selectedFilter, state.searchTerm, jumpToStartEdge]);
 	const filteredMemes = useMemo(() => {
 		let memes = [...favoriteMemes];
 		if (state.selectedFilter !== 'all') {

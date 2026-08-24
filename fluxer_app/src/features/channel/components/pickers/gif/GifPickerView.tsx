@@ -67,23 +67,23 @@ export const GifPickerView = observer(({onClose, selectGif}: GifPickerProps = {}
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const [estimatedContentSize, setEstimatedContentSize] = useState<number | null>(null);
 	useSearchInputAutofocus(searchInputRef);
-	const {viewportSize, scrollTop, handleScroll, handleResize, scrollToTop} = useScrollerViewport(scrollerRef);
-	useWindowFocusVideoControl({scrollerRef, videoPool, gifAutoPlay});
+	const {viewportSize, scrollTop, handleScroll, handleResize, jumpToStartEdge} = useScrollerViewport(scrollerRef);
+	useWindowFocusVideoControl({scrollerRef, videoPool});
 	useEffect(() => {
 		store.ensureFeaturedLoaded();
 		return () => store.dispose();
 	}, [store]);
 	useEffect(() => {
-		scrollToTop();
-	}, [store.view, scrollToTop]);
+		jumpToStartEdge();
+	}, [store.view, jumpToStartEdge]);
 	useEffect(() => {
 		if (
 			(!store.loading && store.shouldRenderSearchResults) ||
 			(!store.searchTerm.trim() && !store.shouldRenderSearchResults)
 		) {
-			scrollToTop();
+			jumpToStartEdge();
 		}
-	}, [store.loading, store.shouldRenderSearchResults, store.searchTerm, scrollToTop]);
+	}, [store.loading, store.shouldRenderSearchResults, store.searchTerm, jumpToStartEdge]);
 	useEffect(() => {
 		if (!store.isShowingFavorites || FavoriteGif.totalCount === 0) return;
 		void FavoriteGifCommands.refreshFavoriteGifPreviews();

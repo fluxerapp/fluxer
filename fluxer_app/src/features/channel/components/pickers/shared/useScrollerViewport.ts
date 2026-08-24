@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 type ResizeType = 'container' | 'content';
+
+function readContentBoxSize(element: HTMLElement): {width: number; height: number} | null {
+	const view = element.ownerDocument.defaultView;
+	if (view === null) return null;
+	const style = view.getComputedStyle(element);
+	const width = element.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight);
+	const height = element.clientHeight - Number.parseFloat(style.paddingTop) - Number.parseFloat(style.paddingBottom);
+	if (!(width > 0) || !(height > 0)) return null;
+	return {width, height};
+}
 
 export function useScrollerViewport(scrollerRef: React.RefObject<ScrollerHandle | null>) {
 	const [viewportSize, setViewportSize] = useState({width: 0, height: 0});
@@ -12,6 +22,7 @@ export function useScrollerViewport(scrollerRef: React.RefObject<ScrollerHandle 
 	const scrollFrameRef = useRef<number | null>(null);
 	const pendingViewportSizeRef = useRef<{width: number; height: number} | null>(null);
 	const viewportFrameRef = useRef<number | null>(null);
+	const hasMeasuredViewportRef = useRef(false);
 	const flushScrollTop = useCallback(() => {
 		scrollFrameRef.current = null;
 		const nextScrollTop = pendingScrollTopRef.current;
@@ -27,16 +38,25 @@ export function useScrollerViewport(scrollerRef: React.RefObject<ScrollerHandle 
 		},
 		[flushScrollTop],
 	);
-	const flushViewportSize = useCallback(() => {
-		viewportFrameRef.current = null;
-		const nextViewportSize = pendingViewportSizeRef.current;
+	const commitViewportSize = useCallback((nextViewportSize: {width: number; height: number}) => {
 		pendingViewportSizeRef.current = null;
-		if (!nextViewportSize) return;
+		if (viewportFrameRef.current != null) {
+			cancelAnimationFrame(viewportFrameRef.current);
+			viewportFrameRef.current = null;
+		}
+		hasMeasuredViewportRef.current = true;
 		setViewportSize((prev) => {
 			if (prev.width === nextViewportSize.width && prev.height === nextViewportSize.height) return prev;
 			return nextViewportSize;
 		});
 	}, []);
+	const flushViewportSize = useCallback(() => {
+		viewportFrameRef.current = null;
+		const nextViewportSize = pendingViewportSizeRef.current;
+		pendingViewportSizeRef.current = null;
+		if (!nextViewportSize) return;
+		commitViewportSize(nextViewportSize);
+	}, [commitViewportSize]);
 	const scheduleViewportSize = useCallback(
 		(nextViewportSize: {width: number; height: number}) => {
 			pendingViewportSizeRef.current = nextViewportSize;
@@ -55,15 +75,22 @@ export function useScrollerViewport(scrollerRef: React.RefObject<ScrollerHandle 
 		(entry: ResizeObserverEntry, type: ResizeType) => {
 			if (type !== 'container') return;
 			const {width, height} = entry.contentRect;
+			if (!hasMeasuredViewportRef.current && width > 0 && height > 0) {
+				commitViewportSize({width, height});
+				return;
+			}
 			scheduleViewportSize({width, height});
 		},
-		[scheduleViewportSize],
+		[commitViewportSize, scheduleViewportSize],
 	);
-	useEffect(() => {
-		const state = scrollerRef.current?.readViewportMetrics();
-		if (!state || state.offsetWidth === 0 || state.offsetHeight === 0) return;
-		scheduleViewportSize({width: state.offsetWidth, height: state.offsetHeight});
-	}, [scrollerRef, scheduleViewportSize]);
+	useLayoutEffect(() => {
+		if (hasMeasuredViewportRef.current) return;
+		const element = scrollerRef.current?.getViewportElement() ?? null;
+		if (element === null) return;
+		const contentBox = readContentBoxSize(element);
+		if (contentBox === null) return;
+		commitViewportSize(contentBox);
+	}, [scrollerRef, commitViewportSize]);
 	useEffect(() => {
 		return () => {
 			if (scrollFrameRef.current != null) {
@@ -74,7 +101,7 @@ export function useScrollerViewport(scrollerRef: React.RefObject<ScrollerHandle 
 			}
 		};
 	}, []);
-	const scrollToTop = useCallback(() => {
+	const jumpToStartEdge = useCallback(() => {
 		scrollerRef.current?.scrollTo({to: 0, animate: false});
 		pendingScrollTopRef.current = null;
 		if (scrollFrameRef.current != null) {
@@ -89,6 +116,6 @@ export function useScrollerViewport(scrollerRef: React.RefObject<ScrollerHandle 
 		setScrollTop,
 		handleScroll,
 		handleResize,
-		scrollToTop,
+		jumpToStartEdge,
 	};
 }
