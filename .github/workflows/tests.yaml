@@ -216,6 +216,18 @@ jobs:
           otp-version: '28'
           rebar3-version: '3.24.0'
 
+      - name: Restore rebar3 dependencies
+        id: rebar3-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            ~/.cache/rebar3
+            fluxer_gateway/_build
+            !fluxer_gateway/_build/default/lib/fluxer_gateway
+            !fluxer_gateway/_build/test/lib/fluxer_gateway
+          key: rebar3-${{ runner.os }}-otp28-rebar3.24.0-${{ hashFiles('fluxer_gateway/rebar.lock', 'fluxer_gateway/rebar.config') }}
+          restore-keys: |
+            rebar3-${{ runner.os }}-otp28-rebar3.24.0-
 
       - name: Check formatting
         run: |
@@ -232,6 +244,17 @@ jobs:
       - name: Run eunit tests
         run: |
           "$FLUXER_CI_BIN" ci --step gateway_eunit
+
+      - name: Save rebar3 dependencies
+        if: always() && github.ref == 'refs/heads/main' && steps.rebar3-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            ~/.cache/rebar3
+            fluxer_gateway/_build
+            !fluxer_gateway/_build/default/lib/fluxer_gateway
+            !fluxer_gateway/_build/test/lib/fluxer_gateway
+          key: rebar3-${{ runner.os }}-otp28-rebar3.24.0-${{ hashFiles('fluxer_gateway/rebar.lock', 'fluxer_gateway/rebar.config') }}
 
   knip:
     runs-on: ubuntu-24.04
