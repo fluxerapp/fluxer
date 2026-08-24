@@ -2075,7 +2075,8 @@ msgstr "{ios} uygulaması"
 msgctxt "platform_support.mobile.ios.testflight_body"
 msgid ""
 "The native {ios} app is in open beta on {testflight}, and anyone can join without an invite. Updates arrive automatically. It is not on the {app_store} yet, and will not be until version 1 is finished."
-msgstr "Yerel {ios} uygulamamız {testflight} üzerinde herkese açık beta aşamasında ve davetiye gerektirmeden herkes katılabilir. Güncellemeler otomatik olarak gelir. Henüz {app_store} üzerinde değil ve sürüm 1 tamamlanana kadar da olmayacak."
+msgstr ""
+"Yerel {ios} uygulamamız {testflight} üzerinde herkese açık beta aşamasında ve davetiye gerektirmeden herkes katılabilir. Güncellemeler otomatik olarak gelir. Henüz {app_store} üzerinde değil ve sürüm 1 tamamlanana kadar da olmayacak."
 
 #. Button label that opens the public TestFlight invitation for the iOS beta. Used both on the iOS row of the download page and on the automatic quick-download button in page heroes when the visitor is on an iPhone or iPad. Keep TestFlight as a proper name; keep it short and action-oriented. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.testflight_cta
@@ -2088,7 +2089,8 @@ msgstr "{testflight} betasına katıl"
 msgctxt "platform_support.mobile.ios.web_app_callout"
 msgid ""
 "Prefer not to install a beta? The full {product_name} web app runs in Safari and can be added to your Home Screen."
-msgstr "Bir beta yüklemek istemiyor musunuz? Tam {product_name} web uygulaması Safari'de çalışır ve Ana Ekran'ınıza eklenebilir."
+msgstr ""
+"Bir beta yüklemek istemiyor musunuz? Tam {product_name} web uygulaması Safari'de çalışır ve Ana Ekran'ınıza eklenebilir."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2101,7 +2103,8 @@ msgstr "{android} uygulaması"
 msgctxt "platform_support.mobile.android.beta_body"
 msgid ""
 "The {android} beta is an open build you install yourself. The recommended download suits most phones; other builds cover degoogled phones and older hardware."
-msgstr "{android} beta sürümü, kendiniz yüklediğiniz açık bir sürümdür. Önerilen indirme çoğu telefon için uygundur; diğer sürümler Google'sız telefonları ve eski donanımları kapsar."
+msgstr ""
+"{android} beta sürümü, kendiniz yüklediğiniz açık bir sürümdür. Önerilen indirme çoğu telefon için uygundur; diğer sürümler Google'sız telefonları ve eski donanımları kapsar."
 
 #. Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.android.cta
@@ -2127,14 +2130,6 @@ msgctxt "download.android.recommended_heading"
 msgid "Recommended"
 msgstr "Önerilen"
 
-#. Body copy for the Obtainium section on the Android install methods page. Keep Obtainium as a proper name. Preserve placeholders exactly.
-#: fluxer_marketing/generated:download.android.obtainium_body
-msgctxt "download.android.obtainium_body"
-msgid ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
-msgstr ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
-
 #. Link label that adds the Firebase build of the Android beta to Obtainium. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.obtainium_fcm
 msgctxt "download.android.obtainium_fcm"
@@ -2152,21 +2147,24 @@ msgstr "{obtainium}'e ekle (Google hizmetleri olmayan telefonlar için)"
 msgctxt "download.android.flavour_fcm"
 msgid ""
 "For phones with {google_play_services}, such as Samsung and Pixel. Notifications arrive over Firebase Cloud Messaging."
-msgstr "Samsung ve Pixel gibi {google_play_services} olan telefonlar için. Bildirimler Firebase Cloud Messaging üzerinden gelir."
+msgstr ""
+"Samsung ve Pixel gibi {google_play_services} olan telefonlar için. Bildirimler Firebase Cloud Messaging üzerinden gelir."
 
 #. Explains which phones should choose the UnifiedPush build. Keep GrapheneOS and UnifiedPush as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.flavour_oss
 msgctxt "download.android.flavour_oss"
 msgid ""
 "For phones without {google_play_services}, such as {graphene_os}. Notifications arrive over {unified_push}, which you set up separately."
-msgstr "{google_play_services} olmayan telefonlar için, örneğin {graphene_os}. Bildirimler, ayrı olarak kurduğunuz {unified_push} üzerinden gelir."
+msgstr ""
+"{google_play_services} olmayan telefonlar için, örneğin {graphene_os}. Bildirimler, ayrı olarak kurduğunuz {unified_push} üzerinden gelir."
 
 #. Warning that the Firebase and UnifiedPush Android builds cannot be installed side by side.
 #: fluxer_marketing/generated:download.android.switch_warning
 msgctxt "download.android.switch_warning"
 msgid ""
 "The two builds are separate installs. Installing one replaces the other, so pick one and stay with it."
-msgstr "İki sürüm ayrı ayrı yüklenir. Birini yüklemek diğerini değiştirir, bu yüzden birini seçin ve onunla devam edin."
+msgstr ""
+"İki sürüm ayrı ayrı yüklenir. Birini yüklemek diğerini değiştirir, bu yüzden birini seçin ve onunla devam edin."
 
 #. Section heading above the table of individual Android build downloads. Keep it short.
 #: fluxer_marketing/generated:download.android.direct_heading
@@ -2179,14 +2177,16 @@ msgstr "Doğrudan indirmeler"
 msgctxt "download.android.abi_help"
 msgid ""
 "Almost every phone made since 2016 needs arm64-v8a. Pick the universal build if you are unsure; it is much larger but works everywhere."
-msgstr "2016'dan beri üretilen hemen hemen her telefon arm64-v8a gerektirir. Emin değilseniz evrensel sürümü seçin; çok daha büyüktür ancak her yerde çalışır."
+msgstr ""
+"2016'dan beri üretilen hemen hemen her telefon arm64-v8a gerektirir. Emin değilseniz evrensel sürümü seçin; çok daha büyüktür ancak her yerde çalışır."
 
 #. Note stating that the app is not yet published in any app store. Keep the store names as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.stores_note
 msgctxt "download.android.stores_note"
 msgid ""
 "{product_name} is not on {google_play}, {f_droid}, {accrescent} or the {app_store} yet. Those come once version 1 is finished."
-msgstr "{product_name} henüz {google_play}, {f_droid}, {accrescent} veya {app_store} üzerinde mevcut değil. Bunlar 1. sürüm tamamlandıktan sonra eklenecektir."
+msgstr ""
+"{product_name} henüz {google_play}, {f_droid}, {accrescent} veya {app_store} üzerinde mevcut değil. Bunlar 1. sürüm tamamlandıktan sonra eklenecektir."
 
 #. Section heading above the Android signing certificate fingerprint. Keep it short.
 #: fluxer_marketing/generated:download.android.signing_heading
@@ -2199,7 +2199,8 @@ msgstr "İmzayı doğrula"
 msgctxt "download.android.signing_body"
 msgid ""
 "Every {android} release build is signed with this SHA-256 certificate fingerprint. Check it before installing a file you did not download from this page."
-msgstr "Her {android} sürüm derlemesi bu SHA-256 sertifika parmak iziyle imzalanır. Dosyayı bu sayfadan indirmediyseniz, yüklemeden önce kontrol edin."
+msgstr ""
+"Her {android} sürüm derlemesi bu SHA-256 sertifika parmak iziyle imzalanır. Dosyayı bu sayfadan indirmediyseniz, yüklemeden önce kontrol edin."
 
 #. Shown in place of the download table when the latest release could not be resolved. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.unavailable
@@ -2219,14 +2220,16 @@ msgstr "{android} betasını edinin"
 msgctxt "download.android.recommended_body"
 msgid ""
 "{obtainium} is the recommended way in. It installs the beta and updates it for you, so you never have to find and sideload a new file by hand."
-msgstr "{obtainium} ile yüklemek en iyi yöntemdir. Beta sürümünü kurar ve sizin için günceller, böylece yeni bir dosyayı manuel olarak bulup yüklemeniz gerekmez."
+msgstr ""
+"{obtainium} ile yüklemek en iyi yöntemdir. Beta sürümünü kurar ve sizin için günceller, böylece yeni bir dosyayı manuel olarak bulup yüklemeniz gerekmez."
 
 #. Lead sentence of the direct downloads section on the Android install methods page, making clear that manual downloads do not update themselves. Keep Obtainium as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.direct_body
 msgctxt "download.android.direct_body"
 msgid ""
 "If you would rather not use {obtainium}, download a build directly. You will need to repeat this for every update."
-msgstr "{obtainium}'ı kullanmak istemezseniz, bir sürümü doğrudan indirin. Her güncelleme için bunu tekrarlamanız gerekecek."
+msgstr ""
+"{obtainium}'ı kullanmak istemezseniz, bir sürümü doğrudan indirin. Her güncelleme için bunu tekrarlamanız gerekecek."
 
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.brand_colors_heading

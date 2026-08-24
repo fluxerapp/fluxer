@@ -2043,7 +2043,8 @@ msgstr "{ios}アプリ"
 msgctxt "platform_support.mobile.ios.testflight_body"
 msgid ""
 "The native {ios} app is in open beta on {testflight}, and anyone can join without an invite. Updates arrive automatically. It is not on the {app_store} yet, and will not be until version 1 is finished."
-msgstr "ネイティブの{ios}アプリは{testflight}で公開ベータ版として提供されており、どなたでも招待なしで参加できます。アップデートは自動的に配信されます。まだ{app_store}には公開されておらず、バージョン1が完了するまで公開されません。"
+msgstr ""
+"ネイティブの{ios}アプリは{testflight}で公開ベータ版として提供されており、どなたでも招待なしで参加できます。アップデートは自動的に配信されます。まだ{app_store}には公開されておらず、バージョン1が完了するまで公開されません。"
 
 #. Button label that opens the public TestFlight invitation for the iOS beta. Used both on the iOS row of the download page and on the automatic quick-download button in page heroes when the visitor is on an iPhone or iPad. Keep TestFlight as a proper name; keep it short and action-oriented. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.testflight_cta
@@ -2069,7 +2070,8 @@ msgstr "{android}アプリ"
 msgctxt "platform_support.mobile.android.beta_body"
 msgid ""
 "The {android} beta is an open build you install yourself. The recommended download suits most phones; other builds cover degoogled phones and older hardware."
-msgstr "{android} ベータ版は、ご自身でインストールするオープンビルドです。推奨ダウンロードはほとんどのスマートフォンに対応していますが、その他のビルドは、Googleサービス非搭載のスマートフォンや旧型ハードウェア向けです。"
+msgstr ""
+"{android} ベータ版は、ご自身でインストールするオープンビルドです。推奨ダウンロードはほとんどのスマートフォンに対応していますが、その他のビルドは、Googleサービス非搭載のスマートフォンや旧型ハードウェア向けです。"
 
 #. Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.android.cta
@@ -2095,14 +2097,6 @@ msgctxt "download.android.recommended_heading"
 msgid "Recommended"
 msgstr "おすすめ"
 
-#. Body copy for the Obtainium section on the Android install methods page. Keep Obtainium as a proper name. Preserve placeholders exactly.
-#: fluxer_marketing/generated:download.android.obtainium_body
-msgctxt "download.android.obtainium_body"
-msgid ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
-msgstr ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
-
 #. Link label that adds the Firebase build of the Android beta to Obtainium. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.obtainium_fcm
 msgctxt "download.android.obtainium_fcm"
@@ -2127,7 +2121,8 @@ msgstr "SamsungやPixelなどの{google_play_services}搭載端末向け。通�
 msgctxt "download.android.flavour_oss"
 msgid ""
 "For phones without {google_play_services}, such as {graphene_os}. Notifications arrive over {unified_push}, which you set up separately."
-msgstr "{google_play_services} が搭載されていないスマートフォン、例えば {graphene_os} の場合。通知は {unified_push} 経由で届きます。これは別途設定が必要です。"
+msgstr ""
+"{google_play_services} が搭載されていないスマートフォン、例えば {graphene_os} の場合。通知は {unified_push} 経由で届きます。これは別途設定が必要です。"
 
 #. Warning that the Firebase and UnifiedPush Android builds cannot be installed side by side.
 #: fluxer_marketing/generated:download.android.switch_warning
@@ -2154,7 +2149,8 @@ msgstr "2016年以降に製造されたほとんどのスマートフォンはar
 msgctxt "download.android.stores_note"
 msgid ""
 "{product_name} is not on {google_play}, {f_droid}, {accrescent} or the {app_store} yet. Those come once version 1 is finished."
-msgstr "{product_name}は、まだ{google_play}、{f_droid}、{accrescent}、または{app_store}ではご利用いただけません。これらはバージョン1が完了してから公開されます。"
+msgstr ""
+"{product_name}は、まだ{google_play}、{f_droid}、{accrescent}、または{app_store}ではご利用いただけません。これらはバージョン1が完了してから公開されます。"
 
 #. Section heading above the Android signing certificate fingerprint. Keep it short.
 #: fluxer_marketing/generated:download.android.signing_heading
@@ -2167,7 +2163,8 @@ msgstr "署名を確認する"
 msgctxt "download.android.signing_body"
 msgid ""
 "Every {android} release build is signed with this SHA-256 certificate fingerprint. Check it before installing a file you did not download from this page."
-msgstr "このSHA-256証明書フィンガープリントは、すべての{android}リリースビルドに署名するために使用されます。このページ以外からダウンロードしたファイルにインストールする前に、確認してください。"
+msgstr ""
+"このSHA-256証明書フィンガープリントは、すべての{android}リリースビルドに署名するために使用されます。このページ以外からダウンロードしたファイルにインストールする前に、確認してください。"
 
 #. Shown in place of the download table when the latest release could not be resolved. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.unavailable
@@ -2187,7 +2184,8 @@ msgstr "{android} ベータ版を入手"
 msgctxt "download.android.recommended_body"
 msgid ""
 "{obtainium} is the recommended way in. It installs the beta and updates it for you, so you never have to find and sideload a new file by hand."
-msgstr "{obtainium} を使うのがおすすめです。ベータ版のインストールとアップデートを自動で行ってくれるので、新しいファイルを自分で見つけて手動でインストールする必要がなくなります。"
+msgstr ""
+"{obtainium} を使うのがおすすめです。ベータ版のインストールとアップデートを自動で行ってくれるので、新しいファイルを自分で見つけて手動でインストールする必要がなくなります。"
 
 #. Lead sentence of the direct downloads section on the Android install methods page, making clear that manual downloads do not update themselves. Keep Obtainium as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.direct_body

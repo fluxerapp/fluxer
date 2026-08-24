@@ -2037,7 +2037,8 @@ msgstr "{ios} 應用程式"
 msgctxt "platform_support.mobile.ios.testflight_body"
 msgid ""
 "The native {ios} app is in open beta on {testflight}, and anyone can join without an invite. Updates arrive automatically. It is not on the {app_store} yet, and will not be until version 1 is finished."
-msgstr "原生 {ios} app 目前在 {testflight} 上進行公開測試，任何人都能加入，無需邀請。更新會自動送達。目前尚未上架至 {app_store}，直到 1.0 版本完成後才會上架。"
+msgstr ""
+"原生 {ios} app 目前在 {testflight} 上進行公開測試，任何人都能加入，無需邀請。更新會自動送達。目前尚未上架至 {app_store}，直到 1.0 版本完成後才會上架。"
 
 #. Button label that opens the public TestFlight invitation for the iOS beta. Used both on the iOS row of the download page and on the automatic quick-download button in page heroes when the visitor is on an iPhone or iPad. Keep TestFlight as a proper name; keep it short and action-oriented. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.testflight_cta
@@ -2088,14 +2089,6 @@ msgstr "安裝 {android} Beta 版的所有方法，以及如何保持更新。"
 msgctxt "download.android.recommended_heading"
 msgid "Recommended"
 msgstr "建議"
-
-#. Body copy for the Obtainium section on the Android install methods page. Keep Obtainium as a proper name. Preserve placeholders exactly.
-#: fluxer_marketing/generated:download.android.obtainium_body
-msgctxt "download.android.obtainium_body"
-msgid ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
-msgstr ""
-"{obtainium} installs the beta and keeps it updated automatically. These links already enable pre-releases and pick the right build for your phone."
 
 #. Link label that adds the Firebase build of the Android beta to Obtainium. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.android.obtainium_fcm
