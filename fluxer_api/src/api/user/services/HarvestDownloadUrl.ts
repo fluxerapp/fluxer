@@ -4,7 +4,7 @@ import {Config} from '../../Config';
 import type {IStorageService} from '../../infrastructure/IStorageService';
 import {signHarvestDownloadToken} from './HarvestDownloadToken';
 
-export const HARVEST_DOWNLOAD_PATH = '/harvest-downloads';
+const HARVEST_DOWNLOAD_PATH = '/harvest-downloads';
 
 export async function buildHarvestDownloadUrl(params: {
 	userId: bigint;

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Readable} from 'node:stream';
-import {HARVEST_DOWNLOAD_PATH} from '@app/api/user/services/HarvestDownloadUrl';
 import {HarvestIdParam, MessageIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {
@@ -272,7 +271,7 @@ export function UserContentController(app: HonoApp) {
 		},
 	);
 	app.get(
-		`${HARVEST_DOWNLOAD_PATH}/:harvestId`,
+		'/harvest-downloads/:harvestId',
 		RateLimitMiddleware(RateLimitConfigs.USER_HARVEST_DOWNLOAD_FILE),
 		Validator('param', HarvestIdParam),
 		OpenAPI({
