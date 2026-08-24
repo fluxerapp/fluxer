@@ -78,10 +78,6 @@
 	opacity: 1;
 }
 
-.mediaImageHidden {
-	opacity: 0;
-}
-
 .mediaBlurred {
 	filter: blur(0.75rem);
 	opacity: 0.15;

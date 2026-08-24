@@ -12,7 +12,6 @@ interface DimensionOptions {
 	maxWidth?: number;
 	maxHeight?: number;
 	preserve?: boolean;
-	forceScale?: boolean;
 	aspectRatio?: boolean;
 	responsive?: boolean;
 }
@@ -30,7 +29,6 @@ const DEFAULT_OPTIONS: Required<DimensionOptions> = {
 	maxWidth: MEDIA_MAX_WIDTH,
 	maxHeight: MEDIA_MAX_HEIGHT,
 	preserve: false,
-	forceScale: false,
 	aspectRatio: true,
 	responsive: true,
 };

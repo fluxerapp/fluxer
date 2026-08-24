@@ -9,6 +9,7 @@ import {MatureMediaBlurOverlay} from '@app/features/channel/components/embeds/Ma
 import {getMediaButtonVisibility} from '@app/features/channel/components/embeds/media/MediaButtonUtils';
 import {MediaContainer} from '@app/features/channel/components/embeds/media/MediaContainer';
 import {MediaActionBottomSheet} from '@app/features/channel/components/MediaActionBottomSheet';
+import {getMosaicTileBox} from '@app/features/channel/components/MessageAttachmentUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import * as FavoriteMemeCommands from '@app/features/expressions/commands/FavoriteMemeCommands';
 import {AddFavoriteMemeModal} from '@app/features/expressions/components/modals/AddFavoriteMemeModal';
@@ -18,11 +19,13 @@ import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMediaLoading} from '@app/features/messaging/hooks/useMediaLoading';
+import {useMediaViewerHoverWarm} from '@app/features/messaging/hooks/useMediaViewerHoverWarm';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import {getMosaicMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
+import {resolveProxyRequestSize} from '@app/features/messaging/utils/MediaProxyRequestSize';
 import {
 	buildAnimatedImageProxyURL,
 	buildMediaProxyURL,
@@ -31,6 +34,7 @@ import {
 } from '@app/features/messaging/utils/MediaProxyUtils';
 import {
 	attachmentsToViewerItems,
+	attachmentToViewerItem,
 	determineMediaType,
 	findViewerItemIndex,
 } from '@app/features/messaging/utils/MediaViewerItemUtils';
@@ -43,7 +47,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {snapMediaProxyImageSize} from '@app/features/user/utils/AvatarUtils';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
@@ -109,10 +113,9 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 		const isAudio = attachmentMediaType === 'audio';
 		const isGifv = attachmentMediaType === 'gifv';
 		const isAnimatedGif = attachmentMediaType === 'gif' || isGifv;
-		const isMobile = MobileLayout.enabled;
 		const isSpoiler = (attachment.flags & MessageAttachmentFlags.IS_SPOILER) !== 0;
 		const nsfw = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
-		const shouldAnimateGif = useShouldAnimate({kind: 'gif'});
+		const shouldAnimateGif = useShouldAnimate({kind: 'gif', isAnimated: isAnimatedGif});
 		const {hidden: spoilerHidden, reveal: revealSpoiler} = useSpoilerState(isSpoiler, message?.channelId);
 		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, message?.channelId);
 		const wrapSpoiler = (node: ReactElement) =>
@@ -129,18 +132,22 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 				node
 			);
 		const mosaicDimensions = getMosaicMediaDimensions();
-		const maxMosaicWidth = mosaicDimensions.maxWidth;
-		let targetWidth = maxMosaicWidth;
-		let targetHeight = maxMosaicWidth;
-		if (
+		const tileIndex = mediaAttachments.findIndex((candidate) => candidate.id === attachment.id);
+		const tileBox = getMosaicTileBox(mediaAttachments.length, Math.max(0, tileIndex), mosaicDimensions.maxWidth);
+		const hasIntrinsicSize =
 			typeof attachment.width === 'number' &&
 			attachment.width > 0 &&
 			typeof attachment.height === 'number' &&
-			attachment.height > 0
-		) {
-			targetWidth = Math.min(attachment.width, maxMosaicWidth * 2);
-			targetHeight = Math.max(1, Math.round((targetWidth / attachment.width) * attachment.height));
-		}
+			attachment.height > 0;
+		const snappedTileWidth = snapMediaProxyImageSize(tileBox.width, true);
+		const coverWidth = hasIntrinsicSize
+			? Math.max(tileBox.width, (tileBox.height * attachment.width!) / attachment.height!)
+			: tileBox.width;
+		const requestedSize = hasIntrinsicSize
+			? resolveProxyRequestSize(coverWidth, tileBox.height, attachment.width!, attachment.height!)
+			: {width: snappedTileWidth, height: snappedTileWidth};
+		const targetWidth = requestedSize?.width;
+		const targetHeight = requestedSize?.height;
 		const proxyUrl = attachment.proxy_url ?? attachment.url ?? '';
 		const isBlob = proxyUrl.startsWith('blob:');
 		const isPlainGif = attachmentMediaType === 'gif';
@@ -159,15 +166,11 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 								height: targetHeight,
 								animated: isAnimatedGif && shouldAnimateGif,
 							});
-		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
-			disabled: !isMobile,
-			rememberKey: thumbnailSrc,
-		});
-		const shouldLoadMedia = isNearViewport && !shouldBlur;
+		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: thumbnailSrc});
+		const shouldLoadMedia = isNearViewport && !shouldBlur && !spoilerHidden;
 		const {
 			loaded,
 			error,
-			cachedOnMount,
 			thumbHashURL,
 			ref: mediaRef,
 			onLoad: handleImageLoad,
@@ -179,6 +182,11 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 		const isFavorited = attachment.content_hash
 			? memes.some((meme) => meme.contentHash === attachment.content_hash)
 			: false;
+		const viewerWarmItem = useMemo(() => attachmentToViewerItem(attachment), [attachment]);
+		const {scheduleViewerWarm, cancelViewerWarm} = useMediaViewerHoverWarm(viewerWarmItem, {
+			allowAnimated: shouldAnimateGif,
+			enabled: !shouldBlur,
+		});
 		const handleClick = useCallback(
 			(event: MouseEvent | KeyboardEvent) => {
 				if (shouldBlur) {
@@ -355,6 +363,8 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 						tabIndex={0}
 						className={styles.clickableButton}
 						onClick={handleClick}
+						onMouseEnter={scheduleViewerWarm}
+						onMouseLeave={cancelViewerWarm}
 						onMouseDown={openInBrowser.onMouseDown}
 						onAuxClick={openInBrowser.onAuxClick}
 						onKeyDown={handleClick}
@@ -388,6 +398,18 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 											GIF
 										</div>
 									)}
+									<img
+										src={shouldLoadMedia ? thumbnailSrc : undefined}
+										ref={mediaRef}
+										alt={attachment.filename}
+										loading="eager"
+										draggable={false}
+										className={clsx(styles.mediaImage, shouldBlur && styles.mediaBlurred)}
+										aria-hidden={shouldBlur}
+										onLoad={handleImageLoad}
+										onError={handleImageError}
+										data-flx="channel.embeds.attachments.attachment-grid-item.media-image"
+									/>
 									<AnimatePresence data-flx="channel.embeds.attachments.attachment-grid-item.animate-presence">
 										{shouldRenderPlaceholder && thumbHashURL && (
 											<motion.img
@@ -397,26 +419,12 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 												transition={{duration: Accessibility.useReducedMotion ? 0 : 0.3}}
 												src={thumbHashURL}
 												alt=""
+												aria-hidden={true}
 												className={styles.placeholderImage}
 												data-flx="channel.embeds.attachments.attachment-grid-item.placeholder-image"
 											/>
 										)}
 									</AnimatePresence>
-									<motion.img
-										src={shouldLoadMedia ? thumbnailSrc : undefined}
-										ref={mediaRef}
-										alt={attachment.filename}
-										loading={isMobile ? 'lazy' : 'eager'}
-										draggable={false}
-										className={clsx(styles.mediaImage, shouldBlur && styles.mediaBlurred)}
-										aria-hidden={shouldBlur}
-										onLoad={handleImageLoad}
-										onError={handleImageError}
-										initial={{opacity: cachedOnMount ? 1 : 0}}
-										animate={{opacity: shouldRenderPlaceholder ? 0 : 1}}
-										transition={{duration: cachedOnMount || Accessibility.useReducedMotion ? 0 : 0.3}}
-										data-flx="channel.embeds.attachments.attachment-grid-item.media-image"
-									/>
 									<AltTextBadge
 										altText={attachment.description}
 										onPopoutToggle={messageViewContext?.onPopoutToggle}
