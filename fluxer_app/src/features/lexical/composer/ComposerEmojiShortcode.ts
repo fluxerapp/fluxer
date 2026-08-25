@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import {
 	$captureSelectionOffsets,
 	$getComposerNodeDisplayStart,
@@ -12,7 +13,7 @@ import {
 	$isComposerStandardEmojiNode,
 } from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
 import {$isSyntaxMarkerNode} from '@app/features/lexical/composer/nodes/SyntaxMarkerNode';
-import {findTypedEmojiShortcode} from '@app/features/messaging/utils/markdown/TypedEmojiMatch';
+import {findTypedEmojiShortcode, type TypedEmojiMatch} from '@app/features/messaging/utils/markdown/TypedEmojiMatch';
 import type {ResolvedTypedEmoji} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import {type LexicalEditor, TextNode} from 'lexical';
 
@@ -26,6 +27,32 @@ export function registerComposerEmojiShortcode(editor: LexicalEditor, resolve: C
 	});
 }
 
+function findUnicodeEmoji(text: string, startIndex: number): TypedEmojiMatch | null {
+	const pattern = new RegExp(UnicodeEmojis.EMOJI_SURROGATE_RE.source, 'g');
+	pattern.lastIndex = startIndex;
+	const match = pattern.exec(text);
+	if (match == null) {
+		return null;
+	}
+	const name = UnicodeEmojis.nameForSurrogate(match[0], false);
+	if (!name) {
+		return null;
+	}
+	return {start: match.index, end: match.index + match[0].length, name};
+}
+
+function findNextEmojiToken(text: string, startIndex: number): TypedEmojiMatch | null {
+	const shortcode = findTypedEmojiShortcode(text, startIndex);
+	const surrogate = findUnicodeEmoji(text, startIndex);
+	if (shortcode == null) {
+		return surrogate;
+	}
+	if (surrogate == null) {
+		return shortcode;
+	}
+	return surrogate.start < shortcode.start ? surrogate : shortcode;
+}
+
 export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver): void {
 	if ($isSyntaxMarkerNode(node) || node.hasFormat('code')) {
 		return;
@@ -37,7 +64,7 @@ export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiRes
 	const text = node.getTextContent();
 	let searchFrom = 0;
 	while (true) {
-		const match = findTypedEmojiShortcode(text, searchFrom);
+		const match = findNextEmojiToken(text, searchFrom);
 		if (match == null) {
 			return;
 		}
