@@ -308,11 +308,14 @@ export class AuthSessionManager {
 		}
 		this.send({type: 'initialize.start'});
 		try {
-			await this.loadStoredAccounts();
 			const storedToken = parseStoredSessionValue(this.deps.appStorage.getItem(AuthSessionStorageKey.Token));
 			const storedUserId = parseStoredSessionValue(this.deps.appStorage.getItem(AuthSessionStorageKey.UserId));
+			await this.loadStoredAccounts();
 			logger.debug(`Loaded from storage: token=${storedToken ? 'present' : 'null'}, userId=${storedUserId ?? 'null'}`);
-			const storedAccount = storedUserId ? this._snapshot.context.accounts.get(storedUserId) : undefined;
+			let storedAccount = storedUserId ? this._snapshot.context.accounts.get(storedUserId) : undefined;
+			if (storedToken && storedUserId && storedAccount?.token !== storedToken) {
+				storedAccount = this.recoverStoredActiveAccount(storedToken, storedUserId, storedAccount);
+			}
 			if (storedToken && storedUserId && storedAccount?.token === storedToken) {
 				this.send({type: 'initialize.tokenLoaded', token: storedToken, userId: storedUserId});
 				this.deps.restoreLocalPresenceIntent(storedAccount.presenceIntent ?? null);
@@ -326,6 +329,25 @@ export class AuthSessionManager {
 			logger.error('Initialization failed', error);
 			this.send({type: 'initialize.failed', error});
 		}
+	}
+
+	private recoverStoredActiveAccount(token: string, userId: string, existing?: Account): Account {
+		const instance = this.deps.getRuntimeSnapshot();
+		const account: Account = {
+			userId,
+			token,
+			userData: existing?.userData,
+			presenceIntent: existing?.presenceIntent ?? null,
+			lastActive: this.deps.now(),
+			instance,
+			isValid: true,
+		};
+		this.send({type: 'account.upsert', account});
+		void this.deps.accountStorage
+			.stashAccountData(userId, token, account.userData, instance, account.presenceIntent)
+			.catch((error) => logger.warn('Failed to persist recovered active account', error));
+		logger.info('Recovered stored active account after local account data was unavailable');
+		return account;
 	}
 
 	private async loadStoredAccounts(): Promise<void> {
