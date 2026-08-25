@@ -78,13 +78,20 @@ fn wasm_clang_candidates() -> Vec<PathBuf> {
 }
 
 fn discover_wasm_clang_from(candidates: Vec<PathBuf>) -> Result<PathBuf> {
+    discover_wasm_clang_with(candidates, clang_targets_wasm32)
+}
+
+fn discover_wasm_clang_with(
+    candidates: Vec<PathBuf>,
+    targets_wasm32: impl Fn(&Path) -> bool,
+) -> Result<PathBuf> {
     let mut seen: Vec<PathBuf> = Vec::new();
     for candidate in candidates {
         if seen.contains(&candidate) {
             continue;
         }
         seen.push(candidate.clone());
-        if clang_targets_wasm32(&candidate) {
+        if targets_wasm32(&candidate) {
             return Ok(candidate);
         }
     }
@@ -495,19 +502,13 @@ export const MARKDOWN_PARSER_WASM_BASE64 =\n\
 
     #[test]
     fn wasm_clang_discovery_prefers_a_wasm32_capable_candidate_over_an_earlier_one() {
-        let temp = TempDir::new().expect("temp dir");
-        let clang = temp.path().join("clang");
-        fs::write(
-            &clang,
-            "#!/bin/sh\nif [ \"$1\" = \"--print-targets\" ]; then echo '    wasm32 - WebAssembly 32-bit'; fi\n",
+        let capable = PathBuf::from("/opt/llvm/bin/clang");
+        let found = discover_wasm_clang_with(
+            vec![PathBuf::from("/nonexistent/clang"), capable.clone()],
+            |candidate| candidate == capable,
         )
-        .expect("write fake clang");
-        make_executable(&clang);
-
-        let found =
-            discover_wasm_clang_from(vec![PathBuf::from("/nonexistent/clang"), clang.clone()])
-                .expect("the fake clang advertises wasm32");
-        assert_eq!(found, clang);
+        .expect("the capable candidate advertises wasm32");
+        assert_eq!(found, capable);
     }
 
     #[test]
@@ -520,15 +521,6 @@ export const MARKDOWN_PARSER_WASM_BASE64 =\n\
 
         assert_eq!(discover_wasm_ar(&clang), Some(archiver));
     }
-
-    #[cfg(unix)]
-    fn make_executable(path: &Path) {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o755)).expect("chmod");
-    }
-
-    #[cfg(not(unix))]
-    fn make_executable(_path: &Path) {}
 
     #[test]
     fn libfluxcore_bindgen_dts_reset_hook_is_inserted() {
