@@ -116,7 +116,9 @@ fn parse_inline_with_context(
                 position += 1 + result.advance;
                 continue;
             }
-            if let Some(emoji) = parser.emoji_context().standard_at(base_offset + position + 1)
+            if let Some(emoji) = parser
+                .emoji_context()
+                .standard_at(base_offset + position + 1)
                 && text[position + 1..].starts_with(&emoji.raw)
             {
                 accumulated.extend_from_slice(emoji.raw.as_bytes());
