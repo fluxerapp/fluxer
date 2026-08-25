@@ -5,7 +5,6 @@ import {ExpressionPickerPopout} from '@app/features/expressions/components/popou
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
-import type {TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -15,6 +14,7 @@ import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.c
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor.module.css';
+import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {SmileyIcon} from '@phosphor-icons/react';
@@ -26,7 +26,14 @@ import {useCallback, useEffect, useId, useRef, useState} from 'react';
 const ABOUT_ME_DESCRIPTOR = msg({message: 'About me'});
 const OPEN_EMOJI_PICKER_DESCRIPTOR = msg({message: 'Open emoji picker'});
 const BIO_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.RESTRICTED_USER_BIO);
-const BIO_ALLOWED_TRIGGERS: ReadonlyArray<TriggerType> = Object.freeze(['emoji']);
+const ABOUT_ME_IS_TOO_LONG_DESCRIPTOR = msg({
+	message: 'About me is too long',
+	comment: 'Error modal title shown when inserting an emoji into the profile bio would exceed the bio limit.',
+});
+const SHORTEN_YOUR_ABOUT_ME_AND_TRY_AGAIN_DESCRIPTOR = msg({
+	message: 'Shorten your about me and try again.',
+	comment: 'Body of the error modal shown when inserting an emoji into the profile bio would exceed the bio limit.',
+});
 const COMPOSER_SURFACE_INTERACTIVE_SELECTOR =
 	'[data-channel-textarea], button, a, input, textarea, select, [role="button"]';
 
@@ -96,6 +103,12 @@ export const BioEditor = observer(
 			},
 			[onEmojiPickerOpenChange, onEmojiSelect],
 		);
+		const handleExceedMaxLength = useCallback(() => {
+			showUserErrorModal(
+				i18n._(ABOUT_ME_IS_TOO_LONG_DESCRIPTOR),
+				i18n._(SHORTEN_YOUR_ABOUT_ME_AND_TRY_AGAIN_DESCRIPTOR),
+			);
+		}, [i18n]);
 		let resolvedPlaceholder = '';
 		if (placeholder != null) {
 			resolvedPlaceholder = placeholder;
@@ -226,12 +239,12 @@ export const BioEditor = observer(
 									placeholder={resolvedPlaceholder}
 									disabled={disabled}
 									channel={null}
-									allowedTriggers={[...BIO_ALLOWED_TRIGGERS]}
 									markdown={true}
 									markdownParserFlags={BIO_MARKDOWN_PARSER_FLAGS}
 									singleLine={false}
 									size="form"
 									maxLength={actualMaxLength}
+									onExceedMaxLength={handleExceedMaxLength}
 									className={styles.editor}
 									autocompleteAnchor={wrapperRef.current}
 									id={editableId}

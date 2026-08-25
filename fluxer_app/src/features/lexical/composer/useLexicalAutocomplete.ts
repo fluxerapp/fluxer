@@ -104,6 +104,7 @@ interface UseLexicalAutocompleteParams {
 	handleRef: RefObject<ComposerHandle | null>;
 	allowedTriggers?: Array<TriggerType>;
 	allowMediaOptions?: boolean;
+	allowSpecialMentions?: boolean;
 	maxActualLength?: number;
 	onExceedMaxLength?: () => void;
 	i18n: I18n;
@@ -161,6 +162,7 @@ export type {TriggerType} from '@app/features/messaging/utils/AutocompleteTrigge
 export function useLexicalAutocomplete({
 	channel,
 	handleRef,
+	allowSpecialMentions,
 	allowedTriggers,
 	allowMediaOptions = true,
 	maxActualLength,
@@ -287,7 +289,8 @@ export function useLexicalAutocomplete({
 		setState: setGifState,
 	});
 
-	const canMentionEveryone = channel != null && Permission.can(Permissions.MENTION_EVERYONE, channel);
+	const canMentionEveryone =
+		allowSpecialMentions !== false && channel != null && Permission.can(Permissions.MENTION_EVERYONE, channel);
 	const canUseCommand = useCallback(
 		(command: Command) => {
 			if (command.type === 'simple') {

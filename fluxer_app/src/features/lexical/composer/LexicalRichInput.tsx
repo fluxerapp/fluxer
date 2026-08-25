@@ -34,6 +34,7 @@ export interface LexicalRichInputProps {
 	disabled?: boolean;
 	channel?: Channel | null;
 	allowedTriggers?: Array<TriggerType>;
+	allowSpecialMentions?: boolean;
 	markdown?: boolean;
 	markdownParserFlags?: number;
 	singleLine?: boolean;
@@ -69,6 +70,7 @@ export const LexicalRichInput = ({
 	disabled = false,
 	channel = null,
 	allowedTriggers,
+	allowSpecialMentions = true,
 	markdown = true,
 	markdownParserFlags,
 	singleLine = false,
@@ -130,12 +132,8 @@ export const LexicalRichInput = ({
 		useLexicalAutocomplete({
 			channel,
 			handleRef,
-			allowedTriggers:
-				allowedTriggers == null
-					? channel == null
-						? SAFE_CONTEXT_FREE_TRIGGERS
-						: SAFE_CHANNEL_TRIGGERS
-					: allowedTriggers,
+			allowedTriggers: allowedTriggers ?? (channel == null ? SAFE_CONTEXT_FREE_TRIGGERS : SAFE_CHANNEL_TRIGGERS),
+			allowSpecialMentions,
 			allowMediaOptions: false,
 			maxActualLength: maxLength,
 			onExceedMaxLength,

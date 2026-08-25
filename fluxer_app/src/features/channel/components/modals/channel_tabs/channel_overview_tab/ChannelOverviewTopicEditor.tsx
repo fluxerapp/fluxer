@@ -4,7 +4,6 @@ import styles from '@app/features/channel/components/modals/channel_tabs/Channel
 import {
 	type FormInputs,
 	MAX_TOPIC_LENGTH,
-	TOPIC_AUTOCOMPLETE_TRIGGERS,
 } from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
@@ -292,7 +291,7 @@ export const ChannelOverviewTopicEditor = observer(
 										placeholder={i18n._(ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR)}
 										disabled={false}
 										channel={channel}
-										allowedTriggers={[...TOPIC_AUTOCOMPLETE_TRIGGERS]}
+										allowSpecialMentions={false}
 										markdown={true}
 										markdownParserFlags={TOPIC_MARKDOWN_PARSER_FLAGS}
 										singleLine={false}
