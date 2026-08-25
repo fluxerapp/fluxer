@@ -1255,6 +1255,9 @@
         "msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
       },
       {
+        "msgid": "About me is too long"
+      },
+      {
         "msgid": "Add a Klipy API key to enable GIF search at runtime."
       },
       {
@@ -1555,6 +1558,9 @@
         "msgid": "Resize expression picker from bottom right"
       },
       {
+        "msgid": "Resize expression picker from the bottom edge"
+      },
+      {
         "msgid": "Resize expression picker from the left edge"
       },
       {
@@ -1576,6 +1582,9 @@
         "msgid": "Resize inbox from bottom right"
       },
       {
+        "msgid": "Resize inbox from the bottom edge"
+      },
+      {
         "msgid": "Resize inbox from the left edge"
       },
       {
@@ -1595,6 +1604,9 @@
       },
       {
         "msgid": "Resize pinned messages from bottom right"
+      },
+      {
+        "msgid": "Resize pinned messages from the bottom edge"
       },
       {
         "msgid": "Resize pinned messages from the left edge"
@@ -1658,6 +1670,9 @@
       },
       {
         "msgid": "Share screens and windows."
+      },
+      {
+        "msgid": "Shorten your about me and try again."
       },
       {
         "msgid": "Show connection volume controls"

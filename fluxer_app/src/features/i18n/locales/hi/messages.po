@@ -20,7 +20,7 @@ msgstr "... dense mode चालू करें। बढ़िया!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:358
-#: src/features/channel/components/UserMessage.tsx:60
+#: src/features/channel/components/UserMessage.tsx:59
 msgid "(edited)"
 msgstr "(संपादित)"
 
@@ -836,7 +836,7 @@ msgid "{length} apps"
 msgstr "{length} ऐप्स"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:49
+#: src/features/channel/components/ChannelMessage.tsx:48
 msgid "{length} attachments"
 msgstr "{length} अटैचमेंट"
 
@@ -846,12 +846,12 @@ msgid "{length} channels"
 msgstr "{length} चैनल"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:67
+#: src/features/channel/components/ChannelMessage.tsx:66
 msgid "{length} embeds"
 msgstr "{length} एम्बेड"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:58
+#: src/features/channel/components/ChannelMessage.tsx:57
 msgid "{length} stickers"
 msgstr "{length} स्टिकर"
 
@@ -2029,6 +2029,11 @@ msgstr "{appName} के बारे में"
 msgid "About me"
 msgstr "मेरे बारे में"
 
+#. Error modal title shown when inserting an emoji into the profile bio would exceed the bio limit.
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:29
+msgid "About me is too long"
+msgstr "मेरे बारे में बहुत लंबा है"
+
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:78
 msgid "About you"
@@ -2409,7 +2414,7 @@ msgstr "टैग जोड़ें"
 msgid "Add a tag and press Enter"
 msgstr "एक टैग जोड़ें और एंटर दबाएँ"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
 msgid "Add a topic to this channel"
 msgstr "इस चैनल में कोई विषय जोड़ें"
 
@@ -3223,7 +3228,7 @@ msgid "Already set to cancel"
 msgstr "पहले से रद्द करने के लिए सेट है"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:76
+#: src/features/messaging/commands/MessageCommands.tsx:77
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "इस मैसेज को {productName} सुरक्षा टीम को भी रिपोर्ट करें"
 
@@ -4017,7 +4022,7 @@ msgid "Attach files"
 msgstr "फ़ाइलें अटैच करें"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:44
+#: src/features/channel/components/ChannelMessage.tsx:43
 msgid "attachment"
 msgstr "अटैचमेंट"
 
@@ -5813,7 +5818,7 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:628
+#: src/features/messaging/components/modals/ForwardModal.tsx:635
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
@@ -5947,15 +5952,15 @@ msgstr "कैप्चा सत्यापन विफल रहा। फ�
 msgid "Capture"
 msgstr "कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:392
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
 msgid "Capture app audio"
 msgstr "ऐप ऑडियो कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:393
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
 msgid "Capture desktop audio"
 msgstr "डेस्कटॉप ऑडियो कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:391
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
 msgid "Capture device audio"
 msgstr "डिवाइस ऑडियो कैप्चर करें"
 
@@ -6546,7 +6551,7 @@ msgstr "चैनल: {0}."
 #. Section header in the message search popout listing matching channels for the in: filter. Title Case.
 #. Section heading in the channel and chat autocomplete for channel suggestions.
 #: src/features/channel/components/Autocomplete.tsx:44
-#: src/features/channel/components/message_search_bar/ChannelsSection.tsx:14
+#: src/features/channel/components/message_search_bar/ChannelsSection.tsx:15
 msgid "Channels"
 msgstr "चैनल"
 
@@ -7327,7 +7332,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "कलर पिकर खोलने और नया रंग चुनने के लिए क्लिक करें।"
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:79
+#: src/features/channel/components/MessageActionBar.tsx:70
 msgid "Click to react"
 msgstr "प्रतिक्रिया देने के लिए क्लिक करें"
 
@@ -10452,7 +10457,7 @@ msgstr "सदस्य को डीबग करें"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:91
+#: src/features/channel/components/MessageActionBar.tsx:82
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -10611,7 +10616,7 @@ msgstr "बैटरी लाइफ़ और डेटा बचाने क�
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:72
+#: src/features/messaging/commands/MessageCommands.tsx:73
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10856,7 +10861,7 @@ msgid "Delete this message"
 msgstr "यह मैसेज मिटाएँ"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:68
+#: src/features/messaging/commands/MessageCommands.tsx:69
 msgid "Delete this message? Can't be undone."
 msgstr "यह मैसेज डिलीट करें? इसे अनडू नहीं किया जा सकता."
 
@@ -11225,7 +11230,7 @@ msgstr "डिवाइस विवरण"
 msgid "Device revoked"
 msgstr "डिवाइस हटा दिया गया"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:879
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
 msgid "Device selection"
 msgstr "डिवाइस चुनें"
 
@@ -12651,7 +12656,7 @@ msgstr "ईमेल सफलतापूर्वक सत्यापित 
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
 #. has:embed chip label. Always lowercase; matches the typed query value 1:1.
-#: src/features/channel/components/ChannelMessage.tsx:62
+#: src/features/channel/components/ChannelMessage.tsx:61
 #: src/features/search/utils/SearchUtils.ts:33
 msgid "embed"
 msgstr "एम्बेड करें"
@@ -13482,7 +13487,7 @@ msgstr "एसएमएस कोड डालें"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "साइन-इन पूरा करने के लिए अपने ब्राउज़र में यह कोड डालें।"
 
-#: src/features/channel/components/EditingMessageInput.tsx:355
+#: src/features/channel/components/EditingMessageInput.tsx:357
 msgid "enter to <0><1>save</1></0>"
 msgstr "सेव करने के लिए <0><1>एंटर करें</1></0>"
 
@@ -13584,7 +13589,7 @@ msgstr "गड़बड़ हो गई"
 msgid "error code {code}"
 msgstr "त्रुटि कोड {code}"
 
-#: src/features/messaging/components/markdown/index.tsx:40
+#: src/features/messaging/components/markdown/index.tsx:39
 msgid "Error rendering content"
 msgstr "कंटेंट रेंडर करने में गड़बड़ी हुई"
 
@@ -13623,7 +13628,7 @@ msgstr "एस्केप कुंजी"
 msgid "Escape key exits keyboard mode"
 msgstr "एस्केप कुंजी से कीबोर्ड मोड से बाहर निकलें"
 
-#: src/features/channel/components/EditingMessageInput.tsx:336
+#: src/features/channel/components/EditingMessageInput.tsx:338
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "रद्द करने के लिए <0><1>एस्केप</1></0> करें"
 
@@ -14256,12 +14261,12 @@ msgid "Failed to send code. Try again."
 msgstr "कोड भेजने में विफल। फिर से कोशिश करें।"
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:68
+#: src/features/channel/components/UserMessage.tsx:67
 msgid "Failed to send message."
 msgstr "मैसेज भेजा नहीं जा सका."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:64
+#: src/features/channel/components/UserMessage.tsx:63
 msgid "Failed to send message. Hold for options."
 msgstr "मैसेज भेजा नहीं जा सका. विकल्पों के लिए दबाकर रखें."
 
@@ -14797,7 +14802,7 @@ msgstr "फ़ोल्डर सेटिंग्ज़"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "हमें {blueskyProviderName} पर फ़ॉलो करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:681
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
 msgid "Follow voice input"
 msgstr "वॉइस इनपुट को फ़ॉलो करें"
 
@@ -15014,7 +15019,7 @@ msgstr "फ़ॉरवर्ड"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:99
+#: src/features/channel/components/MessageActionBar.tsx:86
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -15820,7 +15825,7 @@ msgstr "{0} दिया गया।"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "सभी अनुमतियाँ देता है और चैनल प्रतिबंधों को बायपास करता है। अत्यधिक संवेदनशील।"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
 msgid "Granular selection"
 msgstr "बारीक चयन"
 
@@ -16378,7 +16383,7 @@ msgstr "पासवर्ड छिपाएं"
 msgid "Hide picture-in-picture popout?"
 msgstr "पिक्चर-इन-पिक्चर पॉपआउट छिपाएँ?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:715
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
 msgid "Hide preview thumbnail"
 msgstr "पूर्वावलोकन थंबनेल छिपाएँ"
 
@@ -16828,11 +16833,11 @@ msgstr "नज़रअंदाज़ करें"
 msgid "Ignore friend request"
 msgstr "दोस्ती का अनुरोध अनदेखा करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:856
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
 msgid "Ignore hardware devices"
 msgstr "हार्डवेयर डिवाइस को अनदेखा करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:832
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
 msgid "Ignore input media"
 msgstr "इनपुट मीडिया को अनदेखा करें"
 
@@ -16858,7 +16863,7 @@ msgstr "स्पैम फ़्लैग को अनदेखा करे�
 msgid "Ignore the friend request from {displayName}?"
 msgstr "क्या आप {displayName} की फ्रेंड रिक्वेस्ट को अनदेखा करना चाहते हैं?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:843
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
 msgid "Ignore virtual"
 msgstr "वर्चुअल को अनदेखा करें"
 
@@ -17431,7 +17436,7 @@ msgstr "इनपुट और टेक्स्ट"
 msgid "Inputs with icons"
 msgstr "आइकॉन के साथ इनपुट"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:36
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
 msgid "Insert emoji"
 msgstr "इमोजी डालें"
 
@@ -18131,7 +18136,7 @@ msgid "Jump to message"
 msgstr "मैसेज पर जाएं"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:55
+#: src/features/channel/components/UserMessage.tsx:54
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "{displayName} के मैसेज पर जाएं, भेजा गया {formattedDate}"
 
@@ -19987,7 +19992,7 @@ msgid "Menu shortcuts"
 msgstr "मेनू शॉर्टकट"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:76
+#: src/features/channel/components/ChannelMessage.tsx:75
 msgid "message"
 msgstr "मैसेज"
 
@@ -20064,7 +20069,7 @@ msgstr "मैसेज में अटैच की गई मीडिया 
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:83
+#: src/features/channel/components/MessageActionBar.tsx:74
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
@@ -20089,7 +20094,7 @@ msgstr "मैसेज डिस्प्ले मोड"
 msgid "Message display settings are only available on desktop."
 msgstr "मैसेज डिस्प्ले सेटिंग्स सिर्फ़ डेस्कटॉप पर उपलब्ध हैं."
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:299
+#: src/features/messaging/components/modals/ForwardModal.tsx:306
 msgid "Message forwarded"
 msgstr "मैसेज फ़ॉरवर्ड किया गया"
 
@@ -20341,7 +20346,7 @@ msgstr "माइक्रोफ़ोन की अनुमति ज़रू
 msgid "Microphone test"
 msgstr "माइक टेस्ट"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:801
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
 msgid "Microphone workaround"
 msgstr "माइक्रोफ़ोन वर्कअराउंड"
 
@@ -20597,7 +20602,7 @@ msgstr "मासिक उपहार"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:87
+#: src/features/channel/components/MessageActionBar.tsx:78
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "ज़्यादा"
@@ -21632,7 +21637,7 @@ msgstr "सेव करने के लिए कोई बदलाव नह
 msgid "No channels available"
 msgstr "कोई चैनल उपलब्ध नहीं है"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:418
+#: src/features/messaging/components/modals/ForwardModal.tsx:425
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "कोई चैनल नहीं मिला"
@@ -22024,7 +22029,7 @@ msgid "No system channel"
 msgstr "कोई सिस्टम चैनल नहीं"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:71
+#: src/features/channel/components/ChannelMessage.tsx:70
 msgid "no text content"
 msgstr "कोई टेक्स्ट सामग्री नहीं"
 
@@ -22499,7 +22504,7 @@ msgstr "केवल चौड़ी स्क्रीन पर लागू �
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "केवल क्रेडिट कार्ड स्वीकार किए जाते हैं। परिपक्व सामग्री की जाँच के लिए डेबिट और प्रीपेड कार्ड का उपयोग नहीं किया जा सकता है।"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:821
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
 msgid "Only default speakers"
 msgstr "केवल डिफ़ॉल्ट स्पीकर"
 
@@ -22547,7 +22552,7 @@ msgstr "यहां कोड तभी चलाएं जब आप ठीक
 msgid "Only show message previews for DMs with unread messages"
 msgstr "केवल बिना पढ़े मैसेज वाले DM के लिए मैसेज प्रीव्यू दिखाएं"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
 msgid "Only speakers"
 msgstr "केवल स्पीकर"
 
@@ -22579,7 +22584,7 @@ msgstr "सिर्फ़ चुने हुए"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "केवल विज़नरी सदस्य ही इस समुदाय में शामिल हो सकते हैं। यह स्क्रीन खुलने के बाद आपकी पहुंच बदल गई होगी।"
 
-#: src/features/channel/components/UserMessage.tsx:440
+#: src/features/channel/components/UserMessage.tsx:433
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "यह मैसेज सिर्फ़ आप देख सकते हैं। <0>खारिज करें</0>"
 
@@ -22642,7 +22647,7 @@ msgid "Open {settingsMenuName} settings"
 msgstr "{settingsMenuName} सेटिंग खोलें"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:40
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:38
 msgid "Open {title}"
 msgstr "{title} खोलें"
 
@@ -26617,37 +26622,42 @@ msgid "Resize call view"
 msgstr "कॉल व्यू का आकार बदलें"
 
 #. Accessible label for the bottom-left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:58
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:65
 msgid "Resize expression picker from bottom left"
 msgstr "नीचे बाईं ओर से एक्सप्रेशन पिकर का आकार बदलें"
 
 #. Accessible label for the bottom-right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:62
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:69
 msgid "Resize expression picker from bottom right"
 msgstr "एक्सप्रेशन पिकर को नीचे दाईं ओर से रीसाइज़ करें"
 
+#. Accessible label for the bottom resize handle on the expression picker popout.
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:45
+msgid "Resize expression picker from the bottom edge"
+msgstr "नीचे के किनारे से एक्सप्रेशन पिकर का आकार बदलें"
+
 #. Accessible label for the left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:42
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:49
 msgid "Resize expression picker from the left edge"
 msgstr "एक्सप्रेशन पिकर को बाईं ओर से रीसाइज़ करें"
 
 #. Accessible label for the right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:46
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:53
 msgid "Resize expression picker from the right edge"
 msgstr "दाईं ओर से एक्सप्रेशन पिकर का आकार बदलें"
 
 #. Accessible label for the top resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:38
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:41
 msgid "Resize expression picker from the top edge"
 msgstr "एक्सप्रेशन पिकर को ऊपर के किनारे से रीसाइज़ करें"
 
 #. Accessible label for the top-left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:50
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:57
 msgid "Resize expression picker from top left"
 msgstr "ऊपरी-बाएँ कोने से एक्सप्रेशन पिकर का आकार बदलें"
 
 #. Accessible label for the top-right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:54
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:61
 msgid "Resize expression picker from top right"
 msgstr "एक्सप्रेशन पिकर को ऊपर दाईं ओर से रीसाइज़ करें"
 
@@ -26657,22 +26667,27 @@ msgid "Resize floating panel"
 msgstr "फ़्लोटिंग पैनल का आकार बदलें"
 
 #. Accessible label for the bottom-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:76
+#: src/features/messaging/components/popouts/InboxPopout.tsx:80
 msgid "Resize inbox from bottom left"
 msgstr "नीचे बाईं ओर से इनबॉक्स का आकार बदलें"
 
 #. Accessible label for the bottom-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:80
+#: src/features/messaging/components/popouts/InboxPopout.tsx:84
 msgid "Resize inbox from bottom right"
 msgstr "नीचे दाईं ओर से इनबॉक्स का आकार बदलें"
 
-#. Accessible label for the left resize handle on the inbox popout.
+#. Accessible label for the bottom resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:60
+msgid "Resize inbox from the bottom edge"
+msgstr "इनबॉक्स को नीचे के किनारे से आकार बदलें"
+
+#. Accessible label for the left resize handle on the inbox popout.
+#: src/features/messaging/components/popouts/InboxPopout.tsx:64
 msgid "Resize inbox from the left edge"
 msgstr "बाईं ओर से इनबॉक्स का आकार बदलें"
 
 #. Accessible label for the right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:64
+#: src/features/messaging/components/popouts/InboxPopout.tsx:68
 msgid "Resize inbox from the right edge"
 msgstr "दाहिनी ओर से इनबॉक्स का आकार बदलें"
 
@@ -26682,12 +26697,12 @@ msgid "Resize inbox from the top edge"
 msgstr "ऊपरी किनारे से इनबॉक्स का आकार बदलें"
 
 #. Accessible label for the top-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:68
+#: src/features/messaging/components/popouts/InboxPopout.tsx:72
 msgid "Resize inbox from top left"
 msgstr "ऊपर बाईं ओर से इनबॉक्स का आकार बदलें"
 
 #. Accessible label for the top-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:72
+#: src/features/messaging/components/popouts/InboxPopout.tsx:76
 msgid "Resize inbox from top right"
 msgstr "ऊपरी दाएँ कोने से इनबॉक्स का आकार बदलें"
 
@@ -26702,22 +26717,27 @@ msgid "Resize picture-in-picture"
 msgstr "पिक्चर-इन-पिक्चर का साइज़ बदलें"
 
 #. Accessible label for the bottom-left resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:42
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:46
 msgid "Resize pinned messages from bottom left"
 msgstr "नीचे बाईं ओर से पिन किए गए संदेशों का आकार बदलें"
 
 #. Accessible label for the bottom-right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:46
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:50
 msgid "Resize pinned messages from bottom right"
 msgstr "नीचे दाईं ओर से पिन किए गए संदेशों का आकार बदलें"
 
-#. Accessible label for the left resize handle on the channel pins popout.
+#. Accessible label for the bottom resize handle on the channel pins popout.
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:26
+msgid "Resize pinned messages from the bottom edge"
+msgstr "पिन्ड संदेशों को नीचे के किनारे से रीसाइज़ करें"
+
+#. Accessible label for the left resize handle on the channel pins popout.
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:30
 msgid "Resize pinned messages from the left edge"
 msgstr "बाईं ओर से पिन किए गए संदेशों का आकार बदलें"
 
 #. Accessible label for the right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:30
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:34
 msgid "Resize pinned messages from the right edge"
 msgstr "दाईं ओर से पिन किए गए संदेशों का आकार बदलें"
 
@@ -26727,12 +26747,12 @@ msgid "Resize pinned messages from the top edge"
 msgstr "ऊपर के किनारे से पिन किए गए संदेशों का आकार बदलें"
 
 #. Accessible label for the top-left resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:34
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:38
 msgid "Resize pinned messages from top left"
 msgstr "ऊपर बाईं ओर से पिन किए गए संदेशों का आकार बदलें"
 
 #. Accessible label for the top-right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:38
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:42
 msgid "Resize pinned messages from top right"
 msgstr "ऊपर दाईं ओर से पिन किए गए संदेशों का आकार बदलें"
 
@@ -27486,7 +27506,7 @@ msgid "Screen share encoder controls"
 msgstr "स्क्रीन शेयर एनकोडर नियंत्रण"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:94
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:95
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "स्क्रीन शेयर समाप्त हो गया"
@@ -27740,7 +27760,7 @@ msgstr "सर्च इंजन"
 #. Section header in the message search popout listing available filter operators.
 #: src/features/channel/components/message_search_bar/FilterOption.tsx:14
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:16
-#: src/features/channel/components/message_search_bar/PlaintextSection.tsx:17
+#: src/features/channel/components/message_search_bar/PlaintextSection.tsx:18
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:17
 msgid "Search filters"
 msgstr "खोज फ़िल्टर"
@@ -28152,7 +28172,7 @@ msgid "Select friends"
 msgstr "दोस्त चुनें"
 
 #. Button label in the gif picker grid item when picking a GIF for an avatar, banner, or video background. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:54
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:52
 msgid "Select GIF {title}"
 msgstr "GIF का चयन करें {title}"
 
@@ -28366,7 +28386,7 @@ msgid "Send friend request"
 msgstr "फ्रेंड रिक्वेस्ट भेजें"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:49
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:47
 msgid "Send GIF {title}"
 msgstr "GIF भेजें {title}"
 
@@ -29085,6 +29105,11 @@ msgstr "मैसेज छोटा करें और फिर से को
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:51
 msgid "Shorten the topic and try again."
 msgstr "विषय छोटा करें और फिर से कोशिश करें।"
+
+#. Body of the error modal shown when inserting an emoji into the profile bio would exceed the bio limit.
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:33
+msgid "Shorten your about me and try again."
+msgstr "अपने 'मेरे बारे में' को छोटा करें और फिर से प्रयास करें।"
 
 #. Short label in the sensitive content tab. Keep it concise.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
@@ -30802,7 +30827,7 @@ msgstr "चरण 4"
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #. has:sticker chip label. Always lowercase; matches the typed query value 1:1.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:118
-#: src/features/channel/components/ChannelMessage.tsx:53
+#: src/features/channel/components/ChannelMessage.tsx:52
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "sticker"
 msgstr "स्टिकर"
@@ -32115,7 +32140,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "दिया गया redirect_uri HTTP या HTTPS का उपयोग करना चाहिए।"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "स्क्रीन शेयर स्रोत ने वीडियो भेजना बंद कर दिया है, इसलिए आपका स्क्रीन शेयर रोक दिया गया।"
@@ -33020,7 +33045,7 @@ msgid "This voice channel is no longer available."
 msgstr "यह वॉइस चैनल अब उपलब्ध नहीं है।"
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:72
+#: src/features/channel/components/UserMessage.tsx:71
 msgid "This was a {silentMention} message."
 msgstr "यह एक {silentMention} मैसेज था।"
 
@@ -33462,7 +33487,7 @@ msgstr "सबसे ऊपर"
 msgid "Top tooltip"
 msgstr "शीर्ष टूलटिप"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:33
 msgid "Topic"
 msgstr "विषय"
 
@@ -34587,7 +34612,7 @@ msgid "Unmute stream audio"
 msgstr "स्ट्रीम ऑडियो अनम्यूट करें"
 
 #. Short label in the channel and chat use message search autocomplete. Keep it concise.
-#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:72
+#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:73
 msgid "Unnamed"
 msgstr "अनाम"
 
@@ -34775,10 +34800,8 @@ msgstr "आइकॉन फ़ॉर्मैट काम नहीं कर�
 msgid "Unsupported sticker file"
 msgstr "स्टिकर फ़ाइल समर्थित नहीं है"
 
-#. Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionBar.tsx:95
 #: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
@@ -34958,7 +34981,7 @@ msgid "Updater state"
 msgstr "अपडेटर स्थिति"
 
 #. Short label in the channel and chat gif picker grid item. Keep it concise.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:45
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:43
 msgid "Updating favorites…"
 msgstr "पसंदीदा अपडेट किए जा रहे हैं…"
 
@@ -37810,7 +37833,7 @@ msgstr "आप अभी भी एक खाता बना सकते ह�
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "आप स्टार किए गए GIF को केवल URL वाले पसंदीदा के तौर पर सेव कर सकते हैं या उन्हें अपनी सेव की गई मीडिया में अपलोड कर सकते हैं। चुनें कि आप उनका इस्तेमाल कैसे करना चाहते हैं। आप इसे {mediaSettingsPath} में कभी भी बदल सकते हैं।"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:275
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:288
 msgid "You can use links, emoji, and markdown."
 msgstr "आप लिंक, इमोजी और मार्कडाउन का इस्तेमाल कर सकते हैं।"
 

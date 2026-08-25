@@ -20,7 +20,7 @@ msgstr "... compacte modus inschakelen. Mooi!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:358
-#: src/features/channel/components/UserMessage.tsx:60
+#: src/features/channel/components/UserMessage.tsx:59
 msgid "(edited)"
 msgstr "(bewerkt)"
 
@@ -836,7 +836,7 @@ msgid "{length} apps"
 msgstr "{length} apps"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:49
+#: src/features/channel/components/ChannelMessage.tsx:48
 msgid "{length} attachments"
 msgstr "{length} bijlagen"
 
@@ -846,12 +846,12 @@ msgid "{length} channels"
 msgstr "{length} kanalen"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:67
+#: src/features/channel/components/ChannelMessage.tsx:66
 msgid "{length} embeds"
 msgstr "{length} ingesloten items"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:58
+#: src/features/channel/components/ChannelMessage.tsx:57
 msgid "{length} stickers"
 msgstr "{length} stickers"
 
@@ -2029,6 +2029,11 @@ msgstr "Over {appName}"
 msgid "About me"
 msgstr "Over mij"
 
+#. Error modal title shown when inserting an emoji into the profile bio would exceed the bio limit.
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:29
+msgid "About me is too long"
+msgstr "Over mij is te lang"
+
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:78
 msgid "About you"
@@ -2409,7 +2414,7 @@ msgstr "Tag toevoegen"
 msgid "Add a tag and press Enter"
 msgstr "Voeg een tag toe en druk op Enter"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
 msgid "Add a topic to this channel"
 msgstr "Voeg een onderwerp toe aan dit kanaal"
 
@@ -3223,7 +3228,7 @@ msgid "Already set to cancel"
 msgstr "Annulering al gepland"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:76
+#: src/features/messaging/commands/MessageCommands.tsx:77
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Meld dit bericht ook bij het veiligheidsteam van {productName}"
 
@@ -4017,7 +4022,7 @@ msgid "Attach files"
 msgstr "Bestanden bijvoegen"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:44
+#: src/features/channel/components/ChannelMessage.tsx:43
 msgid "attachment"
 msgstr "bijlage"
 
@@ -5813,7 +5818,7 @@ msgstr "Kan hier geen bestanden uploaden"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:628
+#: src/features/messaging/components/modals/ForwardModal.tsx:635
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
@@ -5947,15 +5952,15 @@ msgstr "Captcha-verificatie mislukt. Probeer het opnieuw."
 msgid "Capture"
 msgstr "Opnemen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:392
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
 msgid "Capture app audio"
 msgstr "App-audio opnemen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:393
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
 msgid "Capture desktop audio"
 msgstr "Bureaubladgeluid opnemen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:391
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
 msgid "Capture device audio"
 msgstr "App-audio opnemen"
 
@@ -6546,7 +6551,7 @@ msgstr "Kanaal: {0}."
 #. Section header in the message search popout listing matching channels for the in: filter. Title Case.
 #. Section heading in the channel and chat autocomplete for channel suggestions.
 #: src/features/channel/components/Autocomplete.tsx:44
-#: src/features/channel/components/message_search_bar/ChannelsSection.tsx:14
+#: src/features/channel/components/message_search_bar/ChannelsSection.tsx:15
 msgid "Channels"
 msgstr "Kanalen"
 
@@ -7327,7 +7332,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "Tik om de kleurkiezer te openen en een nieuwe kleur te kiezen."
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:79
+#: src/features/channel/components/MessageActionBar.tsx:70
 msgid "Click to react"
 msgstr "Tik om te reageren"
 
@@ -10452,7 +10457,7 @@ msgstr "Lid debuggen"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:91
+#: src/features/channel/components/MessageActionBar.tsx:82
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -10611,7 +10616,7 @@ msgstr "Standaard uitgeschakeld op mobiel om batterij en data te besparen."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:72
+#: src/features/messaging/commands/MessageCommands.tsx:73
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10856,7 +10861,7 @@ msgid "Delete this message"
 msgstr "Dit bericht verwijderen"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:68
+#: src/features/messaging/commands/MessageCommands.tsx:69
 msgid "Delete this message? Can't be undone."
 msgstr "Dit bericht verwijderen? Kan niet ongedaan worden gemaakt."
 
@@ -11225,7 +11230,7 @@ msgstr "Apparaatgegevens"
 msgid "Device revoked"
 msgstr "Apparaat ingetrokken"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:879
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
 msgid "Device selection"
 msgstr "Apparaat selecteren"
 
@@ -12651,7 +12656,7 @@ msgstr "E-mailadres succesvol geverifieerd"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
 #. has:embed chip label. Always lowercase; matches the typed query value 1:1.
-#: src/features/channel/components/ChannelMessage.tsx:62
+#: src/features/channel/components/ChannelMessage.tsx:61
 #: src/features/search/utils/SearchUtils.ts:33
 msgid "embed"
 msgstr "insluiten"
@@ -13482,7 +13487,7 @@ msgstr "Voer de sms-code in"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Voer deze code in je browser in om het aanmelden te voltooien."
 
-#: src/features/channel/components/EditingMessageInput.tsx:355
+#: src/features/channel/components/EditingMessageInput.tsx:357
 msgid "enter to <0><1>save</1></0>"
 msgstr "enter om <0><1>op te sl1aan</1></0>"
 
@@ -13584,7 +13589,7 @@ msgstr "Fout"
 msgid "error code {code}"
 msgstr "foutcode {code}"
 
-#: src/features/messaging/components/markdown/index.tsx:40
+#: src/features/messaging/components/markdown/index.tsx:39
 msgid "Error rendering content"
 msgstr "Fout bij het weergeven van inhoud"
 
@@ -13623,7 +13628,7 @@ msgstr "Esc-toets"
 msgid "Escape key exits keyboard mode"
 msgstr "Esc-toets sluit toetsenbordmodus af"
 
-#: src/features/channel/components/EditingMessageInput.tsx:336
+#: src/features/channel/components/EditingMessageInput.tsx:338
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "Esc om te <0><1>annuleren</1></0>"
 
@@ -14256,12 +14261,12 @@ msgid "Failed to send code. Try again."
 msgstr "Verzenden van code mislukt. Probeer het opnieuw."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:68
+#: src/features/channel/components/UserMessage.tsx:67
 msgid "Failed to send message."
 msgstr "Bericht niet verzonden."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:64
+#: src/features/channel/components/UserMessage.tsx:63
 msgid "Failed to send message. Hold for options."
 msgstr "Verzenden mislukt. Houd ingedrukt voor opties."
 
@@ -14797,7 +14802,7 @@ msgstr "Mapinstellingen"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Volg ons op {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:681
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
 msgid "Follow voice input"
 msgstr "Spraakinvoer volgen"
 
@@ -15014,7 +15019,7 @@ msgstr "doorgestuurd"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:99
+#: src/features/channel/components/MessageActionBar.tsx:86
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -15820,7 +15825,7 @@ msgstr "{0} toegekend."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Verleent alle rechten en omzeilt kanaalbeperkingen. Zeer gevoelig."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
 msgid "Granular selection"
 msgstr "Nauwkeurige selectie"
 
@@ -16378,7 +16383,7 @@ msgstr "Wachtwoord verbergen"
 msgid "Hide picture-in-picture popout?"
 msgstr "Beeld-in-beeld-pop-out verbergen?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:715
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
 msgid "Hide preview thumbnail"
 msgstr "Voorbeeldweergave verbergen"
 
@@ -16828,11 +16833,11 @@ msgstr "Negeren"
 msgid "Ignore friend request"
 msgstr "Vriendschapsverzoek negeren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:856
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
 msgid "Ignore hardware devices"
 msgstr "Hardwareapparaten negeren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:832
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
 msgid "Ignore input media"
 msgstr "Invoermedia negeren"
 
@@ -16858,7 +16863,7 @@ msgstr "Spamvlag negeren"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Vriendschapsverzoek van {displayName} negeren?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:843
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
 msgid "Ignore virtual"
 msgstr "Virtuele audio negeren"
 
@@ -17431,7 +17436,7 @@ msgstr "Invoer en tekst"
 msgid "Inputs with icons"
 msgstr "Invoervelden met pictogrammen"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:36
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
 msgid "Insert emoji"
 msgstr "Emoji invoegen"
 
@@ -18131,7 +18136,7 @@ msgid "Jump to message"
 msgstr "Ga naar bericht"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:55
+#: src/features/channel/components/UserMessage.tsx:54
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Ga naar bericht van {displayName}, verzonden op {formattedDate}"
 
@@ -19987,7 +19992,7 @@ msgid "Menu shortcuts"
 msgstr "Menusnelkoppelingen"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:76
+#: src/features/channel/components/ChannelMessage.tsx:75
 msgid "message"
 msgstr "bericht"
 
@@ -20064,7 +20069,7 @@ msgstr "Bericht bevat bijgevoegde media"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:83
+#: src/features/channel/components/MessageActionBar.tsx:74
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
@@ -20089,7 +20094,7 @@ msgstr "Weergavemodus berichten"
 msgid "Message display settings are only available on desktop."
 msgstr "Instellingen voor de weergave van berichten zijn alleen beschikbaar op desktop."
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:299
+#: src/features/messaging/components/modals/ForwardModal.tsx:306
 msgid "Message forwarded"
 msgstr "Bericht doorgestuurd"
 
@@ -20341,7 +20346,7 @@ msgstr "Microfoonrechten vereist"
 msgid "Microphone test"
 msgstr "Microfoontest"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:801
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
 msgid "Microphone workaround"
 msgstr "Microfoonoplossing"
 
@@ -20597,7 +20602,7 @@ msgstr "Maandelijks cadeau"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:87
+#: src/features/channel/components/MessageActionBar.tsx:78
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "Meer"
@@ -21632,7 +21637,7 @@ msgstr "Geen wijzigingen om op te slaan"
 msgid "No channels available"
 msgstr "Geen kanalen beschikbaar"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:418
+#: src/features/messaging/components/modals/ForwardModal.tsx:425
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Geen kanalen gevonden"
@@ -22024,7 +22029,7 @@ msgid "No system channel"
 msgstr "Geen systeemkanaal"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:71
+#: src/features/channel/components/ChannelMessage.tsx:70
 msgid "no text content"
 msgstr "geen tekstinhoud"
 
@@ -22499,7 +22504,7 @@ msgstr "Alleen van toepassing op brede schermen."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Alleen creditcards worden geaccepteerd. Debit- en prepaidkaarten kunnen niet worden gebruikt voor de controle van inhoud voor volwassenen."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:821
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
 msgid "Only default speakers"
 msgstr "Alleen standaardluidsprekers"
 
@@ -22547,7 +22552,7 @@ msgstr "Voer hier alleen code uit als je precies begrijpt wat het doet."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Toon alleen berichtvoorbeelden voor DM's met ongelezen berichten"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
 msgid "Only speakers"
 msgstr "Alleen sprekers"
 
@@ -22579,7 +22584,7 @@ msgstr "Alleen de geselecteerde"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Alleen Visionary-leden kunnen lid worden van deze community. Je toegang is mogelijk gewijzigd sinds dit scherm werd geopend."
 
-#: src/features/channel/components/UserMessage.tsx:440
+#: src/features/channel/components/UserMessage.tsx:433
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Alleen jij kunt dit bericht zien. <0>Verbergen</0>"
 
@@ -22642,7 +22647,7 @@ msgid "Open {settingsMenuName} settings"
 msgstr "Open {settingsMenuName}-instellingen"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:40
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:38
 msgid "Open {title}"
 msgstr "{title} openen"
 
@@ -26617,37 +26622,42 @@ msgid "Resize call view"
 msgstr "Formaat van gesprek wijzigen"
 
 #. Accessible label for the bottom-left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:58
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:65
 msgid "Resize expression picker from bottom left"
 msgstr "Verklein expressiekiezer vanaf linksonder"
 
 #. Accessible label for the bottom-right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:62
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:69
 msgid "Resize expression picker from bottom right"
 msgstr "Vergroot expressiekiezer vanaf rechtsonder"
 
+#. Accessible label for the bottom resize handle on the expression picker popout.
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:45
+msgid "Resize expression picker from the bottom edge"
+msgstr "Verklein de expressiekiezer vanaf de onderkant"
+
 #. Accessible label for the left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:42
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:49
 msgid "Resize expression picker from the left edge"
 msgstr "Verklein de expressiekiezer vanaf de linkerrand"
 
 #. Accessible label for the right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:46
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:53
 msgid "Resize expression picker from the right edge"
 msgstr "Vergroot expressiekiezer vanaf de rechterrand"
 
 #. Accessible label for the top resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:38
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:41
 msgid "Resize expression picker from the top edge"
 msgstr "Verklein de expressiekiezer vanaf de bovenrand"
 
 #. Accessible label for the top-left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:50
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:57
 msgid "Resize expression picker from top left"
 msgstr "Verklein de expressiekiezer vanaf de linkerbovenhoek"
 
 #. Accessible label for the top-right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:54
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:61
 msgid "Resize expression picker from top right"
 msgstr "Verklein expressiekiezer vanaf rechtsboven"
 
@@ -26657,22 +26667,27 @@ msgid "Resize floating panel"
 msgstr "Zwevend paneel vergroten/verkleinen"
 
 #. Accessible label for the bottom-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:76
+#: src/features/messaging/components/popouts/InboxPopout.tsx:80
 msgid "Resize inbox from bottom left"
 msgstr "Inbox verkleinen vanaf linksonder"
 
 #. Accessible label for the bottom-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:80
+#: src/features/messaging/components/popouts/InboxPopout.tsx:84
 msgid "Resize inbox from bottom right"
 msgstr "Inbox verkleinen vanaf rechtsonder"
 
-#. Accessible label for the left resize handle on the inbox popout.
+#. Accessible label for the bottom resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:60
+msgid "Resize inbox from the bottom edge"
+msgstr "Inbox van onderen verkleinen"
+
+#. Accessible label for the left resize handle on the inbox popout.
+#: src/features/messaging/components/popouts/InboxPopout.tsx:64
 msgid "Resize inbox from the left edge"
 msgstr "Inbox vanaf de linkerrand vergroten"
 
 #. Accessible label for the right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:64
+#: src/features/messaging/components/popouts/InboxPopout.tsx:68
 msgid "Resize inbox from the right edge"
 msgstr "Inbox van rechts verkleinen"
 
@@ -26682,12 +26697,12 @@ msgid "Resize inbox from the top edge"
 msgstr "Inbox van bovenrand vergroten"
 
 #. Accessible label for the top-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:68
+#: src/features/messaging/components/popouts/InboxPopout.tsx:72
 msgid "Resize inbox from top left"
 msgstr "Inbox verkleinen vanaf linksboven"
 
 #. Accessible label for the top-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:72
+#: src/features/messaging/components/popouts/InboxPopout.tsx:76
 msgid "Resize inbox from top right"
 msgstr "Inbox verkleinen vanaf rechtsboven"
 
@@ -26702,22 +26717,27 @@ msgid "Resize picture-in-picture"
 msgstr "Beeld-in-beeld aanpassen"
 
 #. Accessible label for the bottom-left resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:42
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:46
 msgid "Resize pinned messages from bottom left"
 msgstr "Berichten vastzetten verkleinen vanaf linksonder"
 
 #. Accessible label for the bottom-right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:46
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:50
 msgid "Resize pinned messages from bottom right"
 msgstr "Pinberichten vergroten/verkleinen vanaf rechtsonder"
 
-#. Accessible label for the left resize handle on the channel pins popout.
+#. Accessible label for the bottom resize handle on the channel pins popout.
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:26
+msgid "Resize pinned messages from the bottom edge"
+msgstr "Hernoem vastgezette berichten vanaf de onderrand"
+
+#. Accessible label for the left resize handle on the channel pins popout.
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:30
 msgid "Resize pinned messages from the left edge"
 msgstr "Berichten vastzetten vanaf de linkerrand vergroten/verkleinen"
 
 #. Accessible label for the right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:30
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:34
 msgid "Resize pinned messages from the right edge"
 msgstr "Vanaf de rechterrand meten van vastgezette berichten"
 
@@ -26727,12 +26747,12 @@ msgid "Resize pinned messages from the top edge"
 msgstr "Hernoem vastgezette berichten vanaf de bovenrand"
 
 #. Accessible label for the top-left resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:34
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:38
 msgid "Resize pinned messages from top left"
 msgstr "Berichten vastzetten verkleinen vanaf linksboven"
 
 #. Accessible label for the top-right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:38
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:42
 msgid "Resize pinned messages from top right"
 msgstr "Vergroot/verklein vastgezette berichten van rechtsboven"
 
@@ -27486,7 +27506,7 @@ msgid "Screen share encoder controls"
 msgstr "Instellingen voor schermdeling"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:94
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:95
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Schermdeling beëindigd"
@@ -27740,7 +27760,7 @@ msgstr "Zoekmachines"
 #. Section header in the message search popout listing available filter operators.
 #: src/features/channel/components/message_search_bar/FilterOption.tsx:14
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:16
-#: src/features/channel/components/message_search_bar/PlaintextSection.tsx:17
+#: src/features/channel/components/message_search_bar/PlaintextSection.tsx:18
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:17
 msgid "Search filters"
 msgstr "Zoekfilters"
@@ -28152,7 +28172,7 @@ msgid "Select friends"
 msgstr "Vrienden selecteren"
 
 #. Button label in the gif picker grid item when picking a GIF for an avatar, banner, or video background. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:54
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:52
 msgid "Select GIF {title}"
 msgstr "Selecteer GIF {title}"
 
@@ -28366,7 +28386,7 @@ msgid "Send friend request"
 msgstr "Vriendschapsverzoek sturen"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:49
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:47
 msgid "Send GIF {title}"
 msgstr "Gif {title} verzenden"
 
@@ -29085,6 +29105,11 @@ msgstr "Verkort het bericht en probeer het opnieuw."
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:51
 msgid "Shorten the topic and try again."
 msgstr "Kort het onderwerp in en probeer het opnieuw."
+
+#. Body of the error modal shown when inserting an emoji into the profile bio would exceed the bio limit.
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:33
+msgid "Shorten your about me and try again."
+msgstr "Verkort je 'over mij'-tekst en probeer het opnieuw."
 
 #. Short label in the sensitive content tab. Keep it concise.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
@@ -30802,7 +30827,7 @@ msgstr "Stap 4"
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #. has:sticker chip label. Always lowercase; matches the typed query value 1:1.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:118
-#: src/features/channel/components/ChannelMessage.tsx:53
+#: src/features/channel/components/ChannelMessage.tsx:52
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "sticker"
 msgstr "sticker"
@@ -32115,7 +32140,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "De opgegeven redirect_uri moet HTTP of HTTPS gebruiken."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "De bron van het scherm delen stuurt geen video meer, dus uw schermdeling is gestopt."
@@ -33020,7 +33045,7 @@ msgid "This voice channel is no longer available."
 msgstr "Dit spraakkanaal is niet langer beschikbaar."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:72
+#: src/features/channel/components/UserMessage.tsx:71
 msgid "This was a {silentMention} message."
 msgstr "Dit was een {silentMention} bericht."
 
@@ -33462,7 +33487,7 @@ msgstr "Populair"
 msgid "Top tooltip"
 msgstr "Bovenste tooltip"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:33
 msgid "Topic"
 msgstr "Onderwerp"
 
@@ -34587,7 +34612,7 @@ msgid "Unmute stream audio"
 msgstr "Geluid van stream inschakelen"
 
 #. Short label in the channel and chat use message search autocomplete. Keep it concise.
-#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:72
+#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:73
 msgid "Unnamed"
 msgstr "Naamloos"
 
@@ -34775,10 +34800,8 @@ msgstr "Niet-ondersteund pictogramformaat"
 msgid "Unsupported sticker file"
 msgstr "Niet-ondersteund stickerbestand"
 
-#. Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionBar.tsx:95
 #: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
@@ -34958,7 +34981,7 @@ msgid "Updater state"
 msgstr "Updaterstatus"
 
 #. Short label in the channel and chat gif picker grid item. Keep it concise.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:45
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:43
 msgid "Updating favorites…"
 msgstr "Favorieten bijwerken…"
 
@@ -37810,7 +37833,7 @@ msgstr "Je kunt nog steeds een account aanmaken of inloggen. Als uitnodigingen l
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "Je kunt \"starred\" GIF's opslaan als favorieten (alleen URL) of uploaden naar je opgeslagen media. Kies de optie die het beste bij je past. Je kunt dit op elk moment wijzigen via {mediaSettingsPath}."
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:275
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:288
 msgid "You can use links, emoji, and markdown."
 msgstr "Je kunt links, emoji en markdown gebruiken."
 

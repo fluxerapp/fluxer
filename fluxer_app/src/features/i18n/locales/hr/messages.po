@@ -20,7 +20,7 @@ msgstr "... uključite zbijeni način rada. Super!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:358
-#: src/features/channel/components/UserMessage.tsx:60
+#: src/features/channel/components/UserMessage.tsx:59
 msgid "(edited)"
 msgstr "(uredio)"
 
@@ -836,7 +836,7 @@ msgid "{length} apps"
 msgstr "{length} aplikacija"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:49
+#: src/features/channel/components/ChannelMessage.tsx:48
 msgid "{length} attachments"
 msgstr "{length} privitaka"
 
@@ -846,12 +846,12 @@ msgid "{length} channels"
 msgstr "{length} kanala"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:67
+#: src/features/channel/components/ChannelMessage.tsx:66
 msgid "{length} embeds"
 msgstr "{length} ugrađenih sadržaja"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:58
+#: src/features/channel/components/ChannelMessage.tsx:57
 msgid "{length} stickers"
 msgstr "{length} naljepnica"
 
@@ -2029,6 +2029,11 @@ msgstr "O aplikaciji {appName}"
 msgid "About me"
 msgstr "O meni"
 
+#. Error modal title shown when inserting an emoji into the profile bio would exceed the bio limit.
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:29
+msgid "About me is too long"
+msgstr "O meni je predugačko"
+
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:78
 msgid "About you"
@@ -2409,7 +2414,7 @@ msgstr "Dodaj oznaku"
 msgid "Add a tag and press Enter"
 msgstr "Dodajte oznaku i pritisnite Enter"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
 msgid "Add a topic to this channel"
 msgstr "Dodajte temu ovom kanalu"
 
@@ -3223,7 +3228,7 @@ msgid "Already set to cancel"
 msgstr "Već je postavljeno za otkazivanje"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:76
+#: src/features/messaging/commands/MessageCommands.tsx:77
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Prijavi ovu poruku i sigurnosnom timu {productName}a"
 
@@ -4017,7 +4022,7 @@ msgid "Attach files"
 msgstr "Priloži datoteke"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:44
+#: src/features/channel/components/ChannelMessage.tsx:43
 msgid "attachment"
 msgstr "privitak"
 
@@ -5813,7 +5818,7 @@ msgstr "Ovdje nije moguće učitati datoteke"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:628
+#: src/features/messaging/components/modals/ForwardModal.tsx:635
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
@@ -5947,15 +5952,15 @@ msgstr "Provjera Captche nije uspjela. Pokušajte ponovno."
 msgid "Capture"
 msgstr "Snimanje"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:392
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
 msgid "Capture app audio"
 msgstr "Snimanje zvuka aplikacije"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:393
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
 msgid "Capture desktop audio"
 msgstr "Snimanje zvuka s radne površine"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:391
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
 msgid "Capture device audio"
 msgstr "Snimanje zvuka uređaja"
 
@@ -6546,7 +6551,7 @@ msgstr "Kanal: {0}."
 #. Section header in the message search popout listing matching channels for the in: filter. Title Case.
 #. Section heading in the channel and chat autocomplete for channel suggestions.
 #: src/features/channel/components/Autocomplete.tsx:44
-#: src/features/channel/components/message_search_bar/ChannelsSection.tsx:14
+#: src/features/channel/components/message_search_bar/ChannelsSection.tsx:15
 msgid "Channels"
 msgstr "Kanali"
 
@@ -7327,7 +7332,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "Kliknite za otvaranje birača boja i odabir nove boje."
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:79
+#: src/features/channel/components/MessageActionBar.tsx:70
 msgid "Click to react"
 msgstr "Dodirnite za reakciju"
 
@@ -10452,7 +10457,7 @@ msgstr "Otklanjanje pogrešaka člana"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:91
+#: src/features/channel/components/MessageActionBar.tsx:82
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -10611,7 +10616,7 @@ msgstr "Na mobilnim uređajima je zadano isključeno radi očuvanja baterije i u
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:72
+#: src/features/messaging/commands/MessageCommands.tsx:73
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10856,7 +10861,7 @@ msgid "Delete this message"
 msgstr "Izbriši ovu poruku"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:68
+#: src/features/messaging/commands/MessageCommands.tsx:69
 msgid "Delete this message? Can't be undone."
 msgstr "Izbrisati ovu poruku? Ne može se poništiti."
 
@@ -11225,7 +11230,7 @@ msgstr "Detalji uređaja"
 msgid "Device revoked"
 msgstr "Uređaj opozvan"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:879
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
 msgid "Device selection"
 msgstr "Odabir uređaja"
 
@@ -12651,7 +12656,7 @@ msgstr "E-pošta je uspješno potvrđena"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
 #. has:embed chip label. Always lowercase; matches the typed query value 1:1.
-#: src/features/channel/components/ChannelMessage.tsx:62
+#: src/features/channel/components/ChannelMessage.tsx:61
 #: src/features/search/utils/SearchUtils.ts:33
 msgid "embed"
 msgstr "ugradi"
@@ -13482,7 +13487,7 @@ msgstr "Unesite SMS kod"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Unesite ovaj kôd u preglednik kako biste dovršili prijavu."
 
-#: src/features/channel/components/EditingMessageInput.tsx:355
+#: src/features/channel/components/EditingMessageInput.tsx:357
 msgid "enter to <0><1>save</1></0>"
 msgstr "enter za <0><1>spremanje</1></0>"
 
@@ -13584,7 +13589,7 @@ msgstr "Pogreška"
 msgid "error code {code}"
 msgstr "kôd greške {code}"
 
-#: src/features/messaging/components/markdown/index.tsx:40
+#: src/features/messaging/components/markdown/index.tsx:39
 msgid "Error rendering content"
 msgstr "Pogreška prikaza sadržaja"
 
@@ -13623,7 +13628,7 @@ msgstr "Tipka Escape"
 msgid "Escape key exits keyboard mode"
 msgstr "Tipka Esc izlazi iz načina rada tipkovnice"
 
-#: src/features/channel/components/EditingMessageInput.tsx:336
+#: src/features/channel/components/EditingMessageInput.tsx:338
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "escape za <0><1>odustajanje</1></0>"
 
@@ -14256,12 +14261,12 @@ msgid "Failed to send code. Try again."
 msgstr "Slanje koda nije uspjelo. Pokušajte ponovno."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:68
+#: src/features/channel/components/UserMessage.tsx:67
 msgid "Failed to send message."
 msgstr "Slanje poruke nije uspjelo."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:64
+#: src/features/channel/components/UserMessage.tsx:63
 msgid "Failed to send message. Hold for options."
 msgstr "Slanje poruke nije uspjelo. Dodirnite i držite za opcije."
 
@@ -14797,7 +14802,7 @@ msgstr "Postavke mape"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Pratite nas na {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:681
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
 msgid "Follow voice input"
 msgstr "Prati glasovni unos"
 
@@ -15014,7 +15019,7 @@ msgstr "proslijeđeno"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:99
+#: src/features/channel/components/MessageActionBar.tsx:86
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -15820,7 +15825,7 @@ msgstr "Dodijeljeno {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Daje sva dopuštenja i zaobilazi ograničenja kanala. Vrlo osjetljivo."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
 msgid "Granular selection"
 msgstr "Detaljan odabir"
 
@@ -16378,7 +16383,7 @@ msgstr "Sakrij lozinku"
 msgid "Hide picture-in-picture popout?"
 msgstr "Sakriti skočni prozor slike u slici?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:715
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
 msgid "Hide preview thumbnail"
 msgstr "Sakrij sličicu pretpregleda"
 
@@ -16828,11 +16833,11 @@ msgstr "Zanemari"
 msgid "Ignore friend request"
 msgstr "Zanemari zahtjev za prijateljstvo"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:856
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
 msgid "Ignore hardware devices"
 msgstr "Zanemari hardverske uređaje"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:832
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
 msgid "Ignore input media"
 msgstr "Zanemari ulazne medije"
 
@@ -16858,7 +16863,7 @@ msgstr "Zanemari oznaku neželjene pošte"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Zanemariti zahtjev za prijateljstvo od {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:843
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
 msgid "Ignore virtual"
 msgstr "Zanemari virtualno"
 
@@ -17431,7 +17436,7 @@ msgstr "Unos i tekst"
 msgid "Inputs with icons"
 msgstr "Unosi s ikonama"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:36
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
 msgid "Insert emoji"
 msgstr "Umetni emoji"
 
@@ -18131,7 +18136,7 @@ msgid "Jump to message"
 msgstr "Skoči na poruku"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:55
+#: src/features/channel/components/UserMessage.tsx:54
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Skoči na poruku od {displayName}, poslanu {formattedDate}"
 
@@ -19987,7 +19992,7 @@ msgid "Menu shortcuts"
 msgstr "Prečaci izbornika"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:76
+#: src/features/channel/components/ChannelMessage.tsx:75
 msgid "message"
 msgstr "Poruka"
 
@@ -20064,7 +20069,7 @@ msgstr "Poruka sadrži priložene medije"
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:83
+#: src/features/channel/components/MessageActionBar.tsx:74
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
@@ -20089,7 +20094,7 @@ msgstr "Način prikaza poruka"
 msgid "Message display settings are only available on desktop."
 msgstr "Postavke prikaza poruka dostupne su samo na računalu."
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:299
+#: src/features/messaging/components/modals/ForwardModal.tsx:306
 msgid "Message forwarded"
 msgstr "Poruka proslijeđena"
 
@@ -20341,7 +20346,7 @@ msgstr "Potrebno je dopuštenje za mikrofon"
 msgid "Microphone test"
 msgstr "Test mikrofona"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:801
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
 msgid "Microphone workaround"
 msgstr "Zaobilazno rješenje za mikrofon"
 
@@ -20597,7 +20602,7 @@ msgstr "Mjesečni dar"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:87
+#: src/features/channel/components/MessageActionBar.tsx:78
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "Više"
@@ -21632,7 +21637,7 @@ msgstr "Nema promjena za spremanje"
 msgid "No channels available"
 msgstr "Nema dostupnih kanala"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:418
+#: src/features/messaging/components/modals/ForwardModal.tsx:425
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Nema pronađenih kanala"
@@ -22024,7 +22029,7 @@ msgid "No system channel"
 msgstr "Nema sistemskog kanala"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:71
+#: src/features/channel/components/ChannelMessage.tsx:70
 msgid "no text content"
 msgstr "nema tekstualnog sadržaja"
 
@@ -22499,7 +22504,7 @@ msgstr "Primjenjuje se samo na širokim zaslonima."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Prihvaćaju se samo kreditne kartice. Debitne i prepaid kartice ne mogu se koristiti za provjeru zrelog sadržaja."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:821
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
 msgid "Only default speakers"
 msgstr "Samo zadani zvučnici"
 
@@ -22547,7 +22552,7 @@ msgstr "Ovdje pokrećite kod samo ako točno razumijete što radi."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Prikazuj pretpreglede poruka samo za izravne poruke s nepročitanim porukama"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
 msgid "Only speakers"
 msgstr "Samo govornici"
 
@@ -22579,7 +22584,7 @@ msgstr "Samo odabrane"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Samo članovi s pretplatom Visionary mogu se pridružiti ovoj zajednici. Vaš pristup se možda promijenio od otvaranja ovog zaslona."
 
-#: src/features/channel/components/UserMessage.tsx:440
+#: src/features/channel/components/UserMessage.tsx:433
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Samo vi možete vidjeti ovu poruku. <0>Odbaci</0>"
 
@@ -22642,7 +22647,7 @@ msgid "Open {settingsMenuName} settings"
 msgstr "Otvori postavke {settingsMenuName}"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:40
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:38
 msgid "Open {title}"
 msgstr "Otvori {title}"
 
@@ -26617,37 +26622,42 @@ msgid "Resize call view"
 msgstr "Promijeni veličinu prikaza poziva"
 
 #. Accessible label for the bottom-left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:58
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:65
 msgid "Resize expression picker from bottom left"
 msgstr "Promijeni veličinu birača izraza iz donjeg lijevog kuta"
 
 #. Accessible label for the bottom-right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:62
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:69
 msgid "Resize expression picker from bottom right"
 msgstr "Promijeni veličinu birača izraza iz donjeg desnog kuta"
 
+#. Accessible label for the bottom resize handle on the expression picker popout.
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:45
+msgid "Resize expression picker from the bottom edge"
+msgstr "Promijeni veličinu izbornika izraza s donjeg ruba"
+
 #. Accessible label for the left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:42
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:49
 msgid "Resize expression picker from the left edge"
 msgstr "Promijeni veličinu birača izraza s lijevog ruba"
 
 #. Accessible label for the right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:46
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:53
 msgid "Resize expression picker from the right edge"
 msgstr "Promijeni veličinu izbornika izraza s desnog ruba"
 
 #. Accessible label for the top resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:38
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:41
 msgid "Resize expression picker from the top edge"
 msgstr "Promijeni veličinu izbornika emotikona s gornjeg ruba"
 
 #. Accessible label for the top-left resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:50
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:57
 msgid "Resize expression picker from top left"
 msgstr "Promijeni veličinu birača izraza iz gornjeg lijevog kuta"
 
 #. Accessible label for the top-right resize handle on the expression picker popout.
-#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:54
+#: src/features/expressions/components/popouts/ExpressionPickerPopout.tsx:61
 msgid "Resize expression picker from top right"
 msgstr "Promijeni veličinu izbornika izraza iz gornjeg desnog kuta"
 
@@ -26657,22 +26667,27 @@ msgid "Resize floating panel"
 msgstr "Promjena veličine plutajuće ploče"
 
 #. Accessible label for the bottom-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:76
+#: src/features/messaging/components/popouts/InboxPopout.tsx:80
 msgid "Resize inbox from bottom left"
 msgstr "Promijeni veličinu pristigle pošte iz donjeg lijevog kuta"
 
 #. Accessible label for the bottom-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:80
+#: src/features/messaging/components/popouts/InboxPopout.tsx:84
 msgid "Resize inbox from bottom right"
 msgstr "Promijeni veličinu pristiglih poruka iz donjeg desnog kuta"
 
-#. Accessible label for the left resize handle on the inbox popout.
+#. Accessible label for the bottom resize handle on the inbox popout.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:60
+msgid "Resize inbox from the bottom edge"
+msgstr "Promijeni veličinu pristigle pošte s donjeg ruba"
+
+#. Accessible label for the left resize handle on the inbox popout.
+#: src/features/messaging/components/popouts/InboxPopout.tsx:64
 msgid "Resize inbox from the left edge"
 msgstr "Promijeni veličinu inboxa s lijevog ruba"
 
 #. Accessible label for the right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:64
+#: src/features/messaging/components/popouts/InboxPopout.tsx:68
 msgid "Resize inbox from the right edge"
 msgstr "Promijeni veličinu pristigle pošte s desnog ruba"
 
@@ -26682,12 +26697,12 @@ msgid "Resize inbox from the top edge"
 msgstr "Promijeni veličinu inboxa s gornjeg ruba"
 
 #. Accessible label for the top-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:68
+#: src/features/messaging/components/popouts/InboxPopout.tsx:72
 msgid "Resize inbox from top left"
 msgstr "Promijeni veličinu pristigle pošte iz gornjeg lijevog kuta"
 
 #. Accessible label for the top-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:72
+#: src/features/messaging/components/popouts/InboxPopout.tsx:76
 msgid "Resize inbox from top right"
 msgstr "Promijeni veličinu pristiglih poruka iz gornjeg desnog kuta"
 
@@ -26702,22 +26717,27 @@ msgid "Resize picture-in-picture"
 msgstr "Promijeni veličinu slike u slici"
 
 #. Accessible label for the bottom-left resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:42
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:46
 msgid "Resize pinned messages from bottom left"
 msgstr "Promijeni veličinu prikvačenih poruka iz donjeg lijevog kuta"
 
 #. Accessible label for the bottom-right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:46
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:50
 msgid "Resize pinned messages from bottom right"
 msgstr "Promijeni veličinu prikvačenih poruka iz donjeg desnog kuta"
 
-#. Accessible label for the left resize handle on the channel pins popout.
+#. Accessible label for the bottom resize handle on the channel pins popout.
 #: src/features/channel/components/popouts/ChannelPinsPopout.tsx:26
+msgid "Resize pinned messages from the bottom edge"
+msgstr "Promijeni veličinu prikvačenih poruka s donjeg ruba"
+
+#. Accessible label for the left resize handle on the channel pins popout.
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:30
 msgid "Resize pinned messages from the left edge"
 msgstr "Promijeni veličinu prikvačenih poruka s lijevog ruba"
 
 #. Accessible label for the right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:30
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:34
 msgid "Resize pinned messages from the right edge"
 msgstr "Promijeni veličinu prikvačenih poruka s desnog ruba"
 
@@ -26727,12 +26747,12 @@ msgid "Resize pinned messages from the top edge"
 msgstr "Promijeni veličinu prikvačenih poruka s gornjeg ruba"
 
 #. Accessible label for the top-left resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:34
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:38
 msgid "Resize pinned messages from top left"
 msgstr "Promijeni veličinu prikvačenih poruka iz gornjeg lijevog kuta"
 
 #. Accessible label for the top-right resize handle on the channel pins popout.
-#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:38
+#: src/features/channel/components/popouts/ChannelPinsPopout.tsx:42
 msgid "Resize pinned messages from top right"
 msgstr "Promijeni veličinu prikvačenih poruka iz gornjeg desnog kuta"
 
@@ -27486,7 +27506,7 @@ msgid "Screen share encoder controls"
 msgstr "Kontrole za enkoder dijeljenja zaslona"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:94
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:95
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Dijeljenje zaslona završeno"
@@ -27740,7 +27760,7 @@ msgstr "Tražilice"
 #. Section header in the message search popout listing available filter operators.
 #: src/features/channel/components/message_search_bar/FilterOption.tsx:14
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:16
-#: src/features/channel/components/message_search_bar/PlaintextSection.tsx:17
+#: src/features/channel/components/message_search_bar/PlaintextSection.tsx:18
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:17
 msgid "Search filters"
 msgstr "Filtri pretraživanja"
@@ -28152,7 +28172,7 @@ msgid "Select friends"
 msgstr "Odaberi prijatelje"
 
 #. Button label in the gif picker grid item when picking a GIF for an avatar, banner, or video background. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:54
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:52
 msgid "Select GIF {title}"
 msgstr "Odaberi GIF {title}"
 
@@ -28366,7 +28386,7 @@ msgid "Send friend request"
 msgstr "Pošalji zahtjev za prijateljstvo"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:49
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:47
 msgid "Send GIF {title}"
 msgstr "Pošalji GIF {title}"
 
@@ -29085,6 +29105,11 @@ msgstr "Skratite poruku i pokušajte ponovno."
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:51
 msgid "Shorten the topic and try again."
 msgstr "Skratite temu i pokušajte ponovno."
+
+#. Body of the error modal shown when inserting an emoji into the profile bio would exceed the bio limit.
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:33
+msgid "Shorten your about me and try again."
+msgstr "Skratite \"O meni\" i pokušajte ponovno."
 
 #. Short label in the sensitive content tab. Keep it concise.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:19
@@ -30802,7 +30827,7 @@ msgstr "Korak 4"
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #. has:sticker chip label. Always lowercase; matches the typed query value 1:1.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:118
-#: src/features/channel/components/ChannelMessage.tsx:53
+#: src/features/channel/components/ChannelMessage.tsx:52
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "sticker"
 msgstr "naljepnica"
@@ -32115,7 +32140,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Navedeni redirect_uri mora koristiti HTTP ili HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Izvor dijeljenja zaslona prestao je slati video, pa je dijeljenje zaslona zaustavljeno."
@@ -33020,7 +33045,7 @@ msgid "This voice channel is no longer available."
 msgstr "Ovaj glasovni kanal više nije dostupan."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:72
+#: src/features/channel/components/UserMessage.tsx:71
 msgid "This was a {silentMention} message."
 msgstr "Ovo je bila {silentMention} poruka."
 
@@ -33462,7 +33487,7 @@ msgstr "Vrh"
 msgid "Top tooltip"
 msgstr "Gornji opis alata"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:33
 msgid "Topic"
 msgstr "Tema"
 
@@ -34587,7 +34612,7 @@ msgid "Unmute stream audio"
 msgstr "Uključi zvuk prijenosa"
 
 #. Short label in the channel and chat use message search autocomplete. Keep it concise.
-#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:72
+#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:73
 msgid "Unnamed"
 msgstr "Bez naziva"
 
@@ -34775,10 +34800,8 @@ msgstr "Nepodržan format ikone"
 msgid "Unsupported sticker file"
 msgstr "Nepodržana datoteka naljepnice"
 
-#. Item in the message action bar overflow menu. Re-shows previously hidden link previews and embeds.
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionBar.tsx:95
 #: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
@@ -34958,7 +34981,7 @@ msgid "Updater state"
 msgstr "Stanje ažuriranja"
 
 #. Short label in the channel and chat gif picker grid item. Keep it concise.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:45
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:43
 msgid "Updating favorites…"
 msgstr "Ažuriranje favorita…"
 
@@ -37810,7 +37833,7 @@ msgstr "I dalje možete izraditi račun ili se prijaviti. Ako se pozivnice ponov
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "Označene GIF-ove možete pohraniti kao favorite samo s URL-om ili ih prenijeti u spremljene medije. Odaberite opciju koja vam najviše odgovara. Možete je promijeniti bilo kada u {mediaSettingsPath}."
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:275
+#: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:288
 msgid "You can use links, emoji, and markdown."
 msgstr "Možete koristiti poveznice, emotikone i Markdown."
 
