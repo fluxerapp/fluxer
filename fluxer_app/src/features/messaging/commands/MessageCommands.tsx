@@ -31,9 +31,10 @@ import {
 	collectMessageModelGuildMemberUserIds,
 	collectWireMessageGuildMemberUserIds,
 } from '@app/features/messaging/utils/MessageMemberLoadUtils';
-import type {
-	ApiAttachmentMetadata,
-	ApiMessageEditAttachmentMetadata,
+import {
+	type ApiAttachmentMetadata,
+	type ApiMessageEditAttachmentMetadata,
+	normalizeMessageContent,
 } from '@app/features/messaging/utils/MessageRequestUtils';
 import * as IARCommands from '@app/features/moderation/commands/IARCommands';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
@@ -814,6 +815,7 @@ export async function forward(
 	optionalMessage?: string,
 ): Promise<boolean> {
 	logger.debug(`Forwarding message ${messageReference.message_id} to ${channelIds.length} channels`);
+	const normalizedComment = optionalMessage == null ? null : normalizeMessageContent(optionalMessage);
 	try {
 		for (const channelId of channelIds) {
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
@@ -835,11 +837,12 @@ export async function forward(
 				return false;
 			}
 			SlowmodeCommands.confirmMessageSend(channelId, forwardedMessage.timestamp);
-			if (optionalMessage) {
+			if (normalizedComment != null && normalizedComment.content.length > 0) {
 				const commentNonce = SnowflakeUtils.fromTimestamp(Date.now() + 1);
 				const commentMessage = await send(channelId, {
-					content: optionalMessage,
+					content: normalizedComment.content,
 					nonce: commentNonce,
+					flags: normalizedComment.flags,
 				});
 				if (!commentMessage) {
 					logger.warn(`Forward comment send failed in channel ${channelId}`);
