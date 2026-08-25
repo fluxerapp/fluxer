@@ -33,7 +33,6 @@ import {
 import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtils';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {SpoilerSyncProvider} from '@app/features/messaging/utils/SpoilerUtils';
-import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import {compactMarkdownProps} from '@app/features/theme/layout/MessageLayoutAttributes';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import styles from '@app/features/theme/styles/Message.module.css';
@@ -194,11 +193,7 @@ export const UserMessage = observer(() => {
 			if (message.messageSnapshots) {
 				return;
 			}
-			const content = resolveTypedEmojiShortcodes({
-				content: (actualContent ?? '').trim(),
-				channel,
-				i18n,
-			});
+			const content = (actualContent ?? '').trim();
 			if (!content) {
 				if (canSubmitEmptyMessageEdit(message)) {
 					if (message.content.length === 0) {
@@ -232,10 +227,8 @@ export const UserMessage = observer(() => {
 			});
 		},
 		[
-			channel,
 			channel.id,
 			handleDelete,
-			i18n,
 			message,
 			message.id,
 			message.messageSnapshots,

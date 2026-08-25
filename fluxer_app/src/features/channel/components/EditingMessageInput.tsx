@@ -23,6 +23,7 @@ import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import {applyMarkdownSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
+import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -35,9 +36,7 @@ import {SmileyIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
-
-const EDITING_ALLOWED_TRIGGERS = ['emoji', 'mention', 'channel'] as const;
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 interface EditingFocusRequest {
 	requestedChannelId: string | null;
@@ -101,6 +100,10 @@ export const EditingMessageInput = observer(
 			return {display, segments: segments.getSegmentsCopy(), wire};
 		});
 		const [actualContent, setActualContent] = useState(initial.wire);
+		const resolvedContent = useMemo(
+			() => resolveTypedEmojiShortcodes({content: actualContent, channel, i18n}),
+			[actualContent, channel, i18n],
+		);
 		const composerRef = useRef<LexicalRichInputHandle | null>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
 		const editableRef = useRef<HTMLElement | null>(null);
@@ -144,11 +147,11 @@ export const EditingMessageInput = observer(
 			}
 		}, []);
 		const handleSubmit = useCallback(() => {
-			if (editingDisabled || actualContent.length > maxMessageLength) {
+			if (editingDisabled || resolvedContent.length > maxMessageLength) {
 				return;
 			}
-			onSubmit(actualContent);
-		}, [actualContent, editingDisabled, maxMessageLength, onSubmit]);
+			onSubmit(resolvedContent);
+		}, [editingDisabled, maxMessageLength, onSubmit, resolvedContent]);
 		const handleKeyDown = useCallback(
 			(event: React.KeyboardEvent<HTMLElement>) => {
 				if (event.defaultPrevented) {
@@ -264,7 +267,7 @@ export const EditingMessageInput = observer(
 		if (mobileLayout.enabled) {
 			handleExpressionPickerButtonClick = () => setExpressionPickerOpen(true);
 		}
-		let displayContentLength = actualContent.length;
+		let displayContentLength = resolvedContent.length;
 		if (editingDisabled) {
 			displayContentLength = 0;
 		}
@@ -287,7 +290,6 @@ export const EditingMessageInput = observer(
 									placeholder={placeholderText}
 									disabled={editingDisabled}
 									channel={channel}
-									allowedTriggers={[...EDITING_ALLOWED_TRIGGERS]}
 									markdown={true}
 									singleLine={!mobileLayout.enabled}
 									size="chat"
