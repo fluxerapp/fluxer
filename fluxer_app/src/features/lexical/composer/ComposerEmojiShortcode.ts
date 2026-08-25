@@ -41,16 +41,30 @@ function findUnicodeEmoji(text: string, startIndex: number): TypedEmojiMatch | n
 	return {start: match.index, end: match.index + match[0].length, name};
 }
 
-function findNextEmojiToken(text: string, startIndex: number): TypedEmojiMatch | null {
+interface EmojiToken extends TypedEmojiMatch {
+	surrogate: boolean;
+}
+
+function findNextEmojiToken(text: string, startIndex: number): EmojiToken | null {
 	const shortcode = findTypedEmojiShortcode(text, startIndex);
 	const surrogate = findUnicodeEmoji(text, startIndex);
 	if (shortcode == null) {
-		return surrogate;
+		return surrogate == null ? null : {...surrogate, surrogate: true};
 	}
 	if (surrogate == null) {
-		return shortcode;
+		return {...shortcode, surrogate: false};
 	}
-	return surrogate.start < shortcode.start ? surrogate : shortcode;
+	return surrogate.start < shortcode.start ? {...surrogate, surrogate: true} : {...shortcode, surrogate: false};
+}
+
+function isEscapedAt(text: string, index: number): boolean {
+	let backslashes = 0;
+	let cursor = index - 1;
+	while (cursor >= 0 && text[cursor] === '\\') {
+		backslashes += 1;
+		cursor -= 1;
+	}
+	return backslashes % 2 === 1;
 }
 
 export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver): void {
@@ -71,6 +85,22 @@ export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiRes
 		const codeMarkers = text.slice(0, match.start).match(/`/g);
 		if ((codeMarkers == null ? 0 : codeMarkers.length) % 2 === 1) {
 			return;
+		}
+		if (isEscapedAt(text, match.start)) {
+			if (match.surrogate) {
+				const shortcodeText = `:${match.name}:`;
+				const selection = $captureSelectionOffsets();
+				const nodeDisplayStart = $getComposerNodeDisplayStart(node);
+				const replaced = `${text.slice(0, match.start)}${shortcodeText}${text.slice(match.end)}`;
+				node.setTextContent(replaced);
+				if (selection != null) {
+					const adjusted = $adjustEmbedCaret(selection, nodeDisplayStart, match.start, match.end, shortcodeText.length);
+					$selectComposerRange(adjusted.anchor, adjusted.focus);
+				}
+				return;
+			}
+			searchFrom = match.end;
+			continue;
 		}
 		const previous = match.start === 0 ? node.getPreviousSibling() : null;
 		if (/^skin-tone-[1-5]$/.test(match.name) && $isComposerStandardEmojiNode(previous)) {
