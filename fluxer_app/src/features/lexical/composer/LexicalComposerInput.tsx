@@ -156,6 +156,22 @@ export interface LexicalComposerInputProps {
 	onSlashCommandStateChange?: (state: SlashCommandComposerState) => void;
 }
 
+function moveSelectionToLineBoundary(event: React.KeyboardEvent<HTMLElement>): boolean {
+	if (event.key !== 'Home' && event.key !== 'End') {
+		return false;
+	}
+	if (event.ctrlKey || event.metaKey || event.altKey) {
+		return false;
+	}
+	const selection = event.currentTarget.ownerDocument.defaultView?.getSelection();
+	if (selection == null || selection.rangeCount === 0) {
+		return false;
+	}
+	selection.modify(event.shiftKey ? 'extend' : 'move', event.key === 'Home' ? 'backward' : 'forward', 'lineboundary');
+	event.preventDefault();
+	return true;
+}
+
 export const LexicalComposerInput = observer((props: LexicalComposerInputProps) => {
 	const plainText = ChatInputSettings.renderComposerAsPlainText;
 	const selectionToolbar = (props.selectionToolbar == null ? true : props.selectionToolbar) && !MobileLayout.enabled;
@@ -626,6 +642,9 @@ const ComposerInner = ({
 	const handleEditableKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLElement>) => {
 			if (!event.defaultPrevented && !isIMEComposing(event)) {
+				if (moveSelectionToLineBoundary(event)) {
+					return;
+				}
 				if (onKeyDown != null) {
 					onKeyDown(event);
 				}
