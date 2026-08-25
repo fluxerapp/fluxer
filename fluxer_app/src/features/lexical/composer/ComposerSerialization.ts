@@ -17,6 +17,7 @@ import {
 	$createComposerPlainSegmentNode,
 	$isComposerPlainSegmentNode,
 } from '@app/features/lexical/composer/nodes/ComposerPlainSegmentNode';
+import {$isComposerStandardEmojiNode} from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
 import {$createSlashSeparatorNode} from '@app/features/lexical/composer/nodes/SlashSeparatorNode';
 import {
 	$createSlashSlotNode,
@@ -306,6 +307,9 @@ export function $projectComposer(): ComposerProjection {
 					start,
 					end: display.length,
 				});
+			} else if ($isComposerStandardEmojiNode(child)) {
+				display += child.getTextContent();
+				wire += child.getWireText();
 			} else if ($isSlashSlotNode(child)) {
 				const displayText = child.getTextContent();
 				const start = display.length;

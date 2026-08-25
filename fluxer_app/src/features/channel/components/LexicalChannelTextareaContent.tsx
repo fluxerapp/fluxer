@@ -286,13 +286,17 @@ export const LexicalChannelTextareaContent = observer(
 			previousValueRef.current = initialDraftRef.current.display;
 			rememberSegmentsForValue(initialDraftRef.current.display, initialDraftRef.current.segments);
 		}
+		const [wireValue, setWireValue] = useState(() =>
+			segmentManagerRef.current.displayToActual(initialDraftRef.current.display),
+		);
 		const handleEditorChange = useCallback(
-			(display: string, segments: Array<MentionSegment>) => {
+			(display: string, segments: Array<MentionSegment>, wire: string) => {
 				editorDisplayRef.current = display;
 				segmentManagerRef.current.setSegments(segments);
 				previousValueRef.current = display;
 				rememberSegmentsForValue(display, segments);
 				setValue(display);
+				setWireValue(wire);
 			},
 			[previousValueRef, rememberSegmentsForValue, segmentManagerRef],
 		);
@@ -342,10 +346,7 @@ export const LexicalChannelTextareaContent = observer(
 		const sendMentionConfirmationEvent = useCallback((event: MentionConfirmationEvent) => {
 			setMentionConfirmationSnapshot((snapshot) => transitionMentionConfirmationSnapshot(snapshot, event));
 		}, []);
-		const currentMentionConfirmationSourceContent = useMemo(
-			() => displayToActual(value).trim(),
-			[displayToActual, value],
-		);
+		const currentMentionConfirmationSourceContent = useMemo(() => wireValue.trim(), [wireValue]);
 		const currentMentionConfirmationSourceContentRef = useRef(currentMentionConfirmationSourceContent);
 		const pendingMentionConfirmationRef = useRef<MentionConfirmationInfo | null>(pendingMentionConfirmation);
 		const handleSendMessageRef = useRef(handleSendMessage);
@@ -514,8 +515,8 @@ export const LexicalChannelTextareaContent = observer(
 			[channel, i18n],
 		);
 		const trimmedMessageContent = useMemo(
-			() => resolveTypedEmojiContent(displayToActual(value).trim()),
-			[displayToActual, resolveTypedEmojiContent, value],
+			() => resolveTypedEmojiContent(wireValue.trim()),
+			[resolveTypedEmojiContent, wireValue],
 		);
 		const hasMessageContent = useMemo(() => hasVisibleMessageContent(trimmedMessageContent), [trimmedMessageContent]);
 		const isSubmissionBlockedBySlowmode = useMemo(() => {

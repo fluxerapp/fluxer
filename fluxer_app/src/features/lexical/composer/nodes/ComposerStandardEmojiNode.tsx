@@ -117,6 +117,11 @@ export class ComposerStandardEmojiNode extends DecoratorNode<JSX.Element> {
 		return this.getLatest().__display;
 	}
 
+	getWireText(): string {
+		const self = this.getLatest();
+		return self.__literal ? self.__display : self.__surrogate;
+	}
+
 	getEmojiName(): string {
 		return this.getLatest().__name;
 	}
