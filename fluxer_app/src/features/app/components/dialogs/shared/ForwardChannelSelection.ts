@@ -27,6 +27,7 @@ export interface ForwardChannelSelectionState {
 	readonly handleToggleChannel: (channelId: string) => void;
 	readonly isChannelSelectionDisabled: (option: ForwardChannelOption) => boolean;
 	readonly maxSelections: number;
+	readonly mostRecentlySelectedChannelId: string | null;
 	readonly searchQuery: string;
 	readonly selectedChannelIds: ReadonlySet<string>;
 	readonly setSearchQuery: Dispatch<SetStateAction<string>>;
@@ -104,12 +105,20 @@ export function useForwardChannelSelection({
 		() => selectedChannelOptions.filter((option) => option.slowmodeRemainingMs > 0),
 		[selectedChannelOptions],
 	);
+	const mostRecentlySelectedChannelId = useMemo(() => {
+		let mostRecent: string | null = null;
+		for (const channelId of selectedChannelIds) {
+			mostRecent = channelId;
+		}
+		return mostRecent;
+	}, [selectedChannelIds]);
 
 	return {
 		filteredChannels,
 		handleToggleChannel,
 		isChannelSelectionDisabled,
 		maxSelections,
+		mostRecentlySelectedChannelId,
 		searchQuery,
 		selectedChannelIds,
 		setSearchQuery,

@@ -184,6 +184,7 @@ export const ForwardModal = observer(
 			filteredChannels,
 			handleToggleChannel,
 			isChannelSelectionDisabled,
+			mostRecentlySelectedChannelId,
 			searchQuery,
 			selectedChannelIds,
 			setSearchQuery,
@@ -195,7 +196,6 @@ export const ForwardModal = observer(
 			message,
 			mediaSelection: mediaSelectionCapability,
 		});
-		const [optionalMessage, setOptionalMessage] = useState('');
 		const [actualOptionalMessage, setActualOptionalMessage] = useState('');
 		const [isForwarding, setIsForwarding] = useState(false);
 		const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
@@ -216,9 +216,15 @@ export const ForwardModal = observer(
 				dataFlx: 'messaging.forward-modal.optional-message-too-long.generic-error-modal',
 			});
 		}, [i18n]);
-		const channel = resolveForwardSourceChannel(sourceChannel, message.channelId);
-		const handleCommentChange = useCallback((display: string, _segments: Array<MentionSegment>, wire: string) => {
-			setOptionalMessage(display);
+		const sourceForwardChannel = resolveForwardSourceChannel(sourceChannel, message.channelId);
+		const composerChannel = useMemo(() => {
+			if (mostRecentlySelectedChannelId == null) {
+				return null;
+			}
+			const selectedChannel = Channels.getChannel(mostRecentlySelectedChannelId);
+			return selectedChannel == null ? null : selectedChannel;
+		}, [mostRecentlySelectedChannelId]);
+		const handleCommentChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
 			setActualOptionalMessage(wire);
 		}, []);
 		const isCommentOverLimit = actualOptionalMessage.length > user.maxMessageLength;
@@ -269,10 +275,11 @@ export const ForwardModal = observer(
 			setIsForwarding(true);
 			try {
 				let actualMessage: string | undefined;
-				if (!isCommentComposerDisabled && optionalMessage.trim().length > 0) {
-					actualMessage = actualOptionalMessage;
+				const trimmedOptionalMessage = actualOptionalMessage.trim();
+				if (!isCommentComposerDisabled && trimmedOptionalMessage.length > 0) {
+					actualMessage = trimmedOptionalMessage;
 				}
-				const guildId = resolveForwardReferenceGuildId(channel, message);
+				const guildId = resolveForwardReferenceGuildId(sourceForwardChannel, message);
 				let attachmentIds: ReadonlyArray<string> | undefined;
 				let embedIndices: ReadonlyArray<number> | undefined;
 				if (mediaSelection !== undefined) {
@@ -509,7 +516,7 @@ export const ForwardModal = observer(
 								initialValue=""
 								initialSegments={EMPTY_FORWARD_COMMENT_SEGMENTS}
 								className={modalStyles.richInput}
-								channel={channel}
+								channel={composerChannel}
 								disabled={isCommentComposerDisabled}
 								markdown={true}
 								singleLine={false}
