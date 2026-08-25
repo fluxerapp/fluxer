@@ -55,6 +55,8 @@ function getPayloadSegment(payload: ComposerInsertPayload): ComposerPayloadSegme
 			return {type: payload.mentionType, id: payload.id, display: payload.display, wire: payload.wire};
 		case 'customEmoji':
 			return {type: 'emoji', id: payload.emojiId, display: payload.display, wire: payload.wire};
+		case 'standardEmoji':
+			return {type: 'emoji', id: payload.surrogate, display: payload.display, wire: payload.surrogate};
 		default:
 			return null;
 	}
