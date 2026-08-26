@@ -14,7 +14,7 @@ fluxer-svc = { path = "../fluxer_svc", default-features = false }
 hmac = "0.13.0"
 moka = { version = "0.12.15", features = ["future", "sync"] }
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
-serde = { version = "1.0.228", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive", "rc"] }
 serde_json = "1.0.150"
 sha2 = "0.11.0"
 tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread", "signal", "sync", "time"] }

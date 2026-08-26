@@ -16,6 +16,7 @@ pub trait ShardService: Send + Sync + 'static {
     type Response: serde::Serialize + serde::de::DeserializeOwned + Send + 'static;
 
     fn service_name(&self) -> &str;
+    fn render_prometheus_metrics(&self, _output: &mut String) {}
     fn handle(
         &self,
         request: Self::Request,
@@ -36,7 +37,12 @@ where
     let shard_subject = format!("svc.{name}.shard.{shard_id}");
     let health_addr = config.listen_addr;
 
-    let metrics = Arc::new(ServiceMetrics::default());
+    let metrics_service = service.clone();
+    let additional_renderer: Arc<dyn Fn(&mut String) + Send + Sync> =
+        Arc::new(move |output| metrics_service.render_prometheus_metrics(output));
+    let metrics = Arc::new(ServiceMetrics::with_additional_renderer(
+        additional_renderer,
+    ));
     metrics.init();
 
     let is_serving = Arc::new(AtomicBool::new(false));

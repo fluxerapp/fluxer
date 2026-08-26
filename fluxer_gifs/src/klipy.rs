@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::collections::{BTreeMap, HashSet};
 use std::sync::LazyLock;
 use std::time::Duration;
-use tokio::time::sleep;
+use tokio::time::{sleep, timeout};
 
 const KLIPY_BASE_URL: &str = "https://api.klipy.com/v2";
 const KLIPY_DIRECT_BASE_URL: &str = "https://api.klipy.com/api/v1";
@@ -18,6 +18,8 @@ const CLIENT_KEY: &str = "fluxer";
 const MAX_RETRIES: usize = 3;
 const BACKOFF_BASE_DELAY: Duration = Duration::from_secs(1);
 const KLIPY_RESPONSE_LIMIT_BYTES: usize = 512 * 1024;
+const MAX_FEATURED_CATEGORIES: usize = 50;
+const FEATURED_CATEGORIES_FETCH_TIMEOUT: Duration = Duration::from_secs(30);
 const FLUXER_USER_AGENT: &str = "Fluxerbot/1.0 (+https://fluxer.app)";
 const KLIPY_PROVIDER_NAME: &str = "klipy";
 const KLIPY_FEATURED_CATEGORY_REFRESH_COUNTRY: &str = "US";
@@ -296,6 +298,19 @@ impl KlipyClient {
         api_key: &str,
         locale: &str,
     ) -> anyhow::Result<Vec<GifCategoryTag>> {
+        timeout(
+            FEATURED_CATEGORIES_FETCH_TIMEOUT,
+            self.fetch_featured_categories(api_key, locale),
+        )
+        .await
+        .context("KLIPY featured categories request timed out")?
+    }
+
+    async fn fetch_featured_categories(
+        &self,
+        api_key: &str,
+        locale: &str,
+    ) -> anyhow::Result<Vec<GifCategoryTag>> {
         let normalized_locale = normalize_locale(locale);
         let response: TagsResponse = self
             .fetch_json(
@@ -317,6 +332,7 @@ impl KlipyClient {
             .map(|tag| tag.searchterm.trim().to_owned())
             .filter(|term| !term.is_empty())
             .filter(|term| seen.insert(term.clone()))
+            .take(MAX_FEATURED_CATEGORIES)
             .collect::<Vec<_>>();
 
         let mut categories = Vec::with_capacity(search_terms.len());
@@ -438,7 +454,7 @@ impl KlipyClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        let response = self
+        let mut response = self
             .http_client
             .get(url)
             .send()
@@ -460,13 +476,21 @@ impl KlipyClient {
         {
             anyhow::bail!("KLIPY response declared more than {KLIPY_RESPONSE_LIMIT_BYTES} bytes");
         }
-        let bytes = response
-            .bytes()
+        let initial_capacity = response
+            .content_length()
+            .and_then(|length| usize::try_from(length).ok())
+            .unwrap_or_default();
+        let mut bytes = Vec::with_capacity(initial_capacity);
+        while let Some(chunk) = response
+            .chunk()
             .await
             .map_err(reqwest::Error::without_url)
-            .with_context(|| format!("KLIPY {label} response body failed"))?;
-        if bytes.len() > KLIPY_RESPONSE_LIMIT_BYTES {
-            anyhow::bail!("KLIPY {label} response exceeded {KLIPY_RESPONSE_LIMIT_BYTES} bytes");
+            .with_context(|| format!("KLIPY {label} response body failed"))?
+        {
+            if bytes.len().saturating_add(chunk.len()) > KLIPY_RESPONSE_LIMIT_BYTES {
+                anyhow::bail!("KLIPY {label} response exceeded {KLIPY_RESPONSE_LIMIT_BYTES} bytes");
+            }
+            bytes.extend_from_slice(&chunk);
         }
         serde_json::from_slice(&bytes)
             .with_context(|| format!("failed to parse KLIPY {label} response"))

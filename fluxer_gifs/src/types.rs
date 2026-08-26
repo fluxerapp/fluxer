@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all_fields = "snake_case")]
@@ -56,16 +57,16 @@ pub enum GifServiceResponse {
     Available {
         available: bool,
     },
-    SearchResults(Vec<GifItem>),
+    SearchResults(Arc<Vec<GifItem>>),
     Featured {
-        gifs: Vec<GifItem>,
-        categories: Vec<GifCategoryTag>,
+        gifs: Arc<Vec<GifItem>>,
+        categories: Arc<Vec<GifCategoryTag>>,
     },
-    TrendingResults(Vec<GifItem>),
-    Suggestions(Vec<String>),
+    TrendingResults(Arc<Vec<GifItem>>),
+    Suggestions(Arc<Vec<String>>),
     Registered,
     Resolved {
-        gif: Option<GifItem>,
+        gif: Arc<Option<GifItem>>,
     },
     ShareUrl {
         url: String,

@@ -2,9 +2,11 @@
 
 use libc::{CLOCK_MONOTONIC, clock_gettime, timespec};
 use std::fmt::Write;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 
 const ORDERING: Ordering = Ordering::Relaxed;
+pub(crate) type AdditionalMetricsRenderer = Arc<dyn Fn(&mut String) + Send + Sync>;
 
 const HISTOGRAM_BUCKETS_MS: &[u64] = &[
     1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000,
@@ -71,6 +73,7 @@ pub struct ServiceMetrics {
     pub shard_forwards_total: AtomicU64,
     pub request_duration: Histogram,
     start_ms: AtomicI64,
+    additional_renderer: Option<AdditionalMetricsRenderer>,
 }
 
 impl Default for ServiceMetrics {
@@ -83,11 +86,19 @@ impl Default for ServiceMetrics {
             shard_forwards_total: AtomicU64::new(0),
             request_duration: Histogram::new(),
             start_ms: AtomicI64::new(0),
+            additional_renderer: None,
         }
     }
 }
 
 impl ServiceMetrics {
+    pub(crate) fn with_additional_renderer(renderer: AdditionalMetricsRenderer) -> Self {
+        Self {
+            additional_renderer: Some(renderer),
+            ..Self::default()
+        }
+    }
+
     pub fn init(&self) {
         self.start_ms.store(now_ms(), ORDERING);
     }
@@ -166,6 +177,10 @@ impl ServiceMetrics {
             &format!("fluxer_{service_name}_uptime_seconds"),
             uptime_ms as f64 / 1000.0,
         );
+
+        if let Some(renderer) = self.additional_renderer.as_ref() {
+            renderer(&mut out);
+        }
 
         out
     }
