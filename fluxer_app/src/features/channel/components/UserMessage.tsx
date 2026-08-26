@@ -200,18 +200,15 @@ export const UserMessage = observer(() => {
 						finishEditing();
 						return;
 					}
-					MessageCommands.edit(
+					finishEditing();
+					void MessageCommands.edit(
 						channel.id,
 						message.id,
 						'',
 						undefined,
 						message._allowedMentions,
 						buildExistingAttachmentEditReferences(message),
-					).then((result) => {
-						if (result) {
-							finishEditing();
-						}
-					});
+					);
 					return;
 				}
 				handleDelete();
@@ -220,11 +217,8 @@ export const UserMessage = observer(() => {
 			if (checkCustomEmojiAvailability(content)) {
 				return;
 			}
-			MessageCommands.edit(channel.id, message.id, content, undefined, message._allowedMentions).then((result) => {
-				if (result) {
-					finishEditing();
-				}
-			});
+			finishEditing();
+			void MessageCommands.edit(channel.id, message.id, content, undefined, message._allowedMentions);
 		},
 		[
 			channel.id,

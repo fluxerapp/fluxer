@@ -481,18 +481,15 @@ export const useTextareaSubmit = ({
 						finishMobileEdit();
 						return;
 					}
-					MessageCommands.edit(
+					finishMobileEdit();
+					void MessageCommands.edit(
 						channelId,
 						editingMessage.id,
 						'',
 						undefined,
 						editingMessage._allowedMentions,
 						buildExistingAttachmentEditReferences(editingMessage),
-					).then((result) => {
-						if (result) {
-							finishMobileEdit();
-						}
-					});
+					);
 					return;
 				}
 				MessageCommands.showDeleteConfirmation(i18n, {
@@ -506,17 +503,14 @@ export const useTextareaSubmit = ({
 			if (checkCustomEmojiAvailability(resolvedContent)) {
 				return;
 			}
-			MessageCommands.edit(
+			finishMobileEdit();
+			void MessageCommands.edit(
 				channelId,
 				editingMessage.id,
 				resolvedContent,
 				undefined,
 				editingMessage._allowedMentions,
-			).then((result) => {
-				if (result) {
-					finishMobileEdit();
-				}
-			});
+			);
 			return;
 		}
 		if (!hasVisibleMessageContent(resolvedContent) && uploadAttachmentsLength === 0 && !hasPendingSticker) {

@@ -57,6 +57,13 @@ export interface MessageEditRequest {
 	flags?: number;
 }
 
+export interface MessageEditPayload {
+	content?: string;
+	attachments?: Array<ApiMessageEditAttachmentMetadata>;
+	allowedMentions?: AllowedMentions;
+	flags?: number;
+}
+
 export interface MessageCreatePayload {
 	content?: string | null;
 	nonce?: string;
@@ -117,6 +124,24 @@ export function buildMessageCreateRequest(payload: MessageCreatePayload): Messag
 	}
 	if (tts) {
 		requestBody.tts = true;
+	}
+	return requestBody;
+}
+
+export function buildMessageEditRequest(payload: MessageEditPayload): MessageEditRequest {
+	const {content, attachments, allowedMentions, flags} = payload;
+	const requestBody: MessageEditRequest = {};
+	if (content !== undefined) {
+		requestBody.content = normalizeMessageEditContent(content);
+	}
+	if (attachments !== undefined) {
+		requestBody.attachments = attachments;
+	}
+	if (allowedMentions !== undefined) {
+		requestBody.allowed_mentions = allowedMentions;
+	}
+	if (flags !== undefined) {
+		requestBody.flags = flags;
 	}
 	return requestBody;
 }

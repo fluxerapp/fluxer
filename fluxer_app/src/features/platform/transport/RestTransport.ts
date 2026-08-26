@@ -78,6 +78,63 @@ type AttemptDecision =
 	| {next: 'retry-after'; delayMs: number; mode: 'backoff' | 'fixed'}
 	| {next: 'fail'; error: unknown};
 
+interface OnlineWaiter {
+	resolve: () => void;
+	signal: AbortSignal | undefined;
+	onAbort: () => void;
+}
+
+const onlineWaiters = new Set<OnlineWaiter>();
+let onlineListenerActive = false;
+
+function createRequestAbortError(): DOMException {
+	return new DOMException('Request aborted', 'AbortError');
+}
+
+function removeOnlineListener(): void {
+	if (!onlineListenerActive) return;
+	window.removeEventListener('online', resolveOnlineWaiters);
+	onlineListenerActive = false;
+}
+
+function releaseOnlineWaiter(waiter: OnlineWaiter): boolean {
+	if (!onlineWaiters.delete(waiter)) return false;
+	waiter.signal?.removeEventListener('abort', waiter.onAbort);
+	if (onlineWaiters.size === 0) removeOnlineListener();
+	return true;
+}
+
+function resolveOnlineWaiters(): void {
+	const pending = Array.from(onlineWaiters);
+	onlineWaiters.clear();
+	removeOnlineListener();
+	for (const waiter of pending) {
+		waiter.signal?.removeEventListener('abort', waiter.onAbort);
+		waiter.resolve();
+	}
+}
+
+function waitUntilOnline(signal?: AbortSignal): Promise<void> {
+	if (signal?.aborted) return Promise.reject(createRequestAbortError());
+	if (navigator.onLine) return Promise.resolve();
+	return new Promise<void>((resolve, reject) => {
+		const waiter: OnlineWaiter = {
+			resolve,
+			signal,
+			onAbort: () => {
+				if (releaseOnlineWaiter(waiter)) reject(createRequestAbortError());
+			},
+		};
+		onlineWaiters.add(waiter);
+		if (signal) signal.addEventListener('abort', waiter.onAbort, {once: true});
+		if (!onlineListenerActive) {
+			window.addEventListener('online', resolveOnlineWaiters);
+			onlineListenerActive = true;
+		}
+		if (navigator.onLine) queueMicrotask(resolveOnlineWaiters);
+	});
+}
+
 export class RestClient {
 	private readonly state: RuntimeState = {
 		baseUrl: '/api',
@@ -216,6 +273,7 @@ async function runRetryLoop<T>(
 	attempt: number,
 ): Promise<RestResponse<T>> {
 	const plan = composePlan(state, method, path, options, sudoApplied);
+	if (plan.retries > 0) await waitUntilOnline(plan.signal);
 	const pacingHit = consultPacing(state.pacing, plan.rateLimitKey);
 	if (pacingHit) {
 		if (plan.mode === 'auto-retry') {
@@ -240,7 +298,11 @@ async function runRetryLoop<T>(
 				return finalizeAfterRetriesExhausted<T>(state, plan, outcome);
 			}
 			const wait = decision.mode === 'backoff' ? computeBackoffMs(attempt) : decision.delayMs;
-			await delay(wait, plan.signal);
+			if (outcome.status === 'transport-error' && !navigator.onLine) {
+				await waitUntilOnline(plan.signal);
+			} else {
+				await delay(wait, plan.signal);
+			}
 			return runRetryLoop<T>(state, method, path, options, sudoApplied, attempt + 1);
 		}
 		case 'fail':

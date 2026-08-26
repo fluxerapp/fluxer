@@ -19,6 +19,8 @@ import {
 import {resolveMessagePageState} from '@app/features/messaging/commands/MessagePageStateMachine';
 import {MessageDeleteFailedModal} from '@app/features/messaging/components/alerts/MessageDeleteFailedModal';
 import {MessageDeleteTooQuickModal} from '@app/features/messaging/components/alerts/MessageDeleteTooQuickModal';
+import {MessageEditFailedModal} from '@app/features/messaging/components/alerts/MessageEditFailedModal';
+import {MessageEditTooQuickModal} from '@app/features/messaging/components/alerts/MessageEditTooQuickModal';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import type {JumpOptions} from '@app/features/messaging/state/ChannelMessages';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
@@ -34,8 +36,10 @@ import {
 import {
 	type ApiAttachmentMetadata,
 	type ApiMessageEditAttachmentMetadata,
+	buildMessageEditRequest,
 	normalizeMessageContent,
 } from '@app/features/messaging/utils/MessageRequestUtils';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import * as IARCommands from '@app/features/moderation/commands/IARCommands';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
@@ -80,6 +84,8 @@ const ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR = msg({
 		'Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).',
 });
 const logger = new Logger('MessageCommands');
+const MESSAGE_EDIT_MAX_RETRIES = 5;
+const MESSAGE_EDIT_TIMEOUT_MS = 30_000;
 const pendingDeletePromises = new Map<string, Promise<void>>();
 const pendingFetchPromises = new Map<string, Promise<Array<WireMessage>>>();
 
@@ -601,7 +607,42 @@ function showDeleteFailureModal(error: unknown, messageId: string): void {
 	);
 }
 
-export function edit(
+function showEditFailureModal(error: unknown): void {
+	if (error instanceof HttpError) {
+		const errorCode = failureCode(error);
+		if (error.status === 429) {
+			const retryAfterMs = resolveRetryAfterMs(error);
+			ModalCommands.push(
+				modal(() => (
+					<MessageEditTooQuickModal
+						retryAfter={retryAfterMs === null ? undefined : Math.ceil(retryAfterMs / 1000)}
+						data-flx="messaging.message-commands.message-edit-too-quick-modal"
+					/>
+				)),
+			);
+			return;
+		}
+		if (error.status === 403 && errorCode === APIErrorCodes.FEATURE_TEMPORARILY_DISABLED) {
+			ModalCommands.push(
+				modal(() => (
+					<FeatureTemporarilyDisabledModal data-flx="messaging.message-commands.message-edit-feature-temporarily-disabled-modal" />
+				)),
+			);
+			return;
+		}
+		if (errorCode === APIErrorCodes.CONTENT_BLOCKED) {
+			void import('@app/features/auth/components/ContentBlockedHandler').then((module) =>
+				module.showContentBlockedModal(),
+			);
+			return;
+		}
+	}
+	ModalCommands.push(
+		modal(() => <MessageEditFailedModal data-flx="messaging.message-commands.message-edit-failed-modal" />),
+	);
+}
+
+export async function edit(
 	channelId: string,
 	messageId: string,
 	content?: string,
@@ -609,31 +650,22 @@ export function edit(
 	allowedMentions?: AllowedMentions,
 	attachments?: Array<ApiMessageEditAttachmentMetadata>,
 ): Promise<WireMessage | null> {
-	return new Promise<WireMessage | null>((resolve) => {
-		logger.debug(`Enqueueing edit for message ${messageId} in channel ${channelId}`);
-		MessageQueue.enqueue(
-			{
-				type: 'edit',
-				channelId,
-				messageId,
-				content,
-				allowedMentions,
-				flags,
-				attachments,
-			},
-			(result, error) => {
-				if (result?.body) {
-					logger.debug(`Message edited successfully: ${messageId} in channel ${channelId}`);
-					resolve(result.body);
-				} else {
-					if (error) {
-						logger.debug(`Message edit failed: ${messageId} in channel ${channelId}`, error);
-					}
-					resolve(null);
-				}
-			},
-		);
-	});
+	logger.debug(`Editing message ${messageId} in channel ${channelId}`);
+	try {
+		const response = await http.patch<WireMessage>(Endpoints.CHANNEL_MESSAGE(channelId, messageId), {
+			body: buildMessageEditRequest({content, flags, allowedMentions, attachments}),
+			mode: 'auto-retry',
+			retries: MESSAGE_EDIT_MAX_RETRIES,
+			timeoutMs: MESSAGE_EDIT_TIMEOUT_MS,
+			suppressContentBlockedModal: true,
+		});
+		logger.debug(`Message edited successfully: ${messageId} in channel ${channelId}`);
+		return response.body ?? null;
+	} catch (error) {
+		logger.error(`Message edit failed: ${messageId} in channel ${channelId}`, error);
+		showEditFailureModal(error);
+		return null;
+	}
 }
 
 export async function remove(channelId: string, messageId: string): Promise<void> {
