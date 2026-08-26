@@ -675,7 +675,9 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 			output.on('close', resolve);
 			output.on('error', reject);
 		});
-		const storageKey = `exports/${userId}/${harvestId}/user-data.zip`;
+		const storageKey = isAdminArchive
+			? `archives/users/${userId}/${harvestId}/user-data.zip`
+			: `exports/${userId}/${harvestId}/user-data.zip`;
 		const expiresAt = new Date(Date.now() + (isAdminArchive ? ms('1 year') : ZIP_EXPIRY_MS));
 		const zipStat = await fs.promises.stat(zipPath);
 		const fileSize = BigInt(zipStat.size);
