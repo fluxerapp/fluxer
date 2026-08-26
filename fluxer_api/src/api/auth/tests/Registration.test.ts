@@ -311,7 +311,7 @@ describe('Auth registration', () => {
 					date_of_birth: '2000-01-01',
 					consent: true,
 				})
-				.expect(403, 'TOR_BLOCKED')
+				.expect(403, 'GLOBAL_IP_BANNED')
 				.execute();
 		} finally {
 			torExitListCache.clearForTesting();

@@ -208,8 +208,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.GLOBAL_IP_BANNED]: 'permissions.global_ip_banned',
 	[APIErrorCodes.GLOBAL_IP_TEMPORARILY_BANNED]: 'permissions.global_ip_temporarily_banned',
 	[APIErrorCodes.IP_BANNED]: 'permissions.global_ip_banned',
-	[APIErrorCodes.RESIDENTIAL_PROXY_BLOCKED]: 'permissions.user_ip_banned_from_guild',
-	[APIErrorCodes.TOR_BLOCKED]: 'permissions.user_ip_banned_from_guild',
 	[APIErrorCodes.MAX_ANIMATED_EMOJIS]: 'invites_and_packs.max_animated_emojis_reached',
 	[APIErrorCodes.MAX_APPLICATIONS]: 'misc_limits.max_applications_reached',
 	[APIErrorCodes.MAX_BOOKMARKS]: 'misc_limits.max_bookmarks_reached',
