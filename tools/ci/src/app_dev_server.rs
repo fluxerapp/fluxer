@@ -4,9 +4,11 @@ use crate::app_wasm::resolve_app_dir;
 use anyhow::{Context, Result, bail, ensure};
 use clap::Args;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -23,11 +25,51 @@ pub struct AppDevServerArgs {
     app_dir: Option<PathBuf>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+enum InputFingerprint {
+    Sha256 {
+        sha256: String,
+        #[serde(skip)]
+        legacy_timestamp_ms: Option<f64>,
+    },
+    LegacyTimestamp(f64),
+}
+
+impl InputFingerprint {
+    fn matches(&self, current: &Self) -> bool {
+        match (self, current) {
+            (
+                Self::Sha256 { sha256, .. },
+                Self::Sha256 {
+                    sha256: current, ..
+                },
+            ) => sha256 == current,
+            (
+                Self::LegacyTimestamp(timestamp),
+                Self::Sha256 {
+                    legacy_timestamp_ms: Some(current),
+                    ..
+                },
+            ) => timestamp == current,
+            (Self::LegacyTimestamp(timestamp), Self::LegacyTimestamp(current)) => {
+                timestamp == current
+            }
+            _ => false,
+        }
+    }
+
+    fn is_legacy(&self) -> bool {
+        matches!(self, Self::LegacyTimestamp(_))
+    }
+}
+
+type StepInputs = BTreeMap<String, InputFingerprint>;
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct StepMetadata {
-    last_run: f64,
-    inputs: BTreeMap<String, f64>,
+    inputs: StepInputs,
 }
 
 type Metadata = BTreeMap<String, StepMetadata>;
@@ -103,20 +145,14 @@ impl AppDevServer {
         )
         .await?;
 
-        if env_truthy("FLUXER_APP_SKIP_I18N_COMPILE") {
-            eprintln!("Skipping pnpm lingui:compile because FLUXER_APP_SKIP_I18N_COMPILE is set.");
-        } else {
-            self.run_cached_step(
-                "lingui",
-                gather_lingui_inputs,
-                "pnpm lingui:compile",
-                |server, shutdown| {
-                    Box::pin(server.run_command("pnpm", &["lingui:compile"], shutdown))
-                },
-                &mut shutdown_rx,
-            )
-            .await?;
-        }
+        self.run_cached_step(
+            "lingui",
+            gather_lingui_inputs,
+            "pnpm lingui:compile",
+            |server, shutdown| Box::pin(server.run_command("pnpm", &["lingui:compile"], shutdown)),
+            &mut shutdown_rx,
+        )
+        .await?;
 
         if *shutdown_rx.borrow() {
             return Ok(());
@@ -175,35 +211,50 @@ impl AppDevServer {
         shutdown: &mut watch::Receiver<bool>,
     ) -> Result<()>
     where
-        G: Fn(&Path) -> Result<BTreeMap<String, f64>>,
+        G: Fn(&Path) -> Result<StepInputs>,
         E: for<'a> FnOnce(
             &'a AppDevServer,
             &'a mut watch::Receiver<bool>,
         )
             -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + 'a>>,
     {
+        if *shutdown.borrow() {
+            return Ok(());
+        }
         let inputs = gather_inputs(&self.project_root)?;
         if !self.should_run_step(step_name, &inputs) {
+            let needs_upgrade = self
+                .metadata
+                .get(step_name)
+                .is_some_and(|entry| entry.inputs.values().any(InputFingerprint::is_legacy));
+            if needs_upgrade {
+                self.metadata
+                    .insert(step_name.to_string(), StepMetadata { inputs });
+                self.save_metadata()?;
+            }
             println!("Skipping {label} (no changes detected)");
             return Ok(());
         }
 
         execute(self, shutdown).await?;
-        self.metadata.insert(
-            step_name.to_string(),
-            StepMetadata {
-                last_run: timestamp_ms(SystemTime::now())?,
-                inputs,
-            },
-        );
+        if *shutdown.borrow() {
+            return Ok(());
+        }
+        self.metadata
+            .insert(step_name.to_string(), StepMetadata { inputs });
         self.save_metadata()
     }
 
-    fn should_run_step(&self, step_name: &str, inputs: &BTreeMap<String, f64>) -> bool {
+    fn should_run_step(&self, step_name: &str, inputs: &StepInputs) -> bool {
         let Some(entry) = self.metadata.get(step_name) else {
             return true;
         };
-        &entry.inputs != inputs
+        entry.inputs.len() != inputs.len()
+            || entry.inputs.iter().any(|(path, cached)| {
+                inputs
+                    .get(path)
+                    .is_none_or(|current| !cached.matches(current))
+            })
     }
 
     async fn run_command(
@@ -286,7 +337,7 @@ impl AppDevServer {
     }
 }
 
-fn collect_file_stats(project_root: &Path, paths: &[PathBuf]) -> Result<BTreeMap<String, f64>> {
+fn collect_file_digests(project_root: &Path, paths: &[PathBuf]) -> Result<StepInputs> {
     let mut result = BTreeMap::new();
     for rel_path in paths {
         let absolute_path = project_root.join(rel_path);
@@ -297,16 +348,16 @@ fn collect_file_stats(project_root: &Path, paths: &[PathBuf]) -> Result<BTreeMap
             "Expected {} to be a file when collecting dev server cache inputs.",
             rel_path.display()
         );
-        result.insert(rel_path_key(rel_path), timestamp_ms(metadata.modified()?)?);
+        result.insert(rel_path_key(rel_path), fingerprint_file(&absolute_path)?);
     }
     Ok(result)
 }
 
-fn collect_directory_stats<P>(
+fn collect_directory_digests<P>(
     project_root: &Path,
     root_rel: &Path,
     predicate: P,
-) -> Result<BTreeMap<String, f64>>
+) -> Result<StepInputs>
 where
     P: Fn(&str) -> bool,
 {
@@ -335,9 +386,36 @@ where
         if !predicate(&key) {
             continue;
         }
-        result.insert(key, timestamp_ms(entry.metadata()?.modified()?)?);
+        result.insert(key, fingerprint_file(entry.path())?);
     }
     Ok(result)
+}
+
+fn hash_file(path: &Path) -> Result<String> {
+    let mut file = fs::File::open(path)
+        .with_context(|| format!("Failed to open {} for hashing", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        let bytes_read = file
+            .read(&mut buffer)
+            .with_context(|| format!("Failed to read {} for hashing", path.display()))?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    }
+    Ok(hex::encode(hasher.finalize()))
+}
+
+fn fingerprint_file(path: &Path) -> Result<InputFingerprint> {
+    let sha256 = hash_file(path)?;
+    let metadata = fs::metadata(path)
+        .with_context(|| format!("Failed to stat {} after hashing", path.display()))?;
+    Ok(InputFingerprint::Sha256 {
+        sha256,
+        legacy_timestamp_ms: Some(timestamp_ms(metadata.modified()?)?),
+    })
 }
 
 fn should_walk_entry(path: &Path, skip_dirs: &BTreeSet<&str>) -> bool {
@@ -346,9 +424,9 @@ fn should_walk_entry(path: &Path, skip_dirs: &BTreeSet<&str>) -> bool {
         .is_none_or(|name| !skip_dirs.contains(name))
 }
 
-fn gather_wasm_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
+fn gather_wasm_inputs(project_root: &Path) -> Result<StepInputs> {
     let markdown_parser_rust_dir = PathBuf::from("../packages/markdown_parser/rust");
-    let mut inputs = collect_file_stats(
+    let mut inputs = collect_file_digests(
         project_root,
         &[
             PathBuf::from("../tools/ci/Cargo.toml"),
@@ -361,12 +439,12 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
             markdown_parser_rust_dir.join("Cargo.toml"),
         ],
     )?;
-    inputs.extend(collect_directory_stats(
+    inputs.extend(collect_directory_digests(
         project_root,
         Path::new("rust/libfluxcore"),
         |path| !path.contains("/target/"),
     )?);
-    inputs.extend(collect_directory_stats(
+    inputs.extend(collect_directory_digests(
         project_root,
         &markdown_parser_rust_dir,
         |path| !path.contains("/target/"),
@@ -374,15 +452,15 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
     Ok(inputs)
 }
 
-fn gather_color_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
-    collect_file_stats(
+fn gather_color_inputs(project_root: &Path) -> Result<StepInputs> {
+    collect_file_digests(
         project_root,
         &[PathBuf::from("scripts/GenerateColorSystem.ts")],
     )
 }
 
-fn gather_message_layout_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
-    collect_file_stats(
+fn gather_message_layout_inputs(project_root: &Path) -> Result<StepInputs> {
+    collect_file_digests(
         project_root,
         &[
             PathBuf::from("scripts/GenerateMessageLayoutCss.ts"),
@@ -391,8 +469,8 @@ fn gather_message_layout_inputs(project_root: &Path) -> Result<BTreeMap<String, 
     )
 }
 
-fn gather_mask_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
-    collect_file_stats(
+fn gather_mask_inputs(project_root: &Path) -> Result<StepInputs> {
+    collect_file_digests(
         project_root,
         &[
             PathBuf::from("scripts/GenerateAvatarMasks.ts"),
@@ -401,14 +479,14 @@ fn gather_mask_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
     )
 }
 
-fn gather_css_module_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
-    collect_directory_stats(project_root, Path::new("src"), |path| {
+fn gather_css_module_inputs(project_root: &Path) -> Result<StepInputs> {
+    collect_directory_digests(project_root, Path::new("src"), |path| {
         path.ends_with(".module.css")
     })
 }
 
-fn gather_lingui_inputs(project_root: &Path) -> Result<BTreeMap<String, f64>> {
-    collect_directory_stats(
+fn gather_lingui_inputs(project_root: &Path) -> Result<StepInputs> {
+    collect_directory_digests(
         project_root,
         Path::new("src/features/i18n/locales"),
         |path| path.ends_with(".po"),
@@ -491,12 +569,6 @@ fn timestamp_ms(timestamp: SystemTime) -> Result<f64> {
         .context("File timestamp predates UNIX epoch")?
         .as_secs_f64()
         * 1000.0)
-}
-
-fn env_truthy(name: &str) -> bool {
-    std::env::var(name)
-        .ok()
-        .is_some_and(|value| matches!(value.to_ascii_lowercase().as_str(), "1" | "true"))
 }
 
 fn display_command(command: &str, args: &[&str]) -> String {

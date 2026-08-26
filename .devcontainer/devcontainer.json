@@ -5,20 +5,17 @@
 	"workspaceFolder": "/workspaces/fluxer",
 	"shutdownAction": "stopCompose",
 	"remoteUser": "vscode",
+	"hostRequirements": {
+		"cpus": 4,
+		"memory": "8gb",
+		"storage": "32gb"
+	},
 	"remoteEnv": {
 		"DOCKER_HOST": "unix:///var/run/docker.sock"
 	},
 	"runServices": ["workspace", "postgres", "valkey", "nats", "livekit", "meilisearch", "mailpit"],
-	"forwardPorts": [
-		3000, 8088, 8080, 8771, 8082, 3010, 3020, 8100, 8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110, 8111,
-		8112, 8113, 8114, 8115, 8116, 8117, 8118, 8119, 8120, 8121, 8122, 8123, 8124, 8125, 3900, 8888, 9333, 9340, 23646,
-		4222, 7700, 7880, 7900, 9200, 8000
-	],
+	"forwardPorts": [3000, 8088, 8080, 8771, 8082, 8773, 3010, 3020, 8333],
 	"portsAttributes": {
-		"8000": {
-			"label": "Zensical docs",
-			"onAutoForward": "openBrowserOnce"
-		},
 		"8088": {
 			"label": "Fluxer dev proxy",
 			"onAutoForward": "notify"
@@ -29,36 +26,15 @@
 		"3020": {
 			"label": "Fluxer admin"
 		},
-		"8100": {
-			"label": "Fluxer Rust service health"
-		},
-		"3900": {
+		"8333": {
 			"label": "SeaweedFS S3"
 		},
-		"8888": {
-			"label": "SeaweedFS filer"
-		},
-		"9333": {
-			"label": "SeaweedFS master"
-		},
-		"9340": {
-			"label": "SeaweedFS volume"
-		},
-		"23646": {
-			"label": "SeaweedFS admin"
-		},
-		"7880": {
-			"label": "LiveKit"
-		},
-		"7700": {
-			"label": "Meilisearch"
-		},
-		"9200": {
-			"label": "Elasticsearch"
+		"8773": {
+			"label": "Fluxer app proxy"
 		}
 	},
-	"postCreateCommand": "sudo chown -R vscode:vscode /workspaces/fluxer/target && find /workspaces/fluxer -maxdepth 4 -type d -name node_modules -prune -exec sudo chown -R vscode:vscode {} + && sudo chown -R vscode:vscode /home/vscode/.local/share/pnpm && cargo run -p fluxer-dev -- bootstrap",
-	"postStartCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && cargo run -p fluxer-dev -- post-start && bash /workspaces/fluxer/fluxer_docs/serve.sh --daemon",
+	"postCreateCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && bash /workspaces/fluxer/.devcontainer/fix-workspace-permissions.sh && cargo run -p fluxer-dev -- bootstrap",
+	"postStartCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && bash /workspaces/fluxer/.devcontainer/fix-workspace-permissions.sh && cargo run -p fluxer-dev -- post-start",
 	"customizations": {
 		"vscode": {
 			"settings": {

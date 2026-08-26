@@ -98,7 +98,7 @@ fallback_owner_for_role(Role) ->
 
 -spec is_ready() -> boolean().
 is_ready() ->
-    not is_draining() andalso gateway_hotpatch_reconciler:is_ready().
+    not is_draining().
 
 -spec is_draining() -> boolean().
 is_draining() ->

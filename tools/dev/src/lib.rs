@@ -7,7 +7,6 @@ pub mod dev;
 pub mod disclaim;
 pub mod env;
 pub mod gateway;
-pub mod gateway_reload;
 pub mod manifest;
 pub mod media_external;
 pub mod media_proxy;

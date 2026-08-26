@@ -36,6 +36,11 @@ import {JetStreamWorkerQueue} from '../worker/JetStreamWorkerQueue';
 import {WorkerService} from '../worker/WorkerService';
 
 let jsConnectionManager: JetStreamConnectionManager | null = null;
+
+function unsupportedDatabaseBackend(backend: never): never {
+	throw new Error(`Unsupported database backend during shutdown: ${String(backend)}`);
+}
+
 export function createInitializer(config: APIConfig, logger: ILogger): () => Promise<void> {
 	return async (): Promise<void> => {
 		try {
@@ -131,7 +136,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			try {
 				const kvDeletionQueue = getKVAccountDeletionQueue();
 				if (await kvDeletionQueue.needsRebuild()) {
-					logger.warn('KV deletion queue needs rebuild, rebuilding...');
+					logger.info('KV deletion queue needs rebuild, rebuilding...');
 					await kvDeletionQueue.rebuildState();
 				} else {
 					logger.info('KV deletion queue state is healthy');
@@ -204,13 +209,13 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			logger.info('API service initialization complete');
 		} catch (error) {
 			logger.error({error}, 'API service initialization failed');
-			await createShutdown(logger)();
+			await createShutdown(config, logger)();
 			throw error;
 		}
 	};
 }
 
-export function createShutdown(logger: ILogger): () => Promise<void> {
+export function createShutdown(config: APIConfig, logger: ILogger): () => Promise<void> {
 	return async (): Promise<void> => {
 		logger.info('Shutting down API service...');
 		if (jsConnectionManager) {
@@ -258,18 +263,26 @@ export function createShutdown(logger: ILogger): () => Promise<void> {
 		} catch (error) {
 			logger.error({error}, 'Error shutting down report service');
 		}
-		try {
-			setDatabaseQueryExecutor(null);
-			await shutdownPostgres();
-			logger.info('Postgres client shut down');
-		} catch (error) {
-			logger.error({error}, 'Error shutting down Postgres client');
-		}
-		try {
-			await shutdownCassandra();
-			logger.info('Cassandra client shut down');
-		} catch (error) {
-			logger.error({error}, 'Error shutting down Cassandra client');
+		setDatabaseQueryExecutor(null);
+		switch (config.database.backend) {
+			case 'postgres':
+				try {
+					await shutdownPostgres();
+					logger.info('Postgres client shut down');
+				} catch (error) {
+					logger.error({error}, 'Error shutting down Postgres client');
+				}
+				break;
+			case 'cassandra':
+				try {
+					await shutdownCassandra();
+					logger.info('Cassandra client shut down');
+				} catch (error) {
+					logger.error({error}, 'Error shutting down Cassandra client');
+				}
+				break;
+			default:
+				unsupportedDatabaseBackend(config.database.backend);
 		}
 		logger.info('API service shutdown complete');
 	};

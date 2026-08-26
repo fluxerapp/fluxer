@@ -17,6 +17,8 @@ const DEV_S3_ACCESS_KEY_ID: &str = "fluxer";
 const DEV_S3_SECRET_ACCESS_KEY: &str = "fluxer-secret";
 const DEV_S3_HOST: &str = "127.0.0.1";
 const DEV_S3_PORT: u16 = 8333;
+const DEV_SEAWEEDFS_STOP_TIMEOUT: Duration = Duration::from_secs(15);
+const DEV_SEAWEEDFS_KILL_TIMEOUT: Duration = Duration::from_secs(2);
 
 pub async fn run_dev_media_doctor(
     repair: bool,
@@ -35,10 +37,20 @@ pub async fn run_dev_media_doctor(
 }
 
 pub async fn ensure_dev_object_store(repair: bool, repair_timeout_secs: u64) -> Result<()> {
+    let managed_process_running =
+        read_dev_seaweedfs_pid()?.is_some_and(managed_seaweedfs_process_running);
+    if repair && !tcp_reachable(DEV_S3_HOST, DEV_S3_PORT) && !managed_process_running {
+        println!("SeaweedFS S3 is not running; starting the managed development instance.");
+        start_dev_seaweedfs()?;
+        wait_s3_api(repair_timeout_secs).await?;
+        ensure_s3_buckets()?;
+        return Ok(());
+    }
+
     match wait_s3_api(5).await {
         Ok(()) => {}
-        Err(error) if repair => {
-            println!("SeaweedFS S3 check failed: {error}");
+        Err(_) if repair => {
+            println!("SeaweedFS S3 is unresponsive; restarting the managed development instance.");
             start_dev_seaweedfs()?;
             wait_s3_api(repair_timeout_secs).await?;
         }
@@ -128,7 +140,7 @@ fn start_dev_seaweedfs() -> Result<()> {
     if let Some(pid) = read_dev_seaweedfs_pid()? {
         if managed_seaweedfs_process_running(pid) {
             eprintln!("Stopping unresponsive managed SeaweedFS process {pid}.");
-            stop_managed_seaweedfs_process(pid);
+            stop_managed_seaweedfs_process(pid)?;
         }
         let _ = fs::remove_file(DEV_SEAWEEDFS_PID_FILE.as_path());
     }
@@ -141,15 +153,24 @@ fn start_dev_seaweedfs() -> Result<()> {
     let log_path = DEV_LOG_DIR.join("seaweedfs.log");
     let log = OpenOptions::new()
         .create(true)
-        .append(true)
+        .write(true)
+        .truncate(true)
         .open(&log_path)
         .with_context(|| format!("failed to open SeaweedFS log {}", log_path.display()))?;
     let stderr = log
         .try_clone()
         .context("failed to clone SeaweedFS log handle")?;
     let data_dir_arg = format!("-dir={}", DEV_SEAWEEDFS_DIR.display());
-    let child = Command::new(weed)
-        .args(["-logtostderr=true", "mini", &data_dir_arg])
+    let mut child = Command::new(weed)
+        .args([
+            "-logtostderr=true",
+            "mini",
+            &data_dir_arg,
+            "-admin.ui=false",
+            "-filer.disableDirListing",
+            "-s3.port.iceberg=0",
+            "-webdav=false",
+        ])
         .env("AWS_ACCESS_KEY_ID", DEV_S3_ACCESS_KEY_ID)
         .env("AWS_SECRET_ACCESS_KEY", DEV_S3_SECRET_ACCESS_KEY)
         .env("S3_BUCKET", DEV_S3_BUCKETS)
@@ -159,12 +180,16 @@ fn start_dev_seaweedfs() -> Result<()> {
         .spawn()
         .context("failed to start SeaweedFS")?;
     let pid = child.id();
-    fs::write(DEV_SEAWEEDFS_PID_FILE.as_path(), pid.to_string()).with_context(|| {
-        format!(
-            "failed to write SeaweedFS pid file {}",
-            DEV_SEAWEEDFS_PID_FILE.display()
-        )
-    })?;
+    if let Err(error) = fs::write(DEV_SEAWEEDFS_PID_FILE.as_path(), pid.to_string()) {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error).with_context(|| {
+            format!(
+                "failed to write SeaweedFS pid file {}",
+                DEV_SEAWEEDFS_PID_FILE.display()
+            )
+        });
+    }
     println!(
         "Started SeaweedFS dev object store with pid {pid}; logs: {}",
         log_path.display()
@@ -195,20 +220,44 @@ fn managed_seaweedfs_process_running(pid: u32) -> bool {
 }
 
 #[cfg(unix)]
-fn stop_managed_seaweedfs_process(pid: u32) {
-    unsafe {
-        libc::kill(pid as i32, libc::SIGTERM);
-    }
-    std::thread::sleep(Duration::from_secs(2));
-    if managed_seaweedfs_process_running(pid) {
-        unsafe {
-            libc::kill(pid as i32, libc::SIGKILL);
+fn stop_managed_seaweedfs_process(pid: u32) -> Result<()> {
+    let result = unsafe { libc::kill(pid as i32, libc::SIGTERM) };
+    if result == -1 {
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() != Some(libc::ESRCH) {
+            return Err(error).context("failed to terminate managed SeaweedFS process");
         }
     }
+
+    let terminate_deadline = Instant::now() + DEV_SEAWEEDFS_STOP_TIMEOUT;
+    while managed_seaweedfs_process_running(pid) && Instant::now() < terminate_deadline {
+        std::thread::sleep(Duration::from_millis(100));
+    }
+    if !managed_seaweedfs_process_running(pid) {
+        return Ok(());
+    }
+
+    let result = unsafe { libc::kill(pid as i32, libc::SIGKILL) };
+    if result == -1 {
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() != Some(libc::ESRCH) {
+            return Err(error).context("failed to kill unresponsive managed SeaweedFS process");
+        }
+    }
+    let kill_deadline = Instant::now() + DEV_SEAWEEDFS_KILL_TIMEOUT;
+    while managed_seaweedfs_process_running(pid) && Instant::now() < kill_deadline {
+        std::thread::sleep(Duration::from_millis(100));
+    }
+    if managed_seaweedfs_process_running(pid) {
+        bail!("managed SeaweedFS process {pid} survived SIGKILL");
+    }
+    Ok(())
 }
 
 #[cfg(not(unix))]
-fn stop_managed_seaweedfs_process(_pid: u32) {}
+fn stop_managed_seaweedfs_process(_pid: u32) -> Result<()> {
+    Ok(())
+}
 
 async fn check_dev_media_path(base_url: &str, path: &str) -> Result<()> {
     let path = if path.starts_with('/') {

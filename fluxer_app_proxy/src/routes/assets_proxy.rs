@@ -148,7 +148,7 @@ pub async fn proxy_assets(
     response
 }
 
-async fn serve_local_asset(
+pub(super) async fn serve_local_asset(
     static_dir: &str,
     relative_path: &str,
     request_headers: &HeaderMap,

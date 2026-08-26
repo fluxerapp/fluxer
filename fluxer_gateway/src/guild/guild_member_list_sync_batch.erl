@@ -159,7 +159,7 @@ flush_pending_syncs_clears_empty_batch_test() ->
     State = #{?SYNC_BATCH_STATE_KEY => #{pending_list_ids => #{}}},
     ?assertEqual(#{}, flush_pending_syncs(State)).
 
-queue_list_sync_drains_pre_hotpatch_pending_batch_test() ->
+queue_list_sync_drains_preexisting_pending_batch_test() ->
     Ref = erlang:send_after(60000, self(), ?FLUSH_SYNC_BATCH_MSG),
     State = #{
         ?SYNC_BATCH_STATE_KEY => #{

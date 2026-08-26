@@ -19,6 +19,8 @@ interface PageState {
 
 const VALUE_SEPARATOR = '\u001f';
 const ENCODED_TYPE_KEY = '__fluxer_type';
+const POSTGRES_KV_SCHEMA_LOCK_NAMESPACE = 0x46584b56;
+const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT = '120s';
 
 function normalizeCql(cql: string): string {
 	return cql.replace(/\s+/g, ' ').trim();
@@ -354,8 +356,13 @@ function parseEqWhere(whereSql: string, cql: string): ReadonlyArray<EqWhereExpr>
 }
 
 export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<void> {
-	const table = quoteIdentifier(client.kvTable());
-	await client.query(`
+	const kvTable = client.kvTable();
+	const table = quoteIdentifier(kvTable);
+	await client.transaction(async (db) => {
+		await db.query("SELECT set_config('statement_timeout', $1, true)", [POSTGRES_KV_SCHEMA_LOCK_TIMEOUT]);
+		await db.query('SELECT pg_advisory_xact_lock($1, hashtext($2))', [POSTGRES_KV_SCHEMA_LOCK_NAMESPACE, kvTable]);
+		await db.query("SELECT set_config('statement_timeout', '0', true)");
+		await db.query(`
 CREATE TABLE IF NOT EXISTS ${table} (
 	table_name text NOT NULL,
 	partition_key text NOT NULL,
@@ -365,28 +372,29 @@ CREATE TABLE IF NOT EXISTS ${table} (
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	PRIMARY KEY (table_name, row_key)
 )`);
-	await client.query(
-		`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${client.kvTable()}_partition_row_idx`)} ON ${table} (table_name, partition_key, row_key)`,
-	);
-	await client.query(
-		`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${client.kvTable()}_row_key_c_idx`)} ON ${table} (table_name, row_key COLLATE "C")`,
-	);
-	await client.query(
-		`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${client.kvTable()}_expires_idx`)} ON ${table} (expires_at) WHERE expires_at IS NOT NULL`,
-	);
-	await client.query(
-		`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${client.kvTable()}_messages_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages'`,
-	);
-	await client.query(
-		`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${client.kvTable()}_message_reactions_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions'`,
-	);
-	await client.query(`
+		await db.query(
+			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_partition_row_idx`)} ON ${table} (table_name, partition_key, row_key)`,
+		);
+		await db.query(
+			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_row_key_c_idx`)} ON ${table} (table_name, row_key COLLATE "C")`,
+		);
+		await db.query(
+			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_expires_idx`)} ON ${table} (expires_at) WHERE expires_at IS NOT NULL`,
+		);
+		await db.query(
+			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_messages_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages'`,
+		);
+		await db.query(
+			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_message_reactions_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions'`,
+		);
+		await db.query(`
 UPDATE ${table}
 SET partition_key = split_part(row_key, chr(31), 1) || chr(31) || split_part(row_key, chr(31), 2)
 WHERE table_name = 'messages'
 	AND partition_key = row_key
 	AND split_part(row_key, chr(31), 3) <> ''`);
-	await client.query(`DROP INDEX IF EXISTS ${quoteIdentifier(`${client.kvTable()}_partition_idx`)}`);
+		await db.query(`DROP INDEX IF EXISTS ${quoteIdentifier(`${kvTable}_partition_idx`)}`);
+	});
 }
 
 export async function pruneExpiredPostgresKvRows(client: IPostgresClient, batchSize = 5000): Promise<number> {

@@ -4,9 +4,11 @@ use crate::env::merge_default_env_with_current;
 use crate::paths::{DEV_ENV_FILE, DEV_LOCAL_ENV_FILE, ROOT, ROOT_LOCAL_ENV_FILE};
 use anyhow::{Context, Result, bail};
 use std::collections::{BTreeMap, VecDeque};
+use std::future::Future;
+use std::io::{BufRead, BufReader, Read};
 use std::net::{TcpStream, ToSocketAddrs};
 use std::path::Path;
-use std::process::{Command, Output, Stdio};
+use std::process::{Child, Command, Output, Stdio};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
@@ -172,6 +174,152 @@ pub fn run_command(args: &[&str], options: RunOptions<'_>) -> Result<Output> {
     Ok(output)
 }
 
+pub async fn run_command_interruptible(
+    args: &[&str],
+    options: RunOptions<'_>,
+    shutdown: &mut ShutdownSignal,
+) -> Result<AwaitOutcome<Output>> {
+    if options.capture {
+        bail!("interruptible commands do not support captured output");
+    }
+    println!("$ {}", format_command(args));
+    let env = merged_env(Some(&options.env), options.load_default_env)?;
+    let mut command = Command::new(args[0]);
+    command
+        .args(&args[1..])
+        .current_dir(options.cwd)
+        .env_clear()
+        .envs(env)
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit());
+    configure_process_group(&mut command);
+    let mut child = command
+        .spawn()
+        .with_context(|| format!("failed to run {}", format_command(args)))?;
+    loop {
+        let status = match child.try_wait() {
+            Ok(status) => status,
+            Err(error) => {
+                stop_process_group(&mut child, Duration::from_secs(5)).await;
+                return Err(error)
+                    .with_context(|| format!("failed to wait for {}", format_command(args)));
+            }
+        };
+        if let Some(status) = status {
+            stop_process_group(&mut child, Duration::from_secs(5)).await;
+            let output = Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            };
+            if options.check && !output.status.success() {
+                let code = output.status.code().unwrap_or(-1);
+                bail!(
+                    "Command failed with exit code {code}: {}",
+                    format_command(args)
+                );
+            }
+            return Ok(AwaitOutcome::Completed(output));
+        }
+        tokio::select! {
+            signal = shutdown.recv() => {
+                stop_process_group(&mut child, Duration::from_secs(5)).await;
+                return Ok(AwaitOutcome::Shutdown(signal));
+            }
+            _ = sleep(Duration::from_millis(100)) => {}
+        }
+    }
+}
+
+pub fn configure_process_group(command: &mut Command) {
+    #[cfg(unix)]
+    unsafe {
+        use std::os::unix::process::CommandExt;
+        command.pre_exec(|| {
+            if libc::setsid() == -1 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+}
+
+#[cfg(unix)]
+pub fn terminate_process_group(process: &mut Child) -> std::io::Result<()> {
+    signal_process_group(process, libc::SIGTERM)
+}
+
+#[cfg(not(unix))]
+pub fn terminate_process_group(process: &mut Child) -> std::io::Result<()> {
+    process.kill()
+}
+
+#[cfg(unix)]
+pub fn force_kill_process_group(process: &mut Child) {
+    if let Err(error) = signal_process_group(process, libc::SIGKILL) {
+        eprintln!(
+            "Failed to send SIGKILL to process group {}: {error}",
+            process.id()
+        );
+    }
+    let _ = process.kill();
+    let _ = process.wait();
+}
+
+#[cfg(unix)]
+pub fn process_group_running(process: &mut Child) -> bool {
+    if unsafe { libc::kill(-(process.id() as i32), 0) } == 0 {
+        return true;
+    }
+    let error = std::io::Error::last_os_error();
+    error.raw_os_error() != Some(libc::ESRCH)
+}
+
+#[cfg(not(unix))]
+pub fn process_group_running(process: &mut Child) -> bool {
+    process.try_wait().ok().flatten().is_none()
+}
+
+#[cfg(not(unix))]
+pub fn force_kill_process_group(process: &mut Child) {
+    let _ = process.kill();
+    let _ = process.wait();
+}
+
+#[cfg(unix)]
+fn signal_process_group(process: &Child, signal: libc::c_int) -> std::io::Result<()> {
+    if unsafe { libc::kill(-(process.id() as i32), signal) } == 0 {
+        return Ok(());
+    }
+    let error = std::io::Error::last_os_error();
+    if error.raw_os_error() == Some(libc::ESRCH) {
+        return Ok(());
+    }
+    Err(error)
+}
+
+pub async fn stop_process_group(process: &mut Child, grace_period: Duration) {
+    if let Err(error) = terminate_process_group(process) {
+        eprintln!(
+            "Failed to terminate process group {}: {error}",
+            process.id()
+        );
+    }
+    let deadline = Instant::now() + grace_period;
+    loop {
+        let leader_exited = process.try_wait().ok().flatten().is_some();
+        if leader_exited && !process_group_running(process) {
+            return;
+        }
+        if Instant::now() >= deadline {
+            force_kill_process_group(process);
+            return;
+        }
+        sleep(Duration::from_millis(100)).await;
+    }
+}
+
 pub async fn wait_tcp(name: &str, host: &str, port: u16, timeout_secs: u64) -> Result<()> {
     let deadline = Instant::now() + Duration::from_secs(timeout_secs);
     let mut last_error = None;
@@ -199,6 +347,19 @@ pub async fn wait_tcp(name: &str, host: &str, port: u16, timeout_secs: u64) -> R
 }
 
 pub async fn wait_http(name: &str, url: &str, timeout_secs: u64) -> Result<()> {
+    wait_http_status(name, url, timeout_secs, |status| status.as_u16() < 500).await
+}
+
+pub async fn wait_http_success(name: &str, url: &str, timeout_secs: u64) -> Result<()> {
+    wait_http_status(name, url, timeout_secs, |status| status.is_success()).await
+}
+
+async fn wait_http_status(
+    name: &str,
+    url: &str,
+    timeout_secs: u64,
+    accepts: impl Fn(reqwest::StatusCode) -> bool,
+) -> Result<()> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(5))
         .build()?;
@@ -206,7 +367,7 @@ pub async fn wait_http(name: &str, url: &str, timeout_secs: u64) -> Result<()> {
     let mut last_error = None;
     while Instant::now() < deadline {
         match client.get(url).send().await {
-            Ok(response) if response.status().as_u16() < 500 => {
+            Ok(response) if accepts(response.status()) => {
                 println!("{name} is reachable at {url}");
                 return Ok(());
             }
@@ -219,6 +380,30 @@ pub async fn wait_http(name: &str, url: &str, timeout_secs: u64) -> Result<()> {
         "Timed out waiting for {name} at {url}: {}",
         last_error.unwrap_or_else(|| "unknown error".to_owned())
     );
+}
+
+pub fn prefix_output(label: &str, reader: impl Read) {
+    let mut reader = BufReader::new(reader);
+    let mut line = Vec::new();
+    loop {
+        line.clear();
+        match reader.read_until(b'\n', &mut line) {
+            Ok(0) => return,
+            Ok(_) => {
+                if line.last() == Some(&b'\n') {
+                    line.pop();
+                }
+                if line.last() == Some(&b'\r') {
+                    line.pop();
+                }
+                println!("[{label}] {}", String::from_utf8_lossy(&line));
+            }
+            Err(error) => {
+                eprintln!("[{label}] output reader failed: {error}");
+                return;
+            }
+        }
+    }
 }
 
 pub const RESTART_WINDOW: Duration = Duration::from_secs(60);
@@ -259,6 +444,29 @@ impl ShutdownSignal {
             _ = self.interrupt.recv() => "SIGINT",
             _ = self.terminate.recv() => "SIGTERM",
         }
+    }
+}
+
+pub enum AwaitOutcome<T> {
+    Completed(T),
+    Shutdown(&'static str),
+}
+
+pub async fn await_or_shutdown<T, F>(shutdown: &mut ShutdownSignal, future: F) -> AwaitOutcome<T>
+where
+    F: Future<Output = T>,
+{
+    tokio::select! {
+        biased;
+        signal = shutdown.recv() => AwaitOutcome::Shutdown(signal),
+        output = future => AwaitOutcome::Completed(output),
+    }
+}
+
+pub async fn pending_shutdown(shutdown: &mut ShutdownSignal) -> Option<&'static str> {
+    match await_or_shutdown(shutdown, std::future::ready(())).await {
+        AwaitOutcome::Completed(()) => None,
+        AwaitOutcome::Shutdown(signal) => Some(signal),
     }
 }
 

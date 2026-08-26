@@ -7,6 +7,7 @@ pub const LOOPBACK_HOST: &str = "127.0.0.1";
 pub const ANY_HOST: &str = "0.0.0.0";
 
 pub const DEV_PROXY_PORT: u16 = 8088;
+pub const DEV_PROXY_GATEWAY_PORTS_ENV: &str = "FLUXER_DEV_PROXY_GATEWAY_PORTS";
 pub const APP_PORT: u16 = 3000;
 pub const APP_PROXY_PORT: u16 = 8773;
 pub const ADMIN_PORT: u16 = 3020;

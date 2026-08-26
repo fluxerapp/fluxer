@@ -306,6 +306,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			apiSecret: master.integrations.voice.api_secret,
 			webhookUrl: master.integrations.voice.webhook_url,
 			url: master.integrations.voice.url,
+			internalUrl: master.integrations.voice.internal_url,
 			defaultRegion: master.integrations.voice.default_region,
 		},
 		stripe: {

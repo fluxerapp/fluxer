@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::manifest::{ANY_HOST, DEV_PROXY_PORT, LOCAL_APP_URL, PROXY_ROUTES, ProxyRoute};
+use crate::manifest::{
+    ANY_HOST, DEV_PROXY_GATEWAY_PORTS_ENV, DEV_PROXY_PORT, GATEWAY_PORT, LOCAL_APP_URL,
+    PROXY_ROUTES, ProxyRoute,
+};
 use anyhow::{Context, Result, bail};
 use axum::{
     Router,
@@ -14,7 +17,7 @@ use hyper_util::rt::TokioIo;
 use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
-use std::sync::{LazyLock, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
@@ -26,6 +29,7 @@ static ROUTE_CURSORS: LazyLock<Mutex<HashMap<&'static str, usize>>> =
 #[derive(Clone)]
 struct ProxyState {
     http_client: reqwest::Client,
+    gateway_ports: Arc<[u16]>,
 }
 
 const BLOCKED_REQUEST_HEADERS: &[&str] = &[
@@ -67,9 +71,21 @@ pub async fn run_proxy(host: &str, port: u16) -> Result<()> {
         .tcp_nodelay(true)
         .build()
         .context("failed to build dev proxy HTTP client")?;
+    let gateway_ports = gateway_proxy_ports()?;
+    println!(
+        "Fluxer dev proxy gateway ports: {}",
+        gateway_ports
+            .iter()
+            .map(u16::to_string)
+            .collect::<Vec<_>>()
+            .join(",")
+    );
     let app = Router::new()
         .fallback(any(proxy_request))
-        .with_state(ProxyState { http_client });
+        .with_state(ProxyState {
+            http_client,
+            gateway_ports,
+        });
 
     axum::serve(
         listener,
@@ -91,11 +107,29 @@ async fn proxy_request(
     }
 
     let route = route_for_path(&request_head.path);
+    let (target_host, target_port) = target_for_route(route, &state.gateway_ports);
     if is_upgrade_request(&request_head) {
-        return proxy_upgrade(request, request_head, route, client_addr).await;
+        return proxy_upgrade(
+            request,
+            request_head,
+            route,
+            target_host,
+            target_port,
+            client_addr,
+        )
+        .await;
     }
 
-    proxy_http(state, request, request_head, route, client_addr).await
+    proxy_http(
+        state,
+        request,
+        request_head,
+        route,
+        target_host,
+        target_port,
+        client_addr,
+    )
+    .await
 }
 
 async fn proxy_http(
@@ -103,9 +137,10 @@ async fn proxy_http(
     request: Request<Body>,
     request_head: RequestHead,
     route: &'static ProxyRoute,
+    target_host: &'static str,
+    target_port: u16,
     client_addr: SocketAddr,
 ) -> Response<Body> {
-    let (target_host, target_port) = target_for_route(route);
     let target_url = upstream_http_url(&request_head.path, route, target_host, target_port);
     let (parts, body) = request.into_parts();
     let method = parts.method.clone();
@@ -155,10 +190,11 @@ async fn proxy_upgrade(
     mut request: Request<Body>,
     request_head: RequestHead,
     route: &'static ProxyRoute,
+    target_host: &'static str,
+    target_port: u16,
     client_addr: SocketAddr,
 ) -> Response<Body> {
     let on_upgrade = hyper::upgrade::on(&mut request);
-    let (target_host, target_port) = target_for_route(route);
     let mut target = match TcpStream::connect((target_host, target_port)).await {
         Ok(target) => target,
         Err(error) => return bad_gateway_response(error),
@@ -497,17 +533,59 @@ pub fn route_for_path(path: &str) -> &'static ProxyRoute {
     PROXY_ROUTES.last().expect("proxy has fallback route")
 }
 
-pub fn target_for_route(route: &'static ProxyRoute) -> (&'static str, u16) {
-    if route.alternate_ports.is_empty() {
+pub fn target_for_route(route: &'static ProxyRoute, gateway_ports: &[u16]) -> (&'static str, u16) {
+    let uses_gateway_ports = route.prefix == "/gateway";
+    let port_count = if uses_gateway_ports {
+        gateway_ports.len()
+    } else {
+        route.alternate_ports.len() + 1
+    };
+    assert!(
+        port_count > 0,
+        "proxy route must have at least one target port"
+    );
+    if port_count == 1 {
+        if uses_gateway_ports {
+            return (route.host, gateway_ports[0]);
+        }
         return (route.host, route.port);
     }
-    let ports = std::iter::once(route.port)
-        .chain(route.alternate_ports.iter().copied())
-        .collect::<Vec<_>>();
     let mut cursors = ROUTE_CURSORS.lock().expect("route cursor lock poisoned");
     let cursor = *cursors.get(route.prefix).unwrap_or(&0);
-    cursors.insert(route.prefix, (cursor + 1) % ports.len());
-    (route.host, ports[cursor])
+    cursors.insert(route.prefix, (cursor + 1) % port_count);
+    let port = if uses_gateway_ports {
+        gateway_ports[cursor]
+    } else if cursor == 0 {
+        route.port
+    } else {
+        route.alternate_ports[cursor - 1]
+    };
+    (route.host, port)
+}
+
+fn gateway_proxy_ports() -> Result<Arc<[u16]>> {
+    let raw = env::var(DEV_PROXY_GATEWAY_PORTS_ENV).unwrap_or_else(|_| GATEWAY_PORT.to_string());
+    let mut ports = Vec::new();
+    for token in raw.split(',') {
+        let token = token.trim();
+        if token.is_empty() {
+            bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} contains an empty port");
+        }
+        let port = token
+            .parse::<u16>()
+            .with_context(|| format!("Invalid port {token:?} in {DEV_PROXY_GATEWAY_PORTS_ENV}"))?;
+        if port == 0 {
+            bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} ports must be greater than zero");
+        }
+        if ports.contains(&port) {
+            bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} contains duplicate port {port}");
+        }
+        ports.push(port);
+    }
+    if ports.len() > 3 {
+        bail!("{DEV_PROXY_GATEWAY_PORTS_ENV} supports at most three ports");
+    }
+    Ok(ports.into())
 }
 
 pub fn rewrite_path(path: &str, route: &ProxyRoute) -> String {

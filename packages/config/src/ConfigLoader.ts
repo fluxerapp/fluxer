@@ -195,6 +195,7 @@ function defaultConfig(): MasterConfig {
 				api_key: '',
 				api_secret: '',
 				url: '',
+				internal_url: '',
 				webhook_url: '',
 			},
 			search: {

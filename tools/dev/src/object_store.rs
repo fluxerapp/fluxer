@@ -168,11 +168,11 @@ fn s3_bucket_already_exists_output(output: &str) -> bool {
     output.contains("BucketAlreadyExists") || output.contains("BucketAlreadyOwnedByYou")
 }
 
-pub async fn bootstrap_schema_and_object_store() -> Result<()> {
+pub async fn bootstrap_schema() -> Result<()> {
     if cassandra_backend_enabled() {
         apply_schema(Some(config_from_env()?)).await?;
     }
-    ensure_s3_buckets()
+    Ok(())
 }
 
 fn cassandra_backend_enabled() -> bool {

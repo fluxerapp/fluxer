@@ -12,22 +12,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	git \
 	curl \
 	make \
-	cmake \
 	gcc \
 	g++ \
 	libc6-dev \
-	libssl-dev \
-	libuv1-dev \
-	zlib1g-dev \
-	pkg-config \
 	gettext-base \
 	ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://github.com/erlang/rebar3/releases/download/3.24.0/rebar3 -o /usr/local/bin/rebar3 && \
+RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://github.com/erlang/rebar3/releases/download/3.24.0/rebar3 -o /usr/local/bin/rebar3 && \
 	chmod +x /usr/local/bin/rebar3
 
-RUN curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | \
+RUN curl --retry 5 --retry-delay 2 --retry-all-errors --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | \
 	sh -s -- -y --profile minimal --default-toolchain "${RUST_TOOLCHAIN}"
 
 COPY . .
@@ -47,8 +42,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	ca-certificates \
 	curl \
 	libstdc++6 \
-	libuv1t64 \
-	zlib1g \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /usr/src/app/fluxer_gateway/_build/prod/rel/fluxer_gateway .

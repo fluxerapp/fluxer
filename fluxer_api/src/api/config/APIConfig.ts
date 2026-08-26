@@ -204,6 +204,7 @@ export interface APIConfig {
 		apiSecret?: string;
 		webhookUrl?: string;
 		url?: string;
+		internalUrl?: string;
 		defaultRegion?: {
 			id: string;
 			name: string;

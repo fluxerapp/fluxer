@@ -284,7 +284,7 @@ export function setInjectedAccountPolicyEvaluator(evaluator: IAccountPolicyEvalu
 function getRegistrationRiskEvaluator(): IRegistrationRiskEvaluator {
 	if (_registrationRiskEvaluator) return _registrationRiskEvaluator;
 	if (!Config.risk.enabled) {
-		Logger.warn(
+		Logger.info(
 			{},
 			'[ServiceMiddleware] integrations.risk_integration.enabled is false — account risk scoring is disabled',
 		);

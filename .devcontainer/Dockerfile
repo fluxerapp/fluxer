@@ -7,7 +7,6 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 ARG NODE_MAJOR=24
 ARG ELP_VERSION=2026-02-27
-ARG HELM_VERSION=4.2.0
 ARG PNPM_VERSION=10.29.3
 ARG WASM_BINDGEN_VERSION=0.2.122
 
@@ -15,8 +14,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
+		acl \
 		bash \
-		brotli \
 		build-essential \
 		ca-certificates \
 		clang \
@@ -42,13 +41,13 @@ RUN apt-get update \
 		libfido2-dev \
 		libgbm1 \
 		libgtk-3-0 \
+		libimage-exiftool-perl \
 		libnotify4 \
 		libnss3 \
 		libpipewire-0.3-dev \
 		libpulse-dev \
 		libsecret-1-0 \
 		libudev-dev \
-		libuv1-dev \
 		libcurl4-openssl-dev \
 		libswresample-dev \
 		libswscale-dev \
@@ -71,14 +70,12 @@ RUN apt-get update \
 		ninja-build \
 		openssh-client \
 		pkg-config \
-		protobuf-compiler \
 		python3 \
 		python3-pip \
-		rsync \
+		python3-venv \
 		sudo \
 		rpm \
 		unzip \
-		webp \
 		xz-utils \
 		xdg-utils \
 		zstd \
@@ -90,6 +87,7 @@ RUN apt-get update \
 		bat \
 		btop \
 		docker-cli \
+		docker-compose \
 		dnsutils \
 		fd-find \
 		gdb \
@@ -122,24 +120,12 @@ RUN apt-get update \
 	&& ln -sf /usr/bin/batcat /usr/local/bin/bat \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
+RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
 	&& apt-get install -y --no-install-recommends nodejs \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& corepack enable
 
-RUN ARCH="$(dpkg --print-architecture)" \
-	&& case "$ARCH" in \
-		amd64) HELM_ARCH="amd64" ;; \
-		arm64) HELM_ARCH="arm64" ;; \
-		*) echo "Unsupported architecture for Helm: $ARCH" >&2; exit 1 ;; \
-	esac \
-	&& curl -fsSL "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${HELM_ARCH}.tar.gz" -o /tmp/helm.tgz \
-	&& tar -C /tmp -xzf /tmp/helm.tgz "linux-${HELM_ARCH}/helm" \
-	&& mv "/tmp/linux-${HELM_ARCH}/helm" /usr/local/bin/helm \
-	&& chmod +x /usr/local/bin/helm \
-	&& rm -rf /tmp/helm.tgz "/tmp/linux-${HELM_ARCH}"
-
-RUN python3 -m pip install --break-system-packages --no-cache-dir awscli cqlsh
+RUN python3 -m pip install --break-system-packages --no-cache-dir awscli
 
 COPY tools/fonts/requirements.txt /tmp/fluxer-fonts-requirements.txt
 RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/fluxer-fonts-requirements.txt \
@@ -147,18 +133,13 @@ RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/fluxer
 	&& pyftsubset --help >/dev/null \
 	&& python3 -c "import fontTools, brotli"
 
-RUN if ! command -v rebar3 >/dev/null 2>&1; then \
-		curl -fsSL https://s3.amazonaws.com/rebar3/rebar3 -o /usr/local/bin/rebar3 \
-		&& chmod +x /usr/local/bin/rebar3; \
-	fi
-
 RUN ARCH="$(dpkg --print-architecture)" \
 	&& case "$ARCH" in \
 		amd64) ELP_ARCH="x86_64" ;; \
 		arm64) ELP_ARCH="aarch64" ;; \
 		*) echo "Unsupported architecture for ELP: $ARCH" >&2; exit 1 ;; \
 	esac \
-	&& curl -fsSL "https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ELP_ARCH}-unknown-linux-gnu-otp-28.tar.gz" -o /tmp/elp.tgz \
+	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ELP_ARCH}-unknown-linux-gnu-otp-28.tar.gz" -o /tmp/elp.tgz \
 	&& tar -C /usr/local/bin -xzf /tmp/elp.tgz elp \
 	&& chmod +x /usr/local/bin/elp \
 	&& rm /tmp/elp.tgz
@@ -179,16 +160,13 @@ ENV DOCKER_HOST="unix:///var/run/docker.sock" \
 ENV CC_wasm32_unknown_unknown="clang" \
 	AR_wasm32_unknown_unknown="llvm-ar"
 
-RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile default --component clippy,rustfmt \
+RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --component clippy,rustfmt \
 	&& rustup target add wasm32-unknown-unknown \
 	&& cargo install cargo-watch --locked \
-	&& cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked
+	&& cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked \
+	&& rm -rf "/home/${USERNAME}/.cargo/registry" "/home/${USERNAME}/.cargo/git"
 
 RUN corepack prepare "pnpm@${PNPM_VERSION}" --activate \
 	&& pnpm --version
-
-RUN sudo apt-get update \
-	&& sudo apt-get install -y --no-install-recommends python3-venv \
-	&& sudo rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspaces/fluxer

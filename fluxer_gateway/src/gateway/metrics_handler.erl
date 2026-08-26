@@ -23,7 +23,6 @@ render_metrics() ->
         render_cluster_counters(),
         render_process_counts(),
         render_push_dispatcher_stats(),
-        render_hotpatch_metrics(),
         render_vm_metrics()
     ].
 
@@ -256,33 +255,6 @@ render_push_dispatcher_stats() ->
             ]
     end.
 
--spec render_hotpatch_metrics() -> iolist().
-render_hotpatch_metrics() ->
-    Status = safe_apply_map(fun gateway_hotpatch_reconciler:status/0),
-    Ready = maps:get(ready, Status, true),
-    Enabled = maps:get(enabled, Status, false),
-    AppliedCount = maps:get(applied_count, Status, 0),
-    [
-        format_metric(
-            <<"fluxer_gateway_hotpatch_enabled">>,
-            <<"gauge">>,
-            <<"Gateway hotpatch reconciler enabled">>,
-            bool_metric(Enabled)
-        ),
-        format_metric(
-            <<"fluxer_gateway_hotpatch_ready">>,
-            <<"gauge">>,
-            <<"Gateway hotpatch reconciliation readiness">>,
-            bool_metric(Ready)
-        ),
-        format_metric(
-            <<"fluxer_gateway_hotpatch_applied_events_total">>,
-            <<"counter">>,
-            <<"Gateway hotpatch events applied on this node">>,
-            integer_to_binary(AppliedCount)
-        )
-    ].
-
 -spec render_vm_metrics() -> iolist().
 render_vm_metrics() ->
     Memory = safe_apply_list(fun erlang:memory/0),
@@ -376,7 +348,3 @@ format_labeled_series(Name, Type, Help, LabelValues) ->
          || {Label, Value} <- LabelValues
         ]
     ].
-
--spec bool_metric(term()) -> binary().
-bool_metric(true) -> <<"1">>;
-bool_metric(_) -> <<"0">>.

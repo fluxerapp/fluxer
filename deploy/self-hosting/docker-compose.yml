@@ -47,6 +47,7 @@ x-fluxer-env: &fluxer-env
   FLUXER_LIVEKIT_ENABLED: "true"
   FLUXER_LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}
   FLUXER_LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?set LIVEKIT_API_SECRET in .env}
+  FLUXER_LIVEKIT_INTERNAL_URL: http://livekit:7880
   FLUXER_LIVEKIT_WEBHOOK_URL: http://api:8080/webhooks/livekit
   FLUXER_LIVEKIT_DEFAULT_REGION: '{"id":"default","name":"Default","emoji":"🌍","latitude":0,"longitude":0}'
 

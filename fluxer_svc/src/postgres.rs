@@ -11,6 +11,9 @@ use std::str::FromStr;
 use tokio_postgres::{Config as PgConfig, Row, config::SslMode, types::ToSql};
 use tokio_postgres_rustls::MakeRustlsConnect;
 
+const POSTGRES_KV_SCHEMA_LOCK_NAMESPACE: i32 = 0x4658_4b56;
+const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT: &str = "120s";
+
 #[derive(Clone, Debug)]
 pub struct PostgresConfig {
     pub url: Option<String>,
@@ -134,8 +137,30 @@ pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()>
     let messages_message_index = quote_identifier(&format!("{kv_table}_messages_message_idx"))?;
     let message_reactions_message_index =
         quote_identifier(&format!("{kv_table}_message_reactions_message_idx"))?;
-    let client = pool.get().await?;
-    client
+    let mut client = pool.get().await?;
+    let transaction = client
+        .transaction()
+        .await
+        .context("failed to begin Postgres KV schema transaction")?;
+    transaction
+        .query_one(
+            "SELECT set_config('statement_timeout', $1, true)",
+            &[&POSTGRES_KV_SCHEMA_LOCK_TIMEOUT],
+        )
+        .await
+        .context("failed to configure Postgres KV schema lock timeout")?;
+    transaction
+        .query_one(
+            "SELECT pg_advisory_xact_lock($1, hashtext($2))",
+            &[&POSTGRES_KV_SCHEMA_LOCK_NAMESPACE, &kv_table],
+        )
+        .await
+        .context("failed to acquire Postgres KV schema lock")?;
+    transaction
+        .query_one("SELECT set_config('statement_timeout', '0', true)", &[])
+        .await
+        .context("failed to clear Postgres KV schema lock timeout")?;
+    transaction
         .batch_execute(&format!(
             r#"
 CREATE TABLE IF NOT EXISTS {table} (
@@ -162,6 +187,10 @@ DROP INDEX IF EXISTS {old_partition_index};
         ))
         .await
         .context("failed to ensure Postgres KV schema")?;
+    transaction
+        .commit()
+        .await
+        .context("failed to commit Postgres KV schema transaction")?;
     Ok(())
 }
 

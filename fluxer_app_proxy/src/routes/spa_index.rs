@@ -19,6 +19,7 @@ use axum::{
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use super::assets_proxy::serve_local_asset;
 use super::spa_static::{CORS_ALLOW_ANY_VALUE, guess_mime, is_font_mime};
 
 const ACCEPT_CH_VALUE: &str = "DPR, Sec-CH-DPR, Sec-CH-Width, Save-Data, ECT, Downlink";
@@ -35,6 +36,14 @@ pub async fn spa_catch_all(
     if let Some(cache_control) = static_root_file_cache_control(request_path) {
         return serve_static_file(&state.config.static_dir, request_path, cache_control).await;
     }
+    if is_static_asset_path(request_path) {
+        return serve_local_asset(
+            &state.config.static_dir,
+            request_path.trim_start_matches('/'),
+            &headers,
+        )
+        .await;
+    }
 
     serve_spa_index(&state, &headers, request_path).await
 }
@@ -42,12 +51,28 @@ pub async fn spa_catch_all(
 const CRAWL_CONTROL_CACHE_CONTROL: &str = "public, max-age=300, must-revalidate";
 
 const STATIC_ROOT_FILES: &[(&str, &str)] = &[("/robots.txt", CRAWL_CONTROL_CACHE_CONTROL)];
+const STATIC_ASSET_PREFIXES: &[&str] = &[
+    "/avatars/",
+    "/badges/",
+    "/desktop/",
+    "/embeds/",
+    "/emoji/",
+    "/libs/",
+    "/marketing/",
+    "/web/",
+];
 
 fn static_root_file_cache_control(request_path: &str) -> Option<&'static str> {
     STATIC_ROOT_FILES
         .iter()
         .find(|(candidate, _)| request_path.eq_ignore_ascii_case(candidate))
         .map(|(_, cache_control)| *cache_control)
+}
+
+fn is_static_asset_path(request_path: &str) -> bool {
+    STATIC_ASSET_PREFIXES
+        .iter()
+        .any(|prefix| request_path.starts_with(prefix))
 }
 
 async fn serve_static_file(

@@ -59,7 +59,7 @@ env_services_config() ->
 
 -spec env_gateway_config() -> map().
 env_gateway_config() ->
-    maps:merge(env_gateway_base_config(), env_gateway_hotpatch_config()).
+    env_gateway_base_config().
 
 -spec env_gateway_base_config() -> map().
 env_gateway_base_config() ->
@@ -104,36 +104,6 @@ env_gateway_base_config() ->
         ),
         <<"gateway_http_recovery_timeout_ms">> => env_int(
             "FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS", 15000
-        )
-    }.
-
--spec env_gateway_hotpatch_config() -> map().
-env_gateway_hotpatch_config() ->
-    #{
-        <<"hotpatch_enabled">> => env_bool("FLUXER_GATEWAY_HOTPATCH_ENABLED", false),
-        <<"hotpatch_cassandra_hosts">> => env_optional_binary(
-            "FLUXER_GATEWAY_HOTPATCH_CASSANDRA_HOSTS"
-        ),
-        <<"hotpatch_cassandra_port">> => env_int(
-            "FLUXER_GATEWAY_HOTPATCH_CASSANDRA_PORT", 9042
-        ),
-        <<"hotpatch_cassandra_keyspace">> => env_binary(
-            "FLUXER_GATEWAY_HOTPATCH_CASSANDRA_KEYSPACE", <<"fluxer">>
-        ),
-        <<"hotpatch_cassandra_username">> => env_optional_binary(
-            "FLUXER_GATEWAY_HOTPATCH_CASSANDRA_USERNAME"
-        ),
-        <<"hotpatch_cassandra_password">> => env_optional_binary(
-            "FLUXER_GATEWAY_HOTPATCH_CASSANDRA_PASSWORD"
-        ),
-        <<"hotpatch_public_keys">> => env_optional_binary(
-            "FLUXER_GATEWAY_HOTPATCH_PUBLIC_KEYS"
-        ),
-        <<"hotpatch_poll_interval_ms">> => env_int(
-            "FLUXER_GATEWAY_HOTPATCH_POLL_INTERVAL_MS", 5000
-        ),
-        <<"hotpatch_startup_sync_timeout_ms">> => env_int(
-            "FLUXER_GATEWAY_HOTPATCH_STARTUP_SYNC_TIMEOUT_MS", 30000
         )
     }.
 
@@ -295,20 +265,6 @@ build_http_config(Service) ->
         ),
         gateway_http_recovery_timeout_ms =>
             get_int(Service, <<"gateway_http_recovery_timeout_ms">>, 15000),
-        hotpatch_enabled => get_bool(Service, <<"hotpatch_enabled">>, false),
-        hotpatch_cassandra_hosts =>
-            optional_string(get_optional_binary(Service, <<"hotpatch_cassandra_hosts">>)),
-        hotpatch_cassandra_port => get_int(Service, <<"hotpatch_cassandra_port">>, 9042),
-        hotpatch_cassandra_keyspace =>
-            get_binary(Service, <<"hotpatch_cassandra_keyspace">>, <<"fluxer">>),
-        hotpatch_cassandra_username =>
-            get_optional_binary(Service, <<"hotpatch_cassandra_username">>),
-        hotpatch_cassandra_password =>
-            get_optional_binary(Service, <<"hotpatch_cassandra_password">>),
-        hotpatch_public_keys => get_optional_binary(Service, <<"hotpatch_public_keys">>),
-        hotpatch_poll_interval_ms => get_int(Service, <<"hotpatch_poll_interval_ms">>, 5000),
-        hotpatch_startup_sync_timeout_ms =>
-            get_int(Service, <<"hotpatch_startup_sync_timeout_ms">>, 30000),
         gateway_http_cleanup_interval_ms =>
             get_int(Service, <<"gateway_http_cleanup_interval_ms">>, 30000),
         gateway_http_cleanup_max_age_ms =>

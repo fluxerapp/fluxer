@@ -253,6 +253,16 @@ pub async fn run_cloudflare_tunnel(
         return Ok(status.code().unwrap_or(1));
     }
     if running_inside_devcontainer() {
+        let container = std::fs::read_to_string("/etc/hostname")
+            .context("failed to read the current devcontainer hostname")?;
+        let container = container.trim();
+        if container.is_empty()
+            || !container
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
+        {
+            bail!("Current devcontainer hostname is invalid");
+        }
         let docker = docker_command();
         let mut command = Command::new(&docker[0]);
         command.args(&docker[1..]);
@@ -261,11 +271,7 @@ pub async fn run_cloudflare_tunnel(
                 "run",
                 "--rm",
                 "--network",
-                &format!(
-                    "container:{}",
-                    std::env::var("HOSTNAME")
-                        .unwrap_or_else(|_| "fluxer-dev-workspace-1".to_owned())
-                ),
+                &format!("container:{container}"),
                 "cloudflare/cloudflared:latest",
                 "tunnel",
                 "run",

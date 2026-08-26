@@ -60,7 +60,7 @@ export class KVAccountDeletionQueueService {
 	}
 
 	async rebuildState(): Promise<void> {
-		Logger.info('Starting deletion queue rebuild from Cassandra');
+		Logger.info('Starting deletion queue rebuild from primary database');
 		try {
 			await this.kvClient.del(QUEUE_KEY);
 			await this.kvClient.del(STATE_VERSION_KEY);

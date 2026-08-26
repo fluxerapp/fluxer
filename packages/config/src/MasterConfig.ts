@@ -243,6 +243,7 @@ export interface MasterConfig {
 			api_key: string;
 			api_secret: string;
 			url: string;
+			internal_url: string;
 			webhook_url: string;
 			default_region?: {
 				id: string;

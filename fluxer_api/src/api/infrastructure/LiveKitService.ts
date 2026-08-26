@@ -109,6 +109,18 @@ function createRoomServiceClient(endpoint: string, apiKey: string, apiSecret: st
 	return client;
 }
 
+function resolveRoomServiceEndpoint(server: VoiceServerRecord): string {
+	const defaultRegion = Config.voice.defaultRegion;
+	const internalUrl = Config.voice.internalUrl;
+	if (!defaultRegion || !internalUrl) {
+		return server.endpoint;
+	}
+	if (server.regionId !== defaultRegion.id || server.serverId !== `${defaultRegion.id}-server-1`) {
+		return server.endpoint;
+	}
+	return internalUrl;
+}
+
 export class LiveKitService extends ILiveKitService {
 	private serverClients: Map<string, Map<string, ServerClientConfig>> = new Map();
 	private topology: VoiceTopology;
@@ -453,12 +465,13 @@ export class LiveKitService extends ILiveKitService {
 			const servers = this.topology.getServersForRegion(region.id);
 			const serverMap: Map<string, ServerClientConfig> = new Map();
 			for (const server of servers) {
+				const roomServiceEndpoint = resolveRoomServiceEndpoint(server);
 				serverMap.set(server.serverId, {
 					endpoint: server.endpoint,
 					apiKey: server.apiKey,
 					apiSecret: server.apiSecret,
 					isActive: server.isActive,
-					roomServiceClient: createRoomServiceClient(server.endpoint, server.apiKey, server.apiSecret),
+					roomServiceClient: createRoomServiceClient(roomServiceEndpoint, server.apiKey, server.apiSecret),
 				});
 			}
 			newMap.set(region.id, serverMap);
