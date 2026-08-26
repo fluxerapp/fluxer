@@ -4,8 +4,8 @@ import {AutocompleteOption} from '@app/features/channel/components/message_searc
 import {FilterOption} from '@app/features/channel/components/message_search_bar/FilterOption';
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
 import type {PlaintextAutocompleteRow} from '@app/features/channel/components/message_search_bar/MessageSearchBarTypes';
+import {resolveChannelSuggestionDisplayName} from '@app/features/channel/components/message_search_bar/MessageSearchBarUtils';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
-import {resolveSearchChannelDisplayName} from '@app/features/search/utils/SearchQueryParser';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -143,7 +143,7 @@ export const PlaintextSection: React.FC<PlaintextSectionProps> = observer(
 											className={styles.channelName}
 											data-flx="channel.message-search-bar.plaintext-section.channel-name"
 										>
-											{resolveSearchChannelDisplayName(row.channel)}
+											{resolveChannelSuggestionDisplayName(row.channel)}
 										</span>
 									</span>
 								);

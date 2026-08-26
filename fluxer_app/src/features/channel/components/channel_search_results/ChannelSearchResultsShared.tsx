@@ -14,9 +14,9 @@ import {msg} from '@lingui/core/macro';
 import type {IconProps} from '@phosphor-icons/react';
 import {
 	ChatCenteredDotsIcon,
+	ChatCircleIcon,
 	ClockClockwiseIcon,
 	ClockCounterClockwiseIcon,
-	EnvelopeSimpleIcon,
 	GlobeIcon,
 	HashIcon,
 	SparkleIcon,
@@ -162,7 +162,7 @@ export const getSortModeOptions = (i18n: I18n): Array<{mode: ChannelSearchSortMo
 ];
 const SCOPE_ICON_COMPONENTS: Record<MessageSearchScope, React.ComponentType<IconProps>> = {
 	current: HashIcon,
-	all_dms: EnvelopeSimpleIcon,
+	all_dms: ChatCircleIcon,
 	open_dms: ChatCenteredDotsIcon,
 	all_guilds: GlobeIcon,
 	all: UsersIcon,

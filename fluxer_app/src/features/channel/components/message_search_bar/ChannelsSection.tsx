@@ -2,9 +2,9 @@
 
 import {AutocompleteOption} from '@app/features/channel/components/message_search_bar/AutocompleteOption';
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
+import {resolveChannelSuggestionDisplayName} from '@app/features/channel/components/message_search_bar/MessageSearchBarUtils';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
-import {resolveSearchChannelDisplayName} from '@app/features/search/utils/SearchQueryParser';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -72,7 +72,7 @@ export const ChannelsSection: React.FC<ChannelsSectionProps> = observer(
 										className={styles.channelName}
 										data-flx="channel.message-search-bar.channels-section.channel-name"
 									>
-										{resolveSearchChannelDisplayName(channelOption) || 'Unnamed Channel'}
+										{resolveChannelSuggestionDisplayName(channelOption) || 'Unnamed Channel'}
 									</span>
 								</div>
 							</div>

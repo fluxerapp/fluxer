@@ -5,24 +5,33 @@ import type {
 	HistoryFilterRow,
 } from '@app/features/channel/components/message_search_bar/MessageSearchBarTypes';
 import type {Channel} from '@app/features/channel/models/Channel';
+import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {resolveSearchChannelDisplayName} from '@app/features/search/utils/SearchQueryParser';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import type {MessageSearchScope, SearchFilterOption} from '@app/features/search/utils/SearchUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {IconProps} from '@phosphor-icons/react';
-import {ChatCenteredDotsIcon, EnvelopeSimpleIcon, GlobeIcon, HashIcon, UsersIcon} from '@phosphor-icons/react';
+import {ChatCenteredDotsIcon, ChatCircleIcon, GlobeIcon, HashIcon, UsersIcon} from '@phosphor-icons/react';
 
 export const SCOPE_ICON_COMPONENTS: Record<MessageSearchScope, React.ComponentType<IconProps>> = {
 	current: HashIcon,
-	all_dms: EnvelopeSimpleIcon,
+	all_dms: ChatCircleIcon,
 	open_dms: ChatCenteredDotsIcon,
 	all_guilds: GlobeIcon,
 	all: UsersIcon,
 	open_dms_and_all_guilds: UsersIcon,
 };
+
+export function resolveChannelSuggestionDisplayName(channel: Channel): string {
+	if (channel.type === ChannelTypes.GROUP_DM || channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
+		return ChannelUtils.getDMDisplayName(channel);
+	}
+	return resolveSearchChannelDisplayName(channel);
+}
 
 export function filterRequiresValue(filter: SearchFilterOption): boolean {
 	return Boolean(filter.requiresValue) || (filter.values?.length ?? 0) > 0;
@@ -271,6 +280,41 @@ export function isUserFilterKey(filterKey: string): boolean {
 			return true;
 		default:
 			return false;
+	}
+}
+
+export type DmChannelSuggestionMode = 'none' | 'current' | 'open' | 'all';
+export type GuildChannelSuggestionMode = 'none' | 'current_guild' | 'all_guilds';
+
+export interface ChannelSuggestionSearchPlan {
+	dmMode: DmChannelSuggestionMode;
+	guildMode: GuildChannelSuggestionMode;
+	currentGuildId?: string;
+}
+
+export function getChannelSuggestionSearchPlan(
+	scope: MessageSearchScope,
+	currentGuildId: string | undefined,
+): ChannelSuggestionSearchPlan {
+	switch (scope) {
+		case 'current':
+			return currentGuildId
+				? {dmMode: 'none', guildMode: 'current_guild', currentGuildId}
+				: {dmMode: 'current', guildMode: 'none'};
+		case 'all_dms':
+			return {dmMode: 'all', guildMode: 'none'};
+		case 'open_dms':
+			return {dmMode: 'open', guildMode: 'none'};
+		case 'all':
+			return {dmMode: 'all', guildMode: 'all_guilds'};
+		case 'open_dms_and_all_guilds':
+			return {dmMode: 'open', guildMode: 'all_guilds'};
+		case 'all_guilds':
+			return {dmMode: 'none', guildMode: 'all_guilds'};
+		default: {
+			const exhaustiveScope: never = scope;
+			throw new Error(`Unsupported message search scope: ${exhaustiveScope}`);
+		}
 	}
 }
 
