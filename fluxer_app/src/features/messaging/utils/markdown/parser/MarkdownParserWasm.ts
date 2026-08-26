@@ -217,15 +217,6 @@ const SPECIAL_SHORTCODES: Record<string, string> = {
 	registered: '®',
 };
 
-function needsVariationSelector(codePoint: number): boolean {
-	return (
-		(codePoint >= 0x2190 && codePoint <= 0x21ff) ||
-		(codePoint >= 0x2300 && codePoint <= 0x23ff) ||
-		(codePoint >= 0x2600 && codePoint <= 0x27bf) ||
-		(codePoint >= 0x2900 && codePoint <= 0x297f)
-	);
-}
-
 function appendContextLine(parts: Array<string>): string {
 	return `${parts.join('\t')}\n`;
 }
@@ -244,10 +235,6 @@ function buildEmojiContext(input: string): string {
 		while ((match = emojiRegex.exec(input)) !== null) {
 			const candidate = match[0];
 			if (!candidate || PLAINTEXT_SYMBOLS.has(candidate)) continue;
-			const hasVariationSelector = candidate.includes('️');
-			const codePoint = candidate.codePointAt(0) || 0;
-			const isDingbat = codePoint >= 0x2600 && codePoint <= 0x27bf;
-			if (!isDingbat && needsVariationSelector(codePoint) && !hasVariationSelector) continue;
 			const name = provider.getSurrogateName(candidate);
 			if (!name) continue;
 			const candidateBytes = textEncoder.encode(candidate).byteLength;
