@@ -34,6 +34,7 @@ import {
 	SYNCED_PREFERENCES_FIELDS,
 	type SyncedPreferences,
 	type SyncedPreferencesField,
+	syncedPreferencesEqual,
 } from '@app/features/user/state/SyncedPreferencesEngine';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
@@ -53,8 +54,6 @@ import isEqual from 'lodash/isEqual';
 import isPlainObject from 'lodash/isPlainObject';
 import snakeCase from 'lodash/snakeCase';
 import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
-
-type SyncedPreferencesSubField = Exclude<SyncedPreferencesField, 'sanitizeUrls'>;
 
 function restoreSettingValue<K extends keyof UserSettings>(target: UserSettings, source: UserSettings, key: K): void {
 	target[key] = source[key];
@@ -781,12 +780,12 @@ class UserSettingsState {
 		);
 	}
 
-	getSubPreference<F extends SyncedPreferencesSubField>(field: F): SyncedPreferences[F] | undefined {
+	getSubPreference<F extends SyncedPreferencesField>(field: F): SyncedPreferences[F] | undefined {
 		const value = this.syncedPreferences[field];
 		return value === undefined ? undefined : value;
 	}
 
-	async setSubPreference<F extends SyncedPreferencesSubField>(
+	async setSubPreference<F extends SyncedPreferencesField>(
 		field: F,
 		value: NonNullable<SyncedPreferences[F]>,
 	): Promise<void> {
@@ -876,8 +875,8 @@ class UserSettingsState {
 		for (const field of dirtyFields) {
 			this.markSyncedPreferenceFieldDirty(field);
 		}
-		const wireChanged = changedSyncedPreferenceFields(nextWire, this.wireSyncedPreferences).length > 0;
-		const localChanged = changedSyncedPreferenceFields(merged, this.syncedPreferences).length > 0;
+		const wireChanged = !syncedPreferencesEqual(nextWire, this.wireSyncedPreferences);
+		const localChanged = !syncedPreferencesEqual(merged, this.syncedPreferences);
 		if (!wireChanged && !localChanged) {
 			if (shouldSyncMigratedMessageGroupSpacing) {
 				this.markSyncedPreferenceFieldDirty('accessibility');

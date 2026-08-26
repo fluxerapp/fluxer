@@ -10,8 +10,6 @@ export type SyncedPreferencesField = Exclude<keyof SyncedPreferences, '$typeName
 
 export type {SyncedPreferences};
 
-export type SyncedPreferencesSubField = Exclude<SyncedPreferencesField, 'sanitizeUrls'>;
-
 interface TopLevelFieldChunk {
 	field: number;
 	bytes: Uint8Array;
@@ -223,6 +221,10 @@ export function changedSyncedPreferenceFields(
 	right: SyncedPreferences,
 ): Array<SyncedPreferencesField> {
 	return toFieldNames(changedFieldNumbers(preferencesToBytes(left), preferencesToBytes(right)));
+}
+
+export function syncedPreferencesEqual(left: SyncedPreferences, right: SyncedPreferences): boolean {
+	return changedFieldNumbers(preferencesToBytes(left), preferencesToBytes(right)).length === 0;
 }
 
 export function copySyncedPreferenceField(

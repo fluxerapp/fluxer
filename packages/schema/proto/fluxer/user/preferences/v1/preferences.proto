@@ -48,6 +48,7 @@ message SyncedPreferences {
   SudoPromptState sudo_prompt = 110;
   KeybindSettings keybinds = 111;
   ChatInputSettings chat_input = 112;
+  optional bool save_camera_uploads_to_device = 113;
 
 }
 
