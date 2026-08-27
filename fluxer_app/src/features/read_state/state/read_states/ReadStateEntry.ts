@@ -280,7 +280,7 @@ export class ReadStateEntry {
 		} else {
 			this.unreadCount = loadedUnreadCount;
 		}
-		this.oldestUnreadMessageId = hasUnreadBoundary ? (this.storedOldestUnreadMessageId ?? oldestUnread) : null;
+		this.oldestUnreadMessageId = this.storedOldestUnreadMessageId ?? oldestUnread;
 	}
 
 	shouldMentionFor(message: MessageModel | WireMessage, userId: string, isPrivate: boolean): boolean {

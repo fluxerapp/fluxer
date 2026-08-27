@@ -457,6 +457,9 @@ class ReadStates {
 			this.refreshUnreadEstimate(state);
 		} else if (action.isAfter && state.ackMessageId != null && messages.has(state.ackMessageId, true)) {
 			state.unreadCount += action.messages.length;
+			if (state.oldestUnreadMessageId == null) {
+				state.rebuild();
+			}
 		}
 		this.notifyChange(action.channelId);
 	}
@@ -533,6 +536,7 @@ class ReadStates {
 	}
 
 	handleMessageDelete(action: {channelId: string}): void {
+		this.getIfExists(action.channelId)?.rebuild();
 		this.notifyChange(action.channelId);
 	}
 

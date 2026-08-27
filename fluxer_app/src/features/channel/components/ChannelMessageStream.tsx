@@ -189,11 +189,13 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 						key={item.key}
 						revealed={item.key === unblurredMessageId}
 						messageGroups={item.content as Array<ChannelStreamItem>}
+						hasUnread={item.hasUnread === true && !suppressUnreadIndicator}
 						onReveal={onReveal ?? (() => {})}
 						compact={messageDisplayCompact}
 						channel={channel}
 						messageGroupSpacing={messageGroupSpacing}
 						variant={variant}
+						suppressUnreadIndicator={suppressUnreadIndicator}
 						data-flx="channel.channel-message-stream.render-channel-stream.blocked-message-groups"
 					/>,
 				);

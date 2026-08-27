@@ -197,18 +197,22 @@ export function createChannelStream(props: {
 			}
 		}
 		let shouldShowUnreadDividerBefore = false;
+		let shouldOpenCollapsedGroupWithUnreadDivider = false;
 		if (oldestUnreadMessageId === message.id && unreadTimestamp != null) {
 			if (lastItem?.type === ChannelStreamType.DIVIDER) {
 				lastItem.unreadId = message.id;
+			} else if (collapsedGroupItem !== null) {
+				shouldOpenCollapsedGroupWithUnreadDivider = true;
 			} else {
 				shouldShowUnreadDividerBefore = true;
-				if (collapsedGroupItem !== null) {
-					collapsedGroupItem.hasUnread = true;
-				}
 			}
 			unreadTimestamp = null;
 		} else if (unreadTimestamp != null && extractTimestamp(message.id) > unreadTimestamp) {
-			shouldShowUnreadDividerBefore = true;
+			if (collapsedGroupItem !== null) {
+				shouldOpenCollapsedGroupWithUnreadDivider = true;
+			} else {
+				shouldShowUnreadDividerBefore = true;
+			}
 			unreadTimestamp = null;
 		}
 		let prevMessageForGrouping: Message | undefined;
@@ -242,7 +246,12 @@ export function createChannelStream(props: {
 			messageItem.jumpTarget = true;
 		}
 		if (collapsedGroupItem !== null) {
-			(collapsedGroupItem.content as Array<ChannelStreamItem>).push(messageItem);
+			const collapsedContentItems = collapsedGroupItem.content as Array<ChannelStreamItem>;
+			if (shouldOpenCollapsedGroupWithUnreadDivider) {
+				collapsedContentItems.push({type: ChannelStreamType.DIVIDER, content: '', unreadId: message.id});
+				collapsedGroupItem.hasUnread = true;
+			}
+			collapsedContentItems.push(messageItem);
 			if (messageItem.jumpTarget) {
 				collapsedGroupItem.hasJumpTarget = true;
 			}

@@ -236,7 +236,7 @@ export const Messages = observer(function Messages({
 		messages: safeMessages,
 		channel,
 		compact: state.messageDisplayCompact,
-		hasPendingUnreads: state.unreadCount > 0,
+		hasPendingUnreads: state.visualUnreadMessageId != null,
 		focusAnchorId: null,
 		unloadedSpacerHeight: selectChannelMessagesSpacerHeight(windowStatus, placeholderSpecs.totalHeight),
 		allowHistoryFetch: true,

@@ -23,6 +23,7 @@ interface BlockedMessageGroupsProps {
 	messageGroups: Array<ChannelStreamItem>;
 	onReveal: (messageId: string | null) => void;
 	revealed: boolean;
+	hasUnread?: boolean;
 	compact: boolean;
 	messageGroupSpacing: number;
 	variant: 'blocked' | 'spammer';
@@ -33,11 +34,13 @@ interface BlockedMessageGroupsProps {
 	messageActionsClassName?: string;
 	renderMessageActions?: (message: Message) => React.ReactNode;
 	renderMessageWrapper?: (props: MessageGroupRenderWrapperProps) => React.ReactNode;
+	suppressUnreadIndicator?: boolean;
 }
 
 const arePropsEqual = (prevProps: BlockedMessageGroupsProps, nextProps: BlockedMessageGroupsProps): boolean => {
 	if (prevProps.channel.id !== nextProps.channel.id) return false;
 	if (prevProps.revealed !== nextProps.revealed) return false;
+	if (prevProps.hasUnread !== nextProps.hasUnread) return false;
 	if (prevProps.compact !== nextProps.compact) return false;
 	if (prevProps.messageGroupSpacing !== nextProps.messageGroupSpacing) return false;
 	if (prevProps.variant !== nextProps.variant) return false;
@@ -49,6 +52,7 @@ const arePropsEqual = (prevProps: BlockedMessageGroupsProps, nextProps: BlockedM
 	if (prevProps.messageActionsClassName !== nextProps.messageActionsClassName) return false;
 	if (prevProps.renderMessageActions !== nextProps.renderMessageActions) return false;
 	if (prevProps.renderMessageWrapper !== nextProps.renderMessageWrapper) return false;
+	if (prevProps.suppressUnreadIndicator !== nextProps.suppressUnreadIndicator) return false;
 	if (prevProps.messageGroups.length !== nextProps.messageGroups.length) return false;
 	for (let i = 0; i < prevProps.messageGroups.length; i++) {
 		const prevGroup = prevProps.messageGroups[i];
@@ -69,6 +73,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		channel,
 		compact,
 		revealed,
+		hasUnread = false,
 		messageGroupSpacing,
 		onReveal,
 		variant,
@@ -79,6 +84,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		messageActionsClassName,
 		renderMessageActions,
 		renderMessageWrapper,
+		suppressUnreadIndicator,
 	} = props;
 	const containerRef = useRef<HTMLDivElement>(null);
 	const scrollToBottomFrameRef = useRef<number | null>(null);
@@ -169,6 +175,12 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		};
 		messageGroups.forEach((item, itemIndex) => {
 			if (item.type === ChannelStreamType.DIVIDER) {
+				if (item.unreadId && suppressUnreadIndicator) {
+					return;
+				}
+				if (itemIndex === 0 && item.unreadId) {
+					return;
+				}
 				flushGroup();
 				nodes.push(
 					<Divider
@@ -205,13 +217,23 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		messageActionsClassName,
 		renderMessageActions,
 		renderMessageWrapper,
+		suppressUnreadIndicator,
 	]);
+	const leadingUnreadDivider = messageGroups[0]?.type === ChannelStreamType.DIVIDER && !!messageGroups[0].unreadId;
 	return (
 		<div
 			ref={containerRef}
 			className={clsx(styles.container, className)}
 			data-flx="channel.blocked-message-groups.container"
 		>
+			{hasUnread && (!revealed || leadingUnreadDivider) && (
+				<Divider
+					spacing={messageGroupSpacing}
+					red={true}
+					id="new-messages-bar"
+					data-flx="channel.blocked-message-groups.collapsed-unread-divider"
+				/>
+			)}
 			<button
 				type="button"
 				className={styles.toggle}
