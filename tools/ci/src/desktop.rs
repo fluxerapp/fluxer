@@ -143,14 +143,14 @@ const PLATFORMS: &[Platform] = &[
         platform: "linux",
         arch: "x64",
         desktop_variant: DEFAULT_DESKTOP_VARIANT,
-        os: "ubuntu-24.04",
+        os: "ubuntu-22.04",
         electron_arch: "x64",
     },
     Platform {
         platform: "linux",
         arch: "arm64",
         desktop_variant: DEFAULT_DESKTOP_VARIANT,
-        os: "ubuntu-24.04-arm",
+        os: "ubuntu-22.04-arm",
         electron_arch: "arm64",
     },
 ];
@@ -3588,8 +3588,8 @@ mod tests {
             selected,
             vec![
                 "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-24.04\",\"electron_arch\":\"x64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-24.04-arm\",\"electron_arch\":\"arm64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
             ]
         );
     }
@@ -3628,8 +3628,8 @@ mod tests {
             selected,
             vec![
                 "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-24.04\",\"electron_arch\":\"x64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-24.04-arm\",\"electron_arch\":\"arm64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
             ]
         );
     }
