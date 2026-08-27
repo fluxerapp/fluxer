@@ -36,6 +36,7 @@ class MediaViewer {
 	messageId?: string = undefined;
 	message?: Message = undefined;
 	sourceChannel?: Channel = undefined;
+	allowAttachmentDelete: boolean = false;
 
 	constructor() {
 		makeAutoObservable(
@@ -56,6 +57,7 @@ class MediaViewer {
 		messageId?: string,
 		message?: Message,
 		sourceChannel?: Channel | null,
+		allowAttachmentDelete: boolean = false,
 	): void {
 		this.isOpen = true;
 		this.items = copyMediaViewerItems(items);
@@ -64,6 +66,7 @@ class MediaViewer {
 		this.messageId = messageId;
 		this.message = message;
 		this.sourceChannel = sourceChannel ?? undefined;
+		this.allowAttachmentDelete = allowAttachmentDelete;
 	}
 
 	close(): void {
@@ -74,6 +77,7 @@ class MediaViewer {
 		this.messageId = undefined;
 		this.message = undefined;
 		this.sourceChannel = undefined;
+		this.allowAttachmentDelete = false;
 	}
 
 	navigate(index: number): void {

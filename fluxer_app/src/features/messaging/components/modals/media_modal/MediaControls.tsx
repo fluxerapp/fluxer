@@ -3,6 +3,7 @@
 import {
 	ADD_TO_FAVORITES_DESCRIPTOR,
 	COPY_LINK_DESCRIPTOR,
+	DELETE_ATTACHMENT_DESCRIPTOR,
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 	ZOOM_IN_DESCRIPTOR,
 	ZOOM_OUT_DESCRIPTOR,
@@ -36,16 +37,17 @@ import {
 	MagnifyingGlassMinusIcon,
 	MagnifyingGlassPlusIcon,
 	StarIcon,
+	TrashIcon,
 	XIcon,
 } from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {type FC, forwardRef, type ReactNode, type Ref} from 'react';
+import {type FC, forwardRef, type MouseEventHandler, type ReactNode, type Ref} from 'react';
 
 interface ControlButtonProps {
 	icon: ReactNode;
 	label: string;
-	onClick: () => void;
+	onClick: MouseEventHandler<HTMLButtonElement>;
 	variant?: 'default' | 'primary' | 'danger';
 	active?: boolean;
 	disabled?: boolean;
@@ -119,6 +121,7 @@ interface MediaOverlayActionsProps {
 	onOpenInBrowser?: () => void;
 	onCopyLink?: () => void;
 	onCopyMedia?: () => void;
+	onDeleteAttachment?: MouseEventHandler<HTMLButtonElement>;
 	onReset?: () => void;
 	onZoomIn?: () => void;
 	onZoomOut?: () => void;
@@ -144,6 +147,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 		onOpenInBrowser,
 		onCopyLink,
 		onCopyMedia,
+		onDeleteAttachment,
 		onReset,
 		onZoomIn,
 		onZoomOut,
@@ -248,6 +252,21 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 						label={i18n._(DOWNLOAD_MEDIA_DESCRIPTOR)}
 						onClick={onDownload}
 						data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button.download"
+					/>
+				)}
+				{onDeleteAttachment && (
+					<OverlayTooltipButton
+						icon={
+							<TrashIcon
+								size={20}
+								weight="bold"
+								data-flx="messaging.media-modal.media-overlay-actions.delete-attachment-icon"
+							/>
+						}
+						label={i18n._(DELETE_ATTACHMENT_DESCRIPTOR)}
+						onClick={onDeleteAttachment}
+						variant="danger"
+						data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button.delete-attachment"
 					/>
 				)}
 				<div

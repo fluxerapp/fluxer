@@ -9,14 +9,26 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {useCallback} from 'react';
 
-export function useDeleteAttachment(message: Message | null | undefined, attachmentId: string | null | undefined) {
+interface DeleteAttachmentOptions {
+	onDeleted?: () => void;
+}
+
+export function useDeleteAttachment(
+	message: Message | null | undefined,
+	attachmentId: string | null | undefined,
+	options?: DeleteAttachmentOptions,
+) {
 	const {i18n} = useLingui();
+	const onDeleted = options?.onDeleted;
 	return useCallback(
 		(e: React.MouseEvent) => {
 			e.preventDefault();
 			e.stopPropagation();
 			if (!message || !attachmentId) return;
-			const deleteAttachment = () => MessageCommands.deleteAttachment(message.channelId, message.id, attachmentId);
+			const deleteAttachment = async () => {
+				await MessageCommands.deleteAttachment(message.channelId, message.id, attachmentId);
+				onDeleted?.();
+			};
 			if (e.shiftKey) {
 				void deleteAttachment();
 				return;
@@ -39,6 +51,6 @@ export function useDeleteAttachment(message: Message | null | undefined, attachm
 				)),
 			);
 		},
-		[message, attachmentId, i18n],
+		[message, attachmentId, i18n, onDeleted],
 	);
 }

@@ -104,6 +104,7 @@ interface ImagePreviewHandlerProps {
 	message?: Message;
 	animated?: boolean;
 	mediaAttachments?: ReadonlyArray<MessageAttachment>;
+	allowAttachmentDelete?: boolean;
 	onViewerWarmEnter?: () => void;
 	onViewerWarmLeave?: () => void;
 	children: React.ReactNode;
@@ -143,6 +144,7 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 		message,
 		animated,
 		mediaAttachments = NO_MEDIA_ATTACHMENTS,
+		allowAttachmentDelete = false,
 		onViewerWarmEnter,
 		onViewerWarmLeave,
 		children,
@@ -176,6 +178,7 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 						messageId,
 						message,
 						sourceChannel: messageViewContext?.channel,
+						allowAttachmentDelete,
 					});
 				} else {
 					MediaViewerCommands.openMediaViewer(
@@ -187,6 +190,7 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 								naturalHeight,
 								type: 'image' as const,
 								contentHash,
+								attachmentId,
 								embedIndex,
 								expiresAt: undefined,
 								expired: undefined,
@@ -199,6 +203,7 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 							messageId,
 							message,
 							sourceChannel: messageViewContext?.channel,
+							allowAttachmentDelete,
 						},
 					);
 				}
@@ -217,6 +222,7 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 				message,
 				messageViewContext?.channel,
 				mediaAttachments,
+				allowAttachmentDelete,
 			],
 		);
 		const openInBrowser = useOpenInBrowserOnMiddleClick(originalSrc || src);
@@ -381,6 +387,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 			[originalSrc, src],
 		);
 		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
+		const allowAttachmentDelete = !isPreview && snapshotIndex === undefined;
 		const [mediaSheetOpen, setMediaSheetOpen] = useState(false);
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
@@ -524,6 +531,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 								attachmentId={attachmentId}
 								message={message}
 								mediaAttachments={mediaAttachments}
+								allowAttachmentDelete={allowAttachmentDelete}
 								animated={animated}
 								onViewerWarmEnter={scheduleViewerWarm}
 								onViewerWarmLeave={cancelViewerWarm}

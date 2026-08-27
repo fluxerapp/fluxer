@@ -181,6 +181,7 @@ const useImagePreview = ({
 	message,
 	sourceChannel,
 	providerName,
+	allowAttachmentDelete = false,
 }: {
 	proxyUrl: string;
 	embedUrl: string;
@@ -195,6 +196,7 @@ const useImagePreview = ({
 	message?: Message;
 	sourceChannel?: Channel | null;
 	providerName?: string;
+	allowAttachmentDelete?: boolean;
 }): {viewerItem: MediaViewerItem; openPreview: (event: React.MouseEvent | React.KeyboardEvent) => void} => {
 	const viewerItem = useMemo<MediaViewerItem>(
 		() => ({
@@ -223,9 +225,10 @@ const useImagePreview = ({
 				messageId,
 				message,
 				sourceChannel,
+				allowAttachmentDelete,
 			});
 		},
-		[viewerItem, channelId, messageId, message, sourceChannel],
+		[viewerItem, channelId, messageId, message, sourceChannel, allowAttachmentDelete],
 	);
 	return {viewerItem, openPreview};
 };
@@ -461,6 +464,7 @@ export const EmbedGifv: FC<
 			message,
 			sourceChannel: messageViewContext?.channel,
 			providerName,
+			allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
 		});
 		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
 		const handleDownloadClick = useCallback(
@@ -795,6 +799,7 @@ export const EmbedGif: FC<
 			contentHash,
 			message,
 			sourceChannel: messageViewContext?.channel,
+			allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
 		});
 		const {scheduleViewerWarm, cancelViewerWarm} = useMediaViewerHoverWarm(viewerItem, {
 			allowAnimated: gifAutoPlay,

@@ -95,6 +95,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		onOpenInBrowser,
 		onCopyLink,
 		onCopyMedia,
+		onDeleteAttachment,
 		onReply,
 		onForward,
 		children,
@@ -636,6 +637,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 									onOpenInBrowser={onOpenInBrowser}
 									onCopyLink={onCopyLink}
 									onCopyMedia={onCopyMedia}
+									onDeleteAttachment={onDeleteAttachment}
 									onReset={handleResetMedia}
 									onZoomIn={handleZoomIn}
 									onZoomOut={handleZoomOut}

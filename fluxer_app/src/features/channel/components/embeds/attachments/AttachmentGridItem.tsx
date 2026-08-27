@@ -208,9 +208,10 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 					messageId: message?.id,
 					message,
 					sourceChannel: messageViewContext?.channel,
+					allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
 				});
 			},
-			[attachment, message, messageViewContext?.channel, mediaAttachments, shouldBlur],
+			[attachment, message, messageViewContext?.channel, mediaAttachments, shouldBlur, isPreview, snapshotIndex],
 		);
 		const openInBrowser = useOpenInBrowserOnMiddleClick(attachment.url ?? attachment.proxy_url ?? '', !shouldBlur);
 		const handleFavoriteClick = useCallback(

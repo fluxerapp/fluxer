@@ -9,6 +9,7 @@ interface MediaViewerOpenOptions {
 	messageId?: string;
 	message?: Message;
 	sourceChannel?: Channel | null;
+	allowAttachmentDelete?: boolean;
 }
 
 type MediaViewerIntent =
@@ -26,6 +27,7 @@ function dispatchMediaViewerIntent(intent: MediaViewerIntent): void {
 				intent.options?.messageId,
 				intent.options?.message,
 				intent.options?.sourceChannel,
+				intent.options?.allowAttachmentDelete,
 			);
 			return;
 		case 'close':

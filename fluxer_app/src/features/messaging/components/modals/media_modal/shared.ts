@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {msg} from '@lingui/core/macro';
-import type {ReactNode} from 'react';
+import type {MouseEventHandler, ReactNode} from 'react';
 
 export type ZoomState = 'fit' | 'zoomed';
 
@@ -23,6 +23,7 @@ export interface MediaModalProps {
 	onOpenInBrowser?: () => void;
 	onCopyLink?: () => void;
 	onCopyMedia?: () => void;
+	onDeleteAttachment?: MouseEventHandler<HTMLButtonElement>;
 	onReply?: () => void;
 	onForward?: () => void;
 	onInfo?: () => void;

@@ -272,6 +272,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			[src],
 		);
 		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
+		const allowAttachmentDelete = !isPreview && snapshotIndex === undefined;
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
 				if (!message) return;
@@ -396,6 +397,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					messageId,
 					message,
 					sourceChannel: messageViewContext?.channel,
+					allowAttachmentDelete,
 				});
 			} else {
 				MediaViewerCommands.openMediaViewer(
@@ -407,12 +409,13 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 							naturalHeight: viewerVideoDimensions.height,
 							type: 'video' as const,
 							contentHash,
+							attachmentId,
 							embedIndex,
 							duration,
 						},
 					],
 					0,
-					{channelId, messageId, message, sourceChannel: messageViewContext?.channel},
+					{channelId, messageId, message, sourceChannel: messageViewContext?.channel, allowAttachmentDelete},
 				);
 			}
 		}, [
@@ -420,6 +423,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			messageId,
 			message,
 			messageViewContext?.channel,
+			allowAttachmentDelete,
 			mediaAttachments,
 			attachmentId,
 			effectiveSrc,
@@ -451,6 +455,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					messageId,
 					message,
 					sourceChannel: messageViewContext?.channel,
+					allowAttachmentDelete,
 				});
 			} else {
 				MediaViewerCommands.openMediaViewer(
@@ -462,13 +467,14 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 							naturalHeight: viewerVideoDimensions.height,
 							type: 'video' as const,
 							contentHash,
+							attachmentId,
 							embedIndex,
 							duration,
 							initialTime: currentTime,
 						},
 					],
 					0,
-					{channelId, messageId, message, sourceChannel: messageViewContext?.channel},
+					{channelId, messageId, message, sourceChannel: messageViewContext?.channel, allowAttachmentDelete},
 				);
 			}
 			setIsPlayingInline(false);
@@ -477,6 +483,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			messageId,
 			message,
 			messageViewContext?.channel,
+			allowAttachmentDelete,
 			mediaAttachments,
 			attachmentId,
 			effectiveSrc,

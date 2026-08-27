@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {useBottomSheetBackHandler} from '@app/features/app/hooks/useBottomSheetBackHandler';
 import {deriveDefaultNameFromMessage} from '@app/features/channel/components/embeds/EmbedUtils';
 import {useMessageActionMenuData} from '@app/features/channel/components/MessageActionMenu';
@@ -14,6 +15,7 @@ import type {ForwardModalSuccess} from '@app/features/messaging/components/modal
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
 import styles from '@app/features/messaging/components/modals/MediaViewerModal.module.css';
 import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modals/MediaViewerPortal';
+import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {formatAttachmentDate} from '@app/features/messaging/utils/AttachmentExpiryUtils';
@@ -273,7 +275,8 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 });
 const MediaViewerModalComponent: FC = observer(() => {
 	const {i18n} = useLingui();
-	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel} = MediaViewer;
+	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel, allowAttachmentDelete} =
+		MediaViewer;
 	const {enabled: isMobile} = MobileLayout;
 	const [isMediaMenuOpen, setIsMediaMenuOpen] = useState(false);
 	const currentItem = items[currentIndex];
@@ -438,6 +441,22 @@ const MediaViewerModalComponent: FC = observer(() => {
 		() => (message ? untracked(() => getMessagePermissions(message, sourceChannel)) : null),
 		[message, sourceChannel],
 	);
+	const deletableAttachmentId =
+		Accessibility.showMediaDeleteButton &&
+		allowAttachmentDelete &&
+		permissions?.canDeleteAttachment &&
+		currentItem?.attachmentId &&
+		message?.attachments.some((attachment) => attachment.id === currentItem.attachmentId)
+			? currentItem.attachmentId
+			: undefined;
+	const handleAttachmentDeleted = useCallback(() => {
+		if (MediaViewer.isOpen && MediaViewer.items === items) {
+			MediaViewerCommands.closeMediaViewer();
+		}
+	}, [items]);
+	const handleDeleteAttachment = useDeleteAttachment(message, deletableAttachmentId, {
+		onDeleted: handleAttachmentDeleted,
+	});
 	const forwardMediaSelection = useMemo<MessageCommands.ForwardMediaSelection | undefined>(() => {
 		if (!currentItem) return undefined;
 		if (currentItem.attachmentId) {
@@ -672,6 +691,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 				onOpenInBrowser={handleOpenInBrowser}
 				onCopyLink={handleCopyLink}
 				onCopyMedia={handleCopyMedia}
+				onDeleteAttachment={deletableAttachmentId ? handleDeleteAttachment : undefined}
 				onReply={permissions?.canSendMessages ? handleReply : undefined}
 				onForward={canForwardCurrentMedia ? handleForward : undefined}
 				enablePanZoom={currentItem.type === 'image' || currentItem.type === 'gif' || currentItem.type === 'gifv'}
