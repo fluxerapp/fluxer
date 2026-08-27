@@ -314,5 +314,5 @@ export function getSortedLocales(): Array<TranslatedLocaleInfo> {
 			...locale,
 			name: i18n._(locale.name),
 		}))
-		.sort((a, b) => a.nativeName.localeCompare(b.nativeName));
+		.sort((a, b) => a.code.localeCompare(b.code));
 }
