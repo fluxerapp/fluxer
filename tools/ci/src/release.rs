@@ -75,8 +75,15 @@ struct QualifiedRelease {
     published_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct ReleaseHandle<'a> {
+    id: u64,
+    tag: &'a str,
+}
+
 #[derive(Debug, Deserialize)]
 struct ReleaseDetail {
+    id: u64,
     tag_name: String,
     target_commitish: String,
     name: Option<String>,
@@ -197,15 +204,16 @@ fn publish(args: PublishArgs) -> Result<()> {
         &args.build_version,
         args.asset_dir.as_deref(),
     )?;
-    if existing_summary.is_some_and(|release| !release.is_draft) {
+    if let Some(existing) = existing_summary.filter(|release| !release.is_draft) {
         ensure!(
-            existing_summary
-                .and_then(|release| release.published_at.as_ref())
-                .is_some(),
+            existing.published_at.is_some(),
             "Published release {tag} is missing its publication timestamp"
         );
         verify_release(
-            &tag,
+            ReleaseHandle {
+                id: existing.id,
+                tag: &tag,
+            },
             &title,
             &body,
             &source_sha,
@@ -217,21 +225,33 @@ fn publish(args: PublishArgs) -> Result<()> {
         return Ok(());
     }
 
-    if let Some(existing) = existing_summary {
+    let release_id = if let Some(existing) = existing_summary {
         ensure!(
             existing.published_at.is_none(),
             "Draft release {tag} unexpectedly has a publication timestamp"
         );
+        existing.id
     } else {
         ensure!(
             !tag_exists(&tag)?,
             "Refusing to publish {tag}: the tag already exists without a matching GitHub Release"
         );
-        create_draft_release(&tag, &title, &body, &source_sha, args.prerelease)?;
-    }
-    upload_draft_release_assets(&tag, &title, &body, &source_sha, args.prerelease, &assets)?;
+        create_draft_release(&tag, &title, &body, &source_sha, args.prerelease)?
+    };
+    let release = ReleaseHandle {
+        id: release_id,
+        tag: &tag,
+    };
+    upload_draft_release_assets(
+        release,
+        &title,
+        &body,
+        &source_sha,
+        args.prerelease,
+        &assets,
+    )?;
     verify_release(
-        &tag,
+        release,
         &title,
         &body,
         &source_sha,
@@ -248,7 +268,7 @@ fn publish(args: PublishArgs) -> Result<()> {
             .arg("--latest=false"),
     )?;
     verify_release(
-        &tag,
+        release,
         &title,
         &body,
         &source_sha,
@@ -496,55 +516,78 @@ fn create_draft_release(
     body: &str,
     source_sha: &str,
     prerelease: bool,
-) -> Result<()> {
-    let mut command = CommandSpec::new("gh")
-        .args(["release", "create", tag])
-        .args(["--repo", RELEASE_REPOSITORY])
-        .args(["--title", title])
-        .args(["--notes", body])
-        .args(["--target", source_sha])
-        .args(["--latest=false", "--draft"]);
-    if prerelease {
-        command = command.arg("--prerelease");
-    }
-    run_command(command)
+) -> Result<u64> {
+    let output = output_text(
+        CommandSpec::new("gh")
+            .args(["api", "--method", "POST"])
+            .arg(format!("repos/{RELEASE_REPOSITORY}/releases"))
+            .arg("-f")
+            .arg(format!("tag_name={tag}"))
+            .arg("-f")
+            .arg(format!("target_commitish={source_sha}"))
+            .arg("-f")
+            .arg(format!("name={title}"))
+            .arg("-f")
+            .arg(format!("body={body}"))
+            .arg("-F")
+            .arg("draft=true")
+            .arg("-F")
+            .arg(format!("prerelease={prerelease}"))
+            .arg("-f")
+            .arg("make_latest=false"),
+    )?;
+    let release: ReleaseDetail = serde_json::from_str(&output)
+        .with_context(|| format!("Failed to parse created draft release {tag}"))?;
+    ensure!(release.id > 0, "Draft release {tag} has an invalid ID");
+    Ok(release.id)
 }
 
-fn release_detail(tag: &str) -> Result<ReleaseDetail> {
+fn release_detail(release_id: u64) -> Result<ReleaseDetail> {
     let output = output_text(
         CommandSpec::new("gh")
             .arg("api")
-            .arg(format!("repos/{RELEASE_REPOSITORY}/releases/tags/{tag}")),
+            .arg(format!("repos/{RELEASE_REPOSITORY}/releases/{release_id}")),
     )?;
-    serde_json::from_str(&output).with_context(|| format!("Failed to parse release {tag}"))
+    serde_json::from_str(&output)
+        .with_context(|| format!("Failed to parse release ID {release_id}"))
 }
 
 fn upload_draft_release_assets(
-    tag: &str,
+    release: ReleaseHandle<'_>,
     title: &str,
     body: &str,
     source_sha: &str,
     prerelease: bool,
     expected_assets: &[LocalReleaseAsset],
 ) -> Result<()> {
-    let release = release_detail(tag)?;
-    verify_release_metadata(tag, &release, title, body, source_sha, prerelease, true)?;
+    let detail = release_detail(release.id)?;
+    verify_release_metadata(
+        release.tag,
+        &detail,
+        title,
+        body,
+        source_sha,
+        prerelease,
+        true,
+    )?;
     let expected_by_name = expected_assets
         .iter()
         .map(|asset| (asset.name.as_str(), asset))
         .collect::<BTreeMap<_, _>>();
     let mut published_by_name = BTreeMap::new();
-    for asset in &release.assets {
+    for asset in &detail.assets {
         ensure!(
             expected_by_name.contains_key(asset.name.as_str()),
-            "Draft release {tag} contains unexpected asset {:?}",
+            "Draft release {} contains unexpected asset {:?}",
+            release.tag,
             asset.name
         );
         ensure!(
             published_by_name
                 .insert(asset.name.as_str(), asset)
                 .is_none(),
-            "Draft release {tag} contains duplicate asset name {:?}",
+            "Draft release {} contains duplicate asset name {:?}",
+            release.tag,
             asset.name
         );
     }
@@ -560,7 +603,7 @@ fn upload_draft_release_assets(
         return Ok(());
     }
     let mut command = CommandSpec::new("gh")
-        .args(["release", "upload", tag])
+        .args(["release", "upload", release.tag])
         .args(["--repo", RELEASE_REPOSITORY])
         .arg("--clobber");
     for asset in pending {
@@ -570,7 +613,7 @@ fn upload_draft_release_assets(
 }
 
 fn verify_release(
-    tag: &str,
+    release: ReleaseHandle<'_>,
     title: &str,
     body: &str,
     source_sha: &str,
@@ -578,16 +621,25 @@ fn verify_release(
     draft: bool,
     expected_assets: &[LocalReleaseAsset],
 ) -> Result<()> {
-    let release = release_detail(tag)?;
-    verify_release_metadata(tag, &release, title, body, source_sha, prerelease, draft)?;
-    verify_release_assets(tag, &release.assets, expected_assets)?;
+    let detail = release_detail(release.id)?;
+    verify_release_metadata(
+        release.tag,
+        &detail,
+        title,
+        body,
+        source_sha,
+        prerelease,
+        draft,
+    )?;
+    verify_release_assets(release.tag, &detail.assets, expected_assets)?;
     if draft {
         return Ok(());
     }
-    let tag_sha = resolve_commit_sha(tag)?;
+    let tag_sha = resolve_commit_sha(release.tag)?;
     ensure!(
         tag_sha == source_sha,
-        "Release tag {tag} targets {tag_sha}, expected {source_sha}"
+        "Release tag {} targets {tag_sha}, expected {source_sha}",
+        release.tag
     );
     Ok(())
 }
