@@ -157,43 +157,58 @@ function collectRuntimeArtifactPaths(packageDir) {
 }
 
 function isNativeRuntimeSidecar(fileName) {
-	return (
-		fileName.endsWith('.node') ||
-		/\.so(?:\.|$)/.test(fileName) ||
-		/\.(?:dll|exe)$/i.test(fileName) ||
-		isWindowsNativeRuntimeManifest(fileName)
-	);
+	return fileName.endsWith('.node') || /\.so(?:\.|$)/.test(fileName) || /\.(?:dll|exe)$/i.test(fileName);
 }
 
-function isWindowsNativeRuntimeManifest(fileName) {
-	return (
-		fileName === 'compatibility.json' || /^fluxer-vulkan-layer\.win32-(?:x64|ia32|arm64)-msvc\.json$/i.test(fileName)
-	);
+function electronArch() {
+	return process.env.ELECTRON_ARCH || process.env.npm_config_arch || process.arch;
 }
 
-function addWinGameCaptureRuntimeArtifacts(artifacts, tag, arch) {
-	const add = (relativePath) => {
-		artifacts.push({
-			label: '@fluxer/win-game-capture',
-			relativePath,
-			runtimeFiles: [],
-		});
-	};
+function primaryWinGameCaptureNodeFileName() {
+	const arch = electronArch();
+	const tag = platformTag(process.platform, arch);
+	if (!tag || process.platform !== 'win32') {
+		throw new Error(`Cannot resolve the primary win-game-capture node for ${process.platform}/${arch}`);
+	}
+	return `win-game-capture.${tag}.node`;
+}
+
+function removeStaleWinGameCaptureArtifacts(packageDir, primaryNodeFileName) {
+	if (!fs.existsSync(packageDir)) return;
+	const stale = fs
+		.readdirSync(packageDir, {withFileTypes: true})
+		.filter((entry) => {
+			if (!entry.isFile()) return false;
+			return (
+				entry.name.startsWith('fluxer-game-hook.') ||
+				entry.name.startsWith('fluxer-inject-helper.') ||
+				entry.name.startsWith('fluxer-vulkan-layer.') ||
+				(entry.name.startsWith('win-game-capture.') &&
+					entry.name.endsWith('.node') &&
+					entry.name !== primaryNodeFileName)
+			);
+		})
+		.map((entry) => entry.name)
+		.sort();
+	for (const fileName of stale) {
+		const artifactPath = path.join(packageDir, fileName);
+		fs.rmSync(artifactPath);
+		console.log(`  Removed stale @fluxer/win-game-capture artifact ${path.relative(ROOT_DIR, artifactPath)}`);
+	}
+}
+
+function addWinGameCaptureRuntimeArtifacts(artifacts, tag) {
 	artifacts.push({
 		label: '@fluxer/win-game-capture',
 		relativePath: `win-game-capture.${tag}.node`,
 	});
-	add(`fluxer-game-hook.${tag}.dll`);
-	add(`fluxer-inject-helper.${tag}.exe`);
-	add(`fluxer-vulkan-layer.${tag}.dll`);
-	add(`fluxer-vulkan-layer.${tag}.json`);
-	if (arch === 'x64') {
-		add('fluxer-game-hook.win32-ia32-msvc.dll');
-		add('fluxer-inject-helper.win32-ia32-msvc.exe');
-	}
 }
 
 function copyRuntimeArtifactsToInstalledPackages({label, packageDir}) {
+	const primaryNodeFileName = label === '@fluxer/win-game-capture' ? primaryWinGameCaptureNodeFileName() : null;
+	if (primaryNodeFileName) {
+		removeStaleWinGameCaptureArtifacts(packageDir, primaryNodeFileName);
+	}
 	const artifacts = collectRuntimeArtifactPaths(packageDir);
 	if (artifacts.length === 0) {
 		return;
@@ -206,6 +221,9 @@ function copyRuntimeArtifactsToInstalledPackages({label, packageDir}) {
 		return;
 	}
 	for (const installedPackageDir of installedPackageDirs) {
+		if (primaryNodeFileName) {
+			removeStaleWinGameCaptureArtifacts(installedPackageDir, primaryNodeFileName);
+		}
 		for (const artifact of artifacts) {
 			const sourcePath = path.join(packageDir, artifact);
 			const targetPath = path.join(installedPackageDir, artifact);
@@ -225,7 +243,7 @@ function platformTag(platform, arch) {
 	return null;
 }
 
-function expectedNativeRuntimeArtifacts(platform = process.platform, arch = process.env.ELECTRON_ARCH || process.arch) {
+function expectedNativeRuntimeArtifacts(platform = process.platform, arch = electronArch()) {
 	if (platform === 'darwin' && arch === 'universal') {
 		return [
 			...expectedNativeRuntimeArtifactsForArch(platform, 'arm64'),
@@ -284,7 +302,7 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 			label: '@fluxer/win-process-loopback',
 			relativePath: `win-process-loopback.${tag}.node`,
 		});
-		addWinGameCaptureRuntimeArtifacts(artifacts, tag, arch);
+		addWinGameCaptureRuntimeArtifacts(artifacts, tag);
 		artifacts.push({
 			label: '@fluxer/win-clipboard',
 			relativePath: `win-clipboard.${tag}.node`,

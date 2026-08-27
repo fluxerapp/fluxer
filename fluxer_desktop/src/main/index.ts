@@ -68,7 +68,6 @@ import {
 import {runNativeModulePreflight} from '@electron/main/NativeModulePreflight';
 import {cleanupNativeScreenCapture, registerNativeScreenCaptureHandlers} from '@electron/main/NativeScreenCapture';
 import {appendOpenH264Switches} from '@electron/main/OpenH264Manager';
-import {startRpcServer, stopRpcServer} from '@electron/main/RpcServer';
 import {cleanupLinuxChromiumSpellcheckDictionaries} from '@electron/main/Spellcheck';
 import {registerUpdater} from '@electron/main/Updater';
 import {
@@ -430,9 +429,6 @@ if (launchConfigurationError) {
 						showWindow();
 					}
 				});
-				void startRpcServer().catch((error: unknown) => {
-					log.error('[RPC] Failed to start RPC server:', error);
-				});
 				log.info('App initialized successfully');
 			})
 			.catch((error: unknown) => {
@@ -478,7 +474,7 @@ if (launchConfigurationError) {
 			cleanupNativeHardwareEncoderHandlers();
 			cleanupVirtmic();
 			destroyDesktopTray();
-			const asyncCleanups: Array<Promise<unknown>> = [stopRpcServer()];
+			const asyncCleanups: Array<Promise<unknown>> = [];
 			if (netLog.currentlyLogging) {
 				asyncCleanups.push(
 					netLog.stopLogging().catch((error) => {

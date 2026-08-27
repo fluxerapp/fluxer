@@ -10,6 +10,7 @@ use crate::common::{
     upload_directory_to_s3, upload_s3_plan_append_only, upload_s3_plan_overwrite,
 };
 use crate::functions::write_json_pretty;
+use crate::release::DESKTOP_RELEASE_ASSET_SUFFIXES;
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use aws_sdk_s3::Client as S3Client;
 use chrono::Utc;
@@ -110,6 +111,9 @@ enum DesktopStep {
     DownloadHandoff,
     CleanupHandoff,
     BuildPayload,
+    PrepareReleaseAssets,
+    UploadReleaseAssets,
+    DownloadReleaseAssets,
     UploadPayload,
     BuildSummary,
 }
@@ -235,6 +239,9 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::DownloadHandoff => download_handoff_step().await,
         DesktopStep::CleanupHandoff => cleanup_handoff_step().await,
         DesktopStep::BuildPayload => build_payload_step(),
+        DesktopStep::PrepareReleaseAssets => prepare_release_assets_step(),
+        DesktopStep::UploadReleaseAssets => upload_release_assets_step().await,
+        DesktopStep::DownloadReleaseAssets => download_release_assets_step().await,
         DesktopStep::UploadPayload => upload_payload_step().await,
         DesktopStep::BuildSummary => build_summary_step(),
     }
@@ -1401,22 +1408,6 @@ fn install_rust_windows_targets_step() -> Result<()> {
         RUST_TOOLCHAIN,
         target,
     ]))?;
-    if arch == "x64" {
-        run_command(CommandSpec::new("rustup").args([
-            "target",
-            "add",
-            "--toolchain",
-            RUST_TOOLCHAIN,
-            "i686-pc-windows-msvc",
-        ]))?;
-        run_command(CommandSpec::new("rustup").args([
-            "target",
-            "add",
-            "--toolchain",
-            RUST_TOOLCHAIN,
-            "aarch64-pc-windows-msvc",
-        ]))?;
-    }
     if let Ok(user_profile) = env::var("USERPROFILE") {
         let cargo_bin = PathBuf::from(user_profile).join(".cargo").join("bin");
         if cargo_bin.exists() && env::var("GITHUB_PATH").is_ok() {
@@ -2011,7 +2002,7 @@ fn pack_and_validate_windows_velopack(
         "--outputDir",
         config.output_dir.to_string_lossy().as_ref(),
         "--delta",
-        "BestSpeed",
+        "None",
         "--azureTrustedSignFile",
         trusted_sign_file.to_string_lossy().as_ref(),
     ]))?;
@@ -2063,6 +2054,15 @@ fn validate_velopack_output(
     let legacy_releases = config.output_dir.join("RELEASES");
     let velopack_releases = config.output_dir.join("releases.win.json");
     let full_nupkg = first_file_matching(&config.output_dir, |name| name.ends_with("-full.nupkg"));
+    let delta_nupkgs = collect_files(&config.output_dir)?
+        .into_iter()
+        .filter(|path| {
+            path.file_name()
+                .and_then(OsStr::to_str)
+                .is_some_and(|name| name.ends_with("-delta.nupkg"))
+        })
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>();
 
     ensure!(
         legacy_releases.exists(),
@@ -2071,6 +2071,12 @@ fn validate_velopack_output(
     ensure!(
         velopack_releases.exists(),
         "Velopack did not produce releases.win.json for Windows updates."
+    );
+    ensure!(
+        delta_nupkgs.is_empty(),
+        "Velopack produced {} disabled delta package(s), which cannot be independently verified against the signed full package:\n{}",
+        delta_nupkgs.len(),
+        delta_nupkgs.join("\n")
     );
     let full_nupkg = full_nupkg.ok_or_else(|| {
         anyhow!("Velopack did not produce a full nupkg payload for Windows updates.")
@@ -2243,7 +2249,15 @@ const THIRD_PARTY_WINDOWS_SIGNATURE_ALLOWLIST: &[(&str, &str)] = &[
         "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
     ),
 ];
-const KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY: &[&str] = &["fluxer-vulkan-layer.win32-ia32-msvc.dll"];
+const KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY: &[&str] = &[];
+const FORBIDDEN_WINDOWS_GAME_CAPTURE_ARTIFACT_PREFIXES: &[&str] = &[
+    "fluxer-game-hook.",
+    "fluxer-inject-helper.",
+    "fluxer-vulkan-layer.",
+    "fluxer_game_hook.",
+    "fluxer_inject_helper.",
+    "fluxer_vulkan_layer.",
+];
 const WINDOWS_NATIVE_ADDON_STEMS: &[&str] = &[
     "hardware-encoder",
     "webauthn",
@@ -2261,33 +2275,26 @@ fn expected_windows_pe_inventory(arch: &str, main_exe: &str) -> Vec<String> {
         main_exe.to_string(),
         format!("velopack_nodeffi_win_{arch}_msvc.node"),
         format!("win-game-capture.{tag}.node"),
-        format!("fluxer-game-hook.{tag}.dll"),
-        format!("fluxer-inject-helper.{tag}.exe"),
-        format!("fluxer-vulkan-layer.{tag}.dll"),
     ];
     names.extend(
         WINDOWS_NATIVE_ADDON_STEMS
             .iter()
             .map(|stem| format!("{stem}.{tag}.node")),
     );
-    if arch == "x64" {
-        names.push("fluxer-game-hook.win32-ia32-msvc.dll".to_string());
-        names.push("fluxer-inject-helper.win32-ia32-msvc.exe".to_string());
-    }
     names.sort();
     names.dedup();
     names
 }
 
-fn is_pe_file(path: &Path) -> Result<bool> {
+fn read_pe_machine(path: &Path) -> Result<Option<u16>> {
     let mut file =
         File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
     let mut dos_header = [0u8; 0x40];
     if !read_exact_or_eof(&mut file, &mut dos_header, path)? {
-        return Ok(false);
+        return Ok(None);
     }
     if &dos_header[0..2] != b"MZ" {
-        return Ok(false);
+        return Ok(None);
     }
     let e_lfanew = u32::from_le_bytes([
         dos_header[0x3c],
@@ -2299,9 +2306,20 @@ fn is_pe_file(path: &Path) -> Result<bool> {
         .with_context(|| format!("Failed to seek in {}", path.display()))?;
     let mut signature = [0u8; 4];
     if !read_exact_or_eof(&mut file, &mut signature, path)? {
-        return Ok(false);
+        return Ok(None);
     }
-    Ok(&signature == b"PE\0\0")
+    if &signature != b"PE\0\0" {
+        return Ok(None);
+    }
+    let mut machine = [0u8; 2];
+    if !read_exact_or_eof(&mut file, &mut machine, path)? {
+        return Ok(None);
+    }
+    Ok(Some(u16::from_le_bytes(machine)))
+}
+
+fn is_pe_file(path: &Path) -> Result<bool> {
+    Ok(read_pe_machine(path)?.is_some())
 }
 
 fn read_exact_or_eof(file: &mut File, buffer: &mut [u8], path: &Path) -> Result<bool> {
@@ -2361,6 +2379,61 @@ fn percent_decode_archive_name(name: &str) -> String {
     String::from_utf8(decoded).unwrap_or_else(|_| name.to_string())
 }
 
+fn windows_pe_machine_arch(machine: u16) -> Option<&'static str> {
+    match machine {
+        0x014c => Some("ia32"),
+        0x8664 => Some("x64"),
+        0xaa64 => Some("arm64"),
+        _ => None,
+    }
+}
+
+fn assert_windows_native_pe_machines(
+    root: &Path,
+    files: &[PathBuf],
+    expected_arch: &str,
+    main_exe: &str,
+) -> Result<()> {
+    let mut violations = Vec::new();
+    let normalized_main_exe = main_exe.to_ascii_lowercase();
+    for path in files {
+        let Some(file_name) = path.file_name().and_then(OsStr::to_str) else {
+            continue;
+        };
+        let normalized_name = percent_decode_archive_name(file_name).to_ascii_lowercase();
+        let file_arch = if normalized_name == normalized_main_exe {
+            Some(expected_arch)
+        } else {
+            windows_native_pe_arch(&normalized_name)
+        };
+        let Some(file_arch) = file_arch else {
+            continue;
+        };
+        let machine = read_pe_machine(path)?.ok_or_else(|| {
+            anyhow!(
+                "{} was collected as a PE file but no COFF Machine field was readable",
+                path.display()
+            )
+        })?;
+        let actual_arch = windows_pe_machine_arch(machine);
+        if actual_arch != Some(file_arch) || actual_arch != Some(expected_arch) {
+            violations.push(format!(
+                "{}: file policy expects {file_arch}, COFF Machine is 0x{machine:04x} ({}) and package architecture is {expected_arch}",
+                relative_display(root, path),
+                actual_arch.unwrap_or("unknown")
+            ));
+        }
+    }
+    ensure!(
+        violations.is_empty(),
+        "{} contains {} Windows native binary/binaries with invalid machine architecture:\n{}",
+        root.display(),
+        violations.len(),
+        violations.join("\n")
+    );
+    Ok(())
+}
+
 fn assert_expected_windows_pe_inventory(
     root: &Path,
     files: &[PathBuf],
@@ -2384,6 +2457,17 @@ fn assert_expected_windows_pe_inventory(
         root.display(),
         missing.len(),
         missing.join("\n")
+    );
+    let forbidden = present
+        .iter()
+        .filter_map(|name| windows_pe_inventory_violation(name, arch))
+        .collect::<Vec<_>>();
+    ensure!(
+        forbidden.is_empty(),
+        "{} contains {} forbidden Windows native binaries:\n{}",
+        root.display(),
+        forbidden.len(),
+        forbidden.join("\n")
     );
     let contradictory = contradictory_optional_windows_pe_inventory(arch, main_exe);
     ensure!(
@@ -2411,7 +2495,7 @@ fn assert_expected_windows_pe_inventory(
         .cloned()
         .collect::<Vec<_>>();
     println!(
-        "{}: {} expected, {} unlisted PE(s) shipped by glob (Electron runtime and cross-architecture native artifacts). Every one of them is signature-classified below; none may be unsigned or signed by an unknown publisher.",
+        "{}: {} expected, {} unlisted PE(s) shipped by glob (Electron runtime and third-party binaries). Every one of them is signature-classified below; none may be unsigned or signed by an unknown publisher.",
         root.display(),
         expected.len(),
         unlisted.len()
@@ -2420,6 +2504,231 @@ fn assert_expected_windows_pe_inventory(
         println!("Unlisted Windows PE pending signature classification: {name}");
     }
     Ok(())
+}
+
+const ASAR_HEADER_LIMIT: usize = 64 * 1024 * 1024;
+const ASAR_ENTRY_LIMIT: usize = 1_000_000;
+const ASAR_NESTING_LIMIT: usize = 256;
+
+fn windows_package_file_policy_violation(relative: &str, expected_arch: &str) -> bool {
+    let normalized_relative = relative
+        .replace('\\', "/")
+        .split('/')
+        .map(percent_decode_archive_name)
+        .collect::<Vec<_>>()
+        .join("/")
+        .replace('\\', "/")
+        .to_ascii_lowercase();
+    let normalized_name = normalized_relative
+        .rsplit('/')
+        .next()
+        .unwrap_or_default()
+        .to_string();
+    if FORBIDDEN_WINDOWS_GAME_CAPTURE_ARTIFACT_PREFIXES
+        .iter()
+        .any(|prefix| normalized_name.starts_with(prefix))
+    {
+        return true;
+    }
+    if normalized_name == "compatibility.json"
+        && normalized_relative
+            .split('/')
+            .any(|component| component == "win-game-capture")
+    {
+        return true;
+    }
+    windows_native_pe_arch(&normalized_name).is_some_and(|arch| arch != expected_arch)
+}
+
+fn read_u32_le(bytes: &[u8], offset: usize) -> Result<u32> {
+    let end = offset
+        .checked_add(4)
+        .ok_or_else(|| anyhow!("ASAR header offset overflow"))?;
+    let value = bytes
+        .get(offset..end)
+        .ok_or_else(|| anyhow!("ASAR header is truncated at byte {offset}"))?;
+    let value = <[u8; 4]>::try_from(value)
+        .map_err(|_| anyhow!("ASAR header field at byte {offset} is not four bytes"))?;
+    Ok(u32::from_le_bytes(value))
+}
+
+fn collect_asar_policy_violations(
+    node: &Value,
+    expected_arch: &str,
+    violations: &mut Vec<String>,
+) -> Result<()> {
+    let mut stack = vec![(node, String::new(), 0usize)];
+    let mut entry_count = 0usize;
+    while let Some((current, prefix, depth)) = stack.pop() {
+        ensure!(
+            depth <= ASAR_NESTING_LIMIT,
+            "ASAR header nesting exceeds {ASAR_NESTING_LIMIT} levels under {prefix:?}"
+        );
+        let files = current
+            .get("files")
+            .and_then(Value::as_object)
+            .ok_or_else(|| anyhow!("ASAR header node {prefix:?} has no files object"))?;
+        for (name, entry) in files {
+            entry_count = entry_count
+                .checked_add(1)
+                .ok_or_else(|| anyhow!("ASAR entry count overflow"))?;
+            ensure!(
+                entry_count <= ASAR_ENTRY_LIMIT,
+                "ASAR header contains more than {ASAR_ENTRY_LIMIT} entries"
+            );
+            let decoded_name = percent_decode_archive_name(name);
+            ensure!(
+                !name.is_empty()
+                    && name != "."
+                    && name != ".."
+                    && !name.contains('/')
+                    && !name.contains('\\')
+                    && decoded_name != "."
+                    && decoded_name != ".."
+                    && !decoded_name.contains('/')
+                    && !decoded_name.contains('\\'),
+                "ASAR header contains invalid entry name {name:?} under {prefix:?}"
+            );
+            let relative = if prefix.is_empty() {
+                name.clone()
+            } else {
+                format!("{prefix}/{name}")
+            };
+            if windows_package_file_policy_violation(&relative, expected_arch) {
+                violations.push(relative.clone());
+            }
+            if entry.get("files").is_some() {
+                stack.push((entry, relative, depth + 1));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn asar_policy_violations(path: &Path, expected_arch: &str) -> Result<Vec<String>> {
+    let mut file =
+        File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+    let file_size = file
+        .metadata()
+        .with_context(|| format!("Failed to stat {}", path.display()))?
+        .len();
+    let mut prefix = [0u8; 16];
+    file.read_exact(&mut prefix)
+        .with_context(|| format!("Failed to read ASAR header prefix from {}", path.display()))?;
+    let size_pickle_payload = read_u32_le(&prefix, 0)?;
+    let header_pickle_size = read_u32_le(&prefix, 4)?;
+    let header_pickle_payload = read_u32_le(&prefix, 8)?;
+    let header_json_size = read_u32_le(&prefix, 12)?;
+    let padded_header_json_size = header_json_size
+        .checked_add(3)
+        .map(|size| size & !3)
+        .ok_or_else(|| anyhow!("{} ASAR JSON header size overflow", path.display()))?;
+    let expected_header_pickle_payload = padded_header_json_size
+        .checked_add(4)
+        .ok_or_else(|| anyhow!("{} ASAR pickle payload size overflow", path.display()))?;
+    ensure!(
+        size_pickle_payload == 4
+            && header_pickle_payload.checked_add(4) == Some(header_pickle_size)
+            && header_pickle_payload == expected_header_pickle_payload,
+        "{} has an invalid ASAR pickle header",
+        path.display()
+    );
+    let header_json_size = usize::try_from(header_json_size).context("ASAR header is too large")?;
+    ensure!(
+        header_json_size > 0 && header_json_size <= ASAR_HEADER_LIMIT,
+        "{} ASAR JSON header size {} is outside 1..={ASAR_HEADER_LIMIT}",
+        path.display(),
+        header_json_size
+    );
+    let header_pickle_size =
+        usize::try_from(header_pickle_size).context("ASAR pickle header is too large")?;
+    let archive_payload_offset = 8usize
+        .checked_add(header_pickle_size)
+        .ok_or_else(|| anyhow!("{} ASAR header size overflow", path.display()))?;
+    ensure!(
+        u64::try_from(archive_payload_offset).unwrap_or(u64::MAX) <= file_size,
+        "{} ASAR header extends beyond the {}-byte archive",
+        path.display(),
+        file_size
+    );
+    let mut header_json = vec![0u8; header_json_size];
+    file.read_exact(&mut header_json)
+        .with_context(|| format!("Failed to read ASAR JSON header from {}", path.display()))?;
+    let header: Value = serde_json::from_slice(&header_json)
+        .with_context(|| format!("Failed to parse ASAR JSON header from {}", path.display()))?;
+    let mut violations = Vec::new();
+    collect_asar_policy_violations(&header, expected_arch, &mut violations)?;
+    Ok(violations)
+}
+
+fn assert_windows_package_file_policy(root: &Path, expected_arch: &str) -> Result<()> {
+    let mut forbidden = Vec::new();
+    for path in collect_files(root)? {
+        let relative = relative_display(root, &path);
+        if windows_package_file_policy_violation(&relative, expected_arch) {
+            forbidden.push(relative.clone());
+        }
+        if path
+            .file_name()
+            .and_then(OsStr::to_str)
+            .is_some_and(|name| {
+                percent_decode_archive_name(name)
+                    .to_ascii_lowercase()
+                    .ends_with(".asar")
+            })
+        {
+            forbidden.extend(
+                asar_policy_violations(&path, expected_arch)?
+                    .into_iter()
+                    .map(|entry| format!("{relative}!/{entry}")),
+            );
+        }
+    }
+    forbidden.sort();
+    forbidden.dedup();
+    ensure!(
+        forbidden.is_empty(),
+        "{} contains {} forbidden Windows package file(s):\n{}",
+        root.display(),
+        forbidden.len(),
+        forbidden.join("\n")
+    );
+    Ok(())
+}
+
+fn windows_pe_inventory_violation(name: &str, expected_arch: &str) -> Option<String> {
+    let normalized = name.to_ascii_lowercase();
+    if FORBIDDEN_WINDOWS_GAME_CAPTURE_ARTIFACT_PREFIXES
+        .iter()
+        .any(|prefix| normalized.starts_with(prefix))
+    {
+        return Some(format!(
+            "{name}: disabled game-capture hook sidecars must not ship"
+        ));
+    }
+    let packaged_arch = windows_native_pe_arch(&normalized)?;
+    if packaged_arch == expected_arch {
+        return None;
+    }
+    Some(format!(
+        "{name}: native architecture is {packaged_arch}, expected {expected_arch}"
+    ))
+}
+
+fn windows_native_pe_arch(name: &str) -> Option<&'static str> {
+    for (marker, arch) in [
+        (".win32-x64-msvc.", "x64"),
+        (".win32-arm64-msvc.", "arm64"),
+        (".win32-ia32-msvc.", "ia32"),
+        ("_win_x64_msvc.", "x64"),
+        ("_win_arm64_msvc.", "arm64"),
+        ("_win_x86_msvc.", "ia32"),
+    ] {
+        if name.contains(marker) {
+            return Some(arch);
+        }
+    }
+    None
 }
 
 fn contradictory_optional_windows_pe_inventory(arch: &str, main_exe: &str) -> Vec<String> {
@@ -2778,6 +3087,8 @@ fn verify_windows_unpacked_signatures_step() -> Result<()> {
     let config = windows_package_config(&build_channel, &arch);
     let pack_dir = resolve_windows_unpacked_dir(&arch, &config.main_exe)?;
     let files = collect_pe_files(&pack_dir)?;
+    assert_windows_package_file_policy(&pack_dir, &arch)?;
+    assert_windows_native_pe_machines(&pack_dir, &files, &arch, &config.main_exe)?;
     assert_expected_windows_pe_inventory(&pack_dir, &files, &arch, &config.main_exe)?;
     ensure!(
         files.iter().any(|file| extension_is(file, "node")),
@@ -2870,23 +3181,14 @@ fn verify_windows_signed_artifacts_step() -> Result<()> {
         .into_iter()
         .filter(|path| extension_is(path, "nupkg"))
         .collect::<Vec<_>>();
-    let delta_nupkgs = staged_nupkgs
-        .iter()
-        .filter(|path| {
-            path.file_name()
-                .and_then(OsStr::to_str)
-                .is_some_and(|name| name.ends_with("-delta.nupkg"))
-        })
-        .cloned()
-        .collect::<Vec<_>>();
     let unclassified_nupkgs = staged_nupkgs
         .iter()
-        .filter(|path| **path != nupkg && !delta_nupkgs.contains(path))
+        .filter(|path| **path != nupkg)
         .map(|path| path.display().to_string())
         .collect::<Vec<_>>();
     ensure!(
         unclassified_nupkgs.is_empty(),
-        "{} stages {} nupkg(s) that are neither the verified full package nor a delta package, so they would be published unverified:\n{}",
+        "{} stages {} nupkg(s) other than the verified full package, so they would be published unverified:\n{}",
         config.output_dir.display(),
         unclassified_nupkgs.len(),
         unclassified_nupkgs.join("\n")
@@ -2930,26 +3232,16 @@ fn verify_windows_signed_artifacts_step() -> Result<()> {
         nupkg.display()
     );
     let nupkg_files = collect_pe_files(&lib_app)?;
+    assert_windows_package_file_policy(&lib_app, &arch)?;
+    assert_windows_native_pe_machines(&lib_app, &nupkg_files, &arch, &config.main_exe)?;
     assert_expected_windows_pe_inventory(&lib_app, &nupkg_files, &arch, &config.main_exe)?;
     verify_windows_pe_signatures(&signtool, "nupkg lib/app", &lib_app, &nupkg_files)?;
-
-    for (index, delta_nupkg) in delta_nupkgs.iter().enumerate() {
-        let delta_root = root.join(format!("d{index}"));
-        extract_zip_safely(delta_nupkg, &delta_root)?;
-        let delta_files = collect_pe_files(&delta_root)?;
-        let label = format!("delta nupkg {}", file_name_string(delta_nupkg)?);
-        if delta_files.is_empty() {
-            println!(
-                "{label}: contains no whole PE entries, only Velopack diffs; nothing to verify."
-            );
-            continue;
-        }
-        verify_windows_pe_signatures(&signtool, &label, &delta_root, &delta_files)?;
-    }
 
     let portable_root = root.join("p");
     extract_zip_safely(&portable_zip, &portable_root)?;
     let portable_files = collect_pe_files(&portable_root)?;
+    assert_windows_package_file_policy(&portable_root, &arch)?;
+    assert_windows_native_pe_machines(&portable_root, &portable_files, &arch, &config.main_exe)?;
     assert_expected_windows_pe_inventory(&portable_root, &portable_files, &arch, &config.main_exe)?;
     verify_windows_pe_signatures(&signtool, "portable zip", &portable_root, &portable_files)?;
 
@@ -3210,6 +3502,137 @@ fn build_payload_step() -> Result<()> {
 
     println!("Payload tree:");
     print_tree(&payload_root, 6)
+}
+
+fn prepare_release_assets_step() -> Result<()> {
+    let channel = require_env("CHANNEL")?;
+    let version = require_env("VERSION")?;
+    let product = match channel.as_str() {
+        "stable" => "Fluxer",
+        "canary" => "Fluxer.Canary",
+        other => bail!("Unsupported desktop release channel {other:?}"),
+    };
+    let expected_asset_names = DESKTOP_RELEASE_ASSET_SUFFIXES
+        .iter()
+        .map(|suffix| format!("{product}-{version}-{suffix}"))
+        .collect::<BTreeSet<_>>();
+    let artifacts = Path::new("artifacts");
+    let release_assets = Path::new("release_assets");
+    remove_dir_if_exists(release_assets)?;
+    fs::create_dir_all(release_assets)?;
+
+    let mut asset_names = BTreeSet::new();
+    for (dir, identity) in payload_artifact_dirs(artifacts, &channel)? {
+        ensure!(
+            identity.desktop_variant == DEFAULT_DESKTOP_VARIANT,
+            "GitHub release asset naming is undefined for desktop variant {:?}",
+            identity.desktop_variant
+        );
+        let platform = match identity.platform.as_str() {
+            "windows" => "win32",
+            "macos" => "darwin",
+            "linux" => "linux",
+            other => bail!("Unsupported desktop release platform {other:?}"),
+        };
+        let candidates = manifest_candidates(&dir, platform, &identity.arch)?;
+        let candidate_kinds = candidates
+            .iter()
+            .map(|(kind, _)| kind.as_str())
+            .collect::<Vec<_>>();
+        let expected_kinds = match platform {
+            "win32" => vec!["setup", "portable"],
+            "darwin" => vec!["dmg", "zip"],
+            "linux" => vec!["appimage", "deb", "rpm", "tar_gz"],
+            _ => unreachable!(),
+        };
+        ensure!(
+            candidate_kinds == expected_kinds,
+            "Incomplete shipped artifact set for {}/{:?}: expected {:?}, found {:?}",
+            identity.platform,
+            identity.arch,
+            expected_kinds,
+            candidate_kinds
+        );
+
+        for (_, source) in candidates {
+            let source_name = file_name_string(&source)?;
+            let asset_name = clean_release_asset_name(&source_name)?;
+            ensure!(
+                asset_names.insert(asset_name.clone()),
+                "Duplicate GitHub release asset name {asset_name:?}"
+            );
+            let destination = release_assets.join(&asset_name);
+            let copied = fs::copy(&source, &destination).with_context(|| {
+                format!(
+                    "Failed to copy shipped artifact {} to {}",
+                    source.display(),
+                    destination.display()
+                )
+            })?;
+            ensure!(
+                copied > 0,
+                "Copied empty GitHub release asset {}",
+                destination.display()
+            );
+        }
+    }
+    ensure!(
+        asset_names == expected_asset_names,
+        "GitHub release asset inventory mismatch: expected {expected_asset_names:?}, found {asset_names:?}"
+    );
+    println!("GitHub release asset tree:");
+    print_tree(release_assets, 2)
+}
+
+fn clean_release_asset_name(source_name: &str) -> Result<String> {
+    let name = source_name
+        .chars()
+        .map(|character| {
+            if character.is_ascii_whitespace() {
+                '.'
+            } else {
+                character
+            }
+        })
+        .collect::<String>();
+    ensure!(
+        name.bytes()
+            .all(|byte| { byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_') }),
+        "Cannot produce a clean GitHub release asset name from {source_name:?}"
+    );
+    Ok(name)
+}
+
+async fn upload_release_assets_step() -> Result<()> {
+    let client = s3_client(None).await?;
+    let bucket = require_env("S3_BUCKET")?;
+    let prefix = require_env("DESKTOP_RELEASE_ASSETS_PREFIX")?;
+    let release_assets = Path::new("release_assets");
+    ensure!(
+        release_assets.is_dir(),
+        "GitHub release asset directory is missing"
+    );
+    ensure!(
+        count_files(release_assets)? > 0,
+        "GitHub release asset directory is empty"
+    );
+    upload_directory_to_s3(&client, &bucket, &prefix, release_assets, |_| true).await
+}
+
+async fn download_release_assets_step() -> Result<()> {
+    let client = s3_client(None).await?;
+    let bucket = require_env("S3_BUCKET")?;
+    let prefix = require_env("DESKTOP_RELEASE_ASSETS_PREFIX")?;
+    let release_assets = Path::new("release_assets");
+    remove_dir_if_exists(release_assets)?;
+    fs::create_dir_all(release_assets)?;
+    download_s3_prefix(&client, &bucket, &prefix, release_assets).await?;
+    ensure!(
+        count_files(release_assets)? > 0,
+        "No GitHub release assets were downloaded from {prefix}"
+    );
+    println!("Downloaded GitHub release asset tree:");
+    print_tree(release_assets, 2)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

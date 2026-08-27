@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::common::{
-    CommandSpec, command_succeeds, output_text, remove_file_if_exists, run_command,
-};
+use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
 use crate::desktop::MACOS_UNIVERSAL_ARCH;
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use clap::Args;
@@ -309,7 +307,9 @@ fn build_desktop_native_addon(addon_root: &Path, addon: &DesktopNativeAddon) -> 
         DesktopNativeSpecialBuild::Webauthn => {
             copy_webauthn_linux_shared_libraries(&built.out_file, addon_root)?
         }
-        DesktopNativeSpecialBuild::WinGameCapture => build_win_game_capture_artifacts(addon_root)?,
+        DesktopNativeSpecialBuild::WinGameCapture => {
+            remove_stale_win_game_capture_outputs(addon_root, &built.out_file)?
+        }
     }
     Ok(())
 }
@@ -365,6 +365,9 @@ fn build_rust_node_addon_for_arch(
         OsString::from("--manifest-path"),
         OsString::from("Cargo.toml"),
     ];
+    if addon.special == DesktopNativeSpecialBuild::WinGameCapture {
+        args.push(OsString::from("--no-default-features"));
+    }
     if !addon.features.is_empty() {
         args.push(OsString::from("--features"));
         args.push(OsString::from(addon.features.join(",")));
@@ -413,6 +416,7 @@ fn build_rust_node_addon_for_arch(
     );
     sign_macos_node_addon(&out_file, platform)?;
     assert_no_redistributable_runtime_imports(&out_file, platform)?;
+    assert_no_disabled_win_game_capture_capabilities(&out_file, addon, platform)?;
     Ok(BuiltNodeAddon {
         out_file,
         source,
@@ -668,235 +672,43 @@ fn should_bundle_linux_library(library_name: &str) -> bool {
     .any(|prefix| library_name.starts_with(prefix))
 }
 
-#[derive(Debug, Clone, Copy)]
-struct HookLayerArch {
-    arch: &'static str,
-    target: &'static str,
-    tag: &'static str,
-}
-
-const WIN_GAME_CAPTURE_ARCHES: &[HookLayerArch] = &[
-    HookLayerArch {
-        arch: "x64",
-        target: "x86_64-pc-windows-msvc",
-        tag: "win32-x64-msvc",
-    },
-    HookLayerArch {
-        arch: "ia32",
-        target: "i686-pc-windows-msvc",
-        tag: "win32-ia32-msvc",
-    },
-    HookLayerArch {
-        arch: "arm64",
-        target: "aarch64-pc-windows-msvc",
-        tag: "win32-arm64-msvc",
-    },
-];
-
-fn build_win_game_capture_artifacts(root: &Path) -> Result<()> {
-    let primary_arch = electron_arch();
-    for arch in WIN_GAME_CAPTURE_ARCHES {
-        let required_for_primary_runtime =
-            arch.arch == primary_arch || (primary_arch == "x64" && arch.arch == "ia32");
-        build_win_game_capture_hook(root, arch, required_for_primary_runtime)?;
-        build_win_game_capture_vulkan_layer(root, arch, arch.arch == primary_arch)?;
-        build_win_game_capture_inject_helper(root, arch, required_for_primary_runtime)?;
+fn remove_stale_win_game_capture_outputs(root: &Path, primary_node: &Path) -> Result<()> {
+    let primary_node_name = primary_node
+        .file_name()
+        .and_then(OsStr::to_str)
+        .ok_or_else(|| {
+            anyhow!(
+                "Invalid win-game-capture output path: {}",
+                primary_node.display()
+            )
+        })?;
+    let mut stale = fs::read_dir(root)
+        .with_context(|| format!("Failed to read {}", root.display()))?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    stale.retain(|path| {
+        if !path.is_file() {
+            return false;
+        }
+        let Some(file_name) = path.file_name().and_then(OsStr::to_str) else {
+            return false;
+        };
+        file_name.starts_with("fluxer-game-hook.")
+            || file_name.starts_with("fluxer-inject-helper.")
+            || file_name.starts_with("fluxer-vulkan-layer.")
+            || (file_name.starts_with("win-game-capture.")
+                && file_name.ends_with(".node")
+                && file_name != primary_node_name)
+    });
+    stale.sort();
+    for path in stale {
+        fs::remove_file(&path).with_context(|| format!("Failed to remove {}", path.display()))?;
+        println!("[win-game-capture] removed stale output {}", path.display());
     }
     Ok(())
 }
 
-fn build_win_game_capture_hook(root: &Path, arch: &HookLayerArch, required: bool) -> Result<()> {
-    build_win_game_capture_extra(
-        "game-capture hook",
-        root,
-        &root.join("hook"),
-        "fluxer_game_hook",
-        &format!("fluxer-game-hook.{}.dll", arch.tag),
-        arch,
-        required,
-    )
-}
-
-fn build_win_game_capture_vulkan_layer(
-    root: &Path,
-    arch: &HookLayerArch,
-    required: bool,
-) -> Result<()> {
-    let layer_dll_name = format!("fluxer-vulkan-layer.{}.dll", arch.tag);
-    build_win_game_capture_extra(
-        "Vulkan game-capture layer",
-        root,
-        &root.join("vulkan-layer"),
-        "fluxer_vulkan_layer",
-        &layer_dll_name,
-        arch,
-        required,
-    )?;
-    let manifest_path = root.join(format!("fluxer-vulkan-layer.{}.json", arch.tag));
-    if !root.join(&layer_dll_name).exists() {
-        remove_file_if_exists(&manifest_path)?;
-        println!(
-            "[win-game-capture] no {layer_dll_name}; not emitting {} so packages never ship a manifest pointing at an absent layer",
-            manifest_path.display()
-        );
-        return Ok(());
-    }
-    fs::write(&manifest_path, vulkan_layer_manifest(&layer_dll_name))
-        .with_context(|| format!("Failed to write {}", manifest_path.display()))?;
-    println!("[win-game-capture] emitted {}", manifest_path.display());
-    Ok(())
-}
-
-fn build_win_game_capture_inject_helper(
-    root: &Path,
-    arch: &HookLayerArch,
-    required: bool,
-) -> Result<()> {
-    let helper_root = root.join("inject-helper");
-    ensure_rust_target_or_skip(arch, "inject-helper", required)?;
-    if !try_cargo_build("inject-helper", &helper_root, arch.target) {
-        if required {
-            bail!(
-                "[win-game-capture] required {} inject-helper build failed",
-                arch.arch
-            );
-        }
-        return Ok(());
-    }
-    let helper_source = helper_root
-        .join("target")
-        .join(arch.target)
-        .join("release")
-        .join("fluxer-inject-helper.exe");
-    let helper_out = root.join(format!("fluxer-inject-helper.{}.exe", arch.tag));
-    copy_optional_win_game_capture_artifact(
-        &helper_source,
-        &helper_out,
-        &format!("{} inject-helper", arch.arch),
-        required,
-    )
-}
-
-fn build_win_game_capture_extra(
-    label: &str,
-    root: &Path,
-    cargo_root: &Path,
-    crate_name: &str,
-    output_name: &str,
-    arch: &HookLayerArch,
-    required: bool,
-) -> Result<()> {
-    ensure_rust_target_or_skip(arch, label, required)?;
-    if !try_cargo_build(label, cargo_root, arch.target) {
-        if required {
-            bail!(
-                "[win-game-capture] required {} {} build failed",
-                arch.arch,
-                label
-            );
-        }
-        return Ok(());
-    }
-    let source = cargo_root
-        .join("target")
-        .join(arch.target)
-        .join("release")
-        .join(cargo_dynamic_library_file_name(crate_name, "win32")?);
-    let output = root.join(output_name);
-    copy_optional_win_game_capture_artifact(
-        &source,
-        &output,
-        &format!("{} {label}", arch.arch),
-        required,
-    )
-}
-
-fn ensure_rust_target_or_skip(arch: &HookLayerArch, label: &str, required: bool) -> Result<()> {
-    if rust_target_installed(arch.target) {
-        return Ok(());
-    }
-    let message = format!(
-        "[win-game-capture] {} {} {}: rust target {} not installed",
-        if required {
-            "missing required"
-        } else {
-            "skipping"
-        },
-        arch.arch,
-        label,
-        arch.target
-    );
-    if required {
-        bail!(message);
-    }
-    eprintln!("{message}");
-    Ok(())
-}
-
-fn rust_target_installed(target: &str) -> bool {
-    let rustup = env::var_os("RUSTUP").unwrap_or_else(|| OsString::from("rustup"));
-    match output_text(CommandSpec::new(rustup).args(["target", "list", "--installed"])) {
-        Ok(output) => output.lines().any(|line| line.trim() == target),
-        Err(error) => {
-            eprintln!(
-                "[win-game-capture] could not query rustup for target {target}; assuming present: {error:#}"
-            );
-            true
-        }
-    }
-}
-
-fn try_cargo_build(label: &str, cwd: &Path, target: &str) -> bool {
-    println!("[win-game-capture] building {label} target={target}");
-    run_command(
-        CommandSpec::new(resolve_cargo_bin())
-            .args([
-                OsString::from("build"),
-                OsString::from("--release"),
-                OsString::from("--target"),
-                OsString::from(target),
-                OsString::from("--manifest-path"),
-                cwd.join("Cargo.toml").into_os_string(),
-            ])
-            .current_dir(cwd),
-    )
-    .map(|_| true)
-    .unwrap_or_else(|error| {
-        eprintln!(
-            "[win-game-capture] skipping {label} for {target}: cargo build failed: {error:#}"
-        );
-        false
-    })
-}
-
-fn copy_optional_win_game_capture_artifact(
-    source: &Path,
-    output: &Path,
-    label: &str,
-    required: bool,
-) -> Result<()> {
-    if !source.exists() {
-        let message = format!(
-            "[win-game-capture] expected {} after {label} build",
-            source.display()
-        );
-        if required {
-            bail!(message);
-        }
-        eprintln!("{message}; skipping copy");
-        return Ok(());
-    }
-    fs::copy(source, output).with_context(|| {
-        format!(
-            "Failed to copy {} to {}",
-            source.display(),
-            output.display()
-        )
-    })?;
-    println!("[win-game-capture] emitted {}", output.display());
-    Ok(())
-}
-
+#[cfg(test)]
 fn vulkan_layer_manifest(layer_dll_name: &str) -> String {
     format!(
         "{{\n\
@@ -933,6 +745,40 @@ fn assert_no_redistributable_runtime_imports(node_file_path: &Path, platform: &s
             .collect::<Vec<_>>()
             .join("\n")
     )
+}
+
+const DISABLED_WIN_GAME_CAPTURE_BINARY_MARKERS: &[&[u8]] = &[
+    b"CreateRemoteThread",
+    b"VirtualAllocEx",
+    b"VirtualFreeEx",
+    b"WriteProcessMemory",
+    b"SetWindowsHookExW",
+    b"fluxer-inject-helper.",
+];
+
+fn assert_no_disabled_win_game_capture_capabilities(
+    node_file_path: &Path,
+    addon: &DesktopNativeAddon,
+    platform: &str,
+) -> Result<()> {
+    if platform != "win32" || addon.special != DesktopNativeSpecialBuild::WinGameCapture {
+        return Ok(());
+    }
+    let binary = fs::read(node_file_path)
+        .with_context(|| format!("Failed to read {}", node_file_path.display()))?;
+    let present = DISABLED_WIN_GAME_CAPTURE_BINARY_MARKERS
+        .iter()
+        .copied()
+        .filter(|marker| binary.windows(marker.len()).any(|window| window == *marker))
+        .map(|marker| String::from_utf8_lossy(marker).into_owned())
+        .collect::<Vec<_>>();
+    ensure!(
+        present.is_empty(),
+        "{} contains disabled game-capture injection capabilities:\n{}",
+        node_file_path.display(),
+        present.join("\n")
+    );
+    Ok(())
 }
 
 fn find_redistributable_runtime_imports(file_path: &Path) -> Vec<String> {

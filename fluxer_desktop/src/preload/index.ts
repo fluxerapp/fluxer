@@ -425,15 +425,6 @@ const api: ElectronAPI = {
 		};
 	},
 	getInitialDeepLink: (): Promise<string | null> => ipcRenderer.invoke('get-initial-deep-link'),
-	onRpcNavigate: (callback: (path: string) => void): (() => void) => {
-		const handler = (_event: Electron.IpcRendererEvent, path: string): void => {
-			callback(path);
-		};
-		ipcRenderer.on('rpc-navigate', handler);
-		return () => {
-			ipcRenderer.removeListener('rpc-navigate', handler);
-		};
-	},
 	autostartEnable: (): Promise<void> => ipcRenderer.invoke('autostart-enable'),
 	autostartDisable: (): Promise<void> => ipcRenderer.invoke('autostart-disable'),
 	autostartIsEnabled: (): Promise<boolean> => ipcRenderer.invoke('autostart-is-enabled'),

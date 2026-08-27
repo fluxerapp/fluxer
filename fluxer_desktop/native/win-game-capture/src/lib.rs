@@ -3,13 +3,17 @@
 #![deny(clippy::all)]
 #![allow(unsafe_op_in_unsafe_fn)]
 
-#[cfg(any(target_os = "windows", test))]
+#[cfg(target_os = "windows")]
+mod capture_target;
+#[cfg(any(all(target_os = "windows", feature = "game-capture-hook"), test))]
 mod compatibility;
+#[cfg(target_os = "windows")]
+mod d3d11_device;
 #[cfg(any(target_os = "windows", test))]
 mod dxgi_capture;
 pub mod encoder_attach;
 mod fallback;
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
 mod game_capture;
 mod game_capture_abi;
 mod gpu_priority;
@@ -19,7 +23,7 @@ mod nv12_gpu;
 mod sources;
 #[cfg(any(target_os = "windows", test))]
 mod stall;
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
 mod vulkan_layer_registry;
 #[cfg(target_os = "windows")]
 mod wgc_capture;
@@ -39,7 +43,7 @@ use dxgi_capture::DxgiCaptureSession;
 use fluxer_encoder_ring::EncoderFrameRate;
 #[cfg(target_os = "windows")]
 use fluxer_screen_frame_bus::EnqueueOutcome;
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
 use game_capture::GameCaptureSession;
 #[cfg(target_os = "windows")]
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -48,7 +52,6 @@ use wgc_capture::WgcCaptureSession;
 
 const LIFECYCLE_QUEUE_LIMIT: usize = 8;
 const START_OPTION_UNSUPPORTED_LIMIT: usize = 4;
-const GAME_CAPTURE_HOOK_FORCE_DISABLED: bool = true;
 
 type LifecycleTsfn = Arc<
     ThreadsafeFunction<
@@ -226,7 +229,7 @@ pub struct CaptureInner {
     pub session: Mutex<Option<DxgiCaptureSession>>,
     #[cfg(target_os = "windows")]
     pub(crate) wgc_session: Mutex<Option<WgcCaptureSession>>,
-    #[cfg(target_os = "windows")]
+    #[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
     pub game_session: Mutex<Option<Arc<GameCaptureSession>>>,
     pub running: std::sync::atomic::AtomicBool,
     pub fallback: Mutex<Option<fallback::FallbackTracker>>,
@@ -421,6 +424,7 @@ pub(crate) fn note_media_frame_without_sink(inner: &CaptureInner, message: &'sta
 }
 
 #[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
 pub(crate) fn note_cpu_fallback_frame_dropped(inner: &CaptureInner, message: &'static str) {
     inner
         .cpu_fallback_frames_dropped
@@ -470,7 +474,7 @@ impl ScreenCapture {
                 session: Mutex::new(None),
                 #[cfg(target_os = "windows")]
                 wgc_session: Mutex::new(None),
-                #[cfg(target_os = "windows")]
+                #[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
                 game_session: Mutex::new(None),
                 running: std::sync::atomic::AtomicBool::new(false),
                 fallback: Mutex::new(None),
@@ -586,43 +590,48 @@ impl ScreenCapture {
         #[cfg(target_os = "windows")]
         {
             let frame_sink = frame_sink_counter_snapshot(&self.inner);
-            let guard = self.inner.game_session.lock();
-            if let Some(session) = guard.as_ref() {
-                let requested_injection_method = session.requested_injection_method().to_string();
-                let injection_method = session.used_injection_method().to_string();
-                if let Some(info) = session.read_shared_info() {
-                    return Some(CaptureDiagnostics {
-                        state: info.state,
-                        api_type: info.api_type,
-                        transport: info.transport,
-                        fallback_reason: info.fallback_reason,
-                        capture_flags: info.capture_flags,
-                        width: info.width,
-                        height: info.height,
-                        dxgi_format: info.dxgi_format,
-                        frame_counter: info.frame_counter as f64,
-                        dropped_frame_counter: info.dropped_frame_counter as f64,
-                        last_present_timestamp_us: info.last_present_timestamp_us as f64,
-                        last_error: info.last_error,
+            #[cfg(feature = "game-capture-hook")]
+            {
+                let guard = self.inner.game_session.lock();
+                if let Some(session) = guard.as_ref() {
+                    let requested_injection_method =
+                        session.requested_injection_method().to_string();
+                    let injection_method = session.used_injection_method().to_string();
+                    if let Some(info) = session.read_shared_info() {
+                        return Some(CaptureDiagnostics {
+                            state: info.state,
+                            api_type: info.api_type,
+                            transport: info.transport,
+                            fallback_reason: info.fallback_reason,
+                            capture_flags: info.capture_flags,
+                            width: info.width,
+                            height: info.height,
+                            dxgi_format: info.dxgi_format,
+                            frame_counter: info.frame_counter as f64,
+                            dropped_frame_counter: info.dropped_frame_counter as f64,
+                            last_present_timestamp_us: info.last_present_timestamp_us as f64,
+                            last_error: info.last_error,
+                            requested_injection_method,
+                            injection_method,
+                            active_strategy: snapshot.active_strategy,
+                            last_fallback_reason: snapshot.last_fallback_reason,
+                            start_options: current_start_options(&self.inner),
+                            frame_sink_accepted: frame_sink.accepted as f64,
+                            frame_sink_coalesced: frame_sink.coalesced as f64,
+                            frame_sink_rejected: frame_sink.rejected as f64,
+                            media_frames_dropped_without_sink: frame_sink.dropped_without_sink
+                                as f64,
+                            cpu_fallback_frames_dropped: frame_sink.cpu_fallback_dropped as f64,
+                        });
+                    }
+                    return Some(strategy_only_diagnostics(
+                        &snapshot,
                         requested_injection_method,
                         injection_method,
-                        active_strategy: snapshot.active_strategy,
-                        last_fallback_reason: snapshot.last_fallback_reason,
-                        start_options: current_start_options(&self.inner),
-                        frame_sink_accepted: frame_sink.accepted as f64,
-                        frame_sink_coalesced: frame_sink.coalesced as f64,
-                        frame_sink_rejected: frame_sink.rejected as f64,
-                        media_frames_dropped_without_sink: frame_sink.dropped_without_sink as f64,
-                        cpu_fallback_frames_dropped: frame_sink.cpu_fallback_dropped as f64,
-                    });
+                        current_start_options(&self.inner),
+                        frame_sink,
+                    ));
                 }
-                return Some(strategy_only_diagnostics(
-                    &snapshot,
-                    requested_injection_method,
-                    injection_method,
-                    current_start_options(&self.inner),
-                    frame_sink,
-                ));
             }
             Some(strategy_only_diagnostics(
                 &snapshot,
@@ -669,7 +678,7 @@ impl ScreenCapture {
 
     #[napi(js_name = "getSharedTextureHandle")]
     pub fn get_shared_texture_handle(&self) -> Option<SharedTextureHandleInfo> {
-        #[cfg(target_os = "windows")]
+        #[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
         {
             let guard = self.inner.game_session.lock();
             let session = guard.as_ref()?;
@@ -684,7 +693,7 @@ impl ScreenCapture {
             }
             None
         }
-        #[cfg(not(target_os = "windows"))]
+        #[cfg(not(all(target_os = "windows", feature = "game-capture-hook")))]
         {
             None
         }
@@ -706,6 +715,9 @@ impl ScreenCapture {
             *guard = None;
             let mut wgc_guard = self.inner.wgc_session.lock();
             *wgc_guard = None;
+        }
+        #[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
+        {
             let mut game_guard = self.inner.game_session.lock();
             *game_guard = None;
         }
@@ -955,7 +967,8 @@ impl ScreenCapture {
             return Err(napi::Error::from_reason("Capture already running"));
         }
 
-        if source_kind == "game" && !GAME_CAPTURE_HOOK_FORCE_DISABLED {
+        #[cfg(feature = "game-capture-hook")]
+        if source_kind == "game" {
             return self.start_windows_game(
                 source_id,
                 source_kind,
@@ -991,7 +1004,7 @@ impl ScreenCapture {
         }
 
         let hwnd = if source_kind == "game" {
-            let target = game_capture::resolve_game_capture_target(&source_id, &source_kind)
+            let target = capture_target::resolve_game_capture_target(&source_id, &source_kind)
                 .map_err(|e| {
                     napi::Error::from_reason(format!("Failed to resolve game capture target: {e}"))
                 })?;
@@ -1115,6 +1128,7 @@ impl ScreenCapture {
         })
     }
 
+    #[cfg(feature = "game-capture-hook")]
     #[allow(clippy::too_many_arguments)]
     fn start_windows_game(
         &self,
@@ -1278,7 +1292,7 @@ pub fn is_supported() -> bool {
 
 #[napi(js_name = "isGameCaptureHookAvailable")]
 pub fn is_game_capture_hook_available() -> bool {
-    cfg!(target_os = "windows") && !GAME_CAPTURE_HOOK_FORCE_DISABLED
+    cfg!(all(target_os = "windows", feature = "game-capture-hook"))
 }
 
 #[napi(js_name = "getAvailability")]
@@ -1314,37 +1328,37 @@ pub fn restore_gpu_scheduling_priority(process_id: Option<u32>) -> Result<()> {
 
 #[napi(js_name = "registerVulkanLayerManifest")]
 pub fn register_vulkan_layer_manifest(manifest_path: String) -> Result<()> {
-    #[cfg(target_os = "windows")]
+    #[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
     {
         vulkan_layer_registry::register_manifest(&manifest_path).map_err(napi::Error::from_reason)
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(all(target_os = "windows", feature = "game-capture-hook")))]
     {
         let _ = manifest_path;
         Err(napi::Error::from_reason(
-            "Vulkan game capture layer only supported on Windows",
+            "Vulkan game capture layer is not included in this build",
         ))
     }
 }
 
 #[napi(js_name = "unregisterVulkanLayerManifest")]
 pub fn unregister_vulkan_layer_manifest(manifest_path: String) -> Result<()> {
-    #[cfg(target_os = "windows")]
+    #[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
     {
         vulkan_layer_registry::unregister_manifest(&manifest_path).map_err(napi::Error::from_reason)
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(all(target_os = "windows", feature = "game-capture-hook")))]
     {
         let _ = manifest_path;
         Err(napi::Error::from_reason(
-            "Vulkan game capture layer only supported on Windows",
+            "Vulkan game capture layer is not included in this build",
         ))
     }
 }
 
 #[napi(js_name = "getVulkanLayerRegistrationState")]
 pub fn get_vulkan_layer_registration_state(manifest_path: String) -> VulkanLayerRegistrationState {
-    #[cfg(target_os = "windows")]
+    #[cfg(all(target_os = "windows", feature = "game-capture-hook"))]
     {
         let state = vulkan_layer_registry::registration_state(&manifest_path);
         VulkanLayerRegistrationState {
@@ -1354,7 +1368,7 @@ pub fn get_vulkan_layer_registration_state(manifest_path: String) -> VulkanLayer
             manifest_path: state.manifest_path,
         }
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(all(target_os = "windows", feature = "game-capture-hook")))]
     {
         VulkanLayerRegistrationState {
             registered: false,

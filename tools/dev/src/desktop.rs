@@ -7,13 +7,11 @@ use anyhow::{Context, Result, bail};
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use url::Url;
 
 const CANARY_APP_NAME: &str = "Fluxer Canary";
 const CANARY_BUNDLE_ID: &str = "app.fluxer.canary";
-const CANARY_RPC_PORT: u16 = 21864;
 const MACOS_DEV_ELECTRON_USAGE_DESCRIPTIONS: &[(&str, &str)] = &[
     (
         "NSMicrophoneUsageDescription",
@@ -466,7 +464,6 @@ fn stop_running_canary_on_host() -> Result<()> {
         ],
     );
     run_best_effort("pkill", &["-TERM", "-x", CANARY_APP_NAME]);
-    terminate_rpc_port_processes(CANARY_RPC_PORT)?;
     Ok(())
 }
 
@@ -477,60 +474,6 @@ fn run_best_effort(program: &str, args: &[&str]) {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status();
-}
-
-fn terminate_rpc_port_processes(port: u16) -> Result<()> {
-    let mut pids = pids_listening_on_tcp_port(port)?;
-    if pids.is_empty() {
-        return Ok(());
-    }
-    kill_pids("-TERM", &pids)?;
-    let deadline = Instant::now() + Duration::from_secs(5);
-    while Instant::now() < deadline {
-        thread::sleep(Duration::from_millis(250));
-        pids = pids_listening_on_tcp_port(port)?;
-        if pids.is_empty() {
-            return Ok(());
-        }
-    }
-    kill_pids("-KILL", &pids)
-}
-
-fn pids_listening_on_tcp_port(port: u16) -> Result<Vec<String>> {
-    let output = Command::new("lsof")
-        .args(["-ti", &format!("tcp:{port}")])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .output()
-        .context("failed to run lsof while stopping Fluxer Canary")?;
-    if !output.status.success() {
-        return Ok(Vec::new());
-    }
-    Ok(String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .map(str::trim)
-        .filter(|line| !line.is_empty())
-        .map(ToOwned::to_owned)
-        .collect())
-}
-
-fn kill_pids(signal: &str, pids: &[String]) -> Result<()> {
-    if pids.is_empty() {
-        return Ok(());
-    }
-    let status = Command::new("kill")
-        .arg(signal)
-        .args(pids)
-        .status()
-        .context("failed to run kill while stopping Fluxer Canary")?;
-    if status.success() {
-        Ok(())
-    } else {
-        bail!(
-            "failed to stop Fluxer Canary process(es): {}",
-            pids.join(", ")
-        )
-    }
 }
 
 #[cfg(test)]

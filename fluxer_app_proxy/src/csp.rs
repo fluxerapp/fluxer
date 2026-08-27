@@ -68,8 +68,6 @@ const CONNECT_SOURCES: &[&str] = &[
     "https://challenges.cloudflare.com",
     "https://fluxerstatus.com",
     "https://fluxer.media",
-    "http://127.0.0.1:21863",
-    "http://127.0.0.1:21864",
 ];
 
 const WORKER_SOURCES: &[&str] = &["https://*.fluxer.app", "blob:"];

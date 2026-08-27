@@ -5,123 +5,29 @@ use anyhow::{Context, Result, bail, ensure};
 use chrono::{DateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::Deserialize;
-use serde_json::Value;
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs::{self, File};
+use std::io::Read;
+use std::path::{Path, PathBuf};
 
 const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
-const DESKTOP_DOWNLOAD_URL: &str = "https://api.fluxer.app/dl/desktop";
-
-struct DesktopDownload {
-    arch: &'static str,
-    label: &'static str,
-    format: &'static str,
-}
-
-struct DesktopPlatform {
-    name: &'static str,
-    slug: &'static str,
-    downloads: &'static [DesktopDownload],
-}
-
-const DESKTOP_PLATFORMS: &[DesktopPlatform] = &[
-    DesktopPlatform {
-        name: "Windows",
-        slug: "win32",
-        downloads: &[
-            DesktopDownload {
-                arch: "x64",
-                label: "Setup.exe",
-                format: "setup",
-            },
-            DesktopDownload {
-                arch: "x64",
-                label: "Portable ZIP",
-                format: "portable",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "Setup.exe",
-                format: "setup",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "Portable ZIP",
-                format: "portable",
-            },
-        ],
-    },
-    DesktopPlatform {
-        name: "macOS",
-        slug: "darwin",
-        downloads: &[
-            DesktopDownload {
-                arch: "x64",
-                label: "DMG",
-                format: "dmg",
-            },
-            DesktopDownload {
-                arch: "x64",
-                label: "ZIP",
-                format: "zip",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "DMG",
-                format: "dmg",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "ZIP",
-                format: "zip",
-            },
-        ],
-    },
-    DesktopPlatform {
-        name: "Linux",
-        slug: "linux",
-        downloads: &[
-            DesktopDownload {
-                arch: "x64",
-                label: "AppImage",
-                format: "appimage",
-            },
-            DesktopDownload {
-                arch: "x64",
-                label: "DEB",
-                format: "deb",
-            },
-            DesktopDownload {
-                arch: "x64",
-                label: "RPM",
-                format: "rpm",
-            },
-            DesktopDownload {
-                arch: "x64",
-                label: "tar.gz",
-                format: "tar_gz",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "AppImage",
-                format: "appimage",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "DEB",
-                format: "deb",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "RPM",
-                format: "rpm",
-            },
-            DesktopDownload {
-                arch: "arm64",
-                label: "tar.gz",
-                format: "tar_gz",
-            },
-        ],
-    },
+pub(crate) const DESKTOP_RELEASE_ASSET_SUFFIXES: &[&str] = &[
+    "linux-aarch64.rpm",
+    "linux-amd64.deb",
+    "linux-arm64.AppImage",
+    "linux-arm64.deb",
+    "linux-arm64.tar.gz",
+    "linux-x64.tar.gz",
+    "linux-x86_64.AppImage",
+    "linux-x86_64.rpm",
+    "mac-universal.dmg",
+    "mac-universal.zip",
+    "portable-win-arm64.zip",
+    "portable-win-x64.zip",
+    "win-arm64.exe",
+    "win-x64.exe",
 ];
 
 #[derive(Debug, Args, Clone)]
@@ -148,6 +54,8 @@ struct PublishArgs {
     previous_sha: Option<String>,
     #[arg(long)]
     prerelease: bool,
+    #[arg(long)]
+    asset_dir: Option<PathBuf>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -175,7 +83,24 @@ struct ReleaseDetail {
     body: Option<String>,
     draft: bool,
     prerelease: bool,
-    assets: Vec<Value>,
+    assets: Vec<PublishedReleaseAsset>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PublishedReleaseAsset {
+    name: String,
+    label: Option<String>,
+    size: u64,
+    digest: Option<String>,
+    state: String,
+}
+
+#[derive(Debug)]
+struct LocalReleaseAsset {
+    path: PathBuf,
+    name: String,
+    size: u64,
+    digest: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -207,12 +132,7 @@ fn publish(args: PublishArgs) -> Result<()> {
     let summaries = release_summaries()?;
     let qualified = qualified_releases(&summaries, &args.component)?;
     let existing_release = qualified.iter().find(|release| release.tag == tag);
-    if let Some(existing) = summaries.iter().find(|release| release.tag_name == tag) {
-        ensure!(
-            !existing.is_draft && existing.published_at.is_some(),
-            "Release {tag} exists but is not a published, non-draft component release"
-        );
-    }
+    let existing_summary = summaries.iter().find(|release| release.tag_name == tag);
 
     if existing_release.is_none()
         && let Some(newer) = qualified
@@ -271,35 +191,71 @@ fn publish(args: PublishArgs) -> Result<()> {
         }
     };
 
-    let body = release_body(
+    let body = release_body(&previous_sha, &source_sha);
+    let assets = local_release_assets(
         &args.component,
         &args.build_version,
-        &previous_sha,
-        &source_sha,
-    );
-    if summaries.iter().any(|release| release.tag_name == tag) {
-        verify_existing_release(&tag, &title, &body, &source_sha, args.prerelease)?;
+        args.asset_dir.as_deref(),
+    )?;
+    if existing_summary.is_some_and(|release| !release.is_draft) {
+        ensure!(
+            existing_summary
+                .and_then(|release| release.published_at.as_ref())
+                .is_some(),
+            "Published release {tag} is missing its publication timestamp"
+        );
+        verify_release(
+            &tag,
+            &title,
+            &body,
+            &source_sha,
+            args.prerelease,
+            false,
+            &assets,
+        )?;
         println!("Release {tag} already exists with the expected state.");
         return Ok(());
     }
 
-    ensure!(
-        !tag_exists(&tag)?,
-        "Refusing to publish {tag}: the tag already exists without a matching GitHub Release"
-    );
-
-    let mut command = CommandSpec::new("gh")
-        .args(["release", "create", &tag])
-        .args(["--repo", RELEASE_REPOSITORY])
-        .args(["--title", &title])
-        .args(["--notes", &body])
-        .args(["--target", &source_sha])
-        .args(["--latest=false"]);
-    if args.prerelease {
-        command = command.arg("--prerelease");
+    if let Some(existing) = existing_summary {
+        ensure!(
+            existing.published_at.is_none(),
+            "Draft release {tag} unexpectedly has a publication timestamp"
+        );
+    } else {
+        ensure!(
+            !tag_exists(&tag)?,
+            "Refusing to publish {tag}: the tag already exists without a matching GitHub Release"
+        );
+        create_draft_release(&tag, &title, &body, &source_sha, args.prerelease)?;
     }
-    run_command(command)?;
-    verify_existing_release(&tag, &title, &body, &source_sha, args.prerelease)
+    upload_draft_release_assets(&tag, &title, &body, &source_sha, args.prerelease, &assets)?;
+    verify_release(
+        &tag,
+        &title,
+        &body,
+        &source_sha,
+        args.prerelease,
+        true,
+        &assets,
+    )?;
+    run_command(
+        CommandSpec::new("gh")
+            .args(["release", "edit", &tag])
+            .args(["--repo", RELEASE_REPOSITORY])
+            .arg("--draft=false")
+            .arg(format!("--prerelease={}", args.prerelease))
+            .arg("--latest=false"),
+    )?;
+    verify_release(
+        &tag,
+        &title,
+        &body,
+        &source_sha,
+        args.prerelease,
+        false,
+        &assets,
+    )
 }
 
 fn validate_component(component: &str) -> Result<()> {
@@ -425,20 +381,226 @@ fn tag_exists(tag: &str) -> Result<bool> {
     Ok(refs.iter().any(|git_ref| git_ref.name == expected))
 }
 
-fn verify_existing_release(
+fn local_release_assets(
+    component: &str,
+    version: &str,
+    asset_dir: Option<&Path>,
+) -> Result<Vec<LocalReleaseAsset>> {
+    let Some(channel) = desktop_channel(component) else {
+        ensure!(
+            asset_dir.is_none(),
+            "Release assets are supported only for desktop components"
+        );
+        return Ok(Vec::new());
+    };
+    let asset_dir = asset_dir.context("Desktop releases require --asset-dir")?;
+    ensure!(
+        asset_dir.is_dir(),
+        "Desktop release asset directory does not exist: {}",
+        asset_dir.display()
+    );
+    let product = match channel {
+        "stable" => "Fluxer",
+        "canary" => "Fluxer.Canary",
+        other => bail!("Unsupported desktop release channel {other:?}"),
+    };
+    let prefix = format!("{product}-{version}-");
+    let mut entries = fs::read_dir(asset_dir)
+        .with_context(|| {
+            format!(
+                "Failed to read desktop release assets in {}",
+                asset_dir.display()
+            )
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    entries.sort_by_key(std::fs::DirEntry::file_name);
+    ensure!(
+        !entries.is_empty(),
+        "Desktop release asset directory is empty: {}",
+        asset_dir.display()
+    );
+
+    let mut assets = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let path = entry.path();
+        let metadata = fs::symlink_metadata(&path)
+            .with_context(|| format!("Failed to inspect release asset {}", path.display()))?;
+        ensure!(
+            metadata.file_type().is_file(),
+            "Release asset must be a regular file: {}",
+            path.display()
+        );
+        ensure!(
+            metadata.len() > 0,
+            "Release asset is empty: {}",
+            path.display()
+        );
+        let name = entry
+            .file_name()
+            .into_string()
+            .map_err(|name| anyhow::anyhow!("Release asset name is not valid UTF-8: {name:?}"))?;
+        ensure!(
+            name.bytes()
+                .all(|byte| { byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_') }),
+            "Release asset name is not clean and URL-safe: {name:?}"
+        );
+        let suffix = name
+            .strip_prefix(&prefix)
+            .with_context(|| format!("Release asset {name:?} must start with {prefix:?}"))?;
+        ensure!(
+            DESKTOP_RELEASE_ASSET_SUFFIXES.contains(&suffix),
+            "Release asset {name:?} is not a supported shipped desktop artifact"
+        );
+        assets.push(LocalReleaseAsset {
+            digest: sha256_file(&path)?,
+            path,
+            name,
+            size: metadata.len(),
+        });
+    }
+    let expected_names = DESKTOP_RELEASE_ASSET_SUFFIXES
+        .iter()
+        .map(|suffix| format!("{prefix}{suffix}"))
+        .collect::<BTreeSet<_>>();
+    let actual_names = assets
+        .iter()
+        .map(|asset| asset.name.clone())
+        .collect::<BTreeSet<_>>();
+    ensure!(
+        actual_names == expected_names,
+        "Desktop release asset inventory mismatch: expected {expected_names:?}, found {actual_names:?}"
+    );
+    Ok(assets)
+}
+
+fn sha256_file(path: &Path) -> Result<String> {
+    let mut file = File::open(path)
+        .with_context(|| format!("Failed to open release asset {}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .with_context(|| format!("Failed to read release asset {}", path.display()))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hex::encode(hasher.finalize()))
+}
+
+fn create_draft_release(
     tag: &str,
     title: &str,
     body: &str,
     source_sha: &str,
     prerelease: bool,
 ) -> Result<()> {
+    let mut command = CommandSpec::new("gh")
+        .args(["release", "create", tag])
+        .args(["--repo", RELEASE_REPOSITORY])
+        .args(["--title", title])
+        .args(["--notes", body])
+        .args(["--target", source_sha])
+        .args(["--latest=false", "--draft"]);
+    if prerelease {
+        command = command.arg("--prerelease");
+    }
+    run_command(command)
+}
+
+fn release_detail(tag: &str) -> Result<ReleaseDetail> {
     let output = output_text(
         CommandSpec::new("gh")
             .arg("api")
             .arg(format!("repos/{RELEASE_REPOSITORY}/releases/tags/{tag}")),
     )?;
-    let release: ReleaseDetail =
-        serde_json::from_str(&output).with_context(|| format!("Failed to parse release {tag}"))?;
+    serde_json::from_str(&output).with_context(|| format!("Failed to parse release {tag}"))
+}
+
+fn upload_draft_release_assets(
+    tag: &str,
+    title: &str,
+    body: &str,
+    source_sha: &str,
+    prerelease: bool,
+    expected_assets: &[LocalReleaseAsset],
+) -> Result<()> {
+    let release = release_detail(tag)?;
+    verify_release_metadata(tag, &release, title, body, source_sha, prerelease, true)?;
+    let expected_by_name = expected_assets
+        .iter()
+        .map(|asset| (asset.name.as_str(), asset))
+        .collect::<BTreeMap<_, _>>();
+    let mut published_by_name = BTreeMap::new();
+    for asset in &release.assets {
+        ensure!(
+            expected_by_name.contains_key(asset.name.as_str()),
+            "Draft release {tag} contains unexpected asset {:?}",
+            asset.name
+        );
+        ensure!(
+            published_by_name
+                .insert(asset.name.as_str(), asset)
+                .is_none(),
+            "Draft release {tag} contains duplicate asset name {:?}",
+            asset.name
+        );
+    }
+    let pending = expected_assets
+        .iter()
+        .filter(|expected| {
+            published_by_name
+                .get(expected.name.as_str())
+                .is_none_or(|published| !release_asset_matches(published, expected))
+        })
+        .collect::<Vec<_>>();
+    if pending.is_empty() {
+        return Ok(());
+    }
+    let mut command = CommandSpec::new("gh")
+        .args(["release", "upload", tag])
+        .args(["--repo", RELEASE_REPOSITORY])
+        .arg("--clobber");
+    for asset in pending {
+        command = command.arg(&asset.path);
+    }
+    run_command(command)
+}
+
+fn verify_release(
+    tag: &str,
+    title: &str,
+    body: &str,
+    source_sha: &str,
+    prerelease: bool,
+    draft: bool,
+    expected_assets: &[LocalReleaseAsset],
+) -> Result<()> {
+    let release = release_detail(tag)?;
+    verify_release_metadata(tag, &release, title, body, source_sha, prerelease, draft)?;
+    verify_release_assets(tag, &release.assets, expected_assets)?;
+    if draft {
+        return Ok(());
+    }
+    let tag_sha = resolve_commit_sha(tag)?;
+    ensure!(
+        tag_sha == source_sha,
+        "Release tag {tag} targets {tag_sha}, expected {source_sha}"
+    );
+    Ok(())
+}
+
+fn verify_release_metadata(
+    tag: &str,
+    release: &ReleaseDetail,
+    title: &str,
+    body: &str,
+    source_sha: &str,
+    prerelease: bool,
+    draft: bool,
+) -> Result<()> {
     ensure!(
         release.tag_name == tag,
         "Release {tag} has a mismatched tag"
@@ -451,26 +613,93 @@ fn verify_existing_release(
         release.body.as_deref().unwrap_or_default() == body,
         "Release {tag} has a mismatched body"
     );
-    ensure!(!release.draft, "Release {tag} is unexpectedly a draft");
+    ensure!(
+        release.draft == draft,
+        "Release {tag} has draft state {}, expected {draft}",
+        release.draft
+    );
     ensure!(
         release.prerelease == prerelease,
         "Release {tag} has a mismatched prerelease state"
-    );
-    ensure!(
-        release.assets.is_empty(),
-        "Release {tag} has assets; asset-free publication is required"
-    );
-
-    let tag_sha = resolve_commit_sha(tag)?;
-    ensure!(
-        tag_sha == source_sha,
-        "Release tag {tag} targets {tag_sha}, expected {source_sha}"
     );
     let target_sha = resolve_commit_sha(&release.target_commitish)?;
     ensure!(
         target_sha == source_sha,
         "Release {tag} target resolves to {target_sha}, expected {source_sha}"
     );
+    if draft && tag_exists(tag)? {
+        let tag_sha = resolve_commit_sha(tag)?;
+        ensure!(
+            tag_sha == source_sha,
+            "Draft release tag {tag} targets {tag_sha}, expected {source_sha}"
+        );
+    }
+    Ok(())
+}
+
+fn release_asset_matches(published: &PublishedReleaseAsset, expected: &LocalReleaseAsset) -> bool {
+    let expected_digest = format!("sha256:{}", expected.digest);
+    published.label.as_deref().unwrap_or_default().is_empty()
+        && published.state == "uploaded"
+        && published.size == expected.size
+        && published.digest.as_deref() == Some(expected_digest.as_str())
+}
+
+fn verify_release_assets(
+    tag: &str,
+    published_assets: &[PublishedReleaseAsset],
+    expected_assets: &[LocalReleaseAsset],
+) -> Result<()> {
+    let mut published_by_name = BTreeMap::new();
+    for asset in published_assets {
+        ensure!(
+            published_by_name
+                .insert(asset.name.as_str(), asset)
+                .is_none(),
+            "Release {tag} contains duplicate asset name {:?}",
+            asset.name
+        );
+    }
+    let expected_names = expected_assets
+        .iter()
+        .map(|asset| asset.name.as_str())
+        .collect::<Vec<_>>();
+    let published_names = published_by_name.keys().copied().collect::<Vec<_>>();
+    ensure!(
+        published_names == expected_names,
+        "Release {tag} asset inventory mismatch: expected {expected_names:?}, published {published_names:?}"
+    );
+    for expected in expected_assets {
+        let published = published_by_name
+            .get(expected.name.as_str())
+            .with_context(|| format!("Release {tag} is missing asset {:?}", expected.name))?;
+        ensure!(
+            published.label.as_deref().unwrap_or_default().is_empty(),
+            "Release {tag} asset {:?} has unexpected label {:?}",
+            expected.name,
+            published.label
+        );
+        ensure!(
+            published.state == "uploaded",
+            "Release {tag} asset {:?} is in unexpected state {:?}",
+            expected.name,
+            published.state
+        );
+        ensure!(
+            published.size == expected.size,
+            "Release {tag} asset {:?} has size {}, expected {}",
+            expected.name,
+            published.size,
+            expected.size
+        );
+        let expected_digest = format!("sha256:{}", expected.digest);
+        ensure!(
+            published.digest.as_deref() == Some(expected_digest.as_str()),
+            "Release {tag} asset {:?} has digest {:?}, expected {expected_digest}",
+            expected.name,
+            published.digest
+        );
+    }
     Ok(())
 }
 
@@ -482,51 +711,14 @@ fn release_title(component: &str, version: &str) -> String {
     format!("{component} {version}")
 }
 
-fn release_body(component: &str, version: &str, previous_sha: &str, source_sha: &str) -> String {
-    let changes = format!(
+fn release_body(previous_sha: &str, source_sha: &str) -> String {
+    format!(
         "Changes: [`{}..{}`]({RELEASE_COMPARE_URL}/{previous_sha}..{source_sha})",
         &previous_sha[..7],
         &source_sha[..7]
-    );
-    match desktop_channel(component) {
-        Some(channel) => format!(
-            "{changes}\n\n{}",
-            desktop_download_sections(channel, version)
-        ),
-        None => changes,
-    }
+    )
 }
 
 fn desktop_channel(component: &str) -> Option<&str> {
     component.strip_prefix("fluxer-desktop-")
-}
-
-fn desktop_download_sections(channel: &str, version: &str) -> String {
-    DESKTOP_PLATFORMS
-        .iter()
-        .map(|platform| desktop_download_section(channel, version, platform))
-        .collect::<Vec<_>>()
-        .join("\n\n")
-}
-
-fn desktop_download_section(channel: &str, version: &str, platform: &DesktopPlatform) -> String {
-    let rows = platform
-        .downloads
-        .iter()
-        .map(|download| {
-            format!(
-                "| {arch} | {label} | {DESKTOP_DOWNLOAD_URL}/{channel}/{slug}/{arch}/{version}/{format} |",
-                arch = download.arch,
-                label = download.label,
-                slug = platform.slug,
-                format = download.format,
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-    format!(
-        "## {name} (`{slug}`)\n\n| Arch | Format | URL |\n|---|---|---|\n{rows}",
-        name = platform.name,
-        slug = platform.slug,
-    )
 }

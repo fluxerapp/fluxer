@@ -8,6 +8,10 @@ publish = false
 [workspace]
 resolver = "2"
 
+[features]
+default = []
+game-capture-hook = []
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 

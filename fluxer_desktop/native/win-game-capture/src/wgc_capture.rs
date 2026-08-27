@@ -208,7 +208,7 @@ impl WgcCaptureSession {
         requested_height: Option<u32>,
     ) -> Result<Self, String> {
         ensure_winrt_initialized();
-        let (device, context) = crate::game_capture::create_shared_texture_device(None)?;
+        let (device, context) = crate::d3d11_device::create_shared_texture_device(None)?;
         let dxgi_device: IDXGIDevice = device
             .cast()
             .map_err(|e| format!("IDXGIDevice cast: {e}"))?;

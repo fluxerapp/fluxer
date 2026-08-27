@@ -5,7 +5,9 @@ use crate::game_capture_abi::{ENV_FORCE_CPU, ENV_VERBOSE, env_flag_enabled};
 use crate::nv12_gpu::Nv12GpuConverter;
 use crate::{
     CaptureInner,
+    capture_target::{monitor_rect, resolve_game_capture_target},
     compatibility::{InjectionPolicy, injection_policy_for_window},
+    d3d11_device::create_shared_texture_device,
     dxgi_capture::{resolve_output_size, wall_clock_us},
     emit_lifecycle, emit_shared_texture_frame,
     game_capture_abi::{
@@ -26,26 +28,18 @@ use std::{
     sync::{Arc, Mutex, atomic::Ordering},
 };
 use windows::Win32::{
-    Foundation::{HANDLE as WinHandle, HMODULE},
+    Foundation::HANDLE as WinHandle,
     Graphics::{
-        Direct3D::{D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_UNKNOWN},
-        Direct3D11::{
-            D3D11_CREATE_DEVICE_BGRA_SUPPORT, D3D11_SDK_VERSION, D3D11_TEXTURE2D_DESC,
-            D3D11CreateDevice, ID3D11Device, ID3D11DeviceContext, ID3D11Texture2D,
-        },
-        Dxgi::{CreateDXGIFactory1, IDXGIAdapter, IDXGIDevice, IDXGIFactory1},
+        Direct3D11::{D3D11_TEXTURE2D_DESC, ID3D11Device, ID3D11DeviceContext, ID3D11Texture2D},
+        Dxgi::{CreateDXGIFactory1, IDXGIAdapter, IDXGIFactory1},
     },
 };
-use windows::core::Interface;
 use windows_sys::Win32::{
     Foundation::{
         CloseHandle, FreeLibrary, HANDLE, HINSTANCE, HMODULE as WinSysHmodule, HWND,
         INVALID_HANDLE_VALUE, LPARAM, RECT, WAIT_ABANDONED, WAIT_OBJECT_0, WAIT_TIMEOUT,
     },
-    Graphics::Gdi::{
-        EnumDisplayMonitors, GetMonitorInfoW, HMONITOR, MONITOR_DEFAULTTONEAREST, MONITORINFO,
-        MonitorFromRect,
-    },
+    Graphics::Gdi::{MONITOR_DEFAULTTONEAREST, MonitorFromRect},
     System::{
         Diagnostics::Debug::WriteProcessMemory,
         LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW},
@@ -67,10 +61,8 @@ use windows_sys::Win32::{
         },
     },
     UI::WindowsAndMessaging::{
-        EnumWindows, GW_OWNER, GWL_STYLE, GetClientRect, GetForegroundWindow, GetWindow,
-        GetWindowLongPtrW, GetWindowRect, GetWindowThreadProcessId, HHOOK, IsWindow,
-        IsWindowVisible, PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, WH_GETMESSAGE,
-        WM_NULL, WS_BORDER, WS_MAXIMIZE,
+        GetClientRect, GetWindowRect, GetWindowThreadProcessId, HHOOK, IsWindow, IsWindowVisible,
+        PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, WH_GETMESSAGE, WM_NULL,
     },
 };
 
@@ -812,87 +804,6 @@ fn inject_via_set_windows_hook(
     Ok(InstalledWindowsHook { hook, module })
 }
 
-fn parse_hwnd_source_id(source_id: &str) -> Option<HWND> {
-    let token = source_id.strip_prefix("window:")?.split(':').next()?;
-    let value = if let Some(hex) = token
-        .strip_prefix("0x")
-        .or_else(|| token.strip_prefix("0X"))
-    {
-        isize::from_str_radix(hex, 16).ok()?
-    } else {
-        token.parse::<isize>().ok()?
-    };
-    let hwnd = value as HWND;
-    if unsafe { IsWindow(hwnd) } != 0 {
-        Some(hwnd)
-    } else {
-        None
-    }
-}
-
-fn parse_screen_ordinal(source_id: &str) -> Option<usize> {
-    let token = source_id.strip_prefix("screen:")?.split(':').next()?;
-    token.parse::<usize>().ok()
-}
-
-pub(crate) fn resolve_game_capture_target(
-    source_id: &str,
-    source_kind: &str,
-) -> Result<HWND, String> {
-    if let Some(hwnd) = parse_hwnd_source_id(source_id) {
-        return Ok(hwnd);
-    }
-    if source_kind == "game" || source_kind == "screen" {
-        let monitor = monitor_for_screen_source(source_id)?;
-        if let Some(hwnd) = find_fullscreen_window_on_monitor(monitor) {
-            return Ok(hwnd);
-        }
-        if let Some(hwnd) = find_foreground_fullscreen_window() {
-            return Ok(hwnd);
-        }
-        if let Some(hwnd) = find_fullscreen_window_on_any_monitor() {
-            return Ok(hwnd);
-        }
-        return Err("no fullscreen game window found on selected display".into());
-    }
-    Err(format!(
-        "invalid game capture source: {source_kind}:{source_id}"
-    ))
-}
-
-fn monitor_for_screen_source(source_id: &str) -> Result<HMONITOR, String> {
-    let ordinal = parse_screen_ordinal(source_id).unwrap_or(0);
-    let monitors = enumerate_monitors();
-    monitors
-        .get(ordinal)
-        .copied()
-        .or_else(|| monitors.first().copied())
-        .ok_or_else(|| "no monitors available for game capture".to_string())
-}
-
-fn enumerate_monitors() -> Vec<HMONITOR> {
-    unsafe extern "system" fn enum_monitor(
-        monitor: HMONITOR,
-        _hdc: windows_sys::Win32::Graphics::Gdi::HDC,
-        _rect: *mut RECT,
-        param: LPARAM,
-    ) -> i32 {
-        let monitors = &mut *(param as *mut Vec<HMONITOR>);
-        monitors.push(monitor);
-        1
-    }
-    let mut monitors = Vec::new();
-    unsafe {
-        EnumDisplayMonitors(
-            null_mut(),
-            null(),
-            Some(enum_monitor),
-            &mut monitors as *mut _ as LPARAM,
-        );
-    }
-    monitors
-}
-
 fn target_process_id(hwnd: HWND) -> Result<u32, String> {
     let mut pid = 0u32;
     unsafe {
@@ -1037,155 +948,6 @@ fn choose_shared_buffer_dimensions(
         return None;
     }
     Some((buffer_width, buffer_height))
-}
-
-fn monitor_rect(monitor: HMONITOR) -> Option<RECT> {
-    let mut info = MONITORINFO {
-        cbSize: std::mem::size_of::<MONITORINFO>() as u32,
-        rcMonitor: RECT::default(),
-        rcWork: RECT::default(),
-        dwFlags: 0,
-    };
-    if unsafe { GetMonitorInfoW(monitor, &mut info) } == 0 {
-        return None;
-    }
-    Some(info.rcMonitor)
-}
-
-fn rect_matches_monitor(window_rect: &RECT, monitor_rect: &RECT) -> bool {
-    let tolerance = 2;
-    (window_rect.left - monitor_rect.left).abs() <= tolerance
-        && (window_rect.top - monitor_rect.top).abs() <= tolerance
-        && (window_rect.right - monitor_rect.right).abs() <= tolerance
-        && (window_rect.bottom - monitor_rect.bottom).abs() <= tolerance
-}
-
-fn is_regular_maximized_window(hwnd: HWND) -> bool {
-    let style = unsafe { GetWindowLongPtrW(hwnd, GWL_STYLE) } as u32;
-    (style & WS_MAXIMIZE) != 0 && (style & WS_BORDER) != 0
-}
-
-fn is_fullscreen_window_on_monitor(hwnd: HWND, monitor: HMONITOR, monitor_rect: &RECT) -> bool {
-    if unsafe { IsWindowVisible(hwnd) } == 0 || !unsafe { GetWindow(hwnd, GW_OWNER) }.is_null() {
-        return false;
-    }
-    let mut pid = 0u32;
-    unsafe {
-        GetWindowThreadProcessId(hwnd, &mut pid);
-    }
-    if pid == 0 || pid == unsafe { GetCurrentProcessId() } {
-        return false;
-    }
-    if is_regular_maximized_window(hwnd) {
-        return false;
-    }
-    let mut rect = RECT::default();
-    if unsafe { GetWindowRect(hwnd, &mut rect) } == 0 {
-        return false;
-    }
-    let window_monitor = unsafe { MonitorFromRect(&rect, MONITOR_DEFAULTTONEAREST) };
-    window_monitor == monitor && rect_matches_monitor(&rect, monitor_rect)
-}
-
-fn find_foreground_fullscreen_window() -> Option<HWND> {
-    let hwnd = unsafe { GetForegroundWindow() };
-    if hwnd.is_null() {
-        return None;
-    }
-    let mut rect = RECT::default();
-    if unsafe { GetWindowRect(hwnd, &mut rect) } == 0 {
-        return None;
-    }
-    let monitor = unsafe { MonitorFromRect(&rect, MONITOR_DEFAULTTONEAREST) };
-    let monitor_rect = monitor_rect(monitor)?;
-    if is_fullscreen_window_on_monitor(hwnd, monitor, &monitor_rect) {
-        Some(hwnd)
-    } else {
-        None
-    }
-}
-
-fn find_fullscreen_window_on_any_monitor() -> Option<HWND> {
-    for monitor in enumerate_monitors() {
-        if let Some(hwnd) = find_fullscreen_window_on_monitor(monitor) {
-            return Some(hwnd);
-        }
-    }
-    None
-}
-
-fn find_fullscreen_window_on_monitor(monitor: HMONITOR) -> Option<HWND> {
-    struct Search {
-        monitor: HMONITOR,
-        monitor_rect: RECT,
-        result: HWND,
-        own_pid: u32,
-    }
-    unsafe extern "system" fn enum_window(hwnd: HWND, param: LPARAM) -> i32 {
-        let search = &mut *(param as *mut Search);
-        let mut pid = 0u32;
-        GetWindowThreadProcessId(hwnd, &mut pid);
-        if pid != 0
-            && pid != search.own_pid
-            && is_fullscreen_window_on_monitor(hwnd, search.monitor, &search.monitor_rect)
-        {
-            search.result = hwnd;
-            return 0;
-        }
-        1
-    }
-
-    let monitor_rect = monitor_rect(monitor)?;
-    let mut search = Search {
-        monitor,
-        monitor_rect,
-        result: null_mut(),
-        own_pid: unsafe { GetCurrentProcessId() },
-    };
-    unsafe {
-        let _ = EnumWindows(Some(enum_window), &mut search as *mut _ as LPARAM);
-    }
-    if search.result.is_null() {
-        None
-    } else {
-        Some(search.result)
-    }
-}
-
-pub(crate) fn create_shared_texture_device(
-    adapter: Option<&IDXGIAdapter>,
-) -> Result<(ID3D11Device, ID3D11DeviceContext), String> {
-    let mut device = None;
-    let mut context = None;
-    let driver_type = if adapter.is_some() {
-        D3D_DRIVER_TYPE_UNKNOWN
-    } else {
-        D3D_DRIVER_TYPE_HARDWARE
-    };
-    unsafe {
-        D3D11CreateDevice(
-            adapter,
-            driver_type,
-            HMODULE::default(),
-            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-            None,
-            D3D11_SDK_VERSION,
-            Some(&mut device),
-            None,
-            Some(&mut context),
-        )
-        .map_err(|e| format!("D3D11CreateDevice for shared game texture: {e}"))?;
-    }
-    let device = device.ok_or("D3D11 shared texture device was None")?;
-    let context = context.ok_or("D3D11 shared texture context was None")?;
-    set_gpu_thread_priority(&device);
-    Ok((device, context))
-}
-
-fn set_gpu_thread_priority(device: &ID3D11Device) {
-    if let Ok(dxgi_device) = device.cast::<IDXGIDevice>() {
-        let _ = unsafe { dxgi_device.SetGPUThreadPriority(7) };
-    }
 }
 
 const SHARED_TEXTURE_ADAPTER_LIMIT: u32 = 16;

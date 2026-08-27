@@ -394,6 +394,7 @@ pub(crate) fn resolve_output_size(
 }
 
 #[cfg(target_os = "windows")]
+#[cfg(feature = "game-capture-hook")]
 pub(crate) fn wall_clock_us() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()

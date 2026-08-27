@@ -8,12 +8,11 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {buildAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {isDesktop, openExternalUrl} from '@app/features/ui/utils/NativeUtils';
-import {checkDesktopAvailable, navigateInDesktop} from '@app/features/voice/utils/DesktopRpcClient';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowSquareOutIcon} from '@phosphor-icons/react';
 import type React from 'react';
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 
 interface DesktopDeepLinkPromptProps {
 	code: string;
@@ -36,25 +35,9 @@ const FAILED_TO_OPEN_IN_DESKTOP_APP_DESCRIPTOR = msg({
 export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({code, kind, preferLogin = false}) => {
 	const {i18n} = useLingui();
 	const [isLoading, setIsLoading] = useState(false);
-	const [desktopAvailable, setDesktopAvailable] = useState<boolean | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const isMobileBrowser = Platform.isMobileBrowser;
-	const useProtocolLaunch = kind === 'invite';
-	const shouldProbeDesktopAvailability = !useProtocolLaunch;
-	useEffect(() => {
-		if (isDesktop() || !shouldProbeDesktopAvailability) return;
-		let cancelled = false;
-		checkDesktopAvailable().then(({available}) => {
-			if (!cancelled) {
-				setDesktopAvailable(available);
-			}
-		});
-		return () => {
-			cancelled = true;
-		};
-	}, [shouldProbeDesktopAvailability]);
 	if (isDesktop() || isMobileBrowser) return null;
-	if (shouldProbeDesktopAvailability && desktopAvailable !== true) return null;
 	const getPath = (): string => {
 		switch (kind) {
 			case 'invite':
@@ -69,20 +52,12 @@ export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({cod
 	const handleOpen = async () => {
 		setIsLoading(true);
 		setError(null);
-		if (useProtocolLaunch) {
-			try {
-				await openExternalUrl(buildAppProtocolUrl(path));
-			} catch {
-				setError(i18n._(FAILED_TO_OPEN_IN_DESKTOP_APP_DESCRIPTOR));
-			} finally {
-				setIsLoading(false);
-			}
-			return;
-		}
-		const result = await navigateInDesktop(path);
-		setIsLoading(false);
-		if (!result.success) {
+		try {
+			await openExternalUrl(buildAppProtocolUrl(path));
+		} catch {
 			setError(i18n._(FAILED_TO_OPEN_IN_DESKTOP_APP_DESCRIPTOR));
+		} finally {
+			setIsLoading(false);
 		}
 	};
 	return (

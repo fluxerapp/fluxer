@@ -180,10 +180,6 @@ export function handleDeepLinkUrl(rawUrl: string): boolean {
 	return true;
 }
 
-export function handleRpcNavigation(path: string): void {
-	RouterUtils.transitionTo(path);
-}
-
 let listenerStarted = false;
 
 export async function startDeepLinkHandling(): Promise<void> {
@@ -206,17 +202,6 @@ export async function startDeepLinkHandling(): Promise<void> {
 				logger.error(' Failed to handle URL', url, error);
 			}
 		});
-		if (typeof electronApi.onRpcNavigate === 'function') {
-			electronApi.onRpcNavigate((path: string) => {
-				try {
-					handleRpcNavigation(path);
-				} catch (error) {
-					logger.error(' Failed to handle RPC navigation', path, error);
-				}
-			});
-		} else {
-			logger.warn(' onRpcNavigate not available on this host version');
-		}
 		return;
 	}
 }

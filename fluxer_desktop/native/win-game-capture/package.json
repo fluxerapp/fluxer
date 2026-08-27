@@ -18,19 +18,7 @@
 		"index.d.ts",
 		"loader-diagnostics.cjs",
 		"win-game-capture.win32-x64-msvc.node",
-		"win-game-capture.win32-arm64-msvc.node",
-		"fluxer-game-hook.win32-x64-msvc.dll",
-		"fluxer-game-hook.win32-ia32-msvc.dll",
-		"fluxer-game-hook.win32-arm64-msvc.dll",
-		"fluxer-inject-helper.win32-x64-msvc.exe",
-		"fluxer-inject-helper.win32-ia32-msvc.exe",
-		"fluxer-inject-helper.win32-arm64-msvc.exe",
-		"fluxer-vulkan-layer.win32-x64-msvc.dll",
-		"fluxer-vulkan-layer.win32-x64-msvc.json",
-		"fluxer-vulkan-layer.win32-ia32-msvc.dll",
-		"fluxer-vulkan-layer.win32-ia32-msvc.json",
-		"fluxer-vulkan-layer.win32-arm64-msvc.dll",
-		"fluxer-vulkan-layer.win32-arm64-msvc.json"
+		"win-game-capture.win32-arm64-msvc.node"
 	],
 	"scripts": {
 		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
