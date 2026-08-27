@@ -27,6 +27,7 @@ interface VirtualRowRendererProps {
 	handleHover: (sticker: GuildSticker | null, row?: number, column?: number) => void;
 	handleSelect: (sticker: GuildSticker, shiftKey?: boolean) => void;
 	gridColumns?: number;
+	cellTrackWidth?: number;
 	selectedRow: number;
 	selectedColumn: number;
 	stickerRowIndex: number;
@@ -126,6 +127,7 @@ const VirtualRowRendererBase: React.FC<VirtualRowRendererProps> = React.memo(
 		handleHover,
 		handleSelect,
 		gridColumns = 4,
+		cellTrackWidth,
 		selectedRow,
 		selectedColumn,
 		stickerRowIndex,
@@ -220,11 +222,14 @@ const VirtualRowRendererBase: React.FC<VirtualRowRendererProps> = React.memo(
 			);
 		}
 		if (row.type === 'sticker-row') {
+			const hasFixedTrack = cellTrackWidth != null && cellTrackWidth > 0;
 			return (
 				<div
-					className={styles.stickerGrid}
+					className={hasFixedTrack ? `${styles.stickerGrid} ${styles.stickerGridFixedTrack}` : styles.stickerGrid}
 					style={{
-						gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
+						gridTemplateColumns: hasFixedTrack
+							? `repeat(auto-fill, ${remFromPx(cellTrackWidth)})`
+							: `repeat(${gridColumns}, minmax(0, 1fr))`,
 					}}
 					data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.sticker-grid"
 				>
@@ -286,6 +291,7 @@ interface VirtualRowWrapperProps {
 	handleHover: (sticker: GuildSticker | null, row?: number, column?: number) => void;
 	handleSelect: (sticker: GuildSticker, shiftKey?: boolean) => void;
 	gridColumns?: number;
+	cellTrackWidth?: number;
 	selectedRow: number;
 	selectedColumn: number;
 	stickerRowIndex: number;
@@ -300,6 +306,7 @@ export const VirtualRowWrapper: React.FC<VirtualRowWrapperProps> = observer(
 		handleHover,
 		handleSelect,
 		gridColumns,
+		cellTrackWidth,
 		selectedRow,
 		selectedColumn,
 		stickerRowIndex,
@@ -313,6 +320,7 @@ export const VirtualRowWrapper: React.FC<VirtualRowWrapperProps> = observer(
 				handleHover={handleHover}
 				handleSelect={handleSelect}
 				gridColumns={gridColumns}
+				cellTrackWidth={cellTrackWidth}
 				selectedRow={selectedRow}
 				selectedColumn={selectedColumn}
 				stickerRowIndex={stickerRowIndex}

@@ -14,10 +14,11 @@ import {useVirtualRows} from '@app/features/channel/components/sticker_picker/ho
 import {StickerPickerCategoryList} from '@app/features/channel/components/sticker_picker/StickerPickerCategoryList';
 import {
 	buildStickerRowOffsets,
-	getStickerRowHeight,
+	getFixedStickerRowHeight,
+	getStickerGridColumns,
 	getStickerRowWindow,
+	STICKER_GRID_TRACK_WIDTH,
 	STICKER_SECTION_GAP,
-	STICKERS_PER_ROW,
 	type StickerRowKind,
 } from '@app/features/channel/components/sticker_picker/StickerPickerConstants';
 import {StickerPickerInspector} from '@app/features/channel/components/sticker_picker/StickerPickerInspector';
@@ -74,12 +75,12 @@ export const StickersPicker = observer(
 		const [selectedColumn, setSelectedColumn] = useState(-1);
 		const [shouldScrollOnSelection, setShouldScrollOnSelection] = useState(false);
 		const scrollerRef = useRef<ScrollerHandle>(null);
-		const {scrollTop, handleScroll, handleResize} = useScrollerViewport(scrollerRef);
+		const {viewportSize, scrollTop, handleScroll, handleResize} = useScrollerViewport(scrollerRef);
 		const searchInputRef = useRef<HTMLInputElement>(null);
 		const stickerRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 		const channel = channelId ? (Channels.getChannel(channelId) ?? null) : null;
 		const rowListRef = useRef<HTMLDivElement>(null);
-		const [listMetrics, setListMetrics] = useState({origin: 0, viewportHeight: 0, gridWidth: 0});
+		const [listMetrics, setListMetrics] = useState({origin: 0, viewportHeight: 0});
 		const [stickerDataVersion, setStickerDataVersion] = useState(0);
 		const permissionVersion = useSyncExternalStore(Permission.subscribe.bind(Permission), () => Permission.version);
 		const {shouldAnimate: shouldAnimateStickerPreview} = useStickerAnimation();
@@ -138,13 +139,26 @@ export const StickersPicker = observer(
 			allUpsell.accessibleItems,
 			renderedStickers,
 		);
+		const zoomLevel = Accessibility.zoomLevel;
+		const gridColumns = useMemo(() => getStickerGridColumns(viewportSize.width), [viewportSize.width, zoomLevel]);
+		const previousGridColumnsRef = useRef(gridColumns);
+		useLayoutEffect(() => {
+			if (previousGridColumnsRef.current === gridColumns) {
+				return;
+			}
+			previousGridColumnsRef.current = gridColumns;
+			setHoveredSticker(null);
+			setSelectedRow(-1);
+			setSelectedColumn(-1);
+			setShouldScrollOnSelection(false);
+		}, [gridColumns]);
 		const pickerRows = useVirtualRows(
 			searchTerm,
 			renderedStickers,
 			favoriteStickers,
 			frequentlyUsedStickers,
 			stickersByGuildId,
-			STICKERS_PER_ROW,
+			gridColumns,
 		);
 		const hasNoStickersAtAll = allItems.length === 0;
 		const isSearching = searchTerm.trim().length > 0;
@@ -198,12 +212,8 @@ export const StickersPicker = observer(
 			}
 			return {stickerRowIndexes: indexes, stickerRowStarts: starts, categoryRowIndexes: categories};
 		}, [pickerRows]);
-		const zoomLevel = Accessibility.zoomLevel;
 		const remScale = getAppRemScale();
-		const stickerRowHeight = useMemo(
-			() => getStickerRowHeight(listMetrics.gridWidth, STICKERS_PER_ROW, remScale),
-			[listMetrics.gridWidth, remScale, zoomLevel],
-		);
+		const stickerRowHeight = useMemo(() => getFixedStickerRowHeight(remScale), [remScale, zoomLevel]);
 		const rowOffsets = useMemo(() => {
 			const rowKinds = pickerRows.map((row): StickerRowKind => row.type);
 			return buildStickerRowOffsets(rowKinds, {remScale, stickerRowHeight, sectionGap: STICKER_SECTION_GAP});
@@ -219,11 +229,8 @@ export const StickersPicker = observer(
 				rowListNode.getBoundingClientRect().top - scrollerNode.getBoundingClientRect().top + scrollerNode.scrollTop,
 			);
 			const viewportHeight = scrollerNode.clientHeight;
-			const gridWidth = rowListNode.clientWidth;
 			setListMetrics((current) =>
-				current.origin === origin && current.viewportHeight === viewportHeight && current.gridWidth === gridWidth
-					? current
-					: {origin, viewportHeight, gridWidth},
+				current.origin === origin && current.viewportHeight === viewportHeight ? current : {origin, viewportHeight},
 			);
 		});
 		const rowWindow = useMemo(
@@ -394,7 +401,8 @@ export const StickersPicker = observer(
 													row={row}
 													handleHover={handleHover}
 													handleSelect={handleStickerSelect}
-													gridColumns={STICKERS_PER_ROW}
+													gridColumns={gridColumns}
+													cellTrackWidth={STICKER_GRID_TRACK_WIDTH}
 													selectedRow={selectedRow}
 													selectedColumn={selectedColumn}
 													stickerRowIndex={stickerRowIndexes[rowIndex]!}

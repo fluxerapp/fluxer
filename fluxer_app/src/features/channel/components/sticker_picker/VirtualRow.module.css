@@ -20,6 +20,11 @@
 	padding: 0 0 0.5rem;
 }
 
+.stickerGridFixedTrack {
+	grid-auto-flow: column;
+	justify-content: start;
+}
+
 .stickerButton {
 	position: relative;
 	display: flex;
