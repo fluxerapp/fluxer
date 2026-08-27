@@ -125,7 +125,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	};
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		const [username, discriminator] = parseInput(input);
+		const [username, discriminator] = parseInput(input['trim']());
 		if (!username || !discriminator || !/^\d{4}$/.test(discriminator)) {
 			setResultStatus('error');
 			setErrorCode(APIErrorCodes.NO_USERS_WITH_FLUXERTAG_EXIST);
