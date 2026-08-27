@@ -335,6 +335,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	);
 	const hasVisibleUnreadInChannel = (channelId: string): boolean => {
 		const unreadCount = ReadStates.getUnreadCount(channelId);
+		const hasUnread = ReadStates.hasUnread(channelId);
 		const mentionCount = ReadStates.getMentionCount(channelId);
 		const isMuted =
 			UserGuildSettings.isParentCategoryMuted(guild.id, channelId) ||
@@ -349,6 +350,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 				})
 			: null;
 		const unreadState = getChannelUnreadState({
+			hasUnread,
 			unreadCount,
 			mentionCount,
 			isMuted,

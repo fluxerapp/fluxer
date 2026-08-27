@@ -663,6 +663,7 @@ function resolveGuildTargetBounds({
 function getDMScrollIndicatorSeverity(channelId: string): ScrollIndicatorSeverity | null {
 	const mentionCount = ReadStates.getPrivateChannelMentionCount(channelId);
 	const unreadState = getChannelUnreadState({
+		hasUnread: ReadStates.hasUnreadPrivateChannel(channelId),
 		unreadCount: ReadStates.getPrivateChannelUnreadCount(channelId),
 		mentionCount,
 		isMuted: UserGuildSettings.isChannelDirectlyMuted(null, channelId),

@@ -3,6 +3,7 @@
 import {resolveChannelUnreadState} from './ChannelUnreadStateMachine';
 
 export interface ChannelUnreadStateInput {
+	hasUnread: boolean;
 	unreadCount: number;
 	mentionCount: number;
 	isMuted: boolean;
@@ -20,6 +21,7 @@ export interface ChannelUnreadState {
 }
 
 export function getChannelUnreadState({
+	hasUnread,
 	unreadCount,
 	mentionCount,
 	isMuted,
@@ -27,6 +29,7 @@ export function getChannelUnreadState({
 	unreadBadgesLevel,
 }: ChannelUnreadStateInput): ChannelUnreadState {
 	return resolveChannelUnreadState({
+		hasUnread,
 		unreadCount,
 		mentionCount,
 		isMuted,

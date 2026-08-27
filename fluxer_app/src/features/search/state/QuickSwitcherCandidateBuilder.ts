@@ -61,10 +61,7 @@ function getChannelRecency(channel: {id: string; lastMessageId: string | null}):
 }
 
 function getChannelSortWeight(channelId: string, baseWeight: number): number {
-	const unreadCount = ReadStates.getUnreadCount(channelId);
-	const mentionCount = ReadStates.getMentionCount(channelId);
-	const hasUnread = unreadCount > 0 || mentionCount > 0;
-	return hasUnread ? baseWeight + UNREAD_SORT_WEIGHT_BOOST : baseWeight;
+	return ReadStates.isUnreadOrMentioned(channelId) ? baseWeight + UNREAD_SORT_WEIGHT_BOOST : baseWeight;
 }
 
 export function buildChannelCandidate(

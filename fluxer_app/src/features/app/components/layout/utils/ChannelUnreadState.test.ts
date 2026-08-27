@@ -7,6 +7,7 @@ import {getChannelUnreadState} from './ChannelUnreadState';
 describe('getChannelUnreadState', () => {
 	it('shows a normal unread indicator for all-messages unread badges', () => {
 		const state = getChannelUnreadState({
+			hasUnread: true,
 			unreadCount: 3,
 			mentionCount: 0,
 			isMuted: false,
@@ -19,6 +20,7 @@ describe('getChannelUnreadState', () => {
 	});
 	it('shows a muted unread indicator for only-mentions unread badges without highlighting the channel', () => {
 		const state = getChannelUnreadState({
+			hasUnread: true,
 			unreadCount: 3,
 			mentionCount: 0,
 			isMuted: false,
@@ -31,6 +33,7 @@ describe('getChannelUnreadState', () => {
 	});
 	it('hides unread and mention surfaces when unread badges are disabled', () => {
 		const state = getChannelUnreadState({
+			hasUnread: true,
 			unreadCount: 3,
 			mentionCount: 1,
 			isMuted: false,
@@ -43,6 +46,7 @@ describe('getChannelUnreadState', () => {
 	});
 	it('keeps legacy muted-channel fading for channels without an unread-badges level', () => {
 		const hiddenState = getChannelUnreadState({
+			hasUnread: true,
 			unreadCount: 3,
 			mentionCount: 0,
 			isMuted: true,
@@ -50,6 +54,7 @@ describe('getChannelUnreadState', () => {
 			unreadBadgesLevel: null,
 		});
 		const fadedState = getChannelUnreadState({
+			hasUnread: true,
 			unreadCount: 3,
 			mentionCount: 0,
 			isMuted: true,
@@ -59,5 +64,28 @@ describe('getChannelUnreadState', () => {
 		expect(hiddenState.shouldShowUnreadIndicator).toBe(false);
 		expect(fadedState.shouldShowUnreadIndicator).toBe(true);
 		expect(fadedState.isUnreadIndicatorMuted).toBe(true);
+	});
+	it('shows the indicator from the unread flag rather than the message count', () => {
+		const state = getChannelUnreadState({
+			hasUnread: true,
+			unreadCount: 0,
+			mentionCount: 0,
+			isMuted: false,
+			showFadedUnreadOnMutedChannels: false,
+			unreadBadgesLevel: null,
+		});
+		expect(state.shouldShowUnreadIndicator).toBe(true);
+	});
+	it('hides the indicator for a read channel even if a stale count survives', () => {
+		const state = getChannelUnreadState({
+			hasUnread: false,
+			unreadCount: 7,
+			mentionCount: 0,
+			isMuted: false,
+			showFadedUnreadOnMutedChannels: false,
+			unreadBadgesLevel: null,
+		});
+		expect(state.shouldShowUnreadIndicator).toBe(false);
+		expect(state.hasVisibleUnread).toBe(false);
 	});
 });

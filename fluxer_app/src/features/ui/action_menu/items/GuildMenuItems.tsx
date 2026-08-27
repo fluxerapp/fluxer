@@ -100,7 +100,7 @@ export const MarkAsReadMenuItem: React.FC<GuildMenuItemProps> = observer(({guild
 	}, [channels]);
 	const handleMarkAsRead = useCallback(() => {
 		const channelIds = channels
-			.filter((channel) => ReadStates.getUnreadCount(channel.id) > 0)
+			.filter((channel) => ReadStates.isUnreadOrMentioned(channel.id))
 			.map((channel) => channel.id);
 		if (channelIds.length > 0) {
 			void ReadStateCommands.bulkAckChannels(channelIds);

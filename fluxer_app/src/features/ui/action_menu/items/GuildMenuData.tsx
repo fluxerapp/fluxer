@@ -182,7 +182,7 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 		() => ({
 			handleMarkAsRead: () => {
 				const channelIds = channels
-					.filter((channel) => ReadStates.getUnreadCount(channel.id) > 0)
+					.filter((channel) => ReadStates.isUnreadOrMentioned(channel.id))
 					.map((channel) => channel.id);
 				if (channelIds.length > 0) {
 					void ReadStateCommands.bulkAckChannels(channelIds);

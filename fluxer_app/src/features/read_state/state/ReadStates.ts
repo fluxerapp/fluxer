@@ -141,16 +141,11 @@ class ReadStates {
 		this.refreshMentionChannel(state.channelId);
 	}
 
-	private refreshUnreadEstimate(state: ReadStateEntry): void {
+	private clearUnreadStateIfRead(state: ReadStateEntry): void {
 		if (!state.hasUnread()) {
 			state.estimated = false;
 			state.unreadCount = 0;
 			state.oldestUnreadMessageId = null;
-			return;
-		}
-		if (state.unreadCount === 0) {
-			state.estimated = true;
-			state.unreadCount = Math.max(1, state.mentionCount);
 		}
 	}
 
@@ -416,7 +411,7 @@ class ReadStates {
 				if (!channelsWithReadState.has(channel.id as ChannelId)) {
 					this.setMentionCount(state, 0);
 				}
-				this.refreshUnreadEstimate(state);
+				this.clearUnreadStateIfRead(state);
 			}
 			this.notifyChange(undefined, {global: true});
 		});
@@ -436,7 +431,7 @@ class ReadStates {
 					state.lastMessageId = channel.last_message_id ?? null;
 					state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
 					state.storedGuildId = action.guild.id;
-					this.refreshUnreadEstimate(state);
+					this.clearUnreadStateIfRead(state);
 					this.refreshMentionChannel(channel.id);
 				}
 			}
@@ -452,9 +447,11 @@ class ReadStates {
 		if (newestMessage != null && isNewerMessageId(newestMessage.id, state.lastMessageId)) {
 			state.lastMessageId = newestMessage.id;
 		}
-		if (state.hasUnread()) {
+		const landedOnNewestWindow = messages.hasNewestMessages();
+		const landedOnAck = state.ackMessageId != null && messages.jumpDestinationId === state.ackMessageId;
+		if (state.hasUnread() || landedOnNewestWindow || landedOnAck) {
 			state.rebuild();
-			this.refreshUnreadEstimate(state);
+			this.clearUnreadStateIfRead(state);
 		} else if (action.isAfter && state.ackMessageId != null && messages.has(state.ackMessageId, true)) {
 			state.unreadCount += action.messages.length;
 			if (state.oldestUnreadMessageId == null) {
@@ -564,7 +561,7 @@ class ReadStates {
 			state.readStateKnown = true;
 			state.ackMessageId = action.channel.last_message_id;
 		} else if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(action.channel.type) && state.hasUnread()) {
-			this.refreshUnreadEstimate(state);
+			this.clearUnreadStateIfRead(state);
 		}
 		this.notifyChange(action.channel.id);
 	}
@@ -586,10 +583,10 @@ class ReadStates {
 				changed = state.guildId !== guildId;
 				state.storedGuildId = guildId;
 			}
-			if (isNewerMessageId(lastMessageId, state.lastMessageId)) {
+			if (lastMessageId !== state.lastMessageId) {
 				state.lastMessageId = lastMessageId;
 				changed = true;
-				this.refreshUnreadEstimate(state);
+				this.clearUnreadStateIfRead(state);
 			}
 			if (changed) {
 				changedChannels.push(channelId as ChannelId);
@@ -751,7 +748,7 @@ class ReadStates {
 					this.setMentionCount(state, mentionCount);
 				}
 				if (decision.shouldRefreshUnreadEstimate) {
-					this.refreshUnreadEstimate(state);
+					this.clearUnreadStateIfRead(state);
 				}
 				if (decision.shouldNotify) {
 					this.notifyChange(action.channelId);
@@ -1046,7 +1043,7 @@ class ReadStates {
 				state.serverVersion = readState.version ?? state.serverVersion;
 				this.setMentionCount(state, readState.mention_count ?? 0);
 				state.rebuild(null, {recomputeMentions: manual});
-				this.refreshUnreadEstimate(state);
+				this.clearUnreadStateIfRead(state);
 				this.notifyChange(readState.id);
 				continue;
 			}

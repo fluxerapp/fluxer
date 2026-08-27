@@ -70,6 +70,7 @@ const ACTIVE_CALL_DESCRIPTOR = msg({
 
 export function resolveDMListItemUnreadState(channelId: string): ChannelUnreadState {
 	return getChannelUnreadState({
+		hasUnread: ReadStates.hasUnread(channelId),
 		unreadCount: ReadStates.getUnreadCount(channelId),
 		mentionCount: ReadStates.getMentionCount(channelId),
 		isMuted: UserGuildSettings.isChannelDirectlyMuted(null, channelId),

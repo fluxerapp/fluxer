@@ -135,6 +135,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 	const isMuted = UserGuildSettings.isChannelDirectlyMuted(null, channel.id);
 	const mentionCount = ReadStates.getMentionCount(channel.id);
 	const unreadState = getChannelUnreadState({
+		hasUnread: ReadStates.hasUnread(channel.id),
 		unreadCount: ReadStates.getUnreadCount(channel.id),
 		mentionCount,
 		isMuted,

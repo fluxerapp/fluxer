@@ -197,6 +197,7 @@ const FavoriteChannelResolvedItem = observer(
 		);
 		const refs = useMergeRefs([dragConnectorRef, dropConnectorRef, elementRef]);
 		const unreadCount = ReadStates.getUnreadCount(channel.id);
+		const hasUnread = ReadStates.hasUnread(channel.id);
 		const mentionCount = ReadStates.getMentionCount(channel.id);
 		const isGroupDM = channel.isGroupDM();
 		const isDM = channel.isDM();
@@ -220,6 +221,7 @@ const FavoriteChannelResolvedItem = observer(
 				})
 			: null;
 		const unreadState = getChannelUnreadState({
+			hasUnread,
 			unreadCount,
 			mentionCount,
 			isMuted,

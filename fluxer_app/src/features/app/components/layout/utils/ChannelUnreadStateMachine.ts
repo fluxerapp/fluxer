@@ -86,7 +86,7 @@ export function transitionChannelUnreadSnapshot(
 
 export function selectChannelUnreadState(snapshot: ChannelUnreadSnapshot): ChannelUnreadState {
 	const context = snapshot.context;
-	const hasUnreadMessages = context.unreadCount > 0;
+	const hasUnreadMessages = context.hasUnread;
 	const rawHasMentions = context.mentionCount > 0;
 	switch (getUnreadStateValue(snapshot)) {
 		case 'disabled':
