@@ -160,7 +160,7 @@ function createEmailServiceForConfig(
 		enabled: emailConfigSource.enabled,
 		fromEmail: emailConfigSource.fromEmail,
 		fromName: emailConfigSource.fromName,
-		appBaseUrl: Config.endpoints.webApp,
+		appBaseUrl: emailConfigSource.appBaseUrl,
 		marketingBaseUrl: Config.endpoints.marketing,
 	};
 	return new EmailService(emailConfig, emailI18n, createEmailProvider(emailConfigSource), bouncedEmailChecker);

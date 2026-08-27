@@ -19,6 +19,26 @@ function trimTrailingSlash(url: string): string {
 	return url.replace(/\/+$/u, '');
 }
 
+function resolveEmailAppBaseUrl(master: MasterConfig): string {
+	const configuredAppBaseUrl = master.integrations.email.app_base_url.trim();
+	if (!configuredAppBaseUrl) return trimTrailingSlash(master.endpoints.app);
+	try {
+		const appBaseUrl = new URL(configuredAppBaseUrl);
+		if (
+			(appBaseUrl.protocol !== 'http:' && appBaseUrl.protocol !== 'https:') ||
+			appBaseUrl.username ||
+			appBaseUrl.password ||
+			appBaseUrl.search ||
+			appBaseUrl.hash
+		) {
+			throw new Error(`Invalid email app base URL: ${configuredAppBaseUrl}`);
+		}
+		return trimTrailingSlash(appBaseUrl.toString());
+	} catch {
+		throw new Error(`Invalid email app base URL: ${configuredAppBaseUrl}`);
+	}
+}
+
 function resolveGatewayInternalUrl(master: MasterConfig): string {
 	const configuredInternalGateway = (
 		master.internal as {
@@ -254,6 +274,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			webhookSecret: master.integrations.email.webhook_secret ?? undefined,
 			fromEmail: master.integrations.email.from_email,
 			fromName: master.integrations.email.from_name,
+			appBaseUrl: resolveEmailAppBaseUrl(master),
 			smtp: master.integrations.email.smtp
 				? {
 						host: master.integrations.email.smtp.host,

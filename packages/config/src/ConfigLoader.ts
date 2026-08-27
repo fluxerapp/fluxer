@@ -182,6 +182,7 @@ function defaultConfig(): MasterConfig {
 				provider: 'none',
 				from_email: '',
 				from_name: 'Fluxer',
+				app_base_url: '',
 			},
 			sms: {
 				enabled: false,
