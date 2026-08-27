@@ -1191,7 +1191,7 @@ export class MessageSendService {
 		await this.deps.mentionService.handleMentionTasks({
 			guildId: channel.guildId,
 			message,
-			authorId: createUserID(0n),
+			authorId: createUserID(BigInt(webhook.id)),
 			mentionHere: mentionData?.mentionHere ?? false,
 		});
 		await this.deps.dispatchService.dispatchMessageCreate({
