@@ -33,6 +33,9 @@ const PUBLIC_DL_BASE: &str = "https://api.fluxer.app/dl";
 const PNPM_VERSION: &str = "10.29.3";
 const RUST_TOOLCHAIN: &str = "1.93.0";
 const DEFAULT_DESKTOP_VARIANT: &str = "default";
+const LINUX_LIBFIDO2_VERSION: &str = "1.16.0";
+const LINUX_LIBFIDO2_SOURCE_SHA256: &str =
+    "8c2b6fb279b5b42e9ac92ade71832e485852647b53607c43baaafbbcecea04e4";
 pub(crate) const MACOS_UNIVERSAL_ARCH: &str = "universal";
 const WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT: &str = "windows-game-capture";
 
@@ -181,7 +184,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         }
         DesktopStep::InstallSetuptoolsWindowsArm64 => install_setuptools_windows_arm64_step(),
         DesktopStep::InstallSetuptoolsMacos => install_setuptools_macos_step(),
-        DesktopStep::InstallLinuxDeps => install_linux_deps_step(),
+        DesktopStep::InstallLinuxDeps => install_linux_deps_step().await,
         DesktopStep::InstallMsvcArm64Tools => install_msvc_arm64_tools_step(),
         DesktopStep::InstallRustWindowsTargets => install_rust_windows_targets_step(),
         DesktopStep::InstallDependencies => {
@@ -773,7 +776,7 @@ fn install_setuptools_macos_step() -> Result<()> {
     run_command(CommandSpec::new(brew).args(["install", "python-setuptools"]))
 }
 
-fn install_linux_deps_step() -> Result<()> {
+async fn install_linux_deps_step() -> Result<()> {
     let apt_conf = runner_temp().join("99fluxer-ci-network");
     fs::write(
         &apt_conf,
@@ -808,6 +811,7 @@ DPkg::Lock::Timeout "120";
         "ruby-dev",
         "build-essential",
         "binutils",
+        "cmake",
         "nasm",
         "rpm",
         "desktop-file-utils",
@@ -823,16 +827,144 @@ DPkg::Lock::Timeout "120";
         "libdbus-1-dev",
         "libudev-dev",
         "libhunspell-dev",
-        "libfido2-dev",
         "libcbor-dev",
         "libssl-dev",
+        "zlib1g-dev",
         "pkg-config",
         "libegl-dev",
         "libclang-dev",
         "clang",
         "libpulse-dev",
     ])?;
+    install_linux_libfido2().await?;
     run_command(CommandSpec::new("sudo").args(["gem", "install", "--no-document", "fpm"]))
+}
+
+async fn install_linux_libfido2() -> Result<()> {
+    let temp = TempDir::new().context("Failed to create libfido2 build directory")?;
+    let archive_name = format!("libfido2-{LINUX_LIBFIDO2_VERSION}.tar.gz");
+    let archive_path = temp.path().join(&archive_name);
+    let source_dir = temp.path().join("source");
+    let build_dir = temp.path().join("build");
+    let source_url = format!("https://developers.yubico.com/libfido2/Releases/{archive_name}");
+    let multiarch = output_text(CommandSpec::new("gcc").arg("-print-multiarch"))?;
+    let multiarch = multiarch.trim();
+    ensure!(
+        !multiarch.is_empty()
+            && multiarch
+                .bytes()
+                .all(|byte| { byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_' }),
+        "gcc returned invalid multiarch tuple: {multiarch:?}"
+    );
+    let install_library_dir = Path::new("/usr/local/lib").join(multiarch);
+    let install_library_arg = format!("-DCMAKE_INSTALL_LIBDIR=lib/{multiarch}");
+
+    download_file(&source_url, &archive_path).await?;
+    let archive_sha256 = sha256_file(&archive_path)?;
+    ensure!(
+        archive_sha256 == LINUX_LIBFIDO2_SOURCE_SHA256,
+        "libfido2 source checksum mismatch: expected {}, got {}",
+        LINUX_LIBFIDO2_SOURCE_SHA256,
+        archive_sha256
+    );
+
+    fs::create_dir_all(&source_dir)
+        .with_context(|| format!("Failed to create {}", source_dir.display()))?;
+    run_command(CommandSpec::new("tar").args([
+        "-xzf",
+        archive_path.to_string_lossy().as_ref(),
+        "-C",
+        source_dir.to_string_lossy().as_ref(),
+        "--strip-components=1",
+    ]))?;
+    run_command(CommandSpec::new("cmake").args([
+        "-S",
+        source_dir.to_string_lossy().as_ref(),
+        "-B",
+        build_dir.to_string_lossy().as_ref(),
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_INSTALL_PREFIX=/usr/local",
+        &install_library_arg,
+        "-DBUILD_SHARED_LIBS=ON",
+        "-DBUILD_STATIC_LIBS=OFF",
+        "-DBUILD_MANPAGES=OFF",
+        "-DBUILD_EXAMPLES=OFF",
+        "-DBUILD_TOOLS=OFF",
+        "-DBUILD_TESTS=OFF",
+        "-DFUZZ=OFF",
+        "-DNFC_LINUX=OFF",
+        "-DUSE_PCSC=OFF",
+        "-DUSE_HIDAPI=OFF",
+        "-DUSE_WINHELLO=OFF",
+    ]))?;
+    run_command(CommandSpec::new("cmake").args([
+        "--build",
+        build_dir.to_string_lossy().as_ref(),
+        "--config",
+        "Release",
+        "--parallel",
+    ]))?;
+    run_command(CommandSpec::new("sudo").args([
+        "cmake",
+        "--install",
+        build_dir.to_string_lossy().as_ref(),
+        "--config",
+        "Release",
+    ]))?;
+    run_command(CommandSpec::new("sudo").arg("ldconfig"))?;
+
+    let installed_version =
+        output_text(CommandSpec::new("pkg-config").args(["--modversion", "libfido2"]))?;
+    ensure!(
+        installed_version.trim() == LINUX_LIBFIDO2_VERSION,
+        "Expected libfido2 {}, got {}",
+        LINUX_LIBFIDO2_VERSION,
+        installed_version.trim()
+    );
+    let include_dir =
+        output_text(CommandSpec::new("pkg-config").args(["--variable=includedir", "libfido2"]))?;
+    ensure!(
+        Path::new(include_dir.trim()).join("fido/es384.h").is_file(),
+        "libfido2 {} did not install fido/es384.h",
+        LINUX_LIBFIDO2_VERSION
+    );
+    let library_dir =
+        output_text(CommandSpec::new("pkg-config").args(["--variable=libdir", "libfido2"]))?;
+    ensure!(
+        Path::new(library_dir.trim()) == install_library_dir,
+        "Expected libfido2 library directory {}, got {}",
+        install_library_dir.display(),
+        library_dir.trim()
+    );
+    let installed_soname = install_library_dir.join("libfido2.so.1");
+    ensure!(
+        installed_soname.exists(),
+        "libfido2 {} did not install {}",
+        LINUX_LIBFIDO2_VERSION,
+        installed_soname.display()
+    );
+    let installed_library = fs::canonicalize(&installed_soname)
+        .with_context(|| format!("Failed to resolve {}", installed_soname.display()))?;
+    let loader_cache = output_text(CommandSpec::new("ldconfig").arg("-p"))?;
+    let loader_path = loader_cache
+        .lines()
+        .find_map(|line| {
+            let (library, path) = line.trim().split_once("=>")?;
+            (library.split_whitespace().next() == Some("libfido2.so.1"))
+                .then(|| PathBuf::from(path.trim()))
+        })
+        .context("ldconfig did not resolve libfido2.so.1")?;
+    let loaded_library = fs::canonicalize(&loader_path)
+        .with_context(|| format!("Failed to resolve {}", loader_path.display()))?;
+    ensure!(
+        loaded_library == installed_library,
+        "Expected the loader to select {}, got {}",
+        installed_library.display(),
+        loaded_library.display()
+    );
+
+    println!("Installed libfido2 {LINUX_LIBFIDO2_VERSION} from verified source.");
+    Ok(())
 }
 
 fn rewrite_ubuntu_ports_sources() -> Result<()> {

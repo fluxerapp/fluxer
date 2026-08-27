@@ -42,10 +42,9 @@ const BACKEND_REASON: &str = "Windows WebAuthn broker backend (webauthn.dll). \
      webauthn.dll is delay-loaded via /DELAYLOAD, so the addon still loads on \
      older builds but `isSupported()` returns false there.";
 #[cfg(target_os = "linux")]
-const BACKEND_REASON: &str = "Linux WebAuthn backend (libfido2). Requires \
-     libfido2 >= 1.5.0 (HID transport, U2F fallback disabled) and a CTAP \
-     authenticator on USB-HID; `isSupported()` returns false when no \
-     authenticator is enumerated.";
+const BACKEND_REASON: &str = "Linux WebAuthn backend (bundled libfido2, HID transport, U2F \
+     fallback disabled). Requires a CTAP authenticator on USB-HID; \
+     `isSupported()` returns false when no authenticator is enumerated.";
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 const BACKEND_REASON: &str = "no WebAuthn backend is compiled in for this platform";
 
