@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
 import {
@@ -19,6 +20,7 @@ import {Logger} from '../../Logger';
 import {getWorkerDependencies} from '../WorkerContext';
 
 const MENTION_CHUNK_SIZE = 250;
+const MENTION_CHUNK_KEY_DIGEST_LENGTH = 32;
 const MENTION_CHUNK_ENQUEUE_CONCURRENCY = 16;
 const MENTION_SOURCE_PAGE_SIZE = 5000;
 const PayloadSchema = z.object({
@@ -100,6 +102,14 @@ function toMentionChunkEntry(entry: GatewayMentionSourceEntry): MentionChunkEntr
 	};
 }
 
+function mentionChunkJobKey(messageId: string, chunk: Array<MentionChunkEntry>): string {
+	const digest = createHash('sha256');
+	for (const entry of chunk) {
+		digest.update(`${entry.userId}:${entry.direct ? 1 : 0}:${entry.role ? 1 : 0}:${entry.everyone ? 1 : 0}\n`);
+	}
+	return `mention-chunk:${messageId}:${digest.digest('hex').slice(0, MENTION_CHUNK_KEY_DIGEST_LENGTH)}`;
+}
+
 async function enqueueMentionChunks({
 	chunks,
 	channelId,
@@ -122,7 +132,6 @@ async function enqueueMentionChunks({
 		await Promise.all(
 			chunkSlice.map((chunk, localIndex) => {
 				const index = firstChunkIndex + offset + localIndex;
-				const jobKeySuffix = chunkCount === undefined ? `${index}` : `${index}:${chunkCount}`;
 				return addJob(
 					'handleMentionChunk',
 					{
@@ -134,7 +143,7 @@ async function enqueueMentionChunks({
 						mentions: chunk,
 					},
 					{
-						jobKey: `mention-chunk:${messageId}:${jobKeySuffix}`,
+						jobKey: mentionChunkJobKey(messageId, chunk),
 						skipLedger: true,
 					},
 				);
