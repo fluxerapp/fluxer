@@ -15,7 +15,7 @@ const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
 pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 1;
 pub(crate) const DESKTOP_RELEASE_ROUTE_COUNT: usize = 28;
-pub(crate) const DESKTOP_RELEASE_ASSET_COUNT: usize = 26;
+pub(crate) const DESKTOP_RELEASE_ASSET_COUNT: usize = 24;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub(crate) struct DesktopReleaseAsset {
@@ -47,6 +47,38 @@ pub(crate) fn desktop_release_descriptor_filename(channel: &str, version: &str) 
     Ok(format!(
         "{}-{version}-release-manifest.json",
         desktop_release_product(channel)?
+    ))
+}
+
+pub(crate) fn desktop_release_asset_name(
+    channel: &str,
+    version: &str,
+    platform: &str,
+    arch: &str,
+    storage_filename: &str,
+) -> Result<String> {
+    let release_prefix = format!("{}-{version}-", desktop_release_product(channel)?);
+    let platform_token = match platform {
+        "win32" => "win",
+        "darwin" => "mac",
+        "linux" => "linux",
+        other => bail!("Unsupported desktop release platform {other:?}"),
+    };
+    ensure!(
+        matches!(arch, "x64" | "arm64"),
+        "Unsupported desktop release architecture {arch:?}"
+    );
+    if storage_filename.starts_with(&release_prefix) {
+        return Ok(storage_filename.to_string());
+    }
+    let release_filename =
+        if platform == "darwin" && storage_filename.eq_ignore_ascii_case("releases.json") {
+            "releases.json"
+        } else {
+            storage_filename
+        };
+    Ok(format!(
+        "{release_prefix}{platform_token}-{arch}-{release_filename}"
     ))
 }
 
@@ -101,6 +133,10 @@ pub(crate) fn validate_desktop_release_descriptor(
     let mut storage_keys = BTreeSet::new();
     let mut route_counts = BTreeMap::<String, usize>::new();
     let mut release_assets = BTreeMap::<&str, (&str, u64)>::new();
+    let mut release_asset_names = BTreeMap::from([(
+        descriptor_name.to_ascii_lowercase(),
+        descriptor_name.as_str(),
+    )]);
     for asset in &descriptor.assets {
         ensure!(
             storage_keys.insert(asset.storage_key.as_str()),
@@ -125,20 +161,13 @@ pub(crate) fn validate_desktop_release_descriptor(
         *route_counts
             .entry(format!("{}/{}", key_segments[2], key_segments[3]))
             .or_default() += 1;
-        let platform_token = match key_segments[2] {
-            "win32" => "win",
-            "darwin" => "mac",
-            "linux" => "linux",
-            _ => unreachable!(),
-        };
-        let expected_release_asset = if key_segments[4].starts_with(&release_prefix) {
-            key_segments[4].to_string()
-        } else {
-            format!(
-                "{release_prefix}{platform_token}-{}-{}",
-                key_segments[3], key_segments[4]
-            )
-        };
+        let expected_release_asset = desktop_release_asset_name(
+            channel,
+            version,
+            key_segments[2],
+            key_segments[3],
+            key_segments[4],
+        )?;
         ensure!(
             asset.release_asset.starts_with(&release_prefix)
                 && asset.release_asset != descriptor_name
@@ -149,6 +178,16 @@ pub(crate) fn validate_desktop_release_descriptor(
             "Desktop release descriptor contains invalid release asset {:?}",
             asset.release_asset
         );
+        if let Some(existing) = release_asset_names.insert(
+            asset.release_asset.to_ascii_lowercase(),
+            asset.release_asset.as_str(),
+        ) {
+            ensure!(
+                existing == asset.release_asset,
+                "Desktop release asset names differ only by case: {existing:?} and {:?}",
+                asset.release_asset
+            );
+        }
         ensure!(
             asset.sha256.len() == 64
                 && asset
@@ -613,6 +652,7 @@ fn local_release_assets(
     );
 
     let mut assets = Vec::with_capacity(entries.len());
+    let mut case_folded_names = BTreeMap::<String, String>::new();
     for entry in entries {
         let path = entry.path();
         let metadata = fs::symlink_metadata(&path)
@@ -640,6 +680,12 @@ fn local_release_assets(
             name.starts_with(&prefix),
             "Release asset {name:?} must start with {prefix:?}"
         );
+        if let Some(existing) = case_folded_names.insert(name.to_ascii_lowercase(), name.clone()) {
+            ensure!(
+                existing == name,
+                "Release asset names differ only by case: {existing:?} and {name:?}"
+            );
+        }
         assets.push(LocalReleaseAsset {
             digest: sha256_file(&path)?,
             path,

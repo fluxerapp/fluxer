@@ -12,7 +12,7 @@ use crate::common::{
 use crate::functions::write_json_pretty;
 use crate::release::{
     DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION, DesktopReleaseAsset, DesktopReleaseDescriptor,
-    desktop_release_descriptor_filename, desktop_release_product,
+    desktop_release_asset_name, desktop_release_descriptor_filename, desktop_release_product,
     validate_desktop_release_descriptor,
 };
 use anyhow::{Context, Result, anyhow, bail, ensure};
@@ -3781,6 +3781,7 @@ struct DesktopReleaseAssetBuilder<'a> {
     descriptor_assets: Vec<DesktopReleaseAsset>,
     storage_keys: BTreeSet<String>,
     release_asset_content: BTreeMap<String, (String, u64)>,
+    release_asset_names: BTreeMap<String, String>,
 }
 
 impl<'a> DesktopReleaseAssetBuilder<'a> {
@@ -3800,6 +3801,7 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
             descriptor_assets: Vec::new(),
             storage_keys: BTreeSet::new(),
             release_asset_content: BTreeMap::new(),
+            release_asset_names: BTreeMap::new(),
         }
     }
 
@@ -3810,21 +3812,13 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
             source.display()
         );
         let source_name = file_name_string(source)?;
-        let platform_token = match platform {
-            "win32" => "win",
-            "darwin" => "mac",
-            "linux" => "linux",
-            other => bail!("Unsupported desktop release platform {other:?}"),
-        };
         let canonical_prefix = format!("{}-{}-", self.product, self.version);
-        let release_asset = if qualify_name && !source_name.starts_with(&canonical_prefix) {
-            format!(
-                "{}-{}-{platform_token}-{arch}-{source_name}",
-                self.product, self.version
-            )
-        } else {
-            source_name.clone()
-        };
+        ensure!(
+            qualify_name || source_name.starts_with(&canonical_prefix),
+            "Shipped desktop artifact name is not canonical: {source_name:?}"
+        );
+        let release_asset =
+            desktop_release_asset_name(self.channel, self.version, platform, arch, &source_name)?;
         ensure!(
             release_asset.starts_with(&canonical_prefix)
                 && release_asset.bytes().all(|byte| {
@@ -3832,6 +3826,15 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
                 }),
             "Desktop release asset name is not canonical and URL-safe: {release_asset:?}"
         );
+        if let Some(existing) = self
+            .release_asset_names
+            .insert(release_asset.to_ascii_lowercase(), release_asset.clone())
+        {
+            ensure!(
+                existing == release_asset,
+                "Desktop release asset names differ only by case: {existing:?} and {release_asset:?}"
+            );
+        }
         let storage_key = format!(
             "{}/{}/{platform}/{arch}/{source_name}",
             self.s3_prefix, self.channel

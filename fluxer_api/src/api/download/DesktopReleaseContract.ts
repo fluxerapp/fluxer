@@ -6,7 +6,7 @@ import {isJsonRecord} from '../utils/JsonBoundaryUtils';
 const DESKTOP_BUCKET_PREFIX = 'desktop';
 const MIN_RELEASE_ROUTE_COUNT = 28;
 const MAX_RELEASE_ROUTE_COUNT = 128;
-const MIN_RELEASE_ASSET_COUNT = 26;
+const MIN_RELEASE_ASSET_COUNT = 24;
 
 interface DesktopReleaseAsset {
 	storage_key: string;
@@ -101,12 +101,14 @@ export function parseDesktopReleaseDescriptor(value: unknown): DesktopReleaseDes
 	const expectedTag = `fluxer-desktop-${value.channel}@${value.version}`;
 	const expectedStoragePrefix = `desktop/${value.channel}/`;
 	const expectedReleasePrefix = `${value.channel === 'canary' ? 'Fluxer-Canary' : 'Fluxer'}-${value.version}-`;
+	const descriptorName = `${expectedReleasePrefix}release-manifest.json`;
 	if (value.release_tag !== expectedTag) {
 		return null;
 	}
 	const storageKeys = new Set<string>();
 	const routeCounts = new Map<string, number>();
 	const releaseAssets = new Map<string, {sha256: string; size: number}>();
+	const releaseAssetNames = new Map<string, string>([[descriptorName.toLowerCase(), descriptorName]]);
 	const assets: Array<DesktopReleaseAsset> = [];
 	for (const rawAsset of value.assets) {
 		const asset = parseDesktopReleaseAsset(rawAsset);
@@ -121,12 +123,23 @@ export function parseDesktopReleaseDescriptor(value: unknown): DesktopReleaseDes
 		storageKeys.add(asset.storage_key);
 		const [, , platform, arch, filename] = asset.storage_key.split('/');
 		const platformToken = platform === 'win32' ? 'win' : platform === 'darwin' ? 'mac' : 'linux';
+		const releaseFilename =
+			platform === 'darwin' && filename.toLowerCase() === 'releases.json' ? 'releases.json' : filename;
 		const expectedReleaseAsset = filename.startsWith(expectedReleasePrefix)
 			? filename
-			: `${expectedReleasePrefix}${platformToken}-${arch}-${filename}`;
-		if (asset.release_asset !== expectedReleaseAsset) {
+			: `${expectedReleasePrefix}${platformToken}-${arch}-${releaseFilename}`;
+		if (
+			asset.release_asset !== expectedReleaseAsset ||
+			asset.release_asset.toLowerCase() === descriptorName.toLowerCase()
+		) {
 			return null;
 		}
+		const caseFoldedReleaseAsset = asset.release_asset.toLowerCase();
+		const existingReleaseAssetName = releaseAssetNames.get(caseFoldedReleaseAsset);
+		if (existingReleaseAssetName && existingReleaseAssetName !== asset.release_asset) {
+			return null;
+		}
+		releaseAssetNames.set(caseFoldedReleaseAsset, asset.release_asset);
 		const scope = `${platform}/${arch}`;
 		routeCounts.set(scope, (routeCounts.get(scope) ?? 0) + 1);
 		const existing = releaseAssets.get(asset.release_asset);
