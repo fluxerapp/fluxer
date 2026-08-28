@@ -2287,7 +2287,8 @@ typedef int (*bmff_box_cb)(const uint8_t *payload, size_t payload_len, void *use
 
 static int bmff_walk(const uint8_t *data, size_t start, size_t end,
                      const char *target, bmff_box_cb cb, void *user,
-                     int meta_full_box) {
+                     int meta_full_box, int depth) {
+    if (depth > 32) return 0;
     size_t off = start;
     if (meta_full_box) {
         if (off + 4 > end) return 0;
@@ -2320,10 +2321,10 @@ static int bmff_walk(const uint8_t *data, size_t start, size_t end,
             memcmp(btype, "stbl", 4) == 0 ||
             memcmp(btype, "edts", 4) == 0 ||
             memcmp(btype, "dinf", 4) == 0) {
-            int r = bmff_walk(data, child_start, child_end, target, cb, user, 0);
+            int r = bmff_walk(data, child_start, child_end, target, cb, user, 0, depth + 1);
             if (r) return r;
         } else if (memcmp(btype, "meta", 4) == 0) {
-            int r = bmff_walk(data, child_start, child_end, target, cb, user, 1);
+            int r = bmff_walk(data, child_start, child_end, target, cb, user, 1, depth + 1);
             if (r) return r;
         }
 
@@ -2395,9 +2396,9 @@ static int cb_each_trak(const uint8_t *payload, size_t len, void *user) {
     }
     trak_info *t = &list->traks[list->count];
     memset(t, 0, sizeof(*t));
-    bmff_walk(payload, 0, len, "mdhd", cb_collect_mdhd, t, 0);
-    bmff_walk(payload, 0, len, "hdlr", cb_collect_hdlr, t, 0);
-    bmff_walk(payload, 0, len, "stts", cb_collect_stts, t, 0);
+    bmff_walk(payload, 0, len, "mdhd", cb_collect_mdhd, t, 0, 0);
+    bmff_walk(payload, 0, len, "hdlr", cb_collect_hdlr, t, 0, 0);
+    bmff_walk(payload, 0, len, "stts", cb_collect_stts, t, 0, 0);
     list->count++;
     return 0;
 }
@@ -2412,7 +2413,7 @@ static int parse_isobmff_track_delays(const void *buf, size_t len,
 
     const uint8_t *data = (const uint8_t *)buf;
     trak_list list = { NULL, 0, 0 };
-    if (bmff_walk(data, 0, len, "trak", cb_each_trak, &list, 0) != 0) {
+    if (bmff_walk(data, 0, len, "trak", cb_each_trak, &list, 0, 0) != 0) {
         free(list.traks);
         return -1;
     }
@@ -2540,7 +2541,7 @@ static int parse_isobmff_has_tmap_item(const void *buf, size_t len) {
     if (buf == NULL || len < 16) return 0;
     int found = 0;
     const uint8_t *data = (const uint8_t *)buf;
-    bmff_walk(data, 0, len, "iinf", cb_find_iinf_tmap, &found, 0);
+    bmff_walk(data, 0, len, "iinf", cb_find_iinf_tmap, &found, 0, 0);
     return found;
 }
 
