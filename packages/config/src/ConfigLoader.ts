@@ -92,6 +92,7 @@ function defaultConfig(): MasterConfig {
 			api: {
 				port: 8080,
 				ip_ban_exempt_ips: [],
+				desktop_github_redirect_countries: [],
 				presigned_attachment_uploads_enabled: false,
 				presigned_downloads_enabled: false,
 				presigned_harvest_downloads_enabled: true,

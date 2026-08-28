@@ -85,6 +85,18 @@ function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
 	return Array.from(normalized);
 }
 
+function normalizeCountryCodes(values: Array<string>, configName: string): ReadonlySet<string> {
+	const normalized = new Set<string>();
+	for (const value of values) {
+		const countryCode = value.trim().toUpperCase();
+		if (!/^[A-Z]{2}$/u.test(countryCode)) {
+			throw new Error(`${configName} contains an invalid ISO 3166-1 alpha-2 country code: ${value}`);
+		}
+		normalized.add(countryCode);
+	}
+	return normalized;
+}
+
 function mapPushProviderApps(
 	apps:
 		| Array<{
@@ -142,6 +154,10 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		nodeEnv: master.env === 'test' ? 'development' : master.env,
 		port: master.services.api.port,
 		ipBanExemptIps: normalizeIpBanExemptIps(master.services.api.ip_ban_exempt_ips),
+		desktopGitHubRedirectCountries: normalizeCountryCodes(
+			master.services.api.desktop_github_redirect_countries,
+			'FLUXER_API_DESKTOP_GITHUB_REDIRECT_COUNTRIES',
+		),
 		cassandra: {
 			hosts: cassandraSource?.hosts.join(',') ?? '',
 			port: cassandraSource?.port ?? 9042,

@@ -560,6 +560,12 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step prepare_release_assets
 
+      - name: Publish GitHub release descriptor
+        if: needs.meta.outputs.test_build != 'true'
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
+          --step publish_release_descriptor
+
       - name: Upload payload to S3
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
@@ -647,3 +653,10 @@ jobs:
             release_args+=(--prerelease)
           fi
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- "${release_args[@]}"
+
+      - name: Publish GitHub release readiness marker
+        env:
+          SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
+          --step publish_release_marker

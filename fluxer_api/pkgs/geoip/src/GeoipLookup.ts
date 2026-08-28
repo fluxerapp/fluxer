@@ -23,6 +23,7 @@ type CacheEntry = {
 };
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 10_000;
 const geoipCache = new Map<string, CacheEntry>();
 
 let maxmindReader: Reader<CityResponse> | null = null;
@@ -85,6 +86,32 @@ function isAsciiUpperAlpha2(value: string): boolean {
 	);
 }
 
+function getCachedGeoipResult(cacheKey: string, normalizedIp: string): GeoipResult | null {
+	const cached = geoipCache.get(cacheKey);
+	if (!cached) {
+		return null;
+	}
+	if (Date.now() >= cached.expiresAt) {
+		geoipCache.delete(cacheKey);
+		return null;
+	}
+	geoipCache.delete(cacheKey);
+	geoipCache.set(cacheKey, cached);
+	return {...cached.result, normalizedIp};
+}
+
+function setCachedGeoipResult(cacheKey: string, result: GeoipResult): void {
+	geoipCache.delete(cacheKey);
+	if (geoipCache.size >= CACHE_MAX_ENTRIES) {
+		const oldestKey = geoipCache.keys().next().value;
+		if (oldestKey === undefined) {
+			throw new Error('GeoIP cache reached capacity without an entry to evict');
+		}
+		geoipCache.delete(oldestKey);
+	}
+	geoipCache.set(cacheKey, {result, expiresAt: Date.now() + CACHE_TTL_MS});
+}
+
 async function lookupMaxmind(clean: string, dbPath: string): Promise<GeoipResult> {
 	try {
 		const reader = await ensureReader(dbPath);
@@ -108,14 +135,13 @@ async function lookupMaxmind(clean: string, dbPath: string): Promise<GeoipResult
 }
 
 async function resolveGeoip(clean: string, dbPath: string): Promise<GeoipResult> {
-	const now = Date.now();
 	const cacheKey = getSameIpDecisionKey(clean) ?? clean;
-	const cached = geoipCache.get(cacheKey);
-	if (cached && now < cached.expiresAt) {
-		return {...cached.result, normalizedIp: clean};
+	const cached = getCachedGeoipResult(cacheKey, clean);
+	if (cached) {
+		return cached;
 	}
 	const result = await lookupMaxmind(clean, dbPath);
-	geoipCache.set(cacheKey, {result, expiresAt: now + CACHE_TTL_MS});
+	setCachedGeoipResult(cacheKey, result);
 	return result;
 }
 

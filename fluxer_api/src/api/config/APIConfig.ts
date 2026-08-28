@@ -35,6 +35,7 @@ export interface APIConfig {
 	nodeEnv: 'development' | 'production';
 	port: number;
 	ipBanExemptIps: Array<string>;
+	desktopGitHubRedirectCountries: ReadonlySet<string>;
 	cassandra: {
 		hosts: string;
 		port: number;

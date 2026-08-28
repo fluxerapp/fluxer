@@ -4,7 +4,7 @@ use crate::common::{CommandSpec, output_text, parse_version_instant, run_command
 use anyhow::{Context, Result, bail, ensure};
 use chrono::{DateTime, Utc};
 use clap::{Args, Subcommand};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
@@ -13,22 +13,188 @@ use std::path::{Path, PathBuf};
 
 const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
-pub(crate) const DESKTOP_RELEASE_ASSET_SUFFIXES: &[&str] = &[
-    "linux-aarch64.rpm",
-    "linux-amd64.deb",
-    "linux-arm64.AppImage",
-    "linux-arm64.deb",
-    "linux-arm64.tar.gz",
-    "linux-x64.tar.gz",
-    "linux-x86_64.AppImage",
-    "linux-x86_64.rpm",
-    "mac-universal.dmg",
-    "mac-universal.zip",
-    "portable-win-arm64.zip",
-    "portable-win-x64.zip",
-    "win-arm64.exe",
-    "win-x64.exe",
-];
+pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 1;
+pub(crate) const DESKTOP_RELEASE_ROUTE_COUNT: usize = 28;
+pub(crate) const DESKTOP_RELEASE_ASSET_COUNT: usize = 26;
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub(crate) struct DesktopReleaseAsset {
+    pub(crate) storage_key: String,
+    pub(crate) release_asset: String,
+    pub(crate) sha256: String,
+    pub(crate) size: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub(crate) struct DesktopReleaseDescriptor {
+    pub(crate) schema_version: u8,
+    pub(crate) channel: String,
+    pub(crate) version: String,
+    pub(crate) release_tag: String,
+    pub(crate) source_sha: String,
+    pub(crate) assets: Vec<DesktopReleaseAsset>,
+}
+
+pub(crate) fn desktop_release_product(channel: &str) -> Result<&'static str> {
+    match channel {
+        "stable" => Ok("Fluxer"),
+        "canary" => Ok("Fluxer-Canary"),
+        other => bail!("Unsupported desktop release channel {other:?}"),
+    }
+}
+
+pub(crate) fn desktop_release_descriptor_filename(channel: &str, version: &str) -> Result<String> {
+    Ok(format!(
+        "{}-{version}-release-manifest.json",
+        desktop_release_product(channel)?
+    ))
+}
+
+pub(crate) fn validate_desktop_release_descriptor(
+    descriptor: &DesktopReleaseDescriptor,
+    channel: &str,
+    version: &str,
+    source_sha: &str,
+) -> Result<()> {
+    ensure!(
+        descriptor.schema_version == DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+        "Unsupported desktop release descriptor schema version {}",
+        descriptor.schema_version
+    );
+    ensure!(
+        descriptor.channel == channel,
+        "Desktop release descriptor channel {:?} does not match {channel:?}",
+        descriptor.channel
+    );
+    ensure!(
+        descriptor.version == version,
+        "Desktop release descriptor version {:?} does not match {version:?}",
+        descriptor.version
+    );
+    ensure!(
+        descriptor.release_tag == format!("fluxer-desktop-{channel}@{version}"),
+        "Desktop release descriptor tag {:?} is invalid",
+        descriptor.release_tag
+    );
+    ensure!(
+        descriptor.source_sha == source_sha,
+        "Desktop release descriptor source SHA {:?} does not match {source_sha:?}",
+        descriptor.source_sha
+    );
+    ensure!(
+        source_sha.len() == 40
+            && source_sha
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()),
+        "Invalid desktop release source SHA {source_sha:?}"
+    );
+    parse_version_instant(version)
+        .with_context(|| format!("Invalid desktop release descriptor version {version:?}"))?;
+    ensure!(
+        descriptor.assets.len() == DESKTOP_RELEASE_ROUTE_COUNT,
+        "Desktop release descriptor must contain {DESKTOP_RELEASE_ROUTE_COUNT} routes, found {}",
+        descriptor.assets.len()
+    );
+    let storage_prefix = format!("desktop/{channel}/");
+    let release_prefix = format!("{}-{version}-", desktop_release_product(channel)?);
+    let descriptor_name = desktop_release_descriptor_filename(channel, version)?;
+    let mut storage_keys = BTreeSet::new();
+    let mut route_counts = BTreeMap::<String, usize>::new();
+    let mut release_assets = BTreeMap::<&str, (&str, u64)>::new();
+    for asset in &descriptor.assets {
+        ensure!(
+            storage_keys.insert(asset.storage_key.as_str()),
+            "Desktop release descriptor contains duplicate storage key {:?}",
+            asset.storage_key
+        );
+        let key_segments = asset.storage_key.split('/').collect::<Vec<_>>();
+        ensure!(
+            key_segments.len() == 5
+                && key_segments[0] == "desktop"
+                && key_segments[1] == channel
+                && matches!(key_segments[2], "win32" | "darwin" | "linux")
+                && matches!(key_segments[3], "x64" | "arm64")
+                && !key_segments[4].is_empty()
+                && key_segments[4].bytes().all(|byte| {
+                    byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')
+                })
+                && asset.storage_key.starts_with(&storage_prefix),
+            "Desktop release descriptor contains invalid storage key {:?}",
+            asset.storage_key
+        );
+        *route_counts
+            .entry(format!("{}/{}", key_segments[2], key_segments[3]))
+            .or_default() += 1;
+        let platform_token = match key_segments[2] {
+            "win32" => "win",
+            "darwin" => "mac",
+            "linux" => "linux",
+            _ => unreachable!(),
+        };
+        let expected_release_asset = if key_segments[4].starts_with(&release_prefix) {
+            key_segments[4].to_string()
+        } else {
+            format!(
+                "{release_prefix}{platform_token}-{}-{}",
+                key_segments[3], key_segments[4]
+            )
+        };
+        ensure!(
+            asset.release_asset.starts_with(&release_prefix)
+                && asset.release_asset != descriptor_name
+                && asset.release_asset == expected_release_asset
+                && asset.release_asset.bytes().all(|byte| {
+                    byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')
+                }),
+            "Desktop release descriptor contains invalid release asset {:?}",
+            asset.release_asset
+        );
+        ensure!(
+            asset.sha256.len() == 64
+                && asset
+                    .sha256
+                    .bytes()
+                    .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()),
+            "Desktop release descriptor contains invalid SHA-256 for {:?}",
+            asset.release_asset
+        );
+        ensure!(
+            asset.size > 0,
+            "Desktop release descriptor contains an empty asset {:?}",
+            asset.release_asset
+        );
+        if let Some((sha256, size)) = release_assets.get(asset.release_asset.as_str()) {
+            ensure!(
+                *sha256 == asset.sha256 && *size == asset.size,
+                "Desktop release descriptor maps conflicting content to {:?}",
+                asset.release_asset
+            );
+        } else {
+            release_assets.insert(
+                asset.release_asset.as_str(),
+                (asset.sha256.as_str(), asset.size),
+            );
+        }
+    }
+    ensure!(
+        release_assets.len() == DESKTOP_RELEASE_ASSET_COUNT,
+        "Desktop release descriptor must contain {DESKTOP_RELEASE_ASSET_COUNT} unique release assets, found {}",
+        release_assets.len()
+    );
+    let expected_route_counts = BTreeMap::from([
+        ("darwin/arm64".to_string(), 4usize),
+        ("darwin/x64".to_string(), 4usize),
+        ("linux/arm64".to_string(), 4usize),
+        ("linux/x64".to_string(), 4usize),
+        ("win32/arm64".to_string(), 6usize),
+        ("win32/x64".to_string(), 6usize),
+    ]);
+    ensure!(
+        route_counts == expected_route_counts,
+        "Desktop release descriptor route inventory mismatch: expected {expected_route_counts:?}, found {route_counts:?}"
+    );
+    Ok(())
+}
 
 #[derive(Debug, Args, Clone)]
 pub struct ReleaseArgs {
@@ -202,6 +368,7 @@ fn publish(args: PublishArgs) -> Result<()> {
     let assets = local_release_assets(
         &args.component,
         &args.build_version,
+        &source_sha,
         args.asset_dir.as_deref(),
     )?;
     if let Some(existing) = existing_summary.filter(|release| !release.is_draft) {
@@ -404,6 +571,7 @@ fn tag_exists(tag: &str) -> Result<bool> {
 fn local_release_assets(
     component: &str,
     version: &str,
+    source_sha: &str,
     asset_dir: Option<&Path>,
 ) -> Result<Vec<LocalReleaseAsset>> {
     let Some(channel) = desktop_channel(component) else {
@@ -419,12 +587,16 @@ fn local_release_assets(
         "Desktop release asset directory does not exist: {}",
         asset_dir.display()
     );
-    let product = match channel {
-        "stable" => "Fluxer",
-        "canary" => "Fluxer.Canary",
-        other => bail!("Unsupported desktop release channel {other:?}"),
-    };
+    let product = desktop_release_product(channel)?;
     let prefix = format!("{product}-{version}-");
+    let descriptor_name = desktop_release_descriptor_filename(channel, version)?;
+    let descriptor_path = asset_dir.join(&descriptor_name);
+    let descriptor: DesktopReleaseDescriptor = serde_json::from_slice(
+        &fs::read(&descriptor_path)
+            .with_context(|| format!("Failed to read {}", descriptor_path.display()))?,
+    )
+    .with_context(|| format!("Failed to parse {}", descriptor_path.display()))?;
+    validate_desktop_release_descriptor(&descriptor, channel, version, source_sha)?;
     let mut entries = fs::read_dir(asset_dir)
         .with_context(|| {
             format!(
@@ -464,12 +636,9 @@ fn local_release_assets(
                 .all(|byte| { byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_') }),
             "Release asset name is not clean and URL-safe: {name:?}"
         );
-        let suffix = name
-            .strip_prefix(&prefix)
-            .with_context(|| format!("Release asset {name:?} must start with {prefix:?}"))?;
         ensure!(
-            DESKTOP_RELEASE_ASSET_SUFFIXES.contains(&suffix),
-            "Release asset {name:?} is not a supported shipped desktop artifact"
+            name.starts_with(&prefix),
+            "Release asset {name:?} must start with {prefix:?}"
         );
         assets.push(LocalReleaseAsset {
             digest: sha256_file(&path)?,
@@ -478,9 +647,11 @@ fn local_release_assets(
             size: metadata.len(),
         });
     }
-    let expected_names = DESKTOP_RELEASE_ASSET_SUFFIXES
+    let expected_names = descriptor
+        .assets
         .iter()
-        .map(|suffix| format!("{prefix}{suffix}"))
+        .map(|asset| asset.release_asset.clone())
+        .chain(std::iter::once(descriptor_name))
         .collect::<BTreeSet<_>>();
     let actual_names = assets
         .iter()
@@ -490,6 +661,25 @@ fn local_release_assets(
         actual_names == expected_names,
         "Desktop release asset inventory mismatch: expected {expected_names:?}, found {actual_names:?}"
     );
+    let local_by_name = assets
+        .iter()
+        .map(|asset| (asset.name.as_str(), asset))
+        .collect::<BTreeMap<_, _>>();
+    for descriptor_asset in &descriptor.assets {
+        let local = local_by_name
+            .get(descriptor_asset.release_asset.as_str())
+            .with_context(|| {
+                format!(
+                    "Desktop release descriptor references missing asset {:?}",
+                    descriptor_asset.release_asset
+                )
+            })?;
+        ensure!(
+            local.digest == descriptor_asset.sha256 && local.size == descriptor_asset.size,
+            "Desktop release descriptor metadata does not match {:?}",
+            descriptor_asset.release_asset
+        );
+    }
     Ok(assets)
 }
 

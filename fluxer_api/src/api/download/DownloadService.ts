@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import {posix} from 'node:path';
 import {Readable} from 'node:stream';
 import {S3ServiceException} from '@aws-sdk/client-s3';
@@ -12,6 +13,11 @@ import type {
 import {Config} from '../Config';
 import type {IStorageService} from '../infrastructure/IStorageService';
 import {isJsonRecord, parseJsonUnknown} from '../utils/JsonBoundaryUtils';
+import {
+	parseDesktopArtifactScope,
+	parseDesktopReleaseDescriptor,
+	parseDesktopReleaseReadiness,
+} from './DesktopReleaseContract';
 
 export const DOWNLOAD_PREFIX = '/dl';
 export const DESKTOP_REDIRECT_PREFIX = `${DOWNLOAD_PREFIX}/desktop`;
@@ -46,6 +52,8 @@ function isUnsatisfiableRangeError(error: unknown): boolean {
 const DESKTOP_BUCKET_PREFIX = 'desktop';
 const DESKTOP_TEST_BUCKET_PREFIX = 'desktop-test';
 const DEFAULT_API_CLIENT_BASE_URL = 'https://api.fluxer.app';
+const GITHUB_RELEASE_DOWNLOAD_BASE_URL = 'https://github.com/fluxerapp/fluxer/releases/download';
+const GITHUB_RELEASE_MARKER_DIRECTORY = 'github-releases';
 
 function desktopBucketPrefix(test?: boolean): string {
 	return test ? DESKTOP_TEST_BUCKET_PREFIX : DESKTOP_BUCKET_PREFIX;
@@ -176,8 +184,69 @@ interface ManifestFilenameResolutionParams extends LatestFilenameLookupParams {
 	filename: string;
 }
 
+export type GitHubDesktopReleaseResolution =
+	| {kind: 'not_current'}
+	| {kind: 'awaiting_release'}
+	| {kind: 'ready'; location: string};
+
 export class DownloadService {
 	constructor(private readonly storageService: IStorageService) {}
+
+	async resolveGitHubDesktopRelease(key: string): Promise<GitHubDesktopReleaseResolution> {
+		const scope = parseDesktopArtifactScope(key);
+		if (!scope) {
+			return {kind: 'not_current'};
+		}
+		const manifestKey = `${DESKTOP_BUCKET_PREFIX}/${scope.channel}/${scope.plat}/${scope.arch}/manifest.json`;
+		const manifest = await this.readOptionalJsonObjectFromStorage(manifestKey);
+		if (
+			!isDesktopManifest(manifest) ||
+			manifest.channel !== scope.channel ||
+			manifest.platform !== scope.plat ||
+			manifest.arch !== scope.arch
+		) {
+			return {kind: 'not_current'};
+		}
+		const descriptorKey = `${DESKTOP_BUCKET_PREFIX}/${scope.channel}/${GITHUB_RELEASE_MARKER_DIRECTORY}/${manifest.version}.json`;
+		const descriptorText = await this.readOptionalTextFromStorage(descriptorKey);
+		if (descriptorText == null) {
+			return {kind: 'not_current'};
+		}
+		const descriptor = parseDesktopReleaseDescriptor(parseJsonUnknown(descriptorText));
+		if (
+			!descriptor ||
+			descriptor.channel !== scope.channel ||
+			descriptor.version !== manifest.version ||
+			descriptor.release_tag !== `fluxer-desktop-${scope.channel}@${manifest.version}`
+		) {
+			throw new Error(`Invalid GitHub desktop release descriptor: ${descriptorKey}`);
+		}
+		const releaseAsset = descriptor.assets.find((asset) => asset.storage_key === key);
+		if (!releaseAsset) {
+			return {kind: 'not_current'};
+		}
+		const markerKey = `${DESKTOP_BUCKET_PREFIX}/${scope.channel}/${GITHUB_RELEASE_MARKER_DIRECTORY}/${manifest.version}.ready.json`;
+		const marker = await this.readOptionalJsonObjectFromStorage(markerKey);
+		if (marker == null) {
+			return {kind: 'awaiting_release'};
+		}
+		const readiness = parseDesktopReleaseReadiness(marker);
+		const descriptorSha256 = createHash('sha256').update(descriptorText).digest('hex');
+		if (
+			!readiness ||
+			readiness.channel !== descriptor.channel ||
+			readiness.version !== descriptor.version ||
+			readiness.release_tag !== descriptor.release_tag ||
+			readiness.source_sha !== descriptor.source_sha ||
+			readiness.descriptor_sha256 !== descriptorSha256
+		) {
+			throw new Error(`Invalid GitHub desktop release readiness marker: ${markerKey}`);
+		}
+		return {
+			kind: 'ready',
+			location: `${GITHUB_RELEASE_DOWNLOAD_BASE_URL}/${encodeURIComponent(descriptor.release_tag)}/${encodeURIComponent(releaseAsset.release_asset)}`,
+		};
+	}
 
 	async resolveLatestDesktopKey(params: {
 		channel: DesktopChannel;
@@ -659,6 +728,11 @@ export class DownloadService {
 	}
 
 	private async readJsonObjectFromStorage(key: string): Promise<unknown | null> {
+		const text = await this.readTextFromStorage(key);
+		return text == null ? null : parseJsonUnknown(text);
+	}
+
+	private async readTextFromStorage(key: string): Promise<string | null> {
 		const streamResult = await this.storageService.streamObject({
 			bucket: Config.s3.buckets.downloads,
 			key,
@@ -667,8 +741,29 @@ export class DownloadService {
 			return null;
 		}
 		const body = Readable.toWeb(streamResult.body);
-		const text = await new Response(body as ReadableStream).text();
-		return parseJsonUnknown(text);
+		return new Response(body as ReadableStream).text();
+	}
+
+	private async readOptionalJsonObjectFromStorage(key: string): Promise<unknown | null> {
+		try {
+			return await this.readJsonObjectFromStorage(key);
+		} catch (error) {
+			if (isStorageNotFoundError(error)) {
+				return null;
+			}
+			throw error;
+		}
+	}
+
+	private async readOptionalTextFromStorage(key: string): Promise<string | null> {
+		try {
+			return await this.readTextFromStorage(key);
+		} catch (error) {
+			if (isStorageNotFoundError(error)) {
+				return null;
+			}
+			throw error;
+		}
 	}
 
 	private isValidSha256(value: string): boolean {
@@ -774,9 +869,11 @@ export class DownloadService {
 		const {ext, arch: archMap} = mapping;
 		const filenames = new Set<string>();
 		for (const archSuffix of this.getArchTokens(archMap[arch as 'x64' | 'arm64'])) {
-			const modernFilename = this.buildModernArtifactFilename(channel, version, plat, archSuffix, ext);
-			if (modernFilename) {
-				filenames.add(modernFilename);
+			for (const productName of this.getModernProductNames(channel)) {
+				filenames.add(`${productName}-${version}-${MODERN_PLATFORM_TOKENS[plat]}-${archSuffix}${ext}`);
+				if (format === 'portable') {
+					filenames.add(`${productName}-${version}-portable-${MODERN_PLATFORM_TOKENS[plat]}-${archSuffix}${ext}`);
+				}
 			}
 			if (format === 'setup') {
 				filenames.add(`fluxer-${channel}-${version}-${archSuffix}-setup${ext}`);
@@ -784,9 +881,6 @@ export class DownloadService {
 				filenames.add(`fluxer-${version}-${archSuffix}-setup${ext}`);
 				filenames.add(`Fluxer-${version}-${archSuffix}-Setup${ext}`);
 			} else if (format === 'portable') {
-				filenames.add(
-					`${this.getModernProductName(channel)}-${version}-portable-${MODERN_PLATFORM_TOKENS[plat]}-${archSuffix}${ext}`,
-				);
 				filenames.add(`fluxer-${channel}-${version}-portable-${archSuffix}${ext}`);
 				filenames.add(`Fluxer-${version}-portable-${archSuffix}${ext}`);
 			} else {
@@ -816,7 +910,6 @@ export class DownloadService {
 			}
 			const {ext, arch: archMap} = mapping;
 			const escapedExt = this.escapeRegex(ext);
-			const escapedModernFilenamePrefix = this.escapeRegex(this.getModernProductName(channel));
 			const modernPlatformToken = MODERN_PLATFORM_TOKENS[plat];
 			for (const archSuffix of this.getArchTokens(archMap[arch as 'x64' | 'arm64'])) {
 				const patterns = [
@@ -828,18 +921,23 @@ export class DownloadService {
 						`^[Ff]luxer-(\\d+\\.\\d+\\.\\d+)-${this.escapeRegex(archSuffix)}(?:-[Ss]etup)?${escapedExt}$`,
 						'u',
 					),
-					new RegExp(
-						`^${escapedModernFilenamePrefix}-(\\d+\\.\\d+\\.\\d+)-${this.escapeRegex(modernPlatformToken)}-${this.escapeRegex(archSuffix)}${escapedExt}$`,
-						'iu',
-					),
 				];
-				if (format === 'portable') {
+				for (const productName of this.getModernProductNames(channel)) {
+					const escapedProductName = this.escapeRegex(productName);
 					patterns.push(
 						new RegExp(
-							`^${escapedModernFilenamePrefix}-(\\d+\\.\\d+\\.\\d+)-portable-${this.escapeRegex(modernPlatformToken)}-${this.escapeRegex(archSuffix)}${escapedExt}$`,
+							`^${escapedProductName}-(\\d+\\.\\d+\\.\\d+)-${this.escapeRegex(modernPlatformToken)}-${this.escapeRegex(archSuffix)}${escapedExt}$`,
 							'iu',
 						),
 					);
+					if (format === 'portable') {
+						patterns.push(
+							new RegExp(
+								`^${escapedProductName}-(\\d+\\.\\d+\\.\\d+)-portable-${this.escapeRegex(modernPlatformToken)}-${this.escapeRegex(archSuffix)}${escapedExt}$`,
+								'iu',
+							),
+						);
+					}
 				}
 				for (const pattern of patterns) {
 					const match = filename.match(pattern);
@@ -852,18 +950,8 @@ export class DownloadService {
 		return null;
 	}
 
-	private getModernProductName(channel: DesktopChannel): string {
-		return channel === 'canary' ? 'Fluxer Canary' : 'Fluxer';
-	}
-
-	private buildModernArtifactFilename(
-		channel: DesktopChannel,
-		version: string,
-		plat: DesktopPlatform,
-		archToken: string,
-		ext: string,
-	): string {
-		return `${this.getModernProductName(channel)}-${version}-${MODERN_PLATFORM_TOKENS[plat]}-${archToken}${ext}`;
+	private getModernProductNames(channel: DesktopChannel): Array<string> {
+		return channel === 'canary' ? ['Fluxer-Canary', 'Fluxer Canary'] : ['Fluxer'];
 	}
 
 	private getArchTokens(archToken: string | Array<string>): Array<string> {

@@ -8,6 +8,7 @@ const path = require('node:path');
 const {promisify} = require('node:util');
 const execFileAsync = promisify(execFile);
 const productName = isCanary ? 'Fluxer Canary' : 'Fluxer';
+const artifactProductName = isCanary ? 'Fluxer-Canary' : 'Fluxer';
 const appId = isCanary ? 'app.fluxer.canary' : 'app.fluxer';
 const iconDir = isCanary ? 'icons-canary' : 'icons-stable';
 const packageName = isCanary ? 'fluxer_desktop_canary' : 'fluxer_desktop';
@@ -1269,8 +1270,7 @@ module.exports = {
 	appId,
 	productName,
 	copyright: 'Copyright © 2026 Fluxer Platform AB',
-	// biome-ignore lint/suspicious/noTemplateCurlyInString: electron-builder placeholders, not JS template literals.
-	artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
+	artifactName: `${artifactProductName}-\${version}-\${os}-\${arch}.\${ext}`,
 	directories: {
 		buildResources: 'build_resources',
 		output: 'dist-electron',
@@ -1440,8 +1440,7 @@ module.exports = {
 		target: winTargets,
 	},
 	portable: {
-		// biome-ignore lint/suspicious/noTemplateCurlyInString: electron-builder expands these placeholders.
-		artifactName: '${productName}-${version}-portable-${os}-${arch}.${ext}',
+		artifactName: `${artifactProductName}-\${version}-portable-\${os}-\${arch}.\${ext}`,
 	},
 	linux: {
 		icon: `build_resources/${iconDir}/1024x1024.png`,

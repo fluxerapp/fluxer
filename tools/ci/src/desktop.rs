@@ -10,7 +10,11 @@ use crate::common::{
     upload_directory_to_s3, upload_s3_plan_append_only, upload_s3_plan_overwrite,
 };
 use crate::functions::write_json_pretty;
-use crate::release::DESKTOP_RELEASE_ASSET_SUFFIXES;
+use crate::release::{
+    DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION, DesktopReleaseAsset, DesktopReleaseDescriptor,
+    desktop_release_descriptor_filename, desktop_release_product,
+    validate_desktop_release_descriptor,
+};
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use aws_sdk_s3::Client as S3Client;
 use chrono::Utc;
@@ -115,6 +119,8 @@ enum DesktopStep {
     UploadReleaseAssets,
     DownloadReleaseAssets,
     UploadPayload,
+    PublishReleaseDescriptor,
+    PublishReleaseMarker,
     BuildSummary,
 }
 
@@ -243,6 +249,8 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::UploadReleaseAssets => upload_release_assets_step().await,
         DesktopStep::DownloadReleaseAssets => download_release_assets_step().await,
         DesktopStep::UploadPayload => upload_payload_step().await,
+        DesktopStep::PublishReleaseDescriptor => publish_release_descriptor_step().await,
+        DesktopStep::PublishReleaseMarker => publish_release_marker_step().await,
         DesktopStep::BuildSummary => build_summary_step(),
     }
 }
@@ -1901,10 +1909,21 @@ fn resolve_windows_unpacked_dir(arch: &str, main_exe: &str) -> Result<PathBuf> {
 struct WindowsPackageConfig {
     pack_id: &'static str,
     pack_title: &'static str,
+    artifact_prefix: &'static str,
     icon_dir: &'static str,
     runtime: &'static str,
     main_exe: String,
     output_dir: PathBuf,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct VelopackAssetIndexEntry {
+    #[serde(rename = "RelativeFileName")]
+    relative_file_name: String,
+    #[serde(rename = "Type")]
+    asset_type: String,
+    #[serde(flatten)]
+    extra: BTreeMap<String, Value>,
 }
 
 fn windows_package_config(build_channel: &str, arch: &str) -> WindowsPackageConfig {
@@ -1917,6 +1936,7 @@ fn windows_package_config(build_channel: &str, arch: &str) -> WindowsPackageConf
             "fluxer_desktop"
         },
         pack_title,
+        artifact_prefix: if canary { "Fluxer-Canary" } else { "Fluxer" },
         icon_dir: if canary {
             "icons-canary"
         } else {
@@ -2081,6 +2101,7 @@ fn validate_velopack_output(
     let full_nupkg = full_nupkg.ok_or_else(|| {
         anyhow!("Velopack did not produce a full nupkg payload for Windows updates.")
     })?;
+    let full_nupkg = rename_windows_update_package(config, version, arch, &full_nupkg)?;
     let release_feed = fs::read_to_string(&legacy_releases)
         .with_context(|| format!("Failed to read {}", legacy_releases.display()))?;
     let nupkg_name = file_name_string(&full_nupkg)?;
@@ -2096,12 +2117,128 @@ fn validate_velopack_output(
                 config.output_dir.display()
             )
         })?;
-    let desired_setup_name = format!("{}-{version}-win-{arch}.exe", config.pack_title);
+    let desired_setup_name = format!("{}-{version}-win-{arch}.exe", config.artifact_prefix);
     if file_name_string(&setup_exe)? != desired_setup_name {
         fs::rename(&setup_exe, config.output_dir.join(desired_setup_name))
             .with_context(|| format!("Failed to rename {}", setup_exe.display()))?;
     }
     Ok(())
+}
+
+fn rename_windows_update_package(
+    config: &WindowsPackageConfig,
+    version: &str,
+    arch: &str,
+    source: &Path,
+) -> Result<PathBuf> {
+    let source_name = file_name_string(source)?;
+    let target_name = format!("{}-{version}-win-{arch}-full.nupkg", config.artifact_prefix);
+    let setup_name = format!("{}-{version}-win-{arch}.exe", config.artifact_prefix);
+    let portable_name = format!(
+        "{}-{version}-portable-win-{arch}.zip",
+        config.artifact_prefix
+    );
+    ensure!(
+        source_name != target_name,
+        "Velopack unexpectedly emitted the canonical package name {target_name:?} before feed normalization"
+    );
+    let legacy_path = config.output_dir.join("RELEASES");
+    let legacy = fs::read_to_string(&legacy_path)
+        .with_context(|| format!("Failed to read {}", legacy_path.display()))?;
+    ensure!(
+        legacy.matches(&source_name).count() == 1,
+        "{} must reference Velopack package {source_name:?} exactly once",
+        legacy_path.display()
+    );
+    fs::write(&legacy_path, legacy.replace(&source_name, &target_name))
+        .with_context(|| format!("Failed to rewrite {}", legacy_path.display()))?;
+
+    let releases_path = config.output_dir.join("releases.win.json");
+    let mut releases: Value = serde_json::from_slice(
+        &fs::read(&releases_path)
+            .with_context(|| format!("Failed to read {}", releases_path.display()))?,
+    )
+    .with_context(|| format!("Failed to parse {}", releases_path.display()))?;
+    let replacements = replace_json_string(&mut releases, &source_name, &target_name);
+    ensure!(
+        replacements == 1,
+        "{} must reference Velopack package {source_name:?} exactly once, found {replacements}",
+        releases_path.display()
+    );
+    write_json_pretty(&releases_path, &releases)?;
+
+    let assets_path = config.output_dir.join("assets.win.json");
+    let mut assets: Vec<VelopackAssetIndexEntry> = serde_json::from_slice(
+        &fs::read(&assets_path)
+            .with_context(|| format!("Failed to read {}", assets_path.display()))?,
+    )
+    .with_context(|| format!("Failed to parse {}", assets_path.display()))?;
+    ensure!(
+        assets.len() == 3,
+        "{} must contain exactly three Velopack assets, found {}",
+        assets_path.display(),
+        assets.len()
+    );
+    let mut asset_types = BTreeSet::new();
+    for asset in &mut assets {
+        ensure!(
+            asset_types.insert(asset.asset_type.as_str()),
+            "{} contains duplicate asset type {:?}",
+            assets_path.display(),
+            asset.asset_type
+        );
+        asset.relative_file_name = match asset.asset_type.as_str() {
+            "Installer" => setup_name.clone(),
+            "Portable" => portable_name.clone(),
+            "Full" => {
+                ensure!(
+                    asset.relative_file_name == source_name,
+                    "{} Full asset references {:?}, expected {source_name:?}",
+                    assets_path.display(),
+                    asset.relative_file_name
+                );
+                target_name.clone()
+            }
+            other => bail!(
+                "{} contains unsupported Velopack asset type {other:?}",
+                assets_path.display()
+            ),
+        };
+    }
+    ensure!(
+        asset_types == BTreeSet::from(["Full", "Installer", "Portable"]),
+        "{} contains an incomplete Velopack asset inventory",
+        assets_path.display()
+    );
+    write_json_pretty(&assets_path, &assets)?;
+
+    let target = config.output_dir.join(&target_name);
+    fs::rename(source, &target).with_context(|| {
+        format!(
+            "Failed to rename {} to {}",
+            source.display(),
+            target.display()
+        )
+    })?;
+    Ok(target)
+}
+
+fn replace_json_string(value: &mut Value, source: &str, target: &str) -> usize {
+    match value {
+        Value::String(current) if current == source => {
+            *current = target.to_string();
+            1
+        }
+        Value::Array(values) => values
+            .iter_mut()
+            .map(|value| replace_json_string(value, source, target))
+            .sum(),
+        Value::Object(values) => values
+            .values_mut()
+            .map(|value| replace_json_string(value, source, target))
+            .sum(),
+        _ => 0,
+    }
 }
 
 fn find_windows_unpacked_app(arch: &str, main_exe: &str) -> Option<PathBuf> {
@@ -2225,7 +2362,10 @@ fn create_portable_zip_windows_step() -> Result<()> {
     let portable_marker = pack_dir.join(".portable");
     fs::write(&portable_marker, "")
         .with_context(|| format!("Failed to write {}", portable_marker.display()))?;
-    let zip_name = format!("{}-{version}-portable-win-{arch}.zip", config.pack_title);
+    let zip_name = format!(
+        "{}-{version}-portable-win-{arch}.zip",
+        config.artifact_prefix
+    );
     let zip_path = PathBuf::from("dist-electron").join(zip_name);
     create_zip_from_dir(&pack_dir, &zip_path)?;
     remove_file_if_exists(&portable_marker)?;
@@ -3159,9 +3299,10 @@ fn verify_windows_signed_artifacts_step() -> Result<()> {
                 config.output_dir.display()
             )
         })?;
-    let setup_exe = config
-        .output_dir
-        .join(format!("{}-{version}-win-{arch}.exe", config.pack_title));
+    let setup_exe = config.output_dir.join(format!(
+        "{}-{version}-win-{arch}.exe",
+        config.artifact_prefix
+    ));
     ensure!(
         setup_exe.is_file(),
         "Velopack Setup.exe not found: {}",
@@ -3169,7 +3310,7 @@ fn verify_windows_signed_artifacts_step() -> Result<()> {
     );
     let portable_zip = PathBuf::from("dist-electron").join(format!(
         "{}-{version}-portable-win-{arch}.zip",
-        config.pack_title
+        config.artifact_prefix
     ));
     ensure!(
         portable_zip.is_file(),
@@ -3507,100 +3648,243 @@ fn build_payload_step() -> Result<()> {
 fn prepare_release_assets_step() -> Result<()> {
     let channel = require_env("CHANNEL")?;
     let version = require_env("VERSION")?;
-    let product = match channel.as_str() {
-        "stable" => "Fluxer",
-        "canary" => "Fluxer.Canary",
-        other => bail!("Unsupported desktop release channel {other:?}"),
-    };
-    let expected_asset_names = DESKTOP_RELEASE_ASSET_SUFFIXES
-        .iter()
-        .map(|suffix| format!("{product}-{version}-{suffix}"))
-        .collect::<BTreeSet<_>>();
-    let artifacts = Path::new("artifacts");
+    let source_sha = require_env("SOURCE_SHA")?;
+    let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
+    ensure!(
+        s3_prefix == "desktop",
+        "GitHub desktop releases require S3_DESKTOP_PREFIX=desktop, received {s3_prefix:?}"
+    );
+    let product = desktop_release_product(&channel)?;
+    let payload_root = Path::new("s3_payload").join(&s3_prefix).join(&channel);
     let release_assets = Path::new("release_assets");
     remove_dir_if_exists(release_assets)?;
     fs::create_dir_all(release_assets)?;
 
-    let mut asset_names = BTreeSet::new();
-    for (dir, identity) in payload_artifact_dirs(artifacts, &channel)? {
+    let mut release_builder =
+        DesktopReleaseAssetBuilder::new(&s3_prefix, &channel, &version, product, release_assets);
+    for (platform, arch) in [
+        ("win32", "x64"),
+        ("win32", "arm64"),
+        ("darwin", "x64"),
+        ("darwin", "arm64"),
+        ("linux", "x64"),
+        ("linux", "arm64"),
+    ] {
+        let dir = payload_root.join(platform).join(arch);
         ensure!(
-            identity.desktop_variant == DEFAULT_DESKTOP_VARIANT,
-            "GitHub release asset naming is undefined for desktop variant {:?}",
-            identity.desktop_variant
+            dir.is_dir(),
+            "Desktop release payload directory is missing: {}",
+            dir.display()
         );
-        let platform = match identity.platform.as_str() {
-            "windows" => "win32",
-            "macos" => "darwin",
+        let manifest_path = dir.join("manifest.json");
+        let manifest: DesktopManifest = serde_json::from_slice(
+            &fs::read(&manifest_path)
+                .with_context(|| format!("Failed to read {}", manifest_path.display()))?,
+        )
+        .with_context(|| format!("Failed to parse {}", manifest_path.display()))?;
+        ensure!(
+            manifest.channel == channel
+                && manifest.platform == platform
+                && manifest.arch == arch
+                && manifest.version == version
+                && manifest.variant.is_none(),
+            "Desktop release manifest identity mismatch in {}",
+            manifest_path.display()
+        );
+        let expected_kinds = match platform {
+            "win32" => BTreeSet::from(["portable", "setup"]),
+            "darwin" => BTreeSet::from(["dmg", "zip"]),
+            "linux" => BTreeSet::from(["appimage", "deb", "rpm", "tar_gz"]),
+            _ => unreachable!(),
+        };
+        let actual_kinds = manifest
+            .files
+            .keys()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>();
+        ensure!(
+            actual_kinds == expected_kinds,
+            "Incomplete shipped artifact set for {platform}/{arch}: expected {:?}, found {:?}",
+            expected_kinds,
+            actual_kinds
+        );
+        for entry in manifest.files.values() {
+            release_builder.add(platform, arch, &dir.join(entry.filename()), false)?;
+        }
+        let updater_files = desktop_updater_release_files(&dir, platform)?;
+        for updater_file in updater_files {
+            release_builder.add(platform, arch, &updater_file, true)?;
+        }
+    }
+    let mut descriptor_assets = release_builder.finish();
+    descriptor_assets.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
+    let descriptor = DesktopReleaseDescriptor {
+        schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+        channel: channel.clone(),
+        version: version.clone(),
+        release_tag: format!("fluxer-desktop-{channel}@{version}"),
+        source_sha,
+        assets: descriptor_assets,
+    };
+    validate_desktop_release_descriptor(&descriptor, &channel, &version, &descriptor.source_sha)?;
+    let descriptor_path =
+        release_assets.join(desktop_release_descriptor_filename(&channel, &version)?);
+    write_json_pretty(&descriptor_path, &descriptor)?;
+    println!("GitHub release asset tree:");
+    print_tree(release_assets, 2)
+}
+
+fn desktop_updater_release_files(dir: &Path, platform: &str) -> Result<Vec<PathBuf>> {
+    let mut files = match platform {
+        "win32" => vec![
+            dir.join("RELEASES"),
+            dir.join("releases.win.json"),
+            dir.join("assets.win.json"),
+        ],
+        "darwin" => vec![dir.join("RELEASES.json"), dir.join("releases.json")],
+        "linux" => Vec::new(),
+        other => bail!("Unsupported desktop release platform {other:?}"),
+    };
+    if platform == "win32" {
+        let nupkgs = collect_files(dir)?
+            .into_iter()
+            .filter(|path| {
+                path.file_name()
+                    .and_then(OsStr::to_str)
+                    .is_some_and(|name| name.ends_with("-full.nupkg"))
+            })
+            .collect::<Vec<_>>();
+        ensure!(
+            nupkgs.len() == 1,
+            "Expected one Windows full update package in {}, found {}",
+            dir.display(),
+            nupkgs.len()
+        );
+        files.push(nupkgs[0].clone());
+    }
+    for path in &files {
+        ensure!(
+            path.is_file(),
+            "Desktop updater release file is missing: {}",
+            path.display()
+        );
+    }
+    Ok(files)
+}
+
+struct DesktopReleaseAssetBuilder<'a> {
+    s3_prefix: &'a str,
+    channel: &'a str,
+    version: &'a str,
+    product: &'a str,
+    release_assets: &'a Path,
+    descriptor_assets: Vec<DesktopReleaseAsset>,
+    storage_keys: BTreeSet<String>,
+    release_asset_content: BTreeMap<String, (String, u64)>,
+}
+
+impl<'a> DesktopReleaseAssetBuilder<'a> {
+    fn new(
+        s3_prefix: &'a str,
+        channel: &'a str,
+        version: &'a str,
+        product: &'a str,
+        release_assets: &'a Path,
+    ) -> Self {
+        Self {
+            s3_prefix,
+            channel,
+            version,
+            product,
+            release_assets,
+            descriptor_assets: Vec::new(),
+            storage_keys: BTreeSet::new(),
+            release_asset_content: BTreeMap::new(),
+        }
+    }
+
+    fn add(&mut self, platform: &str, arch: &str, source: &Path, qualify_name: bool) -> Result<()> {
+        ensure!(
+            source.is_file(),
+            "Release source is missing: {}",
+            source.display()
+        );
+        let source_name = file_name_string(source)?;
+        let platform_token = match platform {
+            "win32" => "win",
+            "darwin" => "mac",
             "linux" => "linux",
             other => bail!("Unsupported desktop release platform {other:?}"),
         };
-        let candidates = manifest_candidates(&dir, platform, &identity.arch)?;
-        let candidate_kinds = candidates
-            .iter()
-            .map(|(kind, _)| kind.as_str())
-            .collect::<Vec<_>>();
-        let expected_kinds = match platform {
-            "win32" => vec!["setup", "portable"],
-            "darwin" => vec!["dmg", "zip"],
-            "linux" => vec!["appimage", "deb", "rpm", "tar_gz"],
-            _ => unreachable!(),
+        let canonical_prefix = format!("{}-{}-", self.product, self.version);
+        let release_asset = if qualify_name && !source_name.starts_with(&canonical_prefix) {
+            format!(
+                "{}-{}-{platform_token}-{arch}-{source_name}",
+                self.product, self.version
+            )
+        } else {
+            source_name.clone()
         };
         ensure!(
-            candidate_kinds == expected_kinds,
-            "Incomplete shipped artifact set for {}/{:?}: expected {:?}, found {:?}",
-            identity.platform,
-            identity.arch,
-            expected_kinds,
-            candidate_kinds
+            release_asset.starts_with(&canonical_prefix)
+                && release_asset.bytes().all(|byte| {
+                    byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')
+                }),
+            "Desktop release asset name is not canonical and URL-safe: {release_asset:?}"
         );
-
-        for (_, source) in candidates {
-            let source_name = file_name_string(&source)?;
-            let asset_name = clean_release_asset_name(&source_name)?;
+        let storage_key = format!(
+            "{}/{}/{platform}/{arch}/{source_name}",
+            self.s3_prefix, self.channel
+        );
+        ensure!(
+            self.storage_keys.insert(storage_key.clone()),
+            "Duplicate desktop release storage key {storage_key:?}"
+        );
+        let size = fs::metadata(source)
+            .with_context(|| format!("Failed to inspect {}", source.display()))?
+            .len();
+        ensure!(
+            size > 0,
+            "Desktop release source is empty: {}",
+            source.display()
+        );
+        let sha256 = sha256_file(source)?;
+        if let Some((existing_sha256, existing_size)) =
+            self.release_asset_content.get(&release_asset)
+        {
             ensure!(
-                asset_names.insert(asset_name.clone()),
-                "Duplicate GitHub release asset name {asset_name:?}"
+                existing_sha256 == &sha256 && *existing_size == size,
+                "Desktop release asset {release_asset:?} has conflicting source content"
             );
-            let destination = release_assets.join(&asset_name);
-            let copied = fs::copy(&source, &destination).with_context(|| {
+        } else {
+            let destination = self.release_assets.join(&release_asset);
+            let copied = fs::copy(source, &destination).with_context(|| {
                 format!(
-                    "Failed to copy shipped artifact {} to {}",
+                    "Failed to copy desktop release asset {} to {}",
                     source.display(),
                     destination.display()
                 )
             })?;
             ensure!(
-                copied > 0,
-                "Copied empty GitHub release asset {}",
+                copied == size,
+                "Desktop release asset copy size mismatch for {}",
                 destination.display()
             );
+            self.release_asset_content
+                .insert(release_asset.clone(), (sha256.clone(), size));
         }
+        self.descriptor_assets.push(DesktopReleaseAsset {
+            storage_key,
+            release_asset,
+            sha256,
+            size,
+        });
+        Ok(())
     }
-    ensure!(
-        asset_names == expected_asset_names,
-        "GitHub release asset inventory mismatch: expected {expected_asset_names:?}, found {asset_names:?}"
-    );
-    println!("GitHub release asset tree:");
-    print_tree(release_assets, 2)
-}
 
-fn clean_release_asset_name(source_name: &str) -> Result<String> {
-    let name = source_name
-        .chars()
-        .map(|character| {
-            if character.is_ascii_whitespace() {
-                '.'
-            } else {
-                character
-            }
-        })
-        .collect::<String>();
-    ensure!(
-        name.bytes()
-            .all(|byte| { byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_') }),
-        "Cannot produce a clean GitHub release asset name from {source_name:?}"
-    );
-    Ok(name)
+    fn finish(self) -> Vec<DesktopReleaseAsset> {
+        self.descriptor_assets
+    }
 }
 
 async fn upload_release_assets_step() -> Result<()> {
@@ -3920,6 +4204,70 @@ async fn upload_payload_step() -> Result<()> {
         is_payload_metadata_key,
     )
     .await
+}
+
+fn read_release_descriptor_from_assets() -> Result<(PathBuf, DesktopReleaseDescriptor)> {
+    let channel = require_env("CHANNEL")?;
+    let version = require_env("VERSION")?;
+    let source_sha = require_env("SOURCE_SHA")?;
+    let path =
+        Path::new("release_assets").join(desktop_release_descriptor_filename(&channel, &version)?);
+    let descriptor: DesktopReleaseDescriptor = serde_json::from_slice(
+        &fs::read(&path).with_context(|| format!("Failed to read {}", path.display()))?,
+    )
+    .with_context(|| format!("Failed to parse {}", path.display()))?;
+    validate_desktop_release_descriptor(&descriptor, &channel, &version, &source_sha)?;
+    Ok((path, descriptor))
+}
+
+async fn publish_release_descriptor_step() -> Result<()> {
+    let (descriptor_path, descriptor) = read_release_descriptor_from_assets()?;
+    let client = s3_client(None).await?;
+    let bucket = require_env("S3_BUCKET")?;
+    let key = format!(
+        "desktop/{}/github-releases/{}.json",
+        descriptor.channel, descriptor.version
+    );
+    let plan = vec![
+        S3UploadPlanItem::new(descriptor_path, key)
+            .with_content_type("application/json; charset=utf-8")
+            .with_cache_control(VERSIONED_ARTIFACT_CACHE_CONTROL),
+    ];
+    upload_s3_plan_append_only(&client, &bucket, plan).await?;
+    Ok(())
+}
+
+async fn publish_release_marker_step() -> Result<()> {
+    let (descriptor_path, descriptor) = read_release_descriptor_from_assets()?;
+    let descriptor_sha256 = sha256_file(&descriptor_path)?;
+    let temp = TempDir::new().context("Failed to create desktop release marker temp directory")?;
+    let marker_path = temp
+        .path()
+        .join(format!("{}.ready.json", descriptor.version));
+    write_json_pretty(
+        &marker_path,
+        &json!({
+            "schema_version": 1,
+            "channel": descriptor.channel,
+            "version": descriptor.version,
+            "release_tag": descriptor.release_tag,
+            "source_sha": descriptor.source_sha,
+            "descriptor_sha256": descriptor_sha256,
+        }),
+    )?;
+    let client = s3_client(None).await?;
+    let bucket = require_env("S3_BUCKET")?;
+    let key = format!(
+        "desktop/{}/github-releases/{}.ready.json",
+        descriptor.channel, descriptor.version
+    );
+    let plan = vec![
+        S3UploadPlanItem::new(marker_path, key)
+            .with_content_type("application/json; charset=utf-8")
+            .with_cache_control(VERSIONED_ARTIFACT_CACHE_CONTROL),
+    ];
+    upload_s3_plan_append_only(&client, &bucket, plan).await?;
+    Ok(())
 }
 
 async fn upload_payload_directory<F>(

@@ -91,6 +91,7 @@ export interface MasterConfig {
 		api: {
 			port: number;
 			ip_ban_exempt_ips: Array<string>;
+			desktop_github_redirect_countries: Array<string>;
 			presigned_attachment_uploads_enabled: boolean;
 			presigned_downloads_enabled: boolean;
 			presigned_harvest_downloads_enabled: boolean;

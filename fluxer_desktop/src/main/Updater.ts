@@ -473,14 +473,14 @@ function buildManualLatestDownloadUrl(format: ManualDesktopFormat): string {
 	return `${UPDATE_BASE_URL}/latest/${format}`;
 }
 
-function getModernProductName(): string {
-	return BUILD_CHANNEL === 'canary' ? 'Fluxer Canary' : 'Fluxer';
+function getArtifactProductName(): string {
+	return BUILD_CHANNEL === 'canary' ? 'Fluxer-Canary' : 'Fluxer';
 }
 
 function getManualUpdateSuggestedName(format: LinuxManualDesktopFormat, version: string): string {
 	const archToken = LINUX_MANUAL_ARCH_TOKENS[format][DESKTOP_DOWNLOAD_ARCH];
 	const extension = LINUX_MANUAL_FORMAT_EXTENSIONS[format];
-	return `${getModernProductName()}-${version}-linux-${archToken}${extension}`;
+	return `${getArtifactProductName()}-${version}-linux-${archToken}${extension}`;
 }
 
 function getManualDownloadOptions(info: ManualLatestInfo): Array<UpdaterDownloadOption> {
