@@ -28,7 +28,6 @@ export interface ResolvedVoiceProcessing {
 export const DEFAULT_VOICE_PROCESSING_MODE: VoiceProcessingMode = 'voice';
 export const DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN = 0;
 export const DEEP_FILTER_NOISE_REDUCTION_LEVEL_MAX = 100;
-export const FOCUSED_VOICE_DEEP_FILTER_NOISE_REDUCTION_LEVEL = 100;
 
 export function clampDeepFilterNoiseReductionLevel(level: number): number {
 	if (!Number.isFinite(level)) {
@@ -67,10 +66,10 @@ export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): R
 			return {
 				mode: 'voice',
 				echoCancellation: true,
-				browserNoiseSuppression: false,
+				browserNoiseSuppression: true,
 				autoGainControl: settings.autoGainControl,
-				deepFilter: true,
-				deepFilterNoiseReductionLevel: FOCUSED_VOICE_DEEP_FILTER_NOISE_REDUCTION_LEVEL,
+				deepFilter: false,
+				deepFilterNoiseReductionLevel: DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN,
 				contentHint: 'speech',
 			};
 	}

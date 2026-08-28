@@ -51,6 +51,8 @@ const MAX_VOICE_PROCESSING_DEVICE_OVERRIDES = 16;
 const VIDEO_FRAME_RATE_MIN = 15;
 const VIDEO_FRAME_RATE_MAX = 120;
 const VIDEO_FRAME_RATE_DEFAULT = 30;
+const DEFAULT_BROWSER_NOISE_SUPPRESSION = true;
+const DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION = false;
 export const CAMERA_EFFECT_STRENGTH_MIN = 0;
 export const CAMERA_EFFECT_STRENGTH_MAX = 100;
 export const CAMERA_EFFECT_STRENGTH_DEFAULT = 50;
@@ -257,6 +259,16 @@ function applyOutputVolumeRecalibrationMigrationV1(parsed: Record<string, unknow
 	return true;
 }
 
+function applyNoiseSuppressionStandardDefaultMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.noiseSuppressionStandardDefaultMigratedV1 === true) {
+		return false;
+	}
+	parsed.noiseSuppression = DEFAULT_BROWSER_NOISE_SUPPRESSION;
+	parsed.deepFilterNoiseSuppressionPrefV2 = DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION;
+	parsed.noiseSuppressionStandardDefaultMigratedV1 = true;
+	return true;
+}
+
 function validateBackgroundImages(images: unknown): Array<BackgroundImage> {
 	if (!Array.isArray(images)) return [];
 	const validated: Array<BackgroundImage> = [];
@@ -283,10 +295,11 @@ class VoiceSettings {
 	inputVolume = 100;
 	outputVolume = 100;
 	echoCancellation = true;
-	noiseSuppression = true;
+	noiseSuppression = DEFAULT_BROWSER_NOISE_SUPPRESSION;
 	autoGainControl = true;
-	deepFilterNoiseSuppressionPrefV2 = true;
+	deepFilterNoiseSuppressionPrefV2 = DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION;
 	deepFilterNoiseSuppressionLevelPrefV2 = 80;
+	noiseSuppressionStandardDefaultMigratedV1 = false;
 	voiceProcessingMode: VoiceProcessingMode = DEFAULT_VOICE_PROCESSING_MODE;
 	voiceProcessingModeByDeviceLabel: Record<string, VoiceProcessingMode> = {};
 	cameraResolution: CameraResolution = 'medium';
@@ -440,6 +453,7 @@ class VoiceSettings {
 			changed = applyScreenShareAudioDefaultOnMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
+			changed = applyNoiseSuppressionStandardDefaultMigrationV1(parsed) || changed;
 			if (changed) {
 				AppStorage.setItem('VoiceSettings', JSON.stringify(parsed));
 			}
@@ -462,6 +476,7 @@ class VoiceSettings {
 			'autoGainControl',
 			'deepFilterNoiseSuppressionPrefV2',
 			'deepFilterNoiseSuppressionLevelPrefV2',
+			'noiseSuppressionStandardDefaultMigratedV1',
 			'voiceProcessingMode',
 			'voiceProcessingModeByDeviceLabel',
 			'cameraResolution',
