@@ -15509,7 +15509,7 @@ msgstr "ต้องระบุรหัสของขวัญ"
 msgid "Gift code is too long"
 msgstr "รหัสของขวัญยาวเกินไป"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "รหัสของขวัญ:"
 
@@ -15544,7 +15544,7 @@ msgstr "แถบแจ้งเตือนคลังของขวัญ"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "ลิงก์ของขวัญ"
@@ -16617,11 +16617,6 @@ msgstr "ฉันยอมรับข้อกำหนดที่อัปเ
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "ฉันคือคำแนะนำเครื่องมือ"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "ฉันแลกรับสิทธิ์นี้ไม่ได้เพราะฉันมี {premiumProductName} แบบตลอดชีพอยู่แล้ว ของขวัญชิ้นนี้เป็นของคุณเลย!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "หรือส่งลิงก์เชิญให้เพื่อ
 msgid "or send an invite to a friend:"
 msgstr "หรือส่งคำเชิญให้เพื่อน:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "หรือส่งลิงก์ของขวัญให้เพื่อน:"
 
@@ -28368,7 +28363,7 @@ msgstr "ส่ง GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "ส่งของขวัญ"
 
@@ -37033,7 +37028,7 @@ msgstr "เราจะกรอก {prefillEmail} ให้โดยอัต�
 msgid "We will send an SMS code when available."
 msgstr "เราจะส่งรหัส SMS เมื่อพร้อมใช้งาน"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "เราอยากจะมอบ {PREMIUM_PRODUCT_NAME} ให้คุณมากกว่าอินฟินิตี้ แต่เดี๋ยวจะเกิดความบิดเบี้ยวของกาลอวกาศแทน ส่งของขวัญให้เพื่อนดีกว่าไหม"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "คุณมีกลุ่มที่มีผู้ใช้เหล่านี้อยู่แล้ว ต้องการสร้างกลุ่มใหม่อีกกลุ่มใช่ไหม ทำได้เลย!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "คุณเป็นเจ้าของ {premiumProductName} แบบตลอดชีพอยู่แล้ว"
 

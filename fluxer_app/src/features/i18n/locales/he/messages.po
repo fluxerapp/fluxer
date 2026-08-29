@@ -15509,7 +15509,7 @@ msgstr "קוד המתנה נדרש"
 msgid "Gift code is too long"
 msgstr "קוד המתנה ארוך מדי"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "קוד מתנה:"
 
@@ -15544,7 +15544,7 @@ msgstr "סרגל התראות של מלאי מתנות"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "קישור למתנה"
@@ -16617,11 +16617,6 @@ msgstr "אני מסכים/ה לתנאים המעודכנים"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "אני כלי עזרה"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "אני לא יכול לממש את זה כי כבר יש לי {premiumProductName} לכל החיים, אז המתנה הזו כולה שלך!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "או שלחו קישור הזמנה לחבר/ה:"
 msgid "or send an invite to a friend:"
 msgstr "או שלחו הזמנה לחבר:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "או שלח/י את קישור המתנה לחבר/ה:"
 
@@ -28368,7 +28363,7 @@ msgstr "שלח GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "שלח מתנה"
 
@@ -37033,7 +37028,7 @@ msgstr "נמלא מראש את {prefillEmail} לאחר שההתחברות בדפ
 msgid "We will send an SMS code when available."
 msgstr "נשלח קוד אימות ב-SMS כשהשירות יהיה זמין."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "היינו שמחים לתת לך יותר מאינסוף של {PREMIUM_PRODUCT_NAME}, אבל זה שובר את רצף הזמן-חלל. אולי תשלח את המתנה לחבר במקום?"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "כבר יש לך קבוצה עם המשתמשים האלה. האם ברצונך ליצור קבוצה חדשה? גם זה בסדר!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "כבר יש לך {premiumProductName} לכל החיים"
 

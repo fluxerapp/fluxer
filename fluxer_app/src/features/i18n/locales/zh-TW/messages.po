@@ -15509,7 +15509,7 @@ msgstr "請輸入禮物代碼"
 msgid "Gift code is too long"
 msgstr "禮物代碼太長"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "贈送代碼："
 
@@ -15544,7 +15544,7 @@ msgstr "禮物庫存提醒列"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "贈送連結"
@@ -16617,11 +16617,6 @@ msgstr "我同意更新後的條款"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "這是一個工具提示"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "我無法兌換這個，因為我已經擁有終身版 {premiumProductName} 了，所以這個禮物就送給你囉！"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "或傳送邀請連結給朋友："
 msgid "or send an invite to a friend:"
 msgstr "或傳送邀請給朋友："
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "或傳送禮物連結給朋友："
 
@@ -28368,7 +28363,7 @@ msgstr "傳送 GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "傳送禮物"
 
@@ -37033,7 +37028,7 @@ msgstr "瀏覽器登入開啟後，我們會預填 {prefillEmail}。"
 msgid "We will send an SMS code when available."
 msgstr "可用時，我們會傳送簡訊驗證碼。"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "我們很樂意贈送您無限多的 {PREMIUM_PRODUCT_NAME}，但這會打破時空連續體。改為將禮物送給朋友如何？"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "您已經和這些用戶建立群組了。真的要再建立一個新的嗎？當然也可以！"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "您已擁有終身版 {premiumProductName}"
 

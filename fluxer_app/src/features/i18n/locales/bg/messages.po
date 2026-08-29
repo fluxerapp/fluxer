@@ -15509,7 +15509,7 @@ msgstr "Изисква се код за подарък"
 msgid "Gift code is too long"
 msgstr "Кодът за подарък е твърде дълъг"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "Код за подарък:"
 
@@ -15544,7 +15544,7 @@ msgstr "Лента за подаръци в инвентара"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "Линк за подарък"
@@ -16617,11 +16617,6 @@ msgstr "Приемам актуализираните условия"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "Аз съм подсказка"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "Не мога да осребря това, защото вече имам доживотен {premiumProductName}, така че този подарък е изцяло за теб!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "Или изпратете линк за покана на приятел
 msgid "or send an invite to a friend:"
 msgstr "или изпратете покана на приятел:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "или изпратете линк за подарък на приятел:"
 
@@ -28368,7 +28363,7 @@ msgstr "Изпращане на GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Изпращане на подарък"
 
@@ -37033,7 +37028,7 @@ msgstr "Ще попълним предварително {prefillEmail}, сле�
 msgid "We will send an SMS code when available."
 msgstr "Ще изпратим SMS код, когато е наличен."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "Бихме искали да ви дадем повече от безкрайност от {PREMIUM_PRODUCT_NAME}, но това нарушава пространствено-времевия континуум. Вместо това да изпратим подаръка на приятел?"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "Вече имате група с тези потребители. Наистина ли искате да създадете нова? Няма проблем и така!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Вече имате доживотен {premiumProductName}"
 

@@ -15509,7 +15509,7 @@ msgstr "Hediye kodu gerekli"
 msgid "Gift code is too long"
 msgstr "Hediye kodu çok uzun"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "Hediye kodu:"
 
@@ -15544,7 +15544,7 @@ msgstr "Hediye envanteri bildirim çubuğu"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "Hediye bağlantısı"
@@ -16617,11 +16617,6 @@ msgstr "Güncellenen şartları kabul ediyorum"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "Ben bir araç ipucuyum"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "Ömür boyu {premiumProductName} üyeliğim olduğu için bunu kullanamıyorum, bu hediye senin!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "Veya bir arkadaşına davet bağlantısı gönder:"
 msgid "or send an invite to a friend:"
 msgstr "veya bir arkadaşına davet gönder:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "veya hediye bağlantısını bir arkadaşına gönder:"
 
@@ -28368,7 +28363,7 @@ msgstr "GIF gönder: {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Hediye gönder"
 
@@ -37033,7 +37028,7 @@ msgstr "Tarayıcıda oturum açma ekranı açıldığında {prefillEmail} adresi
 msgid "We will send an SMS code when available."
 msgstr "Müsait olduğunda bir SMS kodu göndereceğiz."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "{PREMIUM_PRODUCT_NAME} ürününden size sonsuzdan daha fazlasını vermek isterdik ama bu uzay-zaman sürekliliğini bozar. Bunun yerine hediyeyi bir arkadaşınıza mı gönderelim?"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "Bu kullanıcılarla zaten bir grubunuz var. Yeni bir tane oluşturmak istediğinizden emin misiniz? Bu da sorun değil!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Zaten ömür boyu {premiumProductName} sahibisiniz"
 

@@ -15509,7 +15509,7 @@ msgstr "Gavekode er påkrevd"
 msgid "Gift code is too long"
 msgstr "Gavekoden er for lang"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "Gavekode:"
 
@@ -15544,7 +15544,7 @@ msgstr "Varslingslinje for gavebeholdning"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "Gavekobling"
@@ -16617,11 +16617,6 @@ msgstr "Jeg godtar de oppdaterte vilkårene"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "Jeg er et verktøytips"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "Jeg kan ikke løse inn denne fordi jeg allerede har livstid {premiumProductName}, så denne gaven er din!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "Eller send en invitasjonslenke til en venn:"
 msgid "or send an invite to a friend:"
 msgstr "eller send en invitasjon til en venn:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "eller send gavelinken til en venn:"
 
@@ -28368,7 +28363,7 @@ msgstr "Send GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Send gave"
 
@@ -37033,7 +37028,7 @@ msgstr "Vi fyller ut {prefillEmail} automatisk når nettleserpåloggingen åpnes
 msgid "We will send an SMS code when available."
 msgstr "Vi sender en SMS-kode når den er tilgjengelig."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "Vi skulle gjerne gitt deg mer enn uendelig med {PREMIUM_PRODUCT_NAME}, men det bryter romtidskontinuumet. Vil du heller sende gaven til en venn?"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "Du har allerede en gruppe med disse brukerne. Vil du virkelig opprette en ny? Det er også greit!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Du har allerede livstidstilgang til {premiumProductName}"
 

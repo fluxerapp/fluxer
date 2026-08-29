@@ -15509,7 +15509,7 @@ msgstr "Je vyžadován kód dárku"
 msgid "Gift code is too long"
 msgstr "Kód dárku je příliš dlouhý"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "Kód dárku:"
 
@@ -15544,7 +15544,7 @@ msgstr "Upozornění na inventář dárků"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "Odkaz na dárek"
@@ -16617,11 +16617,6 @@ msgstr "Souhlasím s aktualizovanými podmínkami"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "Jsem popisek"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "Nemůžu si to uplatnit, protože už mám doživotní {premiumProductName}, takže tenhle dárek je celý tvůj!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "Nebo pošlete odkaz na pozvánku příteli:"
 msgid "or send an invite to a friend:"
 msgstr "nebo pošlete pozvánku příteli:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "nebo pošlete odkaz na dárek příteli:"
 
@@ -28368,7 +28363,7 @@ msgstr "Odeslat GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Poslat dárek"
 
@@ -37033,7 +37028,7 @@ msgstr "Předvyplníme {prefillEmail}, jakmile se otevře přihlášení v prohl
 msgid "We will send an SMS code when available."
 msgstr "Až to bude možné, pošleme SMS kód."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "Rádi bychom vám dali více než nekonečno {PREMIUM_PRODUCT_NAME}, ale to by narušilo časoprostorové kontinuum. Raději pošlete dárek příteli?"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "Už máte skupinu s těmito uživateli. Opravdu chcete vytvořit novou? To je taky v pořádku!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Už máte doživotní předplatné {premiumProductName}"
 

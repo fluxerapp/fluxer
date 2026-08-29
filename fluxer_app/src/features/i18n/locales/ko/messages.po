@@ -15509,7 +15509,7 @@ msgstr "선물 코드를 입력해주세요"
 msgid "Gift code is too long"
 msgstr "선물 코드가 너무 깁니다"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "선물 코드:"
 
@@ -15544,7 +15544,7 @@ msgstr "선물 인벤토리 알림 표시줄"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "선물 링크"
@@ -16617,11 +16617,6 @@ msgstr "업데이트된 약관에 동의합니다"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "툴팁입니다"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "제가 이미 평생 {premiumProductName}을(를) 가지고 있어서 이 선물은 사용할 수 없어요. 이 선물은 전적으로 당신 거예요!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "또는 친구에게 초대 링크 보내기:"
 msgid "or send an invite to a friend:"
 msgstr "또는 친구에게 초대 보내기:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "또는 친구에게 선물 링크 보내기:"
 
@@ -28368,7 +28363,7 @@ msgstr "GIF {title} 보내기"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "선물하기"
 
@@ -37033,7 +37028,7 @@ msgstr "브라우저 로그인 창이 열리면 {prefillEmail}이(가) 자동으
 msgid "We will send an SMS code when available."
 msgstr "가능한 경우 SMS 코드를 보내드립니다."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "{PREMIUM_PRODUCT_NAME}을(를) 무한대로 드리고 싶지만, 시공간 연속체가 깨질 수 있어요. 대신 친구에게 선물하시겠어요?"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "이 멤버들로 구성된 그룹이 이미 있습니다. 새 그룹을 만드시겠어요? 그래도 괜찮아요!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "회원님은 이미 평생 {premiumProductName}을(를) 보유하고 있습니다"
 

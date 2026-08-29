@@ -15509,7 +15509,7 @@ msgstr "Codul cadou este obligatoriu"
 msgid "Gift code is too long"
 msgstr "Codul cadou este prea lung"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:143
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
 msgid "Gift code:"
 msgstr "Cod cadou:"
 
@@ -15544,7 +15544,7 @@ msgstr "Bara de notificări pentru inventarul de cadouri"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:38
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "Link cadou"
@@ -16617,11 +16617,6 @@ msgstr "Sunt de acord cu termenii actualizați"
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:19
 msgid "I am a tooltip"
 msgstr "Sunt un sfat util"
-
-#. Gift redemption pre-filled DM message for a sender who already owns lifetime premium.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
-msgid "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!"
-msgstr "Nu pot să valorific asta, deoarece am deja abonamentul pe viață la {premiumProductName}, așa că acest cadou este în întregime al tău!"
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:56
 msgid "I changed my mind"
@@ -23160,7 +23155,7 @@ msgstr "Sau trimite un link de invitație unui prieten:"
 msgid "or send an invite to a friend:"
 msgstr "sau trimite o invitație unui prieten:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:135
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
 msgid "or send the gift link to a friend:"
 msgstr "sau trimite linkul cadoului unui prieten:"
 
@@ -28368,7 +28363,7 @@ msgstr "Trimite GIF-ul {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Trimite cadou"
 
@@ -37033,7 +37028,7 @@ msgstr "Vom precompleta {prefillEmail} odată ce se deschide autentificarea în 
 msgid "We will send an SMS code when available."
 msgstr "Vom trimite un cod SMS când va fi disponibil."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:91
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "Ne-ar plăcea să-ți oferim mai mult decât o infinitate de {PREMIUM_PRODUCT_NAME}, dar asta ar rupe continuumul spațiu-timp. Trimite cadoul unui prieten în schimb?"
 
@@ -37666,7 +37661,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "Ai deja un grup cu acești utilizatori. Vrei să creezi unul nou? E în regulă și așa!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Ai deja abonamentul pe viață {premiumProductName}"
 
