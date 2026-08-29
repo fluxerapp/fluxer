@@ -56,9 +56,8 @@ class Spellcheck {
 	get reloadRequired(): boolean {
 		if (!this.providerActivationEngine) return false;
 		const isLinuxDesktop = getElectronAPI()?.platform === 'linux';
-		const wasHunspell = this.providerActivationEngine === 'hunspell' || this.providerActivationEngine === 'auto';
-		const isHunspell =
-			this.engine === 'hunspell' || this.engine === 'auto' || (isLinuxDesktop && this.engine === 'system');
+		const wasHunspell = this.providerActivationEngine === 'hunspell';
+		const isHunspell = isLinuxDesktop ? true : this.engine === 'hunspell';
 		return wasHunspell !== isHunspell;
 	}
 
