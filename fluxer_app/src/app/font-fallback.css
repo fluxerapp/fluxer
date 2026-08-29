@@ -2,6 +2,7 @@
 
 :root {
 	--font-fallback-sans:
+		'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji',
 		'Fluxer Fallback', 'Fluxer Symbols', 'Fluxer Math',
 		'Noto Sans', 'Nirmala UI',
 		'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam',
@@ -12,8 +13,7 @@
 		'Noto Sans Adlam', 'Noto Sans Yi', 'Noto Sans Osage', 'Noto Sans Thaana',
 		'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR',
 		'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols',
-		'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math',
-		'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Noto Emoji';
+		'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math';
 	--font-fallback-mono:
 		'Noto Sans Mono',
 		'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR',
