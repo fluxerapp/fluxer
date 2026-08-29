@@ -25,6 +25,7 @@ import type {LimitConfigService} from '../../../limits/LimitConfigService';
 import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
 import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
 import {Attachment} from '../../../models/Attachment';
+import type {Embed} from '../../../models/Embed';
 import type {Message} from '../../../models/Message';
 import {MessageSnapshot as MessageSnapshotModel} from '../../../models/MessageSnapshot';
 import type {User} from '../../../models/User';
@@ -307,22 +308,60 @@ export async function createMessageSnapshotsForForward(
 	return [new MessageSnapshotModel(snapshotData)];
 }
 
+function collectEmbedReferencedAttachmentCdnKeys(message: Message): Array<string> {
+	const mediaPrefix = `${Config.endpoints.media}/`;
+	const keys = new Set<string>();
+	const consider = (url: string | null | undefined): void => {
+		if (!url || !url.startsWith(mediaPrefix)) {
+			return;
+		}
+		const key = url.slice(mediaPrefix.length);
+		if (key.startsWith('attachments/')) {
+			keys.add(key);
+		}
+	};
+	const scanEmbeds = (embeds: Array<Embed>): void => {
+		for (const embed of embeds) {
+			consider(embed.image?.url);
+			consider(embed.thumbnail?.url);
+			consider(embed.video?.url);
+			consider(embed.audio?.url);
+		}
+	};
+	scanEmbeds(message.embeds);
+	for (const snapshot of message.messageSnapshots) {
+		scanEmbeds(snapshot.embeds);
+	}
+	return [...keys];
+}
+
 export async function purgeMessageAttachments(
 	message: Message,
 	storageService: IStorageService,
 	purgeQueue: IPurgeQueue,
 ): Promise<void> {
+	const cdnKeys = new Set<string>();
 	const cdnUrls: Array<string> = [];
-	await Promise.all(
-		message.attachments.map(async (attachment) => {
-			const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
-			await storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
-			if (Config.bunny.purgeEnabled) {
-				const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
-				cdnUrls.push(cdnUrl);
-			}
-		}),
-	);
+	for (const attachment of collectMessageAttachments(message)) {
+		const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
+		if (cdnKeys.has(cdnKey)) {
+			continue;
+		}
+		cdnKeys.add(cdnKey);
+		if (Config.bunny.purgeEnabled) {
+			cdnUrls.push(makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename));
+		}
+	}
+	for (const embedKey of collectEmbedReferencedAttachmentCdnKeys(message)) {
+		if (cdnKeys.has(embedKey)) {
+			continue;
+		}
+		cdnKeys.add(embedKey);
+		if (Config.bunny.purgeEnabled) {
+			cdnUrls.push(`${Config.endpoints.media}/${embedKey}`);
+		}
+	}
+	await Promise.all([...cdnKeys].map((cdnKey) => storageService.deleteObject(Config.s3.buckets.cdn, cdnKey)));
 	if (Config.bunny.purgeEnabled && cdnUrls.length > 0) {
 		await purgeQueue.addUrls(cdnUrls);
 	}

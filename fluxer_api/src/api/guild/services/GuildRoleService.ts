@@ -308,7 +308,7 @@ export class GuildRoleService {
 				position?: number;
 			}>;
 		},
-		_auditLogReason?: string | null,
+		auditLogReason?: string | null,
 	): Promise<void> {
 		const {userId, guildId, updates} = params;
 		const {checkPermission} = await this.getGuildAuthenticated({userId, guildId});
@@ -319,7 +319,7 @@ export class GuildRoleService {
 			throw new ResourceLockedError();
 		}
 		try {
-			await this.updateRolePositionsByList({userId, guildId, updates});
+			await this.updateRolePositionsByList({userId, guildId, updates, auditLogReason: auditLogReason ?? null});
 		} finally {
 			await this.cacheService.releaseLock(lockKey, lockToken);
 		}
@@ -345,7 +345,7 @@ export class GuildRoleService {
 				hoistPosition: number;
 			}>;
 		},
-		_auditLogReason?: string | null,
+		auditLogReason?: string | null,
 	): Promise<void> {
 		const {userId, guildId, updates} = params;
 		const {checkPermission, guildData} = await this.getGuildAuthenticated({userId, guildId});
@@ -403,6 +403,7 @@ export class GuildRoleService {
 			}
 			if (changedRoles.length > 0) {
 				await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
+				await this.recordRolePositionAuditLogs({guildId, userId, roleMap, changedRoles, auditLogReason});
 			}
 		} finally {
 			await this.cacheService.releaseLock(lockKey, lockToken);
@@ -414,7 +415,7 @@ export class GuildRoleService {
 			userId: UserID;
 			guildId: GuildID;
 		},
-		_auditLogReason?: string | null,
+		auditLogReason?: string | null,
 	): Promise<void> {
 		const {userId, guildId} = params;
 		const {checkPermission} = await this.getGuildAuthenticated({userId, guildId});
@@ -426,6 +427,7 @@ export class GuildRoleService {
 		}
 		try {
 			const allRoles = await this.guildRepository.listRoles(guildId);
+			const roleMap = new Map(allRoles.map((r) => [r.id, r]));
 			const changedRoles: Array<GuildRole> = [];
 			for (const role of allRoles) {
 				if (role.hoistPosition === null) continue;
@@ -441,6 +443,7 @@ export class GuildRoleService {
 			}
 			if (changedRoles.length > 0) {
 				await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
+				await this.recordRolePositionAuditLogs({guildId, userId, roleMap, changedRoles, auditLogReason});
 			}
 		} finally {
 			await this.cacheService.releaseLock(lockKey, lockToken);
@@ -559,8 +562,9 @@ export class GuildRoleService {
 			roleId: RoleID;
 			position?: number;
 		}>;
+		auditLogReason?: string | null;
 	}): Promise<void> {
-		const {userId, guildId, updates} = params;
+		const {userId, guildId, updates, auditLogReason} = params;
 		const {guildData} = await this.getGuildAuthenticated({userId, guildId});
 		const allRoles = await this.guildRepository.listRoles(guildId);
 		const roleMap = new Map(allRoles.map((r) => [r.id, r]));
@@ -625,6 +629,7 @@ export class GuildRoleService {
 		});
 		if (changedRoles.length > 0) {
 			await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
+			await this.recordRolePositionAuditLogs({guildId, userId, roleMap, changedRoles, auditLogReason});
 		}
 	}
 
@@ -697,6 +702,30 @@ export class GuildRoleService {
 			currentPosition--;
 		}
 		return newRoles;
+	}
+
+	private async recordRolePositionAuditLogs(params: {
+		guildId: GuildID;
+		userId: UserID;
+		roleMap: Map<RoleID, GuildRole>;
+		changedRoles: Array<GuildRole>;
+		auditLogReason?: string | null;
+	}): Promise<void> {
+		const {guildId, userId, roleMap, changedRoles, auditLogReason} = params;
+		for (const role of changedRoles) {
+			const oldRole = roleMap.get(role.id);
+			await this.recordAuditLog({
+				guildId,
+				userId,
+				action: AuditLogActionType.ROLE_UPDATE,
+				targetId: role.id,
+				auditLogReason: auditLogReason ?? null,
+				changes: this.guildAuditLogService.computeChanges(
+					oldRole ? this.serializeRoleForAudit(oldRole) : null,
+					this.serializeRoleForAudit(role),
+				),
+			});
+		}
 	}
 
 	private serializeRoleForAudit(role: GuildRole): Record<string, unknown> {

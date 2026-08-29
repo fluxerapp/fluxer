@@ -2,7 +2,6 @@
 
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import type {MessageID, UserID} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
 import type {IPurgeQueue} from '../../../infrastructure/BunnyPurgeQueue';
 import type {IGatewayService} from '../../../infrastructure/IGatewayService';
 import type {IStorageService} from '../../../infrastructure/IStorageService';
@@ -13,7 +12,7 @@ import type {Message} from '../../../models/Message';
 import {mapChannelToResponse} from '../../ChannelMappers';
 import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
 import {dispatchMessageCreateBroadcast} from '../message/MessageGatewayDispatch';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../message/MessageHelpers';
+import {purgeMessageAttachments} from '../message/MessageHelpers';
 
 export class ChannelUtilsService {
 	constructor(
@@ -44,20 +43,7 @@ export class ChannelUtilsService {
 	}
 
 	private async purgeMessageAttachments(message: Message): Promise<void> {
-		const cdnUrls: Array<string> = [];
-		await Promise.all(
-			message.attachments.map(async (attachment) => {
-				const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
-				await this.storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
-				if (Config.bunny.purgeEnabled) {
-					const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
-					cdnUrls.push(cdnUrl);
-				}
-			}),
-		);
-		if (Config.bunny.purgeEnabled && cdnUrls.length > 0) {
-			await this.purgeQueue.addUrls(cdnUrls);
-		}
+		await purgeMessageAttachments(message, this.storageService, this.purgeQueue);
 	}
 
 	async dispatchChannelUpdate({channel, requestCache}: {channel: Channel; requestCache: RequestCache}): Promise<void> {

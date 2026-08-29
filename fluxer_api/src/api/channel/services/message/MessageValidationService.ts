@@ -248,9 +248,10 @@ export class MessageValidationService {
 		}
 		const isAuthor = message.authorId === userId;
 		if (!guild) return isAuthor;
+		if (isAuthor) return true;
 		const canManageMessages =
 			(await hasPermission(Permissions.SEND_MESSAGES)) && (await hasPermission(Permissions.MANAGE_MESSAGES));
-		return isAuthor || canManageMessages;
+		return canManageMessages;
 	}
 
 	private validateVoiceMessageConstraints(

@@ -30,6 +30,7 @@ import {channelNeedsReindexing} from './ChannelIndexingUtils';
 import type {IMessageSearchService} from './IMessageSearchService';
 import {MessageSearchResponseMapper} from './MessageSearchResponseMapper';
 import {searchExistingMessages} from './MessageSearchResultReconciler';
+import {channelRequiresAgeVerification} from './SearchNsfwUtils';
 
 const CHANNEL_INDEX_CHECK_CONCURRENCY = 32;
 const CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY = 16;
@@ -101,7 +102,7 @@ export class GlobalSearchService {
 			this.guildService.search.collectAccessibleGuildChannels(params.userId),
 			this.findDmScopeContextChannel(params.userId, params.includeChannelId),
 		]);
-		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels} = guildAccess;
+		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories} = guildAccess;
 		if (unindexedChannelIds.size > 0) {
 			await this.queueIndexingChannels(unindexedChannelIds);
 			return {indexing: true};
@@ -133,7 +134,7 @@ export class GlobalSearchService {
 			if (guildIsAgeRestricted) {
 				return canIncludeNsfw;
 			}
-			if (channel.isNsfw) {
+			if (channelRequiresAgeVerification(channel, parentCategories, false)) {
 				return canIncludeNsfw;
 			}
 			return true;

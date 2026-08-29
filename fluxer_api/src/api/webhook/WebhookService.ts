@@ -142,7 +142,15 @@ export class WebhookService {
 	async getGuildWebhooks({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<Array<Webhook>> {
 		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
-		return await this.repository.listByGuild(guildId);
+		const webhooks = await this.repository.listByGuild(guildId);
+		const visibility = await Promise.all(
+			webhooks.map((webhook) =>
+				webhook.channelId
+					? this.canManageChannelWebhooks({userId, guildId, channelId: webhook.channelId})
+					: Promise.resolve(false),
+			),
+		);
+		return webhooks.filter((_webhook, index) => visibility[index]);
 	}
 
 	async getChannelWebhooks({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<Array<Webhook>> {
@@ -153,6 +161,7 @@ export class WebhookService {
 			guildId: channel.guildId,
 		});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		await this.assertChannelWebhookPermission({userId, guildId: channel.guildId, channelId});
 		return await this.repository.listByChannel(channelId);
 	}
 
@@ -172,6 +181,7 @@ export class WebhookService {
 			guildId: channel.guildId,
 		});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		await this.assertChannelWebhookPermission({userId, guildId: channel.guildId, channelId});
 		const guildLimit = this.resolveWebhookLimit(guildData.features, 'max_webhooks_per_guild', MAX_WEBHOOKS_PER_GUILD);
 		const guildWebhookCount = await this.repository.countByGuild(channel.guildId);
 		if (guildWebhookCount >= guildLimit) {
@@ -451,7 +461,39 @@ export class WebhookService {
 		if (!webhook) throw new UnknownWebhookError();
 		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId: webhook.guildId!});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		if (webhook.guildId && webhook.channelId) {
+			await this.assertChannelWebhookPermission({
+				userId,
+				guildId: webhook.guildId,
+				channelId: webhook.channelId,
+			});
+		}
 		return webhook;
+	}
+
+	private async canManageChannelWebhooks({
+		userId,
+		guildId,
+		channelId,
+	}: {
+		userId: UserID;
+		guildId: GuildID;
+		channelId: ChannelID;
+	}): Promise<boolean> {
+		const [canView, canManage] = await Promise.all([
+			this.gatewayService.checkPermission({guildId, userId, permission: Permissions.VIEW_CHANNEL, channelId}),
+			this.gatewayService.checkPermission({guildId, userId, permission: Permissions.MANAGE_WEBHOOKS, channelId}),
+		]);
+		return canView && canManage;
+	}
+
+	private async assertChannelWebhookPermission(params: {
+		userId: UserID;
+		guildId: GuildID;
+		channelId: ChannelID;
+	}): Promise<void> {
+		const allowed = await this.canManageChannelWebhooks(params);
+		if (!allowed) throw new MissingPermissionsError();
 	}
 
 	private async getTokenAuthenticatedWebhook({webhookId, token}: WebhookTokenParams): Promise<Webhook> {

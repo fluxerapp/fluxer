@@ -57,7 +57,7 @@ import {Guild} from '../../../models/Guild';
 import type {User} from '../../../models/User';
 import {getGuildSearchService} from '../../../SearchFactory';
 import type {GuildDiscoveryContext} from '../../../search/guild/GuildSearchSerializer';
-import {deleteGuildMessageSearchDocuments} from '../../../search/MessageSearchIndexCleanup';
+import {deleteChannelMessageSearchDocuments} from '../../../search/MessageSearchIndexCleanup';
 import {Channels, ChannelsByGuild, GuildMembers, GuildMembersByUserId, GuildRoles, Guilds} from '../../../Tables';
 import type {IUserRepository} from '../../../user/IUserRepository';
 import {mapUserSettingsToResponse} from '../../../user/UserMappers';
@@ -858,7 +858,11 @@ export class GuildOperationsService {
 		await Promise.all(webhooks.map((webhook) => this.webhookRepository.delete(webhook.id)));
 		const channels = await this.channelRepository.listGuildChannels(guildId);
 		await Promise.all(channels.map((channel) => this.channelRepository.deleteAllChannelMessages(channel.id)));
-		await deleteGuildMessageSearchDocuments(guildId, {context: {source: 'guild_delete'}});
+		await Promise.all(
+			channels.map((channel) =>
+				deleteChannelMessageSearchDocuments(channel.id, {context: {source: 'guild_delete'}}),
+			),
+		);
 		await Promise.all(channels.map((channel) => this.channelService.attachments.purgeChannelAttachments(channel)));
 		const discoveryRow = await this.discoveryRepository.findByGuildId(guildId);
 		if (discoveryRow) {

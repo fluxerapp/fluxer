@@ -174,18 +174,19 @@ export abstract class BaseChannelAuthService {
 			userId,
 			memberData: guildMemberResult.memberData!,
 		});
-		const hasPermission = async (permission: bigint): Promise<boolean> => {
-			return await this.gatewayService.checkPermission({guildId, userId, permission, channelId: channel.id});
-		};
 		const enforceGuildMfa = await createGuildMfaEnforcer({
 			userRepository: this.userRepository,
 			guildData: guildDataResult!,
 			userId,
 		});
+		const hasPermission = async (permission: bigint): Promise<boolean> => {
+			const allowed = await this.gatewayService.checkPermission({guildId, userId, permission, channelId: channel.id});
+			if (allowed) enforceGuildMfa(permission);
+			return allowed;
+		};
 		const checkPermission = async (permission: bigint): Promise<void> => {
 			const allowed = await hasPermission(permission);
 			if (!allowed) throw new MissingPermissionsError();
-			enforceGuildMfa(permission);
 		};
 		await checkPermission(Permissions.VIEW_CHANNEL);
 		const parentCategory = await this.getParentCategoryContentWarningView({

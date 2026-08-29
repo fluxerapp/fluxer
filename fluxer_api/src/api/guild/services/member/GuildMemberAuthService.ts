@@ -37,8 +37,11 @@ export class GuildMemberAuthService {
 			if (!canManage) throw new MissingPermissionsError();
 		};
 		const getMyPermissions = async () => this.gatewayService.getUserPermissions({guildId, userId});
-		const hasPermission = async (permission: bigint) =>
-			this.gatewayService.checkPermission({guildId, userId, permission});
+		const hasPermission = async (permission: bigint) => {
+			const allowed = await this.gatewayService.checkPermission({guildId, userId, permission});
+			if (allowed) enforceGuildMfa(permission);
+			return allowed;
+		};
 		const canManageRoles = async (targetUserId: UserID, targetRoleId: RoleID) =>
 			this.gatewayService.canManageRoles({guildId, userId, targetUserId, roleId: targetRoleId});
 		return {

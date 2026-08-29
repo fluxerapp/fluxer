@@ -116,6 +116,16 @@ export class AttachmentProcessingService {
 		);
 		const hasVirusDetected = results.some((result) => result.hasVirusDetected);
 		if (hasVirusDetected) {
+			await Promise.all(
+				results.map(async (result) => {
+					if (result.sourceLocalPath) {
+						await fs.promises.unlink(result.sourceLocalPath).catch(() => undefined);
+					}
+				}),
+			);
+			for (const result of results) {
+				this.deleteUploadObject(result.copyOperation.sourceBucket, result.copyOperation.sourceKey);
+			}
 			return {attachments: [], hasVirusDetected: true};
 		}
 		const copyResults = await mapWithConcurrency(results, ATTACHMENT_PROCESSING_CONCURRENCY, (result) =>

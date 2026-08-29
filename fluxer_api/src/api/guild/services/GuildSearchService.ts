@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
@@ -22,6 +22,7 @@ import {buildMessageSearchFilters} from '../../search/BuildMessageSearchFilters'
 import {channelNeedsReindexing} from '../../search/ChannelIndexingUtils';
 import {MessageSearchResponseMapper} from '../../search/MessageSearchResponseMapper';
 import {searchExistingMessages} from '../../search/MessageSearchResultReconciler';
+import {channelRequiresAgeVerification} from '../../search/SearchNsfwUtils';
 import type {IUserRepository} from '../../user/IUserRepository';
 import {canUserAccessNsfwContent} from '../../utils/AgeUtils';
 import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
@@ -84,6 +85,7 @@ export class GuildSearchService {
 			}
 		}
 		const canIncludeNsfw = includeNsfwRequested && canUserAccessNsfw;
+		const guildNsfw = guildData?.nsfw ?? false;
 		const channels = await this.channelRepository.listChannels(channelIds);
 		const channelMap = new Map<string, Channel>();
 		for (const channel of channels) {
@@ -96,9 +98,10 @@ export class GuildSearchService {
 				throw InputValidationError.fromCode('channel_ids', ValidationErrorCodes.ALL_CHANNELS_MUST_BELONG_TO_GUILD);
 			}
 		}
+		const categoryLookup = await this.buildParentCategoryLookup(channelMap);
 		const nsfwFilteredIds = channelIds.filter((id) => {
 			const channel = channelMap.get(id.toString())!;
-			return !(channel.isNsfw && !canIncludeNsfw);
+			return !(channelRequiresAgeVerification(channel, categoryLookup, guildNsfw) && !canIncludeNsfw);
 		});
 		const permissionResults = await mapWithConcurrency(nsfwFilteredIds, PERMISSION_CHECK_CONCURRENCY, (channelId) =>
 			this.gatewayService.checkPermission({
@@ -188,7 +191,7 @@ export class GuildSearchService {
 		if (!searchService) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels} =
+		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories} =
 			await this.collectAccessibleGuildChannels(userId);
 		if (unindexedChannelIds.size > 0) {
 			await this.queueIndexingChannels(unindexedChannelIds);
@@ -219,7 +222,7 @@ export class GuildSearchService {
 			if (guildIsAgeRestricted) {
 				return canIncludeNsfw;
 			}
-			if (channel.isNsfw) {
+			if (channelRequiresAgeVerification(channel, parentCategories, false)) {
 				return canIncludeNsfw;
 			}
 			return true;
@@ -259,6 +262,24 @@ export class GuildSearchService {
 		};
 	}
 
+	private async buildParentCategoryLookup(channelMap: Map<string, Channel>): Promise<Map<string, Channel>> {
+		const lookup = new Map<string, Channel>(channelMap);
+		const missingParentIds: Array<ChannelID> = [];
+		for (const channel of channelMap.values()) {
+			const parentId = channel.parentId;
+			if (parentId != null && !lookup.has(parentId.toString())) {
+				missingParentIds.push(parentId);
+			}
+		}
+		if (missingParentIds.length > 0) {
+			const parents = await this.channelRepository.listChannels(missingParentIds);
+			for (const parent of parents) {
+				lookup.set(parent.id.toString(), parent);
+			}
+		}
+		return lookup;
+	}
+
 	private async getCanUserAccessNsfw(userId: UserID): Promise<boolean> {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
@@ -284,11 +305,13 @@ export class GuildSearchService {
 		accessibleChannels: Map<string, Channel>;
 		unindexedChannelIds: Set<string>;
 		guildNsfwLevels: Map<string, number>;
+		parentCategories: Map<string, Channel>;
 	}> {
 		const guildIds = await this.userRepository.getUserGuildIds(userId);
 		const accessibleChannels = new Map<string, Channel>();
 		const unindexedChannelIds = new Set<string>();
 		const guildNsfwLevels = new Map<string, number>();
+		const parentCategories = new Map<string, Channel>();
 		const permissionChecks: Array<{
 			channel: Channel;
 			guildId: GuildID;
@@ -304,6 +327,9 @@ export class GuildSearchService {
 			}
 			const viewableChannelIds = new Set(viewableChannels.map((channelId) => channelId.toString()));
 			for (const channel of guildChannels) {
+				if (channel.type === ChannelTypes.GUILD_CATEGORY) {
+					parentCategories.set(channel.id.toString(), channel);
+				}
 				if (viewableChannelIds.has(channel.id.toString())) {
 					permissionChecks.push({channel, guildId});
 				}
@@ -331,6 +357,6 @@ export class GuildSearchService {
 				unindexedChannelIds.add(channelIdStr);
 			}
 		}
-		return {accessibleChannels, unindexedChannelIds, guildNsfwLevels};
+		return {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories};
 	}
 }
