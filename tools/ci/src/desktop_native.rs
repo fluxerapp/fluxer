@@ -748,7 +748,7 @@ fn read_dependent_load_flags(file_path: &Path) -> Option<u16> {
         return None;
     }
     let size = pe.u32(offset) as usize;
-    let flags_offset = if header.is_pe32_plus { 0x42 } else { 0x36 };
+    let flags_offset = if header.is_pe32_plus { 0x4e } else { 0x36 };
     if size <= flags_offset + 2 || offset + flags_offset + 2 > pe.buffer.len() {
         return None;
     }
@@ -1041,6 +1041,73 @@ mod tests {
         assert!(is_redistributable_runtime_import("concrt140.dll"));
         assert!(!is_redistributable_runtime_import("kernel32.dll"));
         assert!(!is_redistributable_runtime_import("vcruntime.dll"));
+    }
+
+    fn synthetic_pe(pe32_plus: bool, dependent_load_flags: u16) -> Vec<u8> {
+        let opt_size: usize = if pe32_plus { 240 } else { 224 };
+        let load_config_size: usize = if pe32_plus { 0x140 } else { 0xc0 };
+        let flags_offset: usize = if pe32_plus { 0x4e } else { 0x36 };
+        let pe_offset: usize = 0x80;
+        let opt_offset = pe_offset + 4 + 20;
+        let section_offset = opt_offset + opt_size;
+        let raw_pointer = section_offset + 40;
+        let virtual_address: u32 = 0x1000;
+
+        let mut buffer = vec![0u8; raw_pointer + load_config_size];
+        buffer[0..2].copy_from_slice(b"MZ");
+        buffer[0x3c..0x40].copy_from_slice(&(pe_offset as u32).to_le_bytes());
+        buffer[pe_offset..pe_offset + 4].copy_from_slice(&0x4550u32.to_le_bytes());
+        buffer[pe_offset + 6..pe_offset + 8].copy_from_slice(&1u16.to_le_bytes());
+        buffer[pe_offset + 20..pe_offset + 22].copy_from_slice(&(opt_size as u16).to_le_bytes());
+        let magic: u16 = if pe32_plus { 0x20b } else { 0x10b };
+        buffer[opt_offset..opt_offset + 2].copy_from_slice(&magic.to_le_bytes());
+
+        let data_dirs = opt_offset + if pe32_plus { 112 } else { 96 };
+        let load_config_entry = data_dirs + 10 * 8;
+        buffer[load_config_entry..load_config_entry + 4]
+            .copy_from_slice(&virtual_address.to_le_bytes());
+        buffer[load_config_entry + 4..load_config_entry + 8]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+
+        buffer[section_offset + 8..section_offset + 12]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+        buffer[section_offset + 12..section_offset + 16]
+            .copy_from_slice(&virtual_address.to_le_bytes());
+        buffer[section_offset + 16..section_offset + 20]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+        buffer[section_offset + 20..section_offset + 24]
+            .copy_from_slice(&(raw_pointer as u32).to_le_bytes());
+
+        buffer[raw_pointer..raw_pointer + 4]
+            .copy_from_slice(&(load_config_size as u32).to_le_bytes());
+        let flags_at = raw_pointer + flags_offset;
+        buffer[flags_at..flags_at + 2].copy_from_slice(&dependent_load_flags.to_le_bytes());
+        buffer
+    }
+
+    #[test]
+    fn dependent_load_flags_are_read_from_both_pe_widths() {
+        for pe32_plus in [false, true] {
+            let dir = tempfile::tempdir().expect("tempdir");
+            let set = dir.path().join("set.bin");
+            let unset = dir.path().join("unset.bin");
+            fs::write(&set, synthetic_pe(pe32_plus, LOAD_LIBRARY_SEARCH_SYSTEM32)).expect("write");
+            fs::write(&unset, synthetic_pe(pe32_plus, 0)).expect("write");
+
+            assert_eq!(
+                read_dependent_load_flags(&set),
+                Some(LOAD_LIBRARY_SEARCH_SYSTEM32),
+                "pe32_plus={pe32_plus}"
+            );
+            assert_eq!(
+                read_dependent_load_flags(&unset),
+                Some(0),
+                "pe32_plus={pe32_plus}"
+            );
+            assert!(assert_system32_dependent_load_flag(&set, "win32").is_ok());
+            assert!(assert_system32_dependent_load_flag(&unset, "win32").is_err());
+            assert!(assert_system32_dependent_load_flag(&unset, "linux").is_ok());
+        }
     }
 
     #[test]
