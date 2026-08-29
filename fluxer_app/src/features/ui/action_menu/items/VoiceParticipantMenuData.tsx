@@ -199,10 +199,6 @@ const RELATIONSHIP_ACTIONS_DESCRIPTOR = msg({
 	message: 'Relationship',
 	comment: 'Voice participant context menu submenu label for friend and block actions.',
 });
-const STREAM_CONTROLS_DESCRIPTOR = msg({
-	message: 'Stream controls',
-	comment: 'Voice participant context menu submenu label for incoming screen share audio controls.',
-});
 const USER_ACTIONS_DESCRIPTOR = msg({
 	message: 'User actions',
 	comment: 'Voice participant context menu submenu label for lower-frequency profile and communication actions.',
@@ -491,6 +487,9 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		}
 		if (streamRootActions.length > 0) {
 			menuGroups.push({items: streamRootActions});
+		}
+		if (streamControlActions.length > 0) {
+			menuGroups.push({items: streamControlActions});
 		}
 		const primaryActions: Array<MenuItemType> = [];
 		primaryActions.push({
@@ -1384,7 +1383,6 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 				TextCopyCommands.copy(i18n, user.id, true);
 			},
 		});
-		addSecondarySubmenu(i18n._(STREAM_CONTROLS_DESCRIPTOR), streamControlActions);
 		addSecondarySubmenu(i18n._(MEDIA_CONTROLS_DESCRIPTOR), mediaActions);
 		addSecondarySubmenu(i18n._(DEVICE_CONTROLS_DESCRIPTOR), deviceActions);
 		addSecondarySubmenu(i18n._(DISPLAY_OPTIONS_DESCRIPTOR), displayActions);

@@ -49,6 +49,7 @@ interface MediaVerticalVolumeControlProps {
 	className?: string;
 	position?: 'above' | 'below';
 	maxVolume?: number;
+	ariaLabel?: string;
 }
 
 function getVolumeIcon(volume: number, isMuted: boolean) {
@@ -75,6 +76,7 @@ export function MediaVerticalVolumeControl({
 	className,
 	position = 'above',
 	maxVolume = 1,
+	ariaLabel,
 }: MediaVerticalVolumeControlProps) {
 	const {i18n} = useLingui();
 	const buttonRef = useRef<HTMLButtonElement>(null);
@@ -286,7 +288,8 @@ export function MediaVerticalVolumeControl({
 		<div
 			className={clsx(styles.container, className)}
 			role="group"
-			aria-label={i18n._(VOLUME_CONTROL_DESCRIPTOR)}
+			aria-label={ariaLabel ?? i18n._(VOLUME_CONTROL_DESCRIPTOR)}
+			title={ariaLabel}
 			data-flx="voice.media-player.media-vertical-volume-control.container"
 		>
 			{popoutElement}

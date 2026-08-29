@@ -9,7 +9,9 @@ import {
 } from '@app/features/voice/components/CallVolumeState';
 import {MediaVerticalVolumeControl} from '@app/features/voice/components/media_player/components/MediaVerticalVolumeControl';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {VOICE_OUTPUT_VOLUME_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {VOICE_VOLUME_MAX_SLIDER_VOLUME} from '@app/features/voice/utils/VoiceVolumeUtils';
+import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useRef} from 'react';
@@ -25,6 +27,7 @@ export const CallVolumeControl: React.FC<CallVolumeControlProps> = observer(func
 	position = 'above',
 	iconSize = 18,
 }) {
+	const {i18n} = useLingui();
 	const outputVolume = VoiceSettings.outputVolume;
 	const lastNonZeroVolumeRef = useRef(resolveLastNonZeroCallVolume(outputVolume, 0));
 	useEffect(() => {
@@ -50,6 +53,7 @@ export const CallVolumeControl: React.FC<CallVolumeControlProps> = observer(func
 			iconSize={iconSize}
 			className={className}
 			position={position}
+			ariaLabel={i18n._(VOICE_OUTPUT_VOLUME_DESCRIPTOR)}
 			data-flx="voice.call-volume-control.media-vertical-volume-control"
 		/>
 	);
