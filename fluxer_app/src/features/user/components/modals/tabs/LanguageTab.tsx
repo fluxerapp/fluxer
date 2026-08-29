@@ -90,7 +90,7 @@ const RECOMMENDED_DESCRIPTOR = msg({
 });
 const USE_THE_IN_APP_HUNSPELL_ENGINE_WHEN_A_DESCRIPTOR = msg({
 	message:
-		"Use {productName}'s in-app dictionaries when available. Otherwise, use your operating system's spellchecker.",
+		"Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries.",
 	comment:
 		'Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.',
 });

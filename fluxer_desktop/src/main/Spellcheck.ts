@@ -5,6 +5,7 @@ import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import * as path from 'node:path';
+import {STATIC_CDN_URL} from '@electron/common/Constants';
 import type {SpellcheckBundledDictionary} from '@electron/common/Types';
 import {getSpellcheckLaunchMode, type SpellcheckLaunchMode} from '@electron/main/LaunchOptions';
 import {getNativeLocale} from '@electron/main/MainI18n';
@@ -84,6 +85,7 @@ interface ResolvedEngine {
 	hunspellLangs: Array<string>;
 	systemLangs: Array<string>;
 	allowSystemHunspell?: boolean;
+	preferSystemHunspell?: boolean;
 }
 
 interface LoadedHunspell {
@@ -95,10 +97,11 @@ interface LoadedHunspell {
 
 const STATIC_CDN_ENDPOINT = process.env.FLUXER_STATIC_CDN_ENDPOINT?.replace(/\/+$/, '') ?? '';
 const DICTIONARY_DOWNLOAD_BASE_URL =
-	process.env.FLUXER_SPELLCHECK_DICTIONARY_BASE_URL ??
-	(STATIC_CDN_ENDPOINT ? `${STATIC_CDN_ENDPOINT}/desktop/spellcheck/dictionaries` : '');
+	process.env.FLUXER_SPELLCHECK_DICTIONARY_BASE_URL ||
+	`${STATIC_CDN_ENDPOINT || STATIC_CDN_URL}/desktop/spellcheck/dictionaries`;
 const DICTIONARY_CACHE_VERSION = 1;
 const DICTIONARY_DOWNLOAD_TIMEOUT_MS = 15000;
+const DICTIONARY_RETRY_DELAYS_MS: ReadonlyArray<number> = [5000, 15000, 45000];
 const AUTODETECT_MAX_TEXT_LENGTH = 2000;
 const AUTODETECT_PREFIX_SKIP_CHARS = 20;
 const AUTODETECT_CONTEXT_MAX_LENGTH = 128;
@@ -129,6 +132,8 @@ const autodetectCacheByWebContents = new WeakMap<
 		}
 	>
 >();
+const sessionRetryTimer = new WeakMap<Session, NodeJS.Timeout>();
+const sessionRetryAttempt = new WeakMap<Session, number>();
 const dictionaryDataPromises = new Map<string, Promise<SpellcheckDictionaryData | null>>();
 
 let factoryPromise: Promise<HunspellFactory> | null = null;
@@ -352,7 +357,12 @@ const loadHunspellForTag = async (
 	tag: string,
 	shouldContinue: () => boolean,
 	allowSystemFallback: boolean,
+	preferSystem: boolean,
 ): Promise<LoadedHunspell | null> => {
+	if (preferSystem) {
+		const native = loadFromSystemHunspell(tag);
+		if (native) return native;
+	}
 	const dict = resolveBundledFor(tag);
 	if (dict) {
 		try {
@@ -386,11 +396,11 @@ function loadFromSystemHunspell(tag: string): LoadedHunspell | null {
 	const mod = loadSystemHunspell();
 	if (!mod || !mod.Hunspell || !mod.discoverSystemDictionaries) return null;
 	const wantedKey = norm(tag);
+	const wantedBase = languageBase(tag);
 	const installed = mod.discoverSystemDictionaries();
-	const match = installed.find((entry) => {
-		const candidates = [norm(entry.tag), norm(entry.tag.replace(/-/g, '_'))];
-		return candidates.includes(wantedKey);
-	});
+	const match =
+		installed.find((entry) => norm(entry.tag) === wantedKey) ??
+		installed.find((entry) => languageBase(entry.tag) === wantedBase);
 	if (!match) return null;
 	try {
 		const native = new mod.Hunspell(match.affPath, match.dicPath);
@@ -608,16 +618,6 @@ const requestedLanguages = (state: SpellcheckState, session: Session): Array<str
 	}
 	return requested;
 };
-const resolveLinuxHunspellFallback = (
-	state: SpellcheckState,
-	session: Session,
-	allowSystemHunspell: boolean,
-): ResolvedEngine => ({
-	mode: 'hunspell',
-	hunspellLangs: requestedLanguages(state, session),
-	systemLangs: [],
-	allowSystemHunspell,
-});
 const resolveSystemLanguages = (session: Session, requested: Array<string>): Array<string> => {
 	const sysOnly: Array<string> = [];
 	const seen = new Set<string>();
@@ -659,19 +659,16 @@ const resolveEngine = (state: SpellcheckState, session: Session): ResolvedEngine
 	if (state.engine === 'hunspell') {
 		return {mode: 'hunspell', hunspellLangs: bundled, systemLangs: []};
 	}
-	if (state.engine === 'system') {
-		if (isLinux) {
-			return resolveLinuxHunspellFallback(state, session, true);
-		}
+	if (!isLinux) {
 		return {mode: 'system', hunspellLangs: [], systemLangs: resolveSystemLanguages(session, requested)};
 	}
-	if (bundled.length > 0) {
-		return {mode: 'hunspell', hunspellLangs: bundled, systemLangs: []};
-	}
-	if (isLinux) {
-		return resolveLinuxHunspellFallback(state, session, false);
-	}
-	return {mode: 'system', hunspellLangs: [], systemLangs: resolveSystemLanguages(session, requested)};
+	return {
+		mode: 'hunspell',
+		hunspellLangs: bundled.length > 0 ? bundled : requested,
+		systemLangs: [],
+		allowSystemHunspell: true,
+		preferSystemHunspell: true,
+	};
 };
 const applyResolvedToSession = async (
 	session: Session,
@@ -711,6 +708,7 @@ const applyResolvedToSession = async (
 		resolved.hunspellLangs,
 		shouldContinue,
 		resolved.allowSystemHunspell === true,
+		resolved.preferSystemHunspell === true,
 	);
 	if (!shouldContinue()) return resolved;
 	if (loadedCount === 0) {
@@ -727,6 +725,30 @@ const applyResolvedToSession = async (
 	}
 	applyPersonalDictionary(session, state.personalDictionary);
 	return resolved;
+};
+const cancelDictionaryRetry = (session: Session): void => {
+	const timer = sessionRetryTimer.get(session);
+	if (!timer) return;
+	clearTimeout(timer);
+	sessionRetryTimer.delete(session);
+};
+const scheduleDictionaryRetry = (webContents: WebContents): void => {
+	const session = webContents.session;
+	const attempt = sessionRetryAttempt.get(session) ?? 0;
+	const delay = DICTIONARY_RETRY_DELAYS_MS[attempt];
+	if (delay === undefined) return;
+	sessionRetryAttempt.set(session, attempt + 1);
+	cancelDictionaryRetry(session);
+	const timer = setTimeout(() => {
+		sessionRetryTimer.delete(session);
+		if (webContents.isDestroyed()) return;
+		const current = sessionState.get(session);
+		if (!current?.enabled) return;
+		log.info('[Spellcheck] Retrying dictionary load after an empty resolve', {attempt: attempt + 1});
+		void applyStateToWebContents(webContents, current, {broadcastResolved: true});
+	}, delay);
+	timer.unref?.();
+	sessionRetryTimer.set(session, timer);
 };
 const sendResolvedEngine = (webContents: WebContents, effective: ResolvedEngine): void => {
 	try {
@@ -757,9 +779,19 @@ const applyStateToWebContents = async (
 		log.error('[Spellcheck] apply failed', error);
 	}
 	if (!isSessionApplyCurrent(session, generation)) {
+		const settled = sessionResolvedEngine.get(session);
+		if (opts.broadcastResolved && settled) {
+			sendResolvedEngine(webContents, settled);
+		}
 		return effective;
 	}
 	sessionResolvedEngine.set(session, effective);
+	if (state.enabled && effective.mode === 'off') {
+		scheduleDictionaryRetry(webContents);
+	} else {
+		sessionRetryAttempt.delete(session);
+		cancelDictionaryRetry(session);
+	}
 	if (opts.broadcastState) {
 		try {
 			webContents.send('spellcheck-state-changed', state);
@@ -787,7 +819,8 @@ const listAvailableSpellcheckLanguages = (session: Session): Array<string> => {
 	}
 	const state = sessionState.get(session) ?? defaultState;
 	const launchMode = getSpellcheckLaunchMode(process.argv);
-	const includeSystem = launchMode === 'system' || (launchMode === 'default' && state.engine === 'system');
+	const effectiveEngine = launchMode === 'default' || launchMode === 'off' ? state.engine : launchMode;
+	const includeSystem = effectiveEngine !== 'hunspell';
 	const seen = new Set<string>();
 	const languages: Array<string> = [];
 	const add = (tag: string): void => {
@@ -825,6 +858,7 @@ const syncLoadedHunspell = async (
 	wanted: Array<string>,
 	shouldContinue: () => boolean,
 	allowSystemFallback: boolean,
+	preferSystem: boolean,
 ): Promise<number> => {
 	if (wanted.length === 0) {
 		if (!shouldContinue()) return sessionLoaded.get(session)?.size ?? 0;
@@ -848,7 +882,7 @@ const syncLoadedHunspell = async (
 	for (const tag of wanted) {
 		const key = norm(tag);
 		if (map.has(key)) continue;
-		const entry = await loadHunspellForTag(tag, shouldContinue, allowSystemFallback);
+		const entry = await loadHunspellForTag(tag, shouldContinue, allowSystemFallback, preferSystem);
 		if (!shouldContinue()) {
 			if (entry) {
 				if (!isNativeLoaded(entry)) {
@@ -1019,34 +1053,11 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 	const session = webContents.session;
 	let state: SpellcheckState = applyLaunchSpellcheckMode(sessionState.get(session) ?? {...defaultState});
 	sessionState.set(session, state);
-	const broadcastState = () => {
-		try {
-			webContents.send('spellcheck-state-changed', state);
-		} catch {}
-	};
 	const applyAndBroadcast = async (broadcast: boolean) => {
-		const resolved = resolveEngine(state, session);
-		let effective = resolved;
-		const generation = beginSessionApply(session);
-		try {
-			effective = await applyResolvedToSession(session, state, resolved, () =>
-				isSessionApplyCurrent(session, generation),
-			);
-		} catch (error) {
-			log.error('[Spellcheck] apply failed', error);
-		}
-		if (!isSessionApplyCurrent(session, generation)) return;
-		sessionResolvedEngine.set(session, effective);
-		if (broadcast) {
-			broadcastState();
-			try {
-				webContents.send('spellcheck-engine-resolved', {
-					mode: effective.mode,
-					hunspellLangs: effective.hunspellLangs,
-					systemLangs: effective.systemLangs,
-				});
-			} catch {}
-		}
+		await applyStateToWebContents(webContents, state, {
+			broadcastState: broadcast,
+			broadcastResolved: broadcast,
+		});
 	};
 	const setState = async (
 		patch: RendererSpellcheckPatch | SpellcheckState,
@@ -1060,6 +1071,9 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 		return state;
 	};
 	void applyAndBroadcast(false);
+	webContents.on('did-finish-load', () => {
+		void applyStateToWebContents(webContents, sessionState.get(session) ?? state, {broadcastResolved: true});
+	});
 	if (!ipcMain.eventNames().includes('spellcheck-get-state')) {
 		ipcMain.handle('spellcheck-get-state', (event) => {
 			const targetSession = event.sender.session;
@@ -1072,26 +1086,7 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 			const current = sessionState.get(targetSession) ?? {...defaultState};
 			const next = applyLaunchSpellcheckMode(normalizeState(current, patch));
 			sessionState.set(targetSession, next);
-			const resolved = resolveEngine(next, targetSession);
-			let effective = resolved;
-			const generation = beginSessionApply(targetSession);
-			try {
-				effective = await applyResolvedToSession(targetSession, next, resolved, () =>
-					isSessionApplyCurrent(targetSession, generation),
-				);
-			} catch (error) {
-				log.error('[Spellcheck] apply failed (ipc)', error);
-			}
-			if (!isSessionApplyCurrent(targetSession, generation)) return next;
-			sessionResolvedEngine.set(targetSession, effective);
-			try {
-				event.sender.send('spellcheck-state-changed', next);
-				event.sender.send('spellcheck-engine-resolved', {
-					mode: effective.mode,
-					hunspellLangs: effective.hunspellLangs,
-					systemLangs: effective.systemLangs,
-				});
-			} catch {}
+			await applyStateToWebContents(event.sender, next, {broadcastState: true, broadcastResolved: true});
 			return next;
 		});
 		ipcMain.handle('spellcheck-get-available-languages', (event) =>
@@ -1115,19 +1110,7 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 					targetSession.addWordToSpellCheckerDictionary(word);
 				} catch {}
 			}
-			const resolved = resolveEngine(next, targetSession);
-			let effective = resolved;
-			const generation = beginSessionApply(targetSession);
-			try {
-				effective = await applyResolvedToSession(targetSession, next, resolved, () =>
-					isSessionApplyCurrent(targetSession, generation),
-				);
-			} catch {}
-			if (!isSessionApplyCurrent(targetSession, generation)) return;
-			sessionResolvedEngine.set(targetSession, effective);
-			try {
-				event.sender.send('spellcheck-state-changed', next);
-			} catch {}
+			await applyStateToWebContents(event.sender, next, {broadcastState: true});
 		});
 	}
 	webContents.on('context-menu', (event, params) => {
