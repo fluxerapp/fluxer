@@ -2,7 +2,7 @@
 
 use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
-use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
+use crate::media_proxy::{MediaMetadata, embed_media_flags};
 use crate::types::{EmbedMedia, EmbedProvider, MessageEmbed};
 use std::future::Future;
 use std::pin::Pin;
@@ -10,6 +10,7 @@ use std::time::Duration;
 use url::Url;
 
 const KLIPY_API_V1_BASE_URL: &str = "https://api.klipy.com/api/v1";
+const CURATED_PROVIDER_NSFW_MODE: &str = "allow";
 const KLIPY_API_MAX_BYTES: usize = 512 * 1024;
 const KLIPY_API_TIMEOUT: Duration = Duration::from_secs(10);
 const KLIPY_SIZE_PREFERENCE: &[&str] = &["hd", "md", "sm", "xs"];
@@ -68,14 +69,13 @@ impl Resolver for KlipyResolver {
                 name: Some("KLIPY".to_owned()),
                 url: Some("https://klipy.com".to_owned()),
             });
-            let nsfw_str = MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
-
             if let Some(ref thumbnail) = formats.thumbnail {
-                embed.thumbnail = resolve_klipy_media(ctx, thumbnail, nsfw_str).await;
+                embed.thumbnail =
+                    resolve_klipy_media(ctx, thumbnail, CURATED_PROVIDER_NSFW_MODE).await;
             }
 
             if let Some(ref video) = formats.video {
-                embed.video = resolve_klipy_media(ctx, video, nsfw_str).await;
+                embed.video = resolve_klipy_media(ctx, video, CURATED_PROVIDER_NSFW_MODE).await;
             }
 
             Ok(ResolverResult {
