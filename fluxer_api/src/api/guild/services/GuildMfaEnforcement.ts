@@ -7,7 +7,7 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import type {UserID} from '../../BrandedTypes';
 import type {IUserRepository} from '../../user/IUserRepository';
 
-export const ELEVATED_MFA_PERMISSIONS =
+const ELEVATED_MFA_PERMISSIONS =
 	Permissions.KICK_MEMBERS |
 	Permissions.BAN_MEMBERS |
 	Permissions.ADMINISTRATOR |
