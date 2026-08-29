@@ -62,6 +62,10 @@ export class UserContentRepository implements IUserContentRepository {
 		return this.giftCodeRepository.unredeemGiftCode(code, userId);
 	}
 
+	async revokeGiftCode(code: string): Promise<void> {
+		return this.giftCodeRepository.revokeGiftCode(code);
+	}
+
 	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {
 		return this.giftCodeRepository.updateGiftCode(code, data);
 	}

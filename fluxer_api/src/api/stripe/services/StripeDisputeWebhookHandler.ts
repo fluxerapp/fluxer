@@ -123,6 +123,9 @@ export class StripeDisputeWebhookHandler {
 					reason: 'gift_refund',
 					chargeId: charge.id,
 				});
+			} else if (!giftCode.revokedAt) {
+				await this.userRepository.revokeGiftCode(giftCode.code);
+				Logger.debug({giftCode: giftCode.code, chargeId: charge.id}, 'Revoked unredeemed gift code after refund');
 			}
 			return;
 		}
@@ -195,6 +198,12 @@ export class StripeDisputeWebhookHandler {
 			Logger.debug(
 				{giftCode: giftCode.code, redeemerId: giftCode.redeemedByUserId},
 				'Premium revoked due to gift chargeback',
+			);
+		} else if (!giftCode.revokedAt) {
+			await this.userRepository.revokeGiftCode(giftCode.code);
+			Logger.debug(
+				{giftCode: giftCode.code, chargeId: extractId(dispute.charge)},
+				'Revoked unredeemed gift code after chargeback',
 			);
 		}
 		await this.paymentFraudService.enforceAccountFraudAction({

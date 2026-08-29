@@ -186,12 +186,7 @@ export class ChannelOperationsService {
 		let permissionOverwrites = channel.permissionOverwrites;
 		if (data.permission_overwrites !== undefined) {
 			const guildId = createGuildID(BigInt(guild.id));
-			const canManageRoles = await this.gatewayService.checkPermission({
-				guildId,
-				userId,
-				permission: Permissions.MANAGE_ROLES,
-			});
-			if (!canManageRoles) throw new MissingPermissionsError();
+			await checkPermission(Permissions.MANAGE_ROLES);
 			const isOwner = guild.owner_id === userId.toString();
 			const channelPermissions = await this.gatewayService.getUserPermissions({
 				guildId,
@@ -202,6 +197,17 @@ export class ChannelOperationsService {
 				for (const overwrite of data.permission_overwrites ?? []) {
 					const allowPerms = (overwrite.allow ? BigInt(overwrite.allow) : 0n) & ALL_PERMISSIONS;
 					if ((allowPerms & ~channelPermissions) !== 0n) {
+						throw new MissingPermissionsError();
+					}
+				}
+				const nextDeny = new Map<RoleID | UserID, bigint>();
+				for (const overwrite of data.permission_overwrites ?? []) {
+					const targetKey = overwrite.type === 0 ? createRoleID(overwrite.id) : createUserID(overwrite.id);
+					nextDeny.set(targetKey, (overwrite.deny ? BigInt(overwrite.deny) : 0n) & ALL_PERMISSIONS);
+				}
+				for (const [targetId, existing] of previousPermissionOverwrites ?? []) {
+					const removedDeny = existing.deny & ~(nextDeny.get(targetId) ?? 0n);
+					if ((removedDeny & ~channelPermissions) !== 0n) {
 						throw new MissingPermissionsError();
 					}
 				}
@@ -590,6 +596,7 @@ export class ChannelOperationsService {
 		const canManageRoles = await this.gatewayService.checkPermission({
 			guildId: channel.guildId,
 			userId: params.userId,
+			channelId: channel.id,
 			permission: Permissions.MANAGE_ROLES,
 		});
 		if (!canManageRoles) throw new MissingPermissionsError();
@@ -615,6 +622,8 @@ export class ChannelOperationsService {
 		const sanitizedDeny = protectedBits.deny;
 		const hasAdministrator = (userPermissions & Permissions.ADMINISTRATOR) !== 0n;
 		if (!hasAdministrator && (sanitizedAllow & ~userPermissions) !== 0n) throw new MissingPermissionsError();
+		const removedDeny = (existing?.deny ?? 0n) & ~sanitizedDeny;
+		if (!hasAdministrator && (removedDeny & ~userPermissions) !== 0n) throw new MissingPermissionsError();
 		const previousPermissionOverwrites = channel.permissionOverwrites;
 		const overwrites = new Map(channel.permissionOverwrites ?? []);
 		overwrites.set(
@@ -697,6 +706,7 @@ export class ChannelOperationsService {
 		const canManageRoles = await this.gatewayService.checkPermission({
 			guildId: channel.guildId,
 			userId: params.userId,
+			channelId: channel.id,
 			permission: Permissions.MANAGE_ROLES,
 		});
 		if (!canManageRoles) throw new MissingPermissionsError();
@@ -705,6 +715,15 @@ export class ChannelOperationsService {
 		const removedRole = overwrites.get(createRoleID(params.overwriteId));
 		const removedUser = overwrites.get(createUserID(params.overwriteId));
 		const removed = removedRole ?? removedUser;
+		if (removed) {
+			const userPermissions = await this.gatewayService.getUserPermissions({
+				guildId: channel.guildId,
+				userId: params.userId,
+				channelId: channel.id,
+			});
+			const hasAdministrator = (userPermissions & Permissions.ADMINISTRATOR) !== 0n;
+			if (!hasAdministrator && (removed.deny & ~userPermissions) !== 0n) throw new MissingPermissionsError();
+		}
 		overwrites.delete(createRoleID(params.overwriteId));
 		overwrites.delete(createUserID(params.overwriteId));
 		const updated = await this.channelRepository.channelData.upsert({

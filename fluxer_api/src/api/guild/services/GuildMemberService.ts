@@ -50,7 +50,7 @@ export class GuildMemberService {
 		ipInfoService: IpInfoService,
 	) {
 		this.userRepository = userRepository;
-		this.authService = new GuildMemberAuthService(gatewayService);
+		this.authService = new GuildMemberAuthService(gatewayService, userRepository);
 		this.validationService = new GuildMemberValidationService(guildRepository, userRepository, ipInfoService);
 		this.auditService = new GuildMemberAuditService(guildAuditLogService);
 		this.eventService = new GuildMemberEventService(gatewayService, userCacheService);

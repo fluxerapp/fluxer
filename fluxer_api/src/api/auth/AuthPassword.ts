@@ -267,7 +267,7 @@ export async function resetPassword(
 		},
 		user.toRow(),
 	);
-	await users.deleteAllAuthSessions(user.id);
+	await AuthSession.terminateAllUserSessions(ctx, user.id);
 	await users.deletePasswordResetToken(data.token);
 	const hasMfa =
 		updatedUser.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) ||

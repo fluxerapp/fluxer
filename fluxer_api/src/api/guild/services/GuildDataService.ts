@@ -51,7 +51,7 @@ export class GuildDataService {
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
 	) {
-		this.helpers = new GuildDataHelpers(this.gatewayService, this.guildAuditLogService);
+		this.helpers = new GuildDataHelpers(this.gatewayService, this.guildAuditLogService, this.userRepository);
 		this.operationsService = new GuildOperationsService(
 			this.guildRepository,
 			this.channelRepository,

@@ -40,7 +40,7 @@ export class StripeGiftService {
 
 	async getGiftCode(code: string): Promise<GiftCode> {
 		const giftCode = await this.userRepository.findGiftCode(code);
-		if (!giftCode) {
+		if (!giftCode || giftCode.revokedAt) {
 			throw new UnknownGiftCodeError();
 		}
 		return giftCode;
@@ -62,7 +62,7 @@ export class StripeGiftService {
 		}
 		try {
 			const giftCode = await this.userRepository.findGiftCode(code);
-			if (!giftCode) {
+			if (!giftCode || giftCode.revokedAt) {
 				Logger.debug({userId, giftCode: code}, 'Gift code not found during redemption');
 				throw new UnknownGiftCodeError();
 			}
@@ -258,6 +258,7 @@ export class StripeGiftService {
 		const redeemedGracePeriodMs = 7 * 24 * 60 * 60 * 1000;
 		const cutoff = Date.now() - redeemedGracePeriodMs;
 		return gifts
+			.filter((gift) => gift.revokedAt === null)
 			.filter((gift) => gift.redeemedAt === null || gift.redeemedAt.getTime() > cutoff)
 			.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	}

@@ -8,12 +8,14 @@ import type {ChannelID, EmojiID, GuildID, RoleID, StickerID, UserID} from '../..
 import type {IGatewayService} from '../../../infrastructure/IGatewayService';
 import {Logger} from '../../../Logger';
 import type {Guild} from '../../../models/Guild';
+import type {IUserRepository} from '../../../user/IUserRepository';
 import {serializeGuildForAudit as serializeGuildForAuditUtil} from '../../../utils/AuditSerializationUtils';
 import {requirePermission} from '../../../utils/PermissionUtils';
 import type {GuildAuditLogService} from '../../GuildAuditLogService';
 import type {GuildAuditLogChange} from '../../GuildAuditLogTypes';
 import {mapGuildToGuildResponse} from '../../GuildModel';
 import {GuildRepository} from '../../repositories/GuildRepository';
+import {createGuildMfaEnforcer} from '../GuildMfaEnforcement';
 
 interface GuildAuth {
 	guildData: GuildResponse;
@@ -24,6 +26,7 @@ export class GuildDataHelpers {
 	constructor(
 		private readonly gatewayService: IGatewayService,
 		private readonly guildAuditLogService: GuildAuditLogService,
+		private readonly userRepository: IUserRepository,
 	) {}
 
 	private readonly guildRepository = new GuildRepository();
@@ -33,7 +36,7 @@ export class GuildDataHelpers {
 		try {
 			const guildData = await this.gatewayService.getGuildData({guildId, userId});
 			if (!guildData) throw new UnknownGuildError();
-			return this.createGuildAuth({guildData, guildId, userId});
+			return await this.createGuildAuth({guildData, guildId, userId});
 		} catch (error) {
 			if (error instanceof UnknownGuildError && (await this.guildExists(guildId))) {
 				throw new AccessDeniedError();
@@ -42,10 +45,16 @@ export class GuildDataHelpers {
 		}
 	}
 
-	private createGuildAuth(params: {guildData: GuildResponse; guildId: GuildID; userId: UserID}): GuildAuth {
+	private async createGuildAuth(params: {
+		guildData: GuildResponse;
+		guildId: GuildID;
+		userId: UserID;
+	}): Promise<GuildAuth> {
 		const {guildData, guildId, userId} = params;
+		const enforceGuildMfa = await createGuildMfaEnforcer({userRepository: this.userRepository, guildData, userId});
 		const checkPermission = async (permission: bigint) => {
 			await requirePermission(this.gatewayService, {guildId, userId, permission});
+			enforceGuildMfa(permission);
 		};
 		return {guildData, checkPermission};
 	}

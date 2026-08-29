@@ -37,6 +37,7 @@ export interface IUserContentRepository {
 	findGiftCodesByRedeemer(userId: UserID): Promise<Array<GiftCode>>;
 	redeemGiftCode(code: string, userId: UserID): Promise<void>;
 	unredeemGiftCode(code: string, userId: UserID): Promise<void>;
+	revokeGiftCode(code: string): Promise<void>;
 	updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void>;
 	linkGiftCodeToCheckoutSession(code: string, checkoutSessionId: string): Promise<void>;
 	listPushSubscriptions(userId: UserID): Promise<Array<PushSubscription>>;

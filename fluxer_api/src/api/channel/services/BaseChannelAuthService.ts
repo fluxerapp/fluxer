@@ -13,6 +13,7 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import type {ChannelID, GuildID, UserID} from '../../BrandedTypes';
 import {SYSTEM_USER_ID} from '../../constants/Core';
 import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
+import {createGuildMfaEnforcer} from '../../guild/services/GuildMfaEnforcement';
 import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {Channel} from '../../models/Channel';
 import type {GuildMember} from '../../models/GuildMember';
@@ -176,9 +177,15 @@ export abstract class BaseChannelAuthService {
 		const hasPermission = async (permission: bigint): Promise<boolean> => {
 			return await this.gatewayService.checkPermission({guildId, userId, permission, channelId: channel.id});
 		};
+		const enforceGuildMfa = await createGuildMfaEnforcer({
+			userRepository: this.userRepository,
+			guildData: guildDataResult!,
+			userId,
+		});
 		const checkPermission = async (permission: bigint): Promise<void> => {
 			const allowed = await hasPermission(permission);
 			if (!allowed) throw new MissingPermissionsError();
+			enforceGuildMfa(permission);
 		};
 		await checkPermission(Permissions.VIEW_CHANNEL);
 		const parentCategory = await this.getParentCategoryContentWarningView({

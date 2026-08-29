@@ -113,6 +113,7 @@ export class GiftCode {
 	readonly stripePaymentIntentId: string | null;
 	readonly visionarySequenceNumber: number | null;
 	readonly checkoutSessionId: string | null;
+	readonly revokedAt: Date | null;
 	readonly version: number;
 
 	constructor(row: GiftCodeRow) {
@@ -128,6 +129,7 @@ export class GiftCode {
 		this.stripePaymentIntentId = row.stripe_payment_intent_id ?? null;
 		this.visionarySequenceNumber = row.visionary_sequence_number ?? null;
 		this.checkoutSessionId = row.checkout_session_id ?? null;
+		this.revokedAt = row.revoked_at ?? null;
 		this.version = row.version;
 	}
 
@@ -144,6 +146,7 @@ export class GiftCode {
 			stripe_payment_intent_id: this.stripePaymentIntentId,
 			visionary_sequence_number: this.visionarySequenceNumber,
 			checkout_session_id: this.checkoutSessionId,
+			revoked_at: this.revokedAt,
 			version: this.version,
 		};
 	}

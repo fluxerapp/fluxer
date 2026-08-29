@@ -47,6 +47,7 @@ function normaliseGiftCodeRowForWrite(data: GiftCodeRow): GiftCodeRow {
 		duration_type: durationType,
 		duration_quantity: durationQuantity,
 		duration_months: durationMonths,
+		revoked_at: data.revoked_at ?? null,
 	};
 }
 
@@ -169,6 +170,10 @@ export class GiftCodeRepository {
 		);
 		batch.addPrepared(GiftCodesByRedeemer.deleteByPk({redeemed_by_user_id: userId, code}));
 		await batch.execute();
+	}
+
+	async revokeGiftCode(code: string): Promise<void> {
+		await upsertOne(GiftCodes.patchByPk({code}, {revoked_at: Db.set(new Date())}));
 	}
 
 	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {

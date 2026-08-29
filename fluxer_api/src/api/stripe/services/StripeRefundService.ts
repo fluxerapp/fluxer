@@ -252,11 +252,11 @@ export class StripeRefundService {
 			return;
 		}
 		const user = await this.userRepository.findUnique(userId);
-		if (!user || user.firstRefundAt) {
+		if (!user) {
 			return;
 		}
 		const subscriptionId = refund.metadata.subscription_id;
-		if (subscriptionId) {
+		if (subscriptionId && !user.firstRefundAt) {
 			try {
 				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund');
 			} catch (error) {

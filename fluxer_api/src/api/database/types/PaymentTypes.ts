@@ -17,6 +17,7 @@ export interface GiftCodeRow {
 	stripe_payment_intent_id: Nullish<string>;
 	visionary_sequence_number: Nullish<number>;
 	checkout_session_id: Nullish<string>;
+	revoked_at?: Nullish<Date>;
 	version: number;
 }
 
@@ -103,6 +104,7 @@ export const GIFT_CODE_COLUMNS = [
 	'stripe_payment_intent_id',
 	'visionary_sequence_number',
 	'checkout_session_id',
+	'revoked_at',
 	'version',
 ] as const;
 export const GIFT_CODE_BY_CREATOR_COLUMNS = ['created_by_user_id', 'code'] as const;

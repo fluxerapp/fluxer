@@ -355,12 +355,18 @@ export class ChannelOperationsService {
 			requestCache,
 		});
 		if (update.lockPermissions && desiredParent && desiredParent !== (target.parentId ?? null)) {
-			await this.syncPermissionsWithParent({guildId, channelId: target.id, parentId: desiredParent});
+			await this.syncPermissionsWithParent({
+				guildId,
+				userId: params.userId,
+				channelId: target.id,
+				parentId: desiredParent,
+			});
 		}
 	}
 
 	private async syncPermissionsWithParent(params: {
 		guildId: GuildID;
+		userId: UserID;
 		channelId: ChannelID;
 		parentId: ChannelID;
 	}): Promise<void> {
@@ -368,6 +374,22 @@ export class ChannelOperationsService {
 		if (!parent || parent.guildId !== params.guildId || parent.type !== ChannelTypes.GUILD_CATEGORY) return;
 		const child = await this.channelRepository.findUnique(params.channelId);
 		if (!child || child.guildId !== params.guildId) return;
+		const userPermissions = await this.gatewayService.getUserPermissions({
+			guildId: params.guildId,
+			userId: params.userId,
+			channelId: child.id,
+		});
+		if ((userPermissions & Permissions.MANAGE_ROLES) === 0n) {
+			throw new MissingPermissionsError();
+		}
+		for (const [targetId, existing] of child.permissionOverwrites) {
+			const incomingDeny = parent.permissionOverwrites.get(targetId)?.deny ?? 0n;
+			if ((existing.deny & ~incomingDeny & ~userPermissions) !== 0n) throw new MissingPermissionsError();
+		}
+		for (const [targetId, incoming] of parent.permissionOverwrites) {
+			const existingAllow = child.permissionOverwrites.get(targetId)?.allow ?? 0n;
+			if ((incoming.allow & ~existingAllow & ~userPermissions) !== 0n) throw new MissingPermissionsError();
+		}
 		await this.channelRepository.upsert({
 			...child.toRow(),
 			permission_overwrites: new Map(

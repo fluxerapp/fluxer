@@ -26,6 +26,7 @@ import type {LimitConfigService} from '../../limits/LimitConfigService';
 import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
 import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
 import {GuildRole} from '../../models/GuildRole';
+import type {IUserRepository} from '../../user/IUserRepository';
 import {applyProtectedRolePermissions} from '../../utils/featureUtils';
 import {computePermissionsDiff} from '../../utils/PermissionUtils';
 import type {GuildAuditLogService} from '../GuildAuditLogService';
@@ -33,6 +34,7 @@ import type {GuildAuditLogChange} from '../GuildAuditLogTypes';
 import {mapGuildRoleToResponse} from '../GuildModel';
 import type {IGuildMemberRepository} from '../repositories/IGuildMemberRepository';
 import type {IGuildRoleRepository} from '../repositories/IGuildRoleRepository';
+import {createGuildMfaEnforcer} from './GuildMfaEnforcement';
 
 interface GuildRoleRepository extends IGuildRoleRepository, IGuildMemberRepository {}
 
@@ -62,6 +64,7 @@ export class GuildRoleService {
 		private readonly gatewayService: IGatewayService,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
+		private readonly userRepository: IUserRepository,
 	) {}
 
 	async systemCreateRole(params: {
@@ -446,9 +449,11 @@ export class GuildRoleService {
 
 	private async getGuildAuthenticated({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildAuth> {
 		const guildData = await this.gatewayService.getGuildData({guildId, userId});
+		const enforceGuildMfa = await createGuildMfaEnforcer({userRepository: this.userRepository, guildData, userId});
 		const checkPermission = async (permission: bigint) => {
 			const hasPermission = await this.gatewayService.checkPermission({guildId, userId, permission});
 			if (!hasPermission) throw new MissingPermissionsError();
+			enforceGuildMfa(permission);
 		};
 		const getMyPermissions = async () => this.gatewayService.getUserPermissions({guildId, userId});
 		return {

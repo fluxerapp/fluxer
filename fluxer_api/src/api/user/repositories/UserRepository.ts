@@ -645,6 +645,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.contentRepo.unredeemGiftCode(code, userId);
 	}
 
+	async revokeGiftCode(code: string): Promise<void> {
+		return this.contentRepo.revokeGiftCode(code);
+	}
+
 	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {
 		return this.contentRepo.updateGiftCode(code, data);
 	}
