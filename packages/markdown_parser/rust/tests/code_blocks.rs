@@ -172,3 +172,27 @@ fn single_line_fence_without_space_is_content() {
         json!([{"type":"CodeBlock","content":"hello"}])
     );
 }
+
+#[test]
+fn mid_line_fence_is_literal_text() {
+    assert_eq!(
+        parse("note text```rust\nfn main() {}\n```"),
+        json!([{"type":"Text","content":"note text```rust\nfn main() {}\n```"}])
+    );
+}
+
+#[test]
+fn mid_line_fence_spanning_multiple_lines_stays_text() {
+    assert_eq!(
+        parse("intro line ```js\nbody one\nbody two\n```"),
+        json!([{"type":"Text","content":"intro line ```js\nbody one\nbody two\n```"}])
+    );
+}
+
+#[test]
+fn line_start_fence_still_opens_code_block() {
+    assert_eq!(
+        parse("```rust\nfn main() {}\n```"),
+        json!([{"type":"CodeBlock","language":"rust","content":"fn main() {}\n"}])
+    );
+}

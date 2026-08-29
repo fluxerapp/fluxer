@@ -2,7 +2,7 @@
 
 use crate::ast::{AlertType, ListItem, Node, ParserFlags, TableAlignment};
 use crate::constants::{MAX_AST_NODES, MAX_LINE_LENGTH};
-use crate::links::{has_open_inline_code, has_valid_code_fence_language};
+use crate::links::has_valid_code_fence_language;
 use crate::normalize::{normalize_nodes, replace_trailing_whitespace_with_newline};
 use crate::parser::{MarkdownParser, ParseError, RuntimeState};
 use crate::text::{
@@ -174,31 +174,6 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
                     });
                 }
                 return Ok(no_block(current, state.parser.node_count));
-            }
-            let prefix = &line[..fence_pos];
-            if has_open_inline_code(prefix) {
-                return Ok(no_block(current, state.parser.node_count));
-            }
-            let inline_nodes = crate::inline::parse_inline(state.parser, prefix, line_offset)?;
-            let code_lines = slice_lines_from_fence(&state.lines, current, fence_pos);
-            if let Some(code_result) = parse_code_block(state.parser, &code_lines, 0)? {
-                let new_line_index = current + code_result.new_line_index;
-                let mut extra_nodes = Vec::new();
-                if inline_nodes.len() > 1 {
-                    extra_nodes.extend(inline_nodes[1..].iter().cloned());
-                }
-                extra_nodes.push(code_result.node.clone());
-                if let Some(extra) = &code_result.extra_content {
-                    state.lines[new_line_index].text = extra.content.clone();
-                    state.lines[new_line_index].offset = extra.offset;
-                }
-                let first_node = inline_nodes.first().cloned().unwrap_or(code_result.node);
-                return Ok(BlockParseResult {
-                    node: Some(first_node),
-                    extra_nodes: Some(extra_nodes),
-                    new_line_index,
-                    new_node_count: state.parser.node_count + inline_nodes.len() + 1,
-                });
             }
         }
     } else if starts_with(trimmed, "```") {
@@ -1249,16 +1224,6 @@ fn alert_type(label: &str) -> Option<AlertType> {
     } else {
         None
     }
-}
-
-fn slice_lines_from_fence(lines: &[Line], current: usize, fence_pos: usize) -> Vec<Line> {
-    let mut out = Vec::with_capacity(lines.len() - current);
-    out.push(Line {
-        text: lines[current].text[fence_pos..].to_owned(),
-        offset: lines[current].offset + fence_pos,
-    });
-    out.extend(lines[current + 1..].iter().cloned());
-    out
 }
 
 fn normalise_ordinal(items: &[ListItem], ordinal: Option<usize>, ordered: bool) -> Option<usize> {
