@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BAN_DELETE_MESSAGE_OPTIONS} from '@app/features/moderation/constants/BanDeleteMessageOptions';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -83,39 +84,6 @@ const COMMAND_DELETE_MESSAGES_OPTION_DESCRIPTOR = msg({
 	message: "How much of the member's recent message history to delete.",
 	comment: 'Description for the /ban delete_messages option.',
 });
-const DELETE_MESSAGES_NONE_DESCRIPTOR = msg({
-	message: "Don't delete any",
-	comment: 'Choice label for retaining all messages when banning a member.',
-});
-const DELETE_MESSAGES_ONE_DAY_DESCRIPTOR = msg({
-	message: 'Previous 24 hours',
-	comment: 'Choice label for deleting one day of messages when banning a member.',
-});
-const DELETE_MESSAGES_TWO_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 2 days',
-	comment: 'Choice label for deleting two days of messages when banning a member.',
-});
-const DELETE_MESSAGES_THREE_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 3 days',
-	comment: 'Choice label for deleting three days of messages when banning a member.',
-});
-const DELETE_MESSAGES_FOUR_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 4 days',
-	comment: 'Choice label for deleting four days of messages when banning a member.',
-});
-const DELETE_MESSAGES_FIVE_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 5 days',
-	comment: 'Choice label for deleting five days of messages when banning a member.',
-});
-const DELETE_MESSAGES_SIX_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 6 days',
-	comment: 'Choice label for deleting six days of messages when banning a member.',
-});
-const DELETE_MESSAGES_SEVEN_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 7 days',
-	comment: 'Choice label for deleting seven days of messages when banning a member.',
-});
-
 interface SimpleCommand {
 	type: 'simple';
 	name: string;
@@ -271,16 +239,10 @@ export function useCommands(): Array<Command> {
 						type: 'choice',
 						required: true,
 						allowEmpty: false,
-						choices: [
-							{name: i18n._(DELETE_MESSAGES_NONE_DESCRIPTOR), value: '0'},
-							{name: i18n._(DELETE_MESSAGES_ONE_DAY_DESCRIPTOR), value: '1'},
-							{name: i18n._(DELETE_MESSAGES_TWO_DAYS_DESCRIPTOR), value: '2'},
-							{name: i18n._(DELETE_MESSAGES_THREE_DAYS_DESCRIPTOR), value: '3'},
-							{name: i18n._(DELETE_MESSAGES_FOUR_DAYS_DESCRIPTOR), value: '4'},
-							{name: i18n._(DELETE_MESSAGES_FIVE_DAYS_DESCRIPTOR), value: '5'},
-							{name: i18n._(DELETE_MESSAGES_SIX_DAYS_DESCRIPTOR), value: '6'},
-							{name: i18n._(DELETE_MESSAGES_SEVEN_DAYS_DESCRIPTOR), value: '7'},
-						],
+						choices: BAN_DELETE_MESSAGE_OPTIONS.map((option) => ({
+							name: i18n._(option.label),
+							value: String(option.seconds),
+						})),
 					},
 					{
 						name: 'reason',

@@ -15,6 +15,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
 import styles from '@app/features/moderation/components/modals/BanMemberModal.module.css';
+import {BAN_DELETE_MESSAGE_OPTIONS} from '@app/features/moderation/constants/BanDeleteMessageOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -79,33 +80,6 @@ const DELETE_MESSAGE_HISTORY_DESCRIPTOR = msg({
 	comment:
 		'Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.',
 });
-const DON_T_DELETE_ANY_DESCRIPTOR = msg({
-	message: "Don't delete any",
-	comment:
-		'Message-history-deletion option in the destructive ban-member modal. Keeps all messages from the banned member. Short standalone label.',
-});
-const KEEP_ALL_MESSAGES_DESCRIPTOR = msg({
-	message: 'Keep all messages',
-	comment: 'Helper text under the "Don\'t delete any" message-history option in the destructive ban-member modal.',
-});
-const PREVIOUS_24_HOURS_DESCRIPTOR = msg({
-	message: 'Previous 24 hours',
-	comment:
-		"Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 24 hours.",
-});
-const DELETE_MESSAGES_FROM_THE_LAST_DAY_DESCRIPTOR = msg({
-	message: 'Delete their messages from the last 24 hours',
-	comment: 'Helper text under the "Previous 24 hours" option in the destructive ban-member modal.',
-});
-const PREVIOUS_7_DAYS_DESCRIPTOR = msg({
-	message: 'Previous 7 days',
-	comment:
-		"Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 7 days.",
-});
-const DELETE_MESSAGES_FROM_THE_LAST_WEEK_DESCRIPTOR = msg({
-	message: 'Delete their messages from the last 7 days',
-	comment: 'Helper text under the "Previous 7 days" option in the destructive ban-member modal.',
-});
 const REASON_OPTIONAL_DESCRIPTOR = msg({
 	message: 'Reason (optional)',
 	comment:
@@ -130,7 +104,7 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 	const motionArtworkAllowed = !Accessibility.useReducedMotion && !dataSaverOn;
 	const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {enabled: motionArtworkAllowed});
 	const [reason, setReason] = useState('');
-	const [deleteMessageDays, setDeleteMessageDays] = useState<number>(1);
+	const [deleteMessageSeconds, setDeleteMessageSeconds] = useState<number>(60 * 60 * 24);
 	const [banDuration, setBanDuration] = useState<number>(0);
 	const [isBanDurationCustom, setIsBanDurationCustom] = useState(false);
 	const [isBanning, setIsBanning] = useState(false);
@@ -154,7 +128,7 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 	const handleBan = async () => {
 		setIsBanning(true);
 		try {
-			await GuildCommands.banMember(guildId, targetUser.id, deleteMessageDays, reason || undefined, banDuration);
+			await GuildCommands.banMember(guildId, targetUser.id, deleteMessageSeconds, reason || undefined, banDuration);
 			ToastCommands.createToast({
 				type: 'success',
 				children: <Trans>Banned {targetUserTag} from the community</Trans>,
@@ -256,23 +230,14 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 						</div>
 						<RadioGroup
 							aria-label={i18n._(DELETE_MESSAGE_HISTORY_DESCRIPTOR)}
-							options={[
-								{value: 0, name: i18n._(DON_T_DELETE_ANY_DESCRIPTOR), desc: i18n._(KEEP_ALL_MESSAGES_DESCRIPTOR)},
-								{
-									value: 1,
-									name: i18n._(PREVIOUS_24_HOURS_DESCRIPTOR),
-									desc: i18n._(DELETE_MESSAGES_FROM_THE_LAST_DAY_DESCRIPTOR),
-								},
-								{
-									value: 7,
-									name: i18n._(PREVIOUS_7_DAYS_DESCRIPTOR),
-									desc: i18n._(DELETE_MESSAGES_FROM_THE_LAST_WEEK_DESCRIPTOR),
-								},
-							]}
-							value={deleteMessageDays}
-							onChange={setDeleteMessageDays}
+							options={BAN_DELETE_MESSAGE_OPTIONS.map((option) => ({
+								value: option.seconds,
+								name: i18n._(option.label),
+							}))}
+							value={deleteMessageSeconds}
+							onChange={setDeleteMessageSeconds}
 							disabled={isBanning}
-							data-flx="moderation.ban-member-modal.radio-group.set-delete-message-days"
+							data-flx="moderation.ban-member-modal.radio-group.set-delete-message-seconds"
 						/>
 					</div>
 					<Input

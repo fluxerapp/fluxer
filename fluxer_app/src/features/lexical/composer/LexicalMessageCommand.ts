@@ -9,6 +9,7 @@ import {
 import {$isSlashOptionalHintNode} from '@app/features/lexical/composer/nodes/SlashOptionalHintNode';
 import {$isSlashSeparatorNode} from '@app/features/lexical/composer/nodes/SlashSeparatorNode';
 import {$isSlashSlotNode, type SlashSlotNode} from '@app/features/lexical/composer/nodes/SlashSlotNode';
+import {BAN_DELETE_MESSAGE_SECONDS_CHOICE_VALUES} from '@app/features/moderation/constants/BanDeleteMessageOptions';
 import {$getRoot, $isElementNode, $isTextNode, type LexicalNode} from 'lexical';
 
 export const LexicalMessageCommandResolutionStatus = Object.freeze({
@@ -47,7 +48,6 @@ const INVALID_COMMAND: InvalidCommandResolution = Object.freeze({
 	status: LexicalMessageCommandResolutionStatus.INVALID_COMMAND,
 });
 const USER_WIRE_PATTERN = /^<@!?(\d+)>$/;
-const DELETE_MESSAGE_DAYS_PATTERN = /^[0-7]$/;
 
 function hasOnlySlots(slots: Map<string, SlashSlotNode>, allowed: ReadonlyArray<string>): boolean {
 	for (const name of slots.keys()) {
@@ -189,12 +189,12 @@ function resolveCommand(structure: CommandStructure): Exclude<CommandUtils.Parse
 	if (name === '/ban') {
 		if (!hasOnlySlots(slots, ['user', 'delete_messages', 'reason'])) return null;
 		const userId = readUserSlot(slots, 'user');
-		const deleteMessageDaysText = readChoiceSlot(slots, 'delete_messages');
+		const deleteMessageSecondsText = readChoiceSlot(slots, 'delete_messages');
 		const reason = readOptionalStringSlot(slots, 'reason');
 		if (
 			userId == null ||
-			deleteMessageDaysText == null ||
-			!DELETE_MESSAGE_DAYS_PATTERN.test(deleteMessageDaysText) ||
+			deleteMessageSecondsText == null ||
+			!BAN_DELETE_MESSAGE_SECONDS_CHOICE_VALUES.has(deleteMessageSecondsText) ||
 			reason === null
 		) {
 			return null;
@@ -203,14 +203,14 @@ function resolveCommand(structure: CommandStructure): Exclude<CommandUtils.Parse
 			return {
 				type: 'ban',
 				userId,
-				deleteMessageDays: Number(deleteMessageDaysText),
+				deleteMessageSeconds: Number(deleteMessageSecondsText),
 				duration: 0,
 			};
 		}
 		return {
 			type: 'ban',
 			userId,
-			deleteMessageDays: Number(deleteMessageDaysText),
+			deleteMessageSeconds: Number(deleteMessageSecondsText),
 			duration: 0,
 			reason,
 		};

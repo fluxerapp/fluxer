@@ -262,7 +262,7 @@ export function GuildMemberController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const targetId = createUserID(user_id);
 			const guildId = createGuildID(guild_id);
-			const {delete_message_days, reason, ban_duration_seconds} = ctx.req.valid('json');
+			const {delete_message_days, delete_message_seconds, reason, ban_duration_seconds} = ctx.req.valid('json');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const effectiveReason = reason ?? auditLogReason ?? undefined;
 			await ctx.get('guildService').moderation.banMember(
@@ -271,6 +271,7 @@ export function GuildMemberController(app: HonoApp) {
 					guildId,
 					targetId,
 					deleteMessageDays: delete_message_days,
+					deleteMessageSeconds: delete_message_seconds,
 					reason: effectiveReason,
 					banDurationSeconds: ban_duration_seconds,
 				},

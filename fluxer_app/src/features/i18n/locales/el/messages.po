@@ -38987,3 +38987,38 @@ msgstr "Μεγέθυνση"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "Σμίκρυνση"
+
+#. Message-history-deletion option when banning a member. Keeps all of the member's messages.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:14
+msgid "Don't Delete Any"
+msgstr "Να μην διαγραφεί τίποτα"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
+msgid "Previous Hour"
+msgstr "Προηγούμενη ώρα"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:28
+msgid "Previous 6 Hours"
+msgstr "Τελευταίες 6 ώρες"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:36
+msgid "Previous 12 Hours"
+msgstr "Τελευταίες 12 ώρες"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:44
+msgid "Previous 24 Hours"
+msgstr "Τελευταίες 24 ώρες"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:52
+msgid "Previous 3 Days"
+msgstr "Τελευταίες 3 ημέρες"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:60
+msgid "Previous 7 Days"
+msgstr "Προηγούμενες 7 ημέρες"

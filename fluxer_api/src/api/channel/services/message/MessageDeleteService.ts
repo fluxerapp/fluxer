@@ -225,14 +225,14 @@ export class MessageDeleteService {
 	async deleteUserMessagesInGuild({
 		userId,
 		guildId,
-		days,
+		seconds,
 	}: {
 		userId: UserID;
 		guildId: GuildID;
-		days: number;
+		seconds: number;
 	}): Promise<void> {
 		const channels = await this.deps.channelRepository.channelData.listGuildChannels(guildId);
-		const cutoffTimestamp = Date.now() - days * ms('1 day');
+		const cutoffTimestamp = Date.now() - seconds * ms('1 second');
 		const cutoffSnowflake = createMessageID(createSnowflakeFromTimestamp(cutoffTimestamp));
 		await Promise.all(
 			channels.map(async (channel: Channel) => {

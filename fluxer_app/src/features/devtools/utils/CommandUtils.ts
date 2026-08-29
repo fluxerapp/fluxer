@@ -7,6 +7,10 @@ import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberC
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
+import {
+	BAN_DELETE_MESSAGE_SECONDS_CHOICE_VALUES,
+	DEFAULT_BAN_DELETE_MESSAGE_SECONDS,
+} from '@app/features/moderation/constants/BanDeleteMessageOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
@@ -43,7 +47,7 @@ export type ParsedCommand =
 	| {
 			type: 'ban';
 			userId: string;
-			deleteMessageDays: number;
+			deleteMessageSeconds: number;
 			duration: number;
 			reason?: string;
 	  }
@@ -101,11 +105,11 @@ export function parseCommand(content: string): ParsedCommand {
 		const userId = userMatch[1];
 		const afterMention = rest.slice(userMatch[0].length).trim();
 		const parts = afterMention.length === 0 ? [] : afterMention.split(/\s+/);
-		let deleteMessageDays = 1;
+		let deleteMessageSeconds = DEFAULT_BAN_DELETE_MESSAGE_SECONDS;
 		let reasonStart = 0;
 		const firstPart = parts[0];
-		if (firstPart !== undefined && /^[0-7]$/.test(firstPart)) {
-			deleteMessageDays = Number(firstPart);
+		if (firstPart !== undefined && BAN_DELETE_MESSAGE_SECONDS_CHOICE_VALUES.has(firstPart)) {
+			deleteMessageSeconds = Number(firstPart);
 			reasonStart = 1;
 		} else if (firstPart !== undefined && /^\d+$/.test(firstPart)) {
 			return {type: 'unknown'};
@@ -114,7 +118,7 @@ export function parseCommand(content: string): ParsedCommand {
 		const reasonParts = parts.slice(reasonStart);
 		const reasonText = reasonParts.join(' ').trim();
 		const reason = reasonText || undefined;
-		return {type: 'ban', userId, deleteMessageDays, duration, reason};
+		return {type: 'ban', userId, deleteMessageSeconds, duration, reason};
 	}
 	if (trimmed.startsWith('/msg ')) {
 		const rest = trimmed.slice(5).trim();
@@ -310,7 +314,7 @@ export async function executeCommand(
 			await GuildCommands.banMember(
 				guildId,
 				command.userId,
-				command.deleteMessageDays,
+				command.deleteMessageSeconds,
 				command.reason,
 				command.duration,
 			);

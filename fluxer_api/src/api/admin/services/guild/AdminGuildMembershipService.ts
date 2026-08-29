@@ -133,6 +133,7 @@ export class AdminGuildMembershipService {
 				guildId,
 				targetId,
 				deleteMessageDays: data.delete_message_days,
+				deleteMessageSeconds: data.delete_message_seconds,
 				reason: data.reason ?? undefined,
 				banDurationSeconds: data.ban_duration_seconds ?? undefined,
 				skipGuildAuditLog: true,

@@ -30,6 +30,8 @@ import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAg
 import {createGuildMfaEnforcer} from './GuildMfaEnforcement';
 import {GuildMemberSearchIndexService} from './member/GuildMemberSearchIndexService';
 
+const SECONDS_PER_DAY = 86_400;
+
 export class GuildModerationService {
 	private readonly searchIndexService: GuildMemberSearchIndexService;
 
@@ -64,13 +66,23 @@ export class GuildModerationService {
 			targetId: UserID;
 			guildId: GuildID;
 			deleteMessageDays?: number;
+			deleteMessageSeconds?: number;
 			reason?: string | null;
 			banDurationSeconds?: number;
 			skipGuildAuditLog?: boolean;
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
-		const {userId, guildId, targetId, deleteMessageDays, reason, banDurationSeconds, skipGuildAuditLog} = params;
+		const {
+			userId,
+			guildId,
+			targetId,
+			deleteMessageDays,
+			deleteMessageSeconds,
+			reason,
+			banDurationSeconds,
+			skipGuildAuditLog,
+		} = params;
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
 		if (userId === targetId) throw new UnknownGuildMemberError();
 		const targetUser = await this.userRepository.findUnique(targetId);
@@ -82,11 +94,13 @@ export class GuildModerationService {
 			const canManage = await this.gatewayService.checkTargetMember({guildId, userId, targetUserId: targetId});
 			if (!canManage) throw new MissingPermissionsError();
 		}
-		if (deleteMessageDays && deleteMessageDays > 0) {
+		const effectiveDeleteMessageSeconds =
+			deleteMessageSeconds ?? (deleteMessageDays !== undefined ? deleteMessageDays * SECONDS_PER_DAY : undefined);
+		if (effectiveDeleteMessageSeconds && effectiveDeleteMessageSeconds > 0) {
 			await this.workerService.addJob('deleteUserMessagesInGuildByTime', {
 				guildId: guildId.toString(),
 				userId: targetId.toString(),
-				days: deleteMessageDays,
+				seconds: effectiveDeleteMessageSeconds,
 			});
 		}
 		const targetIp = isIpBanExempt(targetUser.lastActiveIp) ? null : targetUser.lastActiveIp || null;

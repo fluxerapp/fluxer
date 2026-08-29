@@ -51,7 +51,7 @@ interface GuildTemplateCreateParams {
 }
 
 interface BanMemberRequest {
-	delete_message_days: number;
+	delete_message_seconds: number;
 	reason: string | null;
 	ban_duration_seconds?: number;
 }
@@ -124,9 +124,13 @@ function transferOwnershipRequest(newOwnerId: string): {new_owner_id: string} {
 	return {new_owner_id: newOwnerId};
 }
 
-function banMemberRequest(deleteMessageDays?: number, reason?: string, banDurationSeconds?: number): BanMemberRequest {
+function banMemberRequest(
+	deleteMessageSeconds?: number,
+	reason?: string,
+	banDurationSeconds?: number,
+): BanMemberRequest {
 	return {
-		delete_message_days: deleteMessageDays ?? 0,
+		delete_message_seconds: deleteMessageSeconds ?? 0,
 		reason: reason ?? null,
 		ban_duration_seconds: banDurationSeconds,
 	};
@@ -373,13 +377,13 @@ export async function transferOwnership(guildId: string, newOwnerId: string): Pr
 export async function banMember(
 	guildId: string,
 	userId: string,
-	deleteMessageDays?: number,
+	deleteMessageSeconds?: number,
 	reason?: string,
 	banDurationSeconds?: number,
 ): Promise<void> {
 	try {
 		await http.put(Endpoints.GUILD_BAN(guildId, userId), {
-			body: banMemberRequest(deleteMessageDays, reason, banDurationSeconds),
+			body: banMemberRequest(deleteMessageSeconds, reason, banDurationSeconds),
 		});
 		logger.debug(`Banned user ${userId} from guild ${guildId}`);
 	} catch (error) {

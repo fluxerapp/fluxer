@@ -30823,7 +30823,14 @@
 						"minimum": 0,
 						"maximum": 7,
 						"format": "int32",
-						"description": "Number of days of messages to delete from the banned user (0-7)"
+						"description": "Number of days of messages to delete from the banned user (0-7). Deprecated in favor of delete_message_seconds."
+					},
+					"delete_message_seconds": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 604800,
+						"format": "int32",
+						"description": "Number of seconds of messages to delete for the banned user (0-604800, default 0)"
 					},
 					"reason": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],

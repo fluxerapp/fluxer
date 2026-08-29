@@ -292,7 +292,16 @@ export const GuildBanCreateRequest = z.object({
 		.min(0)
 		.max(7)
 		.default(0)
-		.describe('Number of days of messages to delete from the banned user (0-7)'),
+		.describe(
+			'Number of days of messages to delete from the banned user (0-7). Deprecated in favor of delete_message_seconds.',
+		),
+	delete_message_seconds: z
+		.number()
+		.int()
+		.min(0)
+		.max(604800)
+		.optional()
+		.describe('Number of seconds of messages to delete for the banned user (0-604800, default 0)'),
 	reason: createStringType(0, 512).nullish().describe('The reason for the ban (max 512 characters)'),
 	ban_duration_seconds: z
 		.number()
