@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CaptchaRequiredError, InvalidCaptchaError} from '@fluxer/errors/src/CaptchaErrors';
 import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {createCaptchaProvider} from '@pkgs/captcha/src/CaptchaProviderFactory';
@@ -53,7 +54,9 @@ export async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
 	if (!captchaConfig.enabled && !(Config.dev.testModeEnabled && Config.captcha.enabled)) return;
 	const user = ctx.get('user') as User | undefined;
 	if (accountPolicyContactHasCapability(user?.email, 'captcha_exempt')) return;
+	if (userHasCaptchaExemptFlag(user)) return;
 	if (await requestContactHasCaptchaExemption(ctx.req.raw)) return;
+	if (await requestUserHasCaptchaExemptFlag(ctx)) return;
 	const token = ctx.req.header('x-captcha-token');
 	if (!token) {
 		throw new CaptchaRequiredError();
@@ -78,6 +81,23 @@ async function requestContactHasCaptchaExemption(request: Request): Promise<bool
 		if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
 		const email = (body as Record<string, unknown>).email;
 		return typeof email === 'string' && accountPolicyContactHasCapability(email, 'captcha_exempt');
+	} catch {
+		return false;
+	}
+}
+
+function userHasCaptchaExemptFlag(user: User | null | undefined): boolean {
+	return user != null && (user.flags & UserFlags.APP_STORE_REVIEWER) !== 0n;
+}
+
+async function requestUserHasCaptchaExemptFlag(ctx: Context<HonoEnv>): Promise<boolean> {
+	try {
+		const body = (await ctx.req.raw.clone().json()) as unknown;
+		if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
+		const email = (body as Record<string, unknown>).email;
+		if (typeof email !== 'string') return false;
+		const user = await ctx.get('userRepository').findByEmail(email);
+		return userHasCaptchaExemptFlag(user);
 	} catch {
 		return false;
 	}
