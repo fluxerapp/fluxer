@@ -3,6 +3,7 @@
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use hmac::{Hmac, KeyInit, Mac};
 use serde::{Deserialize, Serialize};
+use rand::RngExt;
 use sha2::Sha256;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -76,6 +77,36 @@ fn verify_signature<'a>(signed_data: &'a str, secret_key: &str) -> Option<&'a st
         diff |= a ^ b;
     }
     if diff == 0 { Some(data) } else { None }
+}
+
+pub fn create_csrf_token(user_id: &str, secret_key: &str) -> String {
+    let mut rng = rand::rng();
+    let nonce: [u8; 16] = rng.random();
+    let payload = URL_SAFE_NO_PAD.encode(format!(
+        "{}:{}",
+        URL_SAFE_NO_PAD.encode(user_id.as_bytes()),
+        URL_SAFE_NO_PAD.encode(nonce)
+    ));
+    sign_data(&payload, secret_key)
+}
+
+pub fn verify_csrf_token(token: &str, user_id: &str, secret_key: &str) -> bool {
+    let Some(data) = verify_signature(token, secret_key) else {
+        return false;
+    };
+    let Ok(decoded) = URL_SAFE_NO_PAD.decode(data.as_bytes()) else {
+        return false;
+    };
+    let Ok(payload) = String::from_utf8(decoded) else {
+        return false;
+    };
+    let Some((encoded_uid, _nonce)) = payload.split_once(':') else {
+        return false;
+    };
+    match URL_SAFE_NO_PAD.decode(encoded_uid.as_bytes()) {
+        Ok(uid_bytes) => uid_bytes == user_id.as_bytes(),
+        Err(_) => false,
+    }
 }
 
 pub const LEGACY_SESSION_COOKIE_NAME: &str = "session";

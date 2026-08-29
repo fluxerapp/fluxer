@@ -348,7 +348,7 @@ fn oauth_callback_page(config: &AdminConfig, code: Option<&str>, state: Option<&
     )
 }
 
-fn json_string(value: &str) -> String {
+pub(crate) fn json_string(value: &str) -> String {
     serde_json::to_string(value)
         .expect("JSON string serialization cannot fail")
         .replace('<', "\\u003c")

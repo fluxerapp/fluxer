@@ -73,7 +73,10 @@ pub fn build_router(config: AdminConfig) -> Router {
         .route("/", get(dashboard))
         .route("/dashboard", get(dashboard))
         .layer(from_fn(middleware::htmx::flash_redirect_to_toast))
-        .layer(from_fn(middleware::csrf::csrf_protection))
+        .layer(from_fn_with_state(
+            state.clone(),
+            middleware::csrf::csrf_protection,
+        ))
         .layer(from_fn(middleware::self_hosted::self_hosted_override))
         .layer(from_fn_with_state(
             state.clone(),

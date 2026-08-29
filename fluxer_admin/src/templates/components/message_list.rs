@@ -7,6 +7,7 @@ use super::media::user_avatar_url;
 use super::nsfw_indicators::{attachment_nsfw_badge, channel_nsfw_state_badge};
 use super::user_display::format_user_display;
 use crate::config::AdminConfig;
+use crate::routes::auth::json_string;
 
 pub struct Attachment {
     pub id: String,
@@ -309,7 +310,7 @@ pub fn message_list(
 }
 
 pub fn message_deletion_script(csrf_token: &str) -> Markup {
-    let csrf = serde_json::to_string(csrf_token).unwrap_or_else(|_| "\"\"".into());
+    let csrf = json_string(csrf_token);
     let script = r#"(function() {
     var csrf = __CSRF__;
     function bp() {
