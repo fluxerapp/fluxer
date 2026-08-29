@@ -166,6 +166,13 @@ export const updaterStateMachine = setup({
 		}),
 		applyNativeAvailable: assign(({context, event}) => {
 			if (event.type !== 'native.available') return {};
+			const currentNative = context.updateInfo.native;
+			if (currentNative.downloaded && (event.version == null || event.version === currentNative.version)) {
+				return {
+					isChecking: false,
+					nativeUnsupported: null,
+				};
+			}
 			return {
 				updateInfo: {
 					...context.updateInfo,

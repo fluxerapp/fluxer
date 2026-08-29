@@ -45,6 +45,36 @@ describe('updaterStateMachine', () => {
 		expect(snapshot.context.updateInfo.web.available).toBe(false);
 	});
 
+	it('keeps a downloaded native update pending restart when checks re-emit available or not-available', () => {
+		let snapshot = createUpdaterMachineSnapshot();
+		snapshot = transition(snapshot, {
+			type: 'native.available',
+			version: '2.0.0',
+			downloadSize: 1000,
+			downloadStarted: true,
+			downloadUrl: null,
+			downloadOptions: [],
+		});
+		snapshot = transition(snapshot, {type: 'native.downloaded', version: '2.0.0'});
+		expect(snapshot.context.updateInfo.native.downloaded).toBe(true);
+
+		snapshot = transition(snapshot, {type: 'native.notAvailable', now: NOW});
+		expect(snapshot.context.updateInfo.native.downloaded).toBe(true);
+		expect(snapshot.context.updateInfo.native.available).toBe(true);
+
+		snapshot = transition(snapshot, {
+			type: 'native.available',
+			version: null,
+			downloadSize: null,
+			downloadStarted: true,
+			downloadUrl: null,
+			downloadOptions: [],
+		});
+		expect(snapshot.context.updateInfo.native.downloaded).toBe(true);
+		expect(snapshot.context.updateInfo.native.downloading).toBe(false);
+		expect(snapshot.context.updateInfo.native.version).toBe('2.0.0');
+	});
+
 	it('tracks check start and finish separately from available updates', () => {
 		let snapshot = createUpdaterMachineSnapshot();
 		snapshot = transition(snapshot, {type: 'check.started'});
