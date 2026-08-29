@@ -346,7 +346,7 @@ msgstr "{count, plural, one {# การสมัครใช้งานที�
 msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {# ไฟล์แนบ} other {# ไฟล์แนบ}}"
 
-#: src/features/channel/components/BlockedMessageGroups.tsx:229
+#: src/features/channel/components/BlockedMessageGroups.tsx:251
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# ข้อความที่บล็อก} other {# ข้อความที่บล็อก}}"
 
@@ -360,7 +360,7 @@ msgstr "{count, plural, other {# รายการ}}"
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# ชุมชนที่พบ} other {# ชุมชนที่พบ}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1949
+#: src/features/app/components/layout/GuildsLayout.tsx:1950
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# ชุมชนไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ} other {# ชุมชนไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ}}"
 
@@ -392,8 +392,8 @@ msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# รายการ} other {# รายการ}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:435
-#: src/features/channel/components/direct_message/DMListItem.tsx:599
+#: src/features/channel/components/direct_message/DMListItem.tsx:436
+#: src/features/channel/components/direct_message/DMListItem.tsx:600
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:116
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -413,7 +413,7 @@ msgstr "{count, plural, one {# คนอื่น} other {# คนอื่น}}
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# คนในสาย} other {# คนในสาย}}"
 
-#: src/features/channel/components/BlockedMessageGroups.tsx:222
+#: src/features/channel/components/BlockedMessageGroups.tsx:244
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, one {# ข้อความสแปมที่อาจเป็นอันตราย} other {# ข้อความสแปมที่อาจเป็นอันตราย}}"
 
@@ -591,12 +591,12 @@ msgid "{countLabel} years"
 msgstr "{countLabel} ปี"
 
 #. Media viewer attachment position text, such as 2 of 5.
-#: src/features/messaging/components/modals/media_modal/shared.ts:140
+#: src/features/messaging/components/modals/media_modal/shared.ts:141
 msgid "{currentAttachmentNumber} of {totalAttachments}"
 msgstr "{currentAttachmentNumber} จาก {totalAttachments}"
 
 #. Compact media viewer attachment position, such as 2/5.
-#: src/features/messaging/components/modals/media_modal/shared.ts:60
+#: src/features/messaging/components/modals/media_modal/shared.ts:61
 msgid "{currentAttachmentNumber}/{totalAttachments}"
 msgstr "{currentAttachmentNumber}/{totalAttachments}"
 
@@ -776,7 +776,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "ช่องของ {guildName}"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:675
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {ขยายอุปกรณ์อื่น # เครื่อง} other {ขยายอุปกรณ์อื่น # เครื่อง}}"
 
@@ -1160,7 +1160,7 @@ msgid "{productName} restarted while you were connected to the call in {directCa
 msgstr "{productName} รีสตาร์ทในขณะที่คุณเชื่อมต่อกับการโทรใน {directCallName}"
 
 #. Item in the textarea spellcheck submenu that opens the full settings page. Trailing horizontal ellipsis (…) indicates the action opens settings.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:94
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:96
 msgid "{productName} spellcheck settings…"
 msgstr "การตั้งค่าการตรวจสอบการสะกดของ {productName}…"
 
@@ -1738,7 +1738,7 @@ msgid "2 members (typing)"
 msgstr "2 คน (กำลังพิมพ์)"
 
 #. Ban duration option in the destructive ban-member modal for a two-week temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:50
+#: src/features/moderation/components/modals/BanMemberModal.tsx:51
 msgid "2 weeks"
 msgstr "2 สัปดาห์"
 
@@ -1780,7 +1780,7 @@ msgid "2FA requirement"
 msgstr "ต้องยืนยันตัวตน 2 ชั้น"
 
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:42
+#: src/features/moderation/components/modals/BanMemberModal.tsx:43
 msgid "3 days"
 msgstr "3 วัน"
 
@@ -1826,7 +1826,7 @@ msgid "480p"
 msgstr "480p"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:46
+#: src/features/moderation/components/modals/BanMemberModal.tsx:47
 msgid "5 days"
 msgstr "5 วัน"
 
@@ -2219,7 +2219,7 @@ msgstr "เฉพาะ DM ที่เปิดอยู่ทั้งหม�
 msgid "Across every community you're in"
 msgstr "ในทุกคอมมูนิตี้ที่คุณเป็นสมาชิก"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:95
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:110
 msgid "Action"
 msgstr "การกระทำ"
 
@@ -2465,7 +2465,7 @@ msgid "Add an extra layer of security to your account"
 msgstr "เพิ่มความปลอดภัยอีกขั้นให้กับบัญชีของคุณ"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:39
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:40
 msgid "Add another custom shortcut"
 msgstr "เพิ่มปุ่มลัดที่กำหนดเอง"
 
@@ -2650,7 +2650,7 @@ msgid "Add the credentials during setup."
 msgstr "เพิ่มข้อมูลประจำตัวระหว่างการตั้งค่า"
 
 #. Textarea right-click context menu item that adds the selected misspelled word to the personal dictionary.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:32
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:34
 msgid "Add to dictionary"
 msgstr "เพิ่มในพจนานุกรม"
 
@@ -3228,7 +3228,7 @@ msgid "Already set to cancel"
 msgstr "ตั้งค่าให้ยกเลิกแล้ว"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:81
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "รายงานข้อความนี้ไปยังทีมความปลอดภัยของ {productName} ด้วย"
 
@@ -3463,7 +3463,7 @@ msgstr "คุณสามารถควบคุมอิโมจิ, GIF แ
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/media/EmbedGifv.tsx:67
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:99
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:101
 msgid "Animated GIF"
 msgstr "GIF เคลื่อนไหว"
 
@@ -3502,12 +3502,12 @@ msgid "Animated icons require the {animatedIconFeature} community feature."
 msgstr "ไอคอนเคลื่อนไหวต้องใช้ฟีเจอร์ชุมชน {animatedIconFeature}"
 
 #. Media type chip shown in the media viewer info panel for animated images.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:107
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:109
 msgid "Animated image"
 msgstr "รูปภาพเคลื่อนไหว"
 
 #. Accessible label for an animated image (APNG/AVIF) shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:75
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:77
 msgid "Animated image preview"
 msgstr "ตัวอย่างรูปภาพเคลื่อนไหว"
 
@@ -3527,7 +3527,7 @@ msgid "Animated uploads require a {premiumProductName} subscription."
 msgstr "การอัปโหลดภาพเคลื่อนไหวต้องมีการสมัครสมาชิก {premiumProductName}"
 
 #. Media type chip shown in the media viewer info panel for short looping video clips.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:103
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:105
 msgid "Animated video"
 msgstr "วิดีโอเคลื่อนไหว"
 
@@ -3653,7 +3653,7 @@ msgid "Any uploaded attachment"
 msgstr "ไฟล์ที่อัปโหลด"
 
 #. Helper text under the custom ban duration input. Both placeholders are integer numbers of seconds bounding the allowed range.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:72
+#: src/features/moderation/components/modals/BanMemberModal.tsx:73
 msgid "Any value from {minTempBanDurationSeconds} to {maxTempBanDurationSeconds} seconds."
 msgstr "ค่าใดก็ได้ตั้งแต่ {minTempBanDurationSeconds} ถึง {maxTempBanDurationSeconds} วินาที"
 
@@ -3739,17 +3739,17 @@ msgid "Appearance"
 msgstr "ลักษณะที่แสดง"
 
 #. Slash-command description for /tableflip. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:12
+#: src/features/devtools/hooks/useCommands.ts:13
 msgid "Appends (╯°□°)╯︵ ┻━┻ to your message."
 msgstr "เพิ่ม (╯°□°)╯︵ ┻━┻ ไปยังข้อความของคุณ"
 
 #. Slash-command description for /shrug. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:8
+#: src/features/devtools/hooks/useCommands.ts:9
 msgid "Appends ¯\\_(ツ)_/¯ to your message."
 msgstr "เพิ่ม ¯\\_(ツ)_/¯ ต่อท้ายข้อความของคุณ"
 
 #. Slash-command description for /unflip. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:16
+#: src/features/devtools/hooks/useCommands.ts:17
 msgid "Appends ┬─┬ ノ( ゜-゜ノ) to your message."
 msgstr "เพิ่ม ┬─┬ ノ( ゜-゜ノ) ต่อท้ายข้อความของคุณ"
 
@@ -3922,7 +3922,7 @@ msgstr "คุณแน่ใจหรือไม่ว่าต้องกา
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบพาสคีย์ <0>{0}</0>"
 
-#: src/features/messaging/hooks/useDeleteAttachment.tsx:29
+#: src/features/messaging/hooks/useDeleteAttachment.tsx:41
 msgid "Are you sure you want to delete this attachment? This action cannot be undone and will remove the attachment from this message."
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์แนบนี้ การดำเนินการนี้ไม่สามารถเลิกทำได้และจะลบไฟล์แนบออกจากข้อความนี้"
 
@@ -4028,8 +4028,8 @@ msgstr "ไฟล์แนบ"
 
 #. Accessible label for a thumbnail in the media viewer. index1 is the 1-based attachment index.
 #. Accessible label for the active attachment in the media viewer. index1 is the 1-based index.
-#: src/features/messaging/components/modals/media_modal/shared.ts:128
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:71
+#: src/features/messaging/components/modals/media_modal/shared.ts:129
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:73
 msgid "Attachment {index1}"
 msgstr "ไฟล์แนบ {index1}"
 
@@ -4088,7 +4088,7 @@ msgid "Attachment preview"
 msgstr "ตัวอย่างไฟล์แนบ"
 
 #. Accessible label for the thumbnail strip at the bottom of the media viewer.
-#: src/features/messaging/components/modals/media_modal/shared.ts:124
+#: src/features/messaging/components/modals/media_modal/shared.ts:125
 msgid "Attachment thumbnails"
 msgstr "รูปย่อไฟล์แนบ"
 
@@ -4178,7 +4178,7 @@ msgid "Audio player"
 msgstr "เครื่องเล่นเสียง"
 
 #. Accessible label for an audio clip shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:91
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:93
 msgid "Audio preview"
 msgstr "ตัวอย่างเสียง"
 
@@ -4437,7 +4437,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "คำแนะนำเติมข้อความอัตโนมัติ: {label}, {selectedOptionPosition} จาก {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
@@ -4446,7 +4445,6 @@ msgstr "คำแนะนำเติมข้อความอัตโนม
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:199
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
@@ -4884,12 +4882,12 @@ msgid "Ban"
 msgstr "แบน"
 
 #. Title of the destructive ban-member modal. {tag} is the target user tag (username#tag). Destructive moderation action; keep tone direct.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:54
+#: src/features/moderation/components/modals/BanMemberModal.tsx:55
 msgid "Ban {tag}"
 msgstr "แบน {tag}"
 
 #. Slash-command description for /ban. Bans a member from the current community (moderation action).
-#: src/features/devtools/hooks/useCommands.ts:42
+#: src/features/devtools/hooks/useCommands.ts:43
 msgid "Ban a member from this community."
 msgstr "แบนสมาชิกออกจากคอมมูนิตี้นี้"
 
@@ -4899,7 +4897,7 @@ msgid "Ban details"
 msgstr "รายละเอียดการแบน"
 
 #. Label above the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:59
+#: src/features/moderation/components/modals/BanMemberModal.tsx:60
 msgid "Ban duration"
 msgstr "ระยะเวลาแบน"
 
@@ -4911,7 +4909,7 @@ msgstr "การแบนจะหมดอายุในวันที่ {0
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:305
+#: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
@@ -4944,7 +4942,7 @@ msgstr "แบนด์วิดท์จำกัด"
 msgid "Banned"
 msgstr "ถูกแบน"
 
-#: src/features/moderation/components/modals/BanMemberModal.tsx:160
+#: src/features/moderation/components/modals/BanMemberModal.tsx:134
 msgid "Banned {targetUserTag} from the community"
 msgstr "แบน {targetUserTag} ออกจากชุมชนแล้ว"
 
@@ -5822,7 +5820,7 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
-#: src/features/moderation/components/modals/BanMemberModal.tsx:297
+#: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:173
@@ -6276,7 +6274,7 @@ msgid "Change your nickname for a community profile"
 msgstr "เปลี่ยนชื่อเล่นสำหรับโปรไฟล์คอมมูนิตี้ของคุณ"
 
 #. Slash-command description for /nick. Changes the user's nickname in the current community.
-#: src/features/devtools/hooks/useCommands.ts:34
+#: src/features/devtools/hooks/useCommands.ts:35
 msgid "Change your nickname in this community."
 msgstr "เปลี่ยนชื่อเล่นของคุณในคอมมูนิตี้นี้"
 
@@ -6779,7 +6777,7 @@ msgstr "เลือกหน้าต่างจากตัวเลือก
 msgid "Choose an account"
 msgstr "เลือกบัญชี"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:137
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:152
 msgid "Choose an action."
 msgstr "เลือกการดำเนินการ"
 
@@ -7436,12 +7434,12 @@ msgid "Close DM"
 msgstr "ปิด DM"
 
 #. Accessible label for the dedicated close button at the top of the media viewer modal.
-#: src/features/messaging/components/modals/media_modal/shared.ts:112
+#: src/features/messaging/components/modals/media_modal/shared.ts:113
 msgid "Close media viewer"
 msgstr "ปิดหน้าต่างดูมีเดีย"
 
 #. Generic accessible label for the close button on the media viewer modal backdrop.
-#: src/features/messaging/components/modals/media_modal/shared.ts:108
+#: src/features/messaging/components/modals/media_modal/shared.ts:109
 msgid "Close modal"
 msgstr "ปิด"
 
@@ -8235,7 +8233,7 @@ msgstr "ยืนยัน"
 msgid "Confirmation or double-click for community voice joins"
 msgstr "ยืนยันหรือดับเบิลคลิกเพื่อเข้าร่วมช่องเสียงของชุมชน"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:154
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:169
 msgid "Conflicts with {conflictLabel}"
 msgstr "ขัดแย้งกับ {conflictLabel}"
 
@@ -8607,7 +8605,7 @@ msgstr "คัดลอก URL ไปยังคลิปบอร์ดแล�
 #. Textarea right-click context menu item that copies the selected text.
 #: src/features/app/components/dialogs/shared/CopyLinkSection.tsx:11
 #: src/features/auth/components/modals/BackupCodesModal.tsx:94
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:48
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:423
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:71
@@ -8808,7 +8806,7 @@ msgid "Copy media"
 msgstr "คัดลอกสื่อ"
 
 #. Tooltip on the media viewer button that copies the current media item to the system clipboard.
-#: src/features/messaging/components/modals/media_modal/shared.ts:84
+#: src/features/messaging/components/modals/media_modal/shared.ts:85
 msgid "Copy media to clipboard"
 msgstr "คัดลอกสื่อไปยังคลิปบอร์ด"
 
@@ -9977,7 +9975,7 @@ msgid "Custom"
 msgstr "กำหนดเอง"
 
 #. Label of the numeric input shown after choosing "Custom..." in the ban duration dropdown. The unit is seconds.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:67
+#: src/features/moderation/components/modals/BanMemberModal.tsx:68
 msgid "Custom ban duration (seconds)"
 msgstr "ระยะเวลาแบนที่กำหนดเอง (วินาที)"
 
@@ -10072,12 +10070,12 @@ msgid "Custom selection"
 msgstr "เลือกเอง"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:41
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:42
 msgid "Custom shortcut action"
 msgstr "การกระทำทางลัดที่กำหนดเอง"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:37
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:38
 msgid "Custom shortcut options"
 msgstr "ตัวเลือกทางลัดที่กำหนดเอง"
 
@@ -10227,7 +10225,7 @@ msgid "Customizing your avatar, banner, accent color, and bio for individual com
 msgstr "การปรับแต่งอวาตาร์, แบนเนอร์, สีเน้น และประวัติส่วนตัวสำหรับแต่ละชุมชนต้องใช้ {PREMIUM_PRODUCT_NAME} ส่วนชื่อเล่นและคำสรรพนามในชุมชนนั้นฟรีสำหรับทุกคน"
 
 #. Textarea right-click context menu item that cuts the selected text.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:44
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:46
 msgid "Cut"
 msgstr "ตัด"
 
@@ -10616,7 +10614,7 @@ msgstr "ค่าเริ่มต้นคือปิดในมือถื
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:77
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10757,8 +10755,8 @@ msgid "Delete message"
 msgstr "ลบข้อความ"
 
 #. Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:77
-#: src/features/moderation/components/modals/BanMemberModal.tsx:255
+#: src/features/moderation/components/modals/BanMemberModal.tsx:78
+#: src/features/moderation/components/modals/BanMemberModal.tsx:229
 msgid "Delete message history"
 msgstr "ลบประวัติข้อความ"
 
@@ -10811,7 +10809,7 @@ msgid "Delete saved media"
 msgstr "ลบมีเดียที่บันทึกไว้"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:33
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:34
 msgid "Delete shortcut"
 msgstr "ลบปุ่มลัด"
 
@@ -10829,16 +10827,6 @@ msgstr "ลบสติกเกอร์ {stickerName}"
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:47
 msgid "Delete the category \"{categoryName}\"? Can't be undone."
 msgstr "ลบหมวดหมู่ \"{categoryName}\" ใช่หรือไม่ การดำเนินการนี้จะยกเลิกไม่ได้"
-
-#. Helper text under the "Previous 24 hours" option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:96
-msgid "Delete their messages from the last 24 hours"
-msgstr "ลบข้อความของพวกเขาในช่วง 24 ชั่วโมงที่ผ่านมา"
-
-#. Helper text under the "Previous 7 days" option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:105
-msgid "Delete their messages from the last 7 days"
-msgstr "ลบข้อความของพวกเขาในช่วง 7 วันที่ผ่านมา"
 
 #. Button or menu action label in the theme studio library section. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme_studio/sections/LibrarySection.tsx:59
@@ -10861,7 +10849,7 @@ msgid "Delete this message"
 msgstr "ลบข้อความนี้"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:69
+#: src/features/messaging/commands/MessageCommands.tsx:73
 msgid "Delete this message? Can't be undone."
 msgstr "ลบข้อความนี้ใช่หรือไม่ การดำเนินการนี้จะยกเลิกไม่ได้"
 
@@ -11152,7 +11140,7 @@ msgstr "รายละเอียด"
 
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:81
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Detect while typing"
 msgstr "ตรวจจับขณะพิมพ์"
@@ -11391,7 +11379,7 @@ msgid "Disable backend premium perks"
 msgstr "ปิดสิทธิประโยชน์พรีเมียมของแบ็กเอนด์"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:31
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:32
 msgid "Disable built-in shortcut"
 msgstr "ปิดปุ่มลัดในตัว"
 
@@ -11455,7 +11443,7 @@ msgid "Disable screen share picture-in-picture popouts?"
 msgstr "ต้องการปิดหน้าต่างป๊อปอัพแชร์หน้าจอใช่หรือไม่"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:25
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:26
 msgid "Disable shortcut"
 msgstr "ปิดใช้งานปุ่มลัด"
 
@@ -11931,12 +11919,10 @@ msgstr "ไม่ต้องถามอีก"
 msgid "Don't clear"
 msgstr "ไม่ล้าง"
 
-#. Choice label for retaining all messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Keeps all messages from the banned member. Short standalone label.
-#: src/features/devtools/hooks/useCommands.ts:86
-#: src/features/moderation/components/modals/BanMemberModal.tsx:82
-msgid "Don't delete any"
-msgstr "ไม่ลบอะไรเลย"
+#. Message-history-deletion option when banning a member. Keeps all of the member's messages.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:14
+msgid "Don't Delete Any"
+msgstr "ไม่ลบข้อความใดๆ"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:663
 msgid "Don't display separately."
@@ -12088,7 +12074,7 @@ msgstr "ดาวน์โหลดตัวติดตั้ง"
 #. Generic media context menu download action when the specific type is unknown.
 #. Tooltip on the download button in the media viewer modal.
 #: src/features/channel/components/embeds/media/MediaContainer.tsx:28
-#: src/features/messaging/components/modals/media_modal/shared.ts:72
+#: src/features/messaging/components/modals/media_modal/shared.ts:73
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:129
 msgid "Download media"
 msgstr "ดาวน์โหลดสื่อ"
@@ -13085,7 +13071,7 @@ msgid "Enable Shift to expand"
 msgstr "เปิดใช้ Shift เพื่อขยาย"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:29
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:30
 msgid "Enable shortcut"
 msgstr "เปิดใช้ปุ่มลัด"
 
@@ -13147,7 +13133,7 @@ msgstr "เปิดใช้งานภาพตัวอย่างการ
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:359
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:64
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
 msgstr "เปิดใช้งาน"
 
@@ -13309,7 +13295,7 @@ msgid "Enter a product name between 1 and 80 characters."
 msgstr "ป้อนชื่อผลิตภัณฑ์ระหว่าง 1 ถึง 80 ตัวอักษร"
 
 #. Placeholder in the optional reason input in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:114
+#: src/features/moderation/components/modals/BanMemberModal.tsx:88
 msgid "Enter a reason for the ban"
 msgstr "ระบุเหตุผลในการแบน"
 
@@ -14044,7 +14030,7 @@ msgstr "โหลดข้อความล้มเหลว"
 msgid "Fail message sends"
 msgstr "ส่งข้อความไม่สำเร็จ"
 
-#: src/features/moderation/components/modals/BanMemberModal.tsx:167
+#: src/features/moderation/components/modals/BanMemberModal.tsx:141
 msgid "Failed to ban member. Try again."
 msgstr "แบนสมาชิกไม่สำเร็จ ลองอีกครั้ง"
 
@@ -15031,7 +15017,7 @@ msgid "Forward {defaultSeekAmount} seconds"
 msgstr "กรอไปข้างหน้า {defaultSeekAmount} วินาที"
 
 #. Tooltip on the media viewer button that forwards only the current media item.
-#: src/features/messaging/components/modals/media_modal/shared.ts:100
+#: src/features/messaging/components/modals/media_modal/shared.ts:101
 msgid "Forward media"
 msgstr "ส่งต่อสื่อ"
 
@@ -15314,11 +15300,6 @@ msgstr "ปิดและรีสตาร์ท {productName} เพื่อ
 msgid "Gain control"
 msgstr "ควบคุมได้ดั่งใจ"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:281
-msgid "Game capture injection (Windows)"
-msgstr "การแทรกการจับภาพเกม (Windows)"
-
 #. Folder icon option in the community-folder settings modal: a game controller shape.
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:56
 msgid "Game controller"
@@ -15466,7 +15447,7 @@ msgid "GIF picker loading"
 msgstr "กำลังโหลดตัวเลือก GIF"
 
 #. Accessible label for an animated GIF shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:83
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:85
 msgid "GIF preview"
 msgstr "ตัวอย่าง GIF"
 
@@ -15679,6 +15660,12 @@ msgstr "ชื่อที่แสดงทั่วโลก"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:97
 msgid "Global profile"
 msgstr "โปรไฟล์สาธารณะ"
+
+#. Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:81
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:57
+msgid "Global shortcut"
+msgstr "ทางลัดทั่วโลก"
 
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:107
@@ -16544,7 +16531,7 @@ msgid "How about:"
 msgstr "ลองดู:"
 
 #. Helper text under the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:63
+#: src/features/moderation/components/modals/BanMemberModal.tsx:64
 msgid "How long they stay banned."
 msgstr "ระยะเวลาที่ถูกแบน"
 
@@ -16554,7 +16541,7 @@ msgid "How long they stay timed out."
 msgstr "ระยะเวลาที่ผู้ใช้จะถูกพักการใช้งาน"
 
 #. Description for the /ban delete_messages option.
-#: src/features/devtools/hooks/useCommands.ts:82
+#: src/features/devtools/hooks/useCommands.ts:83
 msgid "How much of the member's recent message history to delete."
 msgstr "จะลบประวัติข้อความล่าสุดของสมาชิกจำนวนเท่าใด"
 
@@ -16900,7 +16887,7 @@ msgstr "รูปภาพ"
 #. Type label for image media.
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:47
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:14
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:111
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:113
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:25
 msgid "Image"
 msgstr "รูปภาพ"
@@ -16945,7 +16932,7 @@ msgid "Image options"
 msgstr "ตัวเลือกรูปภาพ"
 
 #. Accessible label for a static image shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:79
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:81
 msgid "Image preview"
 msgstr "ตัวอย่างรูปภาพ"
 
@@ -17157,7 +17144,7 @@ msgstr "ในการสนทนาด้วยเสียง"
 
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:73
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:97
 msgid "In-app dictionaries"
 msgstr "พจนานุกรมในแอป"
@@ -18002,7 +17989,7 @@ msgstr "เข้าร่วมคอมมูนิตี้"
 #. Empty-state hint in the channel and chat mobile stickers picker.
 #. Empty-state hint in the channel and chat stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:55
-#: src/features/channel/components/StickersPicker.tsx:54
+#: src/features/channel/components/StickersPicker.tsx:55
 msgid "Join a community to unlock stickers."
 msgstr "เข้าร่วมคอมมูนิตี้เพื่อปลดล็อกสติกเกอร์"
 
@@ -18106,7 +18093,7 @@ msgstr "ข้ามไปยังช่องที่ยังไม่ได
 msgid "Jump between unread channels with mentions"
 msgstr "ข้ามไปมาระหว่างช่องที่ยังไม่ได้อ่านที่มีการกล่าวถึง"
 
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:100
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:75
 msgid "Jump straight to the app to continue."
 msgstr "ไปที่แอปเพื่อดำเนินการต่อ"
 
@@ -18210,11 +18197,6 @@ msgstr "เข้าร่วมเลย (เชื่อมต่ออื่�
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Keep {productName} running when the window is closed"
 msgstr "เปิด {productName} ทำงานอยู่เบื้องหลังเมื่อปิดหน้าต่าง"
-
-#. Helper text under the "Don't delete any" message-history option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:87
-msgid "Keep all messages"
-msgstr "เก็บข้อความทั้งหมด"
 
 #. Description text in the motion tab.
 #. Settings search entry description. One-line summary of what the settings search entry controls.
@@ -18326,7 +18308,7 @@ msgid "Kick"
 msgstr "เตะออก"
 
 #. Slash-command description for /kick. Removes a member from the current community (moderation action).
-#: src/features/devtools/hooks/useCommands.ts:38
+#: src/features/devtools/hooks/useCommands.ts:39
 msgid "Kick a member from this community."
 msgstr "เตะสมาชิกออกจากคอมมูนิตี้นี้"
 
@@ -18370,7 +18352,7 @@ msgstr "การตั้งค่าภาษา"
 
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:86
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Languages"
 msgstr "ภาษา"
@@ -19695,7 +19677,7 @@ msgstr "ปุ่มสื่อ"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #. Voice participant context menu submenu label for camera, stream, and video actions.
-#: src/features/messaging/components/modals/media_modal/shared.ts:68
+#: src/features/messaging/components/modals/media_modal/shared.ts:69
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "การควบคุมสื่อ"
@@ -19720,12 +19702,12 @@ msgstr "สถานะการโหลดสื่อ"
 #. Accessible label for the overflow menu button in the media viewer modal.
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx:37
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:67
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:69
 msgid "Media options"
 msgstr "ตัวเลือกสื่อ"
 
 #. Generic accessible label for unknown media in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:95
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:97
 msgid "Media preview"
 msgstr "ตัวอย่างสื่อ"
 
@@ -19924,7 +19906,7 @@ msgid "Mention badges"
 msgstr "ป้ายกำกับการกล่าวถึง"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:22
+#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:18
 msgid "Mention controls"
 msgstr "การควบคุมการกล่าวถึง"
 
@@ -20640,7 +20622,7 @@ msgid "More options"
 msgstr "ตัวเลือกเพิ่มเติม"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:52
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:53
 msgid "More shortcut options"
 msgstr "ตัวเลือกทางลัดเพิ่มเติม"
 
@@ -21467,9 +21449,9 @@ msgstr "ถัดไป"
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #. Media viewer navigation button label for the next attachment.
 #. Media viewer navigation tooltip for the next attachment.
-#: src/features/messaging/components/modals/media_modal/shared.ts:64
-#: src/features/messaging/components/modals/media_modal/shared.ts:120
-#: src/features/messaging/components/modals/media_modal/shared.ts:144
+#: src/features/messaging/components/modals/media_modal/shared.ts:65
+#: src/features/messaging/components/modals/media_modal/shared.ts:121
+#: src/features/messaging/components/modals/media_modal/shared.ts:145
 msgid "Next attachment"
 msgstr "ไฟล์แนบถัดไป"
 
@@ -22012,14 +21994,14 @@ msgid "No stickers match"
 msgstr "ไม่มีสติกเกอร์ที่ตรงกัน"
 
 #. Empty-state text in the channel and chat stickers picker.
-#: src/features/channel/components/StickersPicker.tsx:58
+#: src/features/channel/components/StickersPicker.tsx:59
 msgid "No stickers match that search"
 msgstr "ไม่มีสติกเกอร์ที่ตรงกับการค้นหานั้น"
 
 #. Empty-state text in the channel and chat mobile stickers picker.
 #. Empty-state text in the channel and chat stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:51
-#: src/features/channel/components/StickersPicker.tsx:50
+#: src/features/channel/components/StickersPicker.tsx:51
 msgid "No stickers yet"
 msgstr "ยังไม่มีสติกเกอร์"
 
@@ -22584,7 +22566,7 @@ msgstr "เฉพาะที่เลือกไว้"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "เฉพาะสมาชิก Visionary เท่านั้นที่สามารถเข้าร่วมชุมชนนี้ได้ สิทธิ์การเข้าถึงของคุณอาจมีการเปลี่ยนแปลงไปตั้งแต่หน้าจอนี้เปิดขึ้น"
 
-#: src/features/channel/components/UserMessage.tsx:433
+#: src/features/channel/components/UserMessage.tsx:427
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "คุณเท่านั้นที่เห็นข้อความนี้ได้ <0>ปิด</0>"
 
@@ -22637,7 +22619,7 @@ msgid "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} 
 msgstr "เปิด {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → {macosScreenRecordingPermissionName} จากนั้นอนุญาตให้ {productName} หาก {productName2} เปิดใช้งานอยู่แล้ว ให้ปิดและเริ่มโปรแกรม {productName3} ใหม่เพื่อให้ macOS บันทึกการตั้งค่า"
 
 #. Button label that opens the desktop app. productName is the app name.
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:28
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "เปิด {productName}"
 
@@ -22879,12 +22861,12 @@ msgid "Open image link"
 msgstr "เปิดลิงก์รูปภาพ"
 
 #. Title in a web prompt that opens the same flow in the desktop app. productName is the app name.
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:24
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:23
 msgid "Open in {productName} for desktop"
 msgstr "เปิดใน {productName} สำหรับเดสก์ท็อป"
 
 #. Media viewer action that opens the current media in the system default browser.
-#: src/features/messaging/components/modals/media_modal/shared.ts:76
+#: src/features/messaging/components/modals/media_modal/shared.ts:77
 msgid "Open in browser"
 msgstr "เปิดในเบราว์เซอร์"
 
@@ -23105,7 +23087,7 @@ msgstr "เปิดหน้าสมาชิก กด Spacebar หรือ 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:184
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:77
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:107
 msgid "Operating system"
 msgstr "ระบบปฏิบัติการ"
@@ -23512,7 +23494,7 @@ msgid "Past 7 days"
 msgstr "7 วันที่ผ่านมา"
 
 #. Textarea right-click context menu item that pastes clipboard contents.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:52
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:54
 msgid "Paste"
 msgstr "วาง"
 
@@ -23706,7 +23688,7 @@ msgid "Perks paused"
 msgstr "สิทธิประโยชน์หยุดชั่วคราว"
 
 #. Ban duration option in the destructive ban-member modal meaning the ban never expires. Short standalone label.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:37
+#: src/features/moderation/components/modals/BanMemberModal.tsx:38
 msgid "Permanent"
 msgstr "ถาวร"
 
@@ -24441,53 +24423,44 @@ msgstr "ตัวอย่าง"
 msgid "Previous"
 msgstr "ก่อนหน้า"
 
-#. Choice label for deleting two days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:94
-msgid "Previous 2 days"
-msgstr "2 วันก่อนหน้า"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:37
+msgid "Previous 12 Hours"
+msgstr "12 ชั่วโมงที่ผ่านมา"
 
-#. Choice label for deleting one day of messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 24 hours.
-#: src/features/devtools/hooks/useCommands.ts:90
-#: src/features/moderation/components/modals/BanMemberModal.tsx:91
-msgid "Previous 24 hours"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:45
+msgid "Previous 24 Hours"
 msgstr "24 ชั่วโมงที่ผ่านมา"
 
-#. Choice label for deleting three days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:98
-msgid "Previous 3 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:53
+msgid "Previous 3 Days"
 msgstr "3 วันที่ผ่านมา"
 
-#. Choice label for deleting four days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:102
-msgid "Previous 4 days"
-msgstr "4 วันที่ผ่านมา"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:29
+msgid "Previous 6 Hours"
+msgstr "6 ชั่วโมงที่ผ่านมา"
 
-#. Choice label for deleting five days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:106
-msgid "Previous 5 days"
-msgstr "5 วันที่ผ่านมา"
-
-#. Choice label for deleting six days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:110
-msgid "Previous 6 days"
-msgstr "6 วันที่ผ่านมา"
-
-#. Choice label for deleting seven days of messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 7 days.
-#: src/features/devtools/hooks/useCommands.ts:114
-#: src/features/moderation/components/modals/BanMemberModal.tsx:100
-msgid "Previous 7 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:61
+msgid "Previous 7 Days"
 msgstr "7 วันที่ผ่านมา"
 
 #. Accessible label for the previous-attachment navigation button in the media viewer.
 #. Media viewer navigation button label for the previous attachment.
 #. Media viewer navigation tooltip for the previous attachment.
-#: src/features/messaging/components/modals/media_modal/shared.ts:56
-#: src/features/messaging/components/modals/media_modal/shared.ts:116
-#: src/features/messaging/components/modals/media_modal/shared.ts:136
+#: src/features/messaging/components/modals/media_modal/shared.ts:57
+#: src/features/messaging/components/modals/media_modal/shared.ts:117
+#: src/features/messaging/components/modals/media_modal/shared.ts:137
 msgid "Previous attachment"
 msgstr "ไฟล์แนบก่อนหน้า"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
+msgid "Previous Hour"
+msgstr "ชั่วโมงที่แล้ว"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:47
@@ -25236,13 +25209,13 @@ msgstr "เหตุผล"
 
 #. Label of the optional reason input in the destructive ban-member modal. Reason is recorded in the activity log.
 #. Label of the optional reason textarea in the timeout-member modal. The reason is recorded in the activity log.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:109
+#: src/features/moderation/components/modals/BanMemberModal.tsx:83
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:36
 msgid "Reason (optional)"
 msgstr "เหตุผล (ไม่บังคับ)"
 
 #. Description for an optional moderation slash-command reason.
-#: src/features/devtools/hooks/useCommands.ts:66
+#: src/features/devtools/hooks/useCommands.ts:67
 msgid "Reason (optional)."
 msgstr "เหตุผล (ไม่บังคับ)"
 
@@ -25303,7 +25276,7 @@ msgstr "ผู้รับจะถูกนำไปที่ {0} <0>{1}</0>"
 #. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:68
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
 #: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
@@ -25432,7 +25405,7 @@ msgid "Redirect URIs"
 msgstr "URI สำหรับเปลี่ยนเส้นทาง"
 
 #. Textarea right-click context menu item that redoes the last undone edit.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:40
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:42
 msgid "Redo"
 msgstr "ทำซ้ำ"
 
@@ -25622,7 +25595,7 @@ msgid "Reload now"
 msgstr "โหลดใหม่ตอนนี้"
 
 #. Hint in the textarea spellcheck submenu shown after switching engines.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:90
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:92
 msgid "Reload to apply engine change"
 msgstr "โหลดใหม่เพื่อใช้การเปลี่ยนแปลงของระบบ"
 
@@ -25785,7 +25758,7 @@ msgid "Remove friend"
 msgstr "ลบเพื่อน"
 
 #. Textarea right-click context menu item that removes the selected misspelled word from the personal dictionary.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:27
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:29
 msgid "Remove from dictionary"
 msgstr "ลบออกจากพจนานุกรม"
 
@@ -26172,7 +26145,7 @@ msgstr "การตั้งค่าการแจ้งเตือนเม
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.
 #: src/features/input/state/input_keybind/shared.ts:21
-#: src/features/messaging/components/modals/media_modal/shared.ts:104
+#: src/features/messaging/components/modals/media_modal/shared.ts:105
 msgid "Reply to message"
 msgstr "ตอบกลับข้อความ"
 
@@ -26461,7 +26434,7 @@ msgid "Reset"
 msgstr "รีเซ็ต"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:44
 msgid "Reset \"{label}\" to built-in"
 msgstr "รีเซ็ต \"{label}\" เป็นค่าเริ่มต้น"
 
@@ -26542,7 +26515,7 @@ msgid "Reset mature content agreement state"
 msgstr "รีเซ็ตสถานะข้อตกลงเนื้อหาสำหรับผู้ใหญ่"
 
 #. Tooltip on the media viewer button that recenters the current media item and restores the default zoom.
-#: src/features/messaging/components/modals/media_modal/shared.ts:88
+#: src/features/messaging/components/modals/media_modal/shared.ts:89
 msgid "Reset media position"
 msgstr "รีเซ็ตตำแหน่งสื่อ"
 
@@ -26581,7 +26554,7 @@ msgid "Reset to actual values"
 msgstr "รีเซ็ตเป็นค่าจริง"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:35
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:36
 msgid "Reset to built-in"
 msgstr "รีเซ็ตเป็นค่าเริ่มต้น"
 
@@ -27187,14 +27160,14 @@ msgid "Romanian"
 msgstr "โรมาเนีย"
 
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees anticlockwise.
-#: src/features/messaging/components/modals/media_modal/shared.ts:96
+#: src/features/messaging/components/modals/media_modal/shared.ts:97
 msgid "Rotate anticlockwise"
 msgstr "หมุนทวนเข็มนาฬิกา"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
 #: src/features/messaging/components/modals/ImageCropModal.tsx:23
-#: src/features/messaging/components/modals/media_modal/shared.ts:92
+#: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "หมุนตามเข็มนาฬิกา"
 
@@ -27766,7 +27739,7 @@ msgid "Search filters"
 msgstr "ตัวกรองการค้นหา"
 
 #. Slash-command description for /gif. Searches for and sends a GIF.
-#: src/features/devtools/hooks/useCommands.ts:58
+#: src/features/devtools/hooks/useCommands.ts:59
 msgid "Search for and send a GIF."
 msgstr "ค้นหาและส่ง GIF"
 
@@ -27793,7 +27766,7 @@ msgid "Search GIFs and pick your favorite"
 msgstr "ค้นหา GIF และเลือกรายการโปรดของคุณ"
 
 #. Button or menu action label in the search scope sheet. Keep it concise.
-#: src/features/search/components/search/ScopeSheet.tsx:23
+#: src/features/search/components/search/ScopeSheet.tsx:16
 msgid "Search in"
 msgstr "ค้นหาใน"
 
@@ -28149,7 +28122,7 @@ msgid "Select account"
 msgstr "เลือกบัญชี"
 
 #. Textarea right-click context menu item that selects all text in the textarea.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:56
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
 msgid "Select all"
 msgstr "เลือกทั้งหมด"
 
@@ -28307,7 +28280,7 @@ msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "ส่ง ({selectedCount}/{selectionLimit})"
 
 #. Slash-command description for /dm. Sends a direct message to a user.
-#: src/features/devtools/hooks/useCommands.ts:46
+#: src/features/devtools/hooks/useCommands.ts:47
 msgid "Send a direct message to a user."
 msgstr "ส่งข้อความส่วนตัวถึงผู้ใช้"
 
@@ -28317,27 +28290,27 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "ส่งคำขอเป็นเพื่อนถึง {userName} หรือใช้การแทนที่ของเจ้าหน้าที่เพื่อเพิ่มเป็นเพื่อนทันที"
 
 #. Slash-command description for /favorites. Sends a saved / favorited media item.
-#: src/features/devtools/hooks/useCommands.ts:50
+#: src/features/devtools/hooks/useCommands.ts:51
 msgid "Send a saved media item."
 msgstr "ส่งรายการสื่อที่บันทึกไว้"
 
 #. Slash-command description for /spoiler. Wraps the message in spoiler tags so recipients must click to reveal.
-#: src/features/devtools/hooks/useCommands.ts:24
+#: src/features/devtools/hooks/useCommands.ts:25
 msgid "Send a spoiler message (wraps in spoiler tags)."
 msgstr "ส่งข้อความสปอยล์ (จะซ่อนข้อความไว้)"
 
 #. Slash-command description for /sticker. Sends a sticker.
-#: src/features/devtools/hooks/useCommands.ts:54
+#: src/features/devtools/hooks/useCommands.ts:55
 msgid "Send a sticker."
 msgstr "ส่งสติกเกอร์"
 
 #. Slash-command description for /tts. Sends a text-to-speech message played aloud for users with TTS enabled.
-#: src/features/devtools/hooks/useCommands.ts:29
+#: src/features/devtools/hooks/useCommands.ts:30
 msgid "Send a text-to-speech message."
 msgstr "ส่งข้อความเสียง"
 
 #. Slash-command description for /me. Sends the message wrapped in italics, IRC-style.
-#: src/features/devtools/hooks/useCommands.ts:20
+#: src/features/devtools/hooks/useCommands.ts:21
 msgid "Send an action message (wraps in italics)."
 msgstr "ส่งข้อความการทำงาน (แสดงเป็นตัวเอียง)"
 
@@ -28625,12 +28598,12 @@ msgid "Set accent color to {0} <0/>."
 msgstr "ตั้งค่าสีเน้นเป็น {0} <0/>"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:27
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
 msgid "Set custom shortcut"
 msgstr "ตั้งค่าปุ่มลัดเอง"
 
 #. Label in the keybinds tab. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:48
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:49
 msgid "Set custom shortcut for \"{label}\""
 msgstr "ตั้งค่าปุ่มลัดสำหรับ \"{label}\""
 
@@ -29068,7 +29041,7 @@ msgstr "รหัสย่อ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:106
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
@@ -29341,7 +29314,7 @@ msgid "Show media button"
 msgstr "แสดงปุ่มสื่อ"
 
 #. Tooltip on the info button in the media viewer modal. Toggles a metadata sidebar.
-#: src/features/messaging/components/modals/media_modal/shared.ts:80
+#: src/features/messaging/components/modals/media_modal/shared.ts:81
 msgid "Show media information"
 msgstr "แสดงข้อมูลสื่อ"
 
@@ -29481,6 +29454,8 @@ msgstr "แสดงสื่อที่บันทึกไว้ในกา
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
+#. Short label in the channel and chat textarea plus menu. Keep it concise.
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:125
 msgid "Show send button"
@@ -30249,7 +30224,7 @@ msgstr "เกิดข้อผิดพลาดบางอย่าง โ�
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:430
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:32
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "เกิดข้อผิดพลาดบางอย่าง โปรดลองอีกครั้ง"
 
@@ -30500,7 +30475,7 @@ msgstr "ตรวจการสะกด"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:60
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:414
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:456
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
@@ -31083,11 +31058,6 @@ msgstr "สตรีม"
 msgid "Stream buffering"
 msgstr "กำลังบัฟเฟอร์สตรีม"
 
-#. Voice participant context menu submenu label for incoming screen share audio controls.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "Stream controls"
-msgstr "การควบคุมสตรีม"
-
 #. Status overlay on a voice participant tile when the remote screen share has ended.
 #: src/features/voice/components/voice_participant_tile/shared.ts:26
 msgid "Stream ended"
@@ -31296,7 +31266,7 @@ msgstr "ไม่แสดงตัวอย่างลิงก์"
 msgid "Suppress role mentions"
 msgstr "ปิดการแจ้งเตือนเมื่อถูกกล่าวถึงในบทบาท"
 
-#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:103
+#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:90
 msgid "Suppress unprivileged self-mentions"
 msgstr "ไม่แสดงการกล่าวถึงตัวเองที่ไม่มีสิทธิ์"
 
@@ -32103,12 +32073,12 @@ msgid "The mature content check was canceled. You can close this tab and try aga
 msgstr "การตรวจสอบเนื้อหาสำหรับผู้ใหญ่ถูกยกเลิก คุณสามารถปิดแท็บนี้แล้วลองอีกครั้งจากแอป"
 
 #. Description for the member option of a moderation slash command.
-#: src/features/devtools/hooks/useCommands.ts:62
+#: src/features/devtools/hooks/useCommands.ts:63
 msgid "The member to target."
 msgstr "สมาชิกที่จะดำเนินการ"
 
 #. Description for a required message option in a slash command.
-#: src/features/devtools/hooks/useCommands.ts:70
+#: src/features/devtools/hooks/useCommands.ts:71
 msgid "The message to send."
 msgstr "ข้อความที่จะส่ง"
 
@@ -34242,7 +34212,7 @@ msgid "Understood"
 msgstr "รับทราบ"
 
 #. Textarea right-click context menu item that undoes the last edit.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:36
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:38
 msgid "Undo"
 msgstr "เลิกทำ"
 
@@ -34439,7 +34409,7 @@ msgstr "ผู้ใช้ไม่ทราบชื่อ"
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:60
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx:68
 #: src/features/channel/utils/ChannelUtils.tsx:55
-#: src/features/devtools/utils/CommandUtils.ts:23
+#: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
 #: src/features/voice/components/VoiceParticipantTile.tsx:161
@@ -34487,7 +34457,7 @@ msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom em
 msgstr "ปลดล็อก {lockedEmojiCount, plural, one {# อิโมจิที่กำหนดเอง} other {# อิโมจิที่กำหนดเอง}} จาก {communityCount, plural, one {# ชุมชน} other {# ชุมชน}} ด้วย {PREMIUM_PRODUCT_NAME}"
 
 #: src/features/channel/components/MobileStickersPicker.tsx:160
-#: src/features/channel/components/StickersPicker.tsx:155
+#: src/features/channel/components/StickersPicker.tsx:169
 msgid "Unlock {lockedStickerCount, plural, one {# sticker} other {# stickers}} from {stickerCommunityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 msgstr "ปลดล็อกสติกเกอร์ {lockedStickerCount, plural, one {# รายการ} other {# รายการ}} จาก {stickerCommunityCount, plural, one {# ชุมชน} other {# ชุมชน}} ด้วย {PREMIUM_PRODUCT_NAME}"
 
@@ -34612,7 +34582,7 @@ msgid "Unmute stream audio"
 msgstr "เปิดเสียงสตรีม"
 
 #. Short label in the channel and chat use message search autocomplete. Keep it concise.
-#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:73
+#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:88
 msgid "Unnamed"
 msgstr "ไม่มีชื่อ"
 
@@ -35611,7 +35581,7 @@ msgid "User"
 msgstr "ผู้ใช้"
 
 #. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:206
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
 msgid "User actions"
 msgstr "การดำเนินการของผู้ใช้"
 
@@ -36217,8 +36187,8 @@ msgstr "แพ็กเก็ตวิดีโอสูญหาย:"
 #. Accessible label for a video shown in the media viewer.
 #. Accessible label for a video thumbnail in the media viewer thumbnail strip.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/media_modal/shared.ts:132
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:87
+#: src/features/messaging/components/modals/media_modal/shared.ts:133
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:89
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:177
 msgid "Video preview"
 msgstr "ตัวอย่างวิดีโอ"
@@ -37365,7 +37335,7 @@ msgid "What to include"
 msgstr "สิ่งที่ต้องการรวม"
 
 #. Description for a media search slash-command query.
-#: src/features/devtools/hooks/useCommands.ts:74
+#: src/features/devtools/hooks/useCommands.ts:75
 msgid "What to search for."
 msgstr "สิ่งที่ต้องการค้นหา"
 
@@ -38030,7 +38000,7 @@ msgid "You cannot remove this permission because it would remove it from yoursel
 msgstr "คุณไม่สามารถลบสิทธิ์นี้ได้ เนื่องจากจะเป็นการลบสิทธิ์ออกจากตัวคุณเอง"
 
 #. Local system message after the user changes their community nickname with a slash command. The bold markdown markers should remain around the two names.
-#: src/features/devtools/utils/CommandUtils.ts:27
+#: src/features/devtools/utils/CommandUtils.ts:31
 msgid "You changed your nickname in this community from **{previousNickname}** to **{newNickname}**."
 msgstr "คุณเปลี่ยนชื่อเล่นในชุมชนนี้จาก **{previousNickname}** เป็น **{newNickname}**"
 
@@ -38765,27 +38735,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "การซื้อครั้งล่าสุดของคุณอยู่นอกช่วงเวลาการคืนเงิน โปรดติดต่อฝ่ายสนับสนุนสำหรับปัญหาการเรียกเก็บเงิน"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:84
+#: src/features/messaging/state/MessageQueue.tsx:77
 msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
 msgstr "ไม่สามารถส่งข้อความของคุณได้ เนื่องจากมีอิโมจิหรือสติกเกอร์สำหรับผู้ใหญ่ที่ไม่ได้รับอนุญาตในบริบทนี้"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:79
+#: src/features/messaging/state/MessageQueue.tsx:72
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "ไม่สามารถส่งข้อความของคุณได้ เนื่องจากระบบความปลอดภัยของเราตรวจพบข้อความที่ไม่เหมาะสม หากคุณคิดว่านี่เป็นความผิดพลาด โปรดติดต่อฝ่ายสนับสนุน"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:66
+#: src/features/messaging/state/MessageQueue.tsx:59
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "ส่งข้อความของคุณไม่ได้ โดยปกติแล้วเป็นเพราะคุณไม่ได้อยู่ในคอมมูนิตี้เดียวกับผู้รับ หรือผู้รับตั้งค่ารับข้อความโดยตรงจากเพื่อนเท่านั้น คุณอาจต้องปรับการตั้งค่าความเป็นส่วนตัวของข้อความโดยตรงของคุณใน {directMessagePrivacySettingsPath} ด้วย"
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:71
+#: src/features/messaging/state/MessageQueue.tsx:64
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "ส่งข้อความของคุณไม่ได้ คุณต้องยืนยันบัญชีก่อนจึงจะส่งข้อความส่วนตัวได้"
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:75
+#: src/features/messaging/state/MessageQueue.tsx:68
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "ส่งข้อความไม่ได้ คุณต้องยืนยันบัญชีก่อนจึงจะส่งข้อความได้"
 
@@ -38810,7 +38780,7 @@ msgid "your new email"
 msgstr "อีเมลใหม่ของคุณ"
 
 #. Description for the /nick nickname option.
-#: src/features/devtools/hooks/useCommands.ts:78
+#: src/features/devtools/hooks/useCommands.ts:79
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "ชื่อเล่นใหม่ของคุณ หรือเว้นว่างไว้เพื่อรีเซ็ต"
 
@@ -38987,38 +38957,3 @@ msgstr "ซูมเข้า"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "ย่อ"
-
-#. Message-history-deletion option when banning a member. Keeps all of the member's messages.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:14
-msgid "Don't Delete Any"
-msgstr "ไม่ลบข้อความใดๆ"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
-msgid "Previous Hour"
-msgstr "ชั่วโมงที่แล้ว"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:28
-msgid "Previous 6 Hours"
-msgstr "6 ชั่วโมงที่ผ่านมา"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:36
-msgid "Previous 12 Hours"
-msgstr "12 ชั่วโมงที่ผ่านมา"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:44
-msgid "Previous 24 Hours"
-msgstr "24 ชั่วโมงที่ผ่านมา"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:52
-msgid "Previous 3 Days"
-msgstr "3 วันที่ผ่านมา"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:60
-msgid "Previous 7 Days"
-msgstr "7 วันที่ผ่านมา"

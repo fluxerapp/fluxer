@@ -346,7 +346,7 @@ msgstr "{count, plural, one {# active subscription} other {# active subscription
 msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {# attachment} other {# attachments}}"
 
-#: src/features/channel/components/BlockedMessageGroups.tsx:229
+#: src/features/channel/components/BlockedMessageGroups.tsx:251
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# blocked message} other {# blocked messages}}"
 
@@ -360,7 +360,7 @@ msgstr "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# community found} other {# communities found}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1949
+#: src/features/app/components/layout/GuildsLayout.tsx:1950
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 
@@ -392,8 +392,8 @@ msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# item} other {# items}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:435
-#: src/features/channel/components/direct_message/DMListItem.tsx:599
+#: src/features/channel/components/direct_message/DMListItem.tsx:436
+#: src/features/channel/components/direct_message/DMListItem.tsx:600
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:116
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -413,7 +413,7 @@ msgstr "{count, plural, one {# other} other {# others}}"
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# participant in call} other {# participants in call}}"
 
-#: src/features/channel/components/BlockedMessageGroups.tsx:222
+#: src/features/channel/components/BlockedMessageGroups.tsx:244
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 
@@ -591,12 +591,12 @@ msgid "{countLabel} years"
 msgstr "{countLabel} years"
 
 #. Media viewer attachment position text, such as 2 of 5.
-#: src/features/messaging/components/modals/media_modal/shared.ts:140
+#: src/features/messaging/components/modals/media_modal/shared.ts:141
 msgid "{currentAttachmentNumber} of {totalAttachments}"
 msgstr "{currentAttachmentNumber} of {totalAttachments}"
 
 #. Compact media viewer attachment position, such as 2/5.
-#: src/features/messaging/components/modals/media_modal/shared.ts:60
+#: src/features/messaging/components/modals/media_modal/shared.ts:61
 msgid "{currentAttachmentNumber}/{totalAttachments}"
 msgstr "{currentAttachmentNumber}/{totalAttachments}"
 
@@ -776,7 +776,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "{guildName} channels"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:675
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 
@@ -1160,7 +1160,7 @@ msgid "{productName} restarted while you were connected to the call in {directCa
 msgstr "{productName} restarted while you were connected to the call in {directCallName}."
 
 #. Item in the textarea spellcheck submenu that opens the full settings page. Trailing horizontal ellipsis (…) indicates the action opens settings.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:94
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:96
 msgid "{productName} spellcheck settings…"
 msgstr "{productName} spellcheck settings…"
 
@@ -1738,7 +1738,7 @@ msgid "2 members (typing)"
 msgstr "2 members (typing)"
 
 #. Ban duration option in the destructive ban-member modal for a two-week temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:50
+#: src/features/moderation/components/modals/BanMemberModal.tsx:51
 msgid "2 weeks"
 msgstr "2 weeks"
 
@@ -1780,7 +1780,7 @@ msgid "2FA requirement"
 msgstr "2FA requirement"
 
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:42
+#: src/features/moderation/components/modals/BanMemberModal.tsx:43
 msgid "3 days"
 msgstr "3 days"
 
@@ -1826,7 +1826,7 @@ msgid "480p"
 msgstr "480p"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:46
+#: src/features/moderation/components/modals/BanMemberModal.tsx:47
 msgid "5 days"
 msgstr "5 days"
 
@@ -2219,7 +2219,7 @@ msgstr "Across all open DMs only"
 msgid "Across every community you're in"
 msgstr "Across every community you're in"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:95
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:110
 msgid "Action"
 msgstr "Action"
 
@@ -2465,7 +2465,7 @@ msgid "Add an extra layer of security to your account"
 msgstr "Add an extra layer of security to your account"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:39
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:40
 msgid "Add another custom shortcut"
 msgstr "Add another custom shortcut"
 
@@ -2650,7 +2650,7 @@ msgid "Add the credentials during setup."
 msgstr "Add the credentials during setup."
 
 #. Textarea right-click context menu item that adds the selected misspelled word to the personal dictionary.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:32
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:34
 msgid "Add to dictionary"
 msgstr "Add to dictionary"
 
@@ -3228,7 +3228,7 @@ msgid "Already set to cancel"
 msgstr "Already set to cancel"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:81
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Also report this message to the {productName} Safety Team"
 
@@ -3463,7 +3463,7 @@ msgstr "Animated emojis, GIFs, and stickers stay under your control in the Anima
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/media/EmbedGifv.tsx:67
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:99
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:101
 msgid "Animated GIF"
 msgstr "Animated GIF"
 
@@ -3502,12 +3502,12 @@ msgid "Animated icons require the {animatedIconFeature} community feature."
 msgstr "Animated icons require the {animatedIconFeature} community feature."
 
 #. Media type chip shown in the media viewer info panel for animated images.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:107
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:109
 msgid "Animated image"
 msgstr "Animated image"
 
 #. Accessible label for an animated image (APNG/AVIF) shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:75
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:77
 msgid "Animated image preview"
 msgstr "Animated image preview"
 
@@ -3527,7 +3527,7 @@ msgid "Animated uploads require a {premiumProductName} subscription."
 msgstr "Animated uploads require a {premiumProductName} subscription."
 
 #. Media type chip shown in the media viewer info panel for short looping video clips.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:103
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:105
 msgid "Animated video"
 msgstr "Animated video"
 
@@ -3653,7 +3653,7 @@ msgid "Any uploaded attachment"
 msgstr "Any uploaded attachment"
 
 #. Helper text under the custom ban duration input. Both placeholders are integer numbers of seconds bounding the allowed range.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:72
+#: src/features/moderation/components/modals/BanMemberModal.tsx:73
 msgid "Any value from {minTempBanDurationSeconds} to {maxTempBanDurationSeconds} seconds."
 msgstr "Any value from {minTempBanDurationSeconds} to {maxTempBanDurationSeconds} seconds."
 
@@ -3739,17 +3739,17 @@ msgid "Appearance"
 msgstr "Appearance"
 
 #. Slash-command description for /tableflip. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:12
+#: src/features/devtools/hooks/useCommands.ts:13
 msgid "Appends (╯°□°)╯︵ ┻━┻ to your message."
 msgstr "Appends (╯°□°)╯︵ ┻━┻ to your message."
 
 #. Slash-command description for /shrug. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:8
+#: src/features/devtools/hooks/useCommands.ts:9
 msgid "Appends ¯\\_(ツ)_/¯ to your message."
 msgstr "Appends ¯\\_(ツ)_/¯ to your message."
 
 #. Slash-command description for /unflip. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:16
+#: src/features/devtools/hooks/useCommands.ts:17
 msgid "Appends ┬─┬ ノ( ゜-゜ノ) to your message."
 msgstr "Appends ┬─┬ ノ( ゜-゜ノ) to your message."
 
@@ -3922,7 +3922,7 @@ msgstr "Are you sure you want to delete the category \"{categoryName}\"? This ca
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Are you sure you want to delete the passkey <0>{0}</0>?"
 
-#: src/features/messaging/hooks/useDeleteAttachment.tsx:29
+#: src/features/messaging/hooks/useDeleteAttachment.tsx:41
 msgid "Are you sure you want to delete this attachment? This action cannot be undone and will remove the attachment from this message."
 msgstr "Are you sure you want to delete this attachment? This action cannot be undone and will remove the attachment from this message."
 
@@ -4028,8 +4028,8 @@ msgstr "Attachment"
 
 #. Accessible label for a thumbnail in the media viewer. index1 is the 1-based attachment index.
 #. Accessible label for the active attachment in the media viewer. index1 is the 1-based index.
-#: src/features/messaging/components/modals/media_modal/shared.ts:128
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:71
+#: src/features/messaging/components/modals/media_modal/shared.ts:129
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:73
 msgid "Attachment {index1}"
 msgstr "Attachment {index1}"
 
@@ -4088,7 +4088,7 @@ msgid "Attachment preview"
 msgstr "Attachment preview"
 
 #. Accessible label for the thumbnail strip at the bottom of the media viewer.
-#: src/features/messaging/components/modals/media_modal/shared.ts:124
+#: src/features/messaging/components/modals/media_modal/shared.ts:125
 msgid "Attachment thumbnails"
 msgstr "Attachment thumbnails"
 
@@ -4178,7 +4178,7 @@ msgid "Audio player"
 msgstr "Audio player"
 
 #. Accessible label for an audio clip shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:91
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:93
 msgid "Audio preview"
 msgstr "Audio preview"
 
@@ -4437,7 +4437,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
@@ -4446,7 +4445,6 @@ msgstr "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCou
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:199
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
@@ -4884,12 +4882,12 @@ msgid "Ban"
 msgstr "Ban"
 
 #. Title of the destructive ban-member modal. {tag} is the target user tag (username#tag). Destructive moderation action; keep tone direct.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:54
+#: src/features/moderation/components/modals/BanMemberModal.tsx:55
 msgid "Ban {tag}"
 msgstr "Ban {tag}"
 
 #. Slash-command description for /ban. Bans a member from the current community (moderation action).
-#: src/features/devtools/hooks/useCommands.ts:42
+#: src/features/devtools/hooks/useCommands.ts:43
 msgid "Ban a member from this community."
 msgstr "Ban a member from this community."
 
@@ -4899,7 +4897,7 @@ msgid "Ban details"
 msgstr "Ban details"
 
 #. Label above the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:59
+#: src/features/moderation/components/modals/BanMemberModal.tsx:60
 msgid "Ban duration"
 msgstr "Ban duration"
 
@@ -4911,7 +4909,7 @@ msgstr "Ban expires at {0}."
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:305
+#: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
@@ -4944,7 +4942,7 @@ msgstr "bandwidth limited"
 msgid "Banned"
 msgstr "Banned"
 
-#: src/features/moderation/components/modals/BanMemberModal.tsx:160
+#: src/features/moderation/components/modals/BanMemberModal.tsx:134
 msgid "Banned {targetUserTag} from the community"
 msgstr "Banned {targetUserTag} from the community"
 
@@ -5822,7 +5820,7 @@ msgstr "Can't upload files here"
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
-#: src/features/moderation/components/modals/BanMemberModal.tsx:297
+#: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:173
@@ -6276,7 +6274,7 @@ msgid "Change your nickname for a community profile"
 msgstr "Change your nickname for a community profile"
 
 #. Slash-command description for /nick. Changes the user's nickname in the current community.
-#: src/features/devtools/hooks/useCommands.ts:34
+#: src/features/devtools/hooks/useCommands.ts:35
 msgid "Change your nickname in this community."
 msgstr "Change your nickname in this community."
 
@@ -6779,7 +6777,7 @@ msgstr "Choose a window in your system picker"
 msgid "Choose an account"
 msgstr "Choose an account"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:137
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:152
 msgid "Choose an action."
 msgstr "Choose an action."
 
@@ -7436,12 +7434,12 @@ msgid "Close DM"
 msgstr "Close DM"
 
 #. Accessible label for the dedicated close button at the top of the media viewer modal.
-#: src/features/messaging/components/modals/media_modal/shared.ts:112
+#: src/features/messaging/components/modals/media_modal/shared.ts:113
 msgid "Close media viewer"
 msgstr "Close media viewer"
 
 #. Generic accessible label for the close button on the media viewer modal backdrop.
-#: src/features/messaging/components/modals/media_modal/shared.ts:108
+#: src/features/messaging/components/modals/media_modal/shared.ts:109
 msgid "Close modal"
 msgstr "Close"
 
@@ -8235,7 +8233,7 @@ msgstr "Confirmation"
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Confirmation or double-click for community voice joins"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:154
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:169
 msgid "Conflicts with {conflictLabel}"
 msgstr "Conflicts with {conflictLabel}"
 
@@ -8607,7 +8605,7 @@ msgstr "URL copied to clipboard"
 #. Textarea right-click context menu item that copies the selected text.
 #: src/features/app/components/dialogs/shared/CopyLinkSection.tsx:11
 #: src/features/auth/components/modals/BackupCodesModal.tsx:94
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:48
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:423
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:71
@@ -8808,7 +8806,7 @@ msgid "Copy media"
 msgstr "Copy media"
 
 #. Tooltip on the media viewer button that copies the current media item to the system clipboard.
-#: src/features/messaging/components/modals/media_modal/shared.ts:84
+#: src/features/messaging/components/modals/media_modal/shared.ts:85
 msgid "Copy media to clipboard"
 msgstr "Copy media to clipboard"
 
@@ -9977,7 +9975,7 @@ msgid "Custom"
 msgstr "Custom"
 
 #. Label of the numeric input shown after choosing "Custom..." in the ban duration dropdown. The unit is seconds.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:67
+#: src/features/moderation/components/modals/BanMemberModal.tsx:68
 msgid "Custom ban duration (seconds)"
 msgstr "Custom ban duration (seconds)"
 
@@ -10072,12 +10070,12 @@ msgid "Custom selection"
 msgstr "Custom selection"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:41
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:42
 msgid "Custom shortcut action"
 msgstr "Custom shortcut action"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:37
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:38
 msgid "Custom shortcut options"
 msgstr "Custom shortcut options"
 
@@ -10227,7 +10225,7 @@ msgid "Customizing your avatar, banner, accent color, and bio for individual com
 msgstr "Customising your avatar, banner, accent colour, and bio for individual communities requires {PREMIUM_PRODUCT_NAME}. Community nickname and pronouns are free for everyone."
 
 #. Textarea right-click context menu item that cuts the selected text.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:44
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:46
 msgid "Cut"
 msgstr "Cut"
 
@@ -10616,7 +10614,7 @@ msgstr "Defaults to off on mobile to preserve battery life and data usage."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:77
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10757,8 +10755,8 @@ msgid "Delete message"
 msgstr "Delete message"
 
 #. Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:77
-#: src/features/moderation/components/modals/BanMemberModal.tsx:255
+#: src/features/moderation/components/modals/BanMemberModal.tsx:78
+#: src/features/moderation/components/modals/BanMemberModal.tsx:229
 msgid "Delete message history"
 msgstr "Delete message history"
 
@@ -10811,7 +10809,7 @@ msgid "Delete saved media"
 msgstr "Delete saved media"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:33
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:34
 msgid "Delete shortcut"
 msgstr "Delete shortcut"
 
@@ -10829,16 +10827,6 @@ msgstr "Delete sticker {stickerName}"
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:47
 msgid "Delete the category \"{categoryName}\"? Can't be undone."
 msgstr "Delete the category \"{categoryName}\"? This cannot be undone."
-
-#. Helper text under the "Previous 24 hours" option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:96
-msgid "Delete their messages from the last 24 hours"
-msgstr "Delete their messages from the last 24 hours"
-
-#. Helper text under the "Previous 7 days" option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:105
-msgid "Delete their messages from the last 7 days"
-msgstr "Delete their messages from the last 7 days"
 
 #. Button or menu action label in the theme studio library section. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme_studio/sections/LibrarySection.tsx:59
@@ -10861,7 +10849,7 @@ msgid "Delete this message"
 msgstr "Delete this message"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:69
+#: src/features/messaging/commands/MessageCommands.tsx:73
 msgid "Delete this message? Can't be undone."
 msgstr "Delete this message? This can't be undone."
 
@@ -11152,7 +11140,7 @@ msgstr "Details"
 
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:81
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Detect while typing"
 msgstr "Detect while typing"
@@ -11391,7 +11379,7 @@ msgid "Disable backend premium perks"
 msgstr "Disable backend premium perks"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:31
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:32
 msgid "Disable built-in shortcut"
 msgstr "Disable built-in shortcut"
 
@@ -11455,7 +11443,7 @@ msgid "Disable screen share picture-in-picture popouts?"
 msgstr "Disable screen share picture-in-picture popouts?"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:25
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:26
 msgid "Disable shortcut"
 msgstr "Disable shortcut"
 
@@ -11931,11 +11919,9 @@ msgstr "Don't ask me again"
 msgid "Don't clear"
 msgstr "Don't clear"
 
-#. Choice label for retaining all messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Keeps all messages from the banned member. Short standalone label.
-#: src/features/devtools/hooks/useCommands.ts:86
-#: src/features/moderation/components/modals/BanMemberModal.tsx:82
-msgid "Don't delete any"
+#. Message-history-deletion option when banning a member. Keeps all of the member's messages.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:14
+msgid "Don't Delete Any"
 msgstr "Don't delete any"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:663
@@ -12088,7 +12074,7 @@ msgstr "Download installer"
 #. Generic media context menu download action when the specific type is unknown.
 #. Tooltip on the download button in the media viewer modal.
 #: src/features/channel/components/embeds/media/MediaContainer.tsx:28
-#: src/features/messaging/components/modals/media_modal/shared.ts:72
+#: src/features/messaging/components/modals/media_modal/shared.ts:73
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:129
 msgid "Download media"
 msgstr "Download media"
@@ -13085,7 +13071,7 @@ msgid "Enable Shift to expand"
 msgstr "Enable Shift to expand"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:29
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:30
 msgid "Enable shortcut"
 msgstr "Enable shortcut"
 
@@ -13147,7 +13133,7 @@ msgstr "Enable video seek thumbnails"
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:359
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:64
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
 msgstr "Enabled"
 
@@ -13309,7 +13295,7 @@ msgid "Enter a product name between 1 and 80 characters."
 msgstr "Enter a product name between 1 and 80 characters."
 
 #. Placeholder in the optional reason input in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:114
+#: src/features/moderation/components/modals/BanMemberModal.tsx:88
 msgid "Enter a reason for the ban"
 msgstr "Enter a reason for the ban"
 
@@ -14044,7 +14030,7 @@ msgstr "Fail message loads"
 msgid "Fail message sends"
 msgstr "Fail message sends"
 
-#: src/features/moderation/components/modals/BanMemberModal.tsx:167
+#: src/features/moderation/components/modals/BanMemberModal.tsx:141
 msgid "Failed to ban member. Try again."
 msgstr "Failed to ban member. Please try again."
 
@@ -15031,7 +15017,7 @@ msgid "Forward {defaultSeekAmount} seconds"
 msgstr "Forward {defaultSeekAmount} seconds"
 
 #. Tooltip on the media viewer button that forwards only the current media item.
-#: src/features/messaging/components/modals/media_modal/shared.ts:100
+#: src/features/messaging/components/modals/media_modal/shared.ts:101
 msgid "Forward media"
 msgstr "Forward media"
 
@@ -15314,11 +15300,6 @@ msgstr "Fully quit and restart {productName} so macOS applies this permission."
 msgid "Gain control"
 msgstr "Take control"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:281
-msgid "Game capture injection (Windows)"
-msgstr "Game capture injection (Windows)"
-
 #. Folder icon option in the community-folder settings modal: a game controller shape.
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:56
 msgid "Game controller"
@@ -15466,7 +15447,7 @@ msgid "GIF picker loading"
 msgstr "GIF picker loading"
 
 #. Accessible label for an animated GIF shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:83
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:85
 msgid "GIF preview"
 msgstr "GIF preview"
 
@@ -15679,6 +15660,13 @@ msgstr "Global name"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:97
 msgid "Global profile"
 msgstr "Global profile"
+
+# auto-i18n: reviewed unchanged
+#. Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:81
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:57
+msgid "Global shortcut"
+msgstr "Global shortcut"
 
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:107
@@ -16544,7 +16532,7 @@ msgid "How about:"
 msgstr "How about:"
 
 #. Helper text under the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:63
+#: src/features/moderation/components/modals/BanMemberModal.tsx:64
 msgid "How long they stay banned."
 msgstr "How long they stay banned."
 
@@ -16554,7 +16542,7 @@ msgid "How long they stay timed out."
 msgstr "How long they stay timed out."
 
 #. Description for the /ban delete_messages option.
-#: src/features/devtools/hooks/useCommands.ts:82
+#: src/features/devtools/hooks/useCommands.ts:83
 msgid "How much of the member's recent message history to delete."
 msgstr "How much of the member's recent message history to delete."
 
@@ -16900,7 +16888,7 @@ msgstr "image"
 #. Type label for image media.
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:47
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:14
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:111
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:113
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:25
 msgid "Image"
 msgstr "Image"
@@ -16945,7 +16933,7 @@ msgid "Image options"
 msgstr "Image options"
 
 #. Accessible label for a static image shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:79
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:81
 msgid "Image preview"
 msgstr "Image preview"
 
@@ -17157,7 +17145,7 @@ msgstr "In voice chat"
 
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:73
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:97
 msgid "In-app dictionaries"
 msgstr "In-app dictionaries"
@@ -18002,7 +17990,7 @@ msgstr "Join a community"
 #. Empty-state hint in the channel and chat mobile stickers picker.
 #. Empty-state hint in the channel and chat stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:55
-#: src/features/channel/components/StickersPicker.tsx:54
+#: src/features/channel/components/StickersPicker.tsx:55
 msgid "Join a community to unlock stickers."
 msgstr "Join a community to unlock stickers."
 
@@ -18106,7 +18094,7 @@ msgstr "Jump between unread channels"
 msgid "Jump between unread channels with mentions"
 msgstr "Jump between unread channels with mentions"
 
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:100
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:75
 msgid "Jump straight to the app to continue."
 msgstr "Go straight to the app to continue."
 
@@ -18210,11 +18198,6 @@ msgstr "Just join (keep other connections)"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Keep {productName} running when the window is closed"
 msgstr "Keep {productName} running when the window is closed"
-
-#. Helper text under the "Don't delete any" message-history option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:87
-msgid "Keep all messages"
-msgstr "Keep all messages"
 
 #. Description text in the motion tab.
 #. Settings search entry description. One-line summary of what the settings search entry controls.
@@ -18326,7 +18309,7 @@ msgid "Kick"
 msgstr "Kick"
 
 #. Slash-command description for /kick. Removes a member from the current community (moderation action).
-#: src/features/devtools/hooks/useCommands.ts:38
+#: src/features/devtools/hooks/useCommands.ts:39
 msgid "Kick a member from this community."
 msgstr "Remove a member from this community."
 
@@ -18370,7 +18353,7 @@ msgstr "Language settings"
 
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:86
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Languages"
 msgstr "Languages"
@@ -19695,7 +19678,7 @@ msgstr "Media buttons"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #. Voice participant context menu submenu label for camera, stream, and video actions.
-#: src/features/messaging/components/modals/media_modal/shared.ts:68
+#: src/features/messaging/components/modals/media_modal/shared.ts:69
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "Media controls"
@@ -19720,12 +19703,12 @@ msgstr "Media loading state"
 #. Accessible label for the overflow menu button in the media viewer modal.
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx:37
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:67
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:69
 msgid "Media options"
 msgstr "Media options"
 
 #. Generic accessible label for unknown media in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:95
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:97
 msgid "Media preview"
 msgstr "Media preview"
 
@@ -19924,7 +19907,7 @@ msgid "Mention badges"
 msgstr "Mention badges"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:22
+#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:18
 msgid "Mention controls"
 msgstr "Mention controls"
 
@@ -20640,7 +20623,7 @@ msgid "More options"
 msgstr "More options"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:52
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:53
 msgid "More shortcut options"
 msgstr "More shortcut options"
 
@@ -21467,9 +21450,9 @@ msgstr "Next"
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #. Media viewer navigation button label for the next attachment.
 #. Media viewer navigation tooltip for the next attachment.
-#: src/features/messaging/components/modals/media_modal/shared.ts:64
-#: src/features/messaging/components/modals/media_modal/shared.ts:120
-#: src/features/messaging/components/modals/media_modal/shared.ts:144
+#: src/features/messaging/components/modals/media_modal/shared.ts:65
+#: src/features/messaging/components/modals/media_modal/shared.ts:121
+#: src/features/messaging/components/modals/media_modal/shared.ts:145
 msgid "Next attachment"
 msgstr "Next attachment"
 
@@ -22012,14 +21995,14 @@ msgid "No stickers match"
 msgstr "No stickers match"
 
 #. Empty-state text in the channel and chat stickers picker.
-#: src/features/channel/components/StickersPicker.tsx:58
+#: src/features/channel/components/StickersPicker.tsx:59
 msgid "No stickers match that search"
 msgstr "No stickers match that search"
 
 #. Empty-state text in the channel and chat mobile stickers picker.
 #. Empty-state text in the channel and chat stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:51
-#: src/features/channel/components/StickersPicker.tsx:50
+#: src/features/channel/components/StickersPicker.tsx:51
 msgid "No stickers yet"
 msgstr "No stickers yet"
 
@@ -22584,7 +22567,7 @@ msgstr "Only the selected ones"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 
-#: src/features/channel/components/UserMessage.tsx:433
+#: src/features/channel/components/UserMessage.tsx:427
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Only you can see this message. <0>Dismiss</0>"
 
@@ -22637,7 +22620,7 @@ msgid "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} 
 msgstr "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → {macosScreenRecordingPermissionName}, then allow {productName}. If {productName2} is already enabled, fully quit and restart {productName3} so macOS applies the permission."
 
 #. Button label that opens the desktop app. productName is the app name.
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:28
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "Open {productName}"
 
@@ -22879,12 +22862,12 @@ msgid "Open image link"
 msgstr "Open image link"
 
 #. Title in a web prompt that opens the same flow in the desktop app. productName is the app name.
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:24
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:23
 msgid "Open in {productName} for desktop"
 msgstr "Open in {productName} for desktop"
 
 #. Media viewer action that opens the current media in the system default browser.
-#: src/features/messaging/components/modals/media_modal/shared.ts:76
+#: src/features/messaging/components/modals/media_modal/shared.ts:77
 msgid "Open in browser"
 msgstr "Open in browser"
 
@@ -23105,7 +23088,7 @@ msgstr "Opens the Members page. Press Space or Enter to open."
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:184
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:77
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:107
 msgid "Operating system"
 msgstr "Operating system"
@@ -23512,7 +23495,7 @@ msgid "Past 7 days"
 msgstr "Past 7 days"
 
 #. Textarea right-click context menu item that pastes clipboard contents.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:52
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:54
 msgid "Paste"
 msgstr "Paste"
 
@@ -23706,7 +23689,7 @@ msgid "Perks paused"
 msgstr "Perks paused"
 
 #. Ban duration option in the destructive ban-member modal meaning the ban never expires. Short standalone label.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:37
+#: src/features/moderation/components/modals/BanMemberModal.tsx:38
 msgid "Permanent"
 msgstr "Permanent"
 
@@ -24441,53 +24424,44 @@ msgstr "Previews"
 msgid "Previous"
 msgstr "Previous"
 
-#. Choice label for deleting two days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:94
-msgid "Previous 2 days"
-msgstr "Previous 2 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:37
+msgid "Previous 12 Hours"
+msgstr "Previous 12 hours"
 
-#. Choice label for deleting one day of messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 24 hours.
-#: src/features/devtools/hooks/useCommands.ts:90
-#: src/features/moderation/components/modals/BanMemberModal.tsx:91
-msgid "Previous 24 hours"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:45
+msgid "Previous 24 Hours"
 msgstr "Previous 24 hours"
 
-#. Choice label for deleting three days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:98
-msgid "Previous 3 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:53
+msgid "Previous 3 Days"
 msgstr "Previous 3 days"
 
-#. Choice label for deleting four days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:102
-msgid "Previous 4 days"
-msgstr "Previous 4 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:29
+msgid "Previous 6 Hours"
+msgstr "Previous 6 hours"
 
-#. Choice label for deleting five days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:106
-msgid "Previous 5 days"
-msgstr "Previous 5 days"
-
-#. Choice label for deleting six days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:110
-msgid "Previous 6 days"
-msgstr "Previous 6 days"
-
-#. Choice label for deleting seven days of messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 7 days.
-#: src/features/devtools/hooks/useCommands.ts:114
-#: src/features/moderation/components/modals/BanMemberModal.tsx:100
-msgid "Previous 7 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:61
+msgid "Previous 7 Days"
 msgstr "Previous 7 days"
 
 #. Accessible label for the previous-attachment navigation button in the media viewer.
 #. Media viewer navigation button label for the previous attachment.
 #. Media viewer navigation tooltip for the previous attachment.
-#: src/features/messaging/components/modals/media_modal/shared.ts:56
-#: src/features/messaging/components/modals/media_modal/shared.ts:116
-#: src/features/messaging/components/modals/media_modal/shared.ts:136
+#: src/features/messaging/components/modals/media_modal/shared.ts:57
+#: src/features/messaging/components/modals/media_modal/shared.ts:117
+#: src/features/messaging/components/modals/media_modal/shared.ts:137
 msgid "Previous attachment"
 msgstr "Previous attachment"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
+msgid "Previous Hour"
+msgstr "Previous hour"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:47
@@ -25236,13 +25210,13 @@ msgstr "Reason"
 
 #. Label of the optional reason input in the destructive ban-member modal. Reason is recorded in the activity log.
 #. Label of the optional reason textarea in the timeout-member modal. The reason is recorded in the activity log.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:109
+#: src/features/moderation/components/modals/BanMemberModal.tsx:83
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:36
 msgid "Reason (optional)"
 msgstr "Reason (optional)"
 
 #. Description for an optional moderation slash-command reason.
-#: src/features/devtools/hooks/useCommands.ts:66
+#: src/features/devtools/hooks/useCommands.ts:67
 msgid "Reason (optional)."
 msgstr "Reason (optional)."
 
@@ -25303,7 +25277,7 @@ msgstr "Recipients will be taken to {0} <0>{1}</0>"
 #. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:68
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
 #: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
@@ -25432,7 +25406,7 @@ msgid "Redirect URIs"
 msgstr "Redirect URIs"
 
 #. Textarea right-click context menu item that redoes the last undone edit.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:40
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:42
 msgid "Redo"
 msgstr "Redo"
 
@@ -25622,7 +25596,7 @@ msgid "Reload now"
 msgstr "Reload now"
 
 #. Hint in the textarea spellcheck submenu shown after switching engines.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:90
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:92
 msgid "Reload to apply engine change"
 msgstr "Reload to apply engine change"
 
@@ -25785,7 +25759,7 @@ msgid "Remove friend"
 msgstr "Remove friend"
 
 #. Textarea right-click context menu item that removes the selected misspelled word from the personal dictionary.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:27
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:29
 msgid "Remove from dictionary"
 msgstr "Remove from dictionary"
 
@@ -26172,7 +26146,7 @@ msgstr "Reply mention preference for this community"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.
 #: src/features/input/state/input_keybind/shared.ts:21
-#: src/features/messaging/components/modals/media_modal/shared.ts:104
+#: src/features/messaging/components/modals/media_modal/shared.ts:105
 msgid "Reply to message"
 msgstr "Reply to message"
 
@@ -26461,7 +26435,7 @@ msgid "Reset"
 msgstr "Reset"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:44
 msgid "Reset \"{label}\" to built-in"
 msgstr "Reset \"{label}\" to built-in"
 
@@ -26542,7 +26516,7 @@ msgid "Reset mature content agreement state"
 msgstr "Reset mature content agreement state"
 
 #. Tooltip on the media viewer button that recenters the current media item and restores the default zoom.
-#: src/features/messaging/components/modals/media_modal/shared.ts:88
+#: src/features/messaging/components/modals/media_modal/shared.ts:89
 msgid "Reset media position"
 msgstr "Reset media position"
 
@@ -26581,7 +26555,7 @@ msgid "Reset to actual values"
 msgstr "Reset to actual values"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:35
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:36
 msgid "Reset to built-in"
 msgstr "Reset to built-in"
 
@@ -27187,14 +27161,14 @@ msgid "Romanian"
 msgstr "Romanian"
 
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees anticlockwise.
-#: src/features/messaging/components/modals/media_modal/shared.ts:96
+#: src/features/messaging/components/modals/media_modal/shared.ts:97
 msgid "Rotate anticlockwise"
 msgstr "Rotate anticlockwise"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
 #: src/features/messaging/components/modals/ImageCropModal.tsx:23
-#: src/features/messaging/components/modals/media_modal/shared.ts:92
+#: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "Rotate clockwise"
 
@@ -27766,7 +27740,7 @@ msgid "Search filters"
 msgstr "Search filters"
 
 #. Slash-command description for /gif. Searches for and sends a GIF.
-#: src/features/devtools/hooks/useCommands.ts:58
+#: src/features/devtools/hooks/useCommands.ts:59
 msgid "Search for and send a GIF."
 msgstr "Search for and send a GIF."
 
@@ -27793,7 +27767,7 @@ msgid "Search GIFs and pick your favorite"
 msgstr "Search GIFs and pick your favourite"
 
 #. Button or menu action label in the search scope sheet. Keep it concise.
-#: src/features/search/components/search/ScopeSheet.tsx:23
+#: src/features/search/components/search/ScopeSheet.tsx:16
 msgid "Search in"
 msgstr "Search in"
 
@@ -28149,7 +28123,7 @@ msgid "Select account"
 msgstr "Select account"
 
 #. Textarea right-click context menu item that selects all text in the textarea.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:56
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
 msgid "Select all"
 msgstr "Select all"
 
@@ -28307,7 +28281,7 @@ msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Send ({selectedCount}/{selectionLimit})"
 
 #. Slash-command description for /dm. Sends a direct message to a user.
-#: src/features/devtools/hooks/useCommands.ts:46
+#: src/features/devtools/hooks/useCommands.ts:47
 msgid "Send a direct message to a user."
 msgstr "Send a direct message to a user."
 
@@ -28317,27 +28291,27 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "Send a friend request to {userName}, or use the staff override to add them immediately."
 
 #. Slash-command description for /favorites. Sends a saved / favorited media item.
-#: src/features/devtools/hooks/useCommands.ts:50
+#: src/features/devtools/hooks/useCommands.ts:51
 msgid "Send a saved media item."
 msgstr "Send a saved media item."
 
 #. Slash-command description for /spoiler. Wraps the message in spoiler tags so recipients must click to reveal.
-#: src/features/devtools/hooks/useCommands.ts:24
+#: src/features/devtools/hooks/useCommands.ts:25
 msgid "Send a spoiler message (wraps in spoiler tags)."
 msgstr "Send a spoiler message (wraps in spoiler tags)."
 
 #. Slash-command description for /sticker. Sends a sticker.
-#: src/features/devtools/hooks/useCommands.ts:54
+#: src/features/devtools/hooks/useCommands.ts:55
 msgid "Send a sticker."
 msgstr "Send a sticker."
 
 #. Slash-command description for /tts. Sends a text-to-speech message played aloud for users with TTS enabled.
-#: src/features/devtools/hooks/useCommands.ts:29
+#: src/features/devtools/hooks/useCommands.ts:30
 msgid "Send a text-to-speech message."
 msgstr "Send a text-to-speech message."
 
 #. Slash-command description for /me. Sends the message wrapped in italics, IRC-style.
-#: src/features/devtools/hooks/useCommands.ts:20
+#: src/features/devtools/hooks/useCommands.ts:21
 msgid "Send an action message (wraps in italics)."
 msgstr "Send an action message (shown in italics)."
 
@@ -28625,12 +28599,12 @@ msgid "Set accent color to {0} <0/>."
 msgstr "Set accent colour to {0} <0/>."
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:27
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
 msgid "Set custom shortcut"
 msgstr "Set custom shortcut"
 
 #. Label in the keybinds tab. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:48
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:49
 msgid "Set custom shortcut for \"{label}\""
 msgstr "Set custom shortcut for \"{label}\""
 
@@ -29068,7 +29042,7 @@ msgstr "Shortcodes"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:106
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
@@ -29106,7 +29080,6 @@ msgstr "Shorten the message and try again."
 msgid "Shorten the topic and try again."
 msgstr "Shorten the topic and try again."
 
-# auto-i18n: reviewed unchanged
 #. Body of the error modal shown when inserting an emoji into the profile bio would exceed the bio limit.
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:33
 msgid "Shorten your about me and try again."
@@ -29342,7 +29315,7 @@ msgid "Show media button"
 msgstr "Show media button"
 
 #. Tooltip on the info button in the media viewer modal. Toggles a metadata sidebar.
-#: src/features/messaging/components/modals/media_modal/shared.ts:80
+#: src/features/messaging/components/modals/media_modal/shared.ts:81
 msgid "Show media information"
 msgstr "Show media information"
 
@@ -29482,6 +29455,8 @@ msgstr "Show saved media in expression autocomplete"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
+#. Short label in the channel and chat textarea plus menu. Keep it concise.
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:125
 msgid "Show send button"
@@ -30250,7 +30225,7 @@ msgstr "Something went wrong. Please try again later."
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:430
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:32
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Something went wrong. Please try again."
 
@@ -30501,7 +30476,7 @@ msgstr "Spell check"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:60
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:414
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:456
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
@@ -31084,11 +31059,6 @@ msgstr "Stream"
 msgid "Stream buffering"
 msgstr "Stream buffering"
 
-#. Voice participant context menu submenu label for incoming screen share audio controls.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "Stream controls"
-msgstr "Stream controls"
-
 #. Status overlay on a voice participant tile when the remote screen share has ended.
 #: src/features/voice/components/voice_participant_tile/shared.ts:26
 msgid "Stream ended"
@@ -31297,7 +31267,7 @@ msgstr "Suppress embeds"
 msgid "Suppress role mentions"
 msgstr "Suppress role mentions"
 
-#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:103
+#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:90
 msgid "Suppress unprivileged self-mentions"
 msgstr "Suppress unprivileged self-mentions"
 
@@ -32104,12 +32074,12 @@ msgid "The mature content check was canceled. You can close this tab and try aga
 msgstr "The mature content check was cancelled. You can close this tab and try again from the app."
 
 #. Description for the member option of a moderation slash command.
-#: src/features/devtools/hooks/useCommands.ts:62
+#: src/features/devtools/hooks/useCommands.ts:63
 msgid "The member to target."
 msgstr "The member to target."
 
 #. Description for a required message option in a slash command.
-#: src/features/devtools/hooks/useCommands.ts:70
+#: src/features/devtools/hooks/useCommands.ts:71
 msgid "The message to send."
 msgstr "The message to send."
 
@@ -34243,7 +34213,7 @@ msgid "Understood"
 msgstr "Understood"
 
 #. Textarea right-click context menu item that undoes the last edit.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:36
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:38
 msgid "Undo"
 msgstr "Undo"
 
@@ -34440,7 +34410,7 @@ msgstr "Unknown user"
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:60
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx:68
 #: src/features/channel/utils/ChannelUtils.tsx:55
-#: src/features/devtools/utils/CommandUtils.ts:23
+#: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
 #: src/features/voice/components/VoiceParticipantTile.tsx:161
@@ -34488,7 +34458,7 @@ msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom em
 msgstr "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 
 #: src/features/channel/components/MobileStickersPicker.tsx:160
-#: src/features/channel/components/StickersPicker.tsx:155
+#: src/features/channel/components/StickersPicker.tsx:169
 msgid "Unlock {lockedStickerCount, plural, one {# sticker} other {# stickers}} from {stickerCommunityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 msgstr "Unlock {lockedStickerCount, plural, one {# sticker} other {# stickers}} from {stickerCommunityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 
@@ -34613,7 +34583,7 @@ msgid "Unmute stream audio"
 msgstr "Unmute stream audio"
 
 #. Short label in the channel and chat use message search autocomplete. Keep it concise.
-#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:73
+#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:88
 msgid "Unnamed"
 msgstr "Unnamed"
 
@@ -35612,7 +35582,7 @@ msgid "User"
 msgstr "User"
 
 #. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:206
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
 msgid "User actions"
 msgstr "User actions"
 
@@ -36218,8 +36188,8 @@ msgstr "Video packet loss:"
 #. Accessible label for a video shown in the media viewer.
 #. Accessible label for a video thumbnail in the media viewer thumbnail strip.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/media_modal/shared.ts:132
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:87
+#: src/features/messaging/components/modals/media_modal/shared.ts:133
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:89
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:177
 msgid "Video preview"
 msgstr "Video preview"
@@ -37366,7 +37336,7 @@ msgid "What to include"
 msgstr "What to include"
 
 #. Description for a media search slash-command query.
-#: src/features/devtools/hooks/useCommands.ts:74
+#: src/features/devtools/hooks/useCommands.ts:75
 msgid "What to search for."
 msgstr "What to search for."
 
@@ -38031,7 +38001,7 @@ msgid "You cannot remove this permission because it would remove it from yoursel
 msgstr "You can't remove this permission as it would remove it from yourself"
 
 #. Local system message after the user changes their community nickname with a slash command. The bold markdown markers should remain around the two names.
-#: src/features/devtools/utils/CommandUtils.ts:27
+#: src/features/devtools/utils/CommandUtils.ts:31
 msgid "You changed your nickname in this community from **{previousNickname}** to **{newNickname}**."
 msgstr "You changed your nickname in this community from **{previousNickname}** to **{newNickname}**."
 
@@ -38766,27 +38736,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Your last purchase is outside the refund window. Contact support for billing issues."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:84
+#: src/features/messaging/state/MessageQueue.tsx:77
 msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
 msgstr "Your message couldn't be delivered because it contains mature emoji or stickers that aren't allowed in this context."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:79
+#: src/features/messaging/state/MessageQueue.tsx:72
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Your message couldn't be delivered as it was flagged by our safety systems. If you think this is a mistake, please contact support."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:66
+#: src/features/messaging/state/MessageQueue.tsx:59
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Your message couldn't be delivered. This is usually because you don't share a community with the recipient, or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:71
+#: src/features/messaging/state/MessageQueue.tsx:64
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Your message couldn't be delivered. You need to claim your account to send direct messages."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:75
+#: src/features/messaging/state/MessageQueue.tsx:68
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Your message couldn't be delivered. You need to claim your account to send messages."
 
@@ -38811,7 +38781,7 @@ msgid "your new email"
 msgstr "Your new email"
 
 #. Description for the /nick nickname option.
-#: src/features/devtools/hooks/useCommands.ts:78
+#: src/features/devtools/hooks/useCommands.ts:79
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "Your new nickname, or leave blank to reset it."
 
@@ -38988,38 +38958,3 @@ msgstr "Zoom in"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "Zoom out"
-
-#. Message-history-deletion option when banning a member. Keeps all of the member's messages.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:14
-msgid "Don't Delete Any"
-msgstr "Don't delete any"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
-msgid "Previous Hour"
-msgstr "Previous hour"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:28
-msgid "Previous 6 Hours"
-msgstr "Previous 6 hours"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:36
-msgid "Previous 12 Hours"
-msgstr "Previous 12 hours"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:44
-msgid "Previous 24 Hours"
-msgstr "Previous 24 hours"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:52
-msgid "Previous 3 Days"
-msgstr "Previous 3 days"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:60
-msgid "Previous 7 Days"
-msgstr "Previous 7 days"

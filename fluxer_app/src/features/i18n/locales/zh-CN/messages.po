@@ -346,7 +346,7 @@ msgstr "{count, plural, one {# 个有效订阅} other {# 个有效订阅}}"
 msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {# 个附件} other {# 个附件}}"
 
-#: src/features/channel/components/BlockedMessageGroups.tsx:229
+#: src/features/channel/components/BlockedMessageGroups.tsx:251
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# 条被屏蔽的消息} other {# 条被屏蔽的消息}}"
 
@@ -360,7 +360,7 @@ msgstr "{count, plural, one {# 条书签} other {# 条书签}}"
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# 个社群} other {# 个社群}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1949
+#: src/features/app/components/layout/GuildsLayout.tsx:1950
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# 个社群因时空穿梭器故障暂时不可用。} other {# 个社群因时空穿梭器故障暂时不可用。}}"
 
@@ -392,8 +392,8 @@ msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# 项} other {# 项}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:435
-#: src/features/channel/components/direct_message/DMListItem.tsx:599
+#: src/features/channel/components/direct_message/DMListItem.tsx:436
+#: src/features/channel/components/direct_message/DMListItem.tsx:600
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:116
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -413,7 +413,7 @@ msgstr "{count, plural, one {# 位其他用户} other {# 位其他用户}}"
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# 位参与者正在通话中} other {# 位参与者正在通话中}}"
 
-#: src/features/channel/components/BlockedMessageGroups.tsx:222
+#: src/features/channel/components/BlockedMessageGroups.tsx:244
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, one {# 条疑似垃圾信息} other {# 条疑似垃圾信息}}"
 
@@ -591,12 +591,12 @@ msgid "{countLabel} years"
 msgstr "{countLabel} 年"
 
 #. Media viewer attachment position text, such as 2 of 5.
-#: src/features/messaging/components/modals/media_modal/shared.ts:140
+#: src/features/messaging/components/modals/media_modal/shared.ts:141
 msgid "{currentAttachmentNumber} of {totalAttachments}"
 msgstr "{currentAttachmentNumber} / {totalAttachments}"
 
 #. Compact media viewer attachment position, such as 2/5.
-#: src/features/messaging/components/modals/media_modal/shared.ts:60
+#: src/features/messaging/components/modals/media_modal/shared.ts:61
 msgid "{currentAttachmentNumber}/{totalAttachments}"
 msgstr "{currentAttachmentNumber}/{totalAttachments}"
 
@@ -776,7 +776,7 @@ msgstr "{fps} 帧/秒"
 msgid "{guildName} channels"
 msgstr "{guildName} 频道"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:675
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {展开其他设备} other {展开其他设备}}"
 
@@ -1160,7 +1160,7 @@ msgid "{productName} restarted while you were connected to the call in {directCa
 msgstr "{productName} 重启了，你当时正在 {directCallName} 的通话中。"
 
 #. Item in the textarea spellcheck submenu that opens the full settings page. Trailing horizontal ellipsis (…) indicates the action opens settings.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:94
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:96
 msgid "{productName} spellcheck settings…"
 msgstr "{productName} 拼写检查设置…"
 
@@ -1738,7 +1738,7 @@ msgid "2 members (typing)"
 msgstr "2 位成员（正在输入）"
 
 #. Ban duration option in the destructive ban-member modal for a two-week temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:50
+#: src/features/moderation/components/modals/BanMemberModal.tsx:51
 msgid "2 weeks"
 msgstr "2 周"
 
@@ -1780,7 +1780,7 @@ msgid "2FA requirement"
 msgstr "需要双重认证"
 
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:42
+#: src/features/moderation/components/modals/BanMemberModal.tsx:43
 msgid "3 days"
 msgstr "3天"
 
@@ -1826,7 +1826,7 @@ msgid "480p"
 msgstr "480p"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:46
+#: src/features/moderation/components/modals/BanMemberModal.tsx:47
 msgid "5 days"
 msgstr "5 天"
 
@@ -2219,7 +2219,7 @@ msgstr "仅在所有开放私信中"
 msgid "Across every community you're in"
 msgstr "在你加入的所有社群中"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:95
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:110
 msgid "Action"
 msgstr "操作"
 
@@ -2465,7 +2465,7 @@ msgid "Add an extra layer of security to your account"
 msgstr "为你的帐户添加额外的安全保护"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:39
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:40
 msgid "Add another custom shortcut"
 msgstr "添加自定义快捷键"
 
@@ -2650,7 +2650,7 @@ msgid "Add the credentials during setup."
 msgstr "在设置过程中添加凭据。"
 
 #. Textarea right-click context menu item that adds the selected misspelled word to the personal dictionary.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:32
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:34
 msgid "Add to dictionary"
 msgstr "添加到词典"
 
@@ -3228,7 +3228,7 @@ msgid "Already set to cancel"
 msgstr "已设为取消"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:81
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "同时将此消息举报给 {productName} 安全团队"
 
@@ -3463,7 +3463,7 @@ msgstr "在“动画”选项卡中，您可以控制动效表情、GIF 和贴�
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/media/EmbedGifv.tsx:67
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:99
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:101
 msgid "Animated GIF"
 msgstr "GIF 动图"
 
@@ -3502,12 +3502,12 @@ msgid "Animated icons require the {animatedIconFeature} community feature."
 msgstr "动态图标需要社区拥有 {animatedIconFeature} 功能。"
 
 #. Media type chip shown in the media viewer info panel for animated images.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:107
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:109
 msgid "Animated image"
 msgstr "动图"
 
 #. Accessible label for an animated image (APNG/AVIF) shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:75
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:77
 msgid "Animated image preview"
 msgstr "动图预览"
 
@@ -3527,7 +3527,7 @@ msgid "Animated uploads require a {premiumProductName} subscription."
 msgstr "上传动态内容需要 {premiumProductName} 订阅。"
 
 #. Media type chip shown in the media viewer info panel for short looping video clips.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:103
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:105
 msgid "Animated video"
 msgstr "动图视频"
 
@@ -3653,7 +3653,7 @@ msgid "Any uploaded attachment"
 msgstr "任意上传的附件"
 
 #. Helper text under the custom ban duration input. Both placeholders are integer numbers of seconds bounding the allowed range.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:72
+#: src/features/moderation/components/modals/BanMemberModal.tsx:73
 msgid "Any value from {minTempBanDurationSeconds} to {maxTempBanDurationSeconds} seconds."
 msgstr "任意值，从 {minTempBanDurationSeconds} 到 {maxTempBanDurationSeconds} 秒。"
 
@@ -3739,17 +3739,17 @@ msgid "Appearance"
 msgstr "外观"
 
 #. Slash-command description for /tableflip. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:12
+#: src/features/devtools/hooks/useCommands.ts:13
 msgid "Appends (╯°□°)╯︵ ┻━┻ to your message."
 msgstr "在你的消息后添加 (╯°□°)╯︵ ┻━┻。"
 
 #. Slash-command description for /shrug. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:8
+#: src/features/devtools/hooks/useCommands.ts:9
 msgid "Appends ¯\\_(ツ)_/¯ to your message."
 msgstr "在你的消息后添加 ¯\\_(ツ)_/¯。"
 
 #. Slash-command description for /unflip. Appends a kaomoji to the user's message.
-#: src/features/devtools/hooks/useCommands.ts:16
+#: src/features/devtools/hooks/useCommands.ts:17
 msgid "Appends ┬─┬ ノ( ゜-゜ノ) to your message."
 msgstr "在你的消息后添加 ┬─┬ ノ( ゜-゜ノ)。"
 
@@ -3922,7 +3922,7 @@ msgstr "确定要删除分类\"{categoryName}\"吗？此操作无法撤销。"
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "确定要删除通行密钥 <0>{0}</0> 吗？"
 
-#: src/features/messaging/hooks/useDeleteAttachment.tsx:29
+#: src/features/messaging/hooks/useDeleteAttachment.tsx:41
 msgid "Are you sure you want to delete this attachment? This action cannot be undone and will remove the attachment from this message."
 msgstr "确定要删除此附件吗？此操作无法撤销，并将从该消息中移除此附件。"
 
@@ -4028,8 +4028,8 @@ msgstr "附件"
 
 #. Accessible label for a thumbnail in the media viewer. index1 is the 1-based attachment index.
 #. Accessible label for the active attachment in the media viewer. index1 is the 1-based index.
-#: src/features/messaging/components/modals/media_modal/shared.ts:128
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:71
+#: src/features/messaging/components/modals/media_modal/shared.ts:129
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:73
 msgid "Attachment {index1}"
 msgstr "附件 {index1}"
 
@@ -4088,7 +4088,7 @@ msgid "Attachment preview"
 msgstr "附件预览"
 
 #. Accessible label for the thumbnail strip at the bottom of the media viewer.
-#: src/features/messaging/components/modals/media_modal/shared.ts:124
+#: src/features/messaging/components/modals/media_modal/shared.ts:125
 msgid "Attachment thumbnails"
 msgstr "附件缩略图"
 
@@ -4178,7 +4178,7 @@ msgid "Audio player"
 msgstr "音频播放器"
 
 #. Accessible label for an audio clip shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:91
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:93
 msgid "Audio preview"
 msgstr "音频预览"
 
@@ -4437,7 +4437,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "自动填充建议：{label}，{selectedOptionPosition}/{resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
@@ -4446,7 +4445,6 @@ msgstr "自动填充建议：{label}，{selectedOptionPosition}/{resultCount}"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:199
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
@@ -4884,12 +4882,12 @@ msgid "Ban"
 msgstr "封禁"
 
 #. Title of the destructive ban-member modal. {tag} is the target user tag (username#tag). Destructive moderation action; keep tone direct.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:54
+#: src/features/moderation/components/modals/BanMemberModal.tsx:55
 msgid "Ban {tag}"
 msgstr "封禁 {tag}"
 
 #. Slash-command description for /ban. Bans a member from the current community (moderation action).
-#: src/features/devtools/hooks/useCommands.ts:42
+#: src/features/devtools/hooks/useCommands.ts:43
 msgid "Ban a member from this community."
 msgstr "在此社群中封禁成员。"
 
@@ -4899,7 +4897,7 @@ msgid "Ban details"
 msgstr "封禁详情"
 
 #. Label above the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:59
+#: src/features/moderation/components/modals/BanMemberModal.tsx:60
 msgid "Ban duration"
 msgstr "封禁时长"
 
@@ -4911,7 +4909,7 @@ msgstr "封禁将于 {0} 到期。"
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:305
+#: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
@@ -4944,7 +4942,7 @@ msgstr "带宽受限"
 msgid "Banned"
 msgstr "已封禁"
 
-#: src/features/moderation/components/modals/BanMemberModal.tsx:160
+#: src/features/moderation/components/modals/BanMemberModal.tsx:134
 msgid "Banned {targetUserTag} from the community"
 msgstr "已将 {targetUserTag} 移出社群"
 
@@ -5822,7 +5820,7 @@ msgstr "无法在此上传文件"
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
-#: src/features/moderation/components/modals/BanMemberModal.tsx:297
+#: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:173
@@ -6276,7 +6274,7 @@ msgid "Change your nickname for a community profile"
 msgstr "更改社群资料的昵称"
 
 #. Slash-command description for /nick. Changes the user's nickname in the current community.
-#: src/features/devtools/hooks/useCommands.ts:34
+#: src/features/devtools/hooks/useCommands.ts:35
 msgid "Change your nickname in this community."
 msgstr "修改你在本社区的昵称。"
 
@@ -6779,7 +6777,7 @@ msgstr "在系统选择器中选择一个窗口"
 msgid "Choose an account"
 msgstr "选择一个账号"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:137
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:152
 msgid "Choose an action."
 msgstr "选择一个操作。"
 
@@ -7436,12 +7434,12 @@ msgid "Close DM"
 msgstr "关闭私信"
 
 #. Accessible label for the dedicated close button at the top of the media viewer modal.
-#: src/features/messaging/components/modals/media_modal/shared.ts:112
+#: src/features/messaging/components/modals/media_modal/shared.ts:113
 msgid "Close media viewer"
 msgstr "关闭媒体查看器"
 
 #. Generic accessible label for the close button on the media viewer modal backdrop.
-#: src/features/messaging/components/modals/media_modal/shared.ts:108
+#: src/features/messaging/components/modals/media_modal/shared.ts:109
 msgid "Close modal"
 msgstr "关闭"
 
@@ -8235,7 +8233,7 @@ msgstr "确认"
 msgid "Confirmation or double-click for community voice joins"
 msgstr "确认或双击以加入社区语音频道。"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:154
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:169
 msgid "Conflicts with {conflictLabel}"
 msgstr "与 {conflictLabel} 冲突"
 
@@ -8607,7 +8605,7 @@ msgstr "已将网址复制到剪贴板"
 #. Textarea right-click context menu item that copies the selected text.
 #: src/features/app/components/dialogs/shared/CopyLinkSection.tsx:11
 #: src/features/auth/components/modals/BackupCodesModal.tsx:94
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:48
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:423
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:71
@@ -8808,7 +8806,7 @@ msgid "Copy media"
 msgstr "复制媒体"
 
 #. Tooltip on the media viewer button that copies the current media item to the system clipboard.
-#: src/features/messaging/components/modals/media_modal/shared.ts:84
+#: src/features/messaging/components/modals/media_modal/shared.ts:85
 msgid "Copy media to clipboard"
 msgstr "复制媒体到剪贴板"
 
@@ -9977,7 +9975,7 @@ msgid "Custom"
 msgstr "自定义"
 
 #. Label of the numeric input shown after choosing "Custom..." in the ban duration dropdown. The unit is seconds.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:67
+#: src/features/moderation/components/modals/BanMemberModal.tsx:68
 msgid "Custom ban duration (seconds)"
 msgstr "自定义封禁时长（秒）"
 
@@ -10072,12 +10070,12 @@ msgid "Custom selection"
 msgstr "自定义选择"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:41
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:42
 msgid "Custom shortcut action"
 msgstr "自定义快捷方式操作"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:37
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:38
 msgid "Custom shortcut options"
 msgstr "自定义快捷键选项"
 
@@ -10227,7 +10225,7 @@ msgid "Customizing your avatar, banner, accent color, and bio for individual com
 msgstr "在不同社群中自定义头像、横幅、主题色和个人简介需要 {PREMIUM_PRODUCT_NAME}。社群昵称和代词所有人均可免费使用。"
 
 #. Textarea right-click context menu item that cuts the selected text.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:44
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:46
 msgid "Cut"
 msgstr "剪切"
 
@@ -10616,7 +10614,7 @@ msgstr "移动设备上默认关闭，以节省电量和流量。"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:77
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10757,8 +10755,8 @@ msgid "Delete message"
 msgstr "删除消息"
 
 #. Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:77
-#: src/features/moderation/components/modals/BanMemberModal.tsx:255
+#: src/features/moderation/components/modals/BanMemberModal.tsx:78
+#: src/features/moderation/components/modals/BanMemberModal.tsx:229
 msgid "Delete message history"
 msgstr "删除聊天记录"
 
@@ -10811,7 +10809,7 @@ msgid "Delete saved media"
 msgstr "删除已保存的媒体"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:33
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:34
 msgid "Delete shortcut"
 msgstr "删除快捷方式"
 
@@ -10829,16 +10827,6 @@ msgstr "删除贴纸\"{stickerName}\""
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:47
 msgid "Delete the category \"{categoryName}\"? Can't be undone."
 msgstr "删除分类\"{categoryName}\"？此操作无法撤消。"
-
-#. Helper text under the "Previous 24 hours" option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:96
-msgid "Delete their messages from the last 24 hours"
-msgstr "删除他们过去 24 小时内的消息"
-
-#. Helper text under the "Previous 7 days" option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:105
-msgid "Delete their messages from the last 7 days"
-msgstr "删除他们过去 7 天的消息"
 
 #. Button or menu action label in the theme studio library section. Keep it concise. Keep the tone plain and specific.
 #: src/features/theme_studio/sections/LibrarySection.tsx:59
@@ -10861,7 +10849,7 @@ msgid "Delete this message"
 msgstr "删除此消息"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:69
+#: src/features/messaging/commands/MessageCommands.tsx:73
 msgid "Delete this message? Can't be undone."
 msgstr "删除这条消息？此操作无法撤消。"
 
@@ -11152,7 +11140,7 @@ msgstr "详情"
 
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:81
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Detect while typing"
 msgstr "输入时检测"
@@ -11391,7 +11379,7 @@ msgid "Disable backend premium perks"
 msgstr "禁用后端高级特权"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:31
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:32
 msgid "Disable built-in shortcut"
 msgstr "禁用内置快捷键"
 
@@ -11455,7 +11443,7 @@ msgid "Disable screen share picture-in-picture popouts?"
 msgstr "要禁用屏幕共享浮动小窗口吗？"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:25
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:26
 msgid "Disable shortcut"
 msgstr "禁用快捷方式"
 
@@ -11931,12 +11919,10 @@ msgstr "不再询问"
 msgid "Don't clear"
 msgstr "不清除"
 
-#. Choice label for retaining all messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Keeps all messages from the banned member. Short standalone label.
-#: src/features/devtools/hooks/useCommands.ts:86
-#: src/features/moderation/components/modals/BanMemberModal.tsx:82
-msgid "Don't delete any"
-msgstr "不删除任何内容"
+#. Message-history-deletion option when banning a member. Keeps all of the member's messages.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:14
+msgid "Don't Delete Any"
+msgstr "不删除任何"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:663
 msgid "Don't display separately."
@@ -12088,7 +12074,7 @@ msgstr "下载安装程序"
 #. Generic media context menu download action when the specific type is unknown.
 #. Tooltip on the download button in the media viewer modal.
 #: src/features/channel/components/embeds/media/MediaContainer.tsx:28
-#: src/features/messaging/components/modals/media_modal/shared.ts:72
+#: src/features/messaging/components/modals/media_modal/shared.ts:73
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:129
 msgid "Download media"
 msgstr "下载媒体文件"
@@ -13085,7 +13071,7 @@ msgid "Enable Shift to expand"
 msgstr "启用 Shift 键展开"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:29
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:30
 msgid "Enable shortcut"
 msgstr "启用快捷方式"
 
@@ -13147,7 +13133,7 @@ msgstr "启用视频片段缩略图"
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:359
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:64
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
 msgstr "已启用"
 
@@ -13309,7 +13295,7 @@ msgid "Enter a product name between 1 and 80 characters."
 msgstr "请输入 1 到 80 个字符的产品名称。"
 
 #. Placeholder in the optional reason input in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:114
+#: src/features/moderation/components/modals/BanMemberModal.tsx:88
 msgid "Enter a reason for the ban"
 msgstr "填写封禁理由"
 
@@ -14044,7 +14030,7 @@ msgstr "加载消息失败"
 msgid "Fail message sends"
 msgstr "发送消息失败"
 
-#: src/features/moderation/components/modals/BanMemberModal.tsx:167
+#: src/features/moderation/components/modals/BanMemberModal.tsx:141
 msgid "Failed to ban member. Try again."
 msgstr "封禁成员失败。请重试。"
 
@@ -15031,7 +15017,7 @@ msgid "Forward {defaultSeekAmount} seconds"
 msgstr "快进 {defaultSeekAmount} 秒"
 
 #. Tooltip on the media viewer button that forwards only the current media item.
-#: src/features/messaging/components/modals/media_modal/shared.ts:100
+#: src/features/messaging/components/modals/media_modal/shared.ts:101
 msgid "Forward media"
 msgstr "转发媒体"
 
@@ -15314,11 +15300,6 @@ msgstr "请完全退出并重启 {productName}，以便 macOS 应用此权限。
 msgid "Gain control"
 msgstr "掌控"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:281
-msgid "Game capture injection (Windows)"
-msgstr "游戏捕获注入 (Windows)"
-
 #. Folder icon option in the community-folder settings modal: a game controller shape.
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:56
 msgid "Game controller"
@@ -15466,7 +15447,7 @@ msgid "GIF picker loading"
 msgstr "正在加载 GIF 选择器"
 
 #. Accessible label for an animated GIF shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:83
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:85
 msgid "GIF preview"
 msgstr "GIF 预览"
 
@@ -15679,6 +15660,12 @@ msgstr "全局名称"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:97
 msgid "Global profile"
 msgstr "全局个人资料"
+
+#. Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:81
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:57
+msgid "Global shortcut"
+msgstr "全局快捷键"
 
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:107
@@ -16544,7 +16531,7 @@ msgid "How about:"
 msgstr "试试："
 
 #. Helper text under the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:63
+#: src/features/moderation/components/modals/BanMemberModal.tsx:64
 msgid "How long they stay banned."
 msgstr "他们将被封禁多久。"
 
@@ -16554,7 +16541,7 @@ msgid "How long they stay timed out."
 msgstr "他们被禁言的时长。"
 
 #. Description for the /ban delete_messages option.
-#: src/features/devtools/hooks/useCommands.ts:82
+#: src/features/devtools/hooks/useCommands.ts:83
 msgid "How much of the member's recent message history to delete."
 msgstr "要删除多少成员的近期消息历史记录。"
 
@@ -16900,7 +16887,7 @@ msgstr "图片"
 #. Type label for image media.
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:47
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:14
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:111
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:113
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:25
 msgid "Image"
 msgstr "图片"
@@ -16945,7 +16932,7 @@ msgid "Image options"
 msgstr "图片选项"
 
 #. Accessible label for a static image shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:79
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:81
 msgid "Image preview"
 msgstr "图片预览"
 
@@ -17157,7 +17144,7 @@ msgstr "在语音聊天中"
 
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:73
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:97
 msgid "In-app dictionaries"
 msgstr "应用内词典"
@@ -18002,7 +17989,7 @@ msgstr "加入社群"
 #. Empty-state hint in the channel and chat mobile stickers picker.
 #. Empty-state hint in the channel and chat stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:55
-#: src/features/channel/components/StickersPicker.tsx:54
+#: src/features/channel/components/StickersPicker.tsx:55
 msgid "Join a community to unlock stickers."
 msgstr "加入社群即可解锁贴纸。"
 
@@ -18106,7 +18093,7 @@ msgstr "跳转到未读频道"
 msgid "Jump between unread channels with mentions"
 msgstr "跳转到有提及的未读频道"
 
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:100
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:75
 msgid "Jump straight to the app to continue."
 msgstr "直接跳转到应用继续操作。"
 
@@ -18210,11 +18197,6 @@ msgstr "直接加入（保留其他连接）"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Keep {productName} running when the window is closed"
 msgstr "关闭窗口时保持 {productName} 运行"
-
-#. Helper text under the "Don't delete any" message-history option in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:87
-msgid "Keep all messages"
-msgstr "保留所有消息"
 
 #. Description text in the motion tab.
 #. Settings search entry description. One-line summary of what the settings search entry controls.
@@ -18326,7 +18308,7 @@ msgid "Kick"
 msgstr "踢出"
 
 #. Slash-command description for /kick. Removes a member from the current community (moderation action).
-#: src/features/devtools/hooks/useCommands.ts:38
+#: src/features/devtools/hooks/useCommands.ts:39
 msgid "Kick a member from this community."
 msgstr "将成员踢出此社群。"
 
@@ -18370,7 +18352,7 @@ msgstr "语言设置"
 
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:86
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Languages"
 msgstr "语言"
@@ -19695,7 +19677,7 @@ msgstr "媒体按钮"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #. Voice participant context menu submenu label for camera, stream, and video actions.
-#: src/features/messaging/components/modals/media_modal/shared.ts:68
+#: src/features/messaging/components/modals/media_modal/shared.ts:69
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "媒体控件"
@@ -19720,12 +19702,12 @@ msgstr "媒体加载状态"
 #. Accessible label for the overflow menu button in the media viewer modal.
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx:37
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:67
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:69
 msgid "Media options"
 msgstr "媒体选项"
 
 #. Generic accessible label for unknown media in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:95
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:97
 msgid "Media preview"
 msgstr "媒体预览"
 
@@ -19924,7 +19906,7 @@ msgid "Mention badges"
 msgstr "提及徽章"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:22
+#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:18
 msgid "Mention controls"
 msgstr "提及设置"
 
@@ -20640,7 +20622,7 @@ msgid "More options"
 msgstr "更多选项"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:52
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:53
 msgid "More shortcut options"
 msgstr "更多快捷键选项"
 
@@ -21467,9 +21449,9 @@ msgstr "下一步"
 #. Accessible label for the next-attachment navigation button in the media viewer.
 #. Media viewer navigation button label for the next attachment.
 #. Media viewer navigation tooltip for the next attachment.
-#: src/features/messaging/components/modals/media_modal/shared.ts:64
-#: src/features/messaging/components/modals/media_modal/shared.ts:120
-#: src/features/messaging/components/modals/media_modal/shared.ts:144
+#: src/features/messaging/components/modals/media_modal/shared.ts:65
+#: src/features/messaging/components/modals/media_modal/shared.ts:121
+#: src/features/messaging/components/modals/media_modal/shared.ts:145
 msgid "Next attachment"
 msgstr "下一张附件"
 
@@ -22012,14 +21994,14 @@ msgid "No stickers match"
 msgstr "没有匹配的贴纸"
 
 #. Empty-state text in the channel and chat stickers picker.
-#: src/features/channel/components/StickersPicker.tsx:58
+#: src/features/channel/components/StickersPicker.tsx:59
 msgid "No stickers match that search"
 msgstr "没有符合条件的贴纸"
 
 #. Empty-state text in the channel and chat mobile stickers picker.
 #. Empty-state text in the channel and chat stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:51
-#: src/features/channel/components/StickersPicker.tsx:50
+#: src/features/channel/components/StickersPicker.tsx:51
 msgid "No stickers yet"
 msgstr "暂无贴纸"
 
@@ -22584,7 +22566,7 @@ msgstr "仅限选定的"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "只有 Visionary 会员才能加入此社区。您的访问权限可能已更改。"
 
-#: src/features/channel/components/UserMessage.tsx:433
+#: src/features/channel/components/UserMessage.tsx:427
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "只有您能看到这条消息。<0>忽略</0>"
 
@@ -22637,7 +22619,7 @@ msgid "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} 
 msgstr "打开“{macosSystemSettingsName}”→“{macosPrivacyAndSecuritySettingsName}”→“{macosScreenRecordingPermissionName}”，然后允许{productName}。如果{productName2}已启用，请完全退出并重新启动{productName3}，以便macOS应用该权限。"
 
 #. Button label that opens the desktop app. productName is the app name.
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:28
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "打开 {productName}"
 
@@ -22879,12 +22861,12 @@ msgid "Open image link"
 msgstr "打开图片链接"
 
 #. Title in a web prompt that opens the same flow in the desktop app. productName is the app name.
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:24
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:23
 msgid "Open in {productName} for desktop"
 msgstr "在桌面版 {productName} 中打开"
 
 #. Media viewer action that opens the current media in the system default browser.
-#: src/features/messaging/components/modals/media_modal/shared.ts:76
+#: src/features/messaging/components/modals/media_modal/shared.ts:77
 msgid "Open in browser"
 msgstr "在浏览器中打开"
 
@@ -23105,7 +23087,7 @@ msgstr "打开成员页面。按空格键或回车键打开。"
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:184
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:77
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:107
 msgid "Operating system"
 msgstr "操作系统"
@@ -23512,7 +23494,7 @@ msgid "Past 7 days"
 msgstr "过去 7 天"
 
 #. Textarea right-click context menu item that pastes clipboard contents.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:52
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:54
 msgid "Paste"
 msgstr "粘贴"
 
@@ -23706,7 +23688,7 @@ msgid "Perks paused"
 msgstr "特权已暂停"
 
 #. Ban duration option in the destructive ban-member modal meaning the ban never expires. Short standalone label.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:37
+#: src/features/moderation/components/modals/BanMemberModal.tsx:38
 msgid "Permanent"
 msgstr "永久"
 
@@ -24441,53 +24423,44 @@ msgstr "预览"
 msgid "Previous"
 msgstr "上一条"
 
-#. Choice label for deleting two days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:94
-msgid "Previous 2 days"
-msgstr "前两天"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:37
+msgid "Previous 12 Hours"
+msgstr "过去12小时"
 
-#. Choice label for deleting one day of messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 24 hours.
-#: src/features/devtools/hooks/useCommands.ts:90
-#: src/features/moderation/components/modals/BanMemberModal.tsx:91
-msgid "Previous 24 hours"
-msgstr "过去 24 小时"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:45
+msgid "Previous 24 Hours"
+msgstr "过去24小时"
 
-#. Choice label for deleting three days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:98
-msgid "Previous 3 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:53
+msgid "Previous 3 Days"
 msgstr "过去 3 天"
 
-#. Choice label for deleting four days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:102
-msgid "Previous 4 days"
-msgstr "过去 4 天"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:29
+msgid "Previous 6 Hours"
+msgstr "过去6小时"
 
-#. Choice label for deleting five days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:106
-msgid "Previous 5 days"
-msgstr "过去 5 天"
-
-#. Choice label for deleting six days of messages when banning a member.
-#: src/features/devtools/hooks/useCommands.ts:110
-msgid "Previous 6 days"
-msgstr "过去 6 天"
-
-#. Choice label for deleting seven days of messages when banning a member.
-#. Message-history-deletion option in the destructive ban-member modal. Deletes the banned member's messages from the last 7 days.
-#: src/features/devtools/hooks/useCommands.ts:114
-#: src/features/moderation/components/modals/BanMemberModal.tsx:100
-msgid "Previous 7 days"
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:61
+msgid "Previous 7 Days"
 msgstr "过去 7 天"
 
 #. Accessible label for the previous-attachment navigation button in the media viewer.
 #. Media viewer navigation button label for the previous attachment.
 #. Media viewer navigation tooltip for the previous attachment.
-#: src/features/messaging/components/modals/media_modal/shared.ts:56
-#: src/features/messaging/components/modals/media_modal/shared.ts:116
-#: src/features/messaging/components/modals/media_modal/shared.ts:136
+#: src/features/messaging/components/modals/media_modal/shared.ts:57
+#: src/features/messaging/components/modals/media_modal/shared.ts:117
+#: src/features/messaging/components/modals/media_modal/shared.ts:137
 msgid "Previous attachment"
 msgstr "上一个附件"
+
+#. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
+#: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
+msgid "Previous Hour"
+msgstr "过去一小时"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:47
@@ -25236,13 +25209,13 @@ msgstr "原因"
 
 #. Label of the optional reason input in the destructive ban-member modal. Reason is recorded in the activity log.
 #. Label of the optional reason textarea in the timeout-member modal. The reason is recorded in the activity log.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:109
+#: src/features/moderation/components/modals/BanMemberModal.tsx:83
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:36
 msgid "Reason (optional)"
 msgstr "原因（可选）"
 
 #. Description for an optional moderation slash-command reason.
-#: src/features/devtools/hooks/useCommands.ts:66
+#: src/features/devtools/hooks/useCommands.ts:67
 msgid "Reason (optional)."
 msgstr "原因（可选）。"
 
@@ -25303,7 +25276,7 @@ msgstr "接收者将被带到 {0} <0>{1}</0>"
 #. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:68
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
 #: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
@@ -25432,7 +25405,7 @@ msgid "Redirect URIs"
 msgstr "重定向 URI"
 
 #. Textarea right-click context menu item that redoes the last undone edit.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:40
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:42
 msgid "Redo"
 msgstr "重做"
 
@@ -25622,7 +25595,7 @@ msgid "Reload now"
 msgstr "立即重载"
 
 #. Hint in the textarea spellcheck submenu shown after switching engines.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:90
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:92
 msgid "Reload to apply engine change"
 msgstr "重新加载以应用引擎更改"
 
@@ -25785,7 +25758,7 @@ msgid "Remove friend"
 msgstr "删除好友"
 
 #. Textarea right-click context menu item that removes the selected misspelled word from the personal dictionary.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:27
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:29
 msgid "Remove from dictionary"
 msgstr "从词典中删除"
 
@@ -26172,7 +26145,7 @@ msgstr "本社区的回复提及偏好设置"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.
 #: src/features/input/state/input_keybind/shared.ts:21
-#: src/features/messaging/components/modals/media_modal/shared.ts:104
+#: src/features/messaging/components/modals/media_modal/shared.ts:105
 msgid "Reply to message"
 msgstr "回复消息"
 
@@ -26461,7 +26434,7 @@ msgid "Reset"
 msgstr "重置"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:44
 msgid "Reset \"{label}\" to built-in"
 msgstr "将\"{label}\"重置为内置值"
 
@@ -26542,7 +26515,7 @@ msgid "Reset mature content agreement state"
 msgstr "重置成人内容协议状态"
 
 #. Tooltip on the media viewer button that recenters the current media item and restores the default zoom.
-#: src/features/messaging/components/modals/media_modal/shared.ts:88
+#: src/features/messaging/components/modals/media_modal/shared.ts:89
 msgid "Reset media position"
 msgstr "重置媒体位置"
 
@@ -26581,7 +26554,7 @@ msgid "Reset to actual values"
 msgstr "重置为实际值"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:35
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:36
 msgid "Reset to built-in"
 msgstr "重置为内置"
 
@@ -27187,14 +27160,14 @@ msgid "Romanian"
 msgstr "罗马尼亚语"
 
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees anticlockwise.
-#: src/features/messaging/components/modals/media_modal/shared.ts:96
+#: src/features/messaging/components/modals/media_modal/shared.ts:97
 msgid "Rotate anticlockwise"
 msgstr "逆时针旋转"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
 #: src/features/messaging/components/modals/ImageCropModal.tsx:23
-#: src/features/messaging/components/modals/media_modal/shared.ts:92
+#: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "顺时针旋转"
 
@@ -27766,7 +27739,7 @@ msgid "Search filters"
 msgstr "搜索筛选条件"
 
 #. Slash-command description for /gif. Searches for and sends a GIF.
-#: src/features/devtools/hooks/useCommands.ts:58
+#: src/features/devtools/hooks/useCommands.ts:59
 msgid "Search for and send a GIF."
 msgstr "搜索并发送GIF."
 
@@ -27793,7 +27766,7 @@ msgid "Search GIFs and pick your favorite"
 msgstr "搜索 GIF 并选择你最喜欢的"
 
 #. Button or menu action label in the search scope sheet. Keep it concise.
-#: src/features/search/components/search/ScopeSheet.tsx:23
+#: src/features/search/components/search/ScopeSheet.tsx:16
 msgid "Search in"
 msgstr "搜索范围"
 
@@ -28149,7 +28122,7 @@ msgid "Select account"
 msgstr "选择账号"
 
 #. Textarea right-click context menu item that selects all text in the textarea.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:56
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
 msgid "Select all"
 msgstr "全选"
 
@@ -28307,7 +28280,7 @@ msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "发送 ({selectedCount}/{selectionLimit})"
 
 #. Slash-command description for /dm. Sends a direct message to a user.
-#: src/features/devtools/hooks/useCommands.ts:46
+#: src/features/devtools/hooks/useCommands.ts:47
 msgid "Send a direct message to a user."
 msgstr "给用户发送私信。"
 
@@ -28317,27 +28290,27 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "向 {userName} 发送好友请求，或使用员工权限立即添加对方。"
 
 #. Slash-command description for /favorites. Sends a saved / favorited media item.
-#: src/features/devtools/hooks/useCommands.ts:50
+#: src/features/devtools/hooks/useCommands.ts:51
 msgid "Send a saved media item."
 msgstr "发送已保存的媒体项目。"
 
 #. Slash-command description for /spoiler. Wraps the message in spoiler tags so recipients must click to reveal.
-#: src/features/devtools/hooks/useCommands.ts:24
+#: src/features/devtools/hooks/useCommands.ts:25
 msgid "Send a spoiler message (wraps in spoiler tags)."
 msgstr "发送剧透消息（用剧透标签包裹）."
 
 #. Slash-command description for /sticker. Sends a sticker.
-#: src/features/devtools/hooks/useCommands.ts:54
+#: src/features/devtools/hooks/useCommands.ts:55
 msgid "Send a sticker."
 msgstr "发送贴纸."
 
 #. Slash-command description for /tts. Sends a text-to-speech message played aloud for users with TTS enabled.
-#: src/features/devtools/hooks/useCommands.ts:29
+#: src/features/devtools/hooks/useCommands.ts:30
 msgid "Send a text-to-speech message."
 msgstr "发送文本转语音消息。"
 
 #. Slash-command description for /me. Sends the message wrapped in italics, IRC-style.
-#: src/features/devtools/hooks/useCommands.ts:20
+#: src/features/devtools/hooks/useCommands.ts:21
 msgid "Send an action message (wraps in italics)."
 msgstr "发送操作消息（斜体显示）."
 
@@ -28625,12 +28598,12 @@ msgid "Set accent color to {0} <0/>."
 msgstr "将强调色设为 {0} <0/>。"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:27
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
 msgid "Set custom shortcut"
 msgstr "设置自定义快捷键"
 
 #. Label in the keybinds tab. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:48
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:49
 msgid "Set custom shortcut for \"{label}\""
 msgstr "为\"{label}\"设置自定义快捷方式"
 
@@ -29068,7 +29041,7 @@ msgstr "短代码"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:106
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
@@ -29341,7 +29314,7 @@ msgid "Show media button"
 msgstr "显示媒体按钮"
 
 #. Tooltip on the info button in the media viewer modal. Toggles a metadata sidebar.
-#: src/features/messaging/components/modals/media_modal/shared.ts:80
+#: src/features/messaging/components/modals/media_modal/shared.ts:81
 msgid "Show media information"
 msgstr "显示媒体信息"
 
@@ -29481,6 +29454,8 @@ msgstr "在表情自动填充中显示已保存的媒体"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
+#. Short label in the channel and chat textarea plus menu. Keep it concise.
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:125
 msgid "Show send button"
@@ -30249,7 +30224,7 @@ msgstr "出错了。请稍后重试。"
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:430
-#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:32
+#: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "出错了。请再试一次。"
 
@@ -30500,7 +30475,7 @@ msgstr "拼写检查"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:60
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:414
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:456
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
@@ -31083,11 +31058,6 @@ msgstr "直播"
 msgid "Stream buffering"
 msgstr "直播缓冲中"
 
-#. Voice participant context menu submenu label for incoming screen share audio controls.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "Stream controls"
-msgstr "流控制"
-
 #. Status overlay on a voice participant tile when the remote screen share has ended.
 #: src/features/voice/components/voice_participant_tile/shared.ts:26
 msgid "Stream ended"
@@ -31296,7 +31266,7 @@ msgstr "不显示嵌入内容"
 msgid "Suppress role mentions"
 msgstr "屏蔽身份组提及"
 
-#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:103
+#: src/features/channel/components/channel_header_components/developer_tools/GeneralOptionsMenu.tsx:90
 msgid "Suppress unprivileged self-mentions"
 msgstr "禁止提及无权限的自己"
 
@@ -32103,12 +32073,12 @@ msgid "The mature content check was canceled. You can close this tab and try aga
 msgstr "成人内容检查已取消。您可以关闭此标签页，然后从应用中重试。"
 
 #. Description for the member option of a moderation slash command.
-#: src/features/devtools/hooks/useCommands.ts:62
+#: src/features/devtools/hooks/useCommands.ts:63
 msgid "The member to target."
 msgstr "要操作的成员。"
 
 #. Description for a required message option in a slash command.
-#: src/features/devtools/hooks/useCommands.ts:70
+#: src/features/devtools/hooks/useCommands.ts:71
 msgid "The message to send."
 msgstr "要发送的消息"
 
@@ -34242,7 +34212,7 @@ msgid "Understood"
 msgstr "知道了"
 
 #. Textarea right-click context menu item that undoes the last edit.
-#: src/features/channel/components/textarea/TextareaContextMenu.tsx:36
+#: src/features/channel/components/textarea/TextareaContextMenu.tsx:38
 msgid "Undo"
 msgstr "撤销"
 
@@ -34439,7 +34409,7 @@ msgstr "未知用户"
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:60
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx:68
 #: src/features/channel/utils/ChannelUtils.tsx:55
-#: src/features/devtools/utils/CommandUtils.ts:23
+#: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
 #: src/features/voice/components/VoiceParticipantTile.tsx:161
@@ -34487,7 +34457,7 @@ msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom em
 msgstr "通过{PREMIUM_PRODUCT_NAME}解锁{lockedEmojiCount, plural, one {#个自定义表情} other {#个自定义表情}}，来自{communityCount, plural, one {#个社群} other {#个社群}}。"
 
 #: src/features/channel/components/MobileStickersPicker.tsx:160
-#: src/features/channel/components/StickersPicker.tsx:155
+#: src/features/channel/components/StickersPicker.tsx:169
 msgid "Unlock {lockedStickerCount, plural, one {# sticker} other {# stickers}} from {stickerCommunityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 msgstr "通过{PREMIUM_PRODUCT_NAME}解锁{lockedStickerCount, plural, one {#个贴纸} other {#个贴纸}}，来自{stickerCommunityCount, plural, one {#个社群} other {#个社群}}。"
 
@@ -34612,7 +34582,7 @@ msgid "Unmute stream audio"
 msgstr "取消静音直播音频"
 
 #. Short label in the channel and chat use message search autocomplete. Keep it concise.
-#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:73
+#: src/features/channel/components/message_search_bar/useMessageSearchAutocomplete.ts:88
 msgid "Unnamed"
 msgstr "未命名"
 
@@ -35611,7 +35581,7 @@ msgid "User"
 msgstr "用户"
 
 #. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:206
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
 msgid "User actions"
 msgstr "用户操作"
 
@@ -36217,8 +36187,8 @@ msgstr "视频丢包率："
 #. Accessible label for a video shown in the media viewer.
 #. Accessible label for a video thumbnail in the media viewer thumbnail strip.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/media_modal/shared.ts:132
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:87
+#: src/features/messaging/components/modals/media_modal/shared.ts:133
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:89
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:177
 msgid "Video preview"
 msgstr "视频预览"
@@ -37365,7 +37335,7 @@ msgid "What to include"
 msgstr "要包含什么"
 
 #. Description for a media search slash-command query.
-#: src/features/devtools/hooks/useCommands.ts:74
+#: src/features/devtools/hooks/useCommands.ts:75
 msgid "What to search for."
 msgstr "搜索内容。"
 
@@ -38030,7 +38000,7 @@ msgid "You cannot remove this permission because it would remove it from yoursel
 msgstr "你无法移除此权限，因为它会把你自己的权限也移除"
 
 #. Local system message after the user changes their community nickname with a slash command. The bold markdown markers should remain around the two names.
-#: src/features/devtools/utils/CommandUtils.ts:27
+#: src/features/devtools/utils/CommandUtils.ts:31
 msgid "You changed your nickname in this community from **{previousNickname}** to **{newNickname}**."
 msgstr "你在此社群中的昵称已从\"**{previousNickname}**\"更改为\"**{newNickname}**\"。"
 
@@ -38765,27 +38735,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "您的上次购买已超出退款期限。如有账单问题，请联系客服。"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:84
+#: src/features/messaging/state/MessageQueue.tsx:77
 msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
 msgstr "您的消息无法发送，因为它包含不在此情境中允许的成人表情符号或贴纸。"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:79
+#: src/features/messaging/state/MessageQueue.tsx:72
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "你的消息未能发送，因为它已被我们的安全系统标记。如果你认为这是一个错误，请联系客服。"
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:66
+#: src/features/messaging/state/MessageQueue.tsx:59
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "你的消息未能送达。这通常是因为你和收件人不在同一个社群，或者收件人只接受好友的私信。你可能还需要在{directMessagePrivacySettingsPath}中调整自己的私信隐私设置。"
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:71
+#: src/features/messaging/state/MessageQueue.tsx:64
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "你的消息未能送达。你需要先认领帐户才能发送私信。"
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:75
+#: src/features/messaging/state/MessageQueue.tsx:68
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "消息未能送达。您需要先注册帐户才能发送消息。"
 
@@ -38810,7 +38780,7 @@ msgid "your new email"
 msgstr "你的新邮箱"
 
 #. Description for the /nick nickname option.
-#: src/features/devtools/hooks/useCommands.ts:78
+#: src/features/devtools/hooks/useCommands.ts:79
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "你的新昵称，留空则重置。"
 
@@ -38987,38 +38957,3 @@ msgstr "放大"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "缩小"
-
-#. Message-history-deletion option when banning a member. Keeps all of the member's messages.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:14
-msgid "Don't Delete Any"
-msgstr "不删除任何"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
-msgid "Previous Hour"
-msgstr "过去一小时"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:28
-msgid "Previous 6 Hours"
-msgstr "过去6小时"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:36
-msgid "Previous 12 Hours"
-msgstr "过去12小时"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:44
-msgid "Previous 24 Hours"
-msgstr "过去24小时"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:52
-msgid "Previous 3 Days"
-msgstr "过去 3 天"
-
-#. Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.
-#: src/features/moderation/constants/BanDeleteMessageOptions.ts:60
-msgid "Previous 7 Days"
-msgstr "过去 7 天"
