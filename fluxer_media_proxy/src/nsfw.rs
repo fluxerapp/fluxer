@@ -144,11 +144,11 @@ async fn check_buffers_inner(
         return Err(Error::NsfwUnavailable);
     }
     let bytes = response.bytes().await.map_err(|_| Error::NsfwUnavailable)?;
-    let probability = parse_batch_max_probability(&bytes)?;
-    Ok(Result {
-        probability,
-        is_nsfw: probability >= cfg.threshold,
-    })
+    let probabilities = parse_batch_probabilities(&bytes)?;
+    Ok(verdict_from_frame_probabilities(
+        &probabilities,
+        cfg.threshold,
+    ))
 }
 
 fn trim_trailing_slash(value: &str) -> &str {
@@ -168,24 +168,48 @@ pub fn parse_probability(body: &[u8]) -> std::result::Result<f32, Error> {
     Err(Error::InvalidResponse)
 }
 
-pub fn parse_batch_max_probability(body: &[u8]) -> std::result::Result<f32, Error> {
+pub const CORROBORATING_FRAMES_REQUIRED: usize = 2;
+
+pub fn parse_batch_probabilities(body: &[u8]) -> std::result::Result<Vec<f32>, Error> {
     let value: Value = serde_json::from_slice(body).map_err(|_| Error::InvalidResponse)?;
     let predictions = value
         .get("predictions")
         .and_then(Value::as_array)
         .ok_or(Error::InvalidResponse)?;
-    let mut max = 0.0f32;
+    let mut out = Vec::with_capacity(predictions.len());
     for item in predictions {
         let Some(object) = item.as_object() else {
             continue;
         };
+        let mut frame = None;
         for key in ["nsfw_probability", "score", "probability", "nsfw"] {
             if let Some(score) = object.get(key).and_then(number_as_f32) {
-                max = max.max(score.clamp(0.0, 1.0));
+                let score = score.clamp(0.0, 1.0);
+                frame = Some(frame.map_or(score, |current: f32| current.max(score)));
             }
         }
+        if let Some(frame) = frame {
+            out.push(frame);
+        }
     }
-    Ok(max)
+    Ok(out)
+}
+
+pub fn verdict_from_frame_probabilities(probabilities: &[f32], threshold: f32) -> Result {
+    let max = probabilities.iter().copied().fold(0.0f32, f32::max);
+    let over = probabilities
+        .iter()
+        .filter(|probability| **probability >= threshold)
+        .count();
+    let required = if probabilities.len() >= CORROBORATING_FRAMES_REQUIRED {
+        CORROBORATING_FRAMES_REQUIRED
+    } else {
+        1
+    };
+    Result {
+        probability: max,
+        is_nsfw: over >= required,
+    }
 }
 
 fn number_as_f32(value: &Value) -> Option<f32> {
@@ -197,19 +221,56 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_batch_max_probability_picks_highest_score() {
-        assert!((parse_batch_max_probability(br#"{"predictions":[{"nsfw_probability":0.1},{"nsfw_probability":0.7},{"nsfw_probability":0.3}]}"#).unwrap() - 0.7).abs() < 0.001);
+    fn parse_batch_probabilities_reads_every_frame() {
+        let parsed = parse_batch_probabilities(
+            br#"{"predictions":[{"nsfw_probability":0.1},{"nsfw_probability":0.7},{"nsfw_probability":0.3}]}"#,
+        )
+        .unwrap();
+        assert_eq!(3, parsed.len());
+        assert!((parsed[1] - 0.7).abs() < 0.001);
         assert!(
-            (parse_batch_max_probability(br#"{"predictions":[]}"#).unwrap() - 0.0).abs() < 0.001
+            parse_batch_probabilities(br#"{"predictions":[]}"#)
+                .unwrap()
+                .is_empty()
         );
         assert_eq!(
             Err(Error::InvalidResponse),
-            parse_batch_max_probability(br#"{}"#)
+            parse_batch_probabilities(br#"{}"#)
         );
         assert_eq!(
             Err(Error::InvalidResponse),
-            parse_batch_max_probability(b"not-json")
+            parse_batch_probabilities(b"not-json")
         );
+    }
+
+    #[test]
+    fn single_high_frame_does_not_flag_a_multi_frame_scan() {
+        let verdict = verdict_from_frame_probabilities(&[0.02, 0.99, 0.03], 0.95);
+        assert!(!verdict.is_nsfw);
+        assert!((verdict.probability - 0.99).abs() < 0.001);
+    }
+
+    #[test]
+    fn two_high_frames_flag_a_multi_frame_scan() {
+        assert!(verdict_from_frame_probabilities(&[0.02, 0.99, 0.97], 0.95).is_nsfw);
+    }
+
+    #[test]
+    fn a_lone_frame_still_flags_on_its_own() {
+        assert!(verdict_from_frame_probabilities(&[0.99], 0.95).is_nsfw);
+        assert!(!verdict_from_frame_probabilities(&[0.94], 0.95).is_nsfw);
+    }
+
+    #[test]
+    fn an_empty_scan_never_flags() {
+        let verdict = verdict_from_frame_probabilities(&[], 0.95);
+        assert!(!verdict.is_nsfw);
+        assert!((verdict.probability - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn frames_at_the_threshold_count_as_over() {
+        assert!(verdict_from_frame_probabilities(&[0.95, 0.95], 0.95).is_nsfw);
     }
 
     #[test]
