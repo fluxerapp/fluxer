@@ -205,7 +205,7 @@ function readMatchingEmailVerified(
 	return coerceEmailVerified(record['email_verified']);
 }
 
-export function resolveEmailVerified({
+function resolveEmailVerified({
 	claims,
 	userInfo,
 	idTokenEmail,

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createMessageID, type GuildID, type MessageID} from '../BrandedTypes';
+import {type ChannelID, createMessageID, type MessageID} from '../BrandedTypes';
 import {Logger} from '../Logger';
 import {getMessageSearchService} from '../SearchFactory';
 import type {IMessageSearchService} from './IMessageSearchService';
@@ -56,21 +56,6 @@ export async function deleteChannelMessageSearchDocuments(
 		Logger.error(
 			{...options.context, channelId: channelId.toString(), error},
 			'Failed to delete channel message documents from search index',
-		);
-	}
-}
-
-export async function deleteGuildMessageSearchDocuments(guildId: GuildID, options: CleanupOptions = {}): Promise<void> {
-	const searchService = resolveMessageSearchService(options.searchService);
-	if (!searchService) {
-		return;
-	}
-	try {
-		await searchService.deleteGuildMessages(guildId);
-	} catch (error) {
-		Logger.error(
-			{...options.context, guildId: guildId.toString(), error},
-			'Failed to delete guild message documents from search index',
 		);
 	}
 }
