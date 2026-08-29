@@ -408,7 +408,7 @@ export const EmbedGifv: FC<
 			},
 			[visibilityRef],
 		);
-		const {dimensions, style} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
+		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
 		const canPlayInline = isInlinePlayableVideoSize({width: naturalWidth, height: naturalHeight});
 		const posterSource = thumbnailProxyURL && thumbnailProxyURL.length > 0 ? thumbnailProxyURL : videoProxyURL;
 		const posterURL = useMemo(() => {
@@ -534,8 +534,11 @@ export const EmbedGifv: FC<
 			safePause(video);
 		}, [shouldPlay]);
 		if (shouldBlur) {
-			const {width: _width, height: _height, ...styleWithoutDimensions} = style;
-			const blurContainerStyle = {...styleWithoutDimensions, maxWidth: '100%', width: '100%'};
+			const blurContainerStyle: React.CSSProperties = {
+				maxWidth: '100%',
+				width: remFromPx(dimensions.width),
+				...aspectRatioStyle,
+			};
 			return (
 				<div
 					ref={visibilityRef}
@@ -719,7 +722,7 @@ export const EmbedGif: FC<
 			},
 			[visibilityRef],
 		);
-		const {dimensions, style} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
+		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
 		const {width: displayWidth, height: displayHeight} = dimensions;
 		const gifAutoPlay = useShouldAnimate({kind: 'gif'});
 		const animationPolicyAllowed = useShouldAnimate({
@@ -856,8 +859,11 @@ export const EmbedGif: FC<
 			],
 		);
 		if (shouldBlur) {
-			const {width: _width, height: _height, ...styleWithoutDimensions} = style;
-			const blurContainerStyle = {...styleWithoutDimensions, maxWidth: '100%', width: '100%'};
+			const blurContainerStyle: React.CSSProperties = {
+				maxWidth: '100%',
+				width: remFromPx(dimensions.width),
+				...aspectRatioStyle,
+			};
 			return (
 				<div
 					ref={visibilityRef}
