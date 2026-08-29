@@ -179,8 +179,14 @@ export function getScreenShareCodecPreferenceOrder(
 	const encoderMode = resolveEffectiveScreenShareEncoderMode(VoiceSettings.getScreenShareEncoderMode());
 	const automaticOrder =
 		encoderMode === 'software' ? SOFTWARE_CODEC_PREFERENCE : getHardwareFirstScreenShareCodecPreferenceOrder();
-	if (preference !== 'auto') return [preference, ...automaticOrder.filter((codec) => codec !== preference)];
-	return automaticOrder;
+	const order =
+		preference !== 'auto' ? [preference, ...automaticOrder.filter((codec) => codec !== preference)] : automaticOrder;
+	const filtered = order.filter(
+		(codec) =>
+			(codec !== 'av1' || VoiceSettings.getScreenShareAv1OptIn()) &&
+			(codec !== 'h265' || VoiceSettings.getScreenShareHevcOptIn()),
+	);
+	return filtered;
 }
 
 function getHardwareFirstScreenShareCodecPreferenceOrder(): ReadonlyArray<VideoCodec> {

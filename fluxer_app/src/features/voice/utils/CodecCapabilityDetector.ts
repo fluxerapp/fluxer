@@ -9,6 +9,7 @@ import {
 	isFirefoxBrowser,
 	type NativePlatform,
 } from '@app/features/ui/utils/NativeUtils';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getGpuEncoderReportSync, type HardwareEncodeAnswer} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {
 	getNativeHardwareEncoderCapabilitiesSync,
@@ -35,6 +36,7 @@ export type CodecSupportReason =
 	| 'unsupported-system'
 	| 'unavailable-on-platform'
 	| 'capabilities-unavailable'
+	| 'opt-in-required'
 	| 'runtime-failed';
 
 export interface CodecSupportInfo {
@@ -84,6 +86,8 @@ let cachedReport: CodecCapabilityReport | null = null;
 let cachedReportGpuKey: object | null | undefined;
 let cachedReportNativeHardwareEncoderKey: object | null | undefined;
 let cachedReportHardwareAccelerationDisabled: boolean | undefined;
+let cachedReportAv1OptIn: boolean | undefined;
+let cachedReportHevcOptIn: boolean | undefined;
 const runtimeEncodeFailureCodecs = new Set<VideoCodec>();
 
 interface RawProbeResult {
@@ -160,6 +164,22 @@ function getScreenShareCodecPolicyUnsupported(
 	codec: keyof CodecCapabilities,
 	context: CodecPolicyContext,
 ): Omit<CodecSupportInfo, 'hardwareAccelerated'> | null {
+	if (codec === 'av1' && !VoiceSettings.getScreenShareAv1OptIn()) {
+		return {
+			supported: false,
+			reason: 'opt-in-required',
+			detail:
+				'AV1 screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on AV1 screen sharing in Advanced settings to use it.',
+		};
+	}
+	if (codec === 'h265' && !VoiceSettings.getScreenShareHevcOptIn()) {
+		return {
+			supported: false,
+			reason: 'opt-in-required',
+			detail:
+				'H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.',
+		};
+	}
 	if (context.firefox) {
 		switch (codec) {
 			case 'av1':
@@ -318,17 +338,23 @@ export function getCodecCapabilityReport(): CodecCapabilityReport {
 	const currentGpu = getGpuEncoderReportSync();
 	const currentNativeHardwareEncoder = getNativeHardwareEncoderCapabilitiesSync();
 	const hardwareAccelerationDisabled = isDesktopHardwareAccelerationDisabled();
+	const av1OptIn = VoiceSettings.getScreenShareAv1OptIn();
+	const hevcOptIn = VoiceSettings.getScreenShareHevcOptIn();
 	if (
 		cachedReport &&
 		cachedReportGpuKey === currentGpu &&
 		cachedReportNativeHardwareEncoderKey === currentNativeHardwareEncoder &&
-		cachedReportHardwareAccelerationDisabled === hardwareAccelerationDisabled
+		cachedReportHardwareAccelerationDisabled === hardwareAccelerationDisabled &&
+		cachedReportAv1OptIn === av1OptIn &&
+		cachedReportHevcOptIn === hevcOptIn
 	)
 		return cachedReport;
 	cachedReport = buildReport();
 	cachedReportGpuKey = currentGpu;
 	cachedReportNativeHardwareEncoderKey = currentNativeHardwareEncoder;
 	cachedReportHardwareAccelerationDisabled = hardwareAccelerationDisabled;
+	cachedReportAv1OptIn = av1OptIn;
+	cachedReportHevcOptIn = hevcOptIn;
 	return cachedReport;
 }
 
@@ -506,6 +532,8 @@ export function resetCachedCodecCapabilities(): void {
 	cachedReportGpuKey = undefined;
 	cachedReportNativeHardwareEncoderKey = undefined;
 	cachedReportHardwareAccelerationDisabled = undefined;
+	cachedReportAv1OptIn = undefined;
+	cachedReportHevcOptIn = undefined;
 	runtimeEncodeFailureCodecs.clear();
 	resetNativeHardwareEncoderCapabilities();
 	resetOpenH264Status();

@@ -61,6 +61,8 @@ type VoiceSettingsPatch = Partial<{
 	disablePictureInPicturePopoutScreenShare: boolean;
 	preferredVideoCodec: CodecPreference;
 	preferredScreenShareCodec: CodecPreference;
+	screenShareAv1OptIn: boolean;
+	screenShareHevcOptIn: boolean;
 	emulatedDecodeVideoCodecCap: CodecPreference;
 	screenShareContentHint: ScreenShareContentHint;
 	screenShareEncoderMode: ScreenShareEncoderMode;
@@ -108,6 +110,8 @@ const CAMERA_BACKGROUND_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 const CAMERA_CAPTURE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = ['cameraResolution'];
 const SCREEN_SHARE_CODEC_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'preferredScreenShareCodec',
+	'screenShareAv1OptIn',
+	'screenShareHevcOptIn',
 	'screenShareEncoderMode',
 	'screenShareSoftwareQuality',
 	'screenShareScalabilityMode',

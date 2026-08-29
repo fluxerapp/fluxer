@@ -85,6 +85,27 @@ const CHOOSE_THE_VIDEO_CODEC_FOR_SCREEN_SHARING_DESCRIPTOR = msg({
 	message: 'Video codec for screen sharing',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
+const ALLOW_AV1_SCREEN_SHARE_DESCRIPTOR = msg({
+	message: 'Allow AV1 for screen sharing',
+	comment: 'Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.',
+});
+const ALLOW_HEVC_SCREEN_SHARE_DESCRIPTOR = msg({
+	message: 'Allow H.265 (HEVC) for screen sharing',
+	comment:
+		'Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.',
+});
+const ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR = msg({
+	message: 'May cause compatibility issues for viewers. We’re working on improving this.',
+	comment: 'Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.',
+});
+const AV1_KEYWORD_DESCRIPTOR = msg({
+	message: 'AV1',
+	comment: 'Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.',
+});
+const HEVC_KEYWORD_DESCRIPTOR = msg({
+	message: 'HEVC',
+	comment: 'Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.',
+});
 const OPENH264_VIDEO_CODEC_DESCRIPTOR = msg({
 	message: 'OpenH264 video codec',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
@@ -204,6 +225,26 @@ export const voiceVideoIndex: Array<SearchableSettingDescriptor> = [
 		label: SCREEN_SHARE_CODEC_DESCRIPTOR,
 		keywords: [SCREEN_SHARING_CODEC_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
 		description: CHOOSE_THE_VIDEO_CODEC_FOR_SCREEN_SHARING_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['media', 'voice'],
+	},
+	{
+		id: 'voice-video-screen-share-av1-opt-in',
+		tabType: 'voice_video',
+		sectionId: 'video',
+		label: ALLOW_AV1_SCREEN_SHARE_DESCRIPTOR,
+		keywords: [AV1_KEYWORD_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
+		description: ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['media', 'voice'],
+	},
+	{
+		id: 'voice-video-screen-share-hevc-opt-in',
+		tabType: 'voice_video',
+		sectionId: 'video',
+		label: ALLOW_HEVC_SCREEN_SHARE_DESCRIPTOR,
+		keywords: [HEVC_KEYWORD_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
+		description: ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['media', 'voice'],
 	},

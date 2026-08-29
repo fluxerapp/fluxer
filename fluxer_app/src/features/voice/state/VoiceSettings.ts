@@ -101,6 +101,8 @@ type VoiceSettingsUpdate = Partial<{
 	disablePictureInPicturePopoutScreenShare: boolean;
 	preferredVideoCodec: CodecPreference;
 	preferredScreenShareCodec: CodecPreference;
+	screenShareAv1OptIn: boolean;
+	screenShareHevcOptIn: boolean;
 	emulatedDecodeVideoCodecCap: CodecPreference;
 	screenShareContentHint: ScreenShareContentHint;
 	screenShareEncoderMode: ScreenShareEncoderMode;
@@ -259,6 +261,28 @@ function applyOutputVolumeRecalibrationMigrationV1(parsed: Record<string, unknow
 	return true;
 }
 
+function applyScreenShareAv1OptOutMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.screenShareAv1OptOutMigratedV1 === true) {
+		return false;
+	}
+	if (parsed.preferredScreenShareCodec === 'av1') {
+		parsed.preferredScreenShareCodec = 'auto';
+	}
+	parsed.screenShareAv1OptOutMigratedV1 = true;
+	return true;
+}
+
+function applyScreenShareHevcOptOutMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.screenShareHevcOptOutMigratedV1 === true) {
+		return false;
+	}
+	if (parsed.preferredScreenShareCodec === 'h265') {
+		parsed.preferredScreenShareCodec = 'auto';
+	}
+	parsed.screenShareHevcOptOutMigratedV1 = true;
+	return true;
+}
+
 function applyNoiseSuppressionStandardDefaultMigrationV1(parsed: Record<string, unknown>): boolean {
 	if (parsed.noiseSuppressionStandardDefaultMigratedV1 === true) {
 		return false;
@@ -332,6 +356,10 @@ class VoiceSettings {
 	disablePictureInPicturePopoutScreenShare = false;
 	preferredVideoCodec: CodecPreference = 'auto';
 	preferredScreenShareCodec: CodecPreference = 'auto';
+	screenShareAv1OptIn = false;
+	screenShareHevcOptIn = false;
+	screenShareAv1OptOutMigratedV1 = false;
+	screenShareHevcOptOutMigratedV1 = false;
 	emulatedDecodeVideoCodecCap: CodecPreference = 'auto';
 	screenShareContentHintPrefV2: ScreenShareContentHint = DEFAULT_SCREEN_SHARE_CONTENT_HINT;
 	screenShareEncoderModePrefV2: ScreenShareEncoderMode = DEFAULT_SCREEN_SHARE_ENCODER_MODE;
@@ -403,6 +431,8 @@ class VoiceSettings {
 				getPreferredVideoCodec: false,
 				getEmulatedDecodeVideoCodecCap: false,
 				getPreferredScreenShareCodec: false,
+				getScreenShareAv1OptIn: false,
+				getScreenShareHevcOptIn: false,
 				getScreenShareContentHint: false,
 				getScreenShareContentHintOverride: false,
 				getScreenShareEncoderMode: false,
@@ -454,10 +484,14 @@ class VoiceSettings {
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
 			changed = applyNoiseSuppressionStandardDefaultMigrationV1(parsed) || changed;
+			changed = applyScreenShareAv1OptOutMigrationV1(parsed) || changed;
+			changed = applyScreenShareHevcOptOutMigrationV1(parsed) || changed;
 			if (changed) {
 				AppStorage.setItem('VoiceSettings', JSON.stringify(parsed));
 			}
 			this.outputVolumeRecalibratedV1 = parsed.outputVolumeRecalibratedV1 === true;
+			this.screenShareAv1OptOutMigratedV1 = parsed.screenShareAv1OptOutMigratedV1 === true;
+			this.screenShareHevcOptOutMigratedV1 = parsed.screenShareHevcOptOutMigratedV1 === true;
 		} catch (error) {
 			logger.warn('Failed to migrate persisted voice settings:', error);
 		}
@@ -508,6 +542,10 @@ class VoiceSettings {
 			'disablePictureInPicturePopoutScreenShare',
 			'preferredVideoCodec',
 			'preferredScreenShareCodec',
+			'screenShareAv1OptIn',
+			'screenShareHevcOptIn',
+			'screenShareAv1OptOutMigratedV1',
+			'screenShareHevcOptOutMigratedV1',
 			'emulatedDecodeVideoCodecCap',
 			'screenShareContentHintPrefV2',
 			'screenShareEncoderModePrefV2',
@@ -871,7 +909,17 @@ class VoiceSettings {
 	}
 
 	getPreferredScreenShareCodec(): CodecPreference {
+		if (this.preferredScreenShareCodec === 'av1' && !this.screenShareAv1OptIn) return 'auto';
+		if (this.preferredScreenShareCodec === 'h265' && !this.screenShareHevcOptIn) return 'auto';
 		return this.preferredScreenShareCodec;
+	}
+
+	getScreenShareAv1OptIn(): boolean {
+		return this.screenShareAv1OptIn;
+	}
+
+	getScreenShareHevcOptIn(): boolean {
+		return this.screenShareHevcOptIn;
 	}
 
 	getScreenShareContentHint(): ScreenShareContentHint {
@@ -1056,6 +1104,8 @@ class VoiceSettings {
 		if (validated.preferredVideoCodec !== undefined) this.preferredVideoCodec = validated.preferredVideoCodec;
 		if (validated.preferredScreenShareCodec !== undefined)
 			this.preferredScreenShareCodec = validated.preferredScreenShareCodec;
+		if (validated.screenShareAv1OptIn !== undefined) this.screenShareAv1OptIn = validated.screenShareAv1OptIn;
+		if (validated.screenShareHevcOptIn !== undefined) this.screenShareHevcOptIn = validated.screenShareHevcOptIn;
 		if (validated.emulatedDecodeVideoCodecCap !== undefined)
 			this.emulatedDecodeVideoCodecCap = validated.emulatedDecodeVideoCodecCap;
 		if (validated.screenShareContentHint !== undefined) this.screenShareContentHint = validated.screenShareContentHint;
@@ -1137,6 +1187,8 @@ class VoiceSettings {
 		const screenShareBackupCodecMode = validateScreenShareBackupCodecMode(
 			data.screenShareBackupCodecMode ?? this.screenShareBackupCodecMode,
 		);
+		const screenShareAv1OptIn = data.screenShareAv1OptIn ?? this.screenShareAv1OptIn;
+		const screenShareHevcOptIn = data.screenShareHevcOptIn ?? this.screenShareHevcOptIn;
 		const validCameraResolutions: Array<CameraResolution> = ['low', 'medium', 'high'];
 		if (!validCameraResolutions.includes(cameraResolution)) {
 			cameraResolution = 'medium';
@@ -1216,7 +1268,13 @@ class VoiceSettings {
 			disablePictureInPicturePopoutScreenShare:
 				data.disablePictureInPicturePopoutScreenShare ?? this.disablePictureInPicturePopoutScreenShare,
 			preferredVideoCodec: data.preferredVideoCodec ?? this.preferredVideoCodec,
-			preferredScreenShareCodec: data.preferredScreenShareCodec ?? this.preferredScreenShareCodec,
+			preferredScreenShareCodec: validateCodecPreference(
+				data.preferredScreenShareCodec ?? this.preferredScreenShareCodec,
+				screenShareAv1OptIn,
+				screenShareHevcOptIn,
+			),
+			screenShareAv1OptIn,
+			screenShareHevcOptIn,
 			emulatedDecodeVideoCodecCap: data.emulatedDecodeVideoCodecCap ?? this.emulatedDecodeVideoCodecCap,
 			screenShareContentHint: validateScreenShareContentHint(
 				data.screenShareContentHint ?? this.screenShareContentHint,
@@ -1276,6 +1334,12 @@ function validateLastScreenShareSource(value: unknown): LastScreenShareSource | 
 		title,
 		updatedAt,
 	};
+}
+
+function validateCodecPreference(value: unknown, allowAv1: boolean, allowHevc: boolean): CodecPreference {
+	if (value === 'av1') return allowAv1 ? 'av1' : 'auto';
+	if (value === 'h265') return allowHevc ? 'h265' : 'auto';
+	return value === 'vp8' || value === 'vp9' || value === 'h264' || value === 'auto' ? value : 'auto';
 }
 
 function validateScreenShareEncoderMode(mode: unknown): ScreenShareEncoderMode {
