@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import {isEditableTextInput, replaceSelectedText} from '@app/features/messaging/utils/TextInputEditUtils';
@@ -97,6 +99,11 @@ const SPELLCHECK_SETTINGS_DESCRIPTOR = msg({
 		'Item in the textarea spellcheck submenu that opens the full settings page. Trailing horizontal ellipsis (…) indicates the action opens settings.',
 });
 
+const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
+	message: 'Show send button',
+	comment: 'Short label in the channel and chat textarea plus menu. Keep it concise.',
+});
+
 export interface TextareaContextMenuEditFlags {
 	canUndo: boolean;
 	canRedo: boolean;
@@ -117,6 +124,7 @@ interface TextareaContextMenuProps {
 export const TextareaContextMenu = observer(
 	({misspelledWord, suggestions = [], editFlags, targetElement, onClose}: TextareaContextMenuProps) => {
 		const {i18n} = useLingui();
+		const showMessageSendButton = Accessibility.showMessageSendButton;
 		const electronAPI = isElectron() ? getElectronAPI() : null;
 		const focusTargetElement = () => {
 			if (!targetElement?.isConnected) {
@@ -300,6 +308,16 @@ export const TextareaContextMenu = observer(
 						)}
 						data-flx="channel.textarea.textarea-context-menu.menu-item-submenu"
 					/>
+				</MenuGroup>
+				<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--6">
+					<CheckboxItem
+						checked={showMessageSendButton}
+						onCheckedChange={(checked) => AccessibilityCommands.update({showMessageSendButton: checked})}
+						closeOnChange={false}
+						data-flx="channel.textarea.textarea-context-menu.checkbox-item.show-send-button"
+					>
+						{i18n._(SHOW_SEND_BUTTON_DESCRIPTOR)}
+					</CheckboxItem>
 				</MenuGroup>
 			</>
 		);

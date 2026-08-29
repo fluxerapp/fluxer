@@ -21,7 +21,8 @@
 }
 
 .button:hover:not(:disabled),
-.button.contextMenuHover:not(:disabled) {
+.button.contextMenuHover:not(:disabled),
+.button.selected:not(:disabled) {
 	color: var(--text-primary);
 	background-color: var(--background-modifier-hover);
 }
@@ -29,10 +30,6 @@
 .button:disabled {
 	cursor: not-allowed;
 	opacity: 0.7;
-}
-
-.button.selected {
-	color: var(--text-primary);
 }
 
 .icon {
