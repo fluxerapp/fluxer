@@ -254,10 +254,11 @@ export async function updateVanityURL(guildId: string, code: string | null): Pro
 	}
 }
 
-export async function createRole(guildId: string, name: string): Promise<void> {
+export async function createRole(guildId: string, name: string): Promise<GuildRole> {
 	try {
-		await http.post(Endpoints.GUILD_ROLES(guildId), {body: {name}});
+		const response = await http.post<GuildRole>(Endpoints.GUILD_ROLES(guildId), {body: {name}});
 		logger.debug(`Created role "${name}" in guild ${guildId}`);
+		return response.body;
 	} catch (error) {
 		logger.error(`Failed to create role in guild ${guildId}:`, error);
 		throw error;

@@ -1,16 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CopyIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {CopyRoleIdMenuItem} from '@app/features/ui/action_menu/items/CopyMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
+import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
+import {msg} from '@lingui/core/macro';
+import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
 
-interface RoleContextMenuProps {
+const DUPLICATE_ROLE_DESCRIPTOR = msg({
+	message: 'Duplicate role',
+	comment:
+		'Context menu action in the community roles settings tab that creates a new role copying the settings of the one right-clicked. Keep it short.',
+});
+
+export interface RoleContextMenuActions {
+	canDuplicate?: boolean;
+	onDuplicate?: () => void;
+}
+
+interface RoleContextMenuProps extends RoleContextMenuActions {
 	roleId: string;
 	onClose: () => void;
 }
 
-export const RoleContextMenu: React.FC<RoleContextMenuProps> = ({roleId, onClose}) => {
+export const RoleContextMenu: React.FC<RoleContextMenuProps> = ({roleId, onClose, canDuplicate, onDuplicate}) => {
+	const {i18n} = useLingui();
 	return (
 		<MenuGroup data-flx="ui.action-menu.role-context-menu.menu-group">
 			<CopyRoleIdMenuItem
@@ -18,15 +34,32 @@ export const RoleContextMenu: React.FC<RoleContextMenuProps> = ({roleId, onClose
 				onClose={onClose}
 				data-flx="ui.action-menu.role-context-menu.copy-role-id-menu-item"
 			/>
+			{canDuplicate && onDuplicate && (
+				<MenuItem
+					icon={<CopyIcon data-flx="ui.action-menu.role-context-menu.duplicate-role-menu-item.copy-icon" />}
+					onClick={() => {
+						onClose();
+						onDuplicate();
+					}}
+					data-flx="ui.action-menu.role-context-menu.duplicate-role-menu-item"
+				>
+					{i18n._(DUPLICATE_ROLE_DESCRIPTOR)}
+				</MenuItem>
+			)}
 		</MenuGroup>
 	);
 };
 
-export function openRoleContextMenu(event: React.MouseEvent | MouseEvent, roleId: string): void {
+export function openRoleContextMenu(
+	event: React.MouseEvent | MouseEvent,
+	roleId: string,
+	actions?: RoleContextMenuActions,
+): void {
 	ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 		<RoleContextMenu
 			roleId={roleId}
 			onClose={onClose}
+			{...actions}
 			data-flx="ui.action-menu.role-context-menu.open-role-context-menu.role-context-menu"
 		/>
 	));

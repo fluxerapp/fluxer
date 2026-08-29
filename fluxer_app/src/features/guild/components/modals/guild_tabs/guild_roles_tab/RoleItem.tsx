@@ -43,6 +43,7 @@ interface RoleItemProps {
 	isTerminal: boolean;
 	canManageRoles: boolean;
 	onClick: () => void;
+	onDuplicate: (roleId: string) => void;
 	onEvaluateMove: (
 		draggedRoleId: string,
 		targetRoleId: string | null,
@@ -52,15 +53,29 @@ interface RoleItemProps {
 }
 
 export const RoleItem: React.FC<RoleItemProps> = observer(
-	({role, isSelected, isLocked, isGuildOwner, isTerminal, canManageRoles, onClick, onEvaluateMove, onCommitMove}) => {
+	({
+		role,
+		isSelected,
+		isLocked,
+		isGuildOwner,
+		isTerminal,
+		canManageRoles,
+		onClick,
+		onDuplicate,
+		onEvaluateMove,
+		onCommitMove,
+	}) => {
 		const {i18n} = useLingui();
 		const elementRef = useRef<HTMLButtonElement | null>(null);
 		const [dropIndicator, setDropIndicator] = useState<{position: 'top' | 'bottom'; isValid: boolean} | null>(null);
 		const handleContextMenu = useCallback(
 			(event: React.MouseEvent<HTMLButtonElement>) => {
-				openRoleContextMenu(event, role.id);
+				openRoleContextMenu(event, role.id, {
+					canDuplicate: canManageRoles,
+					onDuplicate: () => onDuplicate(role.id),
+				});
 			},
-			[role.id],
+			[role.id, canManageRoles, onDuplicate],
 		);
 		const dragItem = useMemo<RoleDragItem>(
 			() => ({type: ROLE_DND_TYPE, id: role.id, isEveryone: role.isEveryone, isLocked}),

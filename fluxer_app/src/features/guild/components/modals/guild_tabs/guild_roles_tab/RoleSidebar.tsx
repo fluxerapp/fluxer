@@ -44,6 +44,7 @@ interface RoleSidebarProps {
 	isRoleLocked: (role: GuildRole) => boolean;
 	onSelectRole: (roleId: string) => void;
 	onCreateRole: () => void;
+	onDuplicateRole: (roleId: string) => void;
 	onEnterHoistOrderMode: () => void;
 	onExitHoistOrderMode: () => void;
 	onResetHoistOrder: () => void;
@@ -74,6 +75,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 		isRoleLocked,
 		onSelectRole,
 		onCreateRole,
+		onDuplicateRole,
 		onEnterHoistOrderMode,
 		onExitHoistOrderMode,
 		onResetHoistOrder,
@@ -155,6 +157,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 										isTerminal={index === hoistedRoles.length - 1}
 										canManageRoles={canManageRoles}
 										onClick={() => onSelectRole(role.id)}
+										onDuplicate={onDuplicateRole}
 										onEvaluateMove={onEvaluateHoistMove}
 										onCommitMove={onHoistDrop}
 										data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.role-item.set-selected-role-id"
@@ -251,6 +254,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 									isTerminal={index === roles.length - 1}
 									canManageRoles={canManageRoles}
 									onClick={() => onSelectRole(role.id)}
+									onDuplicate={onDuplicateRole}
 									onEvaluateMove={onEvaluateRoleMove}
 									onCommitMove={onRoleDrop}
 									data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.role-item.set-selected-role-id--2"

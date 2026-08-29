@@ -28,6 +28,7 @@ import {RoleUpdateFailedModal} from '@app/features/moderation/components/alerts/
 import Permission from '@app/features/permissions/state/Permission';
 import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -43,9 +44,15 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
+const logger = new Logger('GuildRolesTab');
 const NEW_ROLE_DESCRIPTOR = msg({
 	message: 'New role',
 	comment: 'Default name for a newly created role in the community roles settings tab. Short label.',
+});
+const ROLE_COPY_NAME_DESCRIPTOR = msg({
+	message: '{name} copy',
+	comment:
+		'Default name for a role created by duplicating another role in the community roles settings tab. {name} is the source role name; translate the whole label so "copy" can move or inflect as the language needs.',
 });
 const DELETE_ROLE_DESCRIPTOR = msg({
 	message: 'Delete role',
@@ -341,6 +348,55 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			);
 		}
 	}, [guild]);
+	const handleDuplicateRole = useCallback(
+		async (sourceRoleId: string) => {
+			if (!guild || !canManageRoles) return;
+			const sourceRole = guild.roles[sourceRoleId];
+			if (!sourceRole) return;
+			const copyName = i18n._(ROLE_COPY_NAME_DESCRIPTOR, {name: sourceRole.name}).slice(0, 100);
+			const grantablePermissions = sourceRole.permissions & currentUserPermissions;
+			pendingRoleCreationRef.current = true;
+			try {
+				const createdRole = await GuildCommands.createRole(guild.id, copyName);
+				await GuildCommands.updateRole(guild.id, createdRole.id, {
+					color: sourceRole.color,
+					hoist: sourceRole.hoist,
+					mentionable: sourceRole.mentionable,
+					permissions: grantablePermissions.toString(),
+				});
+				try {
+					const orderedRoleIds = roles.map((role: GuildRole) => role.id);
+					const sourceIndex = orderedRoleIds.indexOf(sourceRoleId);
+					const insertIndex = sourceIndex === -1 ? orderedRoleIds.length : sourceIndex + 1;
+					orderedRoleIds.splice(insertIndex, 0, createdRole.id);
+					const submittableRoleOrder = createSubmittableRoleOrderIds({
+						guildId: guild.id,
+						orderedRoleIds,
+						isRoleLocked: (roleId) => {
+							if (roleId === createdRole.id) return false;
+							const role = guild.roles[roleId];
+							if (!role) return true;
+							return isRoleLocked(role);
+						},
+					});
+					if (submittableRoleOrder.length > 0) {
+						await GuildCommands.setRoleOrder(guild.id, submittableRoleOrder);
+					}
+				} catch (error) {
+					logger.error(`Failed to position duplicated role in guild ${guild.id}:`, error);
+				}
+				ToastCommands.createToast({type: 'success', children: <Trans>Role created successfully</Trans>});
+			} catch (_error) {
+				pendingRoleCreationRef.current = false;
+				ModalCommands.push(
+					modal(() => (
+						<RoleCreateFailedModal data-flx="guild.guild-tabs.guild-roles-tab.handle-duplicate-role.role-create-failed-modal" />
+					)),
+				);
+			}
+		},
+		[guild, canManageRoles, roles, isRoleLocked, currentUserPermissions, i18n],
+	);
 	const handleDeleteRole = useCallback(() => {
 		if (!selectedRole || selectedRole.isEveryone || !guild) return;
 		const currentIndex = roles.findIndex((r: GuildRole) => r.id === selectedRole.id);
@@ -500,6 +556,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				isRoleLocked={isRoleLocked}
 				onSelectRole={setSelectedRoleId}
 				onCreateRole={handleCreateRole}
+				onDuplicateRole={handleDuplicateRole}
 				onEnterHoistOrderMode={handleEnterHoistOrderMode}
 				onExitHoistOrderMode={handleExitHoistOrderMode}
 				onResetHoistOrder={handleResetHoistOrder}
@@ -519,6 +576,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		isGuildOwner,
 		canManageRoles,
 		handleCreateRole,
+		handleDuplicateRole,
 		evaluateRoleMove,
 		handleRoleDrop,
 		evaluateHoistMove,
