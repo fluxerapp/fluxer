@@ -254,9 +254,16 @@ export async function updateVanityURL(guildId: string, code: string | null): Pro
 	}
 }
 
-export async function createRole(guildId: string, name: string): Promise<GuildRole> {
+export async function createRole(
+	guildId: string,
+	name: string,
+	options?: {color?: number; permissions?: bigint},
+): Promise<GuildRole> {
 	try {
-		const response = await http.post<GuildRole>(Endpoints.GUILD_ROLES(guildId), {body: {name}});
+		const body: {name: string; color?: number; permissions?: string} = {name};
+		if (options?.color !== undefined) body.color = options.color;
+		if (options?.permissions !== undefined) body.permissions = options.permissions.toString();
+		const response = await http.post<GuildRole>(Endpoints.GUILD_ROLES(guildId), {body});
 		logger.debug(`Created role "${name}" in guild ${guildId}`);
 		return response.body;
 	} catch (error) {

@@ -92,6 +92,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const [mobileShowEditor, setMobileShowEditor] = useState(false);
 	const [roleUpdates, setRoleUpdates] = useState<Map<string, RoleUpdate>>(new Map());
 	const [pendingRoleOrder, setPendingRoleOrder] = useState<Array<string> | null>(null);
+	const [optimisticRoleOrder, setOptimisticRoleOrder] = useState<Array<string> | null>(null);
 	const [hoistOrderMode, setHoistOrderMode] = useState(false);
 	const [pendingHoistOrder, setPendingHoistOrder] = useState<Array<string> | null>(null);
 	const [permissionSearchQuery, setPermissionSearchQuery] = useState('');
@@ -105,13 +106,16 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		if (!guild) return [];
 		const rolesList = Object.values(guild.roles);
 		const sorted = sortRolesByPosition(rolesList);
-		if (pendingRoleOrder) {
-			return pendingRoleOrder
+		const order = pendingRoleOrder ?? optimisticRoleOrder;
+		if (order) {
+			const mapped = order
 				.map((id: string) => sorted.find((r: GuildRole) => r.id === id))
 				.filter((r): r is GuildRole => r != null);
+			const missing = sorted.filter((r: GuildRole) => !order.includes(r.id));
+			return [...mapped, ...missing];
 		}
 		return sorted;
-	}, [guild, pendingRoleOrder]);
+	}, [guild, pendingRoleOrder, optimisticRoleOrder]);
 	useEffect(() => {
 		if (!pendingRoleOrder || !guild) return;
 		const sortedIds = sortRolesByPosition(Object.values(guild.roles)).map((role: GuildRole) => role.id);
@@ -119,6 +123,13 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		const matches = pendingRoleOrder.every((id, index) => id === sortedIds[index]);
 		if (matches) setPendingRoleOrder(null);
 	}, [pendingRoleOrder, guild]);
+	useEffect(() => {
+		if (!optimisticRoleOrder || !guild) return;
+		const sortedIds = sortRolesByPosition(Object.values(guild.roles)).map((role: GuildRole) => role.id);
+		if (optimisticRoleOrder.length !== sortedIds.length) return;
+		const matches = optimisticRoleOrder.every((id, index) => id === sortedIds[index]);
+		if (matches) setOptimisticRoleOrder(null);
+	}, [optimisticRoleOrder, guild]);
 	const hoistedRoles = useMemo(() => {
 		if (!guild) return [];
 		const rolesList = Object.values(guild.roles).filter((role) => role.hoist && !role.isEveryone);
@@ -357,18 +368,20 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			const grantablePermissions = sourceRole.permissions & currentUserPermissions;
 			pendingRoleCreationRef.current = true;
 			try {
-				const createdRole = await GuildCommands.createRole(guild.id, copyName);
-				await GuildCommands.updateRole(guild.id, createdRole.id, {
+				const createdRole = await GuildCommands.createRole(guild.id, copyName, {
 					color: sourceRole.color,
+					permissions: grantablePermissions,
+				});
+				const orderedRoleIds = roles.map((role: GuildRole) => role.id).filter((id) => id !== createdRole.id);
+				const sourceIndex = orderedRoleIds.indexOf(sourceRoleId);
+				const insertIndex = sourceIndex === -1 ? orderedRoleIds.length : sourceIndex + 1;
+				orderedRoleIds.splice(insertIndex, 0, createdRole.id);
+				setOptimisticRoleOrder(orderedRoleIds);
+				await GuildCommands.updateRole(guild.id, createdRole.id, {
 					hoist: sourceRole.hoist,
 					mentionable: sourceRole.mentionable,
-					permissions: grantablePermissions.toString(),
 				});
 				try {
-					const orderedRoleIds = roles.map((role: GuildRole) => role.id);
-					const sourceIndex = orderedRoleIds.indexOf(sourceRoleId);
-					const insertIndex = sourceIndex === -1 ? orderedRoleIds.length : sourceIndex + 1;
-					orderedRoleIds.splice(insertIndex, 0, createdRole.id);
 					const submittableRoleOrder = createSubmittableRoleOrderIds({
 						guildId: guild.id,
 						orderedRoleIds,
@@ -384,10 +397,12 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					}
 				} catch (error) {
 					logger.error(`Failed to position duplicated role in guild ${guild.id}:`, error);
+					setOptimisticRoleOrder(null);
 				}
 				ToastCommands.createToast({type: 'success', children: <Trans>Role created successfully</Trans>});
 			} catch (_error) {
 				pendingRoleCreationRef.current = false;
+				setOptimisticRoleOrder(null);
 				ModalCommands.push(
 					modal(() => (
 						<RoleCreateFailedModal data-flx="guild.guild-tabs.guild-roles-tab.handle-duplicate-role.role-create-failed-modal" />
