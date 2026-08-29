@@ -3,12 +3,15 @@
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {createAttachmentID} from '../../BrandedTypes';
+import {createAttachmentID, createMemeID, createUserID} from '../../BrandedTypes';
 import {
 	createTestAccountForAttachmentTests,
 	sendMessageWithAttachments,
 	setupTestGuildAndChannel,
 } from '../../channel/tests/AttachmentTestUtils';
+import {fetchOne} from '../../database/CassandraQueryExecution';
+import {Db} from '../../database/CassandraTypes';
+import {FavoriteMemes} from '../../Tables';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder} from '../../test/TestRequestBuilder';
@@ -40,6 +43,24 @@ interface MessageWithDecayAttachment {
 		expires_at?: string | null;
 		url?: string | null;
 	}>;
+}
+
+interface MessageWithPlaceholderAttachment {
+	id: string;
+	attachments: Array<{
+		id: string;
+		filename: string;
+		placeholder?: string | null;
+	}>;
+}
+
+async function clearFavoriteMemePlaceholder(userId: string, memeId: string) {
+	await fetchOne(
+		FavoriteMemes.patchByPk(
+			{user_id: createUserID(BigInt(userId)), meme_id: createMemeID(BigInt(memeId))},
+			{placeholder: Db.set(null)},
+		),
+	);
 }
 
 async function fetchDecayRow(attachmentId: string) {
@@ -110,6 +131,43 @@ describe('Favorite Meme Operations', () => {
 			.execute();
 		expect(sent.attachments[0].filename).toBe(filename);
 		expect(sent.attachments[0].flags & MessageAttachmentFlags.IS_ANIMATED).toBe(MessageAttachmentFlags.IS_ANIMATED);
+	});
+	test('should carry the saved placeholder onto the sent attachment', async () => {
+		const account = await createTestAccountForAttachmentTests(harness);
+		const {channel} = await setupTestGuildAndChannel(harness, account);
+		const message = await createMessageWithImageAttachment(harness, account.token, channel.id);
+		const meme = await createFavoriteMemeFromMessage(harness, account.token, channel.id, message.id, {
+			attachment_id: message.attachments[0].id,
+			name: 'Placeholder Meme',
+		});
+		expect(meme.placeholder).toBeTruthy();
+		const sent = await createBuilder<MessageWithPlaceholderAttachment>(harness, account.token)
+			.post(`/channels/${channel.id}/messages`)
+			.body({favorite_meme_id: meme.id})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(sent.attachments[0].placeholder).toBe(meme.placeholder);
+	});
+	test('should read-repair a missing placeholder when sending a favorite meme', async () => {
+		const account = await createTestAccountForAttachmentTests(harness);
+		const {channel} = await setupTestGuildAndChannel(harness, account);
+		const message = await createMessageWithImageAttachment(harness, account.token, channel.id);
+		const meme = await createFavoriteMemeFromMessage(harness, account.token, channel.id, message.id, {
+			attachment_id: message.attachments[0].id,
+			name: 'Repair Meme',
+		});
+		expect(meme.placeholder).toBeTruthy();
+		await clearFavoriteMemePlaceholder(account.userId, meme.id);
+		const stripped = await getFavoriteMeme(harness, account.token, meme.id);
+		expect(stripped.placeholder).toBeNull();
+		const sent = await createBuilder<MessageWithPlaceholderAttachment>(harness, account.token)
+			.post(`/channels/${channel.id}/messages`)
+			.body({favorite_meme_id: meme.id})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(sent.attachments[0].placeholder).toBeTruthy();
+		const repaired = await getFavoriteMeme(harness, account.token, meme.id);
+		expect(repaired.placeholder).toBe(sent.attachments[0].placeholder);
 	});
 	test('should create decay metadata when sending favorite meme', async () => {
 		const account = await createTestAccountForAttachmentTests(harness);

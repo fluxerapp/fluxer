@@ -37,6 +37,7 @@ export class TestMediaService extends IMediaService {
 				height: 128,
 				animated: stored ? this.isAnimatedImage(stored, format) : format === 'gif',
 				nsfw: false,
+				placeholder: this.fakePlaceholder(request.key),
 			};
 		}
 		if (request.type === 'upload') {
@@ -55,6 +56,7 @@ export class TestMediaService extends IMediaService {
 				height: 128,
 				animated: format === 'gif',
 				nsfw: false,
+				placeholder: this.fakePlaceholder(request.upload_filename),
 			};
 		}
 		if (request.type === 'external') {
@@ -67,9 +69,14 @@ export class TestMediaService extends IMediaService {
 				height: 128,
 				animated: false,
 				nsfw: false,
+				placeholder: this.fakePlaceholder(request.url),
 			};
 		}
 		return null;
+	}
+
+	private fakePlaceholder(seed: string): string {
+		return crypto.createHash('sha256').update(seed).digest('base64').slice(0, 24);
 	}
 
 	getExternalMediaProxyURL(): string {

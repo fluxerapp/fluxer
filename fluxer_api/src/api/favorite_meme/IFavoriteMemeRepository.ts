@@ -34,6 +34,8 @@ export abstract class IFavoriteMemeRepository {
 
 	abstract update(userId: UserID, memeId: MemeID, data: CreateFavoriteMemeParams): Promise<FavoriteMeme>;
 
+	abstract updatePlaceholder(userId: UserID, memeId: MemeID, placeholder: string): Promise<void>;
+
 	abstract delete(userId: UserID, memeId: MemeID): Promise<void>;
 
 	abstract deleteAllByUserId(userId: UserID): Promise<void>;

@@ -2,6 +2,7 @@
 
 import type {MemeID, UserID} from '../BrandedTypes';
 import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
+import {Db} from '../database/CassandraTypes';
 import type {FavoriteMemeRow} from '../database/types/UserTypes';
 import {FavoriteMeme} from '../models/FavoriteMeme';
 import {FavoriteMemes, FavoriteMemesByMemeId} from '../Tables';
@@ -97,6 +98,10 @@ export class FavoriteMemeRepository extends IFavoriteMemeRepository {
 		};
 		await upsertOne(FavoriteMemes.upsertAll(memeRow));
 		return new FavoriteMeme(memeRow);
+	}
+
+	async updatePlaceholder(userId: UserID, memeId: MemeID, placeholder: string): Promise<void> {
+		await fetchOne(FavoriteMemes.patchByPk({user_id: userId, meme_id: memeId}, {placeholder: Db.set(placeholder)}));
 	}
 
 	async delete(userId: UserID, memeId: MemeID): Promise<void> {
