@@ -94,7 +94,7 @@ function getDatabase(): Promise<IDBDatabase> {
 	if (openPromise) {
 		return openPromise;
 	}
-	openPromise = new Promise((resolve, reject) => {
+	const promise = new Promise<IDBDatabase>((resolve, reject) => {
 		if (!browserIndexedDB) {
 			reject(new Error('IndexedDB unavailable'));
 			return;
@@ -126,7 +126,13 @@ function getDatabase(): Promise<IDBDatabase> {
 		request.onerror = () => reject(request.error ?? new Error('Failed to open theme library database'));
 		request.onblocked = () => reject(new Error('Theme library database upgrade is blocked by another window'));
 	});
-	return openPromise;
+	promise.catch(() => {
+		if (openPromise === promise) {
+			openPromise = null;
+		}
+	});
+	openPromise = promise;
+	return promise;
 }
 
 async function withReadonlyDb<T>(

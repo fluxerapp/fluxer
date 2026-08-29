@@ -125,6 +125,7 @@ class ThemeLibrary {
 	localFiles: Array<ThemeLibraryLocalFileReference> = [];
 	enabledThemeIds: Array<string> = [];
 	isHydrated = false;
+	loadFailed = false;
 	isBusy = false;
 	revision = 0;
 	private initPromise: Promise<void> | null = null;
@@ -173,12 +174,13 @@ class ThemeLibrary {
 				this.localFiles = localFiles.sort((a, b) => a.name.localeCompare(b.name));
 				this.enabledThemeIds = enabledThemeIds.filter((id) => themes.some((theme) => theme.id === id));
 				this.isHydrated = true;
+				this.loadFailed = false;
 				this.revision += 1;
 			});
 		} catch (error) {
 			logger.error('Failed to hydrate theme library', error);
 			runInAction(() => {
-				this.isHydrated = true;
+				this.loadFailed = true;
 			});
 		}
 	}

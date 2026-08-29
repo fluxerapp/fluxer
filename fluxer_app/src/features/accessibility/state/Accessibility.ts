@@ -33,6 +33,7 @@ export const ZOOM_LEVEL_MARKERS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0] as cons
 export const ACCESSIBILITY_STORE_STORAGE_KEY = 'Accessibility';
 export const ACCESSIBILITY_ZOOM_STORAGE_KEY = 'Accessibility:zoomLevel';
 export const ACCESSIBILITY_CUSTOM_THEME_STORAGE_KEY = 'Accessibility:customThemeCss';
+const ACCESSIBILITY_CUSTOM_THEME_SYNC_STORAGE_KEY = 'Accessibility:customThemeCssSyncAcrossDevices';
 export const ACCESSIBILITY_MOTION_STORAGE_KEY = 'Accessibility:motion';
 export const ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY = 'Accessibility:showNeko';
 export const ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY = 'Accessibility:keepNekoStill';
@@ -492,6 +493,21 @@ function persistLocalCustomThemeCss(css: string | null): void {
 	} catch {}
 }
 
+function persistLocalCustomThemeCssSyncAcrossDevices(value: boolean): void {
+	try {
+		AppStorage.setItem(ACCESSIBILITY_CUSTOM_THEME_SYNC_STORAGE_KEY, JSON.stringify(value));
+	} catch {}
+}
+
+function readLocalCustomThemeCssSyncAcrossDevices(): boolean {
+	try {
+		const raw = AppStorage.getItem(ACCESSIBILITY_CUSTOM_THEME_SYNC_STORAGE_KEY);
+		return raw === null ? false : JSON.parse(raw) === true;
+	} catch {
+		return false;
+	}
+}
+
 function normalizeCustomThemeCss(css: string | null | undefined): string | null {
 	if (typeof css !== 'string') {
 		return null;
@@ -728,6 +744,7 @@ class Accessibility {
 		if (this.customThemeCss !== null) {
 			persistLocalCustomThemeCss(this.customThemeCss);
 		}
+		this.customThemeCssSyncAcrossDevices = readLocalCustomThemeCssSyncAcrossDevices();
 		this.showNeko = readAndMigrateLocalShowNeko();
 		this.keepNekoStill = readAndMigrateLocalKeepNekoStill();
 		this.showVideoSeekPreviewThumbnails = readLocalVideoSeekPreviewThumbnails();
@@ -851,7 +868,11 @@ class Accessibility {
 				showStickersInAutocomplete: s.showStickersInExpressionAutocomplete,
 				showMemesInAutocomplete: s.showMemesInExpressionAutocomplete,
 				voiceChannelJoinRequiresDoubleClick: s.voiceChannelJoinRequiresDoubleClick,
-				customThemeCss: s.customThemeCssSyncAcrossDevices ? (s.customThemeCss ?? '') : (s.serverCustomThemeCss ?? ''),
+				customThemeCss: ((): string | undefined => {
+					const local = s.customThemeCss;
+					const server = s.serverCustomThemeCss;
+					return (s.customThemeCssSyncAcrossDevices ? local : server) ?? undefined;
+				})(),
 				showFavorites: s.showFavorites,
 				dmMessagePreviewMode: DM_PREVIEW_TO_PROTO[s.dmMessagePreviewMode],
 				enableTtsCommand: s.enableTTSCommand,
@@ -1396,6 +1417,7 @@ class Accessibility {
 			persistLocalCustomThemeCss(this.customThemeCss);
 		}
 		this.customThemeCssSyncAcrossDevices = syncAcrossDevices;
+		persistLocalCustomThemeCssSyncAcrossDevices(syncAcrossDevices);
 	}
 
 	subscribe(callback: () => void): () => void {

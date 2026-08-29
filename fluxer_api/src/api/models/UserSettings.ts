@@ -254,7 +254,7 @@ function normalizeStoredSyncedPreferences(raw: string | null | undefined): strin
 	try {
 		decodeSyncedPreferences(raw);
 	} catch {
-		return '';
+		return raw;
 	}
 	return raw;
 }
