@@ -118,11 +118,19 @@ interface TextareaContextMenuProps {
 	suggestions?: Array<string>;
 	editFlags?: TextareaContextMenuEditFlags;
 	targetElement?: HTMLElement | null;
+	showSendButtonToggle?: boolean;
 	onClose: () => void;
 }
 
 export const TextareaContextMenu = observer(
-	({misspelledWord, suggestions = [], editFlags, targetElement, onClose}: TextareaContextMenuProps) => {
+	({
+		misspelledWord,
+		suggestions = [],
+		editFlags,
+		targetElement,
+		showSendButtonToggle = false,
+		onClose,
+	}: TextareaContextMenuProps) => {
 		const {i18n} = useLingui();
 		const showMessageSendButton = Accessibility.showMessageSendButton;
 		const electronAPI = isElectron() ? getElectronAPI() : null;
@@ -309,16 +317,18 @@ export const TextareaContextMenu = observer(
 						data-flx="channel.textarea.textarea-context-menu.menu-item-submenu"
 					/>
 				</MenuGroup>
-				<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--6">
-					<CheckboxItem
-						checked={showMessageSendButton}
-						onCheckedChange={(checked) => AccessibilityCommands.update({showMessageSendButton: checked})}
-						closeOnChange={false}
-						data-flx="channel.textarea.textarea-context-menu.checkbox-item.show-send-button"
-					>
-						{i18n._(SHOW_SEND_BUTTON_DESCRIPTOR)}
-					</CheckboxItem>
-				</MenuGroup>
+				{showSendButtonToggle && (
+					<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--6">
+						<CheckboxItem
+							checked={showMessageSendButton}
+							onCheckedChange={(checked) => AccessibilityCommands.update({showMessageSendButton: checked})}
+							closeOnChange={false}
+							data-flx="channel.textarea.textarea-context-menu.checkbox-item.show-send-button"
+						>
+							{i18n._(SHOW_SEND_BUTTON_DESCRIPTOR)}
+						</CheckboxItem>
+					</MenuGroup>
+				)}
 			</>
 		);
 	},

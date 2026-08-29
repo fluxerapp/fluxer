@@ -218,6 +218,7 @@ export const useTextInputContextMenu = () => {
 				suggestions: params.suggestions,
 				editFlags: params.editFlags as TextareaContextMenuEditFlags | undefined,
 				targetElement: resolvedTarget.editable,
+				showSendButtonToggle: resolvedTarget.editable.closest('flx-channel-textarea') != null,
 			});
 		});
 		return () => {
