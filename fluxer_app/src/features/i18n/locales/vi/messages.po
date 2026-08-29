@@ -35209,11 +35209,6 @@ msgstr "Sử dụng {everyoneMention}/{hereMention} và {rolesMention}"
 msgid "Use {pixPaymentMethod}"
 msgstr "Sử dụng {pixPaymentMethod}"
 
-#. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
-msgid "Use {productName}'s in-app dictionaries when available. Otherwise, use your operating system's spellchecker."
-msgstr "Sử dụng từ điển trong ứng dụng của {productName} khi có sẵn. Nếu không, hãy dùng trình kiểm tra chính tả của hệ điều hành."
-
 #. Description text in the add custom search engine modal. Preserve {query}; it is inserted by code.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:50
 msgid "Use {query} where the search text should be inserted."
@@ -35532,6 +35527,11 @@ msgstr "Sử dụng bản xem trước video và camera."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
 msgid "Use voice activity"
 msgstr "Sử dụng tính năng kích hoạt bằng giọng nói"
+
+#. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
+msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
+msgstr "Sử dụng trình kiểm tra chính tả của hệ điều hành khi có sẵn. Nếu không, hãy sử dụng từ điển tích hợp của {productName}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:689

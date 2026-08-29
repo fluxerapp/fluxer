@@ -1777,6 +1777,9 @@
         "msgid": "Use video and camera previews."
       },
       {
+        "msgid": "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
+      },
+      {
         "msgid": "Volume sliders"
       },
       {

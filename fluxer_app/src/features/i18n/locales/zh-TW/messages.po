@@ -35209,11 +35209,6 @@ msgstr "使用 {everyoneMention}/{hereMention} 和 {rolesMention}"
 msgid "Use {pixPaymentMethod}"
 msgstr "使用 {pixPaymentMethod}"
 
-#. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
-msgid "Use {productName}'s in-app dictionaries when available. Otherwise, use your operating system's spellchecker."
-msgstr "如果可用，請使用 {productName} 的應用程式內建字典。否則，請使用您作業系統的拼字檢查工具。"
-
 #. Description text in the add custom search engine modal. Preserve {query}; it is inserted by code.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:50
 msgid "Use {query} where the search text should be inserted."
@@ -35532,6 +35527,11 @@ msgstr "使用影片和相機預覽。"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
 msgid "Use voice activity"
 msgstr "使用語音活動"
+
+#. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
+msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
+msgstr "使用你作業系統的拼字檢查程式（如果可用）。否則，請使用 {productName} 的應用程式內字典。"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:689

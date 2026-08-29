@@ -35209,11 +35209,6 @@ msgstr "{everyoneMention}/{hereMention} 및 {rolesMention} 사용"
 msgid "Use {pixPaymentMethod}"
 msgstr "{pixPaymentMethod} 사용"
 
-#. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
-msgid "Use {productName}'s in-app dictionaries when available. Otherwise, use your operating system's spellchecker."
-msgstr "{productName}의 앱 내 사전을 사용할 수 있는 경우 사용합니다. 그렇지 않으면 운영체제의 맞춤법 검사기를 사용합니다."
-
 #. Description text in the add custom search engine modal. Preserve {query}; it is inserted by code.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:50
 msgid "Use {query} where the search text should be inserted."
@@ -35532,6 +35527,11 @@ msgstr "동영상 및 카메라 미리보기를 사용합니다."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
 msgid "Use voice activity"
 msgstr "음성 자동 감지 사용"
+
+#. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
+msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
+msgstr "운영 체제에서 제공하는 맞춤법 검사기를 사용하세요. 사용 가능한 경우, 그렇지 않으면 {productName}의 인앱 사전을 사용하세요."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:689
