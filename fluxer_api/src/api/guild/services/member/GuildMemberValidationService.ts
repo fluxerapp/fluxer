@@ -74,9 +74,10 @@ export class GuildMemberValidationService {
 		userId: UserID;
 		targetId: UserID;
 		roleId: RoleID;
+		hasPermission: (permission: bigint) => Promise<boolean>;
 		canManageRoles: (targetUserId: UserID, targetRoleId: RoleID) => Promise<boolean>;
 	}): Promise<void> {
-		const {guildData, guildId, userId, targetId, roleId, canManageRoles} = params;
+		const {guildData, guildId, userId, targetId, roleId, hasPermission, canManageRoles} = params;
 		ensureNotEveryoneRole(roleId, guildId, 'role_id');
 		if (guildData && guildData.owner_id === userId.toString()) {
 			const role = await this.guildRepository.getRole(roleId, guildId);
@@ -84,6 +85,9 @@ export class GuildMemberValidationService {
 				throw new UnknownGuildRoleError();
 			}
 		} else {
+			if (!(await hasPermission(Permissions.MANAGE_ROLES))) {
+				throw new MissingPermissionsError();
+			}
 			if (!(await canManageRoles(targetId, roleId))) {
 				throw new MissingPermissionsError();
 			}

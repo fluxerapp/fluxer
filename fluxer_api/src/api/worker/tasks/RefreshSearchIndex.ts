@@ -21,6 +21,7 @@ import {
 } from '../../SearchFactory';
 import type {IGuildMemberSearchService} from '../../search/IGuildMemberSearchService';
 import type {IMessageSearchService} from '../../search/IMessageSearchService';
+import {deleteChannelMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
 import {getWorkerDependencies} from '../WorkerContext';
 
 const INDEX_TYPES = [
@@ -190,10 +191,15 @@ const refreshChannelMessages: IndexHandler = async (payload, helpers, kvClient, 
 	const {channelRepository} = getWorkerDependencies();
 	const guildId = createGuildID(BigInt(payload.guild_id!));
 	const searchService = requireSearchService<IMessageSearchService>(getMessageSearchService());
-	await searchService.deleteGuildMessages(guildId);
 	const channels = await channelRepository.listGuildChannels(guildId);
 	if (channels.length === 0) {
 		return 0;
+	}
+	for (const channel of channels) {
+		await deleteChannelMessageSearchDocuments(channel.id, {
+			searchService,
+			context: {source: 'bulk_reindex', guildId: guildId.toString()},
+		});
 	}
 	const completionKey = `bulk_reindex:${payload.job_id}:remaining`;
 	await kvClient.del(completionKey);

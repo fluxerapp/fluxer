@@ -42,7 +42,7 @@ export class GuildMemberRoleService {
 		requestCache: RequestCache;
 	}): Promise<void> {
 		const {userId, targetId, guildId, roleId} = params;
-		const {guildData, canManageRoles} = await this.authService.getGuildAuthenticated({userId, guildId});
+		const {guildData, hasPermission, canManageRoles} = await this.authService.getGuildAuthenticated({userId, guildId});
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		await this.validationService.validateRoleAssignment({
@@ -51,6 +51,7 @@ export class GuildMemberRoleService {
 			userId,
 			targetId,
 			roleId,
+			hasPermission,
 			canManageRoles,
 		});
 		if (targetMember.roleIds.has(roleId)) return;
@@ -75,7 +76,7 @@ export class GuildMemberRoleService {
 		requestCache: RequestCache;
 	}): Promise<void> {
 		const {userId, targetId, guildId, roleId} = params;
-		const {guildData, canManageRoles} = await this.authService.getGuildAuthenticated({userId, guildId});
+		const {guildData, hasPermission, canManageRoles} = await this.authService.getGuildAuthenticated({userId, guildId});
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		await this.validationService.validateRoleAssignment({
@@ -84,6 +85,7 @@ export class GuildMemberRoleService {
 			userId,
 			targetId,
 			roleId,
+			hasPermission,
 			canManageRoles,
 		});
 		if (!targetMember.roleIds.has(roleId)) return;

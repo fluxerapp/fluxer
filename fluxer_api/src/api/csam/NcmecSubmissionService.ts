@@ -30,6 +30,7 @@ import {Config} from '../Config';
 import type {IChannelRepository} from '../channel/IChannelRepository';
 import type {AttachmentUploadTraceRepository} from '../channel/repositories/message/AttachmentUploadTraceRepository';
 import {
+	collectMessageAttachments,
 	makeAttachmentCdnKey,
 	makeAttachmentCdnUrl,
 	purgeMessageAttachments,
@@ -43,6 +44,9 @@ import type {IStorageService} from '../infrastructure/IStorageService';
 import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
 import type {UserCacheService} from '../infrastructure/UserCacheService';
 import {Logger} from '../Logger';
+import type {Embed} from '../models/Embed';
+import type {EmbedMedia} from '../models/EmbedMedia';
+import type {Message} from '../models/Message';
 import type {User} from '../models/User';
 import type {IARMessageContext, IARSubmission} from '../report/IReportRepository';
 import type {ReportRepository} from '../report/ReportRepository';
@@ -471,18 +475,34 @@ export class NcmecSubmissionService {
 
 	private async resolveAttachment(input: SubmitAttachmentToNcmecInput): Promise<ResolvedAttachment> {
 		const liveMessage = await this.deps.channelRepository.getMessage(input.channelId, input.messageId);
-		const liveAttachment = liveMessage?.attachments.find(
-			(attachment) => attachment.id === input.attachmentId && attachment.filename === input.filename,
-		);
-		if (liveMessage?.authorId && liveAttachment) {
-			return this.buildAttachmentContext(input, {
-				contentType: liveAttachment.contentType,
-				reportedAt: snowflakeToDate(input.messageId),
-				userId: liveMessage.authorId,
-				sourceReportId: input.sourceReportId ?? null,
-				bucket: Config.s3.buckets.cdn,
-				storageKey: makeAttachmentCdnKey(input.channelId, input.attachmentId, input.filename),
-			});
+		if (liveMessage?.authorId) {
+			const liveAttachment = collectMessageAttachments(liveMessage).find(
+				(attachment) => attachment.id === input.attachmentId && attachment.filename === input.filename,
+			);
+			if (liveAttachment) {
+				return this.buildAttachmentContext(input, {
+					contentType: liveAttachment.contentType,
+					reportedAt: snowflakeToDate(input.messageId),
+					userId: liveMessage.authorId,
+					sourceReportId: input.sourceReportId ?? null,
+					bucket: Config.s3.buckets.cdn,
+					storageKey: makeAttachmentCdnKey(input.channelId, input.attachmentId, input.filename),
+				});
+			}
+			const embedMedia = findEmbedReferencedAttachmentMedia(
+				liveMessage,
+				makeAttachmentCdnUrl(input.channelId, input.attachmentId, input.filename),
+			);
+			if (embedMedia) {
+				return this.buildAttachmentContext(input, {
+					contentType: embedMedia.contentType,
+					reportedAt: snowflakeToDate(input.messageId),
+					userId: liveMessage.authorId,
+					sourceReportId: input.sourceReportId ?? null,
+					bucket: Config.s3.buckets.cdn,
+					storageKey: makeAttachmentCdnKey(input.channelId, input.attachmentId, input.filename),
+				});
+			}
 		}
 		if (!input.sourceReportId) {
 			throw new UnknownMessageError();
@@ -937,6 +957,30 @@ function buildAuditMetadata(args: {
 		}
 	}
 	return metadata;
+}
+
+function findEmbedReferencedAttachmentMedia(message: Message, targetCdnUrl: string): EmbedMedia | null {
+	const scan = (embeds: Array<Embed>): EmbedMedia | null => {
+		for (const embed of embeds) {
+			for (const media of [embed.image, embed.thumbnail, embed.video, embed.audio]) {
+				if (media?.url === targetCdnUrl) {
+					return media;
+				}
+			}
+		}
+		return null;
+	};
+	const direct = scan(message.embeds);
+	if (direct) {
+		return direct;
+	}
+	for (const snapshot of message.messageSnapshots) {
+		const found = scan(snapshot.embeds);
+		if (found) {
+			return found;
+		}
+	}
+	return null;
 }
 
 function findAttachmentInReport(
