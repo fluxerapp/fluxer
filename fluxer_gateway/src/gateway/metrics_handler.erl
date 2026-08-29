@@ -7,14 +7,36 @@
 
 -spec init(cowboy_req:req(), term()) -> {ok, cowboy_req:req(), term()}.
 init(Req0, State) ->
-    Body = render_metrics(),
-    Req = cowboy_req:reply(
-        200,
-        #{<<"content-type">> => <<"text/plain; version=0.0.4; charset=utf-8">>},
-        Body,
-        Req0
-    ),
-    {ok, Req, State}.
+    case is_loopback_request(Req0) of
+        false ->
+            Req = cowboy_req:reply(
+                403,
+                #{<<"content-type">> => <<"text/plain">>},
+                <<"FORBIDDEN">>,
+                Req0
+            ),
+            {ok, Req, State};
+        true ->
+            Body = render_metrics(),
+            Req = cowboy_req:reply(
+                200,
+                #{<<"content-type">> => <<"text/plain; version=0.0.4; charset=utf-8">>},
+                Body,
+                Req0
+            ),
+            {ok, Req, State}
+    end.
+
+-spec is_loopback_request(cowboy_req:req()) -> boolean().
+is_loopback_request(Req) ->
+    case cowboy_req:peer(Req) of
+        {{127, 0, 0, 1}, _Port} ->
+            true;
+        {{0, 0, 0, 0, 0, 0, 0, 1}, _Port} ->
+            true;
+        _ ->
+            false
+    end.
 
 -spec render_metrics() -> iolist().
 render_metrics() ->
