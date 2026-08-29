@@ -91,6 +91,7 @@ export interface IStorageService {
 		key: string;
 		uploadId: string;
 		partNumber: number;
+		contentLength?: number;
 		expiresIn?: number;
 	}): Promise<string>;
 	purgeBucket(bucket: string): Promise<void>;

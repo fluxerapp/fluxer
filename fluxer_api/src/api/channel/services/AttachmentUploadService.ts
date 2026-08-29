@@ -233,11 +233,14 @@ export class AttachmentUploadService {
 				const parts = await Promise.all(
 					Array.from({length: partCount}, async (_, index) => {
 						const partNumber = index + 1;
+						const partContentLength =
+							partNumber < partCount ? partSize : attachment.file_size - partSize * (partCount - 1);
 						const presigned_upload_url = await this.storageService.getPresignedUploadPartURL({
 							bucket,
 							key: uploadKey,
 							uploadId,
 							partNumber,
+							contentLength: partContentLength,
 						});
 						const upload_url = applyUploadRelayDecision({
 							presignedUrl: presigned_upload_url,
@@ -246,7 +249,7 @@ export class AttachmentUploadService {
 							relayDecision: uploadRelayDecision,
 							uploadId,
 							partNumber,
-							maxBytes: partSize,
+							maxBytes: partContentLength,
 						});
 						return {part_number: partNumber, upload_url};
 					}),
@@ -275,7 +278,7 @@ export class AttachmentUploadService {
 		if (!Config.presignedAttachmentUploadsEnabled) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		await this.getUploadPermissionAndLimit({userId, channelId});
+		const {maxFileSize} = await this.getUploadPermissionAndLimit({userId, channelId});
 		const bucket = Config.s3.buckets.uploads;
 		return Promise.all(
 			uploads.map(async ({upload_filename, upload_id}, index) => {
@@ -304,6 +307,13 @@ export class AttachmentUploadService {
 						.abortMultipartUpload({bucket, key: upload_filename, uploadId: upload_id})
 						.catch(() => undefined);
 					throw InputValidationError.fromCode('parts', ValidationErrorCodes.NO_UPLOADED_PARTS_TO_FINALIZE);
+				}
+				const totalUploadedBytes = parts.reduce((sum, part) => sum + (part.size ?? 0), 0);
+				if (totalUploadedBytes > maxFileSize) {
+					await this.storageService
+						.abortMultipartUpload({bucket, key: upload_filename, uploadId: upload_id})
+						.catch(() => undefined);
+					throw new FileSizeTooLargeError(maxFileSize);
 				}
 				try {
 					await runAttachmentStorageOperation(() =>

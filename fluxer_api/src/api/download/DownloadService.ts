@@ -51,6 +51,7 @@ function isUnsatisfiableRangeError(error: unknown): boolean {
 }
 const DESKTOP_BUCKET_PREFIX = 'desktop';
 const DESKTOP_TEST_BUCKET_PREFIX = 'desktop-test';
+const DOWNLOAD_KEY_ALLOWED_PREFIXES = [`${DESKTOP_BUCKET_PREFIX}/`, `${DESKTOP_TEST_BUCKET_PREFIX}/`];
 const DEFAULT_API_CLIENT_BASE_URL = 'https://api.fluxer.app';
 const GITHUB_RELEASE_DOWNLOAD_BASE_URL = 'https://github.com/fluxerapp/fluxer/releases/download';
 const GITHUB_RELEASE_MARKER_DIRECTORY = 'github-releases';
@@ -987,7 +988,13 @@ export class DownloadService {
 				return null;
 			}
 		}
-		return normalized.length > 0 ? normalized : null;
+		if (normalized.length === 0) {
+			return null;
+		}
+		if (!DOWNLOAD_KEY_ALLOWED_PREFIXES.some((prefix) => normalized.startsWith(prefix))) {
+			return null;
+		}
+		return normalized;
 	}
 
 	private normalizePlatformArchKey(key: string): string | null {

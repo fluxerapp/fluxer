@@ -89,29 +89,77 @@ function isFqdnHostname(hostname: string): boolean {
 	return !/^\d+$/.test(topLevelDomain);
 }
 
-function parseIpv4MappedIpv6Address(ipv6Address: string): string | null {
+function expandIpv6ToBytes(ipv6Address: string): Uint8Array | null {
 	const normalized = stripIpv6Brackets(ipv6Address.trim().toLowerCase());
-	if (!normalized.startsWith('::ffff:')) {
+	if (isIP(normalized) !== 6) {
 		return null;
 	}
-	const suffix = normalized.slice('::ffff:'.length);
-	if (isIP(suffix) === 4) {
-		return suffix;
+	let head = normalized;
+	let embeddedIpv4Octets: Array<number> | null = null;
+	const lastColonIndex = head.lastIndexOf(':');
+	const trailing = head.slice(lastColonIndex + 1);
+	if (trailing.includes('.')) {
+		if (isIP(trailing) !== 4) {
+			return null;
+		}
+		embeddedIpv4Octets = trailing.split('.').map((part) => Number.parseInt(part, 10));
+		head = `${head.slice(0, lastColonIndex + 1)}0:0`;
 	}
-	const groups = suffix.split(':');
-	if (groups.length !== 2) {
+	let groups: Array<string>;
+	if (head.indexOf('::') === -1) {
+		groups = head.split(':');
+		if (groups.length !== 8) {
+			return null;
+		}
+	} else {
+		const [beforePart, afterPart] = head.split('::');
+		const before = beforePart.length > 0 ? beforePart.split(':') : [];
+		const after = afterPart.length > 0 ? afterPart.split(':') : [];
+		const missing = 8 - before.length - after.length;
+		if (missing < 1) {
+			return null;
+		}
+		groups = [...before, ...new Array(missing).fill('0'), ...after];
+	}
+	const bytes = new Uint8Array(16);
+	for (let index = 0; index < 8; index += 1) {
+		const value = parseHexGroup(groups[index]);
+		if (value === null) {
+			return null;
+		}
+		bytes[index * 2] = (value >> 8) & 0xff;
+		bytes[index * 2 + 1] = value & 0xff;
+	}
+	if (embeddedIpv4Octets) {
+		bytes[12] = embeddedIpv4Octets[0];
+		bytes[13] = embeddedIpv4Octets[1];
+		bytes[14] = embeddedIpv4Octets[2];
+		bytes[15] = embeddedIpv4Octets[3];
+	}
+	return bytes;
+}
+
+function parseEmbeddedIpv4Address(ipv6Address: string): string | null {
+	const bytes = expandIpv6ToBytes(ipv6Address);
+	if (!bytes) {
 		return null;
 	}
-	const high = parseHexGroup(groups[0]);
-	const low = parseHexGroup(groups[1]);
-	if (high === null || low === null) {
-		return null;
+	const hasPrefix = (prefix: Array<number>): boolean => prefix.every((byte, index) => bytes[index] === byte);
+	const dottedQuadAt = (start: number): string =>
+		`${bytes[start]}.${bytes[start + 1]}.${bytes[start + 2]}.${bytes[start + 3]}`;
+	if (hasPrefix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff])) {
+		return dottedQuadAt(12);
 	}
-	const octet1 = (high >> 8) & 0xff;
-	const octet2 = high & 0xff;
-	const octet3 = (low >> 8) & 0xff;
-	const octet4 = low & 0xff;
-	return `${octet1}.${octet2}.${octet3}.${octet4}`;
+	if (hasPrefix([0x00, 0x64, 0xff, 0x9b, 0, 0, 0, 0, 0, 0, 0, 0])) {
+		return dottedQuadAt(12);
+	}
+	if (hasPrefix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])) {
+		return dottedQuadAt(12);
+	}
+	if (hasPrefix([0x20, 0x02])) {
+		return dottedQuadAt(2);
+	}
+	return null;
 }
 
 function parseHexGroup(value: string | undefined): number | null {
@@ -128,9 +176,9 @@ function isBlockedIpAddress(address: string): boolean {
 		return blockedIpv4List.check(normalizedAddress, 'ipv4');
 	}
 	if (family === 6) {
-		const mappedIpv4 = parseIpv4MappedIpv6Address(normalizedAddress);
-		if (mappedIpv4) {
-			return blockedIpv4List.check(mappedIpv4, 'ipv4');
+		const embeddedIpv4 = parseEmbeddedIpv4Address(normalizedAddress);
+		if (embeddedIpv4) {
+			return blockedIpv4List.check(embeddedIpv4, 'ipv4');
 		}
 		return blockedIpv6List.check(normalizedAddress, 'ipv6');
 	}

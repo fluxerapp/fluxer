@@ -118,15 +118,17 @@ export class UserRelationshipService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<Relationship> {
-		if (!staffForceAccept && (await getInstanceConfigRepository().getInstancePolicyConfig()).direct_messages_disabled) {
+		const requesterUser = await this.userRepository.findUnique(userId);
+		const requesterIsStaff =
+			requesterUser != null && (requesterUser.flags & UserFlags.STAFF) === UserFlags.STAFF;
+		if (
+			!requesterIsStaff &&
+			(await getInstanceConfigRepository().getInstancePolicyConfig()).direct_messages_disabled
+		) {
 			throw new DirectMessagesDisabledError();
 		}
-		const requesterUser = await this.userRepository.findUnique(userId);
-		if (staffForceAccept) {
-			const requesterIsStaff = requesterUser != null && (requesterUser.flags & UserFlags.STAFF) === UserFlags.STAFF;
-			if (requesterIsStaff) {
-				return await this.forceCreateFriendship({userId, targetId, userCacheService, requestCache});
-			}
+		if (staffForceAccept && requesterIsStaff) {
+			return await this.forceCreateFriendship({userId, targetId, userCacheService, requestCache});
 		}
 		if (!requesterUser) {
 			throw new UnknownUserError();

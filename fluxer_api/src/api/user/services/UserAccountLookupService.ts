@@ -89,14 +89,17 @@ export class UserAccountLookupService {
 		let guildMember: GuildMemberResponse | null = null;
 		let guildMemberDomain: GuildMember | null = null;
 		if (guildId != null) {
-			guildMemberDomain = await this.deps.guildRepository.getMember(guildId, targetId);
-			if (guildMemberDomain) {
-				guildMember = await this.deps.guildService.members.getMember({
-					userId,
-					targetId,
-					guildId,
-					requestCache,
-				});
+			const viewerMember = await this.deps.guildRepository.getMember(guildId, userId);
+			if (viewerMember) {
+				guildMemberDomain = await this.deps.guildRepository.getMember(guildId, targetId);
+				if (guildMemberDomain) {
+					guildMember = await this.deps.guildService.members.getMember({
+						userId,
+						targetId,
+						guildId,
+						requestCache,
+					});
+				}
 			}
 		}
 		let premiumType = user.premiumType ?? undefined;

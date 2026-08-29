@@ -52,7 +52,11 @@ function shouldShowHeadersOnSuccess(accountType: AccountType): boolean {
 function getClientIdentifier(ctx: Context<HonoEnv>): string {
 	const user = ctx.get('user');
 	if (user?.id) {
-		return `user:${user.id}`;
+		const tokenType = ctx.get('authTokenType') ?? 'session';
+		if (tokenType === 'bearer') {
+			return `user:${user.id}:bearer:${ctx.get('oauthBearerApplicationId') ?? 'unknown'}`;
+		}
+		return `user:${user.id}:${tokenType}`;
 	}
 	const ip = extractClientIp(ctx.req.raw, {
 		trustClientIpHeader: Config.proxy.trust_client_ip_header,

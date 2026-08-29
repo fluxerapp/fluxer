@@ -40,9 +40,8 @@ export class DMPermissionValidator {
 		if (isBugHunterBotUser(senderUser)) {
 			return;
 		}
-		if (!senderUser.isBot && (senderUser.flags & UserFlags.SPAMMER) === UserFlags.SPAMMER) {
-			return;
-		}
+		const isShadowbannedSpammer =
+			!senderUser.isBot && (senderUser.flags & UserFlags.SPAMMER) === UserFlags.SPAMMER;
 		const [senderBlockedTarget, targetBlockedSender, areFriends, targetSettings, senderSettings] = await Promise.all([
 			this.deps.userRepository.getRelationship(senderId, recipientId, RelationshipTypes.BLOCKED),
 			this.deps.userRepository.getRelationship(recipientId, senderId, RelationshipTypes.BLOCKED),
@@ -52,6 +51,9 @@ export class DMPermissionValidator {
 		]);
 		if (senderBlockedTarget || targetBlockedSender) {
 			throw new CannotSendMessagesToUserError();
+		}
+		if (isShadowbannedSpammer) {
+			return;
 		}
 		if (areFriends) {
 			return;

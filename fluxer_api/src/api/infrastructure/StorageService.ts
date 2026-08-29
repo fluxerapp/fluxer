@@ -296,12 +296,14 @@ export class StorageService implements IStorageService {
 		key,
 		uploadId,
 		partNumber,
+		contentLength,
 		expiresIn = seconds('1 hour'),
 	}: {
 		bucket: string;
 		key: string;
 		uploadId: string;
 		partNumber: number;
+		contentLength?: number;
 		expiresIn?: number;
 	}): Promise<string> {
 		const command = new UploadPartCommand({
@@ -309,6 +311,7 @@ export class StorageService implements IStorageService {
 			Key: key,
 			UploadId: uploadId,
 			PartNumber: partNumber,
+			ContentLength: contentLength,
 		});
 		return getSignedUrl(this.presignClient, command, {expiresIn});
 	}
