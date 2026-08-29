@@ -174,7 +174,8 @@
 	cursor: pointer;
 	background: transparent;
 }
-.overwriteItem:not(.overwriteItemSelected):hover {
+.overwriteItem:not(.overwriteItemSelected):hover,
+.overwriteItemContextMenuOpen:not(.overwriteItemSelected) {
 	background: var(--background-modifier-hover);
 }
 .overwriteItemSelected {

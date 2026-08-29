@@ -519,27 +519,34 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 		});
 		setSelectedOverwriteId(id);
 	}, []);
-	const handleDeleteOverride = useCallback(() => {
-		if (!selectedOverwrite || !guild || selectedOverwrite.id === guild.id) return;
-		const futureOverwrites = overwritesWithUpdates.filter((o) => o.id !== selectedOverwrite.id);
-		const currentIndex = overwritesWithUpdates.findIndex((o) => o.id === selectedOverwrite.id);
-		const nextOverwrite = futureOverwrites[currentIndex] ?? futureOverwrites[0];
-		if (newOverwriteIds.has(selectedOverwrite.id)) {
-			setNewOverwriteIds((prev) => {
-				const newSet = new Set(prev);
-				newSet.delete(selectedOverwrite.id);
-				return newSet;
+	const removeOverwrite = useCallback(
+		(overwriteId: string) => {
+			if (!guild || overwriteId === guild.id) return;
+			const futureOverwrites = overwritesWithUpdates.filter((o) => o.id !== overwriteId);
+			const currentIndex = overwritesWithUpdates.findIndex((o) => o.id === overwriteId);
+			const nextOverwrite = futureOverwrites[currentIndex] ?? futureOverwrites[0];
+			if (newOverwriteIds.has(overwriteId)) {
+				setNewOverwriteIds((prev) => {
+					const newSet = new Set(prev);
+					newSet.delete(overwriteId);
+					return newSet;
+				});
+			} else {
+				setDeletedOverwriteIds((prev) => new Set(prev).add(overwriteId));
+			}
+			setOverwriteUpdates((prev) => {
+				const newMap = new Map(prev);
+				newMap.delete(overwriteId);
+				return newMap;
 			});
-		} else {
-			setDeletedOverwriteIds((prev) => new Set(prev).add(selectedOverwrite.id));
-		}
-		setOverwriteUpdates((prev) => {
-			const newMap = new Map(prev);
-			newMap.delete(selectedOverwrite.id);
-			return newMap;
-		});
-		setSelectedOverwriteId(nextOverwrite?.id ?? null);
-	}, [selectedOverwrite, guild, overwritesWithUpdates, newOverwriteIds]);
+			setSelectedOverwriteId((prev) => (prev === overwriteId ? (nextOverwrite?.id ?? null) : prev));
+		},
+		[guild, overwritesWithUpdates, newOverwriteIds],
+	);
+	const handleDeleteOverride = useCallback(() => {
+		if (!selectedOverwrite) return;
+		removeOverwrite(selectedOverwrite.id);
+	}, [selectedOverwrite, removeOverwrite]);
 	const getOverwriteName = useCallback(
 		(overwrite: PermissionOverwrite): string => {
 			if (!guild) return '';
@@ -585,6 +592,8 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 				selectedOverwriteId={selectedOverwriteId}
 				canManageChannels={canManageChannels}
 				canManageRoles={canManageRoles}
+				canManageOverwrites={canManageChannels && canManageRoles}
+				onDeleteOverwrite={removeOverwrite}
 				isAddOverrideOpen={isAddOverrideOpen}
 				setIsAddOverrideOpen={setIsAddOverrideOpen}
 				existingOverwriteIds={existingOverwriteIds}
@@ -615,6 +624,7 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 		overwritesWithUpdates,
 		canManageChannels,
 		canManageRoles,
+		removeOverwrite,
 		isAddOverrideOpen,
 		addOverrideContext,
 		addOverrideFloatingStyles,
