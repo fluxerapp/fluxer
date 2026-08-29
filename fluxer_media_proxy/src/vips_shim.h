@@ -78,6 +78,8 @@ int fluxer_ffmpeg_resize_gif(
     int target_width,
     int target_height,
     long long deadline_unix_ms,
+    long long max_frames,
+    long long max_total_pixels,
     void **out_buf,
     size_t *out_size
 );

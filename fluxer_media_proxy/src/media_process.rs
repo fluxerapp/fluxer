@@ -1205,12 +1205,18 @@ fn resize_animated_gif_with_ffmpeg(
             dims.width,
             dims.height,
             options.deadline_ms.unwrap_or(0),
+            i64::from(Limits::animated_frames()),
+            Limits::animated_total_pixels().min(i64::MAX as usize) as i64,
             &mut out_ptr,
             &mut out_size,
         )
     };
     if rc == -2 {
         return Err(MediaError::RequestTimeout);
+    }
+    if rc == -3 {
+        clear_vips_error();
+        return Err(MediaError::InvalidImageDimensions);
     }
     if rc != 0 || out_ptr.is_null() {
         clear_vips_error();
@@ -1277,6 +1283,7 @@ pub fn transform_image(input: &[u8], options: &ImageOptions) -> Result<Processed
         && !options.cover_crop
         && sniffed.mime == "image/gif"
     {
+        probe_animated(input)?;
         let bytes = if let Some(dims) = gif_resize_dims(sniffed, options) {
             resize_animated_gif_with_ffmpeg(input, dims, options)?
         } else {

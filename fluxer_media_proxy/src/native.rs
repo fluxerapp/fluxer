@@ -167,6 +167,8 @@ unsafe extern "C" {
         target_width: c_int,
         target_height: c_int,
         deadline_unix_ms: c_longlong,
+        max_frames: c_longlong,
+        max_total_pixels: c_longlong,
         out_buf: *mut *mut c_void,
         out_size: *mut size_t,
     ) -> c_int;

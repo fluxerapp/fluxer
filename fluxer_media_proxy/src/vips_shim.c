@@ -584,6 +584,8 @@ int fluxer_ffmpeg_resize_gif(
     int target_width,
     int target_height,
     long long deadline_unix_ms,
+    long long max_frames,
+    long long max_total_pixels,
     void **out_buf,
     size_t *out_size
 ) {
@@ -685,6 +687,8 @@ int fluxer_ffmpeg_resize_gif(
 
     int64_t next_pts = 0;
     int64_t last_packet_duration = 0;
+    long long frames_decoded = 0;
+    long long decoded_pixels = 0;
     AVRational out_tb = (AVRational){ 1, 100 };
     int read_rc = 0;
     while ((read_rc = av_read_frame(in_fmt, packet)) >= 0) {
@@ -704,6 +708,14 @@ int fluxer_ffmpeg_resize_gif(
             int recv_rc = avcodec_receive_frame(dec_ctx, frame);
             if (recv_rc == AVERROR(EAGAIN) || recv_rc == AVERROR_EOF) break;
             if (recv_rc < 0) goto cleanup;
+            frames_decoded++;
+            if (max_frames > 0 && frames_decoded > max_frames) { rc = -3; goto cleanup; }
+            {
+                long long fw = frame->width > 0 ? frame->width : dec_ctx->width;
+                long long fh = frame->height > 0 ? frame->height : dec_ctx->height;
+                decoded_pixels += fw * fh;
+            }
+            if (max_total_pixels > 0 && decoded_pixels > max_total_pixels) { rc = -3; goto cleanup; }
             frame->pts = next_pts;
             int64_t duration = frame->duration > 0 ? frame->duration : last_packet_duration;
             int64_t duration_cs = duration > 0 ? av_rescale_q(duration, in_stream->time_base, out_tb) : 2;
@@ -723,6 +735,14 @@ int fluxer_ffmpeg_resize_gif(
             int recv_rc = avcodec_receive_frame(dec_ctx, frame);
             if (recv_rc == AVERROR(EAGAIN) || recv_rc == AVERROR_EOF) break;
             if (recv_rc < 0) goto cleanup;
+            frames_decoded++;
+            if (max_frames > 0 && frames_decoded > max_frames) { rc = -3; goto cleanup; }
+            {
+                long long fw = frame->width > 0 ? frame->width : dec_ctx->width;
+                long long fh = frame->height > 0 ? frame->height : dec_ctx->height;
+                decoded_pixels += fw * fh;
+            }
+            if (max_total_pixels > 0 && decoded_pixels > max_total_pixels) { rc = -3; goto cleanup; }
             frame->pts = next_pts;
             if (push_frame_delay_cs(&frame_delays_cs, &frame_delays_len, &frame_delays_cap, 2) != 0)
                 goto cleanup;
@@ -2306,9 +2326,10 @@ static int bmff_walk(const uint8_t *data, size_t start, size_t end,
         } else if (size32 == 0) {
             box_size = (uint64_t)(end - off);
         }
-        if (box_size < header_len || off + box_size > end) return 0;
+        if (box_size < header_len || box_size > (uint64_t)(end - off)) return 0;
         size_t child_start = off + header_len;
         size_t child_end   = (size_t)(off + box_size);
+        if (child_end < child_start) return 0;
 
         if (memcmp(btype, target, 4) == 0) {
             int r = cb(data + child_start, child_end - child_start, user);
@@ -2505,10 +2526,11 @@ static int cb_find_iinf_tmap(const uint8_t *payload, size_t len, void *user) {
         } else if (size32 == 0) {
             box_size = (uint64_t)(len - off);
         }
-        if (box_size < header_len || off + box_size > len) return 0;
+        if (box_size < header_len || box_size > (uint64_t)(len - off)) return 0;
 
         size_t child_start = off + header_len;
         size_t child_end = (size_t)(off + box_size);
+        if (child_end < child_start) return 0;
         if (memcmp(btype, "infe", 4) == 0 && child_end > child_start) {
             const uint8_t *infe = payload + child_start;
             size_t infe_len = child_end - child_start;
