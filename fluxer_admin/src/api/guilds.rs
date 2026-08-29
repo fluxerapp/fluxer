@@ -136,6 +136,7 @@ impl AdminApiClient {
         let body = generated_types::BanGuildMemberRequest {
             ban_duration_seconds: None,
             delete_message_days: None,
+            delete_message_seconds: None,
             guild_id: snowflake(guild_id),
             reason: None,
             user_id: snowflake(user_id),
