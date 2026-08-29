@@ -38,7 +38,7 @@ describe('ApnsPushService', () => {
 			},
 		});
 	});
-	it('builds silent APNs clear payloads with badge when badge_count is present', () => {
+	it('builds silent APNs clear payloads as pure background pushes', () => {
 		const payload = ApnsPushServiceTestHooks.buildApnsPayload({
 			type: 'notification_clear',
 			action: 'clear_channel',
@@ -56,11 +56,11 @@ describe('ApnsPushService', () => {
 			badge_count: 0,
 			aps: {
 				'content-available': 1,
-				badge: 0,
 			},
 		});
 		expect(payload.aps).not.toHaveProperty('alert');
 		expect(payload.aps).not.toHaveProperty('sound');
+		expect(payload.aps).not.toHaveProperty('badge');
 	});
 	it('uses APNs push-type and priority headers that match alert versus background delivery', () => {
 		const alertHeaders = ApnsPushServiceTestHooks.buildApnsHeaders({
@@ -94,6 +94,43 @@ describe('ApnsPushService', () => {
 			'apns-priority': '5',
 			'apns-collapse-id': 'channel:123',
 		});
+		const now = Math.floor(Date.now() / 1000);
+		expect(Number(clearHeaders['apns-expiration']) - now).toBeGreaterThan(1800);
+	});
+
+	it('omits the badge entirely when no usable badge count is supplied', () => {
+		const payload = ApnsPushServiceTestHooks.buildApnsPayload({
+			tag: 'channel:123:456',
+			data: {channel_id: '123', message_id: '456'},
+			notification: {title: 'Alice', body: 'Hello'},
+		});
+		expect(payload.aps).not.toHaveProperty('badge');
+		const unparseable = ApnsPushServiceTestHooks.buildApnsPayload({
+			tag: 'channel:123:456',
+			data: {channel_id: '123', message_id: '456', badge_count: 'not-a-number'},
+			notification: {title: 'Alice', body: 'Hello'},
+		});
+		expect(unparseable.aps).not.toHaveProperty('badge');
+	});
+
+	it('keeps a genuine zero badge so reading the last message clears the app icon', () => {
+		const payload = ApnsPushServiceTestHooks.buildApnsPayload({
+			tag: 'channel:123:456',
+			data: {channel_id: '123', message_id: '456', badge_count: 0},
+			notification: {title: 'Alice', body: 'Hello'},
+		});
+		expect((payload.aps as Record<string, unknown>).badge).toBe(0);
+	});
+
+	it('does not use the sender avatar as the notification media image', () => {
+		const payload = ApnsPushServiceTestHooks.buildApnsPayload({
+			tag: 'channel:123:456',
+			data: {channel_id: '123', message_id: '456', author_avatar_url: 'https://cdn.example/avatar.png'},
+			notification: {title: 'Alice', body: 'Hello', icon: 'https://cdn.example/avatar.png'},
+		});
+		expect(payload.image_url).toBeUndefined();
+		expect(payload.aps).not.toHaveProperty('mutable-content');
+		expect(payload.author_avatar_url).toBe('https://cdn.example/avatar.png');
 	});
 	it('marks only permanent APNs token failures as subscription deletion signals', () => {
 		expect(ApnsPushServiceTestHooks.isPermanentApnsFailure(410, 'Unregistered')).toBe(true);

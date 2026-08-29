@@ -143,7 +143,7 @@ function buildApnsHeaders(params: {
 		'apns-topic': params.topic,
 		'apns-push-type': isClear ? APNS_PUSH_TYPE_BACKGROUND : APNS_PUSH_TYPE_ALERT,
 		'apns-priority': isClear ? '5' : '10',
-		'apns-expiration': String(Math.floor(Date.now() / 1000) + (isClear ? 300 : 86400)),
+		'apns-expiration': String(Math.floor(Date.now() / 1000) + (isClear ? 3600 : 86400)),
 		'content-type': 'application/json',
 	};
 	if (collapseId && Buffer.byteLength(collapseId) <= 64) {
@@ -155,18 +155,11 @@ function buildApnsHeaders(params: {
 function buildApnsPayload(payload: Record<string, unknown>): Record<string, unknown> {
 	if (isClearNotificationPayload(payload)) {
 		const data = isRecord(payload.data) ? payload.data : {};
-		const badge = normalizeBadgeCount(data.badge_count);
-		const aps: Record<string, unknown> = {
-			'content-available': 1,
-		};
-		if (badge !== undefined) {
-			aps.badge = badge;
-		}
 		return {
 			...data,
 			type: 'notification_clear',
 			action: 'clear_channel',
-			aps,
+			aps: {'content-available': 1},
 		};
 	}
 	const data = isRecord(payload.data) ? payload.data : {};
@@ -177,16 +170,18 @@ function buildApnsPayload(payload: Record<string, unknown>): Record<string, unkn
 	const channelId = optionalString(data.channel_id);
 	const threadId =
 		optionalString(data.notification_tag) ?? (channelId ? `channel:${channelId}` : undefined) ?? 'fluxer-message';
-	const imageUrl = firstString([payload.image_url, notification.image, notification.icon, payload.icon]);
+	const imageUrl = firstString([payload.image_url, notification.image]);
 	const aps: Record<string, unknown> = {
 		alert: {title, body},
 		sound: APNS_DEFAULT_SOUND,
-		badge,
 		'thread-id': threadId,
 		category: APNS_CATEGORY_MESSAGE,
 		'interruption-level': 'active',
 		'relevance-score': 0.5,
 	};
+	if (badge !== undefined) {
+		aps.badge = badge;
+	}
 	if (imageUrl) {
 		aps['mutable-content'] = 1;
 	}
@@ -292,13 +287,13 @@ function isPermanentApnsFailure(statusCode: number, reason: string): boolean {
 	return reason === 'Unregistered';
 }
 
-function normalizeBadgeCount(value: unknown): number {
+function normalizeBadgeCount(value: unknown): number | undefined {
 	if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.floor(value));
 	if (typeof value === 'string') {
 		const parsed = Number.parseInt(value, 10);
-		return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+		return Number.isFinite(parsed) ? Math.max(0, parsed) : undefined;
 	}
-	return 0;
+	return undefined;
 }
 
 function firstString(values: Array<unknown>): string | undefined {
