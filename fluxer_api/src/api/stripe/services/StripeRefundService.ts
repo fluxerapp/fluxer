@@ -256,7 +256,7 @@ export class StripeRefundService {
 			return;
 		}
 		const subscriptionId = refund.metadata.subscription_id;
-		if (subscriptionId && !user.firstRefundAt) {
+		if (subscriptionId) {
 			try {
 				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund');
 			} catch (error) {

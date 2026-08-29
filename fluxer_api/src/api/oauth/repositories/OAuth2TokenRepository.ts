@@ -19,11 +19,15 @@ import {
 	OAuth2RefreshTokens,
 	OAuth2RefreshTokensByUser,
 } from '../../Tables';
-import {ACCESS_TOKEN_TTL_SECONDS} from '../OAuth2TokenConstants';
+import {ACCESS_TOKEN_TTL_SECONDS, AUTHORIZATION_CODE_TTL_SECONDS} from '../OAuth2TokenConstants';
 import type {IOAuth2TokenRepository} from './IOAuth2TokenRepository';
 
 function isAccessTokenExpired(createdAt: Date): boolean {
 	return Date.now() - createdAt.getTime() > ACCESS_TOKEN_TTL_SECONDS * 1000;
+}
+
+function isAuthorizationCodeExpired(createdAt: Date): boolean {
+	return Date.now() - createdAt.getTime() > AUTHORIZATION_CODE_TTL_SECONDS * 1000;
 }
 
 const SELECT_AUTHORIZATION_CODE = OAuth2AuthorizationCodes.selectCql({
@@ -46,13 +50,19 @@ const SELECT_REFRESH_TOKENS_BY_USER = OAuth2RefreshTokensByUser.selectCql({
 
 export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 	async createAuthorizationCode(data: OAuth2AuthorizationCodeRow): Promise<OAuth2AuthorizationCode> {
-		await upsertOne(OAuth2AuthorizationCodes.insert(data));
+		await upsertOne(OAuth2AuthorizationCodes.insertWithTtl(data, AUTHORIZATION_CODE_TTL_SECONDS));
 		return new OAuth2AuthorizationCode(data);
 	}
 
 	async getAuthorizationCode(code: string): Promise<OAuth2AuthorizationCode | null> {
 		const row = await fetchOne<OAuth2AuthorizationCodeRow>(SELECT_AUTHORIZATION_CODE, {code});
-		return row ? new OAuth2AuthorizationCode(row) : null;
+		if (!row) {
+			return null;
+		}
+		if (isAuthorizationCodeExpired(row.created_at)) {
+			return null;
+		}
+		return new OAuth2AuthorizationCode(row);
 	}
 
 	async deleteAuthorizationCode(code: string): Promise<void> {

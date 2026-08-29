@@ -118,7 +118,7 @@ export class TokenRepository {
 	}
 
 	async createEmailRevertToken(tokenData: EmailRevertTokenRow): Promise<EmailRevertToken> {
-		await upsertOne(EmailRevertTokens.insert(tokenData));
+		await upsertOne(EmailRevertTokens.insertWithTtl(tokenData, seconds('24 hours')));
 		return new EmailRevertToken(tokenData);
 	}
 

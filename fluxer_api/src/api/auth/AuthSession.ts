@@ -91,6 +91,7 @@ export async function createAuthSession(
 	if (user.isBot) throw new BotUserAuthSessionCreationDeniedError();
 	if (user.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) throw new RegistrationPendingApprovalError();
 	if (user.traits.has(REGISTRATION_REJECTED_TRAIT)) throw new RegistrationRejectedError();
+	user = await AuthUtility.handleBanStatus(ctx, user);
 	const now = new Date();
 	const token = await AuthUtility.generateAuthToken(ctx);
 	let clientCountry: string | null = null;
