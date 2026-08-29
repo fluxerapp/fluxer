@@ -23,10 +23,6 @@ import {MagnifyingGlassIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useState} from 'react';
 
-const I_CAN_T_REDEEM_THIS_BECAUSE_I_ALREADY_DESCRIPTOR = msg({
-	message: "I can't redeem this because I already have lifetime {premiumProductName}, so this gift is all yours!",
-	comment: 'Gift redemption pre-filled DM message for a sender who already owns lifetime premium.',
-});
 const YOU_ALREADY_HAVE_LIFETIME_DESCRIPTOR = msg({
 	message: 'You already have lifetime {premiumProductName}',
 	comment: 'Status label shown to a user who already owns the lifetime premium tier.',
@@ -62,7 +58,7 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 					? item.channelId
 					: await PrivateChannelCommands.ensureDMChannel(item.user.id);
 				const result = await MessageCommands.send(targetChannelId, {
-					content: `${i18n._(I_CAN_T_REDEEM_THIS_BECAUSE_I_ALREADY_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}\n${giftUrl}`,
+					content: giftUrl,
 					nonce: SnowflakeUtils.fromTimestamp(Date.now()),
 				});
 				if (result) {
@@ -79,7 +75,7 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 				});
 			}
 		},
-		[giftUrl, i18n],
+		[giftUrl],
 	);
 	return (
 		<Modal.Root size="small" centered data-flx="expressions.gift-send-to-friend-modal.modal-root">
