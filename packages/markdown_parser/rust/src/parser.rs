@@ -164,6 +164,11 @@ impl RuntimeState<'_> {
                     self.current_line + consumed,
                     self.parser.flags(),
                 )
+                || crate::block::opens_code_block_midline(
+                    &self.lines,
+                    self.current_line + consumed,
+                    self.parser.flags(),
+                )
                 || trimmed_next.is_empty()
             {
                 break;

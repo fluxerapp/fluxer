@@ -174,25 +174,31 @@ fn single_line_fence_without_space_is_content() {
 }
 
 #[test]
-fn mid_line_fence_is_literal_text() {
+fn fence_after_a_preceding_line_opens_code_block() {
     assert_eq!(
-        parse("note text```rust\nfn main() {}\n```"),
-        json!([{"type":"Text","content":"note text```rust\nfn main() {}\n```"}])
+        parse("intro line\nlabel```rust\nfn main() {}\n```"),
+        json!([
+            {"type": "Text", "content": "intro line\nlabel"},
+            {"type": "CodeBlock", "language": "rust", "content": "fn main() {}\n"}
+        ])
     );
 }
 
 #[test]
-fn mid_line_fence_spanning_multiple_lines_stays_text() {
+fn fenced_body_with_pipes_after_a_line_is_not_a_table() {
     assert_eq!(
-        parse("intro line ```js\nbody one\nbody two\n```"),
-        json!([{"type":"Text","content":"intro line ```js\nbody one\nbody two\n```"}])
+        parse("heading text\nrow```md\na | b\n---\nc | d\n```"),
+        json!([
+            {"type": "Text", "content": "heading text\nrow"},
+            {"type": "CodeBlock", "language": "md", "content": "a | b\n---\nc | d\n"}
+        ])
     );
 }
 
 #[test]
-fn line_start_fence_still_opens_code_block() {
+fn unterminated_midline_fence_after_a_line_stays_text() {
     assert_eq!(
-        parse("```rust\nfn main() {}\n```"),
-        json!([{"type":"CodeBlock","language":"rust","content":"fn main() {}\n"}])
+        parse("hello\nfoo```bar with no closing fence"),
+        json!([{"type": "Text", "content": "hello\nfoo```bar with no closing fence"}])
     );
 }

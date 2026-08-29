@@ -1078,6 +1078,31 @@ fn has_terminal_tld(text: &str) -> bool {
     letter_count >= 2 && i > 0 && byte_at(text, i - 1) == b'.'
 }
 
+pub fn has_open_inline_code(text: &str) -> bool {
+    if !text.contains('`') {
+        return false;
+    }
+    let mut open_len: Option<usize> = None;
+    let mut index = 0;
+    while index < text.len() {
+        if byte_at(text, index) != b'`' {
+            index += 1;
+            continue;
+        }
+        let mut run = 0usize;
+        while index + run < text.len() && byte_at(text, index + run) == b'`' {
+            run += 1;
+        }
+        if open_len.is_none() {
+            open_len = Some(run);
+        } else if open_len == Some(run) {
+            open_len = None;
+        }
+        index += run;
+    }
+    open_len.is_some()
+}
+
 pub fn has_valid_code_fence_language(language: &str) -> bool {
     if is_whitespace(byte_at(language, 0)) {
         return false;
