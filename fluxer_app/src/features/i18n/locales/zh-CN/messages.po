@@ -942,6 +942,11 @@ msgstr "{minutes} 分钟"
 msgid "{months, plural, one {# month} other {# months}}"
 msgstr "{months, plural, one {# 个月} other {# 个月}}"
 
+#. Default name for a role created by duplicating another role in the community roles settings tab. {name} is the source role name; translate the whole label so "copy" can move or inflect as the language needs.
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:52
+msgid "{name} copy"
+msgstr "{name} 副本"
+
 #. Time window preset label for a single-hour interval. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:18
 msgid "{oneHour} hour"
@@ -2090,7 +2095,7 @@ msgstr "接受此邀请将自动安装内容包。"
 msgid "Access granted"
 msgstr "已授权"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:66
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:70
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:84
 msgid "Access overrides"
 msgstr "访问覆盖"
@@ -2563,7 +2568,7 @@ msgstr "给消息添加新表情回应."
 msgid "Add note"
 msgstr "添加备注"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:88
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:92
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:96
 msgid "Add override"
 msgstr "添加覆盖"
@@ -3894,7 +3899,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "确定要删除个人笔记中的所有消息吗？此操作将永久删除所有消息及其附件，且无法撤销。"
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:354
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "确定要删除\"<0>{0}</0>\"身份组吗？拥有此身份组的成员将不再拥有它。"
 
@@ -4761,7 +4766,7 @@ msgstr "返回覆盖"
 #. Back-navigation label that returns from an individual role editor to the roles list.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:50
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:149
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:112
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:116
 msgid "Back to roles"
 msgstr "返回身份组"
 
@@ -9300,7 +9305,7 @@ msgid "Couldn't rename this emoji"
 msgstr "无法重命名此表情符号"
 
 #. Error modal title shown when resetting the community role hoist order fails.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:55
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:62
 msgid "Couldn't reset hoist order"
 msgstr "无法重置置顶顺序"
 
@@ -9679,7 +9684,7 @@ msgid "Create or join a community"
 msgstr "创建或加入社群"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:209
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
 msgid "Create role"
 msgstr "创建身份组"
 
@@ -10015,7 +10020,7 @@ msgstr "使用 {premiumProductName} 自定义入场音效"
 msgid "Custom expiry (seconds)"
 msgstr "自定义过期时间（秒）"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:225
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:231
 msgid "Custom hoist order"
 msgstr "自定义排序"
 
@@ -10795,9 +10800,13 @@ msgstr "删除通行密钥"
 msgid "Delete redirect URI"
 msgstr "删除重定向 URI"
 
+#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
 #. Destructive button in the role editor that removes the selected role. Removes the role from every member; keep tone plain.
+#. Destructive context menu action in the community roles settings tab that immediately removes the right-clicked role from every member. Keep it short.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:14
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:173
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:57
+#: src/features/ui/action_menu/RoleContextMenu.tsx:17
 msgid "Delete role"
 msgstr "删除身份组"
 
@@ -10857,6 +10866,11 @@ msgstr "删除这条消息？此操作无法撤消。"
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
 msgid "Delete this pack? Can't be undone."
 msgstr "删除此表情包？此操作无法撤消。"
+
+#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
+msgid "Delete user"
+msgstr "删除用户"
 
 #. Danger button label that deletes a webhook.
 #: src/features/webhook/components/WebhookListItem.tsx:360
@@ -12149,7 +12163,7 @@ msgstr "将表情文件拖放到此处"
 msgid "Drag members between channels they can access."
 msgstr "拖动成员，调整他们在可访问频道中的位置。"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:136
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
 msgstr "拖动角色可调整其在成员列表中的显示顺序。"
 
@@ -12249,6 +12263,11 @@ msgstr "复制"
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
 msgstr "复制频道"
+
+#. Context menu action in the community roles settings tab that creates a new role copying the settings of the one right-clicked. Keep it short.
+#: src/features/ui/action_menu/RoleContextMenu.tsx:12
+msgid "Duplicate role"
+msgstr "复制角色"
 
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
@@ -16451,11 +16470,11 @@ msgstr "印地语"
 msgid "Hints"
 msgstr "提示"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:95
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:99
 msgid "Hoist order"
 msgstr "显示顺序"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:427
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
 msgid "Hoist order reset to default"
 msgstr "提升顺序已重置为默认"
 
@@ -21395,7 +21414,7 @@ msgid "New password"
 msgstr "新密码"
 
 #. Default name for a newly created role in the community roles settings tab. Short label.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:48
 msgid "New role"
 msgstr "新角色"
 
@@ -21734,7 +21753,7 @@ msgstr "没有匹配的 GIF"
 msgid "No gifts yet"
 msgstr "暂无礼物"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:169
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:175
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "没有置顶身份组。请在身份组设置中开启\"单独显示此身份组\"即可在此处查看。"
 
@@ -26553,7 +26572,7 @@ msgstr "重置为实际值"
 msgid "Reset to built-in"
 msgstr "重置为内置"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:122
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:126
 msgid "Reset to default"
 msgstr "重置为默认值"
 
@@ -27091,7 +27110,8 @@ msgstr "角色颜色"
 msgid "Role created"
 msgstr "角色已创建"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:334
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
 msgid "Role created successfully"
 msgstr "角色创建成功"
 
@@ -27100,7 +27120,8 @@ msgstr "角色创建成功"
 msgid "Role deleted"
 msgstr "角色已删除"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:369
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
 msgid "Role deleted successfully"
 msgstr "角色已删除"
 
@@ -27140,7 +27161,7 @@ msgstr "角色"
 msgid "Roles and members"
 msgstr "角色与成员"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:278
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
 msgid "Roles updated successfully"
 msgstr "角色更新成功"
 
@@ -37970,17 +37991,17 @@ msgid "You cannot delete your account while you own communities. Transfer owners
 msgstr "您拥有社区时无法删除帐户。请先转移以下社区的所有权："
 
 #. Tooltip on the disabled permission list in the role editor when role hierarchy blocks editing.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:64
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:71
 msgid "You cannot edit a role at or above your highest role"
 msgstr "你无法编辑与你最高角色相同或更高层级的角色"
 
 #. Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:34
 msgid "You cannot edit this role because it is your highest role or above you"
 msgstr "你无法编辑此角色，因为它高于或等同于你的最高角色"
 
 #. Tooltip on a permission toggle in the role editor that the current user cannot grant because they do not hold that permission themselves.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:68
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:75
 msgid "You cannot grant a permission you don't have"
 msgstr "你无法授予自己没有的权限"
 
@@ -37990,7 +38011,7 @@ msgid "You cannot interact with this user right now."
 msgstr "你暂时无法与该用户互动。"
 
 #. Tooltip on a permission toggle in the role editor when revoking that permission would leave the current user without it.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:73
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:80
 msgid "You cannot remove this permission because it would remove it from yourself"
 msgstr "你无法移除此权限，因为它会把你自己的权限也移除"
 
@@ -38170,7 +38191,7 @@ msgid "You need the \"{manageChannelsPermissionLabel}\" permission to edit these
 msgstr "你需要\"{manageChannelsPermissionLabel}\"权限才能编辑这些权限。"
 
 #. Tooltip on the disabled permission list in the role editor. {manageRolesPermissionLabel} is the localized name of the Manage Roles permission and should match its label exactly.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:59
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:66
 msgid "You need the \"{manageRolesPermissionLabel}\" permission to edit these permissions"
 msgstr "你需要\"{manageRolesPermissionLabel}\"权限才能编辑这些权限"
 

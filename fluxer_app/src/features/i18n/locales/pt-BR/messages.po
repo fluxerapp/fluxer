@@ -942,6 +942,11 @@ msgstr "{minutes} minutos"
 msgid "{months, plural, one {# month} other {# months}}"
 msgstr "{months, plural, one {# mês} other {# meses}}"
 
+#. Default name for a role created by duplicating another role in the community roles settings tab. {name} is the source role name; translate the whole label so "copy" can move or inflect as the language needs.
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:52
+msgid "{name} copy"
+msgstr "cópia de {name}"
+
 #. Time window preset label for a single-hour interval. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:18
 msgid "{oneHour} hour"
@@ -2090,7 +2095,7 @@ msgstr "Aceitar este convite instala o pacote automaticamente."
 msgid "Access granted"
 msgstr "Acesso concedido"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:66
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:70
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:84
 msgid "Access overrides"
 msgstr "Substituições de acesso"
@@ -2563,7 +2568,7 @@ msgstr "Adicione novas reações às mensagens."
 msgid "Add note"
 msgstr "Adicionar nota"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:88
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:92
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:96
 msgid "Add override"
 msgstr "Adicionar exceção"
@@ -3894,7 +3899,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "Tem certeza de que deseja apagar todas as mensagens em suas notas pessoais? Isso removerá permanentemente todas as mensagens e seus anexos. Esta ação não poderá ser desfeita."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:354
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "Tem certeza de que deseja excluir a função <0>{0}</0>? Todos os membros com esta função não a terão mais."
 
@@ -4761,7 +4766,7 @@ msgstr "Voltar para substituições"
 #. Back-navigation label that returns from an individual role editor to the roles list.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:50
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:149
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:112
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:116
 msgid "Back to roles"
 msgstr "Voltar para cargos"
 
@@ -9300,7 +9305,7 @@ msgid "Couldn't rename this emoji"
 msgstr "Não foi possível renomear este emoji"
 
 #. Error modal title shown when resetting the community role hoist order fails.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:55
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:62
 msgid "Couldn't reset hoist order"
 msgstr "Não foi possível redefinir a ordem de destaque"
 
@@ -9679,7 +9684,7 @@ msgid "Create or join a community"
 msgstr "Criar ou entrar em uma comunidade"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:209
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
 msgid "Create role"
 msgstr "Criar função"
 
@@ -10015,7 +10020,7 @@ msgstr "Sons de entrada personalizados com {premiumProductName}"
 msgid "Custom expiry (seconds)"
 msgstr "Expiração personalizada (segundos)"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:225
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:231
 msgid "Custom hoist order"
 msgstr "Ordem de destaque personalizada"
 
@@ -10795,9 +10800,13 @@ msgstr "Excluir chave de acesso"
 msgid "Delete redirect URI"
 msgstr "Excluir URI de redirecionamento"
 
+#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
 #. Destructive button in the role editor that removes the selected role. Removes the role from every member; keep tone plain.
+#. Destructive context menu action in the community roles settings tab that immediately removes the right-clicked role from every member. Keep it short.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:14
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:173
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:57
+#: src/features/ui/action_menu/RoleContextMenu.tsx:17
 msgid "Delete role"
 msgstr "Excluir cargo"
 
@@ -10857,6 +10866,11 @@ msgstr "Excluir esta mensagem? Não é possível desfazer."
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
 msgid "Delete this pack? Can't be undone."
 msgstr "Excluir este pacote? Não é possível desfazer."
+
+#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
+msgid "Delete user"
+msgstr "Remover permissão do usuário"
 
 #. Danger button label that deletes a webhook.
 #: src/features/webhook/components/WebhookListItem.tsx:360
@@ -12149,7 +12163,7 @@ msgstr "Arraste e solte os arquivos de emoji aqui"
 msgid "Drag members between channels they can access."
 msgstr "Arraste os membros entre os canais que eles podem acessar."
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:136
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
 msgstr "Arraste os cargos para personalizar a ordem em que aparecem na lista de membros."
 
@@ -12249,6 +12263,11 @@ msgstr "Duplicar"
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
 msgstr "Duplicar canal"
+
+#. Context menu action in the community roles settings tab that creates a new role copying the settings of the one right-clicked. Keep it short.
+#: src/features/ui/action_menu/RoleContextMenu.tsx:12
+msgid "Duplicate role"
+msgstr "Duplicar cargo"
 
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
@@ -16451,11 +16470,11 @@ msgstr "Hindi"
 msgid "Hints"
 msgstr "Dicas"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:95
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:99
 msgid "Hoist order"
 msgstr "Ordem de destaque"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:427
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
 msgid "Hoist order reset to default"
 msgstr "Ordem de destaque redefinida para o padrão"
 
@@ -21395,7 +21414,7 @@ msgid "New password"
 msgstr "Nova senha"
 
 #. Default name for a newly created role in the community roles settings tab. Short label.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:48
 msgid "New role"
 msgstr "Nova função"
 
@@ -21734,7 +21753,7 @@ msgstr "Nenhum GIF encontrado"
 msgid "No gifts yet"
 msgstr "Nenhum presente ainda"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:169
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:175
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "Nenhum cargo em destaque. Ative a opção \"Mostrar cargo separadamente\" em um cargo para vê-lo aqui."
 
@@ -26553,7 +26572,7 @@ msgstr "Redefinir para os valores reais"
 msgid "Reset to built-in"
 msgstr "Redefinir para o padrão"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:122
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:126
 msgid "Reset to default"
 msgstr "Redefinir para o padrão"
 
@@ -27091,7 +27110,8 @@ msgstr "Cor do cargo"
 msgid "Role created"
 msgstr "Função criada"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:334
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
 msgid "Role created successfully"
 msgstr "Cargo criado com sucesso"
 
@@ -27100,7 +27120,8 @@ msgstr "Cargo criado com sucesso"
 msgid "Role deleted"
 msgstr "Função excluída"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:369
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
 msgid "Role deleted successfully"
 msgstr "Cargo excluído com sucesso"
 
@@ -27140,7 +27161,7 @@ msgstr "Funções"
 msgid "Roles and members"
 msgstr "Cargos e membros"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:278
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
 msgid "Roles updated successfully"
 msgstr "Cargos atualizados com sucesso"
 
@@ -37970,17 +37991,17 @@ msgid "You cannot delete your account while you own communities. Transfer owners
 msgstr "Você não pode excluir sua conta enquanto for proprietário de comunidades. Transfira a propriedade das seguintes comunidades primeiro:"
 
 #. Tooltip on the disabled permission list in the role editor when role hierarchy blocks editing.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:64
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:71
 msgid "You cannot edit a role at or above your highest role"
 msgstr "Você não pode editar um cargo que seja igual ou superior ao seu cargo mais alto"
 
 #. Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:34
 msgid "You cannot edit this role because it is your highest role or above you"
 msgstr "Você não pode editar esta função porque ela é a sua função mais alta ou está acima da sua"
 
 #. Tooltip on a permission toggle in the role editor that the current user cannot grant because they do not hold that permission themselves.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:68
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:75
 msgid "You cannot grant a permission you don't have"
 msgstr "Você não pode conceder uma permissão que você não tem"
 
@@ -37990,7 +38011,7 @@ msgid "You cannot interact with this user right now."
 msgstr "Você não pode interagir com este usuário agora."
 
 #. Tooltip on a permission toggle in the role editor when revoking that permission would leave the current user without it.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:73
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:80
 msgid "You cannot remove this permission because it would remove it from yourself"
 msgstr "Você não pode remover esta permissão porque ela seria removida de você mesmo"
 
@@ -38170,7 +38191,7 @@ msgid "You need the \"{manageChannelsPermissionLabel}\" permission to edit these
 msgstr "Você precisa da permissão \"{manageChannelsPermissionLabel}\" para editar estas permissões."
 
 #. Tooltip on the disabled permission list in the role editor. {manageRolesPermissionLabel} is the localized name of the Manage Roles permission and should match its label exactly.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:59
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:66
 msgid "You need the \"{manageRolesPermissionLabel}\" permission to edit these permissions"
 msgstr "Você precisa da permissão \"{manageRolesPermissionLabel}\" para editar estas permissões"
 

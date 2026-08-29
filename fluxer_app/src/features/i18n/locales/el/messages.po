@@ -942,6 +942,11 @@ msgstr "{minutes} λεπτά"
 msgid "{months, plural, one {# month} other {# months}}"
 msgstr "{months, plural, one {# μήνας} other {# μήνες}}"
 
+#. Default name for a role created by duplicating another role in the community roles settings tab. {name} is the source role name; translate the whole label so "copy" can move or inflect as the language needs.
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:52
+msgid "{name} copy"
+msgstr "Αντίγραφο του {name}"
+
 #. Time window preset label for a single-hour interval. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:18
 msgid "{oneHour} hour"
@@ -2090,7 +2095,7 @@ msgstr "Με την αποδοχή αυτής της πρόσκλησης, το 
 msgid "Access granted"
 msgstr "Έχετε πρόσβαση"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:66
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:70
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:84
 msgid "Access overrides"
 msgstr "Παρακάμψεις πρόσβασης"
@@ -2563,7 +2568,7 @@ msgstr "Προσθήκη νέων αντιδράσεων στα μηνύματα
 msgid "Add note"
 msgstr "Προσθήκη σημείωσης"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:88
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:92
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:96
 msgid "Add override"
 msgstr "Προσθήκη εξαίρεσης"
@@ -3894,7 +3899,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "Είστε σίγουροι ότι θέλετε να διαγράψετε όλα τα μηνύματα στις προσωπικές σας σημειώσεις; Αυτό θα καταργήσει οριστικά όλα τα μηνύματα και τα συνημμένα τους. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:354
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "Είστε σίγουροι ότι θέλετε να διαγράψετε τον ρόλο <0>{0}</0>; Όλα τα μέλη που έχουν αυτόν τον ρόλο δεν θα τον έχουν πλέον."
 
@@ -4761,7 +4766,7 @@ msgstr "Πίσω στις εξαιρέσεις"
 #. Back-navigation label that returns from an individual role editor to the roles list.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:50
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:149
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:112
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:116
 msgid "Back to roles"
 msgstr "Πίσω στους ρόλους"
 
@@ -9300,7 +9305,7 @@ msgid "Couldn't rename this emoji"
 msgstr "Αδυναμία μετονομασίας αυτού του emoji"
 
 #. Error modal title shown when resetting the community role hoist order fails.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:55
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:62
 msgid "Couldn't reset hoist order"
 msgstr "Δεν ήταν δυνατή η επαναφορά της σειράς ανύψωσης"
 
@@ -9679,7 +9684,7 @@ msgid "Create or join a community"
 msgstr "Δημιουργία ή συμμετοχή σε κοινότητα"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:209
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
 msgid "Create role"
 msgstr "Δημιουργία ρόλου"
 
@@ -10015,7 +10020,7 @@ msgstr "Προσαρμοσμένοι ήχοι εισόδου με {premiumProduc
 msgid "Custom expiry (seconds)"
 msgstr "Προσαρμοσμένη λήξη (δευτερόλεπτα)"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:225
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:231
 msgid "Custom hoist order"
 msgstr "Προσαρμοσμένη σειρά εμφάνισης"
 
@@ -10795,9 +10800,13 @@ msgstr "Διαγραφή κλειδιού πρόσβασης"
 msgid "Delete redirect URI"
 msgstr "Διαγραφή διεύθυνσης ανακατεύθυνσης"
 
+#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
 #. Destructive button in the role editor that removes the selected role. Removes the role from every member; keep tone plain.
+#. Destructive context menu action in the community roles settings tab that immediately removes the right-clicked role from every member. Keep it short.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:14
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:173
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:57
+#: src/features/ui/action_menu/RoleContextMenu.tsx:17
 msgid "Delete role"
 msgstr "Διαγραφή ρόλου"
 
@@ -10857,6 +10866,11 @@ msgstr "Διαγραφή αυτού του μηνύματος; Δεν μπορε
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
 msgid "Delete this pack? Can't be undone."
 msgstr "Να διαγραφεί αυτό το πακέτο; Δεν είναι δυνατή η αναίρεση."
+
+#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
+msgid "Delete user"
+msgstr "Διαγραφή χρήστη"
 
 #. Danger button label that deletes a webhook.
 #: src/features/webhook/components/WebhookListItem.tsx:360
@@ -12149,7 +12163,7 @@ msgstr "Σύρετε και αποθέστε αρχεία emoji εδώ"
 msgid "Drag members between channels they can access."
 msgstr "Σύρετε μέλη μεταξύ των καναλιών στα οποία έχουν πρόσβαση."
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:136
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
 msgstr "Σύρετε τους ρόλους για να προσαρμόσετε τη σειρά εμφάνισής τους στη λίστα μελών."
 
@@ -12249,6 +12263,11 @@ msgstr "Αντιγραφή"
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
 msgstr "Αντιγραφή καναλιού"
+
+#. Context menu action in the community roles settings tab that creates a new role copying the settings of the one right-clicked. Keep it short.
+#: src/features/ui/action_menu/RoleContextMenu.tsx:12
+msgid "Duplicate role"
+msgstr "Διπλή ιδιότητα"
 
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
@@ -16451,11 +16470,11 @@ msgstr "Χίντι"
 msgid "Hints"
 msgstr "Συμβουλές"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:95
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:99
 msgid "Hoist order"
 msgstr "Σειρά εμφάνισης"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:427
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
 msgid "Hoist order reset to default"
 msgstr "Η σειρά εμφάνισης επαναφέρθηκε στην προεπιλογή"
 
@@ -21395,7 +21414,7 @@ msgid "New password"
 msgstr "Νέος κωδικός πρόσβασης"
 
 #. Default name for a newly created role in the community roles settings tab. Short label.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:48
 msgid "New role"
 msgstr "Νέος ρόλος"
 
@@ -21734,7 +21753,7 @@ msgstr "Δεν βρέθηκαν GIF"
 msgid "No gifts yet"
 msgstr "Δεν υπάρχουν δώρα ακόμα"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:169
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:175
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "Δεν υπάρχουν εμφανείς ρόλοι. Ενεργοποίησε την επιλογή \"Εμφάνιση αυτού του ρόλου ξεχωριστά\" σε έναν ρόλο για να τον δεις εδώ."
 
@@ -26553,7 +26572,7 @@ msgstr "Επαναφορά στις πραγματικές τιμές"
 msgid "Reset to built-in"
 msgstr "Επαναφορά στις προεπιλογές"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:122
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:126
 msgid "Reset to default"
 msgstr "Επαναφορά στις προεπιλογές"
 
@@ -27091,7 +27110,8 @@ msgstr "Χρώμα ρόλου"
 msgid "Role created"
 msgstr "Ο ρόλος δημιουργήθηκε"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:334
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
 msgid "Role created successfully"
 msgstr "Ο ρόλος δημιουργήθηκε"
 
@@ -27100,7 +27120,8 @@ msgstr "Ο ρόλος δημιουργήθηκε"
 msgid "Role deleted"
 msgstr "Ο ρόλος διαγράφηκε"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:369
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
 msgid "Role deleted successfully"
 msgstr "Ο ρόλος διαγράφηκε με επιτυχία"
 
@@ -27140,7 +27161,7 @@ msgstr "Ρόλοι"
 msgid "Roles and members"
 msgstr "Ρόλοι και μέλη"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:278
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
 msgid "Roles updated successfully"
 msgstr "Οι ρόλοι ενημερώθηκαν επιτυχώς"
 
@@ -37970,17 +37991,17 @@ msgid "You cannot delete your account while you own communities. Transfer owners
 msgstr "Δεν μπορείτε να διαγράψετε τον λογαριασμό σας όσο είστε κάτοχος κοινοτήτων. Μεταφέρετε πρώτα την ιδιοκτησία των παρακάτω κοινοτήτων:"
 
 #. Tooltip on the disabled permission list in the role editor when role hierarchy blocks editing.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:64
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:71
 msgid "You cannot edit a role at or above your highest role"
 msgstr "Δεν μπορείς να επεξεργαστείς έναν ρόλο που είναι ίδιος ή ανώτερος από τον δικό σου"
 
 #. Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:34
 msgid "You cannot edit this role because it is your highest role or above you"
 msgstr "Δεν μπορείτε να επεξεργαστείτε αυτόν τον ρόλο επειδή είναι ο υψηλότερος ρόλος σας ή είναι ανώτερος από εσάς"
 
 #. Tooltip on a permission toggle in the role editor that the current user cannot grant because they do not hold that permission themselves.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:68
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:75
 msgid "You cannot grant a permission you don't have"
 msgstr "Δεν μπορείς να δώσεις μια άδεια που δεν έχεις"
 
@@ -37990,7 +38011,7 @@ msgid "You cannot interact with this user right now."
 msgstr "Δεν μπορείτε να επικοινωνήσετε με αυτόν τον χρήστη αυτήν τη στιγμή."
 
 #. Tooltip on a permission toggle in the role editor when revoking that permission would leave the current user without it.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:73
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:80
 msgid "You cannot remove this permission because it would remove it from yourself"
 msgstr "Δεν μπορείς να αφαιρέσεις αυτήν την άδεια, γιατί θα την αφαιρούσες και από τον εαυτό σου"
 
@@ -38170,7 +38191,7 @@ msgid "You need the \"{manageChannelsPermissionLabel}\" permission to edit these
 msgstr "Χρειάζεστε την άδεια \"{manageChannelsPermissionLabel}\" για να επεξεργαστείτε αυτές τις άδειες."
 
 #. Tooltip on the disabled permission list in the role editor. {manageRolesPermissionLabel} is the localized name of the Manage Roles permission and should match its label exactly.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:59
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:66
 msgid "You need the \"{manageRolesPermissionLabel}\" permission to edit these permissions"
 msgstr "Χρειάζεστε την άδεια \"{manageRolesPermissionLabel}\" για να επεξεργαστείτε αυτές τις άδειες"
 

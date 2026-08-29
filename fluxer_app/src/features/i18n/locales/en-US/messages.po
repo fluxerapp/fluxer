@@ -943,6 +943,11 @@ msgstr "{minutes} minutes"
 msgid "{months, plural, one {# month} other {# months}}"
 msgstr "{months, plural, one {# month} other {# months}}"
 
+#. Default name for a role created by duplicating another role in the community roles settings tab. {name} is the source role name; translate the whole label so "copy" can move or inflect as the language needs.
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:52
+msgid "{name} copy"
+msgstr "{name} copy"
+
 #. Time window preset label for a single-hour interval. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:18
 msgid "{oneHour} hour"
@@ -2091,7 +2096,7 @@ msgstr "Accepting this invite installs the pack automatically."
 msgid "Access granted"
 msgstr "Access granted"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:66
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:70
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:84
 msgid "Access overrides"
 msgstr "Access overrides"
@@ -2564,7 +2569,7 @@ msgstr "Add new reactions to messages."
 msgid "Add note"
 msgstr "Add note"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:88
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:92
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:96
 msgid "Add override"
 msgstr "Add override"
@@ -3895,7 +3900,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "Are you sure you want to delete every message in your personal notes? This will permanently remove all messages and their attachments. This action cannot be undone."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:354
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 
@@ -4762,7 +4767,7 @@ msgstr "Back to overrides"
 #. Back-navigation label that returns from an individual role editor to the roles list.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:50
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:149
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:112
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:116
 msgid "Back to roles"
 msgstr "Back to roles"
 
@@ -9301,7 +9306,7 @@ msgid "Couldn't rename this emoji"
 msgstr "Couldn't rename this emoji"
 
 #. Error modal title shown when resetting the community role hoist order fails.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:55
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:62
 msgid "Couldn't reset hoist order"
 msgstr "Couldn't reset hoist order"
 
@@ -9680,7 +9685,7 @@ msgid "Create or join a community"
 msgstr "Create or join a community"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:209
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
 msgid "Create role"
 msgstr "Create role"
 
@@ -10016,7 +10021,7 @@ msgstr "Custom entrance sounds with {premiumProductName}"
 msgid "Custom expiry (seconds)"
 msgstr "Custom expiry (seconds)"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:225
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:231
 msgid "Custom hoist order"
 msgstr "Custom hoist order"
 
@@ -10796,9 +10801,13 @@ msgstr "Delete passkey"
 msgid "Delete redirect URI"
 msgstr "Delete redirect URI"
 
+#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
 #. Destructive button in the role editor that removes the selected role. Removes the role from every member; keep tone plain.
+#. Destructive context menu action in the community roles settings tab that immediately removes the right-clicked role from every member. Keep it short.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:14
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:173
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:57
+#: src/features/ui/action_menu/RoleContextMenu.tsx:17
 msgid "Delete role"
 msgstr "Delete role"
 
@@ -10858,6 +10867,11 @@ msgstr "Delete this message? Can't be undone."
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
 msgid "Delete this pack? Can't be undone."
 msgstr "Delete this pack? Can't be undone."
+
+#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
+msgid "Delete user"
+msgstr "Delete user"
 
 #. Danger button label that deletes a webhook.
 #: src/features/webhook/components/WebhookListItem.tsx:360
@@ -12150,7 +12164,7 @@ msgstr "Drag and drop emoji files here"
 msgid "Drag members between channels they can access."
 msgstr "Drag members between channels they can access."
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:136
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
 msgstr "Drag roles to customize the order they appear in the member list."
 
@@ -12250,6 +12264,11 @@ msgstr "Duplicate"
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
 msgstr "Duplicate channel"
+
+#. Context menu action in the community roles settings tab that creates a new role copying the settings of the one right-clicked. Keep it short.
+#: src/features/ui/action_menu/RoleContextMenu.tsx:12
+msgid "Duplicate role"
+msgstr "Duplicate role"
 
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
@@ -16452,11 +16471,11 @@ msgstr "Hindi"
 msgid "Hints"
 msgstr "Hints"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:95
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:99
 msgid "Hoist order"
 msgstr "Hoist order"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:427
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
 msgid "Hoist order reset to default"
 msgstr "Hoist order reset to default"
 
@@ -21396,7 +21415,7 @@ msgid "New password"
 msgstr "New password"
 
 #. Default name for a newly created role in the community roles settings tab. Short label.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:48
 msgid "New role"
 msgstr "New role"
 
@@ -21735,7 +21754,7 @@ msgstr "No GIFs match"
 msgid "No gifts yet"
 msgstr "No gifts yet"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:169
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:175
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 
@@ -26554,7 +26573,7 @@ msgstr "Reset to actual values"
 msgid "Reset to built-in"
 msgstr "Reset to built-in"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:122
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:126
 msgid "Reset to default"
 msgstr "Reset to default"
 
@@ -27092,7 +27111,8 @@ msgstr "Role color"
 msgid "Role created"
 msgstr "Role created"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:334
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
 msgid "Role created successfully"
 msgstr "Role created successfully"
 
@@ -27101,7 +27121,8 @@ msgstr "Role created successfully"
 msgid "Role deleted"
 msgstr "Role deleted"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:369
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
 msgid "Role deleted successfully"
 msgstr "Role deleted successfully"
 
@@ -27141,7 +27162,7 @@ msgstr "Roles"
 msgid "Roles and members"
 msgstr "Roles and members"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:278
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
 msgid "Roles updated successfully"
 msgstr "Roles updated successfully"
 
@@ -37971,17 +37992,17 @@ msgid "You cannot delete your account while you own communities. Transfer owners
 msgstr "You cannot delete your account while you own communities. Transfer ownership of the following communities first:"
 
 #. Tooltip on the disabled permission list in the role editor when role hierarchy blocks editing.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:64
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:71
 msgid "You cannot edit a role at or above your highest role"
 msgstr "You cannot edit a role at or above your highest role"
 
 #. Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:34
 msgid "You cannot edit this role because it is your highest role or above you"
 msgstr "You cannot edit this role because it is your highest role or above you"
 
 #. Tooltip on a permission toggle in the role editor that the current user cannot grant because they do not hold that permission themselves.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:68
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:75
 msgid "You cannot grant a permission you don't have"
 msgstr "You cannot grant a permission you don't have"
 
@@ -37991,7 +38012,7 @@ msgid "You cannot interact with this user right now."
 msgstr "You cannot interact with this user right now."
 
 #. Tooltip on a permission toggle in the role editor when revoking that permission would leave the current user without it.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:73
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:80
 msgid "You cannot remove this permission because it would remove it from yourself"
 msgstr "You cannot remove this permission because it would remove it from yourself"
 
@@ -38171,7 +38192,7 @@ msgid "You need the \"{manageChannelsPermissionLabel}\" permission to edit these
 msgstr "You need the \"{manageChannelsPermissionLabel}\" permission to edit these permissions."
 
 #. Tooltip on the disabled permission list in the role editor. {manageRolesPermissionLabel} is the localized name of the Manage Roles permission and should match its label exactly.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:59
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:66
 msgid "You need the \"{manageRolesPermissionLabel}\" permission to edit these permissions"
 msgstr "You need the \"{manageRolesPermissionLabel}\" permission to edit these permissions"
 

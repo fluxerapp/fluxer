@@ -942,6 +942,11 @@ msgstr "{minutes} मिनट"
 msgid "{months, plural, one {# month} other {# months}}"
 msgstr "{months, plural, one {# महीना} other {# महीने}}"
 
+#. Default name for a role created by duplicating another role in the community roles settings tab. {name} is the source role name; translate the whole label so "copy" can move or inflect as the language needs.
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:52
+msgid "{name} copy"
+msgstr "{name} की कॉपी"
+
 #. Time window preset label for a single-hour interval. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:18
 msgid "{oneHour} hour"
@@ -2090,7 +2095,7 @@ msgstr "इस आमंत्रण को स्वीकार करने �
 msgid "Access granted"
 msgstr "पहुँच दी गई"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:66
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:70
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:84
 msgid "Access overrides"
 msgstr "एक्सेस ओवरराइड"
@@ -2563,7 +2568,7 @@ msgstr "मैसेज में नई रिएक्शन जोड़े�
 msgid "Add note"
 msgstr "नोट जोड़ें"
 
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:88
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/ChannelPermissionsSidebar.tsx:92
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/MobileOverrideListView.tsx:96
 msgid "Add override"
 msgstr "ओवरराइड जोड़ें"
@@ -3894,7 +3899,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "क्या आप वाकई अपने निजी नोट्स के सभी मैसेज मिटाना चाहते हैं? इससे सभी मैसेज और उनके अटैचमेंट हमेशा के लिए हट जाएँगे. इस कार्रवाई को पहले जैसा नहीं किया जा सकता."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:354
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "क्या आप वाकई <0>{0}</0> भूमिका को हटाना चाहते हैं? इस भूमिका वाले किसी भी सदस्य के पास अब यह नहीं रहेगा।"
 
@@ -4761,7 +4766,7 @@ msgstr "ओवरराइड पर वापस जाएं"
 #. Back-navigation label that returns from an individual role editor to the roles list.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:50
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:149
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:112
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:116
 msgid "Back to roles"
 msgstr "भूमिकाओं पर वापस जाएँ"
 
@@ -9300,7 +9305,7 @@ msgid "Couldn't rename this emoji"
 msgstr "इस इमोजी का नाम नहीं बदला जा सका"
 
 #. Error modal title shown when resetting the community role hoist order fails.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:55
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:62
 msgid "Couldn't reset hoist order"
 msgstr "होइस्ट क्रम रीसेट नहीं किया जा सका"
 
@@ -9679,7 +9684,7 @@ msgid "Create or join a community"
 msgstr "कम्युनिटी बनाएँ या उसमें शामिल हों"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:209
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
 msgid "Create role"
 msgstr "भूमिका बनाएँ"
 
@@ -10015,7 +10020,7 @@ msgstr "{premiumProductName} के साथ कस्टम प्रवेश
 msgid "Custom expiry (seconds)"
 msgstr "कस्टम समय-सीमा (सेकंड)"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:225
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:231
 msgid "Custom hoist order"
 msgstr "कस्टम होइस्ट ऑर्डर"
 
@@ -10795,9 +10800,13 @@ msgstr "पासकी मिटाएँ"
 msgid "Delete redirect URI"
 msgstr "रीडायरेक्ट यूआरआई मिटाएँ"
 
+#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
 #. Destructive button in the role editor that removes the selected role. Removes the role from every member; keep tone plain.
+#. Destructive context menu action in the community roles settings tab that immediately removes the right-clicked role from every member. Keep it short.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:14
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:173
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:57
+#: src/features/ui/action_menu/RoleContextMenu.tsx:17
 msgid "Delete role"
 msgstr "भूमिका मिटाएँ"
 
@@ -10857,6 +10866,11 @@ msgstr "यह मैसेज डिलीट करें? इसे अनड
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
 msgid "Delete this pack? Can't be undone."
 msgstr "यह पैक हटाएँ? इसे पूर्ववत नहीं किया जा सकता।"
+
+#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
+msgid "Delete user"
+msgstr "उपयोगकर्ता हटाएं"
 
 #. Danger button label that deletes a webhook.
 #: src/features/webhook/components/WebhookListItem.tsx:360
@@ -12149,7 +12163,7 @@ msgstr "इमोजी फ़ाइलों को यहां खींच�
 msgid "Drag members between channels they can access."
 msgstr "सदस्यों को उन चैनलों के बीच खींचें जिन तक वे पहुँच सकते हैं।"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:136
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
 msgstr "सदस्य सूची में भूमिकाओं के दिखने का क्रम बदलने के लिए उन्हें खींचें."
 
@@ -12249,6 +12263,11 @@ msgstr "डुप्लिकेट करें"
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
 msgstr "चैनल डुप्लीकेट करें"
+
+#. Context menu action in the community roles settings tab that creates a new role copying the settings of the one right-clicked. Keep it short.
+#: src/features/ui/action_menu/RoleContextMenu.tsx:12
+msgid "Duplicate role"
+msgstr "भूमिका डुप्लिकेट करें"
 
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
@@ -16451,11 +16470,11 @@ msgstr "हिंदी"
 msgid "Hints"
 msgstr "संकेत"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:95
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:99
 msgid "Hoist order"
 msgstr "होइस्ट क्रम"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:427
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
 msgid "Hoist order reset to default"
 msgstr "होइस्ट ऑर्डर डिफ़ॉल्ट पर रीसेट किया गया"
 
@@ -21395,7 +21414,7 @@ msgid "New password"
 msgstr "नया पासवर्ड"
 
 #. Default name for a newly created role in the community roles settings tab. Short label.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:48
 msgid "New role"
 msgstr "नई भूमिका"
 
@@ -21734,7 +21753,7 @@ msgstr "कोई GIF मेल नहीं खा रहा है"
 msgid "No gifts yet"
 msgstr "अभी तक कोई उपहार नहीं"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:169
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:175
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "कोई होइस्टेड भूमिका नहीं। किसी भूमिका को यहां देखने के लिए उस पर \"इस भूमिका को अलग से दिखाएं\" सक्षम करें।"
 
@@ -26553,7 +26572,7 @@ msgstr "वास्तविक मानों पर रीसेट कर�
 msgid "Reset to built-in"
 msgstr "बिल्ट-इन पर रीसेट करें"
 
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:122
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:126
 msgid "Reset to default"
 msgstr "डिफ़ॉल्ट पर रीसेट करें"
 
@@ -27091,7 +27110,8 @@ msgstr "भूमिका का रंग"
 msgid "Role created"
 msgstr "भूमिका बनाई गई"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:334
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
 msgid "Role created successfully"
 msgstr "भूमिका सफलतापूर्वक बन गई"
 
@@ -27100,7 +27120,8 @@ msgstr "भूमिका सफलतापूर्वक बन गई"
 msgid "Role deleted"
 msgstr "भूमिका हटाई गई"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:369
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
 msgid "Role deleted successfully"
 msgstr "भूमिका सफलतापूर्वक मिटा दी गई"
 
@@ -27140,7 +27161,7 @@ msgstr "भूमिकाएँ"
 msgid "Roles and members"
 msgstr "भूमिकाएं और सदस्य"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:278
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
 msgid "Roles updated successfully"
 msgstr "भूमिकाएं सफलतापूर्वक अपडेट की गईं"
 
@@ -37970,17 +37991,17 @@ msgid "You cannot delete your account while you own communities. Transfer owners
 msgstr "जब तक आप समुदायों के मालिक हैं, तब तक आप अपना खाता नहीं हटा सकते. पहले इन समुदायों का स्वामित्व ट्रांसफ़र करें:"
 
 #. Tooltip on the disabled permission list in the role editor when role hierarchy blocks editing.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:64
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:71
 msgid "You cannot edit a role at or above your highest role"
 msgstr "आप अपनी सबसे ऊंची भूमिका के बराबर या उससे ऊपर की भूमिका को संपादित नहीं कर सकते"
 
 #. Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.
-#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem.tsx:34
 msgid "You cannot edit this role because it is your highest role or above you"
 msgstr "आप इस भूमिका को संपादित नहीं कर सकते क्योंकि यह आपकी सबसे ऊँची भूमिका है या आपसे ऊपर है"
 
 #. Tooltip on a permission toggle in the role editor that the current user cannot grant because they do not hold that permission themselves.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:68
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:75
 msgid "You cannot grant a permission you don't have"
 msgstr "आप ऐसी अनुमति नहीं दे सकते जो आपके पास नहीं है"
 
@@ -37990,7 +38011,7 @@ msgid "You cannot interact with this user right now."
 msgstr "आप अभी इस यूज़र के साथ इंटरैक्ट नहीं कर सकते हैं।"
 
 #. Tooltip on a permission toggle in the role editor when revoking that permission would leave the current user without it.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:73
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:80
 msgid "You cannot remove this permission because it would remove it from yourself"
 msgstr "आप यह अनुमति नहीं हटा सकते क्योंकि इससे यह आपके लिए भी हट जाएगी"
 
@@ -38170,7 +38191,7 @@ msgid "You need the \"{manageChannelsPermissionLabel}\" permission to edit these
 msgstr "इन अनुमतियों को एडिट करने के लिए आपको \"{manageChannelsPermissionLabel}\" अनुमति चाहिए।"
 
 #. Tooltip on the disabled permission list in the role editor. {manageRolesPermissionLabel} is the localized name of the Manage Roles permission and should match its label exactly.
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:59
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:66
 msgid "You need the \"{manageRolesPermissionLabel}\" permission to edit these permissions"
 msgstr "इन अनुमतियों को संपादित करने के लिए आपको \"{manageRolesPermissionLabel}\" अनुमति चाहिए"
 

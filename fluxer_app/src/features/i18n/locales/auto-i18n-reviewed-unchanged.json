@@ -1348,6 +1348,9 @@
         "msgid": "Decide how premium limits apply to people on this instance."
       },
       {
+        "msgid": "Delete user"
+      },
+      {
         "msgid": "Denied"
       },
       {
@@ -1355,6 +1358,9 @@
       },
       {
         "msgid": "Disable direct messages and friend requests"
+      },
+      {
+        "msgid": "Duplicate role"
       },
       {
         "msgid": "Emulate decode codec (testing)"
@@ -1835,6 +1841,9 @@
       },
       {
         "msgid": "{count, plural, one {# minute} other {# minutes}}"
+      },
+      {
+        "msgid": "{name} copy"
       },
       {
         "msgid": "{productName} application logo"
