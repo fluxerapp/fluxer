@@ -97,7 +97,6 @@ export type DeveloperOptionsState = Readonly<{
 		}
 	>;
 	noOpInAppReports: boolean;
-	gameCaptureInjectionMethod: 'auto' | 'remote-thread' | 'set-windows-hook';
 }>;
 type MutableDeveloperOptionsState = {
 	-readonly [K in keyof DeveloperOptionsState]: DeveloperOptionsState[K];
@@ -182,7 +181,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 	mockGiftRedeemed: boolean | null = null;
 	mockTitlebarPlatformOverride: DeveloperOptionsState['mockTitlebarPlatformOverride'] = 'auto';
 	noOpInAppReports = false;
-	gameCaptureInjectionMethod: DeveloperOptionsState['gameCaptureInjectionMethod'] = 'auto';
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -255,7 +253,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'mockTitlebarPlatformOverride',
 			'mockAttachmentStates',
 			'noOpInAppReports',
-			'gameCaptureInjectionMethod',
 		]);
 	}
 

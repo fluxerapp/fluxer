@@ -87,14 +87,6 @@ export function isValidStartOptions(options: unknown): options is NativeScreenCa
 		return false;
 	}
 	if (
-		options.injectionMethod !== undefined &&
-		options.injectionMethod !== 'auto' &&
-		options.injectionMethod !== 'remote-thread' &&
-		options.injectionMethod !== 'set-windows-hook'
-	) {
-		return false;
-	}
-	if (
 		options.captureId !== undefined &&
 		(typeof options.captureId !== 'string' ||
 			options.captureId.trim().length === 0 ||

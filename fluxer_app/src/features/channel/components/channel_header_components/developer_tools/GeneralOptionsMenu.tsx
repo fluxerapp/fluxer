@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getDeveloperOptionLabel} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels';
-import {DeveloperOptionRadioSubmenu} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsMenuComponents';
 import {translateDescriptor} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
-import {getGameCaptureInjectionMethodOptions} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
 import {getToggleGroups, type ToggleGroup} from '@app/features/devtools/components/DeveloperOptionsToggleGroups';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
-import {getNativePlatformSync} from '@app/features/ui/utils/NativeUtils';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
@@ -71,7 +67,6 @@ export const GeneralDeveloperOptionsMenu: React.FC = observer(() => {
 	const currentUser = Users.currentUser;
 	const canConfigureMentionSuppression = currentUser?.isStaff() ?? false;
 	const suppressUnprivilegedSelfMentions = UserSettings.getSuppressUnprivilegedSelfMentions();
-	const isWindows = getNativePlatformSync() === 'windows';
 	return (
 		<>
 			{toggleGroups.map((group, index) => (
@@ -81,14 +76,6 @@ export const GeneralDeveloperOptionsMenu: React.FC = observer(() => {
 					data-flx="channel.channel-header-components.developer-tools-context-menu.general-developer-options-menu.toggle-group-submenu"
 				/>
 			))}
-			{isWindows && (
-				<DeveloperOptionRadioSubmenu
-					label={translateDescriptor(i18n, getDeveloperOptionLabel('gameCaptureInjectionMethod'))}
-					optionKey="gameCaptureInjectionMethod"
-					options={getGameCaptureInjectionMethodOptions()}
-					data-flx="channel.channel-header-components.developer-tools-context-menu.general-developer-options-menu.game-capture-injection"
-				/>
-			)}
 			{canConfigureMentionSuppression && (
 				<MenuItemSubmenu
 					label={i18n._(MENTION_CONTROLS_DESCRIPTOR)}

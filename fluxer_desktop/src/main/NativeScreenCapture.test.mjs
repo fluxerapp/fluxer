@@ -273,7 +273,6 @@ describe('NativeScreenCapture source identity and capability reporting', () => {
 				width: 2560,
 				height: 1440,
 				frameRate: 60,
-				injectionMethod: undefined,
 				captureId: 'capture-1',
 				colorRange: 'full',
 				colorSpace: 'rec709',
@@ -287,7 +286,6 @@ describe('NativeScreenCapture source identity and capability reporting', () => {
 				width: 1280,
 				height: 720,
 				frameRate: 30,
-				injectionMethod: undefined,
 				captureId: 'capture-2',
 				colorRange: undefined,
 				colorSpace: undefined,
@@ -352,7 +350,6 @@ describe('NativeScreenCapture source identity and capability reporting', () => {
 			width: 1280,
 			height: 720,
 			frameRate: 30,
-			injectionMethod: undefined,
 			captureId: 'preselected-capture-id',
 			colorRange: undefined,
 			colorSpace: undefined,
@@ -485,14 +482,12 @@ describe('NativeScreenCapture source identity and capability reporting', () => {
 				width: 2560,
 				height: 1440,
 				frameRate: 60,
-				injectionMethod: 'set-windows-hook',
 				nativeFrameSinkRequired: true,
 			},
 		);
 
 		assert.equal(captures.length, 1);
 		assert.equal(captures[0].options.sourceKind, 'screen');
-		assert.equal(captures[0].options.injectionMethod, undefined);
 
 		const diagnostics = await harness.handlers.get('native-screen-capture:get-diagnostics')({sender}, result.captureId);
 		assert.equal(diagnostics.sourceKind, 'screen');

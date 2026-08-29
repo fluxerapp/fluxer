@@ -827,7 +827,6 @@ async function startNativeScreenCapture(
 		width: requestedWidth,
 		height: requestedHeight,
 		frameRate: options.frameRate ?? 30,
-		injectionMethod: options.sourceKind === 'game' ? options.injectionMethod : undefined,
 		captureId,
 		colorRange: options.colorRange,
 		colorSpace: options.colorSpace,

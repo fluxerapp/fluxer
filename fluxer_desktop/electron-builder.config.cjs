@@ -359,10 +359,6 @@ function windowsGameCaptureArtifactExcludes(arch) {
 	];
 	const excludedNodeArchs = [...supportedTargetArchs, 'ia32'].filter((candidate) => candidate !== arch);
 	return packageRoots.flatMap((packageRoot) => [
-		`!${packageRoot}/compatibility.json`,
-		`!${packageRoot}/fluxer-game-hook.*`,
-		`!${packageRoot}/fluxer-inject-helper.*`,
-		`!${packageRoot}/fluxer-vulkan-layer.*`,
 		...excludedNodeArchs.map((excludedArch) => `!${packageRoot}/win-game-capture.win32-${excludedArch}-msvc.node`),
 	]);
 }

@@ -1,6 +1,0 @@
-{
-	"$comment": "Optional per-process game-capture injection policy override. Placed next to the native addon, it augments the deny/force-cpu lists compiled into the addon. Entries are matched case-insensitively by executable file name (e.g. game.exe); paths are reduced to their final component. 'deny' refuses injection; 'allow' opts a process back in past the built-in deny list; 'forceCpu' keeps injection but prefers CPU readback over the shared-texture fast path. A missing or malformed file falls back to the embedded defaults.",
-	"deny": [],
-	"allow": [],
-	"forceCpu": []
-}

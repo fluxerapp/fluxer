@@ -17,14 +17,7 @@
 # own `[workspace]`.
 
 [target.x86_64-pc-windows-msvc]
-rustflags = ["-C", "target-feature=+crt-static"]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=/DEPENDENTLOADFLAG:0x800"]
 
 [target.aarch64-pc-windows-msvc]
-rustflags = ["-C", "target-feature=+crt-static"]
-
-# 32-bit injected game-capture hook/layer (for capturing 32-bit games from the
-# 64-bit app). Same rationale: the DLL is LoadLibrary'd into an arbitrary game
-# process that may not have the 32-bit VC++ redistributable, so the runtime
-# must be static.
-[target.i686-pc-windows-msvc]
-rustflags = ["-C", "target-feature=+crt-static"]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=/DEPENDENTLOADFLAG:0x800"]

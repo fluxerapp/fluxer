@@ -2,9 +2,7 @@
 
 import {EventEmitter} from 'node:events';
 
-export type GameCaptureInjectionMethod = 'auto' | 'remote-thread' | 'set-windows-hook';
-
-export type CaptureStrategyName = 'game-hook' | 'wgc' | 'dxgi-duplication' | 'window-gdi';
+export type CaptureStrategyName = 'wgc' | 'dxgi-duplication' | 'window-gdi';
 
 export interface ScreenCaptureRect {
 	x: number;
@@ -19,9 +17,6 @@ export interface ScreenCaptureOptions {
 	width?: number;
 	height?: number;
 	frameRate?: number;
-	hookDllPath?: string;
-	hookDllPathX86?: string;
-	injectionMethod?: GameCaptureInjectionMethod;
 	captureId?: string;
 	colorRange?: 'full' | 'limited';
 	colorSpace?: 'rec709' | 'srgb';
@@ -66,8 +61,6 @@ export interface CaptureDiagnostics {
 	droppedFrameCounter: number;
 	lastPresentTimestampUs: number;
 	lastError: number;
-	requestedInjectionMethod: GameCaptureInjectionMethod;
-	injectionMethod: 'remote-thread' | 'set-windows-hook';
 	activeStrategy: CaptureStrategyName;
 	lastFallbackReason: string;
 	startOptions: ScreenCaptureStartOptionsDiagnostics;
@@ -84,14 +77,6 @@ export interface ScreenCaptureStartOptionsDiagnostics {
 	showCursorClicks?: boolean;
 	captureRect?: ScreenCaptureRect;
 	unsupportedOptions: Array<'showCursorClicks' | 'captureRect' | 'colorRange' | 'colorSpace'>;
-}
-
-export interface SharedTextureHandleInfo {
-	handle: bigint;
-	width: number;
-	height: number;
-	dxgiFormat: number;
-	timestampUs: number;
 }
 
 export interface EncoderAttachDiagnostics {
@@ -111,13 +96,6 @@ export interface FrameSinkDiagnostics {
 	rejected: number;
 	mediaFramesDroppedWithoutSink: number;
 	cpuFallbackFramesDropped: number;
-}
-
-export interface VulkanLayerRegistrationState {
-	registered: boolean;
-	manifestExists: boolean;
-	dllExists: boolean;
-	manifestPath: string | null;
 }
 
 export declare interface ScreenCapture {
@@ -144,7 +122,6 @@ export declare class ScreenCapture extends EventEmitter {
 	start(): Promise<ScreenCaptureStartResult | undefined>;
 	stop(): Promise<void>;
 	getDiagnostics(): CaptureDiagnostics | null;
-	getSharedTextureHandle(): SharedTextureHandleInfo | null;
 	attachEncoder(width: number, height: number, frameRate?: number): void;
 	detachEncoder(): void;
 	isEncoderAttached(): boolean;
@@ -156,13 +133,6 @@ export declare class ScreenCapture extends EventEmitter {
 export declare function isSupported(): boolean;
 export declare function getAvailability(): AvailabilityInfo;
 export declare function listSources(): Promise<Array<ScreenCaptureSourceDescriptor>>;
-export declare function resolveGameHookPath(): string | null;
-export declare function resolveGameHookPathX86(): string | null;
-export declare function isGameCaptureHookAvailable(): boolean;
-export declare function resolveVulkanLayerManifestPath(): string | null;
-export declare function registerVulkanLayerManifest(): boolean;
-export declare function unregisterVulkanLayerManifest(): boolean;
-export declare function getVulkanLayerRegistrationState(): VulkanLayerRegistrationState;
 export declare function parseFallbackRecommendation(message: string | undefined): CaptureStrategyName | 'none' | null;
 export declare function elevateGpuSchedulingPriority(processId?: number, priorityClass?: 'high' | 'realtime'): boolean;
 export declare function restoreGpuSchedulingPriority(processId?: number): boolean;

@@ -196,14 +196,3 @@ export const getGiftDurationOptions = (): Array<RadioMenuOption<DeveloperOptions
 	{value: 12, label: MESSAGE_12_MONTHS_1_YEAR_DESCRIPTOR},
 	{value: 0, label: LIFETIME_DESCRIPTOR},
 ];
-export const INJECT_METHOD_AUTOMATIC_DESCRIPTOR = msg({
-	message: 'Automatic',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-export const getGameCaptureInjectionMethodOptions = (): Array<
-	RadioMenuOption<DeveloperOptionsState['gameCaptureInjectionMethod']>
-> => [
-	{value: 'auto', label: INJECT_METHOD_AUTOMATIC_DESCRIPTOR},
-	{value: 'remote-thread', label: 'CreateRemoteThread'},
-	{value: 'set-windows-hook', label: 'SetWindowsHookEx'},
-];

@@ -188,7 +188,7 @@ function inferWindowsCaptureMethod(
 		return null;
 	}
 	if (diagnostics?.activeStrategy) return diagnostics.activeStrategy;
-	if (capture.sourceKind === 'game') return 'game-hook';
+	if (capture.sourceKind === 'game') return 'wgc';
 	if (capture.sourceKind === 'screen') return 'wgc';
 	if (capture.sourceKind === 'window') return 'dxgi-duplication';
 	return 'native-screen-capture';

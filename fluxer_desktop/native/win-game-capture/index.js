@@ -59,97 +59,6 @@ if (process.platform === 'win32') {
 	});
 }
 
-function gameHookFileName(arch) {
-	switch (arch) {
-		case 'x64':
-			return 'fluxer-game-hook.win32-x64-msvc.dll';
-		case 'ia32':
-			return 'fluxer-game-hook.win32-ia32-msvc.dll';
-		case 'arm64':
-			return 'fluxer-game-hook.win32-arm64-msvc.dll';
-		default:
-			return null;
-	}
-}
-
-function resolveGameHookPathForArch(arch, root = nativeRoot) {
-	if (process.platform !== 'win32') return null;
-	const fileName = gameHookFileName(arch);
-	if (!fileName) return null;
-	const hookPath = join(root, fileName);
-	return existsSync(hookPath) ? hookPath : null;
-}
-
-function resolveGameHookPath(root = nativeRoot) {
-	return resolveGameHookPathForArch(process.arch, root);
-}
-
-function resolveGameHookPathX86(root = nativeRoot) {
-	return resolveGameHookPathForArch('ia32', root);
-}
-
-function vulkanLayerManifestFileName(arch) {
-	switch (arch) {
-		case 'x64':
-			return 'fluxer-vulkan-layer.win32-x64-msvc.json';
-		case 'ia32':
-			return 'fluxer-vulkan-layer.win32-ia32-msvc.json';
-		case 'arm64':
-			return 'fluxer-vulkan-layer.win32-arm64-msvc.json';
-		default:
-			return null;
-	}
-}
-
-function resolveVulkanLayerManifestPath(root = nativeRoot) {
-	if (process.platform !== 'win32') return null;
-	const fileName = vulkanLayerManifestFileName(process.arch);
-	if (!fileName) return null;
-	const manifestPath = join(root, fileName);
-	return existsSync(manifestPath) ? manifestPath : null;
-}
-
-function isGameCaptureHookAvailable(root = nativeRoot) {
-	if (typeof binding?.isGameCaptureHookAvailable !== 'function') return false;
-	if (binding.isGameCaptureHookAvailable() !== true) return false;
-	return resolveGameHookPath(root) !== null;
-}
-
-function registerVulkanLayerManifest(root = nativeRoot) {
-	if (!binding?.registerVulkanLayerManifest) return false;
-	if (!isGameCaptureHookAvailable(root)) return false;
-	const manifestPath = resolveVulkanLayerManifestPath(root);
-	if (!manifestPath) return false;
-	binding.registerVulkanLayerManifest(manifestPath);
-	return true;
-}
-
-function unregisterVulkanLayerManifest(root = nativeRoot) {
-	if (!binding?.unregisterVulkanLayerManifest) return false;
-	const manifestPath = resolveVulkanLayerManifestPath(root);
-	if (!manifestPath) return false;
-	try {
-		binding.unregisterVulkanLayerManifest(manifestPath);
-		return true;
-	} catch (error) {
-		console.warn('[win-game-capture] unregisterVulkanLayerManifest failed:', error?.message || error);
-		return false;
-	}
-}
-
-function getVulkanLayerRegistrationState(root = nativeRoot) {
-	const manifestPath = resolveVulkanLayerManifestPath(root);
-	if (!binding?.getVulkanLayerRegistrationState) {
-		return {registered: false, manifestExists: Boolean(manifestPath), dllExists: false, manifestPath};
-	}
-	try {
-		return binding.getVulkanLayerRegistrationState(manifestPath ?? '');
-	} catch (error) {
-		console.warn('[win-game-capture] getVulkanLayerRegistrationState failed:', error?.message || error);
-		return {registered: false, manifestExists: Boolean(manifestPath), dllExists: false, manifestPath};
-	}
-}
-
 class ScreenCapture extends EventEmitter {
 	constructor(options = {}) {
 		super();
@@ -161,9 +70,6 @@ class ScreenCapture extends EventEmitter {
 		this.width = options.width ?? 0;
 		this.height = options.height ?? 0;
 		this.frameRate = options.frameRate ?? 30;
-		this.hookDllPath = options.hookDllPath ?? resolveGameHookPath();
-		this.hookDllPathX86 = options.hookDllPathX86 ?? resolveGameHookPathX86();
-		this.injectionMethod = options.injectionMethod ?? undefined;
 		this.captureId = typeof options.captureId === 'string' ? options.captureId : undefined;
 		this.colorRange = options.colorRange;
 		this.colorSpace = options.colorSpace;
@@ -226,9 +132,6 @@ class ScreenCapture extends EventEmitter {
 				this.width || undefined,
 				this.height || undefined,
 				this.frameRate || undefined,
-				this.sourceKind === 'game' ? this.hookDllPath : undefined,
-				this.sourceKind === 'game' ? (this.hookDllPathX86 ?? undefined) : undefined,
-				this.sourceKind === 'game' ? (this.injectionMethod ?? undefined) : undefined,
 				this.captureId,
 				{
 					colorRange: this.colorRange,
@@ -268,16 +171,6 @@ class ScreenCapture extends EventEmitter {
 			return this.native.getDiagnostics() ?? null;
 		} catch (error) {
 			console.warn('[win-game-capture] getDiagnostics failed:', error?.message || error);
-			return null;
-		}
-	}
-
-	getSharedTextureHandle() {
-		if (!this.native || typeof this.native.getSharedTextureHandle !== 'function') return null;
-		try {
-			return this.native.getSharedTextureHandle() ?? null;
-		} catch (error) {
-			console.warn('[win-game-capture] getSharedTextureHandle failed:', error?.message || error);
 			return null;
 		}
 	}
@@ -346,7 +239,7 @@ class ScreenCapture extends EventEmitter {
 	}
 }
 
-const FALLBACK_STRATEGY_NAMES = new Set(['game-hook', 'wgc', 'dxgi-duplication', 'window-gdi', 'none']);
+const FALLBACK_STRATEGY_NAMES = new Set(['wgc', 'dxgi-duplication', 'window-gdi', 'none']);
 function parseFallbackRecommendation(message) {
 	if (typeof message !== 'string') return null;
 	const match = message.match(/\[next-strategy=([a-z-]+)\]/);
@@ -439,13 +332,6 @@ function __setBindingForTests(nextBinding) {
 module.exports = {
 	isSupported,
 	getAvailability,
-	resolveGameHookPath,
-	resolveGameHookPathX86,
-	isGameCaptureHookAvailable,
-	resolveVulkanLayerManifestPath,
-	registerVulkanLayerManifest,
-	unregisterVulkanLayerManifest,
-	getVulkanLayerRegistrationState,
 	listSources,
 	ScreenCapture,
 	parseFallbackRecommendation,

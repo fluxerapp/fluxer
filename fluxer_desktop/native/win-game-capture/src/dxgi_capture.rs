@@ -394,16 +394,6 @@ pub(crate) fn resolve_output_size(
 }
 
 #[cfg(target_os = "windows")]
-#[cfg(feature = "game-capture-hook")]
-pub(crate) fn wall_clock_us() -> i64 {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_micros() as i64)
-        .unwrap_or(0)
-}
-
-#[cfg(target_os = "windows")]
 pub(crate) fn capture_timestamp_us(capture_start: std::time::Instant) -> i64 {
     let elapsed_us = capture_start.elapsed().as_micros();
     assert!(elapsed_us < i64::MAX as u128);

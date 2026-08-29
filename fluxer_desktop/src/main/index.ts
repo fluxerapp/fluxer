@@ -78,7 +78,7 @@ import {
 	setQuitting,
 	showWindow,
 } from '@electron/main/Window';
-import {initializeWindowsVulkanGameCaptureLayer} from '@electron/main/WindowsVulkanGameCaptureLayer';
+import {removeFluxerVulkanLayerRegistrations} from '@electron/main/WindowsVulkanLayerCleanup';
 import {app, dialog, netLog} from 'electron';
 import log from 'electron-log';
 
@@ -378,9 +378,9 @@ if (launchConfigurationError) {
 					log.error('[Init] Failed to register native audio handlers:', error);
 				}
 				try {
-					runStartupPhase('vulkan-game-capture-layer', initializeWindowsVulkanGameCaptureLayer);
+					runStartupPhase('vulkan-layer-cleanup', removeFluxerVulkanLayerRegistrations);
 				} catch (error: unknown) {
-					log.error('[Init] Failed to initialize Vulkan game capture layer:', error);
+					log.error('[Init] Failed to remove stale Vulkan layer registrations:', error);
 				}
 				try {
 					runStartupPhase('native-screen-capture-handlers', registerNativeScreenCaptureHandlers);
