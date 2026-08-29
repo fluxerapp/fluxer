@@ -262,7 +262,8 @@
 	background: transparent;
 }
 
-.overwriteItem:not(.overwriteItemSelected):hover {
+.overwriteItem:not(.overwriteItemSelected):hover,
+.overwriteItem:not(.overwriteItemSelected).overwriteItemHovered {
 	background: var(--background-modifier-hover);
 }
 

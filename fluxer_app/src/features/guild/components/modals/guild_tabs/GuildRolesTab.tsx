@@ -442,6 +442,30 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			)),
 		);
 	}, [selectedRole, guild, roles]);
+	const handleContextMenuDeleteRole = useCallback(
+		async (roleId: string) => {
+			if (!guild) return;
+			const role = guild.roles[roleId];
+			if (!role || role.isEveryone || isRoleLocked(role)) return;
+			const currentIndex = roles.findIndex((r: GuildRole) => r.id === roleId);
+			const nextRole = roles[currentIndex + 1] ?? roles[0];
+			try {
+				await GuildCommands.deleteRole(guild.id, roleId);
+				ToastCommands.createToast({type: 'success', children: <Trans>Role deleted successfully</Trans>});
+				setSelectedRoleId((current) => (current === roleId ? (nextRole?.id ?? null) : current));
+			} catch (_error) {
+				ModalCommands.push(
+					modal(() => (
+						<RoleDeleteFailedModal
+							roleName={role.name}
+							data-flx="guild.guild-tabs.guild-roles-tab.handle-context-menu-delete-role.role-delete-failed-modal"
+						/>
+					)),
+				);
+			}
+		},
+		[guild, roles, isRoleLocked],
+	);
 	const evaluateRoleMove = useCallback(
 		(draggedRoleId: string, targetRoleId: string | null, position: 'before' | 'after') => {
 			if (!guild) return null;
@@ -557,6 +581,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				onSelectRole={setSelectedRoleId}
 				onCreateRole={handleCreateRole}
 				onDuplicateRole={handleDuplicateRole}
+				onDeleteRole={handleContextMenuDeleteRole}
 				onEnterHoistOrderMode={handleEnterHoistOrderMode}
 				onExitHoistOrderMode={handleExitHoistOrderMode}
 				onResetHoistOrder={handleResetHoistOrder}
@@ -577,6 +602,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		canManageRoles,
 		handleCreateRole,
 		handleDuplicateRole,
+		handleContextMenuDeleteRole,
 		evaluateRoleMove,
 		handleRoleDrop,
 		evaluateHoistMove,
