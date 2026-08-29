@@ -7,6 +7,7 @@ import Keybind, {
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {MoreOptionsVerticalIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -68,19 +69,33 @@ export const CustomKeybindRow = observer(
 		};
 		const openRowMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-				<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group">
-					<MenuItem
-						icon={<TrashIcon size={remFromPx(16)} data-flx="user.keybinds-tab.open-row-menu.trash-icon" />}
-						danger
-						onClick={() => {
-							onClose();
-							onRemove();
-						}}
-						data-flx="user.keybinds-tab.open-row-menu.menu-item.close--2"
-					>
-						{i18n._(DELETE_SHORTCUT_DESCRIPTOR)}
-					</MenuItem>
-				</MenuGroup>
+				<>
+					{entry.action && Keybind.isActionGlobalCapable(entry.action) ? (
+						<MenuGroup data-flx="user.keybinds-tab.open-row-menu.global-menu-group">
+							<CheckboxItem
+								checked={entry.combo.global === true}
+								onCheckedChange={(value) => Keybind.updateCustomKeybindCombo(entry.id, {...entry.combo, global: value})}
+								closeOnChange
+								data-flx="user.keybinds-tab.open-row-menu.checkbox-item.global"
+							>
+								<Trans>Global shortcut</Trans>
+							</CheckboxItem>
+						</MenuGroup>
+					) : null}
+					<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group">
+						<MenuItem
+							icon={<TrashIcon size={remFromPx(16)} data-flx="user.keybinds-tab.open-row-menu.trash-icon" />}
+							danger
+							onClick={() => {
+								onClose();
+								onRemove();
+							}}
+							data-flx="user.keybinds-tab.open-row-menu.menu-item.close--2"
+						>
+							{i18n._(DELETE_SHORTCUT_DESCRIPTOR)}
+						</MenuItem>
+					</MenuGroup>
+				</>
 			));
 		};
 		return (

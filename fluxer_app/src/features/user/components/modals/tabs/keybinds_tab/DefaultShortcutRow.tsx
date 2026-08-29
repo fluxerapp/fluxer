@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
+import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	EditSimpleIcon,
 	HideIcon,
@@ -53,6 +54,10 @@ const MORE_SHORTCUT_OPTIONS_DESCRIPTOR = msg({
 	message: 'More shortcut options',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
+const GLOBAL_SHORTCUT_DESCRIPTOR = msg({
+	message: 'Global shortcut',
+	comment: 'Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.',
+});
 export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActions: ReadonlySet<KeybindCommand>}> = ({
 	row,
 	overriddenActions,
@@ -74,97 +79,119 @@ export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActi
 				});
 				const allHaveCustom = perAction.every((p) => p.customBindings.length > 0);
 				const noneHaveCustom = perAction.every((p) => p.customBindings.length === 0);
-				if (noneHaveCustom) {
-					return (
-						<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group--2">
-							<MenuItem
-								icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--2" />}
-								onClick={() => {
-									onClose();
-									for (const {action} of perAction) {
-										Keybind.addCustomKeybindForAction(action.action);
-									}
-								}}
-								data-flx="user.keybinds-tab.open-row-menu.menu-item.close--3"
-							>
-								{i18n._(SET_CUSTOM_SHORTCUT_DESCRIPTOR)}
-							</MenuItem>
-							<MenuItem
-								icon={<HideIcon size={16} data-flx="user.keybinds-tab.open-row-menu.hide-icon--2" />}
-								onClick={() => {
-									onClose();
-									for (const {action} of perAction) {
-										Keybind.addCustomKeybindForAction(action.action);
-									}
-								}}
-								data-flx="user.keybinds-tab.open-row-menu.menu-item.close--4"
-							>
-								{i18n._(DISABLE_BUILT_IN_SHORTCUT_DESCRIPTOR)}
-							</MenuItem>
-						</MenuGroup>
-					);
-				}
-				if (allHaveCustom && perAction.length === 1) {
-					const {action, hasEnabledCustomBinding} = perAction[0];
-					return (
-						<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group--3">
-							{hasEnabledCustomBinding ? (
+				const globalAction =
+					actions.length === 1 && Keybind.isActionGlobalCapable(actions[0].action) ? actions[0].action : null;
+				const globalGroup = globalAction ? (
+					<MenuGroup data-flx="user.keybinds-tab.open-row-menu.global-menu-group">
+						<CheckboxItem
+							checked={Keybind.isActionGlobal(globalAction)}
+							onCheckedChange={(value) => Keybind.setActionGlobal(globalAction, value)}
+							closeOnChange
+							data-flx="user.keybinds-tab.open-row-menu.checkbox-item.global"
+						>
+							{i18n._(GLOBAL_SHORTCUT_DESCRIPTOR)}
+						</CheckboxItem>
+					</MenuGroup>
+				) : null;
+				const renderBody = () => {
+					if (noneHaveCustom) {
+						return (
+							<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group--2">
 								<MenuItem
-									icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon" />}
-									danger
+									icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--2" />}
 									onClick={() => {
 										onClose();
-										Keybind.removeCustomKeybindsForAction(action.action);
+										for (const {action} of perAction) {
+											Keybind.addCustomKeybindForAction(action.action);
+										}
 									}}
-									data-flx="user.keybinds-tab.open-row-menu.menu-item.close--5"
+									data-flx="user.keybinds-tab.open-row-menu.menu-item.close--3"
 								>
-									{i18n._(RESET_TO_BUILT_IN_DESCRIPTOR)}
+									{i18n._(SET_CUSTOM_SHORTCUT_DESCRIPTOR)}
 								</MenuItem>
-							) : (
 								<MenuItem
-									icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--3" />}
+									icon={<HideIcon size={16} data-flx="user.keybinds-tab.open-row-menu.hide-icon--2" />}
 									onClick={() => {
 										onClose();
-										Keybind.addCustomKeybindForAction(action.action);
+										for (const {action} of perAction) {
+											Keybind.addCustomKeybindForAction(action.action);
+										}
 									}}
-									data-flx="user.keybinds-tab.open-row-menu.menu-item.close--6"
+									data-flx="user.keybinds-tab.open-row-menu.menu-item.close--4"
 								>
-									{i18n._(ADD_ANOTHER_CUSTOM_SHORTCUT_DESCRIPTOR)}
+									{i18n._(DISABLE_BUILT_IN_SHORTCUT_DESCRIPTOR)}
 								</MenuItem>
-							)}
-						</MenuGroup>
-					);
-				}
-				return (
-					<>
-						{perAction.map(({action, label, customBindings, hasEnabledCustomBinding}) => (
-							<MenuGroup key={action.action} data-flx="user.keybinds-tab.open-row-menu.menu-group--4">
-								{customBindings.length > 0 && hasEnabledCustomBinding ? (
+							</MenuGroup>
+						);
+					}
+					if (allHaveCustom && perAction.length === 1) {
+						const {action, hasEnabledCustomBinding} = perAction[0];
+						return (
+							<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group--3">
+								{hasEnabledCustomBinding ? (
 									<MenuItem
-										icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon--2" />}
+										icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon" />}
 										danger
 										onClick={() => {
 											onClose();
 											Keybind.removeCustomKeybindsForAction(action.action);
 										}}
-										data-flx="user.keybinds-tab.open-row-menu.menu-item.close--7"
+										data-flx="user.keybinds-tab.open-row-menu.menu-item.close--5"
 									>
-										{i18n._(RESET_TO_BUILT_IN_2_DESCRIPTOR, {label})}
+										{i18n._(RESET_TO_BUILT_IN_DESCRIPTOR)}
 									</MenuItem>
 								) : (
 									<MenuItem
-										icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--4" />}
+										icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--3" />}
 										onClick={() => {
 											onClose();
 											Keybind.addCustomKeybindForAction(action.action);
 										}}
-										data-flx="user.keybinds-tab.open-row-menu.menu-item.close--8"
+										data-flx="user.keybinds-tab.open-row-menu.menu-item.close--6"
 									>
-										{i18n._(SET_CUSTOM_SHORTCUT_FOR_DESCRIPTOR, {label})}
+										{i18n._(ADD_ANOTHER_CUSTOM_SHORTCUT_DESCRIPTOR)}
 									</MenuItem>
 								)}
 							</MenuGroup>
-						))}
+						);
+					}
+					return (
+						<>
+							{perAction.map(({action, label, customBindings, hasEnabledCustomBinding}) => (
+								<MenuGroup key={action.action} data-flx="user.keybinds-tab.open-row-menu.menu-group--4">
+									{customBindings.length > 0 && hasEnabledCustomBinding ? (
+										<MenuItem
+											icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon--2" />}
+											danger
+											onClick={() => {
+												onClose();
+												Keybind.removeCustomKeybindsForAction(action.action);
+											}}
+											data-flx="user.keybinds-tab.open-row-menu.menu-item.close--7"
+										>
+											{i18n._(RESET_TO_BUILT_IN_2_DESCRIPTOR, {label})}
+										</MenuItem>
+									) : (
+										<MenuItem
+											icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--4" />}
+											onClick={() => {
+												onClose();
+												Keybind.addCustomKeybindForAction(action.action);
+											}}
+											data-flx="user.keybinds-tab.open-row-menu.menu-item.close--8"
+										>
+											{i18n._(SET_CUSTOM_SHORTCUT_FOR_DESCRIPTOR, {label})}
+										</MenuItem>
+									)}
+								</MenuGroup>
+							))}
+						</>
+					);
+				};
+				return (
+					<>
+						{globalGroup}
+						{renderBody()}
 					</>
 				);
 			});

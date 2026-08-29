@@ -381,6 +381,12 @@ class KeybindManager {
 	private async checkInputMonitoringPermission(): Promise<boolean> {
 		if (!isNativeMacOS()) return true;
 		if (this.inputMonitoringHookStatus === 'granted') return true;
+		const electronApi = getElectronAPI();
+		if (await electronApi?.checkInputMonitoringAccess?.()) {
+			NativePermission.setInputMonitoringStatus('granted');
+			this.inputMonitoringHookStatus = 'granted';
+			return true;
+		}
 		const result = await ensureMacPermission('input-monitoring', {behavior: 'passive'});
 		switch (result) {
 			case 'granted':

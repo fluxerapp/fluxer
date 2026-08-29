@@ -82,6 +82,7 @@ import {
 	ZOOM_IN_DESCRIPTOR,
 	ZOOM_OUT_DESCRIPTOR,
 } from '@app/features/input/state/input_keybind/shared';
+import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {awaitHydration, makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserSettings from '@app/features/user/state/UserSettings';
@@ -285,6 +286,8 @@ export interface CustomKeybindEntry {
 }
 
 const STORE_VERSION = 5 as const;
+
+const GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY = 'Keybind:globalDefaultMigration:v1';
 const generateId = (): string => {
 	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
 		return crypto.randomUUID();
@@ -748,7 +751,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'voice_toggle_mute',
 			label: i18n._(TOGGLE_MUTE_DESCRIPTOR),
-			combo: {key: 'm', ctrlOrMeta: true, shift: true, global: false, enabled: true},
+			combo: {key: 'm', ctrlOrMeta: true, shift: true, global: true, enabled: true},
 			allowGlobal: true,
 			assignable: true,
 			section: 'voice_and_video',
@@ -756,7 +759,7 @@ const getDefaultKeybinds = (
 		{
 			action: 'voice_toggle_deafen',
 			label: i18n._(VOICE_TOGGLE_DEAFEN_DESCRIPTOR),
-			combo: {key: 'd', ctrlOrMeta: true, shift: true, global: false, enabled: true},
+			combo: {key: 'd', ctrlOrMeta: true, shift: true, global: true, enabled: true},
 			allowGlobal: true,
 			assignable: true,
 			section: 'voice_and_video',
@@ -1025,6 +1028,18 @@ class Keybind {
 		});
 	}
 
+	private migrateGlobalCapableKeybindsToGlobal(): void {
+		if (AppStorage.getItem(GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY) === '1') return;
+		for (const entry of this.customKeybinds) {
+			if (entry.action == null) continue;
+			const config = this.getDefaultByAction(entry.action);
+			if (config?.allowGlobal && entry.combo.global !== true) {
+				entry.combo = {...entry.combo, global: true};
+			}
+		}
+		AppStorage.setItem(GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY, '1');
+	}
+
 	setI18n(i18n: I18n): void {
 		this.i18n = i18n;
 		if (this.initialized) return;
@@ -1034,6 +1049,7 @@ class Keybind {
 				if (!Array.isArray(this.customKeybinds)) {
 					this.customKeybinds = [];
 				}
+				this.migrateGlobalCapableKeybindsToGlobal();
 				this.initialized = true;
 			});
 		});
@@ -1198,6 +1214,21 @@ class Keybind {
 			this.customKeybinds.push(created);
 		});
 		return created;
+	}
+
+	isActionGlobalCapable(action: KeybindCommand): boolean {
+		return this.getDefaultByAction(action)?.allowGlobal === true;
+	}
+
+	isActionGlobal(action: KeybindCommand): boolean {
+		const combo = this.getPrimaryCustomKeybind(action)?.combo ?? this.getDefaultByAction(action)?.combo;
+		return combo?.global === true;
+	}
+
+	setActionGlobal(action: KeybindCommand, global: boolean): void {
+		const baseCombo = this.getPrimaryCustomKeybind(action)?.combo ??
+			this.getDefaultByAction(action)?.combo ?? {key: ''};
+		this.setPrimaryCustomKeybindCombo(action, {...baseCombo, global});
 	}
 
 	setTransmitMode(mode: TransmitMode): void {
