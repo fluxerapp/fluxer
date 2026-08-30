@@ -20,11 +20,17 @@ interface PageState {
 	offset: number;
 }
 
+interface RangeGroup {
+	lowerBounds: Array<string>;
+	upperBounds: Array<string>;
+}
+
 export type CandidatePlan =
 	| {kind: 'none'}
 	| {kind: 'rowKeys'; rowKeys: Array<string>}
 	| {kind: 'range'; lowerBound: string; upperBound: string}
 	| {kind: 'ranges'; lowerBounds: Array<string>; upperBounds: Array<string>}
+	| {kind: 'rangeGroups'; groups: Array<RangeGroup>}
 	| {kind: 'partitionKeys'; partitionKeys: Array<string>}
 	| {kind: 'scan'};
 
@@ -418,6 +424,15 @@ function keyRangeUpperBound(prefix: string): string {
 	return `${prefix}${KEY_RANGE_UPPER}`;
 }
 
+function prefixRangeGroups(prefixes: ReadonlyArray<string>): Array<RangeGroup> {
+	const groups: Array<RangeGroup> = [];
+	for (let start = 0; start < prefixes.length; start += MAX_PREFIX_RANGES) {
+		const group = prefixes.slice(start, start + MAX_PREFIX_RANGES);
+		groups.push({lowerBounds: group.map(keyRangeLowerBound), upperBounds: group.map(keyRangeUpperBound)});
+	}
+	return groups;
+}
+
 interface PinnedColumn {
 	values: Array<unknown>;
 	segments: Array<string>;
@@ -430,9 +445,26 @@ function pinnedColumns(clauses: ReadonlyArray<PinnedWhereExpr>, params: Cassandr
 		if (values === null || values.length === 0) break;
 		const segments = keySegments(values);
 		if (segments === null) break;
-		pinned.push({values, segments});
+		pinned.push({values, segments: [...new Set(segments)]});
 	}
 	return pinned;
+}
+
+function boundedLeading(pinned: ReadonlyArray<PinnedColumn>, primaryKeyLength: number): number {
+	for (let leading = pinned.length; leading > 0; leading -= 1) {
+		const cap = leading === primaryKeyLength ? MAX_ROW_KEY_COMBINATIONS : MAX_PREFIX_RANGES;
+		if (combinationCount(pinned.slice(0, leading).map((column) => column.segments)) <= cap) return leading;
+	}
+	return 0;
+}
+
+function chunkableLeading(pinned: ReadonlyArray<PinnedColumn>): number {
+	for (let leading = pinned.length; leading > 0; leading -= 1) {
+		if (combinationCount(pinned.slice(0, leading).map((column) => column.segments)) <= MAX_ROW_KEY_COMBINATIONS) {
+			return leading;
+		}
+	}
+	return 0;
 }
 
 function planIsExact(meta: KvQueryMeta, shape: QueryShape, pinned: ReadonlyArray<PinnedColumn>): boolean {
@@ -456,13 +488,8 @@ export function buildCandidatePlan(meta: KvQueryMeta, params: CassandraParams): 
 	}
 	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
 	const pinned = pinnedColumns(shape.leadingClauses, params);
-	let leading = pinned.length;
-	while (leading > 0) {
-		const segmentLists = pinned.slice(0, leading).map((column) => column.segments);
-		const cap = leading === primaryKey.length ? MAX_ROW_KEY_COMBINATIONS : MAX_PREFIX_RANGES;
-		if (combinationCount(segmentLists) <= cap) break;
-		leading -= 1;
-	}
+	let leading = boundedLeading(pinned, primaryKey.length);
+	if (leading === 0) leading = chunkableLeading(pinned);
 	if (leading > 0) {
 		const columns = pinned.slice(0, leading);
 		const prefixes = keyPrefixes(columns.map((column) => column.segments));
@@ -476,6 +503,9 @@ export function buildCandidatePlan(meta: KvQueryMeta, params: CassandraParams): 
 				candidates: {kind: 'range', lowerBound: keyRangeLowerBound(prefix), upperBound: keyRangeUpperBound(prefix)},
 				exact,
 			};
+		}
+		if (prefixes.length > MAX_PREFIX_RANGES) {
+			return {candidates: {kind: 'rangeGroups', groups: prefixRangeGroups(prefixes)}, exact};
 		}
 		return {
 			candidates: {
@@ -501,7 +531,16 @@ export function buildCandidatePlan(meta: KvQueryMeta, params: CassandraParams): 
 	return {candidates: {kind: 'scan'}, exact: planIsExact(meta, shape, [])};
 }
 
-export function planFragments(plan: CandidatePlan): PlanFragments {
+function rangeFragments(group: RangeGroup): PlanFragments {
+	const params: Array<unknown> = [];
+	const arms = group.lowerBounds.map((lowerBound, index) => {
+		params.push(lowerBound, group.upperBounds[index]);
+		return `(kv.row_key COLLATE "C" >= $${params.length} AND kv.row_key COLLATE "C" < $${params.length + 1})`;
+	});
+	return {predicate: ` AND (${arms.join(' OR ')})`, params};
+}
+
+function planFragments(plan: Exclude<CandidatePlan, {kind: 'rangeGroups'}>): PlanFragments {
 	switch (plan.kind) {
 		case 'rowKeys':
 			return {predicate: ' AND kv.row_key = ANY($2::text[])', params: [plan.rowKeys]};
@@ -510,14 +549,8 @@ export function planFragments(plan: CandidatePlan): PlanFragments {
 				predicate: ' AND kv.row_key COLLATE "C" >= $2 AND kv.row_key COLLATE "C" < $3',
 				params: [plan.lowerBound, plan.upperBound],
 			};
-		case 'ranges': {
-			const params: Array<unknown> = [];
-			const arms = plan.lowerBounds.map((lowerBound, index) => {
-				params.push(lowerBound, plan.upperBounds[index]);
-				return `(kv.row_key COLLATE "C" >= $${params.length} AND kv.row_key COLLATE "C" < $${params.length + 1})`;
-			});
-			return {predicate: ` AND (${arms.join(' OR ')})`, params};
-		}
+		case 'ranges':
+			return rangeFragments(plan);
 		case 'partitionKeys':
 			return plan.partitionKeys.length === 1
 				? {predicate: ' AND kv.partition_key = $2', params: [plan.partitionKeys[0]]}
@@ -525,6 +558,11 @@ export function planFragments(plan: CandidatePlan): PlanFragments {
 		default:
 			return {predicate: '', params: []};
 	}
+}
+
+export function planFragmentGroups(plan: CandidatePlan): Array<PlanFragments> {
+	if (plan.kind === 'rangeGroups') return plan.groups.map(rangeFragments);
+	return [planFragments(plan)];
 }
 
 function logWarn(details: Record<string, unknown>, message: string): void {
@@ -802,15 +840,28 @@ export class PostgresKvQueryExecutor {
 		return meta;
 	}
 
-	private async candidates(meta: KvQueryMeta, plan: QueryPlan, db: PostgresQueryable): Promise<Array<StoredRow>> {
-		if (plan.candidates.kind === 'none') return [];
-		if (plan.candidates.kind === 'scan') logFullScan(meta);
-		const fragments = planFragments(plan.candidates);
+	private async candidateGroup(
+		meta: KvQueryMeta,
+		fragments: PlanFragments,
+		db: PostgresQueryable,
+	): Promise<Array<StoredRow>> {
 		const result = await db.query<StoredRow>(
 			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 			[meta.table.name, ...fragments.params],
 		);
 		return result.rows;
+	}
+
+	private async candidates(meta: KvQueryMeta, plan: QueryPlan, db: PostgresQueryable): Promise<Array<StoredRow>> {
+		if (plan.candidates.kind === 'none') return [];
+		if (plan.candidates.kind === 'scan') logFullScan(meta);
+		const groups = planFragmentGroups(plan.candidates);
+		if (groups.length === 1) return this.candidateGroup(meta, groups[0]!, db);
+		const byRowKey = new Map<string, StoredRow>();
+		for (const fragments of groups) {
+			for (const stored of await this.candidateGroup(meta, fragments, db)) byRowKey.set(stored.row_key, stored);
+		}
+		return [...byRowKey.values()];
 	}
 
 	private matchingRows(meta: KvQueryMeta, stored: ReadonlyArray<StoredRow>, params: CassandraParams): Array<Row> {
@@ -839,12 +890,15 @@ export class PostgresKvQueryExecutor {
 		}
 		if (plan.candidates.kind === 'none') return [{count: 0}];
 		if (plan.candidates.kind === 'scan') logFullScan(meta);
-		const fragments = planFragments(plan.candidates);
-		const result = await db.query<{count: string}>(
-			`SELECT count(*) AS count FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
-			[meta.table.name, ...fragments.params],
-		);
-		return [{count: Number(result.rows[0]?.count ?? 0)}];
+		let total = 0;
+		for (const fragments of planFragmentGroups(plan.candidates)) {
+			const result = await db.query<{count: string}>(
+				`SELECT count(*) AS count FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+				[meta.table.name, ...fragments.params],
+			);
+			total += Number(result.rows[0]?.count ?? 0);
+		}
+		return [{count: total}];
 	}
 
 	private async upsert(meta: KvQueryMeta, params: CassandraParams, db: PostgresQueryable): Promise<Array<Row>> {
@@ -907,11 +961,12 @@ DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = EXCLUDED.row_da
 		if (plan.candidates.kind === 'none') return;
 		if (plan.exact) {
 			if (plan.candidates.kind === 'scan') logFullScan(meta);
-			const fragments = planFragments(plan.candidates);
-			await db.query(
-				`DELETE FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
-				[meta.table.name, ...fragments.params],
-			);
+			for (const fragments of planFragmentGroups(plan.candidates)) {
+				await db.query(
+					`DELETE FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+					[meta.table.name, ...fragments.params],
+				);
+			}
 			return;
 		}
 		const whereColumns = queryShape(meta).whereColumns;

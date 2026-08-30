@@ -33,6 +33,16 @@ function withinRange(rowKey: string, lowerBound: string, upperBound: string): bo
 	return byteCompare(rowKey, lowerBound) >= 0 && byteCompare(rowKey, upperBound) < 0;
 }
 
+function rangeBounds(plan: CandidatePlan): Array<[string, string]> {
+	if (plan.kind === 'ranges') return plan.lowerBounds.map((lower, index) => [lower, plan.upperBounds[index]!]);
+	if (plan.kind === 'rangeGroups') {
+		return plan.groups.flatMap((group) =>
+			group.lowerBounds.map((lower, index): [string, string] => [lower, group.upperBounds[index]!]),
+		);
+	}
+	return [];
+}
+
 function planAccepts(plan: CandidatePlan, rowKey: string, partitionKey: string): boolean {
 	switch (plan.kind) {
 		case 'none':
@@ -42,7 +52,8 @@ function planAccepts(plan: CandidatePlan, rowKey: string, partitionKey: string):
 		case 'range':
 			return withinRange(rowKey, plan.lowerBound, plan.upperBound);
 		case 'ranges':
-			return plan.lowerBounds.some((lower, index) => withinRange(rowKey, lower, plan.upperBounds[index]!));
+		case 'rangeGroups':
+			return rangeBounds(plan).some(([lower, upper]) => withinRange(rowKey, lower, upper));
 		case 'partitionKeys':
 			return plan.partitionKeys.includes(partitionKey);
 		case 'scan':
@@ -51,8 +62,7 @@ function planAccepts(plan: CandidatePlan, rowKey: string, partitionKey: string):
 }
 
 function matchingRangeCount(plan: CandidatePlan, rowKey: string): number {
-	if (plan.kind !== 'ranges') return 0;
-	return plan.lowerBounds.filter((lower, index) => withinRange(rowKey, lower, plan.upperBounds[index]!)).length;
+	return rangeBounds(plan).filter(([lower, upper]) => withinRange(rowKey, lower, upper)).length;
 }
 
 function expectKeyShape(key: string, separators: number): void {
@@ -362,17 +372,56 @@ describe('PostgresKvQueryExecutor plan size caps', () => {
 		expect(plan.candidates.rowKeys.length).toBe(900);
 	});
 
-	it('caps the number of prefix ranges and degrades to a scan instead', () => {
+	it('chunks the prefix ranges into groups instead of degrading to a scan', () => {
 		const under = TripleKey.select({where: TripleKey.where.in('a', 'ids')}).bind({
 			ids: Array.from({length: 256}, (_, i) => `id${i}`),
 		});
 		expect(planOf(under).plan.candidates.kind).toBe('ranges');
 		const over = TripleKey.select({where: TripleKey.where.in('a', 'ids')}).bind({
-			ids: Array.from({length: 257}, (_, i) => `id${i}`),
+			ids: Array.from({length: 700}, (_, i) => `id${i}`),
 		});
 		const {plan} = planOf(over);
+		expect(plan.candidates.kind).toBe('rangeGroups');
+		expect(plan.exact).toBe(true);
+		if (plan.candidates.kind !== 'rangeGroups') return;
+		expect(plan.candidates.groups.map((group) => group.lowerBounds.length)).toEqual([256, 256, 188]);
+		expect(plan.candidates.groups.map((group) => group.upperBounds.length)).toEqual([256, 256, 188]);
+	});
+
+	it('brackets exactly the matching rows once the prefix ranges are chunked', () => {
+		const ids = [...TRICKY_STRINGS, ...Array.from({length: 260}, (_, i) => `id${i}`)];
+		const query = TripleKey.select({where: TripleKey.where.in('a', 'ids')}).bind({ids});
+		expect(checkQuery(query, tripleRows).kind).toBe('rangeGroups');
+	});
+
+	it('falls back to a scan when even the leading column blows the combination bound', () => {
+		const query = TripleKey.select({where: TripleKey.where.in('a', 'ids')}).bind({
+			ids: Array.from({length: 32_769}, (_, i) => `id${i}`),
+		});
+		const {plan} = planOf(query);
 		expect(plan.candidates.kind).toBe('scan');
 		expect(plan.exact).toBe(false);
+	});
+
+	it('applies the cap to distinct IN values rather than to duplicates', () => {
+		const query = TripleKey.select({where: TripleKey.where.in('a', 'ids')}).bind({
+			ids: Array.from({length: 300}, (_, i) => `id${i % 50}`),
+		});
+		const {plan} = planOf(query);
+		expect(plan.candidates.kind).toBe('ranges');
+		if (plan.candidates.kind !== 'ranges') return;
+		expect(plan.candidates.lowerBounds.length).toBe(50);
+	});
+
+	it('applies the row key combination bound to distinct products too', () => {
+		const query = PairKey.select({where: [PairKey.where.in('a', 'ids'), PairKey.where.in('b', 'seqs')]}).bind({
+			ids: Array.from({length: 200}, (_, i) => `id${i % 50}`),
+			seqs: Array.from({length: 200}, (_, i) => BigInt(i % 50)),
+		});
+		const {plan} = planOf(query);
+		expect(plan.candidates.kind).toBe('rowKeys');
+		if (plan.candidates.kind !== 'rowKeys') return;
+		expect(plan.candidates.rowKeys.length).toBe(2500);
 	});
 
 	it('enforces the cap even when the trailing pinned column is an equality', () => {

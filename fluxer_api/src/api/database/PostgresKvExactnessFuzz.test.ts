@@ -62,6 +62,14 @@ function rowKeyMatchesPlan(plan: ReturnType<typeof buildCandidatePlan>, rowKey: 
 					Buffer.compare(buf, Buffer.from(lower, 'utf8')) >= 0 &&
 					Buffer.compare(buf, Buffer.from(c.upperBounds[i]!, 'utf8')) < 0,
 			);
+		case 'rangeGroups':
+			return c.groups.some((group) =>
+				group.lowerBounds.some(
+					(lower, i) =>
+						Buffer.compare(buf, Buffer.from(lower, 'utf8')) >= 0 &&
+						Buffer.compare(buf, Buffer.from(group.upperBounds[i]!, 'utf8')) < 0,
+				),
+			);
 		case 'partitionKeys':
 			return c.partitionKeys.includes(rowKey);
 	}

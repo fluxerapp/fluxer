@@ -13,7 +13,7 @@ import cassandra from 'cassandra-driver';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {LegacyPostgresKvQueryExecutor} from './__testref__/LegacyPostgresKvQueryExecutor';
 import type {CassandraParams, KvQueryMeta, KvTableSpec, WhereExpr} from './CassandraTypes';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
+import {buildCandidatePlan, ensurePostgresKvSchema, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 type AnyMeta = KvQueryMeta<Row>;
@@ -298,6 +298,33 @@ describe.skipIf(!dockerAvailable)('postgres kv non-select matrix', () => {
 			kvMeta: {action: 'delete', table: Two, where} as AnyMeta,
 		});
 		expect(await dump(NEXT_TABLE, Two.name)).toBe(await dump(LEGACY_TABLE, Two.name));
+	}, 300_000);
+
+	it('IN lists above the range cap agree once the plan is chunked into groups', async () => {
+		const rows: Array<Row> = [];
+		for (let k = 0; k < 300; k += 1) {
+			for (const c of [0n, 1n]) rows.push({k: BigInt(k), c, v: k});
+		}
+		await seed(Two, rows);
+		const where = [{kind: 'in', col: 'k', param: 'ks'}] as Array<WhereExpr<Row>>;
+		const params = {ks: Array.from({length: 260}, (_, i) => BigInt(i))} as CassandraParams;
+		const sel = {action: 'select', table: Two, where, columns: Two.columns} as AnyMeta;
+		expect(buildCandidatePlan(sel, params).candidates.kind).toBe('rangeGroups');
+		const ls = await legacy.executeQuery({cql: '__chunk_sel__', params, kvMeta: sel});
+		const ns = await next.executeQuery({cql: '__chunk_sel__', params, kvMeta: sel});
+		expect(ns.length).toBe(520);
+		expect(JSON.stringify(ns, bigintJson)).toBe(JSON.stringify(ls, bigintJson));
+		const cnt = {action: 'count', table: Two, where} as AnyMeta;
+		const lc = await legacy.executeQuery({cql: '__chunk_cnt__', params, kvMeta: cnt});
+		const nc = await next.executeQuery({cql: '__chunk_cnt__', params, kvMeta: cnt});
+		expect(nc).toEqual([{count: 520}]);
+		expect(nc).toEqual(lc);
+		const del = {action: 'delete', table: Two, where} as AnyMeta;
+		await legacy.executeQuery({cql: '__chunk_del__', params, kvMeta: del});
+		await next.executeQuery({cql: '__chunk_del__', params, kvMeta: del});
+		const remaining = await dump(NEXT_TABLE, Two.name);
+		expect(remaining).toBe(await dump(LEGACY_TABLE, Two.name));
+		expect(JSON.parse(remaining).length).toBe(80);
 	}, 300_000);
 
 	it('count with a limit or an order by matches legacy', async () => {

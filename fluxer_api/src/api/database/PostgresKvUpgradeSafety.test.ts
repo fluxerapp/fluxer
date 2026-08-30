@@ -412,7 +412,7 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 
 		it('emits a multi-range plan that is not slower than the tier-3 scan it replaces', async () => {
 			const {PushSubscriptions} = await import('../Tables');
-			const {buildCandidatePlan, planFragments} = await import('./PostgresKvQueryExecutor');
+			const {buildCandidatePlan, planFragmentGroups} = await import('./PostgresKvQueryExecutor');
 			const {getKvMeta} = await import('./CassandraMetaRegistry');
 			const db = getDefaultPostgresClient();
 			const explain = async (sql: string, params: Array<unknown>) => {
@@ -431,7 +431,9 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 				const params = {user_ids: Array.from({length: size}, (_, i) => BASE + BigInt(i * 3))};
 				const plan = buildCandidatePlan(meta, params as never);
 				expect(plan.candidates.kind).toBe('ranges');
-				const fragments = planFragments(plan.candidates);
+				const groups = planFragmentGroups(plan.candidates);
+				expect(groups.length).toBe(1);
+				const fragments = groups[0]!;
 				expect(fragments.predicate).not.toContain('unnest');
 				const pushed = await explain(
 					`SELECT kv.row_key, kv.row_data FROM ${PERF} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
@@ -443,9 +445,22 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 			}
 			expect(deltas.join('\n')).toBe('');
 			const overCap = buildCandidatePlan(meta, {
-				user_ids: Array.from({length: 257}, (_, i) => BASE + BigInt(i * 3)),
+				user_ids: Array.from({length: 700}, (_, i) => BASE + BigInt(i * 3)),
 			} as never);
-			expect(overCap.candidates.kind).toBe('scan');
+			expect(overCap.candidates.kind).toBe('rangeGroups');
+			expect(overCap.exact).toBe(true);
+			const overCapGroups = planFragmentGroups(overCap.candidates);
+			expect(overCapGroups.map((group) => group.params.length)).toEqual([512, 512, 376]);
+			let chunkedMs = 0;
+			for (const fragments of overCapGroups) {
+				const pushed = await explain(
+					`SELECT kv.row_key, kv.row_data FROM ${PERF} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+					['push_subscriptions', ...fragments.params],
+				);
+				expect(pushed.plan).not.toContain('Seq Scan');
+				chunkedMs += pushed.ms;
+			}
+			console.log(`n=700 chunked=${chunkedMs.toFixed(2)}ms scan=${scan.ms.toFixed(2)}ms`);
 			expect(SEP).toBe('\u001f');
 		}, 300_000);
 	});
