@@ -25,6 +25,7 @@ import {EmbedFooter} from '../models/EmbedFooter';
 import {EmbedMedia} from '../models/EmbedMedia';
 import * as UnfurlerUtils from '../utils/UnfurlerUtils';
 import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '../worker/WorkerQueueOverflowError';
 import {
 	type IMediaService,
 	type MediaProxyMetadataResponse,
@@ -498,20 +499,30 @@ export class EmbedService {
 	): Promise<void> {
 		const expectedContentHash =
 			options.content !== undefined ? UnfurlerUtils.hashUnfurlContent(options.content) : undefined;
-		await this.workerService.addJob(
-			'extractEmbeds',
-			{
-				guildId: guildId ? guildId.toString() : null,
-				channelId: channelId.toString(),
-				messageId: messageId.toString(),
-				nsfwMode,
-				...(expectedContentHash ? {expectedContentHash} : {}),
-			},
-			{
-				jobKey: expectedContentHash ? `${messageId.toString()}:${expectedContentHash}` : messageId.toString(),
-				skipLedger: true,
-			},
-		);
+		try {
+			await this.workerService.addJob(
+				'extractEmbeds',
+				{
+					guildId: guildId ? guildId.toString() : null,
+					channelId: channelId.toString(),
+					messageId: messageId.toString(),
+					nsfwMode,
+					...(expectedContentHash ? {expectedContentHash} : {}),
+				},
+				{
+					jobKey: expectedContentHash ? `${messageId.toString()}:${expectedContentHash}` : messageId.toString(),
+					skipLedger: true,
+				},
+			);
+		} catch (error) {
+			if (!(error instanceof WorkerQueueOverflowError)) {
+				throw error;
+			}
+			Logger.warn(
+				{channelId: channelId.toString(), messageId: messageId.toString()},
+				'Dropped url embed extraction, jobs stream is at its limit',
+			);
+		}
 	}
 
 	private async updateMessageEmbeds(channelId: ChannelID, messageId: MessageID, embeds: Array<Embed>): Promise<void> {

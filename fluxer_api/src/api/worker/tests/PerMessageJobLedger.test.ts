@@ -9,6 +9,7 @@ import {MessageMentionService} from '../../channel/services/message/MessageMenti
 import {EmbedService} from '../../infrastructure/EmbedService';
 import type {Message} from '../../models/Message';
 import type {WorkerTaskName} from '../WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '../WorkerQueueOverflowError';
 
 class RecordingWorkerService implements IWorkerService<WorkerTaskName> {
 	readonly jobs: Array<{taskType: WorkerTaskName; options: WorkerJobOptions | undefined}> = [];
@@ -20,6 +21,24 @@ class RecordingWorkerService implements IWorkerService<WorkerTaskName> {
 	): Promise<bigint> {
 		this.jobs.push({taskType, options});
 		return 1n;
+	}
+
+	async cancelJob(): Promise<boolean> {
+		return false;
+	}
+
+	async retryDeadLetterJob(): Promise<boolean> {
+		return false;
+	}
+}
+
+class OverflowingWorkerService implements IWorkerService<WorkerTaskName> {
+	async addJob<TPayload extends WorkerJobPayload = WorkerJobPayload>(
+		taskType: WorkerTaskName,
+		_payload: TPayload,
+		_options?: WorkerJobOptions,
+	): Promise<bigint> {
+		throw new WorkerQueueOverflowError(taskType, 'maximum messages per subject exceeded');
 	}
 
 	async cancelJob(): Promise<boolean> {
@@ -70,5 +89,29 @@ describe('per-message worker jobs', () => {
 		expect(workerService.jobs).toHaveLength(1);
 		expect(workerService.jobs[0]!.taskType).toBe('extractEmbeds');
 		expect(workerService.jobs[0]!.options?.skipLedger).toBe(true);
+	});
+
+	it('drops mention fanout instead of failing the send when the jobs stream is full', async () => {
+		const mentionService = new MessageMentionService(
+			null as never,
+			null as never,
+			null as never,
+			new OverflowingWorkerService(),
+			null as never,
+		);
+		await expect(
+			mentionService.handleMentionTasks({
+				guildId: null,
+				message: makeMentionMessage(),
+				authorId: createUserID(1n),
+			}),
+		).resolves.toBeUndefined();
+	});
+
+	it('drops embed extraction instead of failing the send when the jobs stream is full', async () => {
+		const embedService = new EmbedService(null as never, null as never, null as never, new OverflowingWorkerService());
+		await expect(
+			embedService.enqueueUrlEmbedExtraction(createChannelID(3n), createMessageID(2n), null, 'block'),
+		).resolves.toBeUndefined();
 	});
 });

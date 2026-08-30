@@ -30,6 +30,7 @@ import {
 	validateLaneCompleteness,
 	type WorkerLaneDefinition,
 } from './WorkerLaneConfig';
+import {WorkerQueueOverflowError} from './WorkerQueueOverflowError';
 import {WorkerRunner} from './WorkerRunner';
 import {WorkerService} from './WorkerService';
 import {workerTasks} from './WorkerTaskRegistry';
@@ -213,7 +214,14 @@ export async function startWorkerMain(): Promise<void> {
 			);
 			if (didClaimEmailSync) {
 				Logger.info('Triggering initial disposable email domain sync');
-				await workerService.addJob('syncDisposableEmailDomains', {});
+				try {
+					await workerService.addJob('syncDisposableEmailDomains', {});
+				} catch (error) {
+					if (!(error instanceof WorkerQueueOverflowError)) {
+						throw error;
+					}
+					Logger.warn('Dropped initial disposable email domain sync, jobs stream is at its limit');
+				}
 			}
 		}
 		cron = new CronScheduler(workerService, Logger, dependencies.kvClient);

@@ -3,9 +3,19 @@
 import {randomUUID} from 'node:crypto';
 import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-import {AckPolicy, nanos, RetentionPolicy, StorageType} from 'nats';
+import {
+	AckPolicy,
+	DiscardPolicy,
+	type JetStreamManager,
+	NatsError,
+	nanos,
+	RetentionPolicy,
+	StorageType,
+	type StreamConfig,
+} from 'nats';
 import {Logger} from '../Logger';
 import type {WorkerLaneDefinition} from './WorkerLaneConfig';
+import {WorkerQueueOverflowError} from './WorkerQueueOverflowError';
 
 const STREAM_NAME = 'JOBS';
 const SUBJECT_PREFIX = 'jobs.';
@@ -14,6 +24,29 @@ const LEGACY_CONSUMER_NAME = 'workers';
 const DLQ_STREAM_NAME = 'JOBS_DLQ';
 const DLQ_SUBJECT_PREFIX = 'dlq.';
 const DLQ_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const STREAM_MAX_MSGS = 2_000_000;
+const STREAM_MAX_BYTES = 8 * 1024 * 1024 * 1024;
+const STREAM_MAX_MSGS_PER_SUBJECT = 250_000;
+const STREAM_STORE_ERR_CODE = 10077;
+
+const STREAM_LIMITS = {
+	max_msgs: STREAM_MAX_MSGS,
+	max_bytes: STREAM_MAX_BYTES,
+	max_msgs_per_subject: STREAM_MAX_MSGS_PER_SUBJECT,
+	discard: DiscardPolicy.New,
+	discard_new_per_subject: true,
+} satisfies Partial<StreamConfig>;
+
+function describeStreamRejection(error: unknown): string | null {
+	if (!(error instanceof NatsError)) {
+		return null;
+	}
+	const apiError = error.jsError();
+	if (apiError?.err_code !== STREAM_STORE_ERR_CODE) {
+		return null;
+	}
+	return apiError.description ?? 'stream rejected the publish';
+}
 
 export class JetStreamWorkerQueue {
 	private readonly connectionManager: JetStreamConnectionManager;
@@ -30,9 +63,13 @@ export class JetStreamWorkerQueue {
 			return;
 		}
 		const jsm = await this.connectionManager.getJetStreamManager();
+		let existingConfig: StreamConfig | null = null;
 		try {
-			await jsm.streams.info(STREAM_NAME);
+			existingConfig = (await jsm.streams.info(STREAM_NAME)).config;
 		} catch {
+			existingConfig = null;
+		}
+		if (existingConfig === null) {
 			await jsm.streams.add({
 				name: STREAM_NAME,
 				subjects: [`${SUBJECT_PREFIX}>`],
@@ -41,9 +78,31 @@ export class JetStreamWorkerQueue {
 				max_age: nanos(MAX_AGE_MS),
 				duplicate_window: nanos(2 * 60 * 1000),
 				num_replicas: 1,
+				...STREAM_LIMITS,
 			});
+		} else if (!this.hasStreamLimits(existingConfig)) {
+			await this.applyStreamLimits(jsm);
 		}
 		this.streamReady = true;
+	}
+
+	private hasStreamLimits(config: StreamConfig): boolean {
+		return (
+			config.max_msgs === STREAM_MAX_MSGS &&
+			config.max_bytes === STREAM_MAX_BYTES &&
+			config.max_msgs_per_subject === STREAM_MAX_MSGS_PER_SUBJECT &&
+			config.discard === DiscardPolicy.New &&
+			config.discard_new_per_subject
+		);
+	}
+
+	private async applyStreamLimits(jsm: JetStreamManager): Promise<void> {
+		try {
+			await jsm.streams.update(STREAM_NAME, {...STREAM_LIMITS});
+			Logger.info({stream: STREAM_NAME, ...STREAM_LIMITS}, 'Applied jobs stream limits');
+		} catch (error) {
+			Logger.error({err: error, stream: STREAM_NAME}, 'Failed to apply jobs stream limits, stream stays unbounded');
+		}
 	}
 
 	async ensureDlqStream(): Promise<void> {
@@ -148,11 +207,19 @@ export class JetStreamWorkerQueue {
 			created_at: new Date().toISOString(),
 		});
 		const msgID = options?.jobKey ? `${taskType}:${options.jobKey}` : randomUUID();
-		const ack = await js.publish(subject, body, {
-			msgID,
-		});
-		const jobId = `${ack.seq}`;
-		return jobId;
+		try {
+			const ack = await js.publish(subject, body, {
+				msgID,
+			});
+			const jobId = `${ack.seq}`;
+			return jobId;
+		} catch (error) {
+			const rejection = describeStreamRejection(error);
+			if (rejection === null) {
+				throw error;
+			}
+			throw new WorkerQueueOverflowError(taskType, rejection);
+		}
 	}
 
 	async publishToDlq(

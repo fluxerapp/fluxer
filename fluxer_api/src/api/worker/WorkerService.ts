@@ -7,6 +7,7 @@ import type {IJobLedgerRepository} from '../jobs/IJobLedgerRepository';
 import {Logger} from '../Logger';
 import type {JetStreamWorkerQueue} from './JetStreamWorkerQueue';
 import {findLaneForTask, type WorkerTaskName} from './WorkerLaneConfig';
+import {WorkerQueueOverflowError} from './WorkerQueueOverflowError';
 
 export class WorkerService implements IWorkerService<WorkerTaskName> {
 	private readonly queue: JetStreamWorkerQueue;
@@ -56,6 +57,10 @@ export class WorkerService implements IWorkerService<WorkerTaskName> {
 			Logger.debug({taskType, jobId: jobId.toString(), seq}, 'Job queued successfully');
 			return jobId;
 		} catch (error) {
+			if (error instanceof WorkerQueueOverflowError) {
+				Logger.warn({taskType, jobId: jobId.toString()}, 'Jobs stream is at its limit, shedding job');
+				throw error;
+			}
 			Logger.error({error, taskType, payload}, 'Failed to queue job');
 			throw error;
 		}
