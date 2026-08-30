@@ -6,6 +6,7 @@
 -export([
     update_counts/1,
     maybe_put_permission_cache/1,
+    maybe_put_permission_cache/4,
     maybe_delete_permission_cache/2,
     maybe_put_guild_count_cache/3,
     schedule_count_cache_refresh/1,
@@ -41,6 +42,29 @@ maybe_put_permission_cache(State) ->
         true -> ok;
         false -> guild_permission_cache:put_state(State)
     end.
+
+-spec maybe_put_permission_cache(term(), map(), guild_state(), guild_state()) -> ok.
+maybe_put_permission_cache(Event, EventData, OldState, NewState) ->
+    case permission_cache_needs_rebuild(Event, EventData, OldState, NewState) of
+        true -> maybe_put_permission_cache(NewState);
+        false -> ok
+    end.
+
+-spec permission_cache_needs_rebuild(term(), map(), guild_state(), guild_state()) -> boolean().
+permission_cache_needs_rebuild(guild_member_update, EventData, OldState, NewState) ->
+    guild_permission_cache:member_projection_changed(
+        member_update_user_id(EventData),
+        guild_data_index:ensure_data_map(OldState),
+        guild_data_index:ensure_data_map(NewState)
+    );
+permission_cache_needs_rebuild(_Event, _EventData, _OldState, _NewState) ->
+    true.
+
+-spec member_update_user_id(map()) -> user_id() | undefined.
+member_update_user_id(#{<<"user">> := #{<<"id">> := Id}}) ->
+    snowflake_id:parse_maybe(Id);
+member_update_user_id(_) ->
+    undefined.
 
 -spec maybe_delete_permission_cache(term(), guild_state()) -> ok.
 maybe_delete_permission_cache(GuildId, State) ->
@@ -406,5 +430,85 @@ prune_channel(ChannelId, RoleId) ->
             }
         ]
     }.
+
+permission_cache_skips_nick_only_member_update_test() ->
+    UserId = 4242,
+    OldState = permission_cache_state(
+        7710001, permission_cache_member(UserId, [10], <<"old">>)
+    ),
+    EventData = permission_cache_member(UserId, [10], <<"new">>),
+    NewState = permission_cache_apply(EventData, OldState),
+    ?assertNotEqual(
+        guild_data_index:get_member(UserId, maps:get(data, OldState)),
+        guild_data_index:get_member(UserId, maps:get(data, NewState))
+    ),
+    ?assertEqual(
+        {error, not_found},
+        permission_cache_refresh(guild_member_update, EventData, OldState, NewState)
+    ).
+
+permission_cache_rebuilds_on_member_role_change_test() ->
+    UserId = 4242,
+    OldState = permission_cache_state(
+        7710002, permission_cache_member(UserId, [10], <<"old">>)
+    ),
+    EventData = permission_cache_member(UserId, [10, 11], <<"old">>),
+    NewState = permission_cache_apply(EventData, OldState),
+    {ok, Snapshot} = permission_cache_refresh(
+        guild_member_update, EventData, OldState, NewState
+    ),
+    Member = guild_permissions:find_member_by_user_id(UserId, Snapshot),
+    ?assertEqual([10, 11], maps:get(<<"roles">>, Member)).
+
+permission_cache_rebuilds_on_member_timeout_change_test() ->
+    UserId = 4242,
+    Until = <<"2026-09-01T00:00:00.000Z">>,
+    OldState = permission_cache_state(
+        7710003, permission_cache_member(UserId, [10], <<"old">>)
+    ),
+    EventData = (permission_cache_member(UserId, [10], <<"old">>))#{
+        <<"communication_disabled_until">> => Until
+    },
+    NewState = permission_cache_apply(EventData, OldState),
+    {ok, Snapshot} = permission_cache_refresh(
+        guild_member_update, EventData, OldState, NewState
+    ),
+    Member = guild_permissions:find_member_by_user_id(UserId, Snapshot),
+    ?assertEqual(Until, maps:get(<<"communication_disabled_until">>, Member)).
+
+permission_cache_rebuilds_for_other_mutating_events_test() ->
+    State = permission_cache_state(7710004, permission_cache_member(4242, [10], <<"old">>)),
+    ?assertMatch({ok, _}, permission_cache_refresh(guild_role_update, #{}, State, State)).
+
+permission_cache_rebuilds_without_member_update_user_id_test() ->
+    State = permission_cache_state(7710005, permission_cache_member(4242, [10], <<"old">>)),
+    ?assertMatch({ok, _}, permission_cache_refresh(guild_member_update, #{}, State, State)).
+
+permission_cache_refresh(Event, EventData, OldState, NewState) ->
+    GuildId = maps:get(id, NewState),
+    ok = guild_permission_cache:delete(GuildId),
+    try
+        ok = maybe_put_permission_cache(Event, EventData, OldState, NewState),
+        guild_permission_cache:get_snapshot(GuildId)
+    after
+        ok = guild_permission_cache:delete(GuildId)
+    end.
+
+permission_cache_state(GuildId, Member) ->
+    #{
+        id => GuildId,
+        data => guild_data_index:normalize_data(#{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [prune_role(10, 0), prune_role(11, 0)],
+            <<"members">> => [Member],
+            <<"channels">> => []
+        })
+    }.
+
+permission_cache_member(UserId, RoleIds, Nick) ->
+    (prune_member(UserId, RoleIds))#{<<"nick">> => Nick}.
+
+permission_cache_apply(EventData, State) ->
+    State#{data => guild_state_member:handle_member_update(EventData, maps:get(data, State))}.
 
 -endif.

@@ -531,24 +531,27 @@ handle_dispatch_call(#{event := Event, data := EventData}, State) ->
 
 -spec dispatch_event(term(), term(), guild_state()) -> guild_state().
 dispatch_event(Event, EventData, State) ->
+    ParsedEventData = parse_event_data(EventData),
     {noreply, NewState} = guild_dispatch:handle_dispatch(
-        Event, parse_event_data(EventData), State
+        Event, ParsedEventData, State
     ),
     StateAfterPrune = guild_maintenance:maybe_prune_invalid_member_subscriptions(
         Event, NewState
     ),
-    ok = maybe_refresh_permission_cache(Event, StateAfterPrune),
+    ok = maybe_refresh_permission_cache(Event, ParsedEventData, State, StateAfterPrune),
     StateAfterPrune.
 
 -spec parse_event_data(term()) -> map().
 parse_event_data(D) when is_binary(D) -> require_map(json:decode(D));
 parse_event_data(D) when is_map(D) -> D.
 
--spec maybe_refresh_permission_cache(term(), guild_state()) -> ok.
-maybe_refresh_permission_cache(Event, State) ->
+-spec maybe_refresh_permission_cache(term(), map(), guild_state(), guild_state()) -> ok.
+maybe_refresh_permission_cache(Event, EventData, OldState, NewState) ->
     case event_mutates_guild_data(Event) of
-        true -> guild_maintenance:maybe_put_permission_cache(State);
-        false -> ok
+        true ->
+            guild_maintenance:maybe_put_permission_cache(Event, EventData, OldState, NewState);
+        false ->
+            ok
     end.
 
 -spec event_mutates_guild_data(term()) -> boolean().
