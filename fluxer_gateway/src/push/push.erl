@@ -323,6 +323,7 @@ filter_eligible_users(
     ConnectedUsers
 ) ->
     LargeGuildMetadata = large_guild_metadata(GuildId),
+    push_eligibility:prefetch_user_guild_settings(UserIds, AuthorId, GuildId),
     lists:filter(
         fun(UserId) ->
             push_eligibility:is_eligible_for_push(
@@ -586,6 +587,36 @@ filter_eligible_users_fetches_large_metadata_once_test() ->
             fun(UserId) -> push_ets_cache:delete_user_guild_settings(UserId, 42) end,
             [1, 2, 3]
         )
+    end.
+
+filter_eligible_users_batches_missing_settings_lookups_test() ->
+    push_ets_cache:init(),
+    Self = self(),
+    ok = meck:new(rpc_client, [passthrough, no_link]),
+    try
+        ok = meck:expect(rpc_client, call, fun(Request) ->
+            Self ! {rpc_request, Request},
+            {ok, #{<<"user_guild_settings">> => [#{}, #{}, #{}]}}
+        end),
+        ?assertEqual(
+            [1, 2, 3],
+            filter_eligible_users([1, 2, 3], 999, 43, 10, #{}, 0, #{}, #{})
+        ),
+        ?assertEqual(1, drain_settings_request_count(0))
+    after
+        meck:unload(rpc_client),
+        lists:foreach(
+            fun(UserId) -> push_ets_cache:delete_user_guild_settings(UserId, 43) end,
+            [1, 2, 3]
+        )
+    end.
+
+drain_settings_request_count(Count) ->
+    receive
+        {rpc_request, #{<<"type">> := <<"get_user_guild_settings">>}} ->
+            drain_settings_request_count(Count + 1)
+    after 0 ->
+        Count
     end.
 
 drain_metadata_lookup_count(Count) ->

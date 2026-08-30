@@ -6,6 +6,7 @@
 -export([is_user_blocked/2]).
 -export([check_user_guild_settings/7]).
 -export([check_user_guild_settings/8]).
+-export([prefetch_user_guild_settings/3]).
 -export([should_allow_notification/6]).
 -export([is_user_mentioned/5]).
 -export([is_eligible_for_push/8]).
@@ -14,6 +15,7 @@
 
 -define(MESSAGE_NOTIFICATIONS_NO_MESSAGES, 2).
 -define(MESSAGE_NOTIFICATIONS_ONLY_MENTIONS, 1).
+-define(SETTINGS_PREFETCH_CHUNK_SIZE, 200).
 
 -spec is_eligible_for_push(
     integer(), integer(), integer(), integer(), map(), integer(), map(), map()
@@ -225,6 +227,112 @@ fetch_settings_rpc(UserId, GuildId) ->
         error:_ -> #{};
         exit:_ -> #{}
     end.
+
+-spec prefetch_user_guild_settings([integer()], integer(), integer()) -> ok.
+prefetch_user_guild_settings(_UserIds, _AuthorId, 0) ->
+    ok;
+prefetch_user_guild_settings(UserIds, AuthorId, GuildId) ->
+    prefetch_settings_chunks(uncached_settings_user_ids(UserIds, AuthorId, GuildId), GuildId).
+
+-spec uncached_settings_user_ids([integer()], integer(), integer()) -> [integer()].
+uncached_settings_user_ids(UserIds, AuthorId, GuildId) ->
+    lists:usort(
+        lists:filter(
+            fun(UserId) -> is_settings_uncached(UserId, AuthorId, GuildId) end,
+            UserIds
+        )
+    ).
+
+-spec is_settings_uncached(integer(), integer(), integer()) -> boolean().
+is_settings_uncached(AuthorId, AuthorId, _GuildId) ->
+    false;
+is_settings_uncached(UserId, _AuthorId, GuildId) ->
+    push_ets_cache:get_user_guild_settings(UserId, GuildId) =:= undefined.
+
+-spec prefetch_settings_chunks([integer()], integer()) -> ok.
+prefetch_settings_chunks([], _GuildId) ->
+    ok;
+prefetch_settings_chunks(UserIds, GuildId) ->
+    {Chunk, Rest} = take_settings_chunk(UserIds, ?SETTINGS_PREFETCH_CHUNK_SIZE, []),
+    prefetch_settings_chunk(Chunk, GuildId),
+    prefetch_settings_chunks(Rest, GuildId).
+
+-spec take_settings_chunk([integer()], non_neg_integer(), [integer()]) ->
+    {[integer()], [integer()]}.
+take_settings_chunk(Rest, 0, Acc) ->
+    {lists:reverse(Acc), Rest};
+take_settings_chunk([], _Remaining, Acc) ->
+    {lists:reverse(Acc), []};
+take_settings_chunk([UserId | Rest], Remaining, Acc) ->
+    take_settings_chunk(Rest, Remaining - 1, [UserId | Acc]).
+
+-spec prefetch_settings_chunk([integer()], integer()) -> ok.
+prefetch_settings_chunk(UserIds, GuildId) ->
+    try prefetch_settings_chunk_rpc(UserIds, GuildId) of
+        ok -> ok
+    catch
+        throw:_ -> ok;
+        error:_ -> ok;
+        exit:_ -> ok
+    end.
+
+-spec prefetch_settings_chunk_rpc([integer()], integer()) -> ok.
+prefetch_settings_chunk_rpc(UserIds, GuildId) ->
+    Req = #{
+        <<"type">> => <<"get_user_guild_settings">>,
+        <<"user_ids">> => [integer_to_binary(UserId) || UserId <- UserIds],
+        <<"guild_id">> => integer_to_binary(GuildId)
+    },
+    logger:debug(
+        "Push: prefetching user guild settings via RPC",
+        #{user_count => length(UserIds), guild_id => GuildId}
+    ),
+    case rpc_client:call(Req) of
+        {ok, Data} ->
+            cache_prefetched_settings(UserIds, GuildId, settings_list(Data));
+        {error, Reason} ->
+            logger:debug(
+                "Push: RPC failed to prefetch user guild settings",
+                #{user_count => length(UserIds), guild_id => GuildId, reason => Reason}
+            ),
+            ok
+    end.
+
+-spec settings_list(map()) -> [term()].
+settings_list(Data) ->
+    case maps:get(<<"user_guild_settings">>, Data, []) of
+        Settings when is_list(Settings) -> Settings;
+        _ -> []
+    end.
+
+-spec cache_prefetched_settings([integer()], integer(), [term()]) -> ok.
+cache_prefetched_settings(UserIds, GuildId, Settings) when
+    length(UserIds) =:= length(Settings)
+->
+    lists:foreach(
+        fun({UserId, UserSettings}) ->
+            push_ets_cache:put_user_guild_settings(
+                UserId, GuildId, settings_map(UserSettings)
+            )
+        end,
+        lists:zip(UserIds, Settings)
+    );
+cache_prefetched_settings(UserIds, GuildId, Settings) ->
+    logger:debug(
+        "Push: prefetched user guild settings did not match requested users",
+        #{
+            user_count => length(UserIds),
+            guild_id => GuildId,
+            settings_count => length(Settings)
+        }
+    ),
+    ok.
+
+-spec settings_map(term()) -> map().
+settings_map(Settings) when is_map(Settings) ->
+    Settings;
+settings_map(_Settings) ->
+    #{}.
 
 -spec should_allow_notification(
     integer(), map(), integer(), map(), map(), map()

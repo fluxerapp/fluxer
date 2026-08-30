@@ -114,6 +114,76 @@ message_params_context_requires_explicit_guild_id_test() ->
     {ok, Context} = push_message_params:context(DmParams),
     ?assertEqual(0, maps:get(guild_id, Context)).
 
+prefetch_user_guild_settings_batches_missing_users_into_one_rpc_test() ->
+    push_ets_cache:init(),
+    ok = push_ets_cache:put_user_guild_settings(9004, 4242, #{<<"muted">> => true}),
+    Response = #{<<"user_guild_settings">> => [#{<<"mobile_push">> => false}, null]},
+    with_rpc_client_stub({ok, Response}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings(
+            [9002, 9001, 9004, 9999, 9001], 9999, 4242
+        )
+    end),
+    ?assertEqual([{<<"4242">>, [<<"9001">>, <<"9002">>]}], settings_requests()),
+    ?assertEqual(
+        #{<<"mobile_push">> => false}, push_ets_cache:get_user_guild_settings(9001, 4242)
+    ),
+    ?assertEqual(#{}, push_ets_cache:get_user_guild_settings(9002, 4242)),
+    ?assertEqual(
+        #{<<"muted">> => true}, push_ets_cache:get_user_guild_settings(9004, 4242)
+    ),
+    lists:foreach(
+        fun(UserId) -> push_ets_cache:delete_user_guild_settings(UserId, 4242) end,
+        [9001, 9002, 9004]
+    ).
+
+prefetch_user_guild_settings_chunks_large_batches_test() ->
+    push_ets_cache:init(),
+    UserIds = lists:seq(90000, 90200),
+    with_rpc_client_stub({ok, #{<<"user_guild_settings">> => []}}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings(UserIds, 9999, 4243)
+    end),
+    ?assertEqual([200, 1], [length(Ids) || {_GuildId, Ids} <- settings_requests()]).
+
+prefetch_user_guild_settings_leaves_cache_cold_on_rpc_failure_test() ->
+    push_ets_cache:init(),
+    with_rpc_client_stub({error, timeout}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings([9007, 9008], 9999, 4244)
+    end),
+    ?assertEqual([{<<"4244">>, [<<"9007">>, <<"9008">>]}], settings_requests()),
+    ?assertEqual(undefined, push_ets_cache:get_user_guild_settings(9007, 4244)),
+    ?assertEqual(undefined, push_ets_cache:get_user_guild_settings(9008, 4244)).
+
+prefetch_user_guild_settings_skips_direct_messages_test() ->
+    push_ets_cache:init(),
+    with_rpc_client_stub({error, timeout}, fun() ->
+        ok = push_eligibility:prefetch_user_guild_settings([9007, 9008], 9999, 0)
+    end),
+    ?assertEqual([], settings_requests()).
+
+with_rpc_client_stub(Result, Fun) ->
+    Self = self(),
+    ok = meck:new(rpc_client, [passthrough, no_link]),
+    try
+        ok = meck:expect(rpc_client, call, fun(Request) ->
+            Self ! {rpc_request, Request},
+            Result
+        end),
+        Fun()
+    after
+        meck:unload(rpc_client)
+    end.
+
+settings_requests() ->
+    receive
+        {rpc_request, #{<<"type">> := <<"get_user_guild_settings">>} = Request} ->
+            [
+                {maps:get(<<"guild_id">>, Request), maps:get(<<"user_ids">>, Request)}
+                | settings_requests()
+            ]
+    after 0 ->
+        []
+    end.
+
 erase_persistent_term(Key) ->
     try persistent_term:erase(Key) of
         _ -> ok
