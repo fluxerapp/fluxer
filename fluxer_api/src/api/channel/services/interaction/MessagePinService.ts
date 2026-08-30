@@ -100,18 +100,14 @@ export class MessagePinService extends MessageInteractionBase {
 			canReadMessageHistory: hasReadHistory,
 		};
 		const responseDataService = createMessageResponseDataService();
-		const messageResponses = await Promise.all(
-			trimmed.map((message) =>
-				responseDataService.getMessage({
-					userId,
-					channelId: channel.id,
-					messageId: message.id,
-					access,
-				}),
-			),
-		);
-		const items = trimmed.flatMap((message: Message, index) => {
-			const messageResponse = messageResponses[index];
+		const messageResponses = await responseDataService.buildMessages({
+			userId,
+			messages: trimmed,
+			access,
+		});
+		const responseByMessageId = new Map(messageResponses.map((response) => [response.id, response]));
+		const items = trimmed.flatMap((message: Message) => {
+			const messageResponse = responseByMessageId.get(message.id.toString());
 			if (!messageResponse || !message.pinnedTimestamp) return [];
 			return [
 				{
