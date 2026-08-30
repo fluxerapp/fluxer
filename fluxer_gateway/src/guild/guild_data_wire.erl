@@ -28,21 +28,20 @@ payload(Value, _Path) ->
 
 -spec payload_map_field(path(), term(), term(), map()) -> map().
 payload_map_field(Path, Key, FieldValue, Acc) ->
-    case keep_payload_field(Key) of
-        true -> Acc#{payload_key(Key) => payload_field(Path, Key, FieldValue)};
+    KeyBinary = key_binary(Key),
+    case keep_payload_field(KeyBinary) of
+        true -> Acc#{payload_key(Key) => payload_field(Path, Key, KeyBinary, FieldValue)};
         false -> Acc
     end.
 
--spec keep_payload_field(term()) -> boolean().
-keep_payload_field(Key) ->
-    not lists:member(key_binary(Key), [
-        <<"recipient_ids">>,
-        <<"role_index">>,
-        <<"channel_index">>,
-        <<"member_role_index">>,
-        <<"role_perms_cache">>,
-        <<"overwrite_perms_cache">>
-    ]).
+-spec keep_payload_field(binary() | undefined) -> boolean().
+keep_payload_field(<<"recipient_ids">>) -> false;
+keep_payload_field(<<"role_index">>) -> false;
+keep_payload_field(<<"channel_index">>) -> false;
+keep_payload_field(<<"member_role_index">>) -> false;
+keep_payload_field(<<"role_perms_cache">>) -> false;
+keep_payload_field(<<"overwrite_perms_cache">>) -> false;
+keep_payload_field(_KeyBinary) -> true.
 
 -spec payload_key(term()) -> term().
 payload_key(Key) when is_integer(Key) ->
@@ -52,10 +51,10 @@ payload_key(Key) when is_atom(Key) ->
 payload_key(Key) ->
     Key.
 
--spec payload_field(path(), term(), term()) -> term().
-payload_field(Path, Key, Value) ->
-    FieldPath = path_push(Key, Path),
-    case field_kind(Path, Key, Value) of
+-spec payload_field(path(), term(), binary() | undefined, term()) -> term().
+payload_field(Path, Key, KeyBinary, Value) ->
+    FieldPath = path_push(KeyBinary, Path),
+    case field_kind(Path, Key, KeyBinary, Value) of
         snowflake -> payload_snowflake(Value, FieldPath);
         permission -> payload_permission(Value, FieldPath);
         snowflake_list -> payload_snowflake_list(Value, FieldPath);
@@ -87,11 +86,11 @@ payload_id_string(Value, _Path) when is_integer(Value) ->
 payload_id_string(Value, Path) ->
     payload(Value, Path).
 
--spec field_kind(path(), term(), term()) -> field_kind().
-field_kind(Path, Key, Value) ->
+-spec field_kind(path(), term(), binary() | undefined, term()) -> field_kind().
+field_kind(Path, Key, KeyBinary, Value) ->
     case is_snowflake_record_list_value(Key, Value) of
         true -> snowflake_list;
-        false -> field_kind_binary(Path, key_binary(Key), Value)
+        false -> field_kind_binary(Path, KeyBinary, Value)
     end.
 
 -spec field_kind_binary(path(), binary() | undefined, term()) -> field_kind().
@@ -164,6 +163,8 @@ is_snowflake_record_list_value(Key, Value) ->
 -spec key_is_snowflake(term()) -> boolean().
 key_is_snowflake(Key) when is_integer(Key), Key > 0 ->
     true;
+key_is_snowflake(<<First, _/binary>>) when First < $1; First > $9 ->
+    false;
 key_is_snowflake(Key) when is_binary(Key) ->
     snowflake_id:is_valid(Key);
 key_is_snowflake(_) ->
@@ -211,12 +212,11 @@ key_binary(Key) when is_atom(Key) ->
 key_binary(_) ->
     undefined.
 
--spec path_push(term(), path()) -> path().
-path_push(Key, Path) ->
-    case key_binary(Key) of
-        undefined -> Path;
-        Binary -> [Binary | Path]
-    end.
+-spec path_push(binary() | undefined, path()) -> path().
+path_push(undefined, Path) ->
+    Path;
+path_push(Binary, Path) ->
+    [Binary | Path].
 
 -spec has_any_path([binary()], path()) -> boolean().
 has_any_path(Keys, Path) ->
