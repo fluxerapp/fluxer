@@ -45,16 +45,54 @@ broadcast_member_list_updates(
     _NewPresence
 ) ->
     {ok, UpdatedState};
-broadcast_member_list_updates(UserId, OldState, UpdatedState, _OldPresence, _NewPresence) ->
+broadcast_member_list_updates(UserId, OldState, UpdatedState, OldPresence, NewPresence) ->
     guild_member_list_write_context:with_guild_id(UpdatedState, fun(_GuildId) ->
-        SubsTab = maps:get(member_list_subscriptions, UpdatedState),
         OldMember = find_member_in_state_data(UserId, OldState),
         NewMember = find_member_in_state_data(UserId, UpdatedState),
-        State1 = dispatch_user_change_to_subscribed_lists(
-            UserId, OldMember, NewMember, SubsTab, UpdatedState
+        State1 = dispatch_presence_delta(
+            UserId, OldMember, NewMember, OldPresence, NewPresence, UpdatedState
         ),
         {ok, State1}
     end).
+
+-spec dispatch_presence_delta(
+    user_id(),
+    map() | undefined,
+    map() | undefined,
+    map() | undefined,
+    map() | undefined,
+    guild_state()
+) -> guild_state().
+dispatch_presence_delta(UserId, OldMember, NewMember, OldPresence, NewPresence, State) ->
+    case presence_delta_is_inert(OldPresence, NewPresence, OldMember, NewMember) of
+        true ->
+            State;
+        false ->
+            SubsTab = maps:get(member_list_subscriptions, State),
+            dispatch_user_change_to_subscribed_lists(
+                UserId, OldMember, NewMember, SubsTab, State
+            )
+    end.
+
+-spec presence_delta_is_inert(
+    map() | undefined,
+    map() | undefined,
+    map() | undefined,
+    map() | undefined
+) -> boolean().
+presence_delta_is_inert(OldPresence, NewPresence, Member, Member) when
+    is_map(OldPresence), is_map(NewPresence), is_map(Member)
+->
+    member_list_presence_fields(OldPresence) =:= member_list_presence_fields(NewPresence);
+presence_delta_is_inert(_OldPresence, _NewPresence, _OldMember, _NewMember) ->
+    false.
+
+-spec member_list_presence_fields(map()) -> {binary(), term()}.
+member_list_presence_fields(Presence) ->
+    {
+        maps:get(<<"status">>, Presence, <<"offline">>),
+        maps:get(<<"custom_status">>, Presence, null)
+    }.
 
 -spec find_member_in_state_data(user_id(), guild_state()) -> map() | undefined.
 find_member_in_state_data(UserId, State) ->
