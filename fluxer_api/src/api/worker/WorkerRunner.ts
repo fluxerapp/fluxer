@@ -11,6 +11,7 @@ import {getWorkerService} from '../middleware/ServiceRegistry';
 import {isJsonRecord, parseJsonRecord} from '../utils/JsonBoundaryUtils';
 
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
+const MIN_ACK_HEARTBEAT_MS = 1000;
 
 interface WorkerRunnerJetStreamClient {
 	consumers: {
@@ -274,6 +275,7 @@ export class WorkerRunner {
 				}
 			},
 		};
+		const ackHeartbeat = this.startAckHeartbeat(taskType, msg);
 		try {
 			await task(jobPayload, helpers);
 			if (ledgerJobId !== null) {
@@ -351,6 +353,25 @@ export class WorkerRunner {
 				msg.nak(5000);
 			}
 			return false;
+		} finally {
+			clearInterval(ackHeartbeat);
 		}
+	}
+
+	private startAckHeartbeat(taskType: string, msg: JsMsg): ReturnType<typeof setInterval> {
+		const heartbeat = setInterval(
+			() => {
+				try {
+					msg.working();
+				} catch (err) {
+					Logger.warn({workerId: this.workerId, taskType, seq: msg.seq, err}, 'Failed to extend job ack deadline');
+				}
+			},
+			Math.max(MIN_ACK_HEARTBEAT_MS, Math.floor(this.ackWaitMs / 2)),
+		);
+		if (typeof heartbeat === 'object' && heartbeat && 'unref' in heartbeat) {
+			(heartbeat as {unref(): void}).unref();
+		}
+		return heartbeat;
 	}
 }
