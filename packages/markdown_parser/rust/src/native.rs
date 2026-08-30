@@ -38,6 +38,36 @@ pub unsafe extern "C" fn fluxer_md_parse(
 
 #[allow(clippy::missing_safety_doc)]
 #[unsafe(no_mangle)]
+pub unsafe extern "C" fn fluxer_md_parse_binary(
+    input_ptr: *const u8,
+    input_len: usize,
+    flags: u32,
+    tsv_ptr: *const u8,
+    tsv_len: usize,
+    out: *mut FluxerMdBuffer,
+) -> u32 {
+    let Ok(input) = std::str::from_utf8(unsafe { slice(input_ptr, input_len) }) else {
+        return unsafe { write_error(out, "invalid markdown input") };
+    };
+    let Ok(emoji_context) = std::str::from_utf8(unsafe { slice(tsv_ptr, tsv_len) }) else {
+        return unsafe { write_error(out, "invalid emoji context") };
+    };
+    let parsed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let context = crate::EmojiContext::parse(emoji_context);
+        let mut parser = crate::MarkdownParser::new(flags, context);
+        parser
+            .parse(input)
+            .map(|nodes| crate::binary::write_ast_binary(&nodes))
+    }));
+    match parsed {
+        Ok(Ok(bytes)) => unsafe { write_data(out, bytes) },
+        Ok(Err(_)) => unsafe { write_error(out, "markdown parse failed") },
+        Err(_) => unsafe { write_error(out, "markdown parser panicked") },
+    }
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn fluxer_md_buffer_free(out: *mut FluxerMdBuffer) {
     if out.is_null() {
         return;
