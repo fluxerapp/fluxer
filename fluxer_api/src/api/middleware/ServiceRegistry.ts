@@ -34,7 +34,7 @@ import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
 const DEFAULT_SNOWFLAKE_SERVICE_BATCH_SIZE = 128;
 const DEFAULT_SNOWFLAKE_SERVICE_LOW_WATERMARK = 32;
 const DEFAULT_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS = 5000;
-const DEFAULT_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS = 5000;
+const DEFAULT_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS = 6000;
 
 function readPositiveIntegerEnv(names: string | Array<string>, fallback: number): number {
 	const envNames = Array.isArray(names) ? names : [names];

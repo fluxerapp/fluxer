@@ -116,7 +116,7 @@ describe('SnowflakeService', () => {
 				count: 1,
 				routing_key: 'channel:1510189013330296832',
 			},
-			timeout: 5000,
+			timeout: 6000,
 		});
 		expect(await service.generate()).toBe(201n);
 		expect(manager.requests).toHaveLength(2);

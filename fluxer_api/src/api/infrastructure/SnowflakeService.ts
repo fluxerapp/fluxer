@@ -9,7 +9,7 @@ import type {ISnowflakeService} from './ISnowflakeService';
 const DEFAULT_REMOTE_SUBJECT = 'svc.snowflakes';
 const DEFAULT_REMOTE_BATCH_SIZE = 128;
 const DEFAULT_REMOTE_LOW_WATERMARK = 32;
-const DEFAULT_REMOTE_TIMEOUT_MS = 5000;
+const DEFAULT_REMOTE_TIMEOUT_MS = 6000;
 const DEFAULT_REMOTE_MAX_BUFFER_AGE_MS = 5000;
 const MAX_REMOTE_BATCH_SIZE = 512;
 

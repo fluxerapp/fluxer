@@ -10,9 +10,11 @@ import {MessageResponseDataService} from './MessageResponseDataService';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+const ROUTER_SHARD_REQUEST_TIMEOUT_MS = 5000;
 
 class FakeConnectionManager implements INatsConnectionManager {
 	readonly payloads: Array<Record<string, unknown>> = [];
+	readonly timeouts: Array<number | undefined> = [];
 
 	async connect(): Promise<void> {}
 
@@ -24,8 +26,9 @@ class FakeConnectionManager implements INatsConnectionManager {
 
 	getConnection(): NatsConnection {
 		return {
-			request: async (_subject: string, data: Uint8Array) => {
+			request: async (_subject: string, data: Uint8Array, options?: {timeout?: number}) => {
 				this.payloads.push(JSON.parse(decoder.decode(data)) as Record<string, unknown>);
+				this.timeouts.push(options?.timeout);
 				return {
 					data: encoder.encode(
 						JSON.stringify({
@@ -116,5 +119,18 @@ describe('MessageResponseDataService', () => {
 			include_reactions: true,
 			viewer_user_id: '3',
 		});
+	});
+
+	it('waits longer than the router shard timeout so the inner hop expires first', async () => {
+		const connectionManager = new FakeConnectionManager();
+		const service = new MessageResponseDataService(connectionManager);
+
+		await service.buildMessageForChannel({
+			channel: {guildId: null},
+			message: makeMessage(),
+		});
+
+		expect(connectionManager.timeouts[0]).toBe(6000);
+		expect(connectionManager.timeouts[0]).toBeGreaterThan(ROUTER_SHARD_REQUEST_TIMEOUT_MS);
 	});
 });

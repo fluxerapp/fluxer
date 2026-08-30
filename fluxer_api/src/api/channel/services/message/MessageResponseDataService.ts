@@ -13,7 +13,7 @@ import type {Message} from '../../../models/Message';
 import {isJsonRecord, parseJsonWithGuard} from '../../../utils/JsonBoundaryUtils';
 
 const MESSAGE_RESPONSE_SERVICE_SUBJECT = 'svc.messages';
-const MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS = 3000;
+const MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS = 6000;
 let messageResponseDataService: MessageResponseDataService | undefined;
 let injectedMessageResponseDataService: MessageResponseDataService | undefined;
 
