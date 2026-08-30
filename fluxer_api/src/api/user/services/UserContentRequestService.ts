@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageListResponse, MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {
 	HarvestCreationResponseSchema,
 	HarvestDownloadUrlResponse,
@@ -16,6 +16,7 @@ import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
 import type {IStorageService} from '../../infrastructure/IStorageService';
 import type {UserCacheService} from '../../infrastructure/UserCacheService';
 import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
+import type {Message} from '../../models/Message';
 import type {SavedMessageEntry, UserContentService} from './UserContentService';
 
 type HarvestCreationResponse = z.infer<typeof HarvestCreationResponseSchema>;
@@ -108,7 +109,12 @@ export class UserContentRequestService {
 
 	async listSavedMessages(params: SavedMessagesParams): Promise<SavedMessageEntryListResponse> {
 		const entries = await this.userContentService.getSavedMessages({userId: params.userId, limit: params.limit});
-		return Promise.all(entries.map((entry) => this.mapSavedMessageEntry(params.userId, entry)));
+		const messages = entries.map((entry) => entry.message).filter((message): message is Message => message != null);
+		const responses = await this.userContentService.buildMessageResponsesForUser(params.userId, messages);
+		const responseByMessageId = new Map(responses.map((response) => [response.id, response] as const));
+		return entries.map((entry) =>
+			this.mapSavedMessageEntry(entry, responseByMessageId.get(entry.messageId.toString()) ?? null),
+		);
 	}
 
 	async saveMessage(params: SaveMessageParams): Promise<void> {
@@ -154,15 +160,13 @@ export class UserContentRequestService {
 		return this.userContentService.streamHarvestDownload(params);
 	}
 
-	private async mapSavedMessageEntry(userId: UserID, entry: SavedMessageEntry): Promise<SavedMessageEntryResponse> {
+	private mapSavedMessageEntry(entry: SavedMessageEntry, message: MessageResponse | null): SavedMessageEntryResponse {
 		return {
 			id: entry.messageId.toString(),
 			channel_id: entry.channelId.toString(),
 			message_id: entry.messageId.toString(),
 			status: entry.status,
-			message: entry.message
-				? (await this.userContentService.buildMessageResponsesForUser(userId, [entry.message]))[0]
-				: null,
+			message,
 		};
 	}
 }

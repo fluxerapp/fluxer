@@ -102,6 +102,34 @@ export class MessageRetrievalService {
 		return repairedMessage;
 	}
 
+	async getMessagesByIds({
+		userId,
+		channelId,
+		messageIds,
+	}: {
+		userId: UserID;
+		channelId: ChannelID;
+		messageIds: Array<MessageID>;
+	}): Promise<Map<string, Message>> {
+		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+		const canReadMessageHistory =
+			!authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
+		const cutoff = authChannel.guild?.message_history_cutoff ?? null;
+		const readableIds = messageIds.filter(
+			(messageId) => canReadMessageHistory || (cutoff != null && this.isMessageAfterCutoff(messageId, cutoff)),
+		);
+		const found = (
+			await Promise.all(
+				readableIds.map((messageId) => this.channelRepository.messages.getMessage(channelId, messageId)),
+			)
+		).filter((message): message is Message => message != null);
+		const repairedMessages = await Promise.all(
+			found.map((message) => this.processingService.repairMentionsOnRead(message, authChannel.channel)),
+		);
+		await this.extendAttachments(repairedMessages);
+		return new Map(repairedMessages.map((message) => [message.id.toString(), message] as const));
+	}
+
 	async searchMessages({
 		userId,
 		channelId,
