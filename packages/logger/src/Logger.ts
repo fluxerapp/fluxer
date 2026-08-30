@@ -111,8 +111,13 @@ function createPinoLogger(serviceName: string, options: LoggerOptions = {}): Pin
 export class Logger {
 	private logger: PinoLogger;
 
-	constructor(serviceName: string, options: LoggerOptions = {}) {
-		this.logger = createPinoLogger(serviceName, options);
+	constructor(serviceName: string, options?: LoggerOptions);
+	constructor(pinoLogger: PinoLogger);
+	constructor(serviceNameOrPinoLogger: string | PinoLogger, options: LoggerOptions = {}) {
+		this.logger =
+			typeof serviceNameOrPinoLogger === 'string'
+				? createPinoLogger(serviceNameOrPinoLogger, options)
+				: serviceNameOrPinoLogger;
 	}
 
 	getPinoLogger(): PinoLogger {
@@ -124,9 +129,7 @@ export class Logger {
 	}
 
 	static createWithLogger(logger: PinoLogger): Logger {
-		const childLogger = new Logger('', {});
-		childLogger.setPinoLogger(logger);
-		return childLogger;
+		return new Logger(logger);
 	}
 
 	trace(obj: Record<string, unknown>, msg?: string): void;

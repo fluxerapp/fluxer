@@ -24,6 +24,7 @@ import {
 } from 'jose';
 import type {ApiContext} from '../../ApiContext';
 import type {UserID} from '../../BrandedTypes';
+import type {ILogger} from '../../ILogger';
 import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '../../infrastructure/KVActivityTracker';
 import {
@@ -99,6 +100,13 @@ const CODE_VERIFIER_BYTE_LENGTH = 32;
 const STATE_BYTE_LENGTH = 16;
 const NONCE_BYTE_LENGTH = 16;
 const MOBILE_SSO_REDIRECT_URI = 'fluxer://auth/sso/callback';
+
+let ssoLogger: ILogger | undefined;
+
+function getLogger(): ILogger {
+	ssoLogger ??= Logger.child({logger: 'SsoService'});
+	return ssoLogger;
+}
 
 function randomBase64UrlToken(byteLength: number): string {
 	return randomBytes(byteLength).toString('base64url');
@@ -235,7 +243,6 @@ function isJsonWebKeySet(value: unknown): value is JSONWebKeySet {
 }
 
 export class SsoService {
-	private readonly logger = Logger.child({logger: 'SsoService'});
 	private static readonly STATE_TTL_SECONDS = seconds('10 minutes');
 	private static readonly DISCOVERY_TTL_SECONDS = seconds('1 hour');
 	private static readonly JWKS_CACHE_TTL_MS = ms('1 hour');
@@ -344,12 +351,12 @@ export class SsoService {
 			throw InputValidationError.fromCode('email_verified', ValidationErrorCodes.INVALID_SSO_TOKEN);
 		}
 		const emailLower = claims.email.toLowerCase();
-		this.logger.info({email: emailLower, has_sub: true}, 'SSO login with sub claim');
+		getLogger().info({email: emailLower, has_sub: true}, 'SSO login with sub claim');
 		const identityUserId = await this.ssoIdentityRepository.findUserId(config.providerId, claims.sub);
 		if (identityUserId) {
 			const user = await this.apiContext.services.users.findUnique(identityUserId);
 			if (!user) {
-				this.logger.error(
+				getLogger().error(
 					{user_id: identityUserId.toString()},
 					'SSO identity mapping points at a missing user; refusing reassignment',
 				);
@@ -401,7 +408,7 @@ export class SsoService {
 		if (ownerId?.toString() === userId.toString()) {
 			return;
 		}
-		this.logger.error(
+		getLogger().error(
 			{user_id: userId.toString(), owner_user_id: ownerId?.toString() ?? null},
 			'SSO identity is already linked to another account',
 		);
@@ -413,7 +420,7 @@ export class SsoService {
 		const traits = user.traits;
 		const existingIdentities = Array.from(traits).filter((trait) => trait.startsWith('sso_identity:'));
 		if (existingIdentities.length > 0 && !traits.has(identityTrait)) {
-			this.logger.error({user_id: user.id.toString()}, 'SSO identity claim did not match linked account');
+			getLogger().error({user_id: user.id.toString()}, 'SSO identity claim did not match linked account');
 			throw InputValidationError.fromCode('sub', ValidationErrorCodes.SSO_IDENTITY_MISMATCH);
 		}
 		await this.claimSsoIdentity(user.id, sub, config);
@@ -534,13 +541,13 @@ export class SsoService {
 				}),
 			);
 			void this.kvActivityTracker.updateActivity(user.id, now).catch((error: unknown) => {
-				this.logger.warn({error, userId: user.id}, 'Failed to update real-time user activity');
+				getLogger().warn({error, userId: user.id}, 'Failed to update real-time user activity');
 			});
 			return user;
 		} catch (error) {
 			if (!userCreated) {
 				await this.ssoIdentityRepository.releaseIdentity(config.providerId, claims.sub).catch((releaseError) => {
-					this.logger.error({releaseError}, 'Failed to release SSO identity after user provisioning failed');
+					getLogger().error({releaseError}, 'Failed to release SSO identity after user provisioning failed');
 				});
 			}
 			throw error;
@@ -567,7 +574,7 @@ export class SsoService {
 		let claims: JWTPayload | null = null;
 		if (tokenResponse.id_token) {
 			if (!config.jwksUrl) {
-				this.logger.warn('SSO id_token returned but no JWKS URL is configured; ignoring id_token claims');
+				getLogger().warn('SSO id_token returned but no JWKS URL is configured; ignoring id_token claims');
 			} else {
 				claims = await this.verifyIdToken(tokenResponse.id_token, config, expectedNonce);
 			}
@@ -580,7 +587,7 @@ export class SsoService {
 		const userInfoSub = userInfo ? readStringClaim(userInfo, 'sub') : undefined;
 		if (claims && userInfo) {
 			if (!idTokenSub || !userInfoSub || idTokenSub !== userInfoSub) {
-				this.logger.error('SSO sub mismatch between id_token and userinfo');
+				getLogger().error('SSO sub mismatch between id_token and userinfo');
 				throw InputValidationError.fromCode('sub', ValidationErrorCodes.SSO_IDENTITY_MISMATCH);
 			}
 		}
@@ -597,7 +604,7 @@ export class SsoService {
 		const normalizedIdTokenEmail = idTokenEmail ? normalizeSsoEmail(idTokenEmail) : undefined;
 		const normalizedUserInfoEmail = userInfoEmail ? normalizeSsoEmail(userInfoEmail) : undefined;
 		if (normalizedIdTokenEmail && normalizedUserInfoEmail && normalizedIdTokenEmail !== normalizedUserInfoEmail) {
-			this.logger.error('SSO email mismatch between id_token and userinfo');
+			getLogger().error('SSO email mismatch between id_token and userinfo');
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.SSO_IDENTITY_MISMATCH);
 		}
 		const email =
@@ -634,7 +641,7 @@ export class SsoService {
 				});
 				const nonce = payload['nonce'];
 				if (nonce === undefined) {
-					this.logger.warn('SSO id_token missing required nonce claim');
+					getLogger().warn('SSO id_token missing required nonce claim');
 					throw new Error('nonce missing');
 				}
 				if (typeof nonce !== 'string' || nonce.length === 0 || nonce !== expectedNonce) {
@@ -644,7 +651,7 @@ export class SsoService {
 			}
 			return decodeJwt(idToken);
 		} catch (error) {
-			this.logger.error({error}, 'Failed to verify SSO id_token');
+			getLogger().error({error}, 'Failed to verify SSO id_token');
 			throw InputValidationError.fromCode('id_token', ValidationErrorCodes.INVALID_SSO_TOKEN);
 		}
 	}
@@ -919,7 +926,7 @@ export class SsoService {
 		try {
 			return await this.assertPublicOutboundUrl(rawUrl, fieldName);
 		} catch (error) {
-			this.logger.warn({fieldName, rawUrl, error}, 'Ignoring SSO URL that failed outbound policy validation');
+			getLogger().warn({fieldName, rawUrl, error}, 'Ignoring SSO URL that failed outbound policy validation');
 			return null;
 		}
 	}

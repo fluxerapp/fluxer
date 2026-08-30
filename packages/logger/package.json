@@ -4,6 +4,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
@@ -12,6 +14,8 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:"
+		"@typescript/native-preview": "catalog:",
+		"vite-tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
 	}
 }
