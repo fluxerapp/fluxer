@@ -80,19 +80,21 @@ export class MessageDeletionRepository {
 				}),
 			);
 		}
-		batch.addPrepared(
-			MessageReactions.delete({
-				where: [
-					MessageReactions.where.eq('channel_id'),
-					MessageReactions.where.eq('bucket'),
-					MessageReactions.where.eq('message_id'),
-				],
-			}).bind({
-				channel_id: channelId,
-				bucket,
-				message_id: messageId,
-			}),
-		);
+		if (message?.hasReaction !== false) {
+			batch.addPrepared(
+				MessageReactions.delete({
+					where: [
+						MessageReactions.where.eq('channel_id'),
+						MessageReactions.where.eq('bucket'),
+						MessageReactions.where.eq('message_id'),
+					],
+				}).bind({
+					channel_id: channelId,
+					bucket,
+					message_id: messageId,
+				}),
+			);
+		}
 		if (message?.attachments) {
 			for (const attachment of message.attachments) {
 				batch.addPrepared(
