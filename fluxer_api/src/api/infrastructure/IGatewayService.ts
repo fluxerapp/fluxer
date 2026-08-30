@@ -282,6 +282,8 @@ export abstract class IGatewayService {
 
 	abstract invalidatePushBadgeCount(params: {userId: UserID}): Promise<void>;
 
+	abstract invalidatePushBadgeCounts(params: {userIds: Array<UserID>}): Promise<void>;
+
 	abstract invalidatePushSubscriptions(params: {userId: UserID}): Promise<void>;
 
 	abstract clearPushChannelNotifications(params: {

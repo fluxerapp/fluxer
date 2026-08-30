@@ -32,6 +32,8 @@ import type {
 	GatewayVoiceStateEntry,
 } from './IGatewayService';
 
+const PUSH_BADGE_COUNT_BATCH_SIZE = 100;
+
 const GATEWAY_ERROR_TO_DOMAIN_ERROR: Record<string, () => Error> = {
 	[GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND]: () => new UnknownGuildError(),
 	[GatewayRpcMethodErrorCodes.FORBIDDEN]: () => new MissingPermissionsError(),
@@ -59,6 +61,10 @@ interface DispatchPresenceParams {
 
 interface InvalidatePushBadgeCountParams {
 	userId: UserID;
+}
+
+interface InvalidatePushBadgeCountsParams {
+	userIds: Array<UserID>;
 }
 
 interface InvalidatePushSubscriptionsParams {
@@ -576,6 +582,18 @@ export class GatewayService {
 		await this.call('push.invalidate_badge_count', {
 			user_id: userId.toString(),
 		});
+	}
+
+	async invalidatePushBadgeCounts({userIds}: InvalidatePushBadgeCountsParams): Promise<void> {
+		const batches: Array<Array<UserID>> = [];
+		for (let index = 0; index < userIds.length; index += PUSH_BADGE_COUNT_BATCH_SIZE) {
+			batches.push(userIds.slice(index, index + PUSH_BADGE_COUNT_BATCH_SIZE));
+		}
+		await Promise.all(
+			batches.map((batch) =>
+				this.call('push.invalidate_badge_counts', {user_ids: batch.map((userId) => userId.toString())}),
+			),
+		);
 	}
 
 	async invalidatePushSubscriptions({userId}: InvalidatePushSubscriptionsParams): Promise<void> {

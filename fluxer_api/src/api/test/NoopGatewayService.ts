@@ -797,6 +797,8 @@ export class NoopGatewayService extends IGatewayService {
 
 	async invalidatePushBadgeCount(_params: {userId: UserID}): Promise<void> {}
 
+	async invalidatePushBadgeCounts(_params: {userIds: Array<UserID>}): Promise<void> {}
+
 	async invalidatePushSubscriptions(_params: {userId: UserID}): Promise<void> {}
 
 	async clearPushChannelNotifications(_params: {

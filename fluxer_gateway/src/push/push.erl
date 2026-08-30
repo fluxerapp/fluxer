@@ -16,6 +16,7 @@
     invalidate_user_subscriptions_local/1,
     invalidate_user_badge_count/1,
     invalidate_user_badge_count_local/1,
+    invalidate_user_badge_counts_local/1,
     clear_channel_notifications/3
 ]).
 -export([get_cache_stats/0]).
@@ -171,6 +172,15 @@ invalidate_user_badge_count_local(UserId) ->
     local_cache_mutation(fun() ->
         push_ets_cache:delete_badge_count(UserId)
     end).
+
+-spec invalidate_user_badge_counts_local(term()) -> ok.
+invalidate_user_badge_counts_local(UserIds) ->
+    case integer_list(UserIds) of
+        {ok, TypedUserIds} ->
+            lists:foreach(fun invalidate_user_badge_count_local/1, TypedUserIds);
+        error ->
+            ok
+    end.
 
 -spec maybe_cast(term(), term()) -> ok.
 maybe_cast(Key, Msg) ->
@@ -549,6 +559,25 @@ sync_user_blocked_ids_local_updates_local_cache_test() ->
         ok = sync_user_blocked_ids_local(10, [20, 30]),
         ?assertEqual([20, 30], push_ets_cache:get_blocked_ids(10))
     end).
+
+invalidate_user_badge_counts_local_deletes_every_cached_entry_test() ->
+    push_ets_cache:init(),
+    push_ets_cache:put_badge_count(10, 5, 1000),
+    push_ets_cache:put_badge_count(11, 7, 1000),
+    with_registered_push(fun() ->
+        ok = invalidate_user_badge_counts_local([10, 11])
+    end),
+    ?assertEqual(undefined, push_ets_cache:get_badge_count(10)),
+    ?assertEqual(undefined, push_ets_cache:get_badge_count(11)).
+
+invalidate_user_badge_counts_local_ignores_untyped_ids_test() ->
+    push_ets_cache:init(),
+    push_ets_cache:put_badge_count(12, 5, 1000),
+    with_registered_push(fun() ->
+        ok = invalidate_user_badge_counts_local([<<"12">>])
+    end),
+    ?assertEqual({5, 1000}, push_ets_cache:get_badge_count(12)),
+    push_ets_cache:delete_badge_count(12).
 
 invalidate_user_subscriptions_local_deletes_local_cache_test() ->
     push_ets_cache:init(),
