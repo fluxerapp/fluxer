@@ -208,6 +208,124 @@ describe.skipIf(!dockerAvailable)('postgres kv non-select drift', () => {
 		expect(await dump(NEXT_TABLE, Parent.name)).toBe(await dump(LEGACY_TABLE, Parent.name));
 	});
 
+	it('partial upsert merges with the stored row the way legacy does', async () => {
+		await reset(Parent, seedRows);
+		const meta = {action: 'upsert', table: Parent} as AnyMeta;
+		const partial = {user_id: 1n, channel_id: 10n, blob_: 'merged'} as CassandraParams;
+		await legacy.executeQuery({cql: '__mu__', params: partial, kvMeta: meta});
+		await next.executeQuery({cql: '__mu__', params: partial, kvMeta: meta});
+		expect(await dump(NEXT_TABLE, Parent.name)).toBe(await dump(LEGACY_TABLE, Parent.name));
+		const merged = await raw.query<{note: string | null; blob_: string | null}>(
+			`SELECT row_data->>'note' AS note, row_data->>'blob_' AS blob_ FROM ${NEXT_TABLE} WHERE table_name = $1 AND row_data->>'blob_' IS NOT NULL`,
+			[Parent.name],
+		);
+		expect(merged.rows).toEqual([{note: 'a', blob_: 'merged'}]);
+	});
+
+	it('upsert and patch replace an expired row instead of merging into it', async () => {
+		await reset(Parent, seedRows);
+		for (const kv of [LEGACY_TABLE, NEXT_TABLE]) {
+			await raw.query(`UPDATE ${kv} SET expires_at = timestamptz '2000-01-01T00:00:00Z' WHERE table_name = $1`, [
+				Parent.name,
+			]);
+		}
+		const upsertMeta = {action: 'upsert', table: Parent} as AnyMeta;
+		const patchMeta = {
+			action: 'patch',
+			table: Parent,
+			patchKeys: ['note'],
+			pkColumns: ['user_id', 'channel_id'],
+		} as unknown as AnyMeta;
+		const u = {user_id: 1n, channel_id: 10n, blob_: 'fresh'} as CassandraParams;
+		const p = {user_id: 2n, channel_id: 10n, note: 'fresh'} as CassandraParams;
+		for (const exec of [legacy, next]) {
+			await exec.executeQuery({cql: '__xu__', params: u, kvMeta: upsertMeta});
+			await exec.executeQuery({cql: '__xp__', params: p, kvMeta: patchMeta});
+		}
+		expect(await dump(NEXT_TABLE, Parent.name)).toBe(await dump(LEGACY_TABLE, Parent.name));
+		const rows = await raw.query<{note: string | null; blob_: string | null; expires_at: Date | null}>(
+			`SELECT row_data->>'note' AS note, row_data->>'blob_' AS blob_, expires_at FROM ${NEXT_TABLE} WHERE table_name = $1 ORDER BY row_key COLLATE "C"`,
+			[Parent.name],
+		);
+		expect(rows.rows.map((row) => [row.note, row.blob_, row.expires_at === null])).toEqual([
+			[null, 'fresh', true],
+			['b', null, false],
+			['fresh', null, true],
+		]);
+	});
+
+	it('patch without a ttl parameter keeps the stored expiry', async () => {
+		await reset(Parent, seedRows);
+		for (const kv of [LEGACY_TABLE, NEXT_TABLE]) {
+			await raw.query(`UPDATE ${kv} SET expires_at = timestamptz '2099-01-01T00:00:00Z' WHERE table_name = $1`, [
+				Parent.name,
+			]);
+		}
+		const patchMeta = {
+			action: 'patch',
+			table: Parent,
+			patchKeys: ['note'],
+			pkColumns: ['user_id', 'channel_id'],
+		} as unknown as AnyMeta;
+		const p = {user_id: 1n, channel_id: 10n, note: 'kept'} as CassandraParams;
+		await legacy.executeQuery({cql: '__pk__', params: p, kvMeta: patchMeta});
+		await next.executeQuery({cql: '__pk__', params: p, kvMeta: patchMeta});
+		expect(await dump(NEXT_TABLE, Parent.name)).toBe(await dump(LEGACY_TABLE, Parent.name));
+		const kept = await raw.query<{expires_at: Date | null}>(
+			`SELECT expires_at FROM ${NEXT_TABLE} WHERE table_name = $1 AND row_data->>'note' = 'kept'`,
+			[Parent.name],
+		);
+		expect(kept.rows.map((row) => row.expires_at?.toISOString() ?? null)).toEqual(['2099-01-01T00:00:00.000Z']);
+	});
+
+	it('patch with a ttl parameter replaces the stored expiry', async () => {
+		await reset(Parent, seedRows);
+		for (const kv of [LEGACY_TABLE, NEXT_TABLE]) {
+			await raw.query(`UPDATE ${kv} SET expires_at = timestamptz '2099-01-01T00:00:00Z' WHERE table_name = $1`, [
+				Parent.name,
+			]);
+		}
+		const ttlMeta = {
+			action: 'patch',
+			table: Parent,
+			patchKeys: ['note'],
+			pkColumns: ['user_id', 'channel_id'],
+			ttlParamName: 'ttl_',
+		} as unknown as AnyMeta;
+		const p = {user_id: 1n, channel_id: 10n, note: 'ttl', ttl_: 600} as CassandraParams;
+		const before = Date.now();
+		await legacy.executeQuery({cql: '__pt2__', params: p, kvMeta: ttlMeta});
+		await next.executeQuery({cql: '__pt2__', params: p, kvMeta: ttlMeta});
+		const after = Date.now();
+		expect(await dump(NEXT_TABLE, Parent.name)).toBe(await dump(LEGACY_TABLE, Parent.name));
+		const set = await raw.query<{expires_at: Date}>(
+			`SELECT expires_at FROM ${NEXT_TABLE} WHERE table_name = $1 AND row_data->>'note' = 'ttl'`,
+			[Parent.name],
+		);
+		expect(set.rows.length).toBe(1);
+		const expiry = set.rows[0]!.expires_at.getTime();
+		expect(expiry).toBeGreaterThanOrEqual(before + 600_000);
+		expect(expiry).toBeLessThanOrEqual(after + 600_000);
+	});
+
+	it('insert if not exists over an expired row matches legacy', async () => {
+		await reset(Parent, seedRows);
+		for (const kv of [LEGACY_TABLE, NEXT_TABLE]) {
+			await raw.query(`UPDATE ${kv} SET expires_at = now() - interval '1 hour' WHERE table_name = $1`, [Parent.name]);
+		}
+		const insMeta = {action: 'upsert', table: Parent, ifNotExists: true} as AnyMeta;
+		const revived = {user_id: 1n, channel_id: 10n, note: 'revived', blob_: null} as CassandraParams;
+		const l1 = await legacy.executeQuery({cql: '__ie__', params: revived, kvMeta: insMeta});
+		const n1 = await next.executeQuery({cql: '__ie__', params: revived, kvMeta: insMeta});
+		expect(n1).toEqual(l1);
+		expect(n1).toEqual([{'[applied]': true}]);
+		const l2 = await legacy.executeQuery({cql: '__ie__', params: revived, kvMeta: insMeta});
+		const n2 = await next.executeQuery({cql: '__ie__', params: revived, kvMeta: insMeta});
+		expect(n2).toEqual(l2);
+		expect(n2).toEqual([{'[applied]': false}]);
+		expect(await dump(NEXT_TABLE, Parent.name)).toBe(await dump(LEGACY_TABLE, Parent.name));
+	});
+
 	it('count returns the same value and the same javascript type', async () => {
 		await reset(Parent, seedRows);
 		await raw.query(

@@ -57,6 +57,9 @@ const FULL_SCAN_LOG_KEY_LIMIT = 1024;
 const ENCODED_TYPE_KEY = '__fluxer_type';
 const POSTGRES_KV_SCHEMA_LOCK_NAMESPACE = 0x46584b56;
 const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT = '120s';
+const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()';
+const MERGED_ROW_DATA = `CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE kv.row_data || EXCLUDED.row_data END`;
+const KEPT_EXPIRES_AT = `CASE WHEN ${EXPIRED_STORED_ROW} THEN NULL ELSE kv.expires_at END`;
 
 function normalizeCql(cql: string): string {
 	return cql.replace(/\s+/g, ' ').trim();
@@ -850,29 +853,27 @@ export class PostgresKvQueryExecutor {
 	private async upsert(meta: KvQueryMeta, params: CassandraParams, db: PostgresQueryable): Promise<Array<Row>> {
 		const incoming = rowFromParams(meta, params);
 		const key = rowKey(meta, incoming);
-		const existing = await this.getRow(meta, key, db);
-		if (meta.ifNotExists && existing) {
-			return [{'[applied]': false}];
-		}
 		if (meta.ifNotExists) {
+			if (await this.getRow(meta, key, db)) {
+				return [{'[applied]': false}];
+			}
 			await db.query(
 				`DELETE FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND expires_at IS NOT NULL AND expires_at <= now()`,
 				[meta.table.name, key],
 			);
 		}
-		const next = {...(existing ?? {}), ...incoming};
 		const expiresAt = ttlExpiresAt(meta, params) ?? null;
 		const result = await db.query(
-			`INSERT INTO ${this.table} (table_name, partition_key, row_key, row_data, expires_at, updated_at)
+			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
 ON CONFLICT (table_name, row_key)
-DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = EXCLUDED.row_data, expires_at = EXCLUDED.expires_at, updated_at = now()
+DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = EXCLUDED.expires_at, updated_at = now()
 WHERE NOT $6`,
 			[
 				meta.table.name,
-				partitionKey(meta, next),
+				partitionKey(meta, incoming),
 				key,
-				JSON.stringify(encodeRow(next)),
+				JSON.stringify(encodeRow(incoming)),
 				expiresAt,
 				meta.ifNotExists === true,
 			],
@@ -885,20 +886,18 @@ WHERE NOT $6`,
 
 	private async patch(meta: KvQueryMeta, params: CassandraParams, db: PostgresQueryable): Promise<void> {
 		const key = rowKeyFromParams(meta, params);
-		const stored = await this.getStoredRow(meta, key, db);
-		const base = stored?.row ?? paramsRow(params, (meta.pkColumns ?? meta.table.primaryKey) as ReadonlyArray<string>);
-		const next = {...base};
+		const incoming = paramsRow(params, (meta.pkColumns ?? meta.table.primaryKey) as ReadonlyArray<string>);
 		for (const column of meta.patchKeys ?? []) {
-			next[column] = column in params ? params[column] : null;
+			incoming[column] = column in params ? params[column] : null;
 		}
 		const ttl = ttlExpiresAt(meta, params);
-		const expiresAt = ttl === undefined ? (stored?.expiresAt ?? null) : ttl;
+		const expiresAtExpr = ttl === undefined ? KEPT_EXPIRES_AT : 'EXCLUDED.expires_at';
 		await db.query(
-			`INSERT INTO ${this.table} (table_name, partition_key, row_key, row_data, expires_at, updated_at)
+			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
 ON CONFLICT (table_name, row_key)
-DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = EXCLUDED.row_data, expires_at = EXCLUDED.expires_at, updated_at = now()`,
-			[meta.table.name, partitionKey(meta, next), key, JSON.stringify(encodeRow(next)), expiresAt ?? null],
+DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = ${expiresAtExpr}, updated_at = now()`,
+			[meta.table.name, partitionKey(meta, incoming), key, JSON.stringify(encodeRow(incoming)), ttl ?? null],
 		);
 	}
 
@@ -932,20 +931,12 @@ DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = EXCLUDED.row_da
 		]);
 	}
 
-	private async getStoredRow(
-		meta: KvQueryMeta,
-		key: string,
-		db: PostgresQueryable,
-	): Promise<{row: Row; expiresAt: Date | null} | null> {
-		const result = await db.query<StoredRow & {expires_at: Date | null}>(
-			`SELECT row_key, row_data, expires_at FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1`,
+	private async getRow(meta: KvQueryMeta, key: string, db: PostgresQueryable): Promise<Row | null> {
+		const result = await db.query<{row_data: unknown}>(
+			`SELECT row_data FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1`,
 			[meta.table.name, key],
 		);
 		const row = result.rows[0];
-		return row ? {row: decodeRow(row.row_data), expiresAt: row.expires_at ?? null} : null;
-	}
-
-	private async getRow(meta: KvQueryMeta, key: string, db: PostgresQueryable): Promise<Row | null> {
-		return (await this.getStoredRow(meta, key, db))?.row ?? null;
+		return row ? decodeRow(row.row_data) : null;
 	}
 }
