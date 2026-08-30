@@ -124,6 +124,11 @@ RUN printf '%s\n' \
 	'[workspace.package]' \
 	'edition = "2024"' \
 	'license = "AGPL-3.0-or-later"' \
+	'' \
+	'[profile.release]' \
+	'lto = "fat"' \
+	'codegen-units = 1' \
+	'strip = "symbols"' \
 	> Cargo.toml
 
 RUN if [ "${FLUXER_APP_PROXY_TIME_FREEZE_ENABLED}" = "false" ]; then \

@@ -453,6 +453,33 @@ mod tests {
     }
 
     #[test]
+    fn dockerfile_workspace_manifest_keeps_the_release_profile() {
+        let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
+        let manifest = dockerfile
+            .split("'[workspace]'")
+            .nth(1)
+            .expect("synthesized workspace manifest")
+            .split("> Cargo.toml")
+            .next()
+            .expect("synthesized workspace manifest body");
+        for entry in [
+            "'[profile.release]'",
+            "'lto = \"fat\"'",
+            "'codegen-units = 1'",
+            "'strip = \"symbols\"'",
+        ] {
+            assert!(
+                manifest.contains(entry),
+                "the rust-builder workspace manifest replaces the repository root one, so it must carry {entry}"
+            );
+        }
+        assert!(
+            !manifest.contains("panic"),
+            "fluxer_svc runs every request on its own tokio task, so a panicking handler must unwind instead of aborting the pod"
+        );
+    }
+
+    #[test]
     fn asset_manifest_entries_are_sorted_and_relative_to_dist() {
         let temp = tempfile::tempdir().unwrap();
         let dist = temp.path().join("dist");

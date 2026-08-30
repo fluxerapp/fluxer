@@ -25,3 +25,8 @@ resolver = "2"
 [workspace.package]
 edition = "2024"
 license = "AGPL-3.0-or-later"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
