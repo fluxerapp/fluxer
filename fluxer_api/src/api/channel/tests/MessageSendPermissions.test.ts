@@ -111,7 +111,7 @@ describe('Message send permissions', () => {
 		});
 		await ensureSessionStarted(harness, member.token);
 		const gatewayService = getGatewayService();
-		const getGuildData = vi.spyOn(gatewayService, 'getGuildData');
+		const getGuildAuthContext = vi.spyOn(gatewayService, 'getGuildAuthContext');
 		const getGuildMember = vi.spyOn(gatewayService, 'getGuildMember');
 		const getUserPermissions = vi.spyOn(gatewayService, 'getUserPermissions');
 
@@ -121,11 +121,11 @@ describe('Message send permissions', () => {
 				.body({content: 'authenticate me once'})
 				.execute();
 			const sendCounts = {
-				guildData: getGuildData.mock.calls.length,
+				authContext: getGuildAuthContext.mock.calls.length,
 				guildMember: getGuildMember.mock.calls.length,
 				userPermissions: getUserPermissions.mock.calls.length,
 			};
-			getGuildData.mockClear();
+			getGuildAuthContext.mockClear();
 			getGuildMember.mockClear();
 			getUserPermissions.mockClear();
 			await createBuilder<MessageResponse>(harness, member.token)
@@ -133,15 +133,15 @@ describe('Message send permissions', () => {
 				.body({content: 'authenticate me once again'})
 				.execute();
 			const editCounts = {
-				guildData: getGuildData.mock.calls.length,
+				authContext: getGuildAuthContext.mock.calls.length,
 				guildMember: getGuildMember.mock.calls.length,
 				userPermissions: getUserPermissions.mock.calls.length,
 			};
 
-			expect(sendCounts).toEqual({guildData: 1, guildMember: 1, userPermissions: 1});
-			expect(editCounts).toEqual({guildData: 1, guildMember: 1, userPermissions: 1});
+			expect(sendCounts).toEqual({authContext: 1, guildMember: 1, userPermissions: 1});
+			expect(editCounts).toEqual({authContext: 1, guildMember: 1, userPermissions: 1});
 		} finally {
-			getGuildData.mockRestore();
+			getGuildAuthContext.mockRestore();
 			getGuildMember.mockRestore();
 			getUserPermissions.mockRestore();
 		}

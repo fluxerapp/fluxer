@@ -4,6 +4,7 @@
 -typing([eqwalizer]).
 
 -export([get_guild_data/2]).
+-export([get_auth_context/2]).
 -export([get_guild_member/2]).
 -export([get_guild_members_batch/2]).
 -export([has_member/2]).
@@ -32,6 +33,50 @@ get_guild_data(#{user_id := UserId}, State) ->
         _ ->
             get_guild_data_for_user(UserId, Data, State)
     end.
+
+-spec get_auth_context(map(), guild_state()) -> guild_reply(map()).
+get_auth_context(#{user_id := UserId, channel_id := ChannelId}, State) ->
+    Data = guild_data_index:ensure_data_map(State),
+    case UserId of
+        null ->
+            {reply, #{auth_context => build_auth_context(ChannelId, Data, State)}, State};
+        _ ->
+            get_auth_context_for_member(UserId, ChannelId, Data, State)
+    end.
+
+-spec get_auth_context_for_member(user_id(), integer() | null, map(), guild_state()) ->
+    guild_reply(map()).
+get_auth_context_for_member(UserId, ChannelId, Data, State) ->
+    case guild_data_index:get_member(UserId, Data) of
+        undefined ->
+            {reply, #{auth_context => null, error_reason => <<"forbidden">>}, State};
+        _Member ->
+            {reply, #{auth_context => build_auth_context(ChannelId, Data, State)}, State}
+    end.
+
+-spec build_auth_context(integer() | null, map(), guild_state()) -> map().
+build_auth_context(ChannelId, Data, State) ->
+    #{
+        <<"guild">> => build_auth_guild(Data, State),
+        <<"parent_channel">> => find_channel(ChannelId, Data)
+    }.
+
+-spec build_auth_guild(map(), guild_state()) -> map().
+build_auth_guild(Data, State) ->
+    GuildProperties = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
+    GuildProperties#{
+        <<"roles">> => map_utils:ensure_list(maps:get(<<"roles">>, Data, [])),
+        <<"member_count">> => maps:get(
+            member_count, State, guild_data_index:member_count(Data)
+        ),
+        <<"online_count">> => guild_member_list:get_online_count(State)
+    }.
+
+-spec find_channel(integer() | null, map()) -> map() | null.
+find_channel(null, _Data) ->
+    null;
+find_channel(ChannelId, Data) ->
+    maps:get(ChannelId, guild_data_index:channel_index(Data), null).
 
 -spec get_guild_member(map(), guild_state()) -> guild_reply(map()).
 get_guild_member(Request, State) ->

@@ -241,6 +241,8 @@ handle_max_role_position(#{user_id := UserId}, State) ->
 -spec handle_call_data(term(), guild_state()) -> {reply, term(), guild_state()}.
 handle_call_data({get_guild_data, Req}, State) ->
     guild_data:get_guild_data(request_map(Req), State);
+handle_call_data({get_guild_auth_context, Req}, State) ->
+    guild_data:get_auth_context(request_map(Req), State);
 handle_call_data({get_guild_member, Req}, State) ->
     guild_data:get_guild_member(request_map(Req), State);
 handle_call_data({get_guild_members_batch, Req}, State) ->

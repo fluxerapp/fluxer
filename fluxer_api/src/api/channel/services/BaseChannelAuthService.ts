@@ -9,12 +9,11 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {ChannelID, GuildID, UserID} from '../../BrandedTypes';
 import {SYSTEM_USER_ID} from '../../constants/Core';
 import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
 import {createGuildMfaEnforcer} from '../../guild/services/GuildMfaEnforcement';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
+import type {GuildChannelAuthContext, IGatewayService} from '../../infrastructure/IGatewayService';
 import type {Channel} from '../../models/Channel';
 import type {GuildMember} from '../../models/GuildMember';
 import type {User} from '../../models/User';
@@ -173,13 +172,14 @@ export abstract class BaseChannelAuthService {
 		skipNsfwValidation?: boolean;
 	}): Promise<AuthenticatedChannel> {
 		const guildId = channel.guildId!;
-		const [guildDataResult, guildMemberResult] = await Promise.all([
-			this.fetchGuildDataOrThrow({guildId, userId}),
+		const [authContextResult, guildMemberResult] = await Promise.all([
+			this.fetchGuildAuthContextOrThrow({guildId, userId, channelId: this.parentLookupChannelId(channel)}),
 			this.gatewayService.getGuildMember({guildId, userId}),
 		]);
-		if (!guildDataResult) {
+		if (!authContextResult) {
 			this.throwGuildAccessError();
 		}
+		const guildDataResult = authContextResult.guild;
 		if (!guildMemberResult.success || !guildMemberResult.memberData) {
 			this.throwGuildAccessError();
 		}
@@ -190,7 +190,7 @@ export abstract class BaseChannelAuthService {
 		});
 		const enforceGuildMfa = await createGuildMfaEnforcer({
 			userRepository: this.userRepository,
-			guildData: guildDataResult!,
+			guildData: guildDataResult,
 			userId,
 		});
 		const channelPermissions = await this.gatewayService.getUserPermissions({
@@ -210,12 +210,12 @@ export abstract class BaseChannelAuthService {
 		await checkPermission(Permissions.VIEW_CHANNEL);
 		const parentCategory = await this.getParentCategoryContentWarningView({
 			channel,
-			guild: guildDataResult!,
+			parentChannel: authContextResult.parentChannel,
 		});
 		const requiresAgeVerification = computeEffectiveChannelNsfw(
 			channelToContentWarningView(channel),
 			parentCategory,
-			guildResponseToContentWarningView(guildDataResult!),
+			guildResponseToContentWarningView(guildDataResult),
 		);
 		if (
 			this.options.validateNsfw &&
@@ -233,27 +233,32 @@ export abstract class BaseChannelAuthService {
 		}
 		return {
 			channel,
-			guild: guildDataResult!,
+			guild: guildDataResult,
 			member,
 			hasPermission,
 			checkPermission,
 		};
 	}
 
+	private parentLookupChannelId(channel: Channel): ChannelID | undefined {
+		if (!channel.parentId || channel.type === ChannelTypes.GUILD_CATEGORY) {
+			return undefined;
+		}
+		return channel.parentId;
+	}
+
 	private async getParentCategoryContentWarningView({
 		channel,
-		guild,
+		parentChannel,
 	}: {
 		channel: Channel;
-		guild: GuildResponse;
+		parentChannel: GuildChannelAuthContext['parentChannel'];
 	}): Promise<ContentWarningChannelLike | null> {
 		if (!channel.parentId || channel.type === ChannelTypes.GUILD_CATEGORY) {
 			return null;
 		}
-		const parentId = channel.parentId.toString();
-		const parentFromGateway = guild.channels?.find((guildChannel) => guildChannel.id === parentId);
-		if (parentFromGateway) {
-			return channelResponseToContentWarningView(parentFromGateway);
+		if (parentChannel) {
+			return channelResponseToContentWarningView(parentChannel);
 		}
 		const parentCategory = await this.channelRepository.channelData.findUnique(channel.parentId);
 		return parentCategory ? channelToContentWarningView(parentCategory) : null;
@@ -266,10 +271,14 @@ export abstract class BaseChannelAuthService {
 		throw new UnknownChannelError();
 	}
 
-	private async fetchGuildDataOrThrow(params: {guildId: GuildID; userId: UserID}): Promise<GuildResponse | null> {
-		const {guildId, userId} = params;
+	private async fetchGuildAuthContextOrThrow(params: {
+		guildId: GuildID;
+		userId: UserID;
+		channelId?: ChannelID;
+	}): Promise<GuildChannelAuthContext | null> {
+		const {guildId, userId, channelId} = params;
 		try {
-			return await this.gatewayService.getGuildData({guildId, userId});
+			return await this.gatewayService.getGuildAuthContext({guildId, userId, channelId});
 		} catch (error) {
 			await this.handleGuildAccessError(error, guildId);
 			return null;

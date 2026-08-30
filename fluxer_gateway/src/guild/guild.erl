@@ -89,6 +89,7 @@ query_call_handler(get_user_permissions) -> query;
 query_call_handler(can_manage_roles) -> query;
 query_call_handler(can_manage_role) -> query;
 query_call_handler(get_guild_data) -> query;
+query_call_handler(get_guild_auth_context) -> query;
 query_call_handler(get_assignable_roles) -> query;
 query_call_handler(get_user_max_role_position) -> query;
 query_call_handler(check_target_member) -> query;

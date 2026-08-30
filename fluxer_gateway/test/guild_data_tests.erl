@@ -16,6 +16,75 @@ get_guild_data_membership_gate_test() ->
     Roles = maps:get(<<"roles">>, Guild, []),
     ?assertMatch([_ | _], Roles).
 
+get_auth_context_membership_gate_test() ->
+    State = test_state(),
+    {reply, Reply1, _} = guild_data:get_auth_context(
+        #{user_id => 999, channel_id => null}, State
+    ),
+    ?assertEqual(null, maps:get(auth_context, Reply1)),
+    ?assertEqual(<<"forbidden">>, maps:get(error_reason, Reply1)),
+    {reply, Reply2, _} = guild_data:get_auth_context(
+        #{user_id => 200, channel_id => null}, State
+    ),
+    Context = maps:get(auth_context, Reply2),
+    Guild = maps:get(<<"guild">>, Context),
+    ?assertEqual(<<"Fluxer">>, maps:get(<<"name">>, Guild)),
+    ?assertMatch([_ | _], maps:get(<<"roles">>, Guild, [])),
+    ?assertEqual(null, maps:get(<<"parent_channel">>, Context)).
+
+get_auth_context_omits_collections_test() ->
+    State = test_state(),
+    {reply, Reply, _} = guild_data:get_auth_context(
+        #{user_id => 200, channel_id => null}, State
+    ),
+    Guild = maps:get(<<"guild">>, maps:get(auth_context, Reply)),
+    ?assertNot(maps:is_key(<<"channels">>, Guild)),
+    ?assertNot(maps:is_key(<<"emojis">>, Guild)),
+    ?assertNot(maps:is_key(<<"stickers">>, Guild)).
+
+get_auth_context_resolves_requested_channel_test() ->
+    State = test_state(),
+    {reply, Reply, _} = guild_data:get_auth_context(
+        #{user_id => 200, channel_id => 500}, State
+    ),
+    Parent = maps:get(<<"parent_channel">>, maps:get(auth_context, Reply)),
+    ?assertEqual(500, maps:get(<<"id">>, Parent)),
+    ?assertEqual(0, maps:get(<<"type">>, Parent)).
+
+get_auth_context_unknown_channel_is_null_test() ->
+    State = test_state(),
+    {reply, Reply, _} = guild_data:get_auth_context(
+        #{user_id => 200, channel_id => 999}, State
+    ),
+    ?assertEqual(null, maps:get(<<"parent_channel">>, maps:get(auth_context, Reply))).
+
+get_auth_context_null_user_skips_membership_test() ->
+    State = test_state(),
+    {reply, Reply, _} = guild_data:get_auth_context(
+        #{user_id => null, channel_id => null}, State
+    ),
+    Guild = maps:get(<<"guild">>, maps:get(auth_context, Reply)),
+    ?assertEqual(<<"Fluxer">>, maps:get(<<"name">>, Guild)).
+
+get_auth_context_matches_get_data_scalars_test() ->
+    State = test_state(),
+    {reply, DataReply, _} = guild_data:get_guild_data(#{user_id => 200}, State),
+    {reply, ContextReply, _} = guild_data:get_auth_context(
+        #{user_id => 200, channel_id => null}, State
+    ),
+    Full = maps:get(guild_data, DataReply),
+    Lean = maps:get(<<"guild">>, maps:get(auth_context, ContextReply)),
+    Collections = [<<"channels">>, <<"emojis">>, <<"stickers">>],
+    Expected = maps:without(Collections, Full),
+    ?assertEqual(Expected, Lean).
+
+get_auth_context_is_reachable_through_the_query_handler_test() ->
+    State = test_state(),
+    Request = {get_guild_auth_context, #{user_id => 200, channel_id => 500}},
+    {reply, Reply, _} = guild_query_handler:handle_call(Request, {self(), make_ref()}, State),
+    Context = maps:get(auth_context, Reply),
+    ?assertEqual(500, maps:get(<<"id">>, maps:get(<<"parent_channel">>, Context))).
+
 get_guild_state_filters_channels_test() ->
     State = test_state(),
     GuildState = guild_data:get_guild_state(200, State),

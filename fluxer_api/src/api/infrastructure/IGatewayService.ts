@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
@@ -104,6 +105,11 @@ export interface GatewayVoiceStateEntry {
 	channelId: string;
 	regionId?: string;
 	serverId?: string;
+}
+
+export interface GuildChannelAuthContext {
+	guild: GuildResponse;
+	parentChannel: ChannelResponse | null;
 }
 
 export interface GatewayChannelMention {
@@ -249,6 +255,12 @@ export abstract class IGatewayService {
 		userId: UserID;
 		skipMembershipCheck?: boolean;
 	}): Promise<GuildResponse>;
+
+	abstract getGuildAuthContext(params: {
+		guildId: GuildID;
+		userId: UserID;
+		channelId?: ChannelID;
+	}): Promise<GuildChannelAuthContext>;
 
 	abstract getGuildMember(params: {guildId: GuildID; userId: UserID}): Promise<{
 		success: boolean;

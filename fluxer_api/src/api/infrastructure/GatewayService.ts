@@ -10,6 +10,7 @@ import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPe
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
+import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {ms} from 'itty-time';
@@ -30,6 +31,7 @@ import type {
 	GatewayNodeStats,
 	GatewayVoiceStateCounts,
 	GatewayVoiceStateEntry,
+	GuildChannelAuthContext,
 } from './IGatewayService';
 
 const PUSH_BADGE_COUNT_BATCH_SIZE = 100;
@@ -80,6 +82,12 @@ interface ClearPushChannelNotificationsParams {
 interface GuildDataParams {
 	guildId: GuildID;
 	userId: UserID;
+}
+
+interface GuildAuthContextParams {
+	guildId: GuildID;
+	userId: UserID;
+	channelId?: ChannelID;
 }
 
 interface GuildMemberParams {
@@ -232,6 +240,11 @@ interface GuildMemberRpcResponse {
 	member_data?: GuildMemberResponse;
 }
 
+interface GuildAuthContextRpcResponse {
+	guild: GuildResponse;
+	parent_channel?: ChannelResponse | null;
+}
+
 type PendingRequest<T> = {
 	resolve: (value: T) => void;
 	reject: (error: Error) => void;
@@ -252,17 +265,22 @@ export class GatewayService {
 		>
 	>();
 	private pendingPermissionRequests = new Map<string, Array<PendingRequest<boolean>>>();
+	private pendingAuthContextRequests = new Map<string, Array<PendingRequest<GuildChannelAuthContext>>>();
 	private pendingBatchRequestCount = 0;
 	private guildDataBatchTimeout: NodeJS.Timeout | null = null;
 	private guildMemberBatchTimeout: NodeJS.Timeout | null = null;
 	private permissionBatchTimeout: NodeJS.Timeout | null = null;
+	private authContextBatchTimeout: NodeJS.Timeout | null = null;
 	private activeGuildDataRequests = 0;
 	private activeGuildMemberRequests = 0;
 	private activePermissionRequests = 0;
+	private activeAuthContextRequests = 0;
+	private authContextUnsupportedUntil = 0;
 	private readonly BATCH_DELAY_MS = ms('5 milliseconds');
 	private readonly MAX_PENDING_BATCH_REQUESTS = 2000;
 	private readonly MAX_BATCH_CONCURRENCY = 50;
 	private readonly PENDING_REQUEST_TIMEOUT_MS = ms('30 seconds');
+	private readonly AUTH_CONTEXT_FALLBACK_MS = ms('5 minutes');
 
 	constructor() {
 		this.rpcClient = GatewayRpcClient.getInstance();
@@ -376,6 +394,16 @@ export class GatewayService {
 		}, this.BATCH_DELAY_MS);
 	}
 
+	private scheduleAuthContextBatch(): void {
+		if (this.authContextBatchTimeout || this.activeAuthContextRequests >= this.MAX_BATCH_CONCURRENCY) {
+			return;
+		}
+		this.authContextBatchTimeout = setTimeout(() => {
+			this.authContextBatchTimeout = null;
+			this.processAuthContextQueue();
+		}, this.BATCH_DELAY_MS);
+	}
+
 	private takePendingEntries<T>(
 		requests: Map<string, Array<PendingRequest<T>>>,
 		limit: number,
@@ -482,10 +510,41 @@ export class GatewayService {
 		for (const pendingRequests of this.pendingPermissionRequests.values()) {
 			this.rejectPendingRequests(pendingRequests, error);
 		}
+		for (const pendingRequests of this.pendingAuthContextRequests.values()) {
+			this.rejectPendingRequests(pendingRequests, error);
+		}
 		this.pendingGuildDataRequests.clear();
 		this.pendingGuildMemberRequests.clear();
 		this.pendingPermissionRequests.clear();
+		this.pendingAuthContextRequests.clear();
 		this.pendingBatchRequestCount = 0;
+	}
+
+	private processAuthContextQueue(): void {
+		const availableSlots = this.MAX_BATCH_CONCURRENCY - this.activeAuthContextRequests;
+		if (availableSlots <= 0) {
+			return;
+		}
+		const entries = this.takePendingEntries(this.pendingAuthContextRequests, availableSlots);
+		if (entries.length === 0) {
+			return;
+		}
+		const totalAuthContextRequests = entries.reduce((sum, [, pending]) => sum + pending.length, 0);
+		Logger.debug(
+			`[gateway-batch] Processing guild.get_auth_context batch: ${entries.length} unique requests (${totalAuthContextRequests} total)`,
+		);
+		for (const entry of entries) {
+			this.activeAuthContextRequests += 1;
+			void this.processAuthContextEntry(entry).finally(() => {
+				this.activeAuthContextRequests = Math.max(0, this.activeAuthContextRequests - 1);
+				if (this.pendingAuthContextRequests.size > 0) {
+					this.scheduleAuthContextBatch();
+				}
+			});
+		}
+		if (this.pendingAuthContextRequests.size > 0) {
+			this.scheduleAuthContextBatch();
+		}
 	}
 
 	private async processGuildDataEntry([key, pending]: [string, Array<PendingRequest<GuildResponse>>]): Promise<void> {
@@ -557,6 +616,65 @@ export class GatewayService {
 			this.rejectPendingRequests(pending, transformedError);
 			this.logBatchFailures('guild.check_permission', [{status: 'rejected', reason: error}]);
 		}
+	}
+
+	private async processAuthContextEntry([key, pending]: [
+		string,
+		Array<PendingRequest<GuildChannelAuthContext>>,
+	]): Promise<void> {
+		const [guildIdStr, userIdStr, channelIdStr] = key.split('-');
+		const guildId = BigInt(guildIdStr) as GuildID;
+		const userId = BigInt(userIdStr) as UserID;
+		const channelId = channelIdStr !== '0' ? (BigInt(channelIdStr) as ChannelID) : undefined;
+		try {
+			const result = await this.call<GuildAuthContextRpcResponse>('guild.get_auth_context', {
+				guild_id: guildId.toString(),
+				user_id: userId.toString(),
+				channel_id: channelId ? channelId.toString() : null,
+			});
+			this.resolvePendingRequests(pending, {
+				guild: result.guild,
+				parentChannel: result.parent_channel ?? null,
+			});
+		} catch (error) {
+			const transformedError = this.transformGatewayError(error);
+			if (!this.isAuthContextUnsupportedError(transformedError)) {
+				this.rejectPendingRequests(pending, transformedError);
+				this.logBatchFailures('guild.get_auth_context', [{status: 'rejected', reason: error}]);
+				return;
+			}
+			this.authContextUnsupportedUntil = Date.now() + this.AUTH_CONTEXT_FALLBACK_MS;
+			Logger.warn({error}, '[gateway-rpc] guild.get_auth_context unavailable, falling back to guild.get_data');
+			await this.settleAuthContextFromGuildData({guildId, userId, channelId}, pending);
+		}
+	}
+
+	private isAuthContextUnsupportedError(error: Error): boolean {
+		return error instanceof BadGatewayError || error instanceof GatewayTimeoutError;
+	}
+
+	private async settleAuthContextFromGuildData(
+		params: GuildAuthContextParams,
+		pending: Array<PendingRequest<GuildChannelAuthContext>>,
+	): Promise<void> {
+		try {
+			this.resolvePendingRequests(pending, await this.getGuildAuthContextFromGuildData(params));
+		} catch (error) {
+			const transformedError = this.transformGatewayError(error);
+			this.rejectPendingRequests(pending, transformedError);
+			this.logBatchFailures('guild.get_data', [{status: 'rejected', reason: error}]);
+		}
+	}
+
+	private async getGuildAuthContextFromGuildData({
+		guildId,
+		userId,
+		channelId,
+	}: GuildAuthContextParams): Promise<GuildChannelAuthContext> {
+		const guild = await this.getGuildData({guildId, userId});
+		const parentId = channelId?.toString();
+		const parentChannel = parentId ? (guild.channels?.find((channel) => channel.id === parentId) ?? null) : null;
+		return {guild, parentChannel};
 	}
 
 	async dispatchGuild({guildId, event, data}: DispatchGuildParams): Promise<void> {
@@ -711,6 +829,48 @@ export class GatewayService {
 			);
 			this.scheduleGuildDataBatch();
 		});
+	}
+
+	async getGuildAuthContext({guildId, userId, channelId}: GuildAuthContextParams): Promise<GuildChannelAuthContext> {
+		if (Date.now() < this.authContextUnsupportedUntil) {
+			return await this.getGuildAuthContextFromGuildData({guildId, userId, channelId});
+		}
+		const key = `${guildId.toString()}-${userId.toString()}-${channelId ? channelId.toString() : '0'}`;
+		return new Promise<GuildChannelAuthContext>((resolve, reject) => {
+			if (this.pendingBatchRequestCount >= this.MAX_PENDING_BATCH_REQUESTS) {
+				reject(new ServiceUnavailableError());
+				return;
+			}
+			const pendingRequest: PendingRequest<GuildChannelAuthContext> = {
+				resolve,
+				reject,
+				settled: false,
+				timeoutId: null,
+			};
+			pendingRequest.timeoutId = setTimeout(() => {
+				const error = new GatewayTimeoutError();
+				this.rejectPendingRequests([pendingRequest], error);
+				this.removePendingAuthContextRequest(key, pendingRequest);
+			}, this.PENDING_REQUEST_TIMEOUT_MS);
+			const pending = this.pendingAuthContextRequests.get(key) || [];
+			pending.push(pendingRequest);
+			this.pendingAuthContextRequests.set(key, pending);
+			this.pendingBatchRequestCount += 1;
+			this.scheduleAuthContextBatch();
+		});
+	}
+
+	private removePendingAuthContextRequest(key: string, request: PendingRequest<GuildChannelAuthContext>): void {
+		const pending = this.pendingAuthContextRequests.get(key);
+		if (pending) {
+			const index = pending.indexOf(request);
+			if (index >= 0) {
+				pending.splice(index, 1);
+				if (pending.length === 0) {
+					this.pendingAuthContextRequests.delete(key);
+				}
+			}
+		}
 	}
 
 	private removePendingGuildDataRequest(key: string, request: PendingRequest<GuildResponse>): void {
@@ -1648,6 +1808,10 @@ export class GatewayService {
 		if (this.permissionBatchTimeout) {
 			clearTimeout(this.permissionBatchTimeout);
 			this.permissionBatchTimeout = null;
+		}
+		if (this.authContextBatchTimeout) {
+			clearTimeout(this.authContextBatchTimeout);
+			this.authContextBatchTimeout = null;
 		}
 		this.rejectAllPendingBatchRequests(new ServiceUnavailableError());
 	}

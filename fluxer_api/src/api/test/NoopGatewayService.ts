@@ -25,6 +25,7 @@ import {
 	type GatewayNodeStats,
 	type GatewayVoiceStateCounts,
 	type GatewayVoiceStateEntry,
+	type GuildChannelAuthContext,
 	IGatewayService,
 } from '../infrastructure/IGatewayService';
 import {UserRepository} from '../user/repositories/UserRepository';
@@ -560,6 +561,17 @@ export class NoopGatewayService extends IGatewayService {
 			};
 		}
 		return createDummyGuildResponse({guildId: params.guildId, userId: params.userId});
+	}
+
+	async getGuildAuthContext(params: {
+		guildId: GuildID;
+		userId: UserID;
+		channelId?: ChannelID;
+	}): Promise<GuildChannelAuthContext> {
+		const guild = await this.getGuildData({guildId: params.guildId, userId: params.userId});
+		const parentId = params.channelId?.toString();
+		const parentChannel = parentId ? (guild.channels?.find((channel) => channel.id === parentId) ?? null) : null;
+		return {guild, parentChannel};
 	}
 
 	async getGuildMember(params: {guildId: GuildID; userId: UserID}): Promise<{

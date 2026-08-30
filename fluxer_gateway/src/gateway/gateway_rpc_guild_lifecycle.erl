@@ -15,6 +15,7 @@
 -spec handle(binary(), map()) -> term().
 handle(<<"guild.dispatch">>, P) -> handle_dispatch(P);
 handle(<<"guild.get_data">>, P) -> handle_get_data(P);
+handle(<<"guild.get_auth_context">>, P) -> handle_get_auth_context(P);
 handle(<<"guild.start">>, P) -> handle_start(P);
 handle(<<"guild.stop">>, P) -> handle_stop(P);
 handle(<<"guild.reload">>, P) -> handle_reload(P);
@@ -46,6 +47,39 @@ handle_get_data(#{<<"guild_id">> := GuildIdBin, <<"user_id">> := UserIdBin}) ->
         end,
         <<"guild_not_found">>
     ).
+
+-spec handle_get_auth_context(map()) -> term().
+handle_get_auth_context(#{<<"guild_id">> := GuildIdBin, <<"user_id">> := UserIdBin} = Params) ->
+    GuildId = validation:snowflake_or_throw(<<"guild_id">>, GuildIdBin),
+    UserId = optional_user_id(UserIdBin),
+    ChannelId = optional_channel_id(maps:get(<<"channel_id">>, Params, null)),
+    gateway_rpc_guild_infra:with_guild(
+        GuildId,
+        fun(Pid) ->
+            get_auth_context_from_guild(Pid, UserId, ChannelId)
+        end,
+        <<"guild_not_found">>
+    ).
+
+-spec optional_channel_id(term()) -> integer() | null.
+optional_channel_id(Value) ->
+    case validation:validate_optional_snowflake(Value) of
+        {ok, null} -> null;
+        {ok, ChannelId} when is_integer(ChannelId) -> ChannelId;
+        _ -> gateway_rpc_error:raise(validation_invalid_params)
+    end.
+
+-spec get_auth_context_from_guild(pid(), integer() | null, integer() | null) -> term().
+get_auth_context_from_guild(Pid, UserId, ChannelId) ->
+    Request = {get_guild_auth_context, #{user_id => UserId, channel_id => ChannelId}},
+    case gen_server:call(Pid, Request, ?GUILD_CALL_TIMEOUT) of
+        #{auth_context := null} ->
+            gateway_rpc_error:raise(<<"forbidden">>);
+        #{auth_context := AuthContext} ->
+            AuthContext;
+        _ ->
+            gateway_rpc_error:raise(<<"guild_data_error">>)
+    end.
 
 -spec optional_user_id(term()) -> integer() | null.
 optional_user_id(Value) ->
@@ -194,4 +228,13 @@ optional_user_id_preserves_null_for_skip_membership_check_test() ->
 
 optional_user_id_accepts_snowflake_test() ->
     ?assertEqual(123, optional_user_id(<<"123">>)).
+
+optional_channel_id_defaults_to_null_test() ->
+    ?assertEqual(null, optional_channel_id(null)).
+
+optional_channel_id_accepts_snowflake_test() ->
+    ?assertEqual(456, optional_channel_id(<<"456">>)).
+
+optional_channel_id_rejects_garbage_test() ->
+    ?assertError({gateway_rpc_error, _}, optional_channel_id(<<"nope">>)).
 -endif.
