@@ -223,6 +223,7 @@ services:
       <<: *fluxer-env
       FLUXER_API_PORT: "8080"
       FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED: "true"
+      FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8080/_health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 10s
@@ -254,6 +255,7 @@ services:
       FLUXER_API_WORKER_MODE: all_lanes
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
       FLUXER_API_WORKER_ENABLE_VOICE_RECONCILIATION: "true"
+      FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
     depends_on:
       postgres: {condition: service_healthy}
       valkey: {condition: service_healthy}
@@ -315,6 +317,7 @@ services:
       FLUXER_CSP_EXTRA_WORKER_SRC: ${FLUXER_CSP_EXTRA_WORKER_SRC:-}
       FLUXER_CSP_EXTRA_MANIFEST_SRC: ${FLUXER_CSP_EXTRA_MANIFEST_SRC:-}
       FLUXER_CSP_REPORT_URI: ${FLUXER_CSP_REPORT_URI:-}
+      FLUXER_POSTGRES_MAX_CONNECTIONS: "5"
     depends_on:
       api: {condition: service_healthy}
       caddy: {condition: service_started}
@@ -355,6 +358,7 @@ services:
       <<: *fluxer-env
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
+      FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
     depends_on:
       nats: {condition: service_started}
       postgres: {condition: service_healthy}
@@ -398,6 +402,7 @@ services:
       <<: *fluxer-env
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
+      FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
     depends_on:
       nats: {condition: service_started}
       postgres: {condition: service_healthy}
