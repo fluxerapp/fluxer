@@ -16,7 +16,7 @@ import type {UserID} from '../../BrandedTypes';
 import type {UserCacheService} from '../../infrastructure/UserCacheService';
 import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import type {Relationship} from '../../models/Relationship';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
+import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '../UserCacheHelpers';
 import {mapRelationshipToResponse} from '../UserMappers';
 import type {UserChannelService} from './UserChannelService';
 import type {UserRelationshipService} from './UserRelationshipService';
@@ -69,6 +69,11 @@ export class UserRelationshipRequestService {
 		const userPartialResolver = this.createUserPartialResolver(params.requestCache);
 		const inverseRelationshipResolver = this.createInverseRelationshipResolver(params.userId);
 		const relationships = await this.userRelationshipService.getRelationships(params.userId);
+		await getCachedUserPartialResponses({
+			userIds: relationships.map((relationship) => relationship.targetUserId),
+			userCacheService: this.userCacheService,
+			requestCache: params.requestCache,
+		});
 		return Promise.all(
 			relationships.map((relationship) =>
 				mapRelationshipToResponse({relationship, userPartialResolver, inverseRelationshipResolver}),

@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {ChannelID, UserID} from '../../BrandedTypes';
 import {mapChannelToResponse} from '../../channel/ChannelMappers';
 import type {UserCacheService} from '../../infrastructure/UserCacheService';
 import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
+import type {Channel} from '../../models/Channel';
+import {getCachedUserPartialResponses} from '../UserCacheHelpers';
 import type {UserChannelService} from './UserChannelService';
 
 interface UserChannelListParams {
@@ -24,6 +27,21 @@ interface UserChannelPinParams {
 	channelId: ChannelID;
 }
 
+function collectDMRecipientIds(channels: Array<Channel>, currentUserId: UserID): Array<UserID> {
+	const recipientIds = new Set<UserID>();
+	for (const channel of channels) {
+		if (channel.guildId != null || channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
+			continue;
+		}
+		for (const recipientId of channel.recipientIds) {
+			if (recipientId !== currentUserId) {
+				recipientIds.add(recipientId);
+			}
+		}
+	}
+	return Array.from(recipientIds);
+}
+
 export class UserChannelRequestService {
 	constructor(
 		private readonly userChannelService: UserChannelService,
@@ -32,6 +50,11 @@ export class UserChannelRequestService {
 
 	async listPrivateChannels(params: UserChannelListParams): Promise<Array<ChannelResponse>> {
 		const channels = await this.userChannelService.getPrivateChannels(params.userId);
+		await getCachedUserPartialResponses({
+			userIds: collectDMRecipientIds(channels, params.userId),
+			userCacheService: this.userCacheService,
+			requestCache: params.requestCache,
+		});
 		return Promise.all(
 			channels.map((channel) =>
 				mapChannelToResponse({
