@@ -179,8 +179,13 @@ export abstract class BaseChannelAuthService {
 			guildData: guildDataResult!,
 			userId,
 		});
+		const channelPermissions = await this.gatewayService.getUserPermissions({
+			guildId,
+			userId,
+			channelId: channel.id,
+		});
 		const hasPermission = async (permission: bigint): Promise<boolean> => {
-			const allowed = await this.gatewayService.checkPermission({guildId, userId, permission, channelId: channel.id});
+			const allowed = (channelPermissions & permission) === permission;
 			if (allowed) enforceGuildMfa(permission);
 			return allowed;
 		};
