@@ -7,6 +7,7 @@
 -export([
     new/2,
     push/2,
+    push/3,
     push_front/2,
     pop/1,
     pop_front/1,
@@ -17,10 +18,13 @@
     is_empty/1,
     filter/2,
     drop_while_front/2,
-    recompute_bytes/2
+    recompute_bytes/2,
+    entry_bytes/1
 ]).
 
 -export_type([deque/0]).
+
+-define(WORD_SIZE_KEY, {?MODULE, word_size}).
 
 -opaque deque() :: #{
     front := [term()],
@@ -43,8 +47,11 @@ new(MaxCount, MaxBytes) ->
     }.
 
 -spec push(term(), deque()) -> deque().
-push(Item, #{rear := Rear, count := Count, bytes := Bytes} = D) ->
-    ItemBytes = entry_bytes(Item),
+push(Item, D) ->
+    push(Item, entry_bytes(Item), D).
+
+-spec push(term(), non_neg_integer(), deque()) -> deque().
+push(Item, ItemBytes, #{rear := Rear, count := Count, bytes := Bytes} = D) ->
     D1 = D#{rear := [Item | Rear], count := Count + 1, bytes := Bytes + ItemBytes},
     trim_front(D1).
 
@@ -176,7 +183,21 @@ trim_rear(D) ->
 
 -spec entry_bytes(term()) -> non_neg_integer().
 entry_bytes(Term) ->
-    erts_debug:flat_size(Term) * erlang:system_info(wordsize).
+    erts_debug:flat_size(Term) * word_size().
+
+-spec word_size() -> 4 | 8.
+word_size() ->
+    case persistent_term:get(?WORD_SIZE_KEY, undefined) of
+        4 -> 4;
+        8 -> 8;
+        _Other -> cache_word_size()
+    end.
+
+-spec cache_word_size() -> 4 | 8.
+cache_word_size() ->
+    WordSize = erlang:system_info(wordsize),
+    persistent_term:put(?WORD_SIZE_KEY, WordSize),
+    WordSize.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -238,5 +259,42 @@ size_is_o1_test() ->
     D0 = new(1000, 0),
     D1 = lists:foldl(fun push/2, D0, lists:seq(1, 1000)),
     ?assertEqual(1000, size(D1)).
+
+push_with_precomputed_bytes_matches_push_test() ->
+    Item = #{event => presence_update, data => #{<<"status">> => <<"online">>}, seq => 7},
+    D0 = new(10, 1048576),
+    ?assertEqual(push(Item, D0), push(Item, entry_bytes(Item), D0)),
+    ?assertEqual(entry_bytes(Item), bytes(push(Item, D0))).
+
+push_with_precomputed_bytes_skips_recomputation_test() ->
+    Item = #{event => presence_update, data => #{<<"status">> => <<"online">>}, seq => 7},
+    D = push(Item, 1234, new(10, 1048576)),
+    ?assertEqual(1, size(D)),
+    ?assertEqual(1234, bytes(D)).
+
+push_with_precomputed_bytes_matches_push_at_byte_bound_test() ->
+    Item = lists:seq(1, 256),
+    ItemBytes = entry_bytes(Item),
+    D0 = new(10, ItemBytes * 2),
+    Items = [Item, Item, Item],
+    D1 = lists:foldl(fun push/2, D0, Items),
+    D2 = lists:foldl(fun(I, D) -> push(I, entry_bytes(I), D) end, D0, Items),
+    ?assertEqual(2, size(D1)),
+    ?assertEqual(ItemBytes * 2, bytes(D1)),
+    ?assertEqual(D1, D2).
+
+push_with_precomputed_bytes_matches_push_at_count_bound_test() ->
+    D0 = new(3, 0),
+    Items = [a, b, c, d],
+    D1 = lists:foldl(fun push/2, D0, Items),
+    D2 = lists:foldl(fun(I, D) -> push(I, entry_bytes(I), D) end, D0, Items),
+    ?assertEqual([b, c, d], to_list(D1)),
+    ?assertEqual(D1, D2).
+
+entry_bytes_uses_word_size_test() ->
+    ?assertEqual(
+        erts_debug:flat_size({a, b, c}) * erlang:system_info(wordsize),
+        entry_bytes({a, b, c})
+    ).
 
 -endif.

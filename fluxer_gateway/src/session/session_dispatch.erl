@@ -139,16 +139,19 @@ do_handle_dispatch(Event, Data, State) ->
     {noreply, session_state()}.
 dispatch_replayable_event(Event, Data, NewSeq, State) ->
     Request = #{event => Event, data => Data, seq => NewSeq},
-    case is_oversized_event(Request) of
+    RequestBytes = buffer_entry_bytes(Request),
+    case is_oversized_event(RequestBytes) of
         true ->
             dispatch_without_replay(Event, Data, NewSeq, State);
         false ->
-            dispatch_with_replay(Event, Data, NewSeq, Request, State)
+            dispatch_with_replay(Event, Data, NewSeq, Request, RequestBytes, State)
     end.
 
--spec dispatch_with_replay(event(), map(), non_neg_integer(), map(), session_state()) ->
+-spec dispatch_with_replay(
+    event(), map(), non_neg_integer(), map(), non_neg_integer(), session_state()
+) ->
     {noreply, session_state()}.
-dispatch_with_replay(Event, Data, NewSeq, Request, State) ->
+dispatch_with_replay(Event, Data, NewSeq, Request, RequestBytes, State) ->
     Buffer = maps:get(buffer, State),
     NewBuffer =
         case is_list(Buffer) of
@@ -156,9 +159,9 @@ dispatch_with_replay(Event, Data, NewSeq, Request, State) ->
                 D = limited_deque:from_list(
                     Buffer, ?MAX_EVENT_BUFFER_SIZE, ?MAX_TOTAL_BUFFER_BYTES
                 ),
-                limited_deque:push(Request, D);
+                limited_deque:push(Request, RequestBytes, D);
             false ->
-                limited_deque:push(Request, Buffer)
+                limited_deque:push(Request, RequestBytes, Buffer)
         end,
     send_to_socket(maps:get(socket_pid, State, undefined), Event, Data, NewSeq),
     StateAfterMain = apply_state_updates(Event, Data, State, #{
@@ -225,9 +228,9 @@ needs_state_update(relationship_update) -> true;
 needs_state_update(relationship_remove) -> true;
 needs_state_update(_) -> false.
 
--spec is_oversized_event(map()) -> boolean().
-is_oversized_event(Request) ->
-    buffer_entry_bytes(Request) > ?MAX_SINGLE_EVENT_BUFFER_BYTES.
+-spec is_oversized_event(non_neg_integer()) -> boolean().
+is_oversized_event(RequestBytes) ->
+    RequestBytes > ?MAX_SINGLE_EVENT_BUFFER_BYTES.
 
 -spec should_skip_replay_buffer(event()) -> boolean().
 should_skip_replay_buffer(Event) ->
@@ -235,7 +238,7 @@ should_skip_replay_buffer(Event) ->
 
 -spec buffer_entry_bytes(term()) -> non_neg_integer().
 buffer_entry_bytes(Request) ->
-    erts_debug:flat_size(Request) * erlang:system_info(wordsize).
+    limited_deque:entry_bytes(Request).
 
 -spec send_to_socket(pid() | undefined, event(), term(), non_neg_integer()) -> ok.
 send_to_socket(undefined, _Event, _Data, _Seq) ->
@@ -314,12 +317,12 @@ base_state(Opts) ->
 
 is_oversized_event_small_event_test() ->
     Req = #{event => message_create, data => #{<<"content">> => <<"hello">>}, seq => 1},
-    ?assertEqual(false, is_oversized_event(Req)).
+    ?assertEqual(false, is_oversized_event(buffer_entry_bytes(Req))).
 
 is_oversized_event_large_event_test() ->
     LargeData = make_large_data(),
     Req = #{event => guild_create, data => LargeData, seq => 1},
-    ?assertEqual(true, is_oversized_event(Req)).
+    ?assertEqual(true, is_oversized_event(buffer_entry_bytes(Req))).
 
 ignored_message_create_dispatches_when_mentioned_test() ->
     State = base_state(#{
