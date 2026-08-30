@@ -3,6 +3,8 @@
 -module(guild_dispatch_send).
 -typing([eqwalizer]).
 
+-include_lib("kernel/include/logger.hrl").
+
 -export([
     dispatch_to_sessions/4,
     filter_visible_channels/4
@@ -144,7 +146,7 @@ dispatch_bulk_to_pid(_, _, _, _, _GuildId, Acc) ->
 -spec dispatch_standard([session_pair()], event(), event_data(), guild_id(), guild_state()) ->
     non_neg_integer().
 dispatch_standard(FilteredSessions, Event, FinalData, GuildId, State) ->
-    logger:debug(
+    ?LOG_DEBUG(
         "dispatch_standard: event=~p guild_id=~p filtered_sessions=~p member_count=~p",
         [Event, GuildId, length(FilteredSessions), maps:get(member_count, State, undefined)]
     ),
@@ -155,22 +157,22 @@ dispatch_standard(FilteredSessions, Event, FinalData, GuildId, State) ->
             )},
     Pids = collect_eligible_pids(FilteredSessions, Event, FinalData, GuildId, State),
     dispatch_to_pids(Pids, Event, EncodedData, GuildId, State),
-    normalize_success(length(Pids)).
+    normalize_dispatched(Pids).
 
 -spec collect_eligible_pids(
     [session_pair()], event(), event_data(), guild_id(), guild_state()
 ) -> [pid()].
 collect_eligible_pids(FilteredSessions, Event, FinalData, GuildId, State) ->
     lists:filtermap(
-        fun({Sid, SessionData}) ->
-            check_eligible_pid(Sid, SessionData, Event, FinalData, GuildId, State)
+        fun({_Sid, SessionData}) ->
+            check_eligible_pid(SessionData, Event, FinalData, GuildId, State)
         end,
         FilteredSessions
     ).
 
--spec check_eligible_pid(session_id(), map(), event(), event_data(), guild_id(), guild_state()) ->
+-spec check_eligible_pid(map(), event(), event_data(), guild_id(), guild_state()) ->
     {true, pid()} | false.
-check_eligible_pid(Sid, SessionData, Event, FinalData, GuildId, State) ->
+check_eligible_pid(SessionData, Event, FinalData, GuildId, State) ->
     Pid = maps:get(pid, SessionData),
     Eligible =
         is_pid(Pid) andalso
@@ -179,21 +181,8 @@ check_eligible_pid(Sid, SessionData, Event, FinalData, GuildId, State) ->
         true ->
             {true, Pid};
         false ->
-            log_skip(Sid, Pid, GuildId, SessionData, State),
             false
     end.
-
--spec log_skip(session_id(), term(), guild_id(), map(), guild_state()) -> ok.
-log_skip(Sid, Pid, GuildId, SessionData, State) ->
-    logger:debug(
-        "dispatch_standard skip: sid=~p is_pid=~p passive=~p small=~p",
-        [
-            Sid,
-            is_pid(Pid),
-            session_passive:is_passive(GuildId, SessionData),
-            session_passive:is_small_guild(State)
-        ]
-    ).
 
 -spec dispatch_to_pids([pid()], event(), term(), guild_id(), guild_state()) -> ok.
 dispatch_to_pids([], _Event, _EncodedData, _GuildId, _State) ->
@@ -209,6 +198,10 @@ dispatch_to_pids(Pids, Event, EncodedData, GuildId, State) ->
 normalize_success(Count) when Count > 0 -> 1;
 normalize_success(_) -> 0.
 
+-spec normalize_dispatched([pid()]) -> non_neg_integer().
+normalize_dispatched([]) -> 0;
+normalize_dispatched([_ | _]) -> 1.
+
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
@@ -216,6 +209,11 @@ normalize_success_test() ->
     ?assertEqual(1, normalize_success(5)),
     ?assertEqual(1, normalize_success(1)),
     ?assertEqual(0, normalize_success(0)).
+
+normalize_dispatched_test() ->
+    ?assertEqual(0, normalize_dispatched([])),
+    ?assertEqual(1, normalize_dispatched([self()])),
+    ?assertEqual(1, normalize_dispatched([self(), self()])).
 
 filter_visible_channels_test() ->
     {UserId, Member, State} = visibility_test_fixture(),
@@ -288,6 +286,43 @@ passive_channel_update_bulk_dispatches_visible_channels_test() ->
         [#{<<"id">> => <<"100">>, <<"name">> => <<"visible">>}],
         maps:get(<<"channels">>, Payload)
     ).
+
+standard_dispatch_without_eligible_sessions_test() ->
+    flush_dispatches(),
+    Session = (passive_session_data())#{pid => undefined},
+    ?assertEqual(
+        0,
+        dispatch_to_sessions(
+            [{<<"offline">>, Session}],
+            guild_update,
+            #{<<"guild_id">> => <<"42">>, <<"name">> => <<"Updated">>},
+            passive_dispatch_state()
+        )
+    ),
+    assert_no_dispatch().
+
+standard_dispatch_ignores_ineligible_sessions_test() ->
+    flush_dispatches(),
+    Offline = (passive_session_data())#{pid => undefined},
+    ?assertEqual(
+        1,
+        dispatch_to_sessions(
+            [{<<"offline">>, Offline}, passive_session_pair()],
+            guild_update,
+            #{<<"guild_id">> => <<"42">>, <<"name">> => <<"Updated">>},
+            passive_dispatch_state()
+        )
+    ),
+    _Payload = receive_pre_encoded_payload(guild_update),
+    assert_no_dispatch().
+
+assert_no_dispatch() ->
+    receive
+        {'$gen_cast', {dispatch, Event, _Payload}} ->
+            ?assert(false, {unexpected_dispatch, Event})
+    after 100 ->
+        ok
+    end.
 
 assert_passive_standard_dispatch({Event, Data}) ->
     flush_dispatches(),

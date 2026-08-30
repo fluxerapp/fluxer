@@ -3,6 +3,8 @@
 -module(guild_dispatch).
 -typing([eqwalizer]).
 
+-include_lib("kernel/include/logger.hrl").
+
 -export([
     handle_dispatch/3,
     extract_and_remove_session_id/1,
@@ -60,7 +62,7 @@ process_dispatch(Event, EventData, State) ->
     FilteredSessions = guild_dispatch_filter:filter_sessions_for_event(
         Event, FinalData, SessionIdOpt, Sessions, FilterState
     ),
-    logger:debug(
+    ?LOG_DEBUG(
         "process_dispatch: event=~p guild_id=~p total_sessions=~p filtered_sessions=~p",
         [Event, GuildId, map_size(Sessions), length(FilteredSessions)]
     ),
