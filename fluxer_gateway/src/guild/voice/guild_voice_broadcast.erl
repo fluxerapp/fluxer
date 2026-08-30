@@ -111,11 +111,25 @@ maybe_dispatch_voice_state_update(Pids, SanitizedVoiceState, State) ->
             gateway_dispatch_relay:dispatch_many(
                 [Pid || Pid <- Pids, is_pid(Pid)],
                 voice_state_update,
-                SanitizedVoiceState,
+                dispatch_payload(SanitizedVoiceState),
                 GuildId
             );
         undefined ->
             ok
+    end.
+
+-spec dispatch_payload(voice_state()) -> voice_state() | {pre_encoded, binary()}.
+dispatch_payload(SanitizedVoiceState) ->
+    case voice_state_utils:voice_state_guild_id(SanitizedVoiceState) of
+        undefined ->
+            SanitizedVoiceState;
+        _GuildId ->
+            {pre_encoded,
+                iolist_to_binary(
+                    json:encode(
+                        guild_data_wire:payload(SanitizedVoiceState), fun json:encode_value/2
+                    )
+                )}
     end.
 
 -spec state_guild_id(guild_state()) -> integer() | undefined.
