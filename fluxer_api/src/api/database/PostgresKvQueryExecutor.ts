@@ -67,6 +67,17 @@ const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()
 const MERGED_ROW_DATA = `CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE kv.row_data || EXCLUDED.row_data END`;
 const KEPT_EXPIRES_AT = `CASE WHEN ${EXPIRED_STORED_ROW} THEN NULL ELSE kv.expires_at END`;
 
+function planStatementName(prefix: string, plan: CandidatePlan): string | undefined {
+	switch (plan.kind) {
+		case 'rowKeys':
+			return `${prefix}_rowkeys`;
+		case 'range':
+			return `${prefix}_range`;
+		default:
+			return undefined;
+	}
+}
+
 function normalizeCql(cql: string): string {
 	return cql.replace(/\s+/g, ' ').trim();
 }
@@ -847,10 +858,12 @@ export class PostgresKvQueryExecutor {
 		meta: KvQueryMeta,
 		fragments: PlanFragments,
 		db: PostgresQueryable,
+		name?: string,
 	): Promise<Array<StoredRow>> {
 		const result = await db.query<StoredRow>(
 			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 			[meta.table.name, ...fragments.params],
+			name,
 		);
 		return result.rows;
 	}
@@ -859,10 +872,11 @@ export class PostgresKvQueryExecutor {
 		if (plan.candidates.kind === 'none') return [];
 		if (plan.candidates.kind === 'scan') logFullScan(meta);
 		const groups = planFragmentGroups(plan.candidates);
-		if (groups.length === 1) return this.candidateGroup(meta, groups[0]!, db);
+		const name = planStatementName('kv_sel', plan.candidates);
+		if (groups.length === 1) return this.candidateGroup(meta, groups[0]!, db, name);
 		const byRowKey = new Map<string, StoredRow>();
 		for (const fragments of groups) {
-			for (const stored of await this.candidateGroup(meta, fragments, db)) byRowKey.set(stored.row_key, stored);
+			for (const stored of await this.candidateGroup(meta, fragments, db, name)) byRowKey.set(stored.row_key, stored);
 		}
 		return [...byRowKey.values()];
 	}
@@ -898,6 +912,7 @@ export class PostgresKvQueryExecutor {
 			const result = await db.query<{count: string}>(
 				`SELECT count(*) AS count FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 				[meta.table.name, ...fragments.params],
+				planStatementName('kv_count', plan.candidates),
 			);
 			total += Number(result.rows[0]?.count ?? 0);
 		}
@@ -914,6 +929,7 @@ export class PostgresKvQueryExecutor {
 			await db.query(
 				`DELETE FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND expires_at IS NOT NULL AND expires_at <= now()`,
 				[meta.table.name, key],
+				'kv_del_expired',
 			);
 		}
 		const expiresAt = ttlExpiresAt(meta, params) ?? null;
@@ -931,6 +947,7 @@ WHERE NOT $6`,
 				expiresAt,
 				meta.ifNotExists === true,
 			],
+			'kv_upsert',
 		);
 		if (meta.ifNotExists) {
 			return [{'[applied]': result.rowCount === 1}];
@@ -952,6 +969,7 @@ VALUES ($1, $2, $3, $4::jsonb, $5, now())
 ON CONFLICT (table_name, row_key)
 DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = ${expiresAtExpr}, updated_at = now()`,
 			[meta.table.name, partitionKey(meta, incoming), key, JSON.stringify(encodeRow(incoming)), ttl ?? null],
+			ttl === undefined ? 'kv_patch_keep_ttl' : 'kv_patch_set_ttl',
 		);
 	}
 
@@ -964,6 +982,7 @@ DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DA
 				await db.query(
 					`DELETE FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 					[meta.table.name, ...fragments.params],
+					planStatementName('kv_del', plan.candidates),
 				);
 			}
 			return;
@@ -980,16 +999,18 @@ DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DA
 			)
 			.map((stored) => stored.row_key);
 		if (matchingKeys.length === 0) return;
-		await db.query(`DELETE FROM ${this.table} WHERE table_name = $1 AND row_key = ANY($2::text[])`, [
-			meta.table.name,
-			matchingKeys,
-		]);
+		await db.query(
+			`DELETE FROM ${this.table} WHERE table_name = $1 AND row_key = ANY($2::text[])`,
+			[meta.table.name, matchingKeys],
+			'kv_del_keys',
+		);
 	}
 
 	private async getRow(meta: KvQueryMeta, key: string, db: PostgresQueryable): Promise<Row | null> {
 		const result = await db.query<{row_data: unknown}>(
 			`SELECT row_data FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1`,
 			[meta.table.name, key],
+			'kv_get_row',
 		);
 		const row = result.rows[0];
 		return row ? decodeRow(row.row_data) : null;

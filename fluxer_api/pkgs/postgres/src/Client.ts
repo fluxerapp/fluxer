@@ -17,7 +17,11 @@ interface PostgresConfig {
 }
 
 export interface PostgresQueryable {
-	query<T extends QueryResultRow = QueryResultRow>(text: string, values?: Array<unknown>): Promise<QueryResult<T>>;
+	query<T extends QueryResultRow = QueryResultRow>(
+		text: string,
+		values?: Array<unknown>,
+		name?: string,
+	): Promise<QueryResult<T>>;
 }
 
 export interface IPostgresClient extends PostgresQueryable {
@@ -92,15 +96,16 @@ class PostgresClient implements IPostgresClient {
 	async query<T extends QueryResultRow = QueryResultRow>(
 		text: string,
 		values: Array<unknown> = [],
+		name?: string,
 	): Promise<QueryResult<T>> {
-		return this.getPool().query<T>(text, values);
+		return this.getPool().query<T>({text, values, name});
 	}
 
 	async transaction<T>(fn: (client: PostgresQueryable) => Promise<T>): Promise<T> {
 		const client = await this.getPool().connect();
 		try {
 			await client.query('BEGIN');
-			const result = await fn(client);
+			const result = await fn(poolClientQueryable(client));
 			await client.query('COMMIT');
 			return result;
 		} catch (error) {
@@ -121,6 +126,13 @@ class PostgresClient implements IPostgresClient {
 		}
 		return this.pool;
 	}
+}
+
+function poolClientQueryable(client: PoolClient): PostgresQueryable {
+	return {
+		query: <T extends QueryResultRow = QueryResultRow>(text: string, values: Array<unknown> = [], name?: string) =>
+			client.query<T>({text, values, name}),
+	};
 }
 
 async function rollback(client: PoolClient): Promise<void> {
