@@ -248,7 +248,7 @@ services:
     <<: *fluxer-service
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-api:${FLUXER_IMAGE_TAG:-v1}
     working_dir: /usr/src/app/fluxer_api
-    command: ["./node_modules/.bin/tsx", "src/WorkerEntrypoint.ts"]
+    command: ["/file-secrets.sh", "./node_modules/.bin/tsx", "src/WorkerEntrypoint.ts"]
     environment:
       <<: *fluxer-env
       FLUXER_API_WORKER_MODE: all_lanes

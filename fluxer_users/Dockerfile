@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/src/app/target/release/fluxer-users /usr/local/bin/fluxer-users
+COPY scripts/file-secrets.sh /file-secrets.sh
+RUN chmod +x /file-secrets.sh
 
 ENV BUILD_VERSION="${BUILD_VERSION}"
 
@@ -25,4 +27,4 @@ USER 65532:65532
 
 EXPOSE 8090
 
-CMD ["/usr/local/bin/fluxer-users"]
+CMD ["/file-secrets.sh", "/usr/local/bin/fluxer-users"]

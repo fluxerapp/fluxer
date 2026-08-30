@@ -62,6 +62,8 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/bin/fluxer-admin /usr/local/bin/fluxer-admin
+COPY scripts/file-secrets.sh /file-secrets.sh
+RUN chmod +x /file-secrets.sh
 
 ENV BUILD_VERSION="${BUILD_VERSION}"
 ENV FLUXER_ADMIN_HOST="0.0.0.0"
@@ -71,4 +73,4 @@ USER 65532:65532
 
 EXPOSE 8080
 
-CMD ["/usr/local/bin/fluxer-admin"]
+CMD ["/file-secrets.sh", "/usr/local/bin/fluxer-admin"]

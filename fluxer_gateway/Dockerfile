@@ -47,10 +47,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=build /usr/src/app/fluxer_gateway/_build/prod/rel/fluxer_gateway .
 COPY fluxer_gateway/scripts/docker_entrypoint.sh /opt/fluxer_gateway/bin/docker_entrypoint.sh
 COPY fluxer_gateway/scripts/fluxer_gateway_release_wrapper.sh /opt/fluxer_gateway/bin/fluxer_gateway.wrapper
+COPY scripts/file-secrets.sh /file-secrets.sh
 
 RUN mv /opt/fluxer_gateway/bin/fluxer_gateway /opt/fluxer_gateway/bin/fluxer_gateway.real && \
 	mv /opt/fluxer_gateway/bin/fluxer_gateway.wrapper /opt/fluxer_gateway/bin/fluxer_gateway && \
-	chmod +x /opt/fluxer_gateway/bin/docker_entrypoint.sh /opt/fluxer_gateway/bin/fluxer_gateway && \
+	chmod +x /opt/fluxer_gateway/bin/docker_entrypoint.sh /opt/fluxer_gateway/bin/fluxer_gateway /file-secrets.sh && \
 	groupadd -r -g 65532 fluxer && \
 	useradd -r -u 65532 -g 65532 -s /sbin/nologin -d /opt/fluxer_gateway fluxer && \
 	chown -R 65532:65532 /opt/fluxer_gateway
@@ -61,4 +62,4 @@ ENV BUILD_VERSION="${BUILD_VERSION}"
 
 EXPOSE 8080 8081 4369
 
-ENTRYPOINT ["/opt/fluxer_gateway/bin/docker_entrypoint.sh"]
+ENTRYPOINT ["/file-secrets.sh", "/opt/fluxer_gateway/bin/docker_entrypoint.sh"]

@@ -53,6 +53,8 @@ RUN groupadd --system --gid 10001 fluxer \
     && useradd --system --uid 10001 --gid 10001 --home /var/lib/fluxer --create-home fluxer
 
 COPY --from=builder /usr/local/bin/fluxer-media-proxy /usr/local/bin/fluxer-media-proxy
+COPY scripts/file-secrets.sh /file-secrets.sh
+RUN chmod +x /file-secrets.sh
 
 RUN install -d -o fluxer -g fluxer /var/lib/fluxer/media_proxy_storage
 
@@ -77,4 +79,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD ["sh", "-c", "exec 3<>/dev/tcp/127.0.0.1/${FLUXER_MEDIA_PROXY_PORT:-8080} && printf 'GET /_health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q '200' <&3"]
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["/usr/local/bin/fluxer-media-proxy"]
+CMD ["/file-secrets.sh", "/usr/local/bin/fluxer-media-proxy"]
