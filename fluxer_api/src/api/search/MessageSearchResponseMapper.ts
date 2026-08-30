@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageSearchResultsResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {
+	MessageResponse,
+	MessageSearchResultsResponse,
+} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserID} from '../BrandedTypes';
 import {createChannelID, createMessageID} from '../BrandedTypes';
 import {mapChannelToResponse} from '../channel/ChannelMappers';
@@ -63,10 +66,12 @@ export class MessageSearchResponseMapper {
 			}),
 		);
 		const validMessageResponseEntries = messageResponsesWithEntries.filter(
-			(entry): entry is {message: MessageSearchResultsResponse['messages'][number]; channelId: string} =>
-				entry !== null,
+			(entry): entry is {message: MessageResponse; channelId: string} => entry !== null,
 		);
-		const messageResponses = validMessageResponseEntries.map((entry) => entry.message);
+		const messageResponses = validMessageResponseEntries.map((entry) => {
+			const {referenced_message: _referencedMessage, ...searchMessage} = entry.message;
+			return searchMessage;
+		});
 		const orderedResponseChannelIds = new Set(validMessageResponseEntries.map((entry) => entry.channelId));
 		const orderedChannels = Array.from(orderedResponseChannelIds)
 			.map((channelId) => channelById.get(channelId))

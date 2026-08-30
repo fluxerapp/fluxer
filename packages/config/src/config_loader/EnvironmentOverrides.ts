@@ -411,6 +411,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_DISABLE_RATE_LIMITS: {path: ['dev', 'disable_rate_limits'], parse: parseEnvValue},
 	FLUXER_TEST_MODE_ENABLED: {path: ['dev', 'test_mode_enabled'], parse: parseEnvValue},
 	FLUXER_TEST_HARNESS_TOKEN: {path: ['dev', 'test_harness_token']},
+	FLUXER_VALIDATE_RESPONSES: {path: ['dev', 'validate_responses'], parse: parseEnvValue},
 	FLUXER_GEOIP_DB_PATH: {path: ['geoip', 'maxmind_db_path']},
 };
 

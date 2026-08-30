@@ -3,8 +3,9 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
 import {createLogger} from '@fluxer/logger/src/Logger';
-import type {MiddlewareHandler} from 'hono';
+import type {Context, MiddlewareHandler} from 'hono';
 import type {ZodType} from 'zod';
+import {Config} from '../Config';
 import type {HonoEnv} from '../types/HonoEnv';
 
 const responseValidationLogger = createLogger('response_validation');
@@ -28,6 +29,46 @@ class ResponseValidationError extends InternalServerError {
 	}
 }
 
+async function validateAndRewriteResponse(ctx: Context<HonoEnv>, schema: ZodType): Promise<void> {
+	const response = ctx.res;
+	const contentType = response.headers.get('content-type');
+	if (!contentType?.includes('application/json')) {
+		return;
+	}
+	if (response.status >= 400) {
+		return;
+	}
+	const clonedResponse = response.clone();
+	let body: unknown;
+	try {
+		body = await clonedResponse.json();
+	} catch {
+		return;
+	}
+	const result = schema.safeParse(body);
+	if (!result.success) {
+		const validationErrors = result.error.issues.map((issue) => ({
+			path: issue.path.join('.') || 'root',
+			message: issue.message,
+		}));
+		const errorContext = {
+			method: ctx.req.method,
+			path: ctx.req.path,
+			status: response.status,
+			validationErrors,
+			body,
+		};
+		const responseValidationError = new ResponseValidationError(validationErrors);
+		responseValidationLogger.error(errorContext, 'Response validation failed');
+		throw responseValidationError;
+	}
+	ctx.res = new Response(stringifyValidatedResponse(result.data), {
+		status: response.status,
+		statusText: response.statusText,
+		headers: response.headers,
+	});
+}
+
 export function ResponseType<T extends ZodType>(
 	schema: T,
 	options?: {
@@ -39,49 +80,13 @@ export function ResponseType<T extends ZodType>(
 	return async (ctx, next) => {
 		ctx.set('responseSchema' as keyof HonoEnv['Variables'], schema);
 		await next();
-		if (skipValidation) {
+		if (skipValidation || !Config.dev.validateResponses) {
 			return;
 		}
-		const response = ctx.res;
-		if (allowNoContent && response.status === 204) {
+		if (allowNoContent && ctx.res.status === 204) {
 			return;
 		}
-		const contentType = response.headers.get('content-type');
-		if (!contentType?.includes('application/json')) {
-			return;
-		}
-		if (response.status >= 400) {
-			return;
-		}
-		const clonedResponse = response.clone();
-		let body: unknown;
-		try {
-			body = await clonedResponse.json();
-		} catch {
-			return;
-		}
-		const result = schema.safeParse(body);
-		if (!result.success) {
-			const validationErrors = result.error.issues.map((issue) => ({
-				path: issue.path.join('.') || 'root',
-				message: issue.message,
-			}));
-			const errorContext = {
-				method: ctx.req.method,
-				path: ctx.req.path,
-				status: response.status,
-				validationErrors,
-				body,
-			};
-			const responseValidationError = new ResponseValidationError(validationErrors);
-			responseValidationLogger.error(errorContext, 'Response validation failed');
-			throw responseValidationError;
-		}
-		ctx.res = new Response(stringifyValidatedResponse(result.data), {
-			status: response.status,
-			statusText: response.statusText,
-			headers: response.headers,
-		});
+		await validateAndRewriteResponse(ctx, schema);
 	};
 }
 
@@ -207,45 +212,9 @@ export function OpenAPI(
 		ctx.set('openapiMetadata' as keyof HonoEnv['Variables'], fullMetadata);
 		ctx.set('responseSchema' as keyof HonoEnv['Variables'], schema);
 		await next();
-		if (!schema) {
+		if (!schema || !Config.dev.validateResponses) {
 			return;
 		}
-		const response = ctx.res;
-		const contentType = response.headers.get('content-type');
-		if (!contentType?.includes('application/json')) {
-			return;
-		}
-		if (response.status >= 400) {
-			return;
-		}
-		const clonedResponse = response.clone();
-		let body: unknown;
-		try {
-			body = await clonedResponse.json();
-		} catch {
-			return;
-		}
-		const result = schema.safeParse(body);
-		if (!result.success) {
-			const validationErrors = result.error.issues.map((issue) => ({
-				path: issue.path.join('.') || 'root',
-				message: issue.message,
-			}));
-			const errorContext = {
-				method: ctx.req.method,
-				path: ctx.req.path,
-				status: response.status,
-				validationErrors,
-				body,
-			};
-			const responseValidationError = new ResponseValidationError(validationErrors);
-			responseValidationLogger.error(errorContext, 'Response validation failed');
-			throw responseValidationError;
-		}
-		ctx.res = new Response(stringifyValidatedResponse(result.data), {
-			status: response.status,
-			statusText: response.statusText,
-			headers: response.headers,
-		});
+		await validateAndRewriteResponse(ctx, schema);
 	};
 }

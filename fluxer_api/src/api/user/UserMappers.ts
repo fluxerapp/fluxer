@@ -234,7 +234,6 @@ export function mapUserToOAuthResponse(
 		global_name: user.globalName ?? null,
 		bot: user.isBot || false,
 		system: user.isSystem || false,
-		acls: Array.from(user.acls),
 		avatar_color: user.avatarColor,
 	};
 }

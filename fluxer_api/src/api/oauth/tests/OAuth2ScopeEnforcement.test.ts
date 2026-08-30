@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
-import {beforeEach, describe, expect, test} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createAdminApiKey} from '../../admin/tests/AdminTestUtils';
 import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
+import {Config} from '../../Config';
 import {createGuild, createRole, getRoles} from '../../guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
@@ -60,6 +61,9 @@ describe('OAuth2 Scope Enforcement', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
+	});
+	afterEach(() => {
+		Config.dev.validateResponses = true;
 	});
 	describe('Scope enforcement for user endpoints (/users/@me)', () => {
 		test('GET /users/@me with bearer token succeeds when user is authenticated', async () => {
@@ -266,6 +270,27 @@ describe('OAuth2 Scope Enforcement', () => {
 				.get('/oauth2/userinfo')
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_OAUTH_SCOPE')
 				.execute();
+		});
+		test('GET /oauth2/userinfo omits user ACLs when response validation is disabled', async () => {
+			const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
+			const staffUser = await setUserACLs(harness, endUser, ['admin:authenticate']);
+			const authCodeResponse = await authorizeOAuth2(harness, staffUser.token, {
+				client_id: application.id,
+				redirect_uri: redirectURI,
+				scope: 'identify',
+			});
+			const tokenResponse = await exchangeOAuth2AuthorizationCode(harness, {
+				client_id: application.id,
+				client_secret: application.client_secret,
+				code: authCodeResponse.code,
+				redirect_uri: redirectURI,
+			});
+			Config.dev.validateResponses = false;
+			const json = await createBuilder<Record<string, unknown>>(harness, `Bearer ${tokenResponse.access_token}`)
+				.get('/oauth2/userinfo')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(json).not.toHaveProperty('acls');
 		});
 		test('GET /oauth2/userinfo with session token is unauthorized', async () => {
 			const account = await createTestAccount(harness);

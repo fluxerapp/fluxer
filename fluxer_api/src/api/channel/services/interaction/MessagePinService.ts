@@ -113,9 +113,10 @@ export class MessagePinService extends MessageInteractionBase {
 		const items = trimmed.flatMap((message: Message, index) => {
 			const messageResponse = messageResponses[index];
 			if (!messageResponse || !message.pinnedTimestamp) return [];
+			const {referenced_message: _referencedMessage, reactions: _reactions, ...pinnedMessage} = messageResponse;
 			return [
 				{
-					message: messageResponse,
+					message: pinnedMessage,
 					pinned_at: message.pinnedTimestamp.toISOString(),
 				},
 			];

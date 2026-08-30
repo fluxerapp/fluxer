@@ -181,7 +181,9 @@ export class MessageRetrievalService {
 				}),
 			),
 		);
-		const messageResponses = foundMessages.filter((message): message is MessageResponse => message !== null);
+		const messageResponses = foundMessages
+			.filter((message): message is MessageResponse => message !== null)
+			.map(({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage);
 		return {
 			channels: messageResponses.length > 0 ? [await this.mapSearchChannelResponse(channel, userId, requestCache)] : [],
 			messages: messageResponses,

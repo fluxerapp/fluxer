@@ -366,6 +366,7 @@ export interface MasterConfig {
 		disable_rate_limits: boolean;
 		test_mode_enabled: boolean;
 		test_harness_token?: string;
+		validate_responses?: boolean;
 	};
 	geoip: {
 		maxmind_db_path: string;
