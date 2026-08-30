@@ -28,7 +28,7 @@ export type CandidatePlan =
 	| {kind: 'partitionKeys'; partitionKeys: Array<string>}
 	| {kind: 'scan'};
 
-export interface QueryPlan {
+interface QueryPlan {
 	candidates: CandidatePlan;
 	exact: boolean;
 }
@@ -43,7 +43,7 @@ interface QueryShape {
 	summary: string;
 }
 
-export interface PlanFragments {
+interface PlanFragments {
 	predicate: string;
 	params: Array<unknown>;
 }

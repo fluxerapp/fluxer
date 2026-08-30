@@ -339,29 +339,6 @@ WHERE table_name = 'messages'
 	});
 }
 
-export async function legacyPruneExpiredPostgresKvRows(client: IPostgresClient, batchSize = 5000): Promise<number> {
-	if (!Number.isInteger(batchSize) || batchSize <= 0) {
-		throw new Error('Postgres KV prune batch size must be a positive integer');
-	}
-	const table = quoteIdentifier(client.kvTable());
-	const result = await client.query(
-		`
-WITH expired AS (
-	SELECT table_name, row_key
-	FROM ${table}
-	WHERE expires_at IS NOT NULL AND expires_at <= now()
-	ORDER BY expires_at
-	LIMIT $1
-	FOR UPDATE SKIP LOCKED
-)
-DELETE FROM ${table} kv
-USING expired
-WHERE kv.table_name = expired.table_name AND kv.row_key = expired.row_key`,
-		[batchSize],
-	);
-	return result.rowCount ?? 0;
-}
-
 export class LegacyPostgresKvQueryExecutor {
 	private readonly table: string;
 
