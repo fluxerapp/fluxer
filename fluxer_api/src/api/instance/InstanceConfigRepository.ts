@@ -800,6 +800,8 @@ export class InstanceConfigRepository {
 	private subscriberInitialized = false;
 	private subscriberInitializationPromise: Promise<boolean> | null = null;
 	private messageHandler: ((channel: string, message: string) => void) | null = null;
+	private effectiveBlueskyConfig: BlueskyOAuthConfig | null = null;
+	private effectiveBlueskyConfigSource: string | null = null;
 
 	constructor(kvClient: IKVProvider | null = null) {
 		this.kvClient = kvClient;
@@ -1303,14 +1305,19 @@ export class InstanceConfigRepository {
 	}
 
 	async getEffectiveBlueskyConfig(): Promise<BlueskyOAuthConfig> {
-		const integrations = await this.getInstanceIntegrationsConfig();
+		const raw = await this.getConfig(INSTANCE_INTEGRATIONS_CONFIG_KEY);
+		const memoized = this.effectiveBlueskyConfig;
+		if (memoized && this.effectiveBlueskyConfigSource === raw) {
+			return memoized;
+		}
+		const integrations = normalizeInstanceIntegrationsConfig(raw ? parseJsonRecord(raw) : null);
 		const runtimeKeys = integrations.bluesky.keys.flatMap((key): Array<BlueskyOAuthKeyConfig> => {
 			if (!key.private_key) return [];
 			return [{kid: key.kid, private_key: key.private_key}];
 		});
 		const keys = runtimeKeys.length > 0 ? runtimeKeys : Config.auth.bluesky.keys;
 		const enabled = (integrations.bluesky.enabled ?? Config.auth.bluesky.enabled) && keys.length > 0;
-		return {
+		const effective: BlueskyOAuthConfig = {
 			...Config.auth.bluesky,
 			enabled,
 			client_name: integrations.bluesky.client_name ?? Config.auth.bluesky.client_name,
@@ -1320,6 +1327,9 @@ export class InstanceConfigRepository {
 			policy_uri: integrations.bluesky.policy_uri ?? Config.auth.bluesky.policy_uri,
 			keys,
 		};
+		this.effectiveBlueskyConfigSource = raw;
+		this.effectiveBlueskyConfig = effective;
+		return effective;
 	}
 
 	async getInstanceIntegrationsAdminConfig(): Promise<InstanceIntegrationsAdminConfig> {

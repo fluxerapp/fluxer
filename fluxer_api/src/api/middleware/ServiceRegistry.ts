@@ -181,6 +181,8 @@ let _blueskyOAuthService: IBlueskyOAuthService | undefined;
 let _blueskyOAuthInitializationPromise: Promise<IBlueskyOAuthService> | null = null;
 let _blueskyOAuthConfigSignature: string | null = null;
 let _blueskyOAuthInitializationSignature: string | null = null;
+let _blueskyOAuthSignatureSource: BlueskyOAuthConfig | null = null;
+let _blueskyOAuthSignatureValue: string | null = null;
 let _disabledBlueskyOAuthService: DisabledBlueskyOAuthService | undefined;
 
 export function setInjectedBlueskyOAuthService(service: IBlueskyOAuthService | undefined): void {
@@ -195,7 +197,13 @@ function getDisabledBlueskyOAuthService(): DisabledBlueskyOAuthService {
 }
 
 function getBlueskyOAuthConfigSignature(config: BlueskyOAuthConfig): string {
-	return JSON.stringify(config);
+	if (_blueskyOAuthSignatureSource === config && _blueskyOAuthSignatureValue !== null) {
+		return _blueskyOAuthSignatureValue;
+	}
+	const signature = JSON.stringify(config);
+	_blueskyOAuthSignatureSource = config;
+	_blueskyOAuthSignatureValue = signature;
+	return signature;
 }
 
 export async function resolveBlueskyOAuthService(
@@ -315,6 +323,8 @@ export function resetServiceRegistryForTesting(): void {
 	_blueskyOAuthInitializationPromise = null;
 	_blueskyOAuthConfigSignature = null;
 	_blueskyOAuthInitializationSignature = null;
+	_blueskyOAuthSignatureSource = null;
+	_blueskyOAuthSignatureValue = null;
 	_disabledBlueskyOAuthService = undefined;
 	voiceTopology = null;
 	voiceAvailabilityService = null;
