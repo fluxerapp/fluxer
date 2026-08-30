@@ -153,10 +153,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 		return this.tokenRepository.deletePhoneToken(token);
 	}
 
-	async updateUserActivity(userId: UserID, clientIp: string): Promise<void> {
-		return this.ipAuthorizationRepository.updateUserActivity(userId, clientIp);
-	}
-
 	async checkIpAuthorized(userId: UserID, ip: string): Promise<boolean> {
 		return this.ipAuthorizationRepository.checkIpAuthorized(userId, ip);
 	}

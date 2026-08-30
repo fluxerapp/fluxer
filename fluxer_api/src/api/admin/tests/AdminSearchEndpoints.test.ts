@@ -3,6 +3,7 @@
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
 import {createDmChannel, createFriendship, createGuild} from '../../channel/tests/ChannelTestUtils';
+import {getUserActivityBuffer} from '../../middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder} from '../../test/TestRequestBuilder';
@@ -13,6 +14,7 @@ async function setLastActiveIp(harness: ApiTestHarness, token: string, ip: strin
 		.header('x-forwarded-for', ip)
 		.expect(HTTP_STATUS.OK)
 		.execute();
+	await getUserActivityBuffer().drainAndFlush();
 }
 
 describe('Admin Search Endpoints', () => {

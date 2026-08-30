@@ -174,6 +174,7 @@ export class UserDataRepository {
 		};
 	}> {
 		const {userId, lastActiveAt, lastActiveIp} = params;
+		const previousData = (await this.getActivityTracking(userId)) ?? {last_active_at: null, last_active_ip: null};
 		await upsertOne(
 			Users.patchByPk(
 				{user_id: userId},
@@ -184,7 +185,7 @@ export class UserDataRepository {
 			),
 		);
 		return {
-			previousData: {last_active_at: null, last_active_ip: null},
+			previousData,
 			updatedData: {last_active_at: lastActiveAt, last_active_ip: lastActiveIp ?? null},
 		};
 	}

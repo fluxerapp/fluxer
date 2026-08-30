@@ -163,7 +163,7 @@ export class UserIndexRepository {
 				);
 			}
 		}
-		await batch.execute();
+		await batch.execute(false);
 	}
 
 	async deleteIndices(

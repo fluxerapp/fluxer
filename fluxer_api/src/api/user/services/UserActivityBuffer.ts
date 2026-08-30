@@ -6,8 +6,9 @@ import type {UserID} from '../../BrandedTypes';
 import {upsertOne} from '../../database/CassandraQueryExecution';
 import {Db} from '../../database/CassandraTypes';
 import {Logger} from '../../Logger';
-import {AuthSessions, Users} from '../../Tables';
+import {AuthSessions} from '../../Tables';
 import {isJsonRecord, parseJsonRecord} from '../../utils/JsonBoundaryUtils';
+import {UserAccountRepository} from '../repositories/account/UserAccountRepository';
 
 const PENDING_HASH_KEY = 'user_activity:pending';
 const PENDING_AUTH_SESSION_HASH_KEY = 'auth_session_activity:pending';
@@ -15,6 +16,10 @@ const AUTH_SESSION_TOUCH_KEY_PREFIX = 'auth_session_activity:touched:';
 const WRITE_CONCURRENCY = 64;
 const AUTH_SESSION_TOUCH_DEBOUNCE_TTL_SECONDS = seconds('5 minutes');
 type ActivityWriter = typeof upsertOne;
+
+interface UserActivityAccountWriter {
+	updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<void>;
+}
 
 interface PendingEntry {
 	ts: number;
@@ -58,10 +63,16 @@ function isStringRecord(value: unknown): value is Record<string, string> {
 export class UserActivityBuffer {
 	private readonly kv: IKVProvider;
 	private readonly writer: ActivityWriter;
+	private readonly accounts: UserActivityAccountWriter;
 
-	constructor(kv: IKVProvider, writer: ActivityWriter = upsertOne) {
+	constructor(
+		kv: IKVProvider,
+		writer: ActivityWriter = upsertOne,
+		accounts: UserActivityAccountWriter = new UserAccountRepository(kv),
+	) {
 		this.kv = kv;
 		this.writer = writer;
+		this.accounts = accounts;
 	}
 
 	recordActivity(userId: UserID, timestamp: Date, ip: string | null): void {
@@ -128,15 +139,11 @@ export class UserActivityBuffer {
 			const chunk = drained.slice(i, i + WRITE_CONCURRENCY);
 			const results = await Promise.allSettled(
 				chunk.map(({userId, entry}) =>
-					this.writer(
-						Users.patchByPk(
-							{user_id: userId},
-							{
-								last_active_at: Db.set(new Date(entry.ts)),
-								last_active_ip: entry.ip !== null ? Db.set(entry.ip) : Db.clear(),
-							},
-						),
-					),
+					this.accounts.updateLastActiveAt({
+						userId,
+						lastActiveAt: new Date(entry.ts),
+						lastActiveIp: entry.ip ?? undefined,
+					}),
 				),
 			);
 			for (const r of results) {

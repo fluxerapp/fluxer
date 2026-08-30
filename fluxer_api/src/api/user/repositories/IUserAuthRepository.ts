@@ -44,7 +44,6 @@ export interface IUserAuthRepository {
 	createPhoneToken(token: PhoneVerificationToken, phone: string, userId: UserID | null): Promise<void>;
 	getPhoneToken(token: PhoneVerificationToken): Promise<PhoneTokenRow | null>;
 	deletePhoneToken(token: PhoneVerificationToken): Promise<void>;
-	updateUserActivity(userId: UserID, clientIp: string): Promise<void>;
 	checkIpAuthorized(userId: UserID, ip: string): Promise<boolean>;
 	createAuthorizedIp(userId: UserID, ip: string): Promise<void>;
 	createIpAuthorizationToken(userId: UserID, token: string, email: string): Promise<void>;

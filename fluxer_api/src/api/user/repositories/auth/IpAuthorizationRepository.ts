@@ -111,15 +111,6 @@ export class IpAuthorizationRepository {
 		return {userId: result.user_id, email: result.email};
 	}
 
-	async updateUserActivity(userId: UserID, clientIp: string): Promise<void> {
-		const now = new Date();
-		await this.userAccountRepository.updateLastActiveAt({
-			userId,
-			lastActiveAt: now,
-			lastActiveIp: clientIp,
-		});
-	}
-
 	async getAuthorizedIps(userId: UserID): Promise<
 		Array<{
 			ip: string;

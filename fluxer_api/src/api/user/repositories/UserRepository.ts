@@ -348,10 +348,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.authRepo.deletePhoneToken(token);
 	}
 
-	async updateUserActivity(userId: UserID, clientIp: string): Promise<void> {
-		return this.authRepo.updateUserActivity(userId, clientIp);
-	}
-
 	async checkIpAuthorized(userId: UserID, ip: string): Promise<boolean> {
 		return this.authRepo.checkIpAuthorized(userId, ip);
 	}

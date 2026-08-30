@@ -5,6 +5,7 @@ import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUser
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
 import {createGuild} from '../../channel/tests/ChannelTestUtils';
+import {getUserActivityBuffer} from '../../middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
@@ -40,6 +41,7 @@ async function setLastActiveIp(harness: ApiTestHarness, token: string, ip: strin
 		.header('x-forwarded-for', ip)
 		.expect(HTTP_STATUS.OK)
 		.execute();
+	await getUserActivityBuffer().drainAndFlush();
 }
 
 describe('Admin Search Field Coverage', () => {

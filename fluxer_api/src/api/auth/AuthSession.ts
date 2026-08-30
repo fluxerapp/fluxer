@@ -35,15 +35,6 @@ interface LogoutAuthSessionsParams {
 	sessionIdHashes: Array<string>;
 }
 
-interface UpdateUserActivityParams {
-	userId: UserID;
-	clientIp: string;
-	user?: User;
-	action?: 'session_authenticated' | 'bearer_fallback_session_authenticated' | 'unknown';
-	tokenType?: 'session' | 'bearer';
-	sessionId?: string;
-}
-
 interface DispatchAuthSessionChangeParams {
 	userId: UserID;
 	oldAuthSessionIdHash: string;
@@ -151,11 +142,6 @@ export async function getAuthSessions(ctx: ApiContext, userId: UserID): Promise<
 
 export async function updateAuthSessionLastUsed(ctx: ApiContext, tokenHash: Uint8Array): Promise<void> {
 	await ctx.services.userActivityBuffer.recordAuthSessionActivity(Buffer.from(tokenHash), new Date());
-}
-
-export async function updateUserActivity(ctx: ApiContext, {userId, clientIp}: UpdateUserActivityParams): Promise<void> {
-	const {users} = ctx.services;
-	await users.updateUserActivity(userId, clientIp);
 }
 
 export async function revokeToken(ctx: ApiContext, token: string): Promise<void> {

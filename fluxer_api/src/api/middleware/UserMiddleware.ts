@@ -112,17 +112,6 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		if (authSession) {
 			void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
 			const user = await apiContext.services.users.findUniqueAssert(authSession.userId);
-			const sessionId = Buffer.from(authSession.sessionIdHash).toString('base64url');
-			void AuthSession.updateUserActivity(apiContext, {
-				userId: authSession.userId,
-				clientIp: resolvedClientIp,
-				user,
-				action: 'session_authenticated',
-				tokenType: 'session',
-				sessionId,
-			}).catch((error: unknown) => {
-				Logger.warn({error, userId: authSession.userId}, 'Failed to update user activity telemetry');
-			});
 			ctx.set('authSession', authSession);
 			ctx.set('authTokenType', 'session');
 			setUserInContext(ctx, user, true);
