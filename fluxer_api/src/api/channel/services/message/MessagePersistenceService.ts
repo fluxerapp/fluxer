@@ -254,7 +254,7 @@ export class MessagePersistenceService {
 			has_reaction: false,
 			version: 1,
 		};
-		const message = await this.channelRepository.messages.upsertMessage(messageRowData);
+		const message = await this.channelRepository.messages.upsertMessage(messageRowData, null);
 		const enqueueDeferredEmbeds = await this.runPostPersistenceOperations({
 			message,
 			params,

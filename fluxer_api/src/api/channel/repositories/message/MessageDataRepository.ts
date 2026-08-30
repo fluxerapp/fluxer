@@ -538,6 +538,28 @@ export class MessageDataRepository {
 		);
 	}
 
+	private async recordChannelStateForMessage(
+		channelId: ChannelID,
+		messageId: MessageID,
+		messageBucket: number,
+	): Promise<void> {
+		const state = await this.getChannelState(channelId);
+		const prev = state?.last_message_id ?? null;
+		const patch = {
+			created_bucket: Db.set(BucketUtils.makeBucket(channelId)),
+			has_messages: Db.set(true),
+			updated_at: Db.set(new Date()),
+		};
+		await upsertOne(
+			ChannelState.patchByPk(
+				{channel_id: channelId},
+				prev !== null && messageId <= prev
+					? patch
+					: {...patch, last_message_id: Db.set(messageId), last_message_bucket: Db.set(messageBucket)},
+			),
+		);
+	}
+
 	private async getChannelState(channelId: ChannelID): Promise<ChannelStateRow | null> {
 		return fetchOne<ChannelStateRow>(FETCH_CHANNEL_STATE.bind({channel_id: channelId}));
 	}
@@ -718,19 +740,8 @@ export class MessageDataRepository {
 				updated_at: new Date(),
 			}),
 		);
-		const createdBucket = BucketUtils.makeBucket(data.channel_id);
-		batch.addPrepared(
-			ChannelState.patchByPk(
-				{channel_id: data.channel_id},
-				{
-					created_bucket: Db.set(createdBucket),
-					has_messages: Db.set(true),
-					updated_at: Db.set(new Date()),
-				},
-			),
-		);
-		await batch.execute();
-		await this.advanceChannelStateLastMessageIfNewer(data.channel_id, data.message_id, data.bucket);
+		await batch.execute(false);
+		await this.recordChannelStateForMessage(data.channel_id, data.message_id, data.bucket);
 		return new Message({...data, version: finalVersion});
 	}
 
