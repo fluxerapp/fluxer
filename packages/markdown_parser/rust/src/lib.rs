@@ -7,6 +7,7 @@ pub mod emoji;
 pub mod inline;
 pub mod json;
 pub mod links;
+pub mod native;
 pub mod normalize;
 pub mod parser;
 pub mod plaintext;
