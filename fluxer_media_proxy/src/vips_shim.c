@@ -532,9 +532,14 @@ static int fluxer_gif_setup_filter_graph(
         goto fail;
     sink_ctx = avfilter_graph_alloc_filter(graph, avfilter_get_by_name("buffersink"), "out");
     if (sink_ctx == NULL) goto fail;
-    enum AVPixelFormat sink_fmts[] = { AV_PIX_FMT_PAL8, AV_PIX_FMT_NONE };
-    if (av_opt_set_int_list(sink_ctx, "pix_fmts", sink_fmts, AV_PIX_FMT_NONE,
-                            AV_OPT_SEARCH_CHILDREN) < 0)
+    enum AVPixelFormat sink_fmt = AV_PIX_FMT_PAL8;
+#if LIBAVFILTER_VERSION_INT >= AV_VERSION_INT(10, 6, 100)
+    if (av_opt_set_array(sink_ctx, "pixel_formats", AV_OPT_SEARCH_CHILDREN,
+                         0, 1, AV_OPT_TYPE_PIXEL_FMT, &sink_fmt) < 0)
+#else
+    if (av_opt_set_bin(sink_ctx, "pix_fmts", (const uint8_t *)&sink_fmt,
+                       sizeof(sink_fmt), AV_OPT_SEARCH_CHILDREN) < 0)
+#endif
         goto fail;
     if (avfilter_init_dict(sink_ctx, NULL) < 0) goto fail;
 
