@@ -127,6 +127,24 @@ env_only_push_and_http_runtime_config_test() ->
         end
     ).
 
+rpc_concurrency_keys_are_independent_test() ->
+    with_envs(
+        [
+            {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "128"},
+            {"FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS", "2048"}
+        ],
+        fun() ->
+            Config = fluxer_gateway_config:load(),
+            ?assertEqual(128, maps:get(gateway_http_rpc_max_concurrency, Config)),
+            ?assertEqual(2048, maps:get(gateway_nats_rpc_max_handlers, Config))
+        end
+    ).
+
+rpc_concurrency_key_defaults_test() ->
+    Config = fluxer_gateway_config:build_config(#{}),
+    ?assertEqual(512, maps:get(gateway_nats_rpc_max_handlers, Config)),
+    ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config)).
+
 optional_string_test() ->
     ?assertEqual(undefined, fluxer_gateway_config:optional_string(undefined)),
     ?assertEqual("hello", fluxer_gateway_config:optional_string(<<"hello">>)),

@@ -15,7 +15,7 @@
     build_connect_opts/1
 ]).
 
--define(DEFAULT_MAX_HANDLERS, 1024).
+-define(DEFAULT_MAX_HANDLERS, 512).
 -define(RECONNECT_DELAY_MS, 2000).
 -define(CONNECT_TIMEOUT_MS, 10000).
 -define(RPC_SUBJECT_WILDCARD, <<"rpc.gateway.>">>).
@@ -218,7 +218,7 @@ schedule_reconnect(State) ->
 
 -spec max_handlers() -> pos_integer().
 max_handlers() ->
-    case fluxer_gateway_env:get(gateway_http_rpc_max_concurrency) of
+    case fluxer_gateway_env:get(gateway_nats_rpc_max_handlers) of
         Value when is_integer(Value), Value > 0 -> Value;
         _ -> ?DEFAULT_MAX_HANDLERS
     end.

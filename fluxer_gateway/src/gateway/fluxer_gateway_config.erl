@@ -99,6 +99,9 @@ env_gateway_base_config() ->
         <<"gateway_http_rpc_max_concurrency">> => env_int(
             "FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", 512
         ),
+        <<"gateway_nats_rpc_max_handlers">> => env_int(
+            "FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS", 512
+        ),
         <<"gateway_http_failure_threshold">> => env_int(
             "FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD", 6
         ),
@@ -205,6 +208,8 @@ build_core_config(Service, Internal, Nats, Proxy) ->
         nats_core_url => get_string(Nats, <<"core_url">>, "nats://127.0.0.1:4222"),
         nats_auth_token => get_string(Nats, <<"auth_token">>, ""),
         rpc_auth_token => get_string(Service, <<"rpc_auth_token">>, ""),
+        gateway_nats_rpc_max_handlers =>
+            get_int(Service, <<"gateway_nats_rpc_max_handlers">>, 512),
         identify_rate_limit_enabled => get_bool(
             Service, <<"identify_rate_limit_enabled">>, false
         )

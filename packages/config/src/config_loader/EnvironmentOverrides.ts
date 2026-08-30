@@ -211,6 +211,10 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['services', 'gateway', 'gateway_http_rpc_max_concurrency'],
 		parse: parseEnvValue,
 	},
+	FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS: {
+		path: ['services', 'gateway', 'gateway_nats_rpc_max_handlers'],
+		parse: parseEnvValue,
+	},
 	FLUXER_GATEWAY_SHUTDOWN_DRAIN_WAIT_MS: {
 		path: ['services', 'gateway', 'shutdown_drain_wait_ms'],
 		parse: parseEnvValue,
