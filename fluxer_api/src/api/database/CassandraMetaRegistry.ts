@@ -15,6 +15,7 @@ interface TableMetadata {
 }
 
 const kvMetaRegistry = new Map<string, KvQueryMeta<Record<string, unknown>>>();
+const kvMetaKeyCache = new Map<string, string>();
 const tableRegistry = new Map<string, TableMetadata>();
 
 export function registerTableSpec<Row extends object>(tableSpec: KvTableSpec<Row>): void {
@@ -32,10 +33,17 @@ function normalizeCqlForRegistry(cql: string): string {
 }
 
 export function registerKvMeta(cql: string, meta: KvQueryMeta): void {
-	kvMetaRegistry.set(normalizeCqlForRegistry(cql), meta);
+	let key = kvMetaKeyCache.get(cql);
+	if (key === undefined) {
+		key = normalizeCqlForRegistry(cql);
+		kvMetaKeyCache.set(cql, key);
+	}
+	kvMetaRegistry.set(key, meta);
 }
 
 export function getKvMeta(cql: string): KvQueryMeta | undefined {
+	const key = kvMetaKeyCache.get(cql);
+	if (key !== undefined) return kvMetaRegistry.get(key);
 	return kvMetaRegistry.get(normalizeCqlForRegistry(cql));
 }
 
