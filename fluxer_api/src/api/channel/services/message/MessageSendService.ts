@@ -94,6 +94,11 @@ interface MessageSendServiceDeps {
 	directMessageSpamMitigationService: DirectMessageSpamMitigationService;
 }
 
+interface SendMessageResult {
+	message: Message;
+	authChannel: AuthenticatedChannel;
+}
+
 interface SendMentionData {
 	flags: number;
 	mentionUserIds: Array<UserID>;
@@ -783,7 +788,7 @@ export class MessageSendService {
 		channelId: ChannelID;
 		data: MessageRequest;
 		requestCache: RequestCache;
-	}): Promise<Message> {
+	}): Promise<SendMessageResult> {
 		const authChannel = await this.deps.channelAuthService.getChannelAuthenticated({
 			userId: user.id,
 			channelId,
@@ -792,7 +797,8 @@ export class MessageSendService {
 			throw InputValidationError.fromCode('content', ValidationErrorCodes.MUST_START_SESSION_BEFORE_SENDING);
 		}
 		if (isPersonalNotesChannel({userId: user.id, channelId})) {
-			return this.sendPersonalNoteMessage({user, channelId, data, requestCache});
+			const message = await this.sendPersonalNoteMessage({authChannel, user, channelId, data, requestCache});
+			return {message, authChannel};
 		}
 		const {channel, guild, checkPermission, hasPermission, member} = authChannel;
 		const {canEmbedLinks, canMentionEveryone, canAttachFiles} = await this.checkMessageSendPermissions({
@@ -820,7 +826,7 @@ export class MessageSendService {
 			expectedChannelId: channelId,
 		});
 		if (existingMessage) {
-			return existingMessage;
+			return {message: existingMessage, authChannel};
 		}
 		const referenceContext = await this.resolveReferenceContext({
 			data,
@@ -1031,7 +1037,7 @@ export class MessageSendService {
 		if (searchIndexOptions && !suppressDmRecipientDelivery) {
 			void this.deps.searchService.indexMessage(message, user.isBot, searchIndexOptions);
 		}
-		return message;
+		return {message, authChannel};
 	}
 
 	async sendWebhookMessage({
@@ -1270,17 +1276,19 @@ export class MessageSendService {
 	}
 
 	private async sendPersonalNoteMessage({
+		authChannel,
 		user,
 		channelId,
 		data,
 		requestCache,
 	}: {
+		authChannel: AuthenticatedChannel;
 		user: User;
 		channelId: ChannelID;
 		data: MessageRequest;
 		requestCache: RequestCache;
 	}): Promise<Message> {
-		const {channel} = await this.deps.channelAuthService.getChannelAuthenticated({userId: user.id, channelId});
+		const {channel} = authChannel;
 		const isForwardMessage = this.ensureMessageRequestIsValid({user, data, guildFeatures: null});
 		this.deps.embedAttachmentResolver.validateAttachmentReferences({
 			embeds: data.embeds,

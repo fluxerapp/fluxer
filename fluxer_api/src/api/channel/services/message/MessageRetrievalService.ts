@@ -63,11 +63,14 @@ export class MessageRetrievalService {
 		userId: UserID;
 		channelId: ChannelID;
 		messageId?: MessageID;
+		authChannel?: AuthenticatedChannel;
 	}): Promise<MessageResponseAccessContext> {
-		const authChannel = await this.channelAuthService.getChannelAuthenticated({
-			userId: params.userId,
-			channelId: params.channelId,
-		});
+		const authChannel =
+			params.authChannel ??
+			(await this.channelAuthService.getChannelAuthenticated({
+				userId: params.userId,
+				channelId: params.channelId,
+			}));
 		if (params.messageId && !(await this.canAccessMessage(authChannel, params.messageId))) {
 			throw new UnknownMessageError();
 		}

@@ -18,6 +18,7 @@ import type {IUserRepository} from '../../../user/IUserRepository';
 import {assertGuildMemberCanCommunicate} from '../../../utils/GuildCommunicationUtils';
 import type {MessageUpdateRequest} from '../../MessageTypes';
 import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
+import type {AuthenticatedChannel} from '../AuthenticatedChannel';
 import type {MessageChannelAuthService} from './MessageChannelAuthService';
 import type {MessageDispatchService} from './MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from './MessageEmbedAttachmentResolver';
@@ -31,6 +32,11 @@ import type {MessageValidationService} from './MessageValidationService';
 const MESSAGE_LOCK_TTL_SECONDS = 5;
 const MESSAGE_LOCK_ACQUIRE_ATTEMPTS = 6;
 const MESSAGE_LOCK_RETRY_DELAY_MS = 50;
+
+interface EditMessageResult {
+	message: Message;
+	authChannel: AuthenticatedChannel;
+}
 
 interface MessageEditServiceDeps {
 	channelRepository: IChannelRepositoryAggregate;
@@ -61,11 +67,12 @@ export class MessageEditService {
 		messageId: MessageID;
 		data: MessageUpdateRequest;
 		requestCache: RequestCache;
-	}): Promise<Message> {
-		const {channel, guild, hasPermission, member} = await this.deps.channelAuthService.getChannelAuthenticated({
+	}): Promise<EditMessageResult> {
+		const authChannel = await this.deps.channelAuthService.getChannelAuthenticated({
 			userId,
 			channelId,
 		});
+		const {channel, guild, hasPermission, member} = authChannel;
 		const hasNewAttachments =
 			data.attachments?.some(
 				(attachment) =>
@@ -131,7 +138,7 @@ export class MessageEditService {
 			});
 		}
 		if (message.authorId !== userId) {
-			return await this.withMessageLock(channelId, messageId, () =>
+			const editedMessage = await this.withMessageLock(channelId, messageId, () =>
 				this.deps.processingService.handleNonAuthorEdit({
 					message,
 					messageId,
@@ -144,6 +151,7 @@ export class MessageEditService {
 					dispatchService: this.deps.dispatchService,
 				}),
 			);
+			return {message: editedMessage, authChannel};
 		}
 		const isBugHunterBot = !!user?.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
 		const updateResult = await this.withMessageLock(channelId, messageId, () =>
@@ -184,7 +192,7 @@ export class MessageEditService {
 		if (channel.indexedAt != null) {
 			void this.deps.searchService.updateMessageIndex(updatedMessage);
 		}
-		return updatedMessage;
+		return {message: updatedMessage, authChannel};
 	}
 
 	private getEffectiveAllowedMentionsForEdit({
