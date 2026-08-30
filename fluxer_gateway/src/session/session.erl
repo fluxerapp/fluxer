@@ -80,7 +80,7 @@ start_link(SessionData) ->
 -spec init(map()) -> {ok, session_state()}.
 init(SessionData) ->
     process_flag(trap_exit, true),
-    erlang:process_flag(fullsweep_after, 0),
+    erlang:process_flag(fullsweep_after, 10),
     State0 = session_init:build_state(SessionData),
     ScheduleStartedAt = gateway_timings:start(),
     session_init:schedule_timers(State0),
@@ -318,7 +318,7 @@ terminate(Reason, State) ->
 
 -spec code_change(term(), session_state(), term()) -> {ok, session_state()}.
 code_change(_OldVsn, State, _Extra) ->
-    erlang:process_flag(fullsweep_after, 0),
+    erlang:process_flag(fullsweep_after, 10),
     erlang:garbage_collect(),
     {ok, State}.
 

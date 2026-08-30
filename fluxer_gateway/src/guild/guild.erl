@@ -30,7 +30,7 @@ update_counts(State) -> guild_maintenance:update_counts(State).
 -spec init(map()) -> {ok, guild_state(), timeout()}.
 init(GuildState) ->
     process_flag(trap_exit, true),
-    erlang:process_flag(fullsweep_after, 0),
+    erlang:process_flag(fullsweep_after, 10),
     State0 = guild_init:init_base_state(GuildState),
     State1 = guild_init:init_member_list(State0),
     State2 = guild_init:init_counts(State1),
@@ -431,7 +431,7 @@ terminate(Reason, State) ->
 
 -spec code_change(term(), guild_state(), term()) -> {ok, guild_state()}.
 code_change(_OldVsn, State, _Extra) ->
-    erlang:process_flag(fullsweep_after, 0),
+    erlang:process_flag(fullsweep_after, 10),
     erlang:garbage_collect(),
     {ok, State}.
 

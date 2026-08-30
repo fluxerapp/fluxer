@@ -71,7 +71,7 @@ maybe_cast(_BroadcasterPid, _Msg) ->
 
 -spec init([integer() | pid()]) -> {ok, map()}.
 init([GuildId, GuildPid]) when is_integer(GuildId), is_pid(GuildPid) ->
-    erlang:process_flag(fullsweep_after, 0),
+    erlang:process_flag(fullsweep_after, 10),
     _ = erlang:monitor(process, GuildPid),
     {ok, #{guild_id => GuildId, guild_pid => GuildPid}}.
 
