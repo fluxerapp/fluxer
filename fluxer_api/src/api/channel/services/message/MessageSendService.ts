@@ -238,7 +238,6 @@ export class MessageSendService {
 		user,
 		checkPermission,
 		hasPermission,
-		channelId,
 	}: {
 		guild: GuildResponse | null;
 		member: GuildMemberResponse | null;
@@ -247,7 +246,6 @@ export class MessageSendService {
 		user: User;
 		checkPermission: (permission: bigint) => Promise<void>;
 		hasPermission: (permission: bigint) => Promise<boolean>;
-		channelId: ChannelID;
 	}): Promise<{
 		canEmbedLinks: boolean;
 		canMentionEveryone: boolean;
@@ -286,7 +284,7 @@ export class MessageSendService {
 			}
 			await this.deps.channelAuthService.checkGuildVerification({user, guild, member});
 		} else if (channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM) {
-			await this.deps.channelAuthService.validateDMSendPermissions({channelId, userId: user.id});
+			await this.deps.channelAuthService.validateDMSendPermissions({channel, userId: user.id});
 		}
 		return {canEmbedLinks, canMentionEveryone, canAttachFiles};
 	}
@@ -320,7 +318,6 @@ export class MessageSendService {
 			user,
 			checkPermission,
 			hasPermission,
-			channelId,
 		});
 		this.deps.validationService.ensureTextChannel(channel);
 		const isForwardMessage = this.ensureMessageRequestIsValid({user, data, guildFeatures: guild?.features ?? null});
@@ -809,7 +806,6 @@ export class MessageSendService {
 			user,
 			checkPermission,
 			hasPermission,
-			channelId,
 		});
 		const needsSlowmodeCheck = guild && channel.rateLimitPerUser && channel.rateLimitPerUser > 0 && !user.isBot;
 		const slowmodeBypass = needsSlowmodeCheck ? await hasPermission(Permissions.BYPASS_SLOWMODE) : false;

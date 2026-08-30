@@ -37,6 +37,18 @@ export interface ChannelAuthOptions {
 	validateNsfw: boolean;
 }
 
+interface DMSendPermissionsByChannelParams {
+	channel: Channel;
+	userId: UserID;
+}
+
+interface DMSendPermissionsByChannelIdParams {
+	channelId: ChannelID;
+	userId: UserID;
+}
+
+type DMSendPermissionsParams = DMSendPermissionsByChannelParams | DMSendPermissionsByChannelIdParams;
+
 export abstract class BaseChannelAuthService {
 	protected abstract readonly options: ChannelAuthOptions;
 	protected dmPermissionValidator: DMPermissionValidator;
@@ -136,8 +148,10 @@ export abstract class BaseChannelAuthService {
 		};
 	}
 
-	async validateDMSendPermissions({channelId, userId}: {channelId: ChannelID; userId: UserID}): Promise<void> {
-		const channel = await this.channelRepository.channelData.findUnique(channelId);
+	async validateDMSendPermissions(params: DMSendPermissionsParams): Promise<void> {
+		const {userId} = params;
+		const channel =
+			'channel' in params ? params.channel : await this.channelRepository.channelData.findUnique(params.channelId);
 		if (!channel) throw new UnknownChannelError();
 		if (channel.type === ChannelTypes.GROUP_DM || channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
 			return;

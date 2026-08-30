@@ -4,13 +4,20 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
 import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
 import {getGatewayService} from '../../middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder} from '../../test/TestRequestBuilder';
-import {createPermissionOverwrite, setupTestGuildWithMembers} from './ChannelTestUtils';
+import {ChannelDataRepository} from '../repositories/ChannelDataRepository';
+import {
+	createDmChannel,
+	createFriendship,
+	createPermissionOverwrite,
+	setupTestGuildWithMembers,
+} from './ChannelTestUtils';
 
 describe('Message send permissions', () => {
 	let harness: ApiTestHarness;
@@ -137,6 +144,28 @@ describe('Message send permissions', () => {
 			getGuildData.mockRestore();
 			getGuildMember.mockRestore();
 			getUserPermissions.mockRestore();
+		}
+	});
+
+	it('resolves the DM channel once for routing and once for authentication when sending', async () => {
+		const sender = await createTestAccount(harness);
+		const recipient = await createTestAccount(harness);
+		await ensureSessionStarted(harness, sender.token);
+		await createFriendship(harness, sender, recipient);
+		const channel = await createDmChannel(harness, sender.token, recipient.userId);
+		const findUnique = vi.spyOn(ChannelDataRepository.prototype, 'findUnique');
+
+		try {
+			await createBuilder<MessageResponse>(harness, sender.token)
+				.post(`/channels/${channel.id}/messages`)
+				.body({content: 'no redundant reads'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const channelReads = findUnique.mock.calls.filter((call) => call[0].toString() === channel.id).length;
+
+			expect(channelReads).toBe(2);
+		} finally {
+			findUnique.mockRestore();
 		}
 	});
 
