@@ -2,7 +2,14 @@
 
 import type {ChannelID, MessageID, UserID} from '../BrandedTypes';
 import {channelIdToMessageId} from '../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
+import {
+	BatchBuilder,
+	deleteOneOrMany,
+	fetchMany,
+	fetchManyInChunks,
+	fetchOne,
+	upsertOne,
+} from '../database/CassandraQueryExecution';
 import {defineTable} from '../database/CassandraTableDsl';
 import {Db, type DbOp} from '../database/CassandraTypes';
 import type {ReadStateRow} from '../database/types/ChannelTypes';
@@ -21,6 +28,9 @@ const FETCH_READ_STATES_CQL = ReadStates.selectCql({
 const FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL = ReadStates.selectCql({
 	where: [ReadStates.where.eq('user_id'), ReadStates.where.eq('channel_id')],
 	limit: 1,
+});
+const FETCH_READ_STATES_BY_CHANNEL_IDS_CQL = ReadStates.selectCql({
+	where: [ReadStates.where.eq('user_id'), ReadStates.where.in('channel_id', 'channel_ids')],
 });
 const BULK_READ_STATE_BATCH_QUERY_LIMIT = 50;
 
@@ -215,18 +225,16 @@ export class ReadStateRepository implements IReadStateRepository {
 			messageId: MessageID;
 		}>,
 	): Promise<Array<ReadState>> {
-		const currentRows = await Promise.all(
-			readStates.map((readState) =>
-				fetchOne<ReadStateRow>(FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL, {
-					user_id: userId,
-					channel_id: readState.channelId,
-				}),
-			),
+		const currentRows = await fetchManyInChunks<ReadStateRow, ChannelID>(
+			FETCH_READ_STATES_BY_CHANNEL_IDS_CQL,
+			readStates.map((readState) => readState.channelId),
+			(chunk) => ({user_id: userId, channel_ids: chunk}),
 		);
+		const currentRowsByChannel = new Map(currentRows.map((row) => [row.channel_id, row]));
 		const batch = new BatchBuilder();
 		const results: Array<ReadState> = [];
-		for (const [index, readState] of readStates.entries()) {
-			const currentReadState = currentRows[index];
+		for (const readState of readStates) {
+			const currentReadState = currentRowsByChannel.get(readState.channelId);
 			if (currentReadState?.message_id != null && currentReadState.message_id > readState.messageId) {
 				results.push(new ReadState(currentReadState));
 				continue;
