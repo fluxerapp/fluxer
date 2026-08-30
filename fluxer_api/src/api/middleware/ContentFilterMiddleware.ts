@@ -3,6 +3,7 @@
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {createMiddleware} from 'hono/factory';
 import {Logger} from '../Logger';
+import {readRequestJsonBody} from '../utils/RequestJsonBody';
 import {extractUrlCandidates} from '../utils/UrlNormalizer';
 import {phraseBlocklistCache} from './PhraseBlocklistCache';
 import {urlBlocklistCache} from './UrlBlocklistCache';
@@ -136,13 +137,11 @@ const ContentFilterMiddleware = createMiddleware(async (ctx, next) => {
 	if (!contentType.includes('application/json')) {
 		return next();
 	}
-	let body: unknown;
-	try {
-		body = await ctx.req.json();
-	} catch {
+	const body = await readRequestJsonBody(ctx.req);
+	if (!body.parsed) {
 		return next();
 	}
-	const strings = extractStringValues(body);
+	const strings = extractStringValues(body.value);
 	if (strings.length === 0) {
 		return next();
 	}

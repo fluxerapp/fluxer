@@ -5,14 +5,16 @@ import {AdminRepository} from '../admin/AdminRepository';
 import {BANNED_PHRASES_REFRESH_CHANNEL} from '../constants/ContentModeration';
 import {Logger} from '../Logger';
 import {buildPhraseMatchForms, canonicalizeStoredPhrase} from '../utils/PhraseBlocklistNormalization';
+import {SubstringMatcher} from '../utils/SubstringMatcher';
 
 export class PhraseBlocklistCache {
 	private rawPhrases: Array<string> = [];
 	private rawPhraseSet = new Set<string>();
-	private wordPhrases: Array<string> = [];
-	private compactPhrases: Array<string> = [];
-	private asciiWordPhrases: Array<string> = [];
-	private asciiCompactPhrases: Array<string> = [];
+	private rawMatcher: SubstringMatcher | null = null;
+	private wordMatcher: SubstringMatcher | null = null;
+	private compactMatcher: SubstringMatcher | null = null;
+	private asciiWordMatcher: SubstringMatcher | null = null;
+	private asciiCompactMatcher: SubstringMatcher | null = null;
 	private isInitialized = false;
 	private adminRepository = new AdminRepository();
 	private kvClient: IKVProvider | null = null;
@@ -81,20 +83,12 @@ export class PhraseBlocklistCache {
 		if (this.rawPhrases.length === 0) return false;
 		const forms = buildPhraseMatchForms(text);
 		return (
-			this.matchAny(forms.raw, this.rawPhrases) ||
-			this.matchAny(forms.words, this.wordPhrases) ||
-			this.matchAny(forms.compact, this.compactPhrases) ||
-			this.matchAny(forms.asciiWords, this.asciiWordPhrases) ||
-			this.matchAny(forms.asciiCompact, this.asciiCompactPhrases)
+			this.rawMatcher?.test(forms.raw) === true ||
+			this.wordMatcher?.test(forms.words) === true ||
+			this.compactMatcher?.test(forms.compact) === true ||
+			this.asciiWordMatcher?.test(forms.asciiWords) === true ||
+			this.asciiCompactMatcher?.test(forms.asciiCompact) === true
 		);
-	}
-
-	private matchAny(text: string, phrases: Array<string>): boolean {
-		if (!text || phrases.length === 0) return false;
-		for (const phrase of phrases) {
-			if (text.includes(phrase)) return true;
-		}
-		return false;
 	}
 
 	private rebuildMatchers(): void {
@@ -115,10 +109,11 @@ export class PhraseBlocklistCache {
 		}
 		this.rawPhraseSet = rawPhraseSet;
 		this.rawPhrases = Array.from(rawPhraseSet);
-		this.wordPhrases = Array.from(wordPhraseSet);
-		this.compactPhrases = Array.from(compactPhraseSet);
-		this.asciiWordPhrases = Array.from(asciiWordPhraseSet);
-		this.asciiCompactPhrases = Array.from(asciiCompactPhraseSet);
+		this.rawMatcher = SubstringMatcher.fromPatterns(rawPhraseSet);
+		this.wordMatcher = SubstringMatcher.fromPatterns(wordPhraseSet);
+		this.compactMatcher = SubstringMatcher.fromPatterns(compactPhraseSet);
+		this.asciiWordMatcher = SubstringMatcher.fromPatterns(asciiWordPhraseSet);
+		this.asciiCompactMatcher = SubstringMatcher.fromPatterns(asciiCompactPhraseSet);
 	}
 
 	isPhraseBanned(phrase: string): boolean {
