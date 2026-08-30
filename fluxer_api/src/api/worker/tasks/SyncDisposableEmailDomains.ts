@@ -176,20 +176,20 @@ const syncDisposableEmailDomains: WorkerTaskHandler = async (_payload, helpers) 
 	await helpers.reportProgress(0, totalOps, `Applying ${addCount} adds and ${removeCount} removes`);
 	for (const domain of freshSet) {
 		if (currentSet.has(domain)) continue;
-		await throwIfCancelled(helpers);
 		await adminRepository.addDisposableEmailDomain(domain);
 		added++;
 		if (added % WRITE_PROGRESS_INTERVAL === 0) {
 			await helpers.reportProgress(added + removed, totalOps, null);
+			await throwIfCancelled(helpers);
 		}
 	}
 	for (const domain of currentSet) {
 		if (freshSet.has(domain)) continue;
-		await throwIfCancelled(helpers);
 		await adminRepository.removeDisposableEmailDomain(domain);
 		removed++;
 		if (removed % WRITE_PROGRESS_INTERVAL === 0) {
 			await helpers.reportProgress(added + removed, totalOps, null);
+			await throwIfCancelled(helpers);
 		}
 	}
 	await helpers.reportProgress(totalOps, totalOps, `+${added} added, -${removed} removed`);
