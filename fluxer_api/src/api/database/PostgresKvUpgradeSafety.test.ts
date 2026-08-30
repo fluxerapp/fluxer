@@ -12,7 +12,7 @@ import {
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {GuildMembers, ReadStates, Users} from '../Tables';
 import {LegacyPostgresKvQueryExecutor, legacyEnsurePostgresKvSchema} from './__testref__/LegacyPostgresKvQueryExecutor';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
+import {ensurePostgresKvSchema, POSTGRES_KV_MIGRATION_TABLE, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 
@@ -307,11 +307,11 @@ suite('postgres kv upgrade safety', () => {
 		}
 		const diff = await raw.query<{n: string}>(`
 			SELECT count(*) AS n FROM (
-				(SELECT table_name, partition_key, row_key FROM ${OLD}
-				 EXCEPT SELECT table_name, partition_key, row_key FROM ${NEW})
+				(SELECT table_name, partition_key, row_key FROM ${OLD} WHERE table_name <> '${POSTGRES_KV_MIGRATION_TABLE}'
+				 EXCEPT SELECT table_name, partition_key, row_key FROM ${NEW} WHERE table_name <> '${POSTGRES_KV_MIGRATION_TABLE}')
 				UNION ALL
-				(SELECT table_name, partition_key, row_key FROM ${NEW}
-				 EXCEPT SELECT table_name, partition_key, row_key FROM ${OLD})
+				(SELECT table_name, partition_key, row_key FROM ${NEW} WHERE table_name <> '${POSTGRES_KV_MIGRATION_TABLE}'
+				 EXCEPT SELECT table_name, partition_key, row_key FROM ${OLD} WHERE table_name <> '${POSTGRES_KV_MIGRATION_TABLE}')
 			) d`);
 		const schemaDiff = await raw.query<{n: string}>(`
 			SELECT count(*) AS n FROM (
@@ -377,30 +377,48 @@ suite('postgres kv upgrade safety', () => {
 		expect(failures.length).toBe(0);
 	}, 120_000);
 
-	it('backfills the messages partition key once and then skips the update', async () => {
+	it('backfills the messages partition key once and never scans for it again', async () => {
 		const BACKFILL = 'kv_backfill';
-		const legacyKey = `"c"${String.fromCharCode(31)}"b"${String.fromCharCode(31)}"m"`;
+		const SEP = String.fromCharCode(31);
 		const backfillClient = new TableClient(raw, BACKFILL);
+		const legacyKey = (id: string) => `"c"${SEP}"b"${SEP}"${id}"`;
+		const insertLegacy = async (id: string) => {
+			await raw.query(
+				`INSERT INTO ${BACKFILL} (table_name, partition_key, row_key, row_data) VALUES ('messages', $1, $1, '{}'::jsonb)`,
+				[legacyKey(id)],
+			);
+		};
+		const partitionOf = async (id: string) => {
+			const result = await raw.query<{partition_key: string}>(
+				`SELECT partition_key FROM ${BACKFILL} WHERE table_name = 'messages' AND row_key = $1`,
+				[legacyKey(id)],
+			);
+			return result.rows[0]?.partition_key;
+		};
 		await raw.query(`DROP TABLE IF EXISTS ${BACKFILL}`);
-		await ensurePostgresKvSchema(backfillClient);
-		await raw.query(
-			`INSERT INTO ${BACKFILL} (table_name, partition_key, row_key, row_data) VALUES ('messages', $1, $1, '{}'::jsonb)`,
-			[legacyKey],
-		);
+		await legacyEnsurePostgresKvSchema(backfillClient);
+		await insertLegacy('m1');
 		const pendingBefore = await raw.query(
 			`SELECT 1 FROM ${BACKFILL} WHERE table_name = 'messages' AND partition_key = row_key AND split_part(row_key, chr(31), 3) <> ''`,
 		);
 		expect(pendingBefore.rows.length).toBe(1);
 		await ensurePostgresKvSchema(backfillClient);
-		const after = await raw.query<{partition_key: string}>(`SELECT partition_key FROM ${BACKFILL}`);
-		expect(after.rows[0]?.partition_key).toBe(`"c"${String.fromCharCode(31)}"b"`);
+		const marker = await raw.query(
+			`SELECT 1 FROM ${BACKFILL} WHERE table_name = $1 AND row_key = 'messages_partition_key_v1'`,
+			[POSTGRES_KV_MIGRATION_TABLE],
+		);
 		const pendingAfter = await raw.query(
 			`SELECT 1 FROM ${BACKFILL} WHERE table_name = 'messages' AND partition_key = row_key AND split_part(row_key, chr(31), 3) <> ''`,
 		);
+		expect(await partitionOf('m1')).toBe(`"c"${SEP}"b"`);
 		expect(pendingAfter.rows.length).toBe(0);
+		expect(marker.rows.length).toBe(1);
+		await insertLegacy('m2');
 		await ensurePostgresKvSchema(backfillClient);
-		const stable = await raw.query<{partition_key: string}>(`SELECT partition_key FROM ${BACKFILL}`);
-		expect(stable.rows[0]?.partition_key).toBe(`"c"${String.fromCharCode(31)}"b"`);
+		const skipped = await partitionOf('m2');
+		console.log(`second boot left the new legacy row alone: partition_key=${skipped === legacyKey('m2')}`);
+		expect(skipped).toBe(legacyKey('m2'));
+		expect(await partitionOf('m1')).toBe(`"c"${SEP}"b"`);
 		await raw.query(`DROP TABLE IF EXISTS ${BACKFILL}`);
 	}, 120_000);
 

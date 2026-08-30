@@ -1082,8 +1082,8 @@ suite('PostgresKvQueryExecutor differential', () => {
 		);
 		await raw.query(`CREATE TABLE ${SEED_TABLE} AS TABLE ${LEGACY_TABLE}`);
 		await raw.query(`CREATE INDEX ${SEED_TABLE}_table_idx ON ${SEED_TABLE} (table_name)`);
-		await raw.query(`TRUNCATE ${LEGACY_TABLE}`);
 		for (const kv of [LEGACY_TABLE, NEXT_TABLE, ICU_TABLE]) {
+			await raw.query(`TRUNCATE ${kv}`);
 			await raw.query(`INSERT INTO ${kv} SELECT * FROM ${SEED_TABLE} ORDER BY table_name, row_key COLLATE "C"`);
 		}
 	}, 900_000);

@@ -63,6 +63,9 @@ const FULL_SCAN_LOG_KEY_LIMIT = 1024;
 const ENCODED_TYPE_KEY = '__fluxer_type';
 const POSTGRES_KV_SCHEMA_LOCK_NAMESPACE = 0x46584b56;
 const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT = '120s';
+const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT = '30min';
+export const POSTGRES_KV_MIGRATION_TABLE = '__fluxer_schema_migrations';
+const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION = 'messages_partition_key_v1';
 const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()';
 const MERGED_ROW_DATA = `CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE kv.row_data || EXCLUDED.row_data END`;
 const KEPT_EXPIRES_AT = `CASE WHEN ${EXPIRED_STORED_ROW} THEN NULL ELSE kv.expires_at END`;
@@ -723,7 +726,7 @@ export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<v
 	await client.transaction(async (db) => {
 		await db.query("SELECT set_config('statement_timeout', $1, true)", [POSTGRES_KV_SCHEMA_LOCK_TIMEOUT]);
 		await db.query('SELECT pg_advisory_xact_lock($1, hashtext($2))', [POSTGRES_KV_SCHEMA_LOCK_NAMESPACE, kvTable]);
-		await db.query("SELECT set_config('statement_timeout', '0', true)");
+		await db.query("SELECT set_config('statement_timeout', $1, true)", [POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT]);
 		await db.query(`
 CREATE TABLE IF NOT EXISTS ${table} (
 	table_name text NOT NULL,
@@ -752,20 +755,32 @@ CREATE TABLE IF NOT EXISTS ${table} (
 			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_message_reactions_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions'`,
 		);
 		await repairInvalidPostgresKvIndexes(db, kvTable);
-		const pending = await db.query(`
+		const migrated = await db.query(`SELECT 1 FROM ${table} WHERE table_name = $1 AND row_key = $2 LIMIT 1`, [
+			POSTGRES_KV_MIGRATION_TABLE,
+			POSTGRES_KV_MESSAGES_PARTITION_MIGRATION,
+		]);
+		if (migrated.rows.length === 0) {
+			const pending = await db.query(`
 SELECT 1
 FROM ${table}
 WHERE table_name = 'messages'
 	AND partition_key = row_key
 	AND split_part(row_key, chr(31), 3) <> ''
 LIMIT 1`);
-		if (pending.rows.length > 0) {
-			await db.query(`
+			if (pending.rows.length > 0) {
+				await db.query(`
 UPDATE ${table}
 SET partition_key = split_part(row_key, chr(31), 1) || chr(31) || split_part(row_key, chr(31), 2)
 WHERE table_name = 'messages'
 	AND partition_key = row_key
 	AND split_part(row_key, chr(31), 3) <> ''`);
+			}
+			await db.query(
+				`INSERT INTO ${table} (table_name, partition_key, row_key, row_data)
+VALUES ($1, $2, $2, jsonb_build_object('applied_at', now()))
+ON CONFLICT (table_name, row_key) DO NOTHING`,
+				[POSTGRES_KV_MIGRATION_TABLE, POSTGRES_KV_MESSAGES_PARTITION_MIGRATION],
+			);
 		}
 		await db.query(`DROP INDEX IF EXISTS ${quoteIdentifier(`${kvTable}_partition_idx`)}`);
 	});

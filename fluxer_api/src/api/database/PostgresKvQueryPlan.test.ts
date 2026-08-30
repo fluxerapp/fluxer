@@ -2,9 +2,17 @@
 
 import cassandra from 'cassandra-driver';
 import {describe, expect, it} from 'vitest';
+import '../Tables';
+import {getTableMetadata} from './CassandraMetaRegistry';
 import {defineTable} from './CassandraTableDsl';
 import type {CassandraParams, PreparedQuery} from './CassandraTypes';
-import {buildCandidatePlan, type CandidatePlan, keyFromColumns, matchesWhere} from './PostgresKvQueryExecutor';
+import {
+	buildCandidatePlan,
+	type CandidatePlan,
+	keyFromColumns,
+	matchesWhere,
+	POSTGRES_KV_MIGRATION_TABLE,
+} from './PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 
@@ -486,5 +494,12 @@ describe('PostgresKvQueryExecutor key equality', () => {
 		expect(matchesWhere({a: localDate}, eqWhere, {a: localDate} as CassandraParams)).toBe(true);
 		expect(matchesWhere({a: localDate}, eqWhere, {a: '2020-01-01'} as CassandraParams)).toBe(false);
 		expect(matchesWhere({a: '2020-01-01'}, eqWhere, {a: localDate} as CassandraParams)).toBe(false);
+	});
+});
+
+describe('PostgresKvQueryExecutor migration bookkeeping', () => {
+	it('reserves a table name that no logical table can claim', () => {
+		expect(POSTGRES_KV_MIGRATION_TABLE.startsWith('__')).toBe(true);
+		expect(getTableMetadata(POSTGRES_KV_MIGRATION_TABLE)).toBeUndefined();
 	});
 });
