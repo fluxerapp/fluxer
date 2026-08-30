@@ -31,7 +31,7 @@ docker --version
 docker compose version
 ```
 
-Use Docker Engine 24 or newer and the Compose v2 plugin.
+Use Docker Engine 24 or newer and Compose v2.20.2 or newer. Older Compose plugins reject the API healthcheck's `start_interval` key. Engine 25 or newer acts on that key and brings the stack up faster.
 
 ## Step 2: Download the stack
 
