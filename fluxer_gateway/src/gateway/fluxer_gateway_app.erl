@@ -31,6 +31,7 @@ init_jose() ->
 -spec init_subsystems() -> ok.
 init_subsystems() ->
     _ = fluxer_gateway_env:load(),
+    gateway_compress:init(),
     gateway_cluster_metrics:init(),
     process_registry:init(),
     passive_sync_registry:init(),

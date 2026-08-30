@@ -4,6 +4,7 @@
 -typing([eqwalizer]).
 
 -export([
+    init/0,
     new_context/1,
     compress/2,
     decompress/2,
@@ -18,6 +19,8 @@
 -define(MAX_DECOMPRESSED_SIZE, 10 * 1024 * 1024).
 -define(ZSTD_STREAM_BUFFER_SIZE, 64 * 1024).
 -define(ZSTD_COMPRESSION_LEVEL, 3).
+-define(ZSTD_AVAILABLE_KEY, {?MODULE, zstd_available}).
+-define(ZSTD_STREAM_AVAILABLE_KEY, {?MODULE, zstd_stream_available}).
 
 -type compression() :: none | zstd_frame | zstd_stream.
 
@@ -34,6 +37,12 @@
     stream_ctx => reference() | undefined,
     decompress_stream_ctx => reference()
 }.
+
+-spec init() -> ok.
+init() ->
+    _ = cache_availability(?ZSTD_AVAILABLE_KEY, probe_ezstd_available()),
+    _ = cache_availability(?ZSTD_STREAM_AVAILABLE_KEY, probe_ezstd_stream_available()),
+    ok.
 
 -spec parse_compression(binary() | undefined) -> compression().
 parse_compression(Value) ->
@@ -271,6 +280,27 @@ check_decompressed_size(Decompressed, Ctx) ->
 
 -spec ezstd_available() -> boolean().
 ezstd_available() ->
+    case persistent_term:get(?ZSTD_AVAILABLE_KEY, undefined) of
+        true -> true;
+        false -> false;
+        _ -> cache_availability(?ZSTD_AVAILABLE_KEY, probe_ezstd_available())
+    end.
+
+-spec ezstd_stream_available() -> boolean().
+ezstd_stream_available() ->
+    case persistent_term:get(?ZSTD_STREAM_AVAILABLE_KEY, undefined) of
+        true -> true;
+        false -> false;
+        _ -> cache_availability(?ZSTD_STREAM_AVAILABLE_KEY, probe_ezstd_stream_available())
+    end.
+
+-spec cache_availability(term(), boolean()) -> boolean().
+cache_availability(Key, Available) ->
+    persistent_term:put(Key, Available),
+    Available.
+
+-spec probe_ezstd_available() -> boolean().
+probe_ezstd_available() ->
     case code:ensure_loaded(ezstd) of
         {module, ezstd} ->
             erlang:function_exported(ezstd, compress, 2) andalso
@@ -279,8 +309,8 @@ ezstd_available() ->
             false
     end.
 
--spec ezstd_stream_available() -> boolean().
-ezstd_stream_available() ->
+-spec probe_ezstd_stream_available() -> boolean().
+probe_ezstd_stream_available() ->
     case code:ensure_loaded(ezstd) of
         {module, ezstd} ->
             erlang:function_exported(ezstd, create_compression_context, 1) andalso
@@ -366,6 +396,88 @@ check_decompressed_size_allows_exact_limit_test() ->
     Ctx = new_context(zstd_frame),
     ExactLimit = binary:copy(<<0>>, ?MAX_DECOMPRESSED_SIZE),
     ?assertMatch({ok, _, _}, check_decompressed_size(ExactLimit, Ctx)).
+
+init_caches_availability_test() ->
+    with_saved_availability(fun() ->
+        erase_cached_availability(),
+        ok = init(),
+        ?assertEqual(probe_ezstd_available(), persistent_term:get(?ZSTD_AVAILABLE_KEY)),
+        ?assertEqual(
+            probe_ezstd_stream_available(), persistent_term:get(?ZSTD_STREAM_AVAILABLE_KEY)
+        )
+    end).
+
+availability_falls_back_to_probe_when_uncached_test() ->
+    with_saved_availability(fun() ->
+        erase_cached_availability(),
+        ?assertEqual(probe_ezstd_available(), ezstd_available()),
+        ?assertEqual(probe_ezstd_stream_available(), ezstd_stream_available()),
+        ?assertEqual(probe_ezstd_available(), persistent_term:get(?ZSTD_AVAILABLE_KEY)),
+        ?assertEqual(
+            probe_ezstd_stream_available(), persistent_term:get(?ZSTD_STREAM_AVAILABLE_KEY)
+        )
+    end).
+
+cached_availability_false_rejects_zstd_test() ->
+    with_cached_availability(false, fun assert_zstd_unavailable/0).
+
+cached_availability_true_round_trips_test() ->
+    case probe_ezstd_stream_available() of
+        true -> with_cached_availability(true, fun assert_zstd_round_trip/0);
+        false -> ?assertEqual(skip, skip)
+    end.
+
+assert_zstd_unavailable() ->
+    Data = <<"cached availability payload">>,
+    NoneCtx = new_context(none),
+    ?assertEqual({ok, Data, NoneCtx}, compress(Data, NoneCtx)),
+    ?assertEqual({ok, Data, NoneCtx}, decompress(Data, NoneCtx)),
+    FrameCtx = new_context(zstd_frame),
+    ?assertEqual({error, {compress_failed, zstd_not_available}}, compress(Data, FrameCtx)),
+    ?assertEqual({error, {decompress_failed, zstd_not_available}}, decompress(Data, FrameCtx)),
+    StreamCtx = new_context(zstd_stream),
+    ?assertEqual(
+        {error, {compress_failed, zstd_stream_not_available}}, compress(Data, StreamCtx)
+    ),
+    ?assertEqual(
+        {error, {decompress_failed, zstd_stream_not_available}}, decompress(Data, StreamCtx)
+    ).
+
+assert_zstd_round_trip() ->
+    Data = <<"cached availability round trip payload">>,
+    FrameCtx = new_context(zstd_frame),
+    {ok, Frame, FrameCtx2} = compress(Data, FrameCtx),
+    ?assertMatch({ok, Data, _}, decompress(Frame, FrameCtx2)),
+    {ok, Streamed, _} = compress(Data, new_context(zstd_stream)),
+    ?assertMatch({ok, Data, _}, decompress(Streamed, new_context(zstd_stream))).
+
+availability_keys() ->
+    [?ZSTD_AVAILABLE_KEY, ?ZSTD_STREAM_AVAILABLE_KEY].
+
+with_saved_availability(Fun) ->
+    Previous = [{Key, persistent_term:get(Key, undefined)} || Key <- availability_keys()],
+    try
+        Fun()
+    after
+        lists:foreach(fun({Key, Value}) -> restore_availability(Key, Value) end, Previous)
+    end.
+
+with_cached_availability(Available, Fun) ->
+    with_saved_availability(fun() ->
+        put_cached_availability(Available),
+        Fun()
+    end).
+
+put_cached_availability(Available) ->
+    lists:foreach(fun(Key) -> cache_availability(Key, Available) end, availability_keys()).
+
+erase_cached_availability() ->
+    lists:foreach(fun(Key) -> restore_availability(Key, undefined) end, availability_keys()).
+
+restore_availability(Key, undefined) ->
+    persistent_term:erase(Key);
+restore_availability(Key, Value) ->
+    persistent_term:put(Key, Value).
 
 -ifdef(DEV_MODE).
 zstd_roundtrip_test() ->
