@@ -143,7 +143,7 @@ pub fn sniff(data: &[u8]) -> SniffInfo {
             out.height = u32::from_be_bytes(data[20..24].try_into().unwrap());
             out.has_alpha = data[25] == 4 || data[25] == 6;
         }
-        if data.windows(4).any(|w| w == b"acTL") {
+        if png_has_actl_before_idat(data) {
             out.mime = "image/apng";
             out.animated = true;
             out.frames = 2;
@@ -157,7 +157,7 @@ pub fn sniff(data: &[u8]) -> SniffInfo {
         };
     }
     if starts(data, b"GIF87a") || starts(data, b"GIF89a") {
-        let animated = data.windows(11).any(|w| w == b"NETSCAPE2.0");
+        let animated = gif_has_netscape_loop(data);
         return SniffInfo {
             mime: "image/gif",
             animated,
@@ -176,14 +176,7 @@ pub fn sniff(data: &[u8]) -> SniffInfo {
         };
     }
     if data.len() >= 12 && starts(data, b"RIFF") && &data[8..12] == b"WEBP" {
-        let animated = data.windows(4).any(|w| w == b"ANIM");
-        return SniffInfo {
-            mime: "image/webp",
-            animated,
-            frames: if animated { 2 } else { 1 },
-            has_alpha: data.windows(4).any(|w| w == b"ALPH"),
-            ..Default::default()
-        };
+        return webp_sniff(data);
     }
     if let Some(info) = iso_bmff_sniff(data) {
         return info;
@@ -280,6 +273,111 @@ pub fn sniff(data: &[u8]) -> SniffInfo {
         };
     }
     SniffInfo::default()
+}
+
+const PNG_MAX_HEADER_CHUNKS: usize = 64;
+const GIF_HEADER_SCAN_LIMIT: usize = 4096;
+const WEBP_MAX_HEADER_CHUNKS: usize = 16;
+
+fn png_has_actl_before_idat(data: &[u8]) -> bool {
+    let mut offset = 8;
+    for _ in 0..PNG_MAX_HEADER_CHUNKS {
+        let Some(header) = data.get(offset..).and_then(|rest| rest.get(..8)) else {
+            return false;
+        };
+        match &header[4..8] {
+            b"acTL" => return true,
+            b"IDAT" | b"IEND" => return false,
+            _ => {}
+        }
+        let length = u32::from_be_bytes(header[0..4].try_into().unwrap()) as usize;
+        let Some(next) = offset
+            .checked_add(12)
+            .and_then(|base| base.checked_add(length))
+        else {
+            return false;
+        };
+        offset = next;
+    }
+    false
+}
+
+fn gif_has_netscape_loop(data: &[u8]) -> bool {
+    let limit = data.len().min(GIF_HEADER_SCAN_LIMIT);
+    let Some(&packed) = data.get(10) else {
+        return false;
+    };
+    let mut offset = 13;
+    if packed & 0x80 != 0 {
+        offset += 3 << ((packed & 0x07) + 1);
+    }
+    while offset < limit {
+        if data[offset] != 0x21 {
+            return false;
+        }
+        let Some(&label) = data.get(offset + 1) else {
+            return false;
+        };
+        let mut sub = offset + 2;
+        if label == 0xff
+            && data.get(sub) == Some(&11)
+            && data.get(sub + 1..sub + 12) == Some(b"NETSCAPE2.0".as_slice())
+        {
+            return true;
+        }
+        loop {
+            let Some(&len) = data.get(sub) else {
+                return false;
+            };
+            sub += 1 + len as usize;
+            if len == 0 {
+                break;
+            }
+            if sub >= limit {
+                return false;
+            }
+        }
+        offset = sub;
+    }
+    false
+}
+
+fn webp_sniff(data: &[u8]) -> SniffInfo {
+    let mut out = SniffInfo {
+        mime: "image/webp",
+        ..Default::default()
+    };
+    let mut offset = 12;
+    for _ in 0..WEBP_MAX_HEADER_CHUNKS {
+        let Some(header) = data.get(offset..).and_then(|rest| rest.get(..8)) else {
+            break;
+        };
+        let size = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize;
+        match &header[0..4] {
+            b"VP8X" if size >= 10 => {
+                if let Some(&flags) = data.get(offset + 8) {
+                    out.animated |= flags & 0x02 != 0;
+                    out.has_alpha |= flags & 0x10 != 0;
+                }
+            }
+            b"ANIM" => out.animated = true,
+            b"ALPH" => out.has_alpha = true,
+            b"VP8 " | b"VP8L" | b"ANMF" => break,
+            _ => {}
+        }
+        let Some(next) = offset
+            .checked_add(8)
+            .and_then(|base| base.checked_add(size))
+            .and_then(|base| base.checked_add(size & 1))
+        else {
+            break;
+        };
+        offset = next;
+    }
+    if out.animated {
+        out.frames = 2;
+    }
+    out
 }
 
 fn brand_equals(brand: &[u8], literal: &[u8; 4]) -> bool {
@@ -491,23 +589,188 @@ mod tests {
         assert_eq!("image/bmp", sniff(b"BMxxxx").mime);
     }
 
+    fn png_chunk(kind: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+        let mut out = (payload.len() as u32).to_be_bytes().to_vec();
+        out.extend(kind);
+        out.extend(payload);
+        out.extend([0u8; 4]);
+        out
+    }
+
+    fn png_file(chunks: &[Vec<u8>]) -> Vec<u8> {
+        let mut ihdr = 8u32.to_be_bytes().to_vec();
+        ihdr.extend(8u32.to_be_bytes());
+        ihdr.extend([8, 6, 0, 0, 0]);
+        let mut out = b"\x89PNG\r\n\x1a\n".to_vec();
+        out.extend(png_chunk(b"IHDR", &ihdr));
+        for chunk in chunks {
+            out.extend(chunk);
+        }
+        out
+    }
+
+    fn gif_file(blocks: &[Vec<u8>]) -> Vec<u8> {
+        let mut out = b"GIF89a".to_vec();
+        out.extend(4u16.to_le_bytes());
+        out.extend(4u16.to_le_bytes());
+        out.extend([0x80, 0, 0]);
+        out.extend([0u8; 6]);
+        for block in blocks {
+            out.extend(block);
+        }
+        out.push(0x3b);
+        out
+    }
+
+    fn gif_netscape_block() -> Vec<u8> {
+        let mut out = vec![0x21, 0xff, 11];
+        out.extend(b"NETSCAPE2.0");
+        out.extend([3, 1, 0, 0, 0]);
+        out
+    }
+
+    fn gif_comment_block(payload: &[u8]) -> Vec<u8> {
+        let mut out = vec![0x21, 0xfe];
+        for part in payload.chunks(255) {
+            out.push(part.len() as u8);
+            out.extend(part);
+        }
+        out.push(0);
+        out
+    }
+
+    fn gif_image_block(payload: &[u8]) -> Vec<u8> {
+        let mut out = vec![0x2c];
+        out.extend([0u8; 8]);
+        out.push(0);
+        out.push(8);
+        for part in payload.chunks(255) {
+            out.push(part.len() as u8);
+            out.extend(part);
+        }
+        out.push(0);
+        out
+    }
+
+    fn riff_chunk(kind: &[u8; 4], payload: &[u8]) -> Vec<u8> {
+        let mut out = kind.to_vec();
+        out.extend((payload.len() as u32).to_le_bytes());
+        out.extend(payload);
+        if payload.len() % 2 == 1 {
+            out.push(0);
+        }
+        out
+    }
+
+    fn webp_vp8x(flags: u8) -> Vec<u8> {
+        let mut payload = vec![flags, 0, 0, 0];
+        payload.extend([7, 0, 0, 7, 0, 0]);
+        riff_chunk(b"VP8X", &payload)
+    }
+
+    fn webp_file(chunks: &[Vec<u8>]) -> Vec<u8> {
+        let mut body = b"WEBP".to_vec();
+        for chunk in chunks {
+            body.extend(chunk);
+        }
+        let mut out = b"RIFF".to_vec();
+        out.extend((body.len() as u32).to_le_bytes());
+        out.extend(body);
+        out
+    }
+
+    fn padded_marker(marker: &[u8], len: usize) -> Vec<u8> {
+        let mut out = vec![0x5a; len];
+        out[len / 2..len / 2 + marker.len()].copy_from_slice(marker);
+        out
+    }
+
     #[test]
     fn sniffs_apng_via_actl_chunk() {
-        let mut apng = b"\x89PNG\r\n\x1a\n".to_vec();
-        apng.extend([0u8; 8]);
-        apng.extend(b"IHDR");
-        apng.extend([0u8; 13]);
-        apng.extend(b"acTL");
-        let info = sniff(&apng);
+        let info = sniff(&png_file(&[
+            png_chunk(b"acTL", &[0, 0, 0, 2, 0, 0, 0, 0]),
+            png_chunk(b"IDAT", &[0u8; 16]),
+        ]));
         assert_eq!("image/apng", info.mime);
         assert!(info.animated);
     }
 
     #[test]
+    fn sniffs_apng_when_actl_follows_a_large_icc_profile() {
+        let icc = vec![0x11u8; 300_000];
+        let info = sniff(&png_file(&[
+            png_chunk(b"iCCP", &icc),
+            png_chunk(b"acTL", &[0, 0, 0, 2, 0, 0, 0, 0]),
+            png_chunk(b"IDAT", &[0u8; 16]),
+        ]));
+        assert_eq!("image/apng", info.mime);
+        assert!(info.animated);
+    }
+
+    #[test]
+    fn does_not_treat_actl_bytes_inside_png_image_data_as_animation() {
+        let info = sniff(&png_file(&[png_chunk(
+            b"IDAT",
+            &padded_marker(b"acTL", 1_000_000),
+        )]));
+        assert_eq!("image/png", info.mime);
+        assert!(!info.animated);
+    }
+
+    #[test]
+    fn sniffs_animated_gif_via_netscape_extension() {
+        let info = sniff(&gif_file(&[
+            gif_comment_block(b"made by a tool"),
+            gif_netscape_block(),
+            gif_image_block(&[0u8; 8]),
+        ]));
+        assert_eq!("image/gif", info.mime);
+        assert!(info.animated);
+        assert_eq!(2, info.frames);
+    }
+
+    #[test]
+    fn does_not_treat_netscape_bytes_inside_gif_image_data_as_animation() {
+        let info = sniff(&gif_file(&[gif_image_block(&padded_marker(
+            b"NETSCAPE2.0",
+            1_000_000,
+        ))]));
+        assert_eq!("image/gif", info.mime);
+        assert!(!info.animated);
+        assert_eq!(1, info.frames);
+    }
+
+    #[test]
     fn sniffs_animated_webp_via_anim_chunk() {
-        let info = sniff(b"RIFF\x00\x00\x00\x00WEBPVP8XANIMxxxx");
+        let info = sniff(&webp_file(&[
+            webp_vp8x(0x02),
+            riff_chunk(b"ANIM", &[0, 0, 0, 0, 0, 0]),
+            riff_chunk(b"ANMF", &[0u8; 32]),
+        ]));
         assert_eq!("image/webp", info.mime);
         assert!(info.animated);
+    }
+
+    #[test]
+    fn sniffs_webp_alpha_via_alph_chunk() {
+        let info = sniff(&webp_file(&[
+            webp_vp8x(0x10),
+            riff_chunk(b"ALPH", &[0u8; 8]),
+            riff_chunk(b"VP8 ", &[0u8; 16]),
+        ]));
+        assert!(info.has_alpha);
+        assert!(!info.animated);
+    }
+
+    #[test]
+    fn does_not_treat_anim_bytes_inside_webp_image_data_as_animation() {
+        let info = sniff(&webp_file(&[riff_chunk(
+            b"VP8 ",
+            &padded_marker(b"ANIM", 1_000_000),
+        )]));
+        assert_eq!("image/webp", info.mime);
+        assert!(!info.animated);
+        assert!(!info.has_alpha);
     }
 
     #[test]

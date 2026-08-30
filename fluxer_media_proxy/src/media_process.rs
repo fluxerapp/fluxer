@@ -1074,11 +1074,8 @@ fn output_is_sdr(format: AssetExtension) -> bool {
     )
 }
 
-fn source_maybe_hdr(input: &[u8]) -> bool {
-    matches!(
-        mime::sniff(input).mime,
-        "image/avif" | "image/heic" | "image/heif"
-    )
+fn source_maybe_hdr(sniffed_mime: &str) -> bool {
+    matches!(sniffed_mime, "image/avif" | "image/heic" | "image/heif")
 }
 
 fn tone_map_if_hdr(image: native::VipsImageHandle) -> Result<native::VipsImageHandle, MediaError> {
@@ -1321,7 +1318,7 @@ pub fn transform_image(input: &[u8], options: &ImageOptions) -> Result<Processed
         animated_probe,
         options.effort_override,
     );
-    let tone_map_eligible = source_maybe_hdr(input) && output_is_sdr(format);
+    let tone_map_eligible = source_maybe_hdr(sniffed.mime) && output_is_sdr(format);
     let use_heif_path = matches!(sniffed.mime, "image/avif" | "image/heic" | "image/heif")
         && (options.animated || tone_map_eligible);
     if use_heif_path

@@ -1514,7 +1514,8 @@ async fn serve_asset_image(
             Ok(object) => object,
             Err(err) => return storage_error_response(&asset.storage_key, err),
         };
-    let sniffed_source_ext = extension_from_mime(mime::sniff(&object.data).mime);
+    let sniffed_source = mime::sniff(&object.data);
+    let sniffed_source_ext = extension_from_mime(sniffed_source.mime);
     let source_format = if sniffed_source_ext == Some(AssetExtension::Apng) {
         AssetExtension::Apng
     } else {
@@ -1541,7 +1542,7 @@ async fn serve_asset_image(
     let width = selected.size;
     let height = selected.size;
     if same_format_loaded_image_request_can_use_original(
-        &object.data,
+        sniffed_source,
         OriginalImageRequest {
             source_ext: Some(source_format),
             explicit_out_ext: asset_manual_format_override(params, asset.original_ext),
@@ -2250,7 +2251,8 @@ async fn serve_bytes_or_transform(app: &Arc<AppState>, request: ServeBytesReques
         return media_response(method, data, &content_type, range_header, Some(disposition));
     }
 
-    let sniffed_source_format = extension_from_mime(mime::sniff(&data).mime);
+    let sniffed_source = mime::sniff(&data);
+    let sniffed_source_format = extension_from_mime(sniffed_source.mime);
     let source_format = if sniffed_source_format == Some(AssetExtension::Apng) {
         Some(AssetExtension::Apng)
     } else {
@@ -2287,7 +2289,7 @@ async fn serve_bytes_or_transform(app: &Arc<AppState>, request: ServeBytesReques
         .then(|| parse_effort(params))
         .flatten();
     if same_format_loaded_image_request_can_use_original(
-        &data,
+        sniffed_source,
         OriginalImageRequest {
             source_ext: source_format,
             explicit_out_ext: explicit_requested_format,
@@ -2887,7 +2889,7 @@ struct OriginalImageRequest {
 }
 
 fn same_format_loaded_image_request_can_use_original(
-    data: &[u8],
+    sniffed: mime::SniffInfo,
     request: OriginalImageRequest,
 ) -> bool {
     let Some(source_ext) = request.source_ext else {
@@ -2920,7 +2922,6 @@ fn same_format_loaded_image_request_can_use_original(
     {
         return false;
     }
-    let sniffed = mime::sniff(data);
     if sniffed.width == 0 || sniffed.height == 0 {
         return false;
     }
@@ -4493,7 +4494,7 @@ mod tests {
 
     #[test]
     fn same_format_gif_noop_requests_use_original_bytes() {
-        let gif_header = b"GIF89a\x2c\x01\xe1\x00";
+        let gif_header = mime::sniff(b"GIF89a\x2c\x01\xe1\x00");
         assert!(same_format_loaded_image_request_can_use_original(
             gif_header,
             OriginalImageRequest {
