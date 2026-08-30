@@ -32,9 +32,25 @@ pub fn extract_mentions_from_markdown(input: Option<&str>) -> MessageMentions {
     let Some(input) = input else {
         return MessageMentions::default();
     };
-    if input.is_empty() {
+    if input.is_empty() || !may_contain_mention(input) {
         return MessageMentions::default();
     }
+    parse_mentions(input)
+}
+
+fn may_contain_mention(input: &str) -> bool {
+    let bytes = input.as_bytes();
+    bytes.iter().enumerate().any(|(index, byte)| match byte {
+        b'<' => matches!(bytes.get(index + 1), Some(b'@' | b'#')),
+        b'@' => {
+            let rest = &bytes[index..];
+            rest.starts_with(b"@everyone") || rest.starts_with(b"@here")
+        }
+        _ => false,
+    })
+}
+
+fn parse_mentions(input: &str) -> MessageMentions {
     let cleaned = blank_raw_urls(input);
     let mut parser = MarkdownParser::new(ParserFlags::ALL, EmojiContext::default());
     let Ok(nodes) = parser.parse(cleaned.as_ref()) else {
@@ -149,7 +165,94 @@ fn url_finder() -> &'static LinkFinder {
 
 #[cfg(test)]
 mod tests {
-    use super::extract_mentions_from_markdown;
+    use super::{extract_mentions_from_markdown, may_contain_mention, parse_mentions};
+
+    const MENTION_CORPUS: &[&str] = &[
+        "hey, are we still on for tonight?",
+        "lol",
+        "that build is green now, shipping it",
+        "no idea, ask in the other channel",
+        "brb",
+        "https://example.com/some/long/path?query=1&other=2",
+        "check out https://github.com/fluxerapp/fluxer/pull/1234 when you get a sec",
+        "mail me at someone@example.com",
+        "the price is 12 <> 15 depending on the region",
+        "a < b && c > d",
+        "<https://example.com/autolink>",
+        "<sms:+15550001111>",
+        "<+15550001111>",
+        "</settings:123>",
+        "<id:customize>",
+        "<:custom_emoji:1234567890>",
+        "<t:1700000000:R>",
+        "```rust\nfn main() { println!(\"hi\"); }\n```",
+        "`inline code with a # and an < in it`",
+        "**bold** *italic* __underline__ ~~strike~~ ||spoiler||",
+        "> quoted line\n> another quoted line",
+        "# heading\n## smaller heading\n-# subtext",
+        "- item one\n- item two\n1. numbered",
+        "|a|b|\n|-|-|\n|1|2|",
+        "[masked link](https://example.com)",
+        "emoji party 🎉🎉🎉 and a flag 🇸🇪",
+        "escaped \\<@123> should stay text",
+        "escaped \\@everyone should stay text",
+        "channel #general is over there",
+        "email me @ work tomorrow",
+        "@ everyone with a space",
+        "@ here with a space",
+        "@everyones and @heresy are longer words",
+        "hi <@123> <@!456> <@&789> <#321>",
+        "<@0> <@&0> <#0>",
+        "@everyone hello @here",
+        "`@everyone` @here\n```\n@everyone\n```",
+        "`<@111>` <@222>\n```txt\n<@333> <#444>\n```\n<#555>",
+        "https://example.com/<@123> <@456>",
+        "[click here](https://example.com) and <#888> <@999>",
+        "**bold <@100>** *italic <@&200>* ~~strike <#300>~~ __underline <@400>__",
+        "> quoted <@111>\n<@222>",
+        "||spoiler <@333>||",
+        "[<@101>](https://example.com/<@202>) <#303>",
+        "<@123456789012345678> <@&999> <#888>",
+        "<#not_an_id> <@not_an_id> <@&not_an_id>",
+    ];
+
+    #[test]
+    fn prefilter_never_changes_extraction_over_the_corpus() {
+        for input in MENTION_CORPUS {
+            assert_eq!(
+                extract_mentions_from_markdown(Some(input)),
+                parse_mentions(input),
+                "prefilter changed the result for {input:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn corpus_exercises_both_prefilter_outcomes() {
+        assert!(
+            MENTION_CORPUS
+                .iter()
+                .any(|input| may_contain_mention(input))
+        );
+        assert!(
+            MENTION_CORPUS
+                .iter()
+                .any(|input| !may_contain_mention(input))
+        );
+    }
+
+    #[test]
+    fn prefilter_accepts_every_mention_marker() {
+        assert!(may_contain_mention("<@1>"));
+        assert!(may_contain_mention("<@!1>"));
+        assert!(may_contain_mention("<@&1>"));
+        assert!(may_contain_mention("<#1>"));
+        assert!(may_contain_mention("@everyone"));
+        assert!(may_contain_mention("@here"));
+        assert!(!may_contain_mention("< @1>"));
+        assert!(!may_contain_mention("@ everyone"));
+        assert!(!may_contain_mention("plain text"));
+    }
 
     #[test]
     fn extracts_real_user_role_and_channel_mentions() {

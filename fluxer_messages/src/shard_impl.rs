@@ -270,6 +270,7 @@ struct ResponseContext {
 struct MessageMentionContext {
     content: MessageMentions,
     snapshots: Vec<MessageMentions>,
+    embed_users: HashSet<i64>,
 }
 
 impl MessagesShard {
@@ -1049,11 +1050,15 @@ impl MessagesShard {
             .iter()
             .filter_map(map_sticker)
             .collect();
-        let content_mentions = context
-            .mention_context
-            .get(&message.message_id)
-            .map(|mentions| mentions.content.clone())
-            .unwrap_or_else(|| extract_mentions_from_markdown(message.content.as_deref()));
+        let fallback_mentions;
+        let message_mentions = match context.mention_context.get(&message.message_id) {
+            Some(mentions) => mentions,
+            None => {
+                fallback_mentions = build_mention_context_entry(message);
+                &fallback_mentions
+            }
+        };
+        let content_mentions = &message_mentions.content;
         let mention_roles = ids_present_in_set(&message.mention_roles, &content_mentions.roles);
         let mention_channels =
             ids_present_in_set(&message.mention_channels, &content_mentions.channels)
@@ -1061,24 +1066,9 @@ impl MessagesShard {
                 .filter_map(|id| context.channel_mentions.get(&id).cloned())
                 .collect::<Vec<_>>();
         let mut referenced_user_ids = content_mentions.users.clone();
-        for embed in message.embeds.as_deref().unwrap_or_default() {
-            collect_user_ids_from_embed(embed, &mut referenced_user_ids);
-        }
-        if let Some(snapshots) = &message.message_snapshots {
-            for (index, snapshot) in snapshots.iter().enumerate() {
-                let snapshot_mentions = context
-                    .mention_context
-                    .get(&message.message_id)
-                    .and_then(|mentions| mentions.snapshots.get(index))
-                    .cloned()
-                    .unwrap_or_else(|| extract_mentions_from_markdown(snapshot.content.as_deref()));
-                referenced_user_ids.extend(snapshot_mentions.users);
-                if let Some(embeds) = &snapshot.embeds {
-                    for embed in embeds {
-                        collect_user_ids_from_embed(embed, &mut referenced_user_ids);
-                    }
-                }
-            }
+        referenced_user_ids.extend(message_mentions.embed_users.iter().copied());
+        for snapshot_mentions in &message_mentions.snapshots {
+            referenced_user_ids.extend(snapshot_mentions.users.iter().copied());
         }
         let mentioned_user_ids = message
             .mention_users
@@ -2452,23 +2442,30 @@ fn map_embed_field_response(field: MessageEmbedField) -> ApiEmbedFieldResponse {
 fn build_message_mention_context(messages: &[Message]) -> HashMap<i64, MessageMentionContext> {
     messages
         .iter()
-        .map(|message| {
-            let snapshots = message
-                .message_snapshots
-                .as_deref()
-                .unwrap_or_default()
-                .iter()
-                .map(|snapshot| extract_mentions_from_markdown(snapshot.content.as_deref()))
-                .collect();
-            (
-                message.message_id,
-                MessageMentionContext {
-                    content: extract_mentions_from_markdown(message.content.as_deref()),
-                    snapshots,
-                },
-            )
-        })
+        .map(|message| (message.message_id, build_mention_context_entry(message)))
         .collect()
+}
+
+fn build_mention_context_entry(message: &Message) -> MessageMentionContext {
+    let message_snapshots = message.message_snapshots.as_deref().unwrap_or_default();
+    let snapshots = message_snapshots
+        .iter()
+        .map(|snapshot| extract_mentions_from_markdown(snapshot.content.as_deref()))
+        .collect();
+    let mut embed_users = HashSet::new();
+    for embed in message.embeds.as_deref().unwrap_or_default() {
+        collect_user_ids_from_embed(embed, &mut embed_users);
+    }
+    for snapshot in message_snapshots {
+        for embed in snapshot.embeds.as_deref().unwrap_or_default() {
+            collect_user_ids_from_embed(embed, &mut embed_users);
+        }
+    }
+    MessageMentionContext {
+        content: extract_mentions_from_markdown(message.content.as_deref()),
+        snapshots,
+        embed_users,
+    }
 }
 
 fn ids_present_in_set(ids: &[i64], present: &HashSet<i64>) -> Vec<String> {
@@ -2547,11 +2544,7 @@ fn collect_user_ids(
         }
         if let Some(mentions) = mention_context.get(&message.message_id) {
             ids.extend(mentions.content.users.iter().copied());
-        }
-        if let Some(embeds) = &message.embeds {
-            for embed in embeds {
-                collect_user_ids_from_embed(embed, &mut ids);
-            }
+            ids.extend(mentions.embed_users.iter().copied());
         }
         if let Some(snapshots) = &message.message_snapshots {
             for (index, snapshot) in snapshots.iter().enumerate() {
@@ -2563,11 +2556,6 @@ fn collect_user_ids(
                     .and_then(|mentions| mentions.snapshots.get(index))
                 {
                     ids.extend(mentions.users.iter().copied());
-                }
-                if let Some(embeds) = &snapshot.embeds {
-                    for embed in embeds {
-                        collect_user_ids_from_embed(embed, &mut ids);
-                    }
                 }
             }
         }
@@ -3187,6 +3175,43 @@ mod tests {
         assert_eq!(
             message.call.unwrap().participant_ids,
             vec![1_472_426_752_046_002_208]
+        );
+    }
+
+    #[test]
+    fn mention_context_carries_embed_user_ids_for_message_and_snapshots() {
+        let message: Message = serde_json::from_value(json!({
+            "message_id": "10",
+            "channel_id": "20",
+            "bucket": 1,
+            "author_id": "30",
+            "type": 0,
+            "version": 0,
+            "content": "hello <@40>",
+            "mention_users": ["40"],
+            "embeds": [{
+                "title": "title <@50>",
+                "description": "description <@60>",
+                "footer": {"text": "footer <@70>"},
+                "fields": [{"name": "field <@80>", "value": "value <@90>"}]
+            }],
+            "message_snapshots": [{
+                "content": "snapshot <@100>",
+                "embeds": [{"description": "snapshot embed <@110>"}]
+            }]
+        }))
+        .unwrap();
+        let messages = std::slice::from_ref(&message);
+
+        let mention_context = build_message_mention_context(messages);
+        let entry = mention_context.get(&10).unwrap();
+
+        assert_eq!(entry.content.users, HashSet::from([40]));
+        assert_eq!(entry.embed_users, HashSet::from([50, 60, 70, 80, 90, 110]));
+        assert_eq!(entry.snapshots[0].users, HashSet::from([100]));
+        assert_eq!(
+            collect_user_ids(messages, &mention_context),
+            HashSet::from([30, 40, 50, 60, 70, 80, 90, 100, 110])
         );
     }
 
