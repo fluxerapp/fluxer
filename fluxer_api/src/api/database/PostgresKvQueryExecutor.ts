@@ -693,6 +693,19 @@ WHERE idx.indrelid = to_regclass($1)
 	}
 }
 
+async function postgresKvRowKeyIsCCollated(db: PostgresQueryable, kvTable: string): Promise<boolean> {
+	const result = await db.query<{c_collated: boolean}>(
+		`SELECT col.collname = 'C' AND col.collnamespace = 'pg_catalog'::regnamespace AS c_collated
+FROM pg_attribute att
+JOIN pg_collation col ON col.oid = att.attcollation
+WHERE att.attrelid = to_regclass($1)
+	AND att.attname = 'row_key'
+	AND NOT att.attisdropped`,
+		[kvTable],
+	);
+	return result.rows[0]?.c_collated === true;
+}
+
 export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<void> {
 	const kvTable = client.kvTable();
 	const table = quoteIdentifier(kvTable);
@@ -703,8 +716,8 @@ export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<v
 		await db.query(`
 CREATE TABLE IF NOT EXISTS ${table} (
 	table_name text NOT NULL,
-	partition_key text NOT NULL,
-	row_key text NOT NULL,
+	partition_key text COLLATE "C" NOT NULL,
+	row_key text COLLATE "C" NOT NULL,
 	row_data jsonb NOT NULL,
 	expires_at timestamptz,
 	updated_at timestamptz NOT NULL DEFAULT now(),
@@ -713,9 +726,11 @@ CREATE TABLE IF NOT EXISTS ${table} (
 		await db.query(
 			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_partition_row_idx`)} ON ${table} (table_name, partition_key, row_key)`,
 		);
-		await db.query(
-			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_row_key_c_idx`)} ON ${table} (table_name, row_key COLLATE "C")`,
-		);
+		if (!(await postgresKvRowKeyIsCCollated(db, kvTable))) {
+			await db.query(
+				`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_row_key_c_idx`)} ON ${table} (table_name, row_key COLLATE "C")`,
+			);
+		}
 		await db.query(
 			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_expires_idx`)} ON ${table} (expires_at) WHERE expires_at IS NOT NULL`,
 		);

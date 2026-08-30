@@ -3,7 +3,7 @@
 use crate::config::ServiceConfig;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::{Client, Manager, Pool, Runtime};
+use deadpool_postgres::{Client, Manager, Pool, Runtime, Transaction};
 use rustls::RootCertStore;
 use serde_json::{Map, Number, Value};
 use std::io::Cursor;
@@ -129,6 +129,25 @@ fn build_disabled_tls_connector() -> MakeRustlsConnect {
     MakeRustlsConnect::new(tls_config)
 }
 
+async fn row_key_is_c_collated(
+    transaction: &Transaction<'_>,
+    kv_table: &str,
+) -> anyhow::Result<bool> {
+    let row = transaction
+        .query_opt(
+            r#"SELECT col.collname = 'C' AND col.collnamespace = 'pg_catalog'::regnamespace AS c_collated
+FROM pg_attribute att
+JOIN pg_collation col ON col.oid = att.attcollation
+WHERE att.attrelid = to_regclass($1)
+    AND att.attname = 'row_key'
+    AND NOT att.attisdropped"#,
+            &[&kv_table],
+        )
+        .await
+        .context("failed to inspect Postgres KV row_key collation")?;
+    Ok(row.and_then(|row| row.get::<_, Option<bool>>("c_collated")) == Some(true))
+}
+
 pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()> {
     let table = quote_identifier(kv_table)?;
     let old_partition_index = quote_identifier(&format!("{kv_table}_partition_idx"))?;
@@ -166,15 +185,29 @@ pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()>
             r#"
 CREATE TABLE IF NOT EXISTS {table} (
     table_name text NOT NULL,
-    partition_key text NOT NULL,
-    row_key text NOT NULL,
+    partition_key text COLLATE "C" NOT NULL,
+    row_key text COLLATE "C" NOT NULL,
     row_data jsonb NOT NULL,
     expires_at timestamptz,
     updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (table_name, row_key)
 );
 CREATE INDEX IF NOT EXISTS {partition_row_index} ON {table} (table_name, partition_key, row_key);
-CREATE INDEX IF NOT EXISTS {row_key_c_index} ON {table} (table_name, row_key COLLATE "C");
+"#
+        ))
+        .await
+        .context("failed to ensure Postgres KV schema")?;
+    if !row_key_is_c_collated(&transaction, kv_table).await? {
+        transaction
+            .batch_execute(&format!(
+                r#"CREATE INDEX IF NOT EXISTS {row_key_c_index} ON {table} (table_name, row_key COLLATE "C");"#
+            ))
+            .await
+            .context("failed to ensure Postgres KV schema")?;
+    }
+    transaction
+        .batch_execute(&format!(
+            r#"
 CREATE INDEX IF NOT EXISTS {expires_index} ON {table} (expires_at) WHERE expires_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS {messages_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages';
 CREATE INDEX IF NOT EXISTS {message_reactions_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions';

@@ -315,15 +315,52 @@ suite('postgres kv upgrade safety', () => {
 			) d`);
 		const schemaDiff = await raw.query<{n: string}>(`
 			SELECT count(*) AS n FROM (
-				(SELECT replace(indexdef, '${OLD}', 'KV') FROM pg_indexes WHERE tablename = '${OLD}'
+				(SELECT replace(indexdef, '${OLD}', 'KV') FROM pg_indexes
+				 WHERE tablename = '${OLD}' AND indexname <> '${OLD}_row_key_c_idx'
 				 EXCEPT SELECT replace(indexdef, '${NEW}', 'KV') FROM pg_indexes WHERE tablename = '${NEW}')
 				UNION ALL
 				(SELECT replace(indexdef, '${NEW}', 'KV') FROM pg_indexes WHERE tablename = '${NEW}'
 				 EXCEPT SELECT replace(indexdef, '${OLD}', 'KV') FROM pg_indexes WHERE tablename = '${OLD}')
 			) d`);
+		const collations = await raw.query<{tablename: string; attname: string; collname: string}>(`
+			SELECT cls.relname AS tablename, att.attname, col.collname
+			FROM pg_attribute att
+			JOIN pg_class cls ON cls.oid = att.attrelid
+			JOIN pg_collation col ON col.oid = att.attcollation
+			WHERE att.attrelid IN ('${OLD}'::regclass, '${NEW}'::regclass)
+				AND att.attname IN ('partition_key', 'row_key')
+			ORDER BY cls.relname, att.attname`);
+		const cIndexes = await raw.query<{tablename: string}>(
+			`SELECT tablename FROM pg_indexes WHERE indexname IN ('${OLD}_row_key_c_idx', '${NEW}_row_key_c_idx')`,
+		);
 		console.log(`key diffs=${diff.rows[0]!.n} index-definition diffs=${schemaDiff.rows[0]!.n}`);
+		console.log(collations.rows.map((r) => `${r.tablename}.${r.attname}=${r.collname}`).join(' '));
 		expect(Number(diff.rows[0]!.n)).toBe(0);
 		expect(Number(schemaDiff.rows[0]!.n)).toBe(0);
+		expect(collations.rows.filter((r) => r.tablename === OLD).map((r) => r.collname)).toEqual(['default', 'default']);
+		expect(collations.rows.filter((r) => r.tablename === NEW).map((r) => r.collname)).toEqual(['C', 'C']);
+		expect(cIndexes.rows.map((r) => r.tablename)).toEqual([OLD]);
+	});
+
+	it('never recollates an existing table and keeps its C index', async () => {
+		const OLD = `${KV}_keep_old`;
+		await raw.query(`DROP TABLE IF EXISTS ${OLD}`);
+		const oldClient = new TableClient(raw, OLD);
+		await legacyEnsurePostgresKvSchema(oldClient);
+		await ensurePostgresKvSchema(oldClient);
+		await ensurePostgresKvSchema(oldClient);
+		const collations = await raw.query<{attname: string; collname: string}>(`
+			SELECT att.attname, col.collname
+			FROM pg_attribute att
+			JOIN pg_collation col ON col.oid = att.attcollation
+			WHERE att.attrelid = '${OLD}'::regclass AND att.attname IN ('partition_key', 'row_key')
+			ORDER BY att.attname`);
+		const indexes = await raw.query<{indexname: string}>(
+			`SELECT indexname FROM pg_indexes WHERE tablename = '${OLD}' ORDER BY indexname`,
+		);
+		console.log(`after boot on a legacy table: ${indexes.rows.map((r) => r.indexname).join(', ')}`);
+		expect(collations.rows.map((r) => r.collname)).toEqual(['default', 'default']);
+		expect(indexes.rows.map((r) => r.indexname)).toContain(`${OLD}_row_key_c_idx`);
 	});
 
 	it('survives three simultaneous boots (two api replicas and a worker)', async () => {
