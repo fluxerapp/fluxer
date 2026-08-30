@@ -11,7 +11,7 @@
 -type fetch_result() :: {ok, map()} | {error, term()}.
 
 -define(GUILD_COLLECTION_FETCH_TIMEOUT_MS, 120000).
--define(GUILD_MEMBER_COLLECTION_LIMIT, 250).
+-define(GUILD_MEMBER_COLLECTION_LIMIT, 1000).
 -define(GUILD_COLLECTIONS, [
     <<"guild">>,
     <<"roles">>,

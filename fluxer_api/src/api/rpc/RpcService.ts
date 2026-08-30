@@ -1352,7 +1352,9 @@ export class RpcService {
 		afterUserId?: UserID;
 		limit?: number;
 	}): Promise<RpcResponseGuildCollectionData> {
-		await this.getGuildOrThrow(guildId);
+		if (!afterUserId) {
+			await this.getGuildOrThrow(guildId);
+		}
 		const chunkSize = this.resolveGuildCollectionLimit(limit);
 		const members = await this.guildRepository.listMembersPaginated(guildId, chunkSize + 1, afterUserId);
 		const hasMore = members.length > chunkSize;
