@@ -11,6 +11,7 @@ use axum::{
 use std::path::Path as FsPath;
 use std::time::Duration;
 
+use super::file_stream::stream_file;
 use super::spa_static::{CORS_ALLOW_ANY_VALUE, asset_cache_control, guess_mime, is_font_mime};
 
 const ASSET_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
@@ -181,8 +182,8 @@ pub(super) async fn serve_local_asset(
         return response;
     }
 
-    let content = match tokio::fs::read(&resolved).await {
-        Ok(bytes) => bytes,
+    let mut response = match stream_file(&resolved, request_headers, entity_tag.as_deref()).await {
+        Ok(response) => response,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
             return StatusCode::NOT_FOUND.into_response();
         }
@@ -192,7 +193,6 @@ pub(super) async fn serve_local_asset(
         }
     };
 
-    let mut response = content.into_response();
     let mime_type = guess_mime(relative_path);
     if let Ok(value) = HeaderValue::from_str(mime_type) {
         response.headers_mut().insert(header::CONTENT_TYPE, value);
@@ -617,6 +617,35 @@ mod tests {
         assert!(
             entity_tag_of(&response).is_some(),
             "a year-long asset with no validator forces a full re-download on any revalidation"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_local_asset_download_can_be_resumed() {
+        let fixture = LocalAssetDir::with_asset("fluxer-setup.exe", b"installer-payload");
+
+        let mut resumed = HeaderMap::new();
+        resumed.insert(header::RANGE, HeaderValue::from_static("bytes=10-"));
+        let response = serve_local_asset(fixture.dir(), "assets/fluxer-setup.exe", &resumed).await;
+
+        assert_eq!(
+            response.status(),
+            StatusCode::PARTIAL_CONTENT,
+            "a resumed installer download that answers 200 re-sends every byte already fetched"
+        );
+        assert_eq!(
+            response
+                .headers()
+                .get(header::CONTENT_RANGE)
+                .and_then(|value| value.to_str().ok()),
+            Some("bytes 10-16/17")
+        );
+        assert_eq!(
+            axum::body::to_bytes(response.into_body(), usize::MAX)
+                .await
+                .unwrap()
+                .as_ref(),
+            b"payload"
         );
     }
 

@@ -18,6 +18,7 @@ scylla = { version = "1.6.0", features = ["chrono-04"], optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
 tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal", "time", "fs"] }
+tokio-util = { version = "0.7.18", features = ["io"] }
 tower = { version = "0.5.3", features = ["util"] }
 tower-http = { version = "0.6.11", features = ["compression-br", "compression-gzip", "trace"] }
 tracing = "0.1.44"

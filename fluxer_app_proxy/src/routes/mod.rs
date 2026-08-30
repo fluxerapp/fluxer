@@ -3,6 +3,7 @@
 mod android_association;
 mod apple_association;
 mod assets_proxy;
+mod file_stream;
 mod health;
 mod spa_index;
 mod spa_static;
