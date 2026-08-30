@@ -9,6 +9,7 @@
     handle_http_response/2,
     rpc_headers/1,
     rpc_url/0,
+    rpc_url_meta/0,
     is_retryable/1,
     backoff_delay/2
 ]).
@@ -17,6 +18,7 @@
 
 -define(DEFAULT_RPC_PATH, <<"/internal/rpc">>).
 -define(RPC_AUTH_HEADER, <<"x-fluxer-rpc-auth">>).
+-define(URL_META_TERM_KEY, {?MODULE, rpc_url_meta}).
 
 -type rpc_request() :: map().
 -type rpc_response() :: {ok, map()} | {error, term()}.
@@ -132,14 +134,16 @@ backoff_delay(Attempt, {_MaxAttempts, BaseMs, MaxMs, JitterMs}) ->
 
 -spec do_request(rpc_request()) -> rpc_response().
 do_request(Request) ->
-    Url = rpc_url(),
+    {Url, HostKey, IsHttps} = rpc_url_meta(),
     Timeout = request_timeout_ms(),
     Payload = iolist_to_binary(json:encode(Request)),
     Headers = rpc_headers(Request),
     RequestOpts = #{
         connect_timeout => min(Timeout, 5000),
         recv_timeout => Timeout,
-        content_type => <<"application/json">>
+        content_type => <<"application/json">>,
+        host_key => HostKey,
+        is_https => IsHttps
     },
     case gateway_http_client:request(rpc, post, Url, Headers, Payload, RequestOpts) of
         {ok, StatusCode, _ResponseHeaders, ResponseBody} ->
@@ -174,6 +178,21 @@ rpc_url() ->
         ConfiguredEndpoint ->
             trim_trailing_slash(ConfiguredEndpoint)
     end.
+
+-spec rpc_url_meta() -> {binary(), binary(), boolean()}.
+rpc_url_meta() ->
+    Url = rpc_url(),
+    case persistent_term:get(?URL_META_TERM_KEY, undefined) of
+        {Url, _HostKey, _IsHttps} = Meta -> Meta;
+        _ -> store_rpc_url_meta(Url)
+    end.
+
+-spec store_rpc_url_meta(binary()) -> {binary(), binary(), boolean()}.
+store_rpc_url_meta(Url) ->
+    {HostKey, IsHttps} = gateway_http_client_request:url_metadata(Url),
+    Meta = {Url, HostKey, IsHttps},
+    persistent_term:put(?URL_META_TERM_KEY, Meta),
+    Meta.
 
 -spec trim_trailing_slash(binary()) -> binary().
 trim_trailing_slash(<<>>) ->

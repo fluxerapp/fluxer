@@ -38,7 +38,9 @@
     max_concurrency => pos_integer(),
     failure_threshold => pos_integer(),
     recovery_timeout_ms => pos_integer(),
-    content_type => binary() | string()
+    content_type => binary() | string(),
+    host_key => binary(),
+    is_https => boolean()
 }.
 -type response() :: {ok, non_neg_integer(), [{binary(), binary()}], binary()} | {error, term()}.
 
@@ -76,7 +78,7 @@ request(Workload, Method, Url, Headers, Body, Opts) when is_map(Opts) ->
     MaxConcurrency = maps:get(max_concurrency, WorkloadOpts),
     FailureThreshold = maps:get(failure_threshold, WorkloadOpts),
     RecoveryTimeoutMs = maps:get(recovery_timeout_ms, WorkloadOpts),
-    Host = gateway_http_client_request:extract_host_key(Url),
+    Host = resolve_host_key(Url, WorkloadOpts),
     CircuitKey = {Workload, Host},
     do_request_with_circuit(
         CircuitKey,
@@ -254,6 +256,13 @@ request_with_acquired_slot(
             Result
     after
         gateway_http_client_response:release_inflight_slot(Workload)
+    end.
+
+-spec resolve_host_key(iodata(), request_options()) -> binary().
+resolve_host_key(Url, Opts) ->
+    case maps:get(host_key, Opts, undefined) of
+        Host when is_binary(Host) -> Host;
+        _ -> gateway_http_client_request:extract_host_key(Url)
     end.
 
 -spec ensure_runtime(workload()) -> ok.

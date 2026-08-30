@@ -6,6 +6,7 @@
 -export([
     safe_do_request/6,
     extract_host_key/1,
+    url_metadata/1,
     ensure_binary/1,
     ensure_list/1
 ]).
@@ -20,7 +21,9 @@
     max_concurrency => pos_integer(),
     failure_threshold => pos_integer(),
     recovery_timeout_ms => pos_integer(),
-    content_type => binary() | string()
+    content_type => binary() | string(),
+    host_key => binary(),
+    is_https => boolean()
 }.
 -type response() :: {ok, non_neg_integer(), [{binary(), binary()}], binary()} | {error, term()}.
 
@@ -55,6 +58,18 @@ extract_host_key(Url) ->
         _ -> <<"unknown">>
     catch
         _:_ -> <<"unknown">>
+    end.
+
+-spec url_metadata(iodata()) -> {binary(), boolean()}.
+url_metadata(Url) ->
+    UrlString = ensure_list(Url),
+    try uri_string:parse(UrlString) of
+        Parsed when is_map(Parsed) ->
+            {extract_host_from_parsed(Parsed), parsed_is_https(Parsed)};
+        _ ->
+            {<<"unknown">>, false}
+    catch
+        _:_ -> {<<"unknown">>, false}
     end.
 
 -spec ensure_binary(term()) -> binary().
@@ -99,17 +114,25 @@ build_http_options(UrlString, Opts) ->
         {timeout, RecvTimeout},
         {autoredirect, false}
     ],
-    case is_https_url(UrlString) of
+    case is_https_request(UrlString, Opts) of
         true -> [{ssl, https_ssl_options()} | BaseOptions];
         false -> BaseOptions
     end.
 
+-spec is_https_request(string(), request_options()) -> boolean().
+is_https_request(UrlString, Opts) ->
+    case maps:get(is_https, Opts, undefined) of
+        IsHttps when is_boolean(IsHttps) -> IsHttps;
+        _ -> is_https_url(UrlString)
+    end.
+
 -spec is_https_url(string()) -> boolean().
 is_https_url(UrlString) ->
-    case uri_string:parse(UrlString) of
-        #{scheme := Scheme} -> string:lowercase(ensure_list(Scheme)) =:= "https";
-        _ -> false
-    end.
+    parsed_is_https(uri_string:parse(UrlString)).
+
+-spec parsed_is_https(term()) -> boolean().
+parsed_is_https(#{scheme := Scheme}) -> string:lowercase(ensure_list(Scheme)) =:= "https";
+parsed_is_https(_) -> false.
 
 -spec https_ssl_options() -> list().
 https_ssl_options() ->
@@ -301,5 +324,50 @@ build_http_options_omits_ssl_for_http_test() ->
     ?assertEqual(false, lists:keyfind(ssl, 1, Options)),
     ?assertEqual({connect_timeout, 5000}, lists:keyfind(connect_timeout, 1, Options)),
     ?assertEqual({autoredirect, false}, lists:keyfind(autoredirect, 1, Options)).
+
+memoisable_urls() ->
+    [
+        <<"http://fluxer-api.fluxer.svc.cluster.local/internal/rpc">>,
+        <<"https://fcm.googleapis.com/v1/projects/fluxer/messages:send">>,
+        <<"http://fluxer-api.fluxer.svc.cluster.local:8080/internal/rpc">>,
+        <<"HTTPS://Fluxer-API.Fluxer.SVC.Cluster.Local:8443/internal/rpc">>
+    ].
+
+url_metadata_matches_derive_path_test_() ->
+    [
+        {binary_to_list(Url), fun() ->
+            Derived = {extract_host_key(Url), is_https_url(ensure_list(Url))},
+            ?assertEqual(Derived, url_metadata(Url))
+        end}
+     || Url <- memoisable_urls()
+    ].
+
+url_metadata_values_test() ->
+    ?assertEqual(
+        [
+            {<<"fluxer-api.fluxer.svc.cluster.local">>, false},
+            {<<"fcm.googleapis.com">>, true},
+            {<<"fluxer-api.fluxer.svc.cluster.local">>, false},
+            {<<"fluxer-api.fluxer.svc.cluster.local">>, true}
+        ],
+        [url_metadata(Url) || Url <- memoisable_urls()]
+    ).
+
+url_metadata_handles_unparsable_url_test() ->
+    ?assertEqual({<<"unknown">>, false}, url_metadata(<<"not-a-url">>)).
+
+build_http_options_uses_memoised_scheme_test() ->
+    case has_ca_store() of
+        true ->
+            Opts = #{connect_timeout => 3000, recv_timeout => 5000, is_https => true},
+            ?assertMatch([{ssl, _} | _], build_http_options("http://127.0.0.1:8088/rpc", Opts));
+        false ->
+            ok
+    end.
+
+build_http_options_memoised_http_skips_ssl_test() ->
+    Opts = #{connect_timeout => 3000, recv_timeout => 5000, is_https => false},
+    Options = build_http_options("https://fcm.googleapis.com/v1", Opts),
+    ?assertEqual(false, lists:keyfind(ssl, 1, Options)).
 
 -endif.

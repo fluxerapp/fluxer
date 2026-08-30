@@ -61,6 +61,47 @@ rpc_url_uses_configured_endpoint_without_trailing_slash_test() ->
         _ = fluxer_gateway_env:update(fun(_) -> OldConfig end)
     end.
 
+rpc_url_meta_matches_derive_path_test() ->
+    OldConfig = fluxer_gateway_env:get_map(),
+    Endpoints = [
+        <<"http://fluxer-api.fluxer.svc.cluster.local/internal/rpc">>,
+        <<"https://api.internal/internal/rpc">>,
+        <<"http://fluxer-api.fluxer.svc.cluster.local:8080/internal/rpc">>,
+        <<"HTTPS://Fluxer-API.Fluxer.SVC.Cluster.Local:8443/internal/rpc">>
+    ],
+    try
+        lists:foreach(fun assert_rpc_url_meta_for_endpoint/1, Endpoints)
+    after
+        _ = fluxer_gateway_env:update(fun(_) -> OldConfig end)
+    end.
+
+assert_rpc_url_meta_for_endpoint(Endpoint) ->
+    _ = fluxer_gateway_env:patch(#{api_rpc_endpoint => Endpoint}),
+    Url = rpc_client:rpc_url(),
+    {HostKey, IsHttps} = gateway_http_client_request:url_metadata(Url),
+    ?assertEqual(HostKey, gateway_http_client_request:extract_host_key(Url)),
+    ?assertEqual({Url, HostKey, IsHttps}, rpc_client:rpc_url_meta()),
+    ?assertEqual({Url, HostKey, IsHttps}, rpc_client:rpc_url_meta()).
+
+rpc_url_meta_expected_values_test() ->
+    OldConfig = fluxer_gateway_env:get_map(),
+    try
+        _ = fluxer_gateway_env:patch(#{
+            api_rpc_endpoint =>
+                <<"https://Fluxer-API.Fluxer.SVC.Cluster.Local:8443/internal/rpc">>
+        }),
+        ?assertEqual(
+            {
+                <<"https://Fluxer-API.Fluxer.SVC.Cluster.Local:8443/internal/rpc">>,
+                <<"fluxer-api.fluxer.svc.cluster.local">>,
+                true
+            },
+            rpc_client:rpc_url_meta()
+        )
+    after
+        _ = fluxer_gateway_env:update(fun(_) -> OldConfig end)
+    end.
+
 is_retryable_timeout_test() ->
     ?assert(rpc_client:is_retryable(timeout)).
 
