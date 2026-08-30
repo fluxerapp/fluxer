@@ -15,6 +15,7 @@ import {registerComposerMarkdownShortcuts} from '@app/features/lexical/composer/
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import {registerComposerPlainText} from '@app/features/lexical/composer/ComposerPlainText';
 import {$hydrateComposerFromDraft, $projectComposer} from '@app/features/lexical/composer/ComposerSerialization';
+import {registerComposerSoftWrapDeletion} from '@app/features/lexical/composer/ComposerSoftWrapDeletion';
 import {
 	type ComposerTypeaheadActiveState,
 	registerComposerTypeaheadModifierGuard,
@@ -548,6 +549,7 @@ const ComposerInner = ({
 		return mergeRegister(
 			registerContextMenuUndoRedo(editor),
 			registerComposerIMECommandGuard(editor),
+			registerComposerSoftWrapDeletion(editor),
 			registerComposerTypeaheadModifierGuard(editor, typeaheadActiveState),
 			registerComposerMarkdownShortcuts(editor),
 			registerComposerCodeIndent(editor, typeaheadActiveState),
