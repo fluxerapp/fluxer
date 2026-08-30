@@ -254,6 +254,41 @@ export function isUnsafePreparedStatement(query: string): boolean {
 	return tokens.length >= 2 && tokens[0].toLowerCase() === 'select' && tokens[1] === '*';
 }
 
+function hasUndefinedDeep(value: unknown): boolean {
+	if (value === undefined) return true;
+	if (value === null) return false;
+	const t = typeof value;
+	if (t === 'string' || t === 'number' || t === 'bigint' || t === 'boolean') return false;
+	if (value instanceof Date) return false;
+	if (value instanceof Buffer) return false;
+	if (t === 'object' && value.constructor?.name === 'LocalDate') return false;
+	if (Array.isArray(value)) {
+		for (let i = 0; i < value.length; i++) {
+			if (hasUndefinedDeep(value[i])) return true;
+		}
+		return false;
+	}
+	if (value instanceof Set) {
+		for (const v of value.values()) {
+			if (hasUndefinedDeep(v)) return true;
+		}
+		return false;
+	}
+	if (value instanceof Map) {
+		for (const [k, v] of value.entries()) {
+			if (hasUndefinedDeep(k) || hasUndefinedDeep(v)) return true;
+		}
+		return false;
+	}
+	if (t === 'object') {
+		const keys = Object.keys(value as Record<string, unknown>);
+		for (let i = 0; i < keys.length; i++) {
+			if (hasUndefinedDeep((value as Record<string, unknown>)[keys[i]!])) return true;
+		}
+	}
+	return false;
+}
+
 function assertNoUndefinedDeep(value: unknown, path: string): void {
 	if (value === undefined) {
 		throw new Error(
@@ -297,8 +332,13 @@ function assertNoUndefinedDeep(value: unknown, path: string): void {
 }
 
 export function assertNoUndefinedParams(params: Record<string, unknown>): void {
-	for (const [k, v] of Object.entries(params)) {
-		assertNoUndefinedDeep(v, `:${k}`);
+	const keys = Object.keys(params);
+	for (let i = 0; i < keys.length; i++) {
+		const k = keys[i]!;
+		const v = params[k];
+		if (hasUndefinedDeep(v)) {
+			assertNoUndefinedDeep(v, `:${k}`);
+		}
 	}
 }
 
