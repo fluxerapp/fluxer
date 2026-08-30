@@ -7,7 +7,7 @@
 
 -spec start(application:start_type(), term()) -> {ok, pid()} | {error, term()}.
 start(_StartType, _StartArgs) ->
-    erlang:system_flag(fullsweep_after, 0),
+    erlang:system_flag(fullsweep_after, 10),
     init_jose(),
     init_subsystems(),
     {ok, Pid} = fluxer_gateway_sup:start_link(),
