@@ -3235,7 +3235,8 @@ mod tests {
             }]
         }))
         .unwrap();
-        let messages = std::slice::from_ref(&message);
+        let message_ref = &message;
+        let messages = std::slice::from_ref(&message_ref);
 
         let mention_context = build_message_mention_context(messages);
         let entry = mention_context.get(&10).unwrap();
