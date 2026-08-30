@@ -14,6 +14,7 @@
 
 -define(DEFAULT_DELIVERY_CONCURRENCY, 8).
 -define(DELIVERY_WORKER_TIMEOUT_MS, 30000).
+-define(SUBSCRIPTION_FETCH_CHUNK_SIZE, 256).
 
 -spec fetch_and_send_subscriptions(
     [integer()],
@@ -91,6 +92,30 @@ send_missing_if_any(MissingUserIds, Ctx) ->
 
 -spec fetch_and_send_missing_subscriptions([integer()], tuple()) -> ok.
 fetch_and_send_missing_subscriptions(UserIds, Ctx) ->
+    {FetchedUserIds, SubscriptionsData} = fetch_missing_subscriptions(UserIds),
+    send_fetched_subscriptions(FetchedUserIds, SubscriptionsData, Ctx).
+
+-spec fetch_missing_subscriptions([integer()]) -> {[integer()], map()}.
+fetch_missing_subscriptions(UserIds) ->
+    Chunks = chunk_user_ids(UserIds, ?SUBSCRIPTION_FETCH_CHUNK_SIZE, []),
+    {FetchedChunks, SubscriptionsData} = lists:foldl(
+        fun fetch_subscriptions_chunk/2,
+        {[], #{}},
+        Chunks
+    ),
+    {lists:append(lists:reverse(FetchedChunks)), SubscriptionsData}.
+
+-spec chunk_user_ids([integer()], pos_integer(), [[integer()]]) -> [[integer()]].
+chunk_user_ids([], _ChunkSize, Acc) ->
+    lists:reverse(Acc);
+chunk_user_ids(UserIds, ChunkSize, Acc) when length(UserIds) =< ChunkSize ->
+    lists:reverse([UserIds | Acc]);
+chunk_user_ids(UserIds, ChunkSize, Acc) ->
+    {Chunk, Rest} = lists:split(ChunkSize, UserIds),
+    chunk_user_ids(Rest, ChunkSize, [Chunk | Acc]).
+
+-spec fetch_subscriptions_chunk([integer()], {[[integer()]], map()}) -> {[[integer()]], map()}.
+fetch_subscriptions_chunk(UserIds, {FetchedAcc, DataAcc}) ->
     SubscriptionsReq = #{
         <<"type">> => <<"get_push_subscriptions">>,
         <<"user_ids">> => [integer_to_binary(UserId) || UserId <- UserIds]
@@ -102,13 +127,13 @@ fetch_and_send_missing_subscriptions(UserIds, Ctx) ->
                 user_count => length(UserIds),
                 response_keys => maps:keys(SubscriptionsData)
             }),
-            send_fetched_subscriptions(UserIds, SubscriptionsData, Ctx);
+            {[UserIds | FetchedAcc], maps:merge(DataAcc, SubscriptionsData)};
         {error, Reason} ->
             logger:debug(
                 "Push: RPC failed to fetch subscriptions",
                 #{user_count => length(UserIds), reason => Reason}
             ),
-            ok
+            {FetchedAcc, DataAcc}
     end.
 
 -spec send_fetched_subscriptions([integer()], map(), tuple()) -> ok.
@@ -128,6 +153,7 @@ add_fetched_user_subscription_task(UserId, SubscriptionsData, Acc) ->
     UserIdBin = integer_to_binary(UserId),
     case maps:get(UserIdBin, SubscriptionsData, []) of
         [] ->
+            push_ets_cache:put_subscriptions(UserId, []),
             logger:debug("Push: no subscriptions for user", #{user_id => UserId}),
             Acc;
         Subscriptions ->
@@ -476,6 +502,55 @@ chunk_subscription_tasks_uses_bounded_chunk_size_test() ->
         [[{1, [a]}, {2, [b]}], [{3, [c]}, {4, [d]}], [{5, [e]}]],
         chunk_subscription_tasks(Tasks, 2, [])
     ).
+
+chunk_user_ids_uses_bounded_chunk_size_test() ->
+    ?assertEqual([], chunk_user_ids([], 2, [])),
+    ?assertEqual([[1, 2]], chunk_user_ids([1, 2], 2, [])),
+    ?assertEqual([[1, 2], [3, 4], [5]], chunk_user_ids([1, 2, 3, 4, 5], 2, [])).
+
+add_fetched_user_subscription_task_caches_empty_result_test() ->
+    push_ets_cache:init(),
+    push_ets_cache:delete_subscriptions(4242),
+    ?assertEqual([], add_fetched_user_subscription_task(4242, #{}, [])),
+    ?assertEqual([], push_ets_cache:get_subscriptions(4242)),
+    push_ets_cache:delete_subscriptions(4242).
+
+fetch_missing_subscriptions_chunks_and_merges_test() ->
+    ok = meck:new(rpc_client, [passthrough, no_link]),
+    try
+        ok = meck:expect(rpc_client, call, fun subscriptions_chunk_stub/1),
+        UserIds = lists:seq(1, ?SUBSCRIPTION_FETCH_CHUNK_SIZE + 2),
+        Expected = #{
+            <<"1">> => [{chunk, ?SUBSCRIPTION_FETCH_CHUNK_SIZE}],
+            integer_to_binary(?SUBSCRIPTION_FETCH_CHUNK_SIZE + 1) => [{chunk, 2}]
+        },
+        ?assertEqual({UserIds, Expected}, fetch_missing_subscriptions(UserIds)),
+        ?assertEqual(2, meck:num_calls(rpc_client, call, '_'))
+    after
+        meck:unload(rpc_client)
+    end.
+
+fetch_missing_subscriptions_keeps_other_chunks_when_one_fails_test() ->
+    ok = meck:new(rpc_client, [passthrough, no_link]),
+    try
+        ok = meck:expect(rpc_client, call, fun failing_first_chunk_stub/1),
+        UserIds = lists:seq(1, ?SUBSCRIPTION_FETCH_CHUNK_SIZE + 2),
+        TailUserIds = [?SUBSCRIPTION_FETCH_CHUNK_SIZE + 1, ?SUBSCRIPTION_FETCH_CHUNK_SIZE + 2],
+        Expected = #{
+            integer_to_binary(?SUBSCRIPTION_FETCH_CHUNK_SIZE + 1) => [{chunk, 2}]
+        },
+        ?assertEqual({TailUserIds, Expected}, fetch_missing_subscriptions(UserIds))
+    after
+        meck:unload(rpc_client)
+    end.
+
+subscriptions_chunk_stub(#{<<"user_ids">> := [FirstUserIdBin | _] = UserIdBins}) ->
+    {ok, #{FirstUserIdBin => [{chunk, length(UserIdBins)}]}}.
+
+failing_first_chunk_stub(#{<<"user_ids">> := [<<"1">> | _]}) ->
+    {error, timeout};
+failing_first_chunk_stub(Request) ->
+    subscriptions_chunk_stub(Request).
 
 collect_sent_subscription_tasks(0, Acc) ->
     Acc;
