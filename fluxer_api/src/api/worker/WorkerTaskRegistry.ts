@@ -30,6 +30,7 @@ import processExpiredPremiumSweep from './tasks/ProcessExpiredPremiumSweep';
 import processInactivityDeletions from './tasks/ProcessInactivityDeletions';
 import processPendingBulkMessageDeletions from './tasks/ProcessPendingBulkMessageDeletions';
 import processPremiumStateReconciliationQueue from './tasks/ProcessPremiumStateReconciliationQueue';
+import processScheduledJobQueue from './tasks/ProcessScheduledJobQueue';
 import processStripeWebhook from './tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from './tasks/PrunePostgresKvTtl';
 import reconcileUserPayments from './tasks/ReconcileUserPayments';
@@ -75,6 +76,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	processInactivityDeletions,
 	processPendingBulkMessageDeletions,
 	processPremiumStateReconciliationQueue,
+	processScheduledJobQueue,
 	reconcileUserPayments,
 	prunePostgresKvTtl,
 	refreshSearchIndex,

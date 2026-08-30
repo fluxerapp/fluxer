@@ -25,6 +25,7 @@ import {clearWorkerDependencies, setWorkerDependencies} from './WorkerContext';
 import {initializeWorkerDependencies, shutdownWorkerDependencies, type WorkerDependencies} from './WorkerDependencies';
 import {
 	resolveCronSchedulerEnabled,
+	resolveScheduledJobDrainIntervalSeconds,
 	resolveWorkerLanes,
 	validateLaneCompleteness,
 	type WorkerLaneDefinition,
@@ -50,6 +51,13 @@ function registerCronJobs(cron: CronScheduler): void {
 	cron.upsert('processPremiumStateReconciliationQueue', 'processPremiumStateReconciliationQueue', {}, '0 * * * * *', {
 		ledger: false,
 	});
+	cron.upsert(
+		'processScheduledJobQueue',
+		'processScheduledJobQueue',
+		{},
+		`*/${resolveScheduledJobDrainIntervalSeconds()} * * * * *`,
+		{ledger: false},
+	);
 	cron.upsert('processExpiredPremiumSweep', 'processExpiredPremiumSweep', {}, '0 0 * * * *', {ledger: false});
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
@@ -221,6 +229,7 @@ export async function startWorkerMain(): Promise<void> {
 			const runner = new WorkerRunner({
 				tasks: laneTasks,
 				queue,
+				scheduledJobQueue: dependencies.scheduledJobQueueService,
 				consumerName: lane.consumerName,
 				laneName: lane.name,
 				ledger: jobLedger,

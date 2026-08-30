@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {describe, expect, it} from 'vitest';
-import {resolveCronSchedulerEnabled, resolveWorkerLanes, WORKER_LANES} from '../WorkerLaneConfig';
+import {
+	resolveCronSchedulerEnabled,
+	resolveScheduledJobDrainIntervalSeconds,
+	resolveWorkerLanes,
+	WORKER_LANES,
+} from '../WorkerLaneConfig';
 
 describe('WorkerLaneConfig', () => {
 	it('returns all lanes in all_lanes mode', () => {
@@ -96,5 +101,11 @@ describe('WorkerLaneConfig', () => {
 	it('respects explicit cron scheduler config', () => {
 		expect(resolveCronSchedulerEnabled('single_lane', true)).toBe(true);
 		expect(resolveCronSchedulerEnabled('all_lanes', false)).toBe(false);
+	});
+	it('drains parked scheduled jobs well inside the shortest lane ack-wait', () => {
+		const intervalSeconds = resolveScheduledJobDrainIntervalSeconds();
+		const shortestAckWaitMs = Math.min(...WORKER_LANES.map((lane) => lane.ackWaitMs));
+		expect(intervalSeconds).toBeGreaterThanOrEqual(1);
+		expect(intervalSeconds * 1000 * 2).toBeLessThanOrEqual(shortestAckWaitMs);
 	});
 });

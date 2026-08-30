@@ -58,6 +58,7 @@ import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
 import {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
 import {KVActivityTracker} from '../infrastructure/KVActivityTracker';
 import {KVBulkMessageDeletionQueueService} from '../infrastructure/KVBulkMessageDeletionQueueService';
+import {KVScheduledJobQueueService} from '../infrastructure/KVScheduledJobQueueService';
 import {NatsUnfurlerService} from '../infrastructure/NatsUnfurlerService';
 import {PremiumStateReconciliationQueueService} from '../infrastructure/PremiumStateReconciliationQueueService';
 import {createDownloadsStorageService, createStorageService} from '../infrastructure/StorageServiceFactory';
@@ -220,6 +221,18 @@ export function getKVBulkMessageDeletionQueue(): KVBulkMessageDeletionQueueServi
 		bulkMessageDeletionQueueClient = kvClient;
 	}
 	return bulkMessageDeletionQueue;
+}
+
+let scheduledJobQueueClient: IKVProvider | null = null;
+let scheduledJobQueue: KVScheduledJobQueueService | null = null;
+
+export function getKVScheduledJobQueue(): KVScheduledJobQueueService {
+	const kvClient = getKVClient();
+	if (!scheduledJobQueue || scheduledJobQueueClient !== kvClient) {
+		scheduledJobQueue = new KVScheduledJobQueueService(kvClient);
+		scheduledJobQueueClient = kvClient;
+	}
+	return scheduledJobQueue;
 }
 
 let premiumStateQueueClient: IKVProvider | null = null;
