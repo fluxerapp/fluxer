@@ -20,6 +20,7 @@ class NativePermission {
 	private _linuxFlatpak = false;
 	private _linuxInputAccessStatus: LinuxInputAccessStatus = 'unknown';
 	private _linuxInputAccessNagbarRequested = false;
+	private _linuxInputAccessNagbarDismissedThisSession = false;
 	private _linuxInputAccessNagbarReason: LinuxInputAccessNagbarReason | null = null;
 	private _linuxInputAccessGrantNeedsRelogin = false;
 	private _linuxInputAccessGrantError: string | null = null;
@@ -118,6 +119,7 @@ class NativePermission {
 	get shouldShowLinuxInputAccessNagbar(): boolean {
 		return (
 			this._linuxInputAccessNagbarRequested &&
+			!this._linuxInputAccessNagbarDismissedThisSession &&
 			this._isDesktop &&
 			this._platform === 'linux' &&
 			this._waylandSession &&
@@ -126,13 +128,24 @@ class NativePermission {
 	}
 
 	requestLinuxInputAccessNagbar(reason: LinuxInputAccessNagbarReason): void {
+		if (this._linuxInputAccessNagbarDismissedThisSession) return;
 		this._linuxInputAccessNagbarRequested = true;
 		this._linuxInputAccessNagbarReason = reason;
 	}
 
 	dismissLinuxInputAccessNagbar(): void {
+		this._linuxInputAccessNagbarDismissedThisSession = true;
+		this.clearLinuxInputAccessNagbarRequest();
+	}
+
+	private clearLinuxInputAccessNagbarRequest(): void {
 		this._linuxInputAccessNagbarRequested = false;
 		this._linuxInputAccessNagbarReason = null;
+	}
+
+	private resolveLinuxInputAccessNagbar(): void {
+		this.clearLinuxInputAccessNagbarRequest();
+		this._linuxInputAccessNagbarDismissedThisSession = false;
 	}
 
 	async recheckInputMonitoring(): Promise<NativePermissionResult> {
@@ -154,7 +167,7 @@ class NativePermission {
 			if (nextStatus === 'granted') {
 				this._linuxInputAccessGrantNeedsRelogin = false;
 				this._linuxInputAccessGrantError = null;
-				this.dismissLinuxInputAccessNagbar();
+				this.resolveLinuxInputAccessNagbar();
 			}
 		});
 		logger.debug('Rechecked Linux input access', {status: nextStatus});
@@ -187,7 +200,7 @@ class NativePermission {
 			this._linuxInputAccessGrantError = result.success ? null : (result.error ?? 'Input access could not be enabled');
 			this._linuxInputAccessStatus = nextStatus;
 			if (nextStatus === 'granted') {
-				this.dismissLinuxInputAccessNagbar();
+				this.resolveLinuxInputAccessNagbar();
 			}
 		});
 		return result;
