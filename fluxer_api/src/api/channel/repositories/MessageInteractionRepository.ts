@@ -170,6 +170,7 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 		emojiName: string,
 		emojiId?: EmojiID,
 		emojiAnimated: boolean = false,
+		knownHasReaction?: boolean | null,
 	): Promise<MessageReaction> {
 		const bucket = BucketUtils.makeBucket(messageId);
 		const normalizedEmojiId = emojiId ? emojiId : createEmojiID(0n);
@@ -184,7 +185,9 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 			created_at: new Date(),
 		};
 		await upsertOne(MessageReactions.upsertAll(reactionData));
-		await this.setHasReaction(channelId, messageId, true);
+		if (knownHasReaction !== true) {
+			await this.setHasReaction(channelId, messageId, true);
+		}
 		return new MessageReaction(reactionData);
 	}
 

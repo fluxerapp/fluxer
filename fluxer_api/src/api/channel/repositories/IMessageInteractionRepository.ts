@@ -29,6 +29,7 @@ export abstract class IMessageInteractionRepository {
 		emojiName: string,
 		emojiId?: EmojiID,
 		emojiAnimated?: boolean,
+		knownHasReaction?: boolean | null,
 	): Promise<MessageReaction>;
 
 	abstract removeReaction(
