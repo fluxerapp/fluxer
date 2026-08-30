@@ -406,6 +406,52 @@ presence_map(Status, Mobile, CustomStatus) ->
         <<"custom_status">> => CustomStatus
     }.
 
+has_subs_reports_subscribers_per_list_test() ->
+    SubsTab = make_subs_tab([
+        {<<"10">>, <<"s0">>, [{0, 99}]},
+        {<<"100">>, <<"s1">>, [{0, 99}]},
+        {<<"100">>, <<"s2">>, [{0, 49}]},
+        {<<"300">>, <<"s3">>, [{0, 99}]}
+    ]),
+    ?assert(guild_member_list_subs:has_subs(<<"10">>, SubsTab)),
+    ?assert(guild_member_list_subs:has_subs(<<"100">>, SubsTab)),
+    ?assert(guild_member_list_subs:has_subs(<<"300">>, SubsTab)),
+    ?assertNot(guild_member_list_subs:has_subs(<<"1">>, SubsTab)),
+    ?assertNot(guild_member_list_subs:has_subs(<<"050">>, SubsTab)),
+    ?assertNot(guild_member_list_subs:has_subs(<<"200">>, SubsTab)),
+    ?assertNot(guild_member_list_subs:has_subs(<<"400">>, SubsTab)),
+    guild_member_list_subs:unsubscribe_session(<<"s3">>, SubsTab),
+    ?assertNot(guild_member_list_subs:has_subs(<<"300">>, SubsTab)),
+    guild_member_list_subs:unsubscribe_session(<<"s0">>, SubsTab),
+    ?assertNot(guild_member_list_subs:has_subs(<<"10">>, SubsTab)),
+    ?assert(guild_member_list_subs:has_subs(<<"100">>, SubsTab)),
+    guild_member_list_subs:destroy(SubsTab).
+
+has_subs_on_empty_table_test() ->
+    SubsTab = make_subs_tab(),
+    ?assertNot(guild_member_list_subs:has_subs(<<"500">>, SubsTab)),
+    ?assertEqual([], collect_list_ids(SubsTab)),
+    guild_member_list_subs:destroy(SubsTab).
+
+fold_list_ids_visits_each_list_once_test() ->
+    SubsTab = make_subs_tab([
+        {<<"10">>, <<"s0">>, [{0, 99}]},
+        {<<"100">>, <<"s1">>, [{0, 99}]},
+        {<<"100">>, <<"s2">>, [{0, 49}]},
+        {<<"300">>, <<"s3">>, [{0, 99}]}
+    ]),
+    ListIds = collect_list_ids(SubsTab),
+    ?assertEqual([<<"10">>, <<"100">>, <<"300">>], ListIds),
+    ?assertEqual(guild_member_list_subs:list_ids(SubsTab), ListIds),
+    guild_member_list_subs:destroy(SubsTab).
+
+collect_list_ids(SubsTab) ->
+    lists:reverse(
+        guild_member_list_subs:fold_list_ids(
+            fun(ListId, Acc) -> [ListId | Acc] end, [], SubsTab
+        )
+    ).
+
 channel_list_state(Ref, SubsTab, Members) ->
     (base_state(SubsTab))#{
         data => #{
