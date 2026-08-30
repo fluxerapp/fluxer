@@ -21,6 +21,8 @@ impl RouterService for MessagesRouter {
     type Request = MessageRequest;
     type Response = MessageResponse;
 
+    const CACHES_RESPONSES: bool = false;
+
     fn service_name(&self) -> &str {
         "messages"
     }

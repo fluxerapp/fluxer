@@ -11,6 +11,35 @@ use tracing::{debug, info, warn};
 
 const MAX_SHARD_REQUEST_BYTES: usize = 2 * 1024 * 1024;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum WireEncoding {
+    Json,
+    MessagePack,
+}
+
+impl WireEncoding {
+    fn detect(payload: &[u8]) -> Self {
+        match payload.iter().find(|byte| !byte.is_ascii_whitespace()) {
+            Some(b'{') => Self::Json,
+            _ => Self::MessagePack,
+        }
+    }
+
+    fn decode<T: serde::de::DeserializeOwned>(self, payload: &[u8]) -> anyhow::Result<T> {
+        match self {
+            Self::Json => Ok(serde_json::from_slice(payload)?),
+            Self::MessagePack => Ok(rmp_serde::from_slice(payload)?),
+        }
+    }
+
+    fn encode<T: serde::Serialize>(self, value: &T) -> anyhow::Result<Vec<u8>> {
+        match self {
+            Self::Json => Ok(serde_json::to_vec(value)?),
+            Self::MessagePack => Ok(rmp_serde::to_vec_named(value)?),
+        }
+    }
+}
+
 pub trait ShardService: Send + Sync + 'static {
     type Request: serde::Serialize + serde::de::DeserializeOwned + Send + 'static;
     type Response: serde::Serialize + serde::de::DeserializeOwned + Send + 'static;
@@ -118,10 +147,11 @@ where
                             }
                             let request_start = now_ms();
                             metrics.record_request();
-                            let request: S::Request = match rmp_serde::from_slice(&raw_payload) {
+                            let encoding = WireEncoding::detect(&raw_payload);
+                            let request: S::Request = match encoding.decode(&raw_payload) {
                                 Ok(r) => r,
                                 Err(err) => {
-                                    warn!(error = %err, "failed to decode shard request");
+                                    warn!(error = %err, ?encoding, "failed to decode shard request");
                                     metrics.record_request_error();
                                     reply_shard_error(&msg, &transport, "shard_request_decode_error")
                                         .await;
@@ -134,7 +164,7 @@ where
                                     let elapsed = (now_ms() - request_start).max(0) as u64;
                                     metrics.record_request_duration(elapsed);
                                     if msg.has_reply() {
-                                        match rmp_serde::to_vec_named(&response) {
+                                        match encoding.encode(&response) {
                                             Ok(response_bytes) => {
                                                 if let Err(err) =
                                                     reply_message(&msg, &transport, &response_bytes).await
@@ -253,6 +283,79 @@ mod tests {
             self.started.notify_one();
             std::future::pending().await
         }
+    }
+
+    struct EchoShard;
+
+    impl ShardService for EchoShard {
+        type Request = MockRequest;
+        type Response = MockResponse;
+
+        fn service_name(&self) -> &str {
+            "mock"
+        }
+
+        async fn handle(&self, request: MockRequest) -> anyhow::Result<MockResponse> {
+            Ok(MockResponse { key: request.key })
+        }
+    }
+
+    #[test]
+    fn wire_encoding_detects_json_and_msgpack_payloads() {
+        let json = serde_json::to_vec(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+        let msgpack = rmp_serde::to_vec_named(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+
+        assert_eq!(WireEncoding::detect(&json), WireEncoding::Json);
+        assert_eq!(
+            WireEncoding::detect(b"  \n{\"key\":\"a\"}"),
+            WireEncoding::Json
+        );
+        assert_eq!(WireEncoding::detect(&msgpack), WireEncoding::MessagePack);
+        assert_eq!(WireEncoding::detect(b""), WireEncoding::MessagePack);
+    }
+
+    #[tokio::test]
+    async fn shard_replies_in_the_request_encoding() {
+        let transport = InMemoryTransport::new();
+        let config = test_config(4);
+        let shard_transport = transport.clone();
+        let shard_task =
+            tokio::spawn(async move { run_shard(&config, EchoShard, shard_transport).await });
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let msgpack_request = rmp_serde::to_vec_named(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+        let msgpack_response = transport
+            .request("svc.mock.shard.0", &msgpack_request, Duration::from_secs(1))
+            .await
+            .unwrap();
+        assert_eq!(
+            rmp_serde::from_slice::<MockResponse>(&msgpack_response)
+                .unwrap()
+                .key,
+            "a"
+        );
+
+        let json_request = serde_json::to_vec(&MockRequest {
+            key: "b".to_owned(),
+        })
+        .unwrap();
+        let json_response = transport
+            .request("svc.mock.shard.0", &json_request, Duration::from_secs(1))
+            .await
+            .unwrap();
+        assert_eq!(json_response, br#"{"key":"b"}"#);
+
+        shard_task.abort();
     }
 
     #[tokio::test]
