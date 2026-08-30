@@ -255,8 +255,13 @@ function resolveSpecs(): {resolved: Array<ResolvedSpec>; failures: Array<NativeM
 	return {resolved, failures};
 }
 
-function probeAllModules(resolved: Array<ResolvedSpec>): Array<NativeModulePreflightFailure> {
-	if (resolved.length === 0) return [];
+interface ProbeOutcome {
+	readonly inconclusive: string | null;
+	readonly failures: Array<NativeModulePreflightFailure>;
+}
+
+function probeAllModules(resolved: Array<ResolvedSpec>): ProbeOutcome {
+	if (resolved.length === 0) return {inconclusive: null, failures: []};
 	const result = spawnSync(process.execPath, ['-e', PROBE_SCRIPT, ...resolved.map((entry) => entry.modulePath)], {
 		env: {
 			...process.env,
@@ -267,9 +272,20 @@ function probeAllModules(resolved: Array<ResolvedSpec>): Array<NativeModulePrefl
 		timeout: PREFLIGHT_TIMEOUT_MS,
 		maxBuffer: 32 * 1024 * 1024,
 	});
+	if (result.error) {
+		return {inconclusive: result.error.message, failures: []};
+	}
 	const stdout = result.stdout ?? '';
 	const stderr = result.stderr ?? '';
 	const records = parseProbeRecords(stdout);
+	if (records.length === 0 && result.status !== 0) {
+		return {
+			inconclusive: result.signal
+				? `preflight child terminated by signal ${result.signal} without running any probe`
+				: `preflight child exited with code ${result.status} without running any probe`,
+			failures: [],
+		};
+	}
 	const byIndex = new Map<number, Array<ProbeRecord>>();
 	for (const record of records) {
 		const list = byIndex.get(record.i) ?? [];
@@ -292,13 +308,11 @@ function probeAllModules(resolved: Array<ResolvedSpec>): Array<NativeModulePrefl
 			failures.push({
 				name: spec.name,
 				modulePath,
-				reason: result.error
-					? result.error.message
-					: result.signal
-						? `child process terminated by signal ${result.signal} before this probe ran`
-						: result.status !== null && result.status !== 0
-							? `child process exited with code ${result.status} before this probe ran`
-							: 'child process did not start probe',
+				reason: result.signal
+					? `child process terminated by signal ${result.signal} before this probe ran`
+					: result.status !== null && result.status !== 0
+						? `child process exited with code ${result.status} before this probe ran`
+						: 'child process did not start probe',
 				stdout: trimOutput(stdout),
 				stderr: trimOutput(stderr),
 			});
@@ -326,19 +340,7 @@ function probeAllModules(resolved: Array<ResolvedSpec>): Array<NativeModulePrefl
 			});
 		}
 	}
-	if (records.length === 0 && (result.error || result.status !== 0)) {
-		failures.push({
-			name: '<preflight host>',
-			reason: result.error
-				? result.error.message
-				: result.signal
-					? `child terminated by signal ${result.signal}`
-					: `child exited with code ${result.status}`,
-			stdout: trimOutput(stdout),
-			stderr: trimOutput(stderr),
-		});
-	}
-	return failures;
+	return {inconclusive: null, failures};
 }
 
 function formatNativeModulePreflightFailure(failure: NativeModulePreflightFailure): string {
@@ -367,8 +369,14 @@ export function runNativeModulePreflight(): void {
 			return;
 		}
 	}
-	const probeFailures = probeAllModules(resolved);
-	const failures = [...resolveFailures, ...probeFailures];
+	const outcome = probeAllModules(resolved);
+	if (outcome.inconclusive !== null && resolveFailures.length === 0) {
+		log.warn('[NativeModulePreflight] Skipped: preflight could not be completed on this machine', {
+			reason: outcome.inconclusive,
+		});
+		return;
+	}
+	const failures = [...resolveFailures, ...outcome.failures];
 	if (failures.length === 0) {
 		writePreflightMarker(fingerprint);
 		return;

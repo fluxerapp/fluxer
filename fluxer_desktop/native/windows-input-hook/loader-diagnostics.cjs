@@ -7,6 +7,11 @@ const {spawnSync} = require('node:child_process');
 const NATIVE_LOAD_ERROR_MARKER = Symbol.for('fluxer.nativeLoadError');
 const MAX_TEXT_LENGTH = 6000;
 const MAX_DIRECTORY_ENTRIES = 80;
+const PREFLIGHT_CHILD_ENV = 'FLUXER_NATIVE_MODULE_PREFLIGHT_CHILD';
+const PROBE_TIMEOUT_ENV = 'FLUXER_NATIVE_PROBE_TIMEOUT_MS';
+const DEFAULT_PROBE_TIMEOUT_MS = 30000;
+const PROBE_REACHED_REQUIRE_MARKER = '__fluxer_native_probe_reached_require__';
+const PROBE_SOURCE = `require('node:fs').writeSync(1, ${JSON.stringify(PROBE_REACHED_REQUIRE_MARKER)});require(process.argv[1]);`;
 
 function trimText(value, limit = MAX_TEXT_LENGTH) {
 	const text = Buffer.isBuffer(value) ? value.toString('utf8') : String(value ?? '');
@@ -446,22 +451,41 @@ function createNativeLoadError({
 	return error;
 }
 
-function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv, timeoutMs = 5000}) {
+function resolveProbeTimeoutMs(explicitTimeoutMs) {
+	const configured = Number.parseInt(process.env[PROBE_TIMEOUT_ENV] ?? '', 10);
+	if (Number.isFinite(configured) && configured > 0) return configured;
+	return explicitTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS;
+}
+
+function probeReachedRequire(result) {
+	return typeof result.stdout === 'string' && result.stdout.includes(PROBE_REACHED_REQUIRE_MARKER);
+}
+
+function stripProbeMarker(value) {
+	return typeof value === 'string' ? value.split(PROBE_REACHED_REQUIRE_MARKER).join('') : value;
+}
+
+function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv, timeoutMs}) {
 	if (!skipNativeProbeEnv || process.env[skipNativeProbeEnv] === '1') {
 		return null;
 	}
-	const result = spawnSync(process.execPath, ['-e', 'require(process.argv[1])', nativePath], {
+	if (process.env[PREFLIGHT_CHILD_ENV] === '1') {
+		return null;
+	}
+	const result = spawnSync(process.execPath, ['-e', PROBE_SOURCE, nativePath], {
 		env: {...process.env, ELECTRON_RUN_AS_NODE: '1', [skipNativeProbeEnv]: '1'},
 		encoding: 'utf8',
 		stdio: ['ignore', 'pipe', 'pipe'],
-		timeout: timeoutMs,
+		timeout: resolveProbeTimeoutMs(timeoutMs),
 	});
 	if (result.status === 0) return null;
+	if (!probeReachedRequire(result)) return null;
 	const reason = result.error
 		? result.error.message
 		: result.signal
 			? `safety probe terminated by signal ${result.signal}`
 			: `safety probe exited with code ${result.status}`;
+	const probeStdout = trimText(stripProbeMarker(result.stdout));
 	return createNativeLoadError({
 		moduleName,
 		nativePath,
@@ -470,7 +494,7 @@ function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skip
 		reason,
 		skipNativeProbeEnv,
 		extraDiagnostics: [
-			result.stdout ? {name: 'probeStdout', text: trimText(result.stdout)} : null,
+			probeStdout ? {name: 'probeStdout', text: probeStdout} : null,
 			result.stderr ? {name: 'probeStderr', text: trimText(result.stderr)} : null,
 		],
 	});
