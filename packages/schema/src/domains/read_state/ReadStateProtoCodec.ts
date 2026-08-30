@@ -13,14 +13,6 @@ interface ReadStateProtoEntryInput {
 	version?: string | null;
 }
 
-interface ReadStateProtoNativeEntryInput {
-	channelId: bigint | string;
-	mentionCount?: number | null;
-	lastMessageId?: bigint | string | null;
-	lastPinTimestamp?: Date | string | null;
-	version?: bigint | string | null;
-}
-
 interface ReadStateProtoEntry {
 	id: string;
 	mention_count: number;
@@ -34,24 +26,12 @@ const MAX_UINT32 = 0xffffffff;
 const MAX_UINT64 = 0xffffffffffffffffn;
 
 export function encodeReadStateProto(readStates: ReadonlyArray<ReadStateProtoEntryInput>): string {
-	return encodeReadStateProtoNative(
-		readStates.map((readState) => ({
-			channelId: readState.id,
-			lastMessageId: readState.last_message_id,
-			mentionCount: readState.mention_count,
-			lastPinTimestamp: readState.last_pin_timestamp,
-			version: readState.version,
-		})),
-	);
-}
-
-export function encodeReadStateProtoNative(readStates: ReadonlyArray<ReadStateProtoNativeEntryInput>): string {
 	const bundle = create(ReadStateBundleSchema, {
 		readStates: readStates.map((readState) => ({
-			channelId: parseUint64(readState.channelId, 'id'),
-			lastMessageId: optionalUint64(readState.lastMessageId, 'last_message_id'),
-			mentionCount: normalizeMentionCount(readState.mentionCount),
-			lastPinTimestamp: optionalTimestamp(readState.lastPinTimestamp),
+			channelId: parseUint64(readState.id, 'id'),
+			lastMessageId: optionalUint64(readState.last_message_id, 'last_message_id'),
+			mentionCount: normalizeMentionCount(readState.mention_count),
+			lastPinTimestamp: optionalTimestamp(readState.last_pin_timestamp),
 			version: optionalUint64(readState.version, 'version'),
 		})),
 	});
@@ -101,13 +81,13 @@ class ReadStateProtoEncodeError extends Error {
 	}
 }
 
-function optionalUint64(value: bigint | string | null | undefined, field: string): bigint | undefined {
+function optionalUint64(value: string | null | undefined, field: string): bigint | undefined {
 	return value == null ? undefined : parseUint64(value, field);
 }
 
-function parseUint64(value: bigint | string, field: string): bigint {
+function parseUint64(value: string, field: string): bigint {
 	try {
-		const parsed = typeof value === 'bigint' ? value : BigInt(value);
+		const parsed = BigInt(value);
 		if (parsed < 0n || parsed > MAX_UINT64) {
 			throw new Error('out of uint64 range');
 		}
@@ -119,9 +99,9 @@ function parseUint64(value: bigint | string, field: string): bigint {
 	}
 }
 
-function optionalTimestamp(value: Date | string | null | undefined) {
+function optionalTimestamp(value: string | null | undefined) {
 	if (value == null) return undefined;
-	const date = value instanceof Date ? value : new Date(value);
+	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) {
 		throw new ReadStateProtoEncodeError('last_pin_timestamp: invalid timestamp');
 	}

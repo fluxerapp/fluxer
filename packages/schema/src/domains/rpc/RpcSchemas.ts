@@ -288,7 +288,6 @@ export const RpcResponseSessionData = z.object({
 	user_guild_settings: z.array(UserGuildSettingsResponse).describe('Per-guild settings for the user'),
 	notes: z.record(SnowflakeStringType, z.string()).describe('User notes keyed by user ID'),
 	read_states: z.array(ReadStateResponse).describe('Read state for each channel'),
-	read_state_proto: z.string().describe('Read state for each channel, encoded as a base64 protobuf bundle'),
 	private_channels: z.array(ChannelResponse).describe('List of DM and group DM channels'),
 	relationships: z.array(RelationshipResponse).describe('User relationships (friends, blocked, etc.)'),
 	favorite_memes: z.array(FavoriteMemeResponse).describe('List of user favorite memes'),

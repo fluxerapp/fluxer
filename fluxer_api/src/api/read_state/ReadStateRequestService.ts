@@ -7,7 +7,7 @@ import type {
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {UserID} from '../BrandedTypes';
 import {createChannelID, createMessageID} from '../BrandedTypes';
-import {encodeReadStatesResponseProto, mapReadStateResponse} from './ReadStateResponseMapper';
+import {mapReadStateResponse} from './ReadStateResponseMapper';
 import type {ReadStateService} from './ReadStateService';
 
 interface ReadStateAckBulkParams {
@@ -45,7 +45,6 @@ export class ReadStateRequestService {
 		});
 		return {
 			read_states: readStates.map(mapReadStateResponse),
-			read_state_proto: encodeReadStatesResponseProto(readStates),
 		};
 	}
 }

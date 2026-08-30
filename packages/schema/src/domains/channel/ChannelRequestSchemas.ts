@@ -249,9 +249,6 @@ export type ReadStateAckRequest = z.infer<typeof ReadStateAckRequest>;
 
 export const ReadStateAckResponse = z.object({
 	read_states: z.array(ReadStateResponse).describe('Authoritative read states after applying the acknowledgement'),
-	read_state_proto: z
-		.string()
-		.describe('Authoritative read states after applying the acknowledgement, encoded as a base64 protobuf bundle'),
 });
 
 export type ReadStateAckResponse = z.infer<typeof ReadStateAckResponse>;

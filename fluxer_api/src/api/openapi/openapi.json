@@ -32708,13 +32708,9 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ReadStateResponse"},
 						"description": "Authoritative read states after applying the acknowledgement"
-					},
-					"read_state_proto": {
-						"type": "string",
-						"description": "Authoritative read states after applying the acknowledgement, encoded as a base64 protobuf bundle"
 					}
 				},
-				"required": ["read_states", "read_state_proto"]
+				"required": ["read_states"]
 			},
 			"ReadStateResponse": {
 				"type": "object",

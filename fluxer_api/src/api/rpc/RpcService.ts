@@ -85,7 +85,7 @@ import {UserSettings} from '../models/UserSettings';
 import type {WebAuthnCredential} from '../models/WebAuthnCredential';
 import type {BotAuthService} from '../oauth/BotAuthService';
 import {sendApnsPush} from '../push/ApnsPushService';
-import {encodeReadStatesResponseProto, mapReadStateResponse} from '../read_state/ReadStateResponseMapper';
+import {mapReadStateResponse} from '../read_state/ReadStateResponseMapper';
 import type {ReadStateService} from '../read_state/ReadStateService';
 import type {IUserRepository} from '../user/IUserRepository';
 import {PaymentRepository} from '../user/repositories/PaymentRepository';
@@ -1168,9 +1168,6 @@ export class RpcService {
 			),
 			read_states: timeRpcStepSync(responseBuildSteps, 'map_read_states', () =>
 				userData.readStates.map(mapReadStateResponse),
-			),
-			read_state_proto: timeRpcStepSync(responseBuildSteps, 'encode_read_state_proto', () =>
-				encodeReadStatesResponseProto(userData.readStates),
 			),
 			guilds,
 			private_channels: privateChannels,
