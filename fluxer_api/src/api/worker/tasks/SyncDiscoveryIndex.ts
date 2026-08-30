@@ -5,9 +5,11 @@ import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type {GuildID} from '../../BrandedTypes';
 import {GuildDiscoveryRepository} from '../../guild/repositories/GuildDiscoveryRepository';
 import {getGuildSearchService} from '../../SearchFactory';
+import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
 import {getWorkerDependencies} from '../WorkerContext';
 
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 200;
+const UPDATE_CONCURRENCY = 25;
 const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.info('Starting discovery index sync');
 	const guildSearchService = getGuildSearchService();
@@ -41,21 +43,30 @@ const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 	let synced = 0;
 	for (let i = 0; i < guildIds.length; i += BATCH_SIZE) {
 		const batch = guildIds.slice(i, i + BATCH_SIZE);
-		for (const guildId of batch) {
-			const guild = await guildRepository.findUnique(guildId);
-			if (!guild) continue;
-			const discoveryRow = await discoveryRepository.findByGuildId(guildId);
-			if (!discoveryRow || discoveryRow.status !== DiscoveryApplicationStatus.APPROVED) continue;
-			const counts = freshCounts.get(guildId);
-			await guildSearchService.updateGuild(guild, {
-				description: discoveryRow.description,
-				categoryId: discoveryRow.category_type,
-				primaryLanguage: discoveryRow.primary_language ?? null,
-				tags: discoveryRow.custom_tags ?? [],
-				memberCount: counts?.memberCount,
-			});
-			synced++;
-		}
+		const [guilds, discoveryRows] = await Promise.all([
+			guildRepository.listGuilds(batch),
+			Promise.all(batch.map((guildId) => discoveryRepository.findByGuildId(guildId))),
+		]);
+		const guildMap = new Map(guilds.map((guild) => [guild.id.toString(), guild]));
+		const updates = batch
+			.map((guildId, index) => {
+				const guild = guildMap.get(guildId.toString());
+				if (!guild) return null;
+				const discoveryRow = discoveryRows[index];
+				if (!discoveryRow || discoveryRow.status !== DiscoveryApplicationStatus.APPROVED) return null;
+				return {guild, discoveryRow, counts: freshCounts.get(guildId)};
+			})
+			.filter((update): update is NonNullable<typeof update> => update != null);
+		await mapWithConcurrency(updates, UPDATE_CONCURRENCY, (update) =>
+			guildSearchService.updateGuild(update.guild, {
+				description: update.discoveryRow.description,
+				categoryId: update.discoveryRow.category_type,
+				primaryLanguage: update.discoveryRow.primary_language ?? null,
+				tags: update.discoveryRow.custom_tags ?? [],
+				memberCount: update.counts?.memberCount,
+			}),
+		);
+		synced += updates.length;
 	}
 	helpers.logger.info({synced, total: guildIds.length}, 'Discovery index sync completed');
 };
