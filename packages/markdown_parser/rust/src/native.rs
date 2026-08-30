@@ -1,8 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//
-// Native (non-wasm32) C ABI: a pointer-width twin of the wasm ABI in
-// `wasm.rs`, usable from 64-bit hosts via FFI. The emoji context TSV is
-// per call because its `S` records carry byte offsets into `input`.
 
 #![cfg(not(target_arch = "wasm32"))]
 
@@ -14,13 +10,7 @@ pub struct FluxerMdBuffer {
     pub error_len: usize,
 }
 
-/// Parses `input` with the given flags and emoji context TSV and writes an
-/// owned result into `out`. Returns 0 on success and 1 on failure.
-///
-/// # Safety
-/// - `input_ptr` must be valid for reads of `input_len` bytes (or
-///   `input_len == 0`); the same holds for `tsv_ptr`/`tsv_len`.
-/// - `out` must be valid for writes.
+#[allow(clippy::missing_safety_doc)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn fluxer_md_parse(
     input_ptr: *const u8,
@@ -46,12 +36,7 @@ pub unsafe extern "C" fn fluxer_md_parse(
     }
 }
 
-/// Releases the payload of a buffer previously filled by
-/// [`fluxer_md_parse`] and zeroes it. Null or zeroed buffers are no-ops.
-///
-/// # Safety
-/// `out` must be valid for reads/writes and its pointers must originate
-/// from `fluxer_md_parse`.
+#[allow(clippy::missing_safety_doc)]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn fluxer_md_buffer_free(out: *mut FluxerMdBuffer) {
     if out.is_null() {
