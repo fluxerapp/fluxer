@@ -80,9 +80,7 @@ async fn handle_router_request<S, T>(
         }
         return;
     }
-    let payload = msg.payload().to_vec();
-
-    let request: S::Request = match serde_json::from_slice(&payload) {
+    let request: S::Request = match serde_json::from_slice(msg.payload()) {
         Ok(r) => r,
         Err(err) => {
             warn!(error = %err, "failed to decode incoming request");
@@ -96,6 +94,7 @@ async fn handle_router_request<S, T>(
             return;
         }
     };
+    let request = Arc::new(request);
 
     if let Some(cached) = service.l1_lookup(&request) {
         metrics.record_cache_hit();
@@ -117,6 +116,7 @@ async fn handle_router_request<S, T>(
         let forward_service = service.clone();
         let forward_ring = ring.clone();
         let forward_route_key = route_key.clone();
+        let forward_request = request.clone();
         let inflight_key = (route_key, coalesce_key);
         inflight
             .try_get_with(inflight_key, async move {
@@ -124,7 +124,7 @@ async fn handle_router_request<S, T>(
                     &forward_transport,
                     forward_service.as_ref(),
                     forward_ring.as_ref(),
-                    &request,
+                    &forward_request,
                     &forward_route_key,
                 )
                 .await
@@ -148,9 +148,7 @@ async fn handle_router_request<S, T>(
     match coalesce_result {
         Ok(response_bytes) => match rmp_serde::from_slice::<S::Response>(&response_bytes) {
             Ok(response) => {
-                if let Ok(req) = serde_json::from_slice::<S::Request>(&payload) {
-                    service.l1_insert(&req, &response);
-                }
+                service.l1_insert(&request, &response);
                 if msg.has_reply() {
                     let json = serde_json::to_vec(&response).unwrap_or_default();
                     let _ = reply_message(&msg, &transport, &json).await;
@@ -323,6 +321,8 @@ mod tests {
     use crate::config::{DatabaseBackend, Mode, ServiceConfig};
     use crate::transport::{InMemoryTransport, Transport, TransportSubscriber, reply_message};
     use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
+    use std::sync::Mutex;
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     use tokio::sync::Notify;
 
@@ -461,6 +461,131 @@ mod tests {
         );
 
         shard_task.await.unwrap();
+        router_task.abort();
+    }
+
+    static COUNTED_REQUEST_DECODES: AtomicUsize = AtomicUsize::new(0);
+
+    #[derive(Serialize)]
+    struct CountedRequest {
+        key: String,
+    }
+
+    impl<'de> Deserialize<'de> for CountedRequest {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            #[derive(Deserialize)]
+            struct Raw {
+                key: String,
+            }
+
+            let raw = Raw::deserialize(deserializer)?;
+            COUNTED_REQUEST_DECODES.fetch_add(1, Ordering::SeqCst);
+            Ok(CountedRequest { key: raw.key })
+        }
+    }
+
+    struct CachingRouter {
+        l1: Mutex<HashMap<String, MockResponse>>,
+        inserted_keys: Arc<Mutex<Vec<String>>>,
+    }
+
+    impl RouterService for CachingRouter {
+        type Request = CountedRequest;
+        type Response = MockResponse;
+
+        fn service_name(&self) -> &str {
+            "cached-mock"
+        }
+
+        fn route_key(request: &CountedRequest) -> String {
+            request.key.clone()
+        }
+
+        fn coalesce_key(request: &CountedRequest) -> Option<String> {
+            Some(request.key.clone())
+        }
+
+        fn l1_lookup(&self, request: &CountedRequest) -> Option<MockResponse> {
+            self.l1.lock().unwrap().get(&request.key).cloned()
+        }
+
+        fn l1_insert(&self, request: &CountedRequest, response: &MockResponse) {
+            self.inserted_keys.lock().unwrap().push(request.key.clone());
+            self.l1
+                .lock()
+                .unwrap()
+                .insert(request.key.clone(), response.clone());
+        }
+    }
+
+    #[tokio::test]
+    async fn router_decodes_each_request_once_and_inserts_it_into_l1() {
+        let transport = InMemoryTransport::new();
+        let mut shard_sub = transport
+            .subscribe("svc.cached-mock.shard.0")
+            .await
+            .unwrap();
+
+        let shard_transport = transport.clone();
+        let shard_task = tokio::spawn(async move {
+            while let Some(msg) = shard_sub.next().await {
+                let response = MockResponse {
+                    key: "ok".to_owned(),
+                };
+                let response_bytes = rmp_serde::to_vec_named(&response).unwrap();
+                reply_message(&msg, &shard_transport, &response_bytes)
+                    .await
+                    .unwrap();
+            }
+        });
+
+        let inserted_keys = Arc::new(Mutex::new(Vec::new()));
+        let router = CachingRouter {
+            l1: Mutex::new(HashMap::new()),
+            inserted_keys: inserted_keys.clone(),
+        };
+        let router_config = test_config(4);
+        let router_transport = transport.clone();
+        let router_task =
+            tokio::spawn(async move { run_router(&router_config, router, router_transport).await });
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let request = serde_json::to_vec(&CountedRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+
+        let first = transport
+            .request("svc.cached-mock", &request, Duration::from_secs(1))
+            .await
+            .unwrap();
+        assert_eq!(
+            serde_json::from_slice::<MockResponse>(&first).unwrap(),
+            MockResponse {
+                key: "ok".to_owned()
+            }
+        );
+        assert_eq!(inserted_keys.lock().unwrap().as_slice(), ["a".to_owned()]);
+        assert_eq!(COUNTED_REQUEST_DECODES.load(Ordering::SeqCst), 1);
+
+        let second = transport
+            .request("svc.cached-mock", &request, Duration::from_secs(1))
+            .await
+            .unwrap();
+        assert_eq!(
+            serde_json::from_slice::<MockResponse>(&second).unwrap(),
+            MockResponse {
+                key: "ok".to_owned()
+            }
+        );
+        assert_eq!(inserted_keys.lock().unwrap().as_slice(), ["a".to_owned()]);
+        assert_eq!(COUNTED_REQUEST_DECODES.load(Ordering::SeqCst), 2);
+
+        shard_task.abort();
         router_task.abort();
     }
 
