@@ -3,16 +3,17 @@
 use crate::config::ServiceConfig;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::{Manager, Pool, Runtime};
+use deadpool_postgres::{Client, Manager, Pool, Runtime};
 use rustls::RootCertStore;
 use serde_json::{Map, Number, Value};
 use std::io::Cursor;
 use std::str::FromStr;
-use tokio_postgres::{Config as PgConfig, Row, config::SslMode, types::ToSql};
+use tokio_postgres::{Config as PgConfig, Row, Statement, config::SslMode, types::ToSql};
 use tokio_postgres_rustls::MakeRustlsConnect;
 
 const POSTGRES_KV_SCHEMA_LOCK_NAMESPACE: i32 = 0x4658_4b56;
 const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT: &str = "120s";
+const CACHED_JSON_FIELDS: &[&str] = &["message_id"];
 
 #[derive(Clone, Debug)]
 pub struct PostgresConfig {
@@ -215,24 +216,40 @@ fn is_safe_identifier(identifier: &str) -> bool {
 #[derive(Clone)]
 pub struct KvClient {
     pool: Pool,
-    table: String,
+    get_row_sql: String,
+    get_rows_sql: String,
+    get_partition_rows_sql: String,
+    get_row_key_prefix_rows_sql: String,
+    delete_row_sql: String,
 }
 
 impl KvClient {
     pub fn new(pool: Pool, kv_table: &str) -> anyhow::Result<Self> {
+        let table = quote_identifier(kv_table)?;
         Ok(Self {
             pool,
-            table: quote_identifier(kv_table)?,
+            get_row_sql: format!(
+                "SELECT row_data FROM {table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1"
+            ),
+            get_rows_sql: format!(
+                "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())"
+            ),
+            get_partition_rows_sql: format!(
+                "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())"
+            ),
+            get_row_key_prefix_rows_sql: format!(
+                "SELECT row_key, row_data FROM {table} WHERE table_name = $1 AND row_key COLLATE \"C\" >= $2 AND row_key COLLATE \"C\" < $3 AND (expires_at IS NULL OR expires_at > now())"
+            ),
+            delete_row_sql: format!("DELETE FROM {table} WHERE table_name = $1 AND row_key = $2"),
         })
     }
 
     pub async fn get_row(&self, table_name: &str, row_key: &str) -> anyhow::Result<Option<Value>> {
         let client = self.pool.get().await?;
-        let sql = format!(
-            "SELECT row_data FROM {} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1",
-            self.table
-        );
-        let row = client.query_opt(&sql, &[&table_name, &row_key]).await?;
+        let statement = client.prepare_cached(&self.get_row_sql).await?;
+        let row = client
+            .query_opt(&statement, &[&table_name, &row_key])
+            .await?;
         Ok(row.map(|row| row.get::<_, Value>("row_data")))
     }
 
@@ -245,11 +262,8 @@ impl KvClient {
             return Ok(Vec::new());
         }
         let client = self.pool.get().await?;
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
-        let rows = client.query(&sql, &[&table_name, &row_keys]).await?;
+        let statement = client.prepare_cached(&self.get_rows_sql).await?;
+        let rows = client.query(&statement, &[&table_name, &row_keys]).await?;
         Ok(rows.into_iter().map(row_key_and_data).collect())
     }
 
@@ -259,11 +273,10 @@ impl KvClient {
         partition_key: &str,
     ) -> anyhow::Result<Vec<(String, Value)>> {
         let client = self.pool.get().await?;
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
-        let rows = client.query(&sql, &[&table_name, &partition_key]).await?;
+        let statement = client.prepare_cached(&self.get_partition_rows_sql).await?;
+        let rows = client
+            .query(&statement, &[&table_name, &partition_key])
+            .await?;
         Ok(rows.into_iter().map(row_key_and_data).collect())
     }
 
@@ -274,12 +287,11 @@ impl KvClient {
     ) -> anyhow::Result<Vec<(String, Value)>> {
         let client = self.pool.get().await?;
         let upper = format!("{row_key_prefix}\u{10ffff}");
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND row_key COLLATE \"C\" >= $2 AND row_key COLLATE \"C\" < $3 AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
+        let statement = client
+            .prepare_cached(&self.get_row_key_prefix_rows_sql)
+            .await?;
         let rows = client
-            .query(&sql, &[&table_name, &row_key_prefix, &upper])
+            .query(&statement, &[&table_name, &row_key_prefix, &upper])
             .await?;
         Ok(rows.into_iter().map(row_key_and_data).collect())
     }
@@ -299,31 +311,31 @@ impl KvClient {
         let client = self.pool.get().await?;
         let field_expr = json_field_expr(field_name)?;
         let direction = if desc { "DESC" } else { "ASC" };
-        let base = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
+        let base = &self.get_partition_rows_sql;
         let rows = match bound {
             Some(BigIntBound::LessThan(value)) => {
                 let sql = format!(
                     "{base} AND {field_expr} < $3 ORDER BY {field_expr} {direction} LIMIT $4"
                 );
+                let statement = prepare_dynamic(&client, &sql, field_name).await?;
                 client
-                    .query(&sql, &[&table_name, &partition_key, &value, &limit])
+                    .query(&statement, &[&table_name, &partition_key, &value, &limit])
                     .await?
             }
             Some(BigIntBound::GreaterThan(value)) => {
                 let sql = format!(
                     "{base} AND {field_expr} > $3 ORDER BY {field_expr} {direction} LIMIT $4"
                 );
+                let statement = prepare_dynamic(&client, &sql, field_name).await?;
                 client
-                    .query(&sql, &[&table_name, &partition_key, &value, &limit])
+                    .query(&statement, &[&table_name, &partition_key, &value, &limit])
                     .await?
             }
             None => {
                 let sql = format!("{base} ORDER BY {field_expr} {direction} LIMIT $3");
+                let statement = prepare_dynamic(&client, &sql, field_name).await?;
                 client
-                    .query(&sql, &[&table_name, &partition_key, &limit])
+                    .query(&statement, &[&table_name, &partition_key, &limit])
                     .await?
             }
         };
@@ -342,23 +354,19 @@ impl KvClient {
         }
         let client = self.pool.get().await?;
         let field_expr = json_field_expr(field_name)?;
-        let sql = format!(
-            "SELECT row_key, row_data FROM {} WHERE table_name = $1 AND partition_key = $2 AND {field_expr} = ANY($3::bigint[]) AND (expires_at IS NULL OR expires_at > now())",
-            self.table
-        );
+        let base = &self.get_partition_rows_sql;
+        let sql = format!("{base} AND {field_expr} = ANY($3::bigint[])");
+        let statement = prepare_dynamic(&client, &sql, field_name).await?;
         let rows = client
-            .query(&sql, &[&table_name, &partition_key, &values])
+            .query(&statement, &[&table_name, &partition_key, &values])
             .await?;
         Ok(rows.into_iter().map(row_key_and_data).collect())
     }
 
     pub async fn delete_row(&self, table_name: &str, row_key: &str) -> anyhow::Result<()> {
         let client = self.pool.get().await?;
-        let sql = format!(
-            "DELETE FROM {} WHERE table_name = $1 AND row_key = $2",
-            self.table
-        );
-        client.execute(&sql, &[&table_name, &row_key]).await?;
+        let statement = client.prepare_cached(&self.delete_row_sql).await?;
+        client.execute(&statement, &[&table_name, &row_key]).await?;
         Ok(())
     }
 
@@ -369,6 +377,22 @@ impl KvClient {
     ) -> anyhow::Result<Vec<Row>> {
         let client = self.pool.get().await?;
         Ok(client.query(sql, params).await?)
+    }
+}
+
+fn is_cached_json_field(field_name: &str) -> bool {
+    CACHED_JSON_FIELDS.contains(&field_name)
+}
+
+async fn prepare_dynamic(
+    client: &Client,
+    sql: &str,
+    field_name: &str,
+) -> anyhow::Result<Statement> {
+    if is_cached_json_field(field_name) {
+        Ok(client.prepare_cached(sql).await?)
+    } else {
+        Ok(client.prepare(sql).await?)
     }
 }
 
@@ -551,6 +575,52 @@ mod tests {
         assert_eq!(decoded["bytes"], json!("YWJj"));
         assert_eq!(decoded["ids"], json!([1, 2]));
         assert_eq!(decoded["metadata"], json!([["kind", 9]]));
+    }
+
+    fn test_kv_client(kv_table: &str) -> KvClient {
+        let pg = PgConfig::from_str("postgres://fluxer@127.0.0.1:5432/fluxer").unwrap();
+        let manager = Manager::new(pg, build_disabled_tls_connector());
+        let pool = Pool::builder(manager).max_size(1).build().unwrap();
+        KvClient::new(pool, kv_table).unwrap()
+    }
+
+    #[test]
+    fn hoists_kv_statements_for_the_quoted_table() {
+        let kv = test_kv_client("fluxer_kv");
+
+        assert_eq!(
+            kv.get_row_sql,
+            "SELECT row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1"
+        );
+        assert_eq!(
+            kv.get_rows_sql,
+            "SELECT row_key, row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = ANY($2::text[]) AND (expires_at IS NULL OR expires_at > now())"
+        );
+        assert_eq!(
+            kv.get_partition_rows_sql,
+            "SELECT row_key, row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND partition_key = $2 AND (expires_at IS NULL OR expires_at > now())"
+        );
+        assert_eq!(
+            kv.get_row_key_prefix_rows_sql,
+            "SELECT row_key, row_data FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key COLLATE \"C\" >= $2 AND row_key COLLATE \"C\" < $3 AND (expires_at IS NULL OR expires_at > now())"
+        );
+        assert_eq!(
+            kv.delete_row_sql,
+            "DELETE FROM \"fluxer_kv\" WHERE table_name = $1 AND row_key = $2"
+        );
+    }
+
+    #[test]
+    fn caches_only_closed_set_json_fields() {
+        assert!(is_cached_json_field("message_id"));
+        assert!(!is_cached_json_field("user_id"));
+        assert!(!is_cached_json_field("a0"));
+        assert!(!is_cached_json_field(""));
+        assert!(
+            CACHED_JSON_FIELDS
+                .iter()
+                .all(|field| is_safe_identifier(field))
+        );
     }
 
     #[test]
