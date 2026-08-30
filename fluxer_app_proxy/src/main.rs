@@ -2,8 +2,12 @@
 
 use anyhow::Context;
 use fluxer_app_proxy::{
-    config::AppProxyConfig, discovery_cache::DiscoveryCache, geoip,
-    invite_meta::InviteMetaResolver, routes::build_router, state::AppState,
+    config::AppProxyConfig,
+    discovery_cache::DiscoveryCache,
+    geoip,
+    invite_meta::InviteMetaResolver,
+    routes::build_router,
+    state::{AppState, build_http_client},
 };
 use std::sync::Arc;
 use tokio::{net::TcpListener, runtime::Builder};
@@ -28,12 +32,8 @@ fn main() -> anyhow::Result<()> {
         .context("failed to create Fluxer app proxy async runtime")?;
 
     runtime.block_on(async move {
-        let http_client = reqwest::Client::builder()
-            .connect_timeout(std::time::Duration::from_secs(5))
-            .timeout(std::time::Duration::from_secs(30))
-            .redirect(reqwest::redirect::Policy::limited(2))
-            .build()
-            .context("failed to build Fluxer app proxy HTTP client")?;
+        let http_client =
+            build_http_client().context("failed to build Fluxer app proxy HTTP client")?;
         let discovery_cache = Arc::new(DiscoveryCache::new());
 
         if let Err(err) = discovery_cache

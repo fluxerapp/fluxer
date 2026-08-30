@@ -84,6 +84,7 @@ FROM alpine:3.21 AS app-assets
 ARG BUNDLE_LOCAL_ASSETS=true
 ARG PUBLIC_ASSET_BASE_URL=""
 COPY --from=app-build /usr/src/app/fluxer_app/dist /assets
+COPY fluxer_app_proxy/scripts/precompress_assets.sh /usr/local/bin/precompress_assets.sh
 RUN if [ "${BUNDLE_LOCAL_ASSETS}" != "true" ]; then \
 		case "${PUBLIC_ASSET_BASE_URL}" in \
 		http://* | https://*) ;; \
@@ -95,6 +96,8 @@ RUN if [ "${BUNDLE_LOCAL_ASSETS}" != "true" ]; then \
 		esac; \
 		find /assets/assets -type f ! -name 'fonts-*.txt' -delete; \
 	fi
+RUN apk add --no-cache brotli \
+	&& /usr/local/bin/precompress_assets.sh /assets
 
 # Stage for CI to extract the full dist (docker bake app-dist target)
 FROM alpine:3.21 AS app-dist
