@@ -8905,231 +8905,6 @@
 				}
 			}
 		},
-		"/admin/voice/diagnostics/objects": {
-			"get": {
-				"operationId": "list_voice_diagnostics_objects",
-				"summary": "List voice diagnostics objects",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/VoiceDiagnosticsObjectListResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Lists raw voice diagnostics NDJSON S3 objects for a channel and time range. Requires VOICE_DIAGNOSTICS_VIEW permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"pattern": "^(0|[1-9][0-9]*)$",
-							"description": "Channel id to query diagnostics for"
-						}
-					},
-					{
-						"name": "start_ms",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"minimum": 0,
-							"maximum": 8640000000000000,
-							"format": "int53",
-							"description": "Inclusive start timestamp in milliseconds"
-						}
-					},
-					{
-						"name": "end_ms",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"minimum": 0,
-							"maximum": 8640000000000000,
-							"format": "int53",
-							"description": "Inclusive end timestamp in milliseconds"
-						}
-					},
-					{
-						"name": "session_id",
-						"in": "query",
-						"required": false,
-						"schema": {
-							"type": "string",
-							"minLength": 1,
-							"maxLength": 128,
-							"pattern": "^[A-Za-z0-9_.:-]+$",
-							"description": "Optional voice diagnostics session id filter"
-						}
-					},
-					{
-						"name": "limit_objects",
-						"in": "query",
-						"required": false,
-						"schema": {
-							"type": "integer",
-							"minimum": 1,
-							"maximum": 5000,
-							"format": "int32",
-							"description": "Maximum matching S3 objects to include"
-						}
-					}
-				]
-			}
-		},
-		"/admin/voice/diagnostics/raw": {
-			"get": {
-				"operationId": "stream_voice_diagnostics_raw",
-				"summary": "Stream raw voice diagnostics",
-				"tags": ["Admin"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Streams matching voice diagnostics NDJSON objects for local processing. Requires VOICE_DIAGNOSTICS_VIEW permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"pattern": "^(0|[1-9][0-9]*)$",
-							"description": "Channel id to query diagnostics for"
-						}
-					},
-					{
-						"name": "start_ms",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"minimum": 0,
-							"maximum": 8640000000000000,
-							"format": "int53",
-							"description": "Inclusive start timestamp in milliseconds"
-						}
-					},
-					{
-						"name": "end_ms",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"minimum": 0,
-							"maximum": 8640000000000000,
-							"format": "int53",
-							"description": "Inclusive end timestamp in milliseconds"
-						}
-					},
-					{
-						"name": "session_id",
-						"in": "query",
-						"required": false,
-						"schema": {
-							"type": "string",
-							"minLength": 1,
-							"maxLength": 128,
-							"pattern": "^[A-Za-z0-9_.:-]+$",
-							"description": "Optional voice diagnostics session id filter"
-						}
-					},
-					{
-						"name": "limit_objects",
-						"in": "query",
-						"required": false,
-						"schema": {
-							"type": "integer",
-							"minimum": 1,
-							"maximum": 5000,
-							"format": "int32",
-							"description": "Maximum matching S3 objects to include"
-						}
-					}
-				]
-			}
-		},
 		"/admin/voice/regions/create": {
 			"post": {
 				"operationId": "create_voice_region",
@@ -9718,7 +9493,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 115,
+						"maxItems": 114,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10078,7 +9853,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 115,
+						"maxItems": 114,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10108,7 +9883,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 115,
+						"maxItems": 114,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -14918,7 +14693,7 @@
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
 					"deletion_reason_code": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"deletion_public_reason": {"nullable": true, "type": "string"},
-					"acls": {"type": "array", "items": {"type": "string"}, "maxItems": 115},
+					"acls": {"type": "array", "items": {"type": "string"}, "maxItems": 114},
 					"traits": {"type": "array", "items": {"type": "string"}, "maxItems": 100},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}, "maxItems": 10},
@@ -15486,7 +15261,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 115,
+						"maxItems": 114,
 						"description": "List of access control permissions to assign"
 					}
 				},
@@ -15616,39 +15391,6 @@
 			"BanUserAvatarRequest": {
 				"type": "object",
 				"properties": {"reason": {"type": "string"}, "notes": {"type": "string"}}
-			},
-			"VoiceDiagnosticsObjectListResponse": {
-				"type": "object",
-				"properties": {
-					"bucket": {"type": "string", "description": "Diagnostics S3 bucket"},
-					"objects": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"key": {"type": "string", "description": "S3 object key"},
-								"session_id": {"type": "string", "description": "Voice diagnostics session id"},
-								"start_ns": {
-									"type": "string",
-									"description": "First client event timestamp in the object, in nanoseconds"
-								},
-								"end_ns": {
-									"type": "string",
-									"description": "Last client event timestamp in the object, in nanoseconds"
-								},
-								"last_modified": {
-									"description": "S3 object last-modified timestamp",
-									"nullable": true,
-									"type": "string",
-									"format": "date-time"
-								}
-							},
-							"required": ["key", "session_id", "start_ns", "end_ns", "last_modified"]
-						},
-						"description": "Matching diagnostics objects"
-					}
-				},
-				"required": ["bucket", "objects"]
 			},
 			"CreateVoiceRegionResponse": {
 				"type": "object",

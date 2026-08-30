@@ -3,7 +3,6 @@
 import assert from 'node:assert/strict';
 import {Platform} from '@app/features/platform/types/Platform';
 import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
-import {markScreenShareCaptureEnded} from '@app/features/voice/engine/ScreenShareCaptureDiagnostics';
 import type {NegotiationReason} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {updateLocalParticipantFromRoom} from '@app/features/voice/engine/VoiceMediaEngineBridge';
@@ -408,7 +407,6 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 			this.adapter.ensureScreenShareKeepAliveSinkInternal(ctx.participant);
 		} else {
 			await this.adapter.cleanupLingeringScreenShareTracks(ctx.participant);
-			markScreenShareCaptureEnded('screen-share-codec-migration-failed');
 		}
 		this.adapter.transitionScreenShareLifecycleInternal({
 			type: 'share.reject',

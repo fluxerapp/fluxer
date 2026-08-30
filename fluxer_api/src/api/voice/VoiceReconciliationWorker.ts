@@ -12,7 +12,6 @@ import type {GatewayVoiceStateEntry, IGatewayService} from '../infrastructure/IG
 import type {ILiveKitService, LiveKitRoomLocation} from '../infrastructure/ILiveKitService';
 import type {IVoiceRoomStore} from '../infrastructure/IVoiceRoomStore';
 import {parseParticipantIdentity, parseRoomName} from '../infrastructure/VoiceRoomContext';
-import {type VoicePresenceHeartbeatState, VoicePresenceHeartbeatStore} from './VoicePresenceHeartbeatStore';
 
 interface GatewayPendingJoinEntry {
 	readonly connectionId: string;
@@ -27,7 +26,6 @@ interface VoiceReconciliationWorkerOptions {
 	voiceRoomStore: IVoiceRoomStore;
 	kvClient: IKVProvider;
 	logger: ILogger;
-	voicePresenceHeartbeatStore?: VoicePresenceHeartbeatStore;
 	intervalMs?: number;
 	staggerDelayMs?: number;
 	lockTtlSeconds?: number;
@@ -122,7 +120,6 @@ export class VoiceReconciliationWorker {
 	private readonly liveKitService: ILiveKitService;
 	private readonly voiceRoomStore: IVoiceRoomStore;
 	private readonly kvClient: IKVProvider;
-	private readonly voicePresenceHeartbeatStore: VoicePresenceHeartbeatStore;
 	private readonly logger: ILogger;
 	private readonly intervalMs: number;
 	private readonly staggerDelayMs: number;
@@ -140,8 +137,6 @@ export class VoiceReconciliationWorker {
 		this.liveKitService = options.liveKitService;
 		this.voiceRoomStore = options.voiceRoomStore;
 		this.kvClient = options.kvClient;
-		this.voicePresenceHeartbeatStore =
-			options.voicePresenceHeartbeatStore ?? new VoicePresenceHeartbeatStore(this.kvClient);
 		this.logger = options.logger.child({worker: 'VoiceReconciliationWorker'});
 		this.intervalMs = options.intervalMs ?? DEFAULT_INTERVAL_MS;
 		this.staggerDelayMs = options.staggerDelayMs ?? DEFAULT_STAGGER_DELAY_MS;
@@ -575,34 +570,6 @@ export class VoiceReconciliationWorker {
 					livekitOnlyDeferred++;
 					continue;
 				}
-				const heartbeatState = await this.getVoicePresenceHeartbeatState(room.channelId, participant);
-				if (heartbeatState === 'active') {
-					await this.clearLiveKitOnlyCandidate(room.guildId, room.channelId, participant);
-					this.logger.debug(
-						{
-							roomName: room.roomName,
-							userId: participant.userId.toString(),
-							connectionId: participant.connectionId,
-						},
-						'Deferring LiveKit-only participant because v2 voice presence heartbeat is active',
-					);
-					livekitOnlyDeferred++;
-					continue;
-				}
-				if (heartbeatState === 'expired') {
-					await this.clearLiveKitOnlyCandidate(room.guildId, room.channelId, participant);
-					this.logger.warn(
-						{
-							roomName: room.roomName,
-							userId: participant.userId.toString(),
-							connectionId: participant.connectionId,
-						},
-						'Disconnecting LiveKit-only participant because v2 voice presence heartbeat expired',
-					);
-					await this.disconnectLiveKitOnlyParticipant(room, participant);
-					livekitOnlyDisconnected++;
-					continue;
-				}
 				if (!liveKitSnapshot.completed) {
 					this.logger.warn(
 						{
@@ -649,7 +616,7 @@ export class VoiceReconciliationWorker {
 				gatewayOnlySkipped++;
 				continue;
 			}
-			const shouldRemove = await this.shouldRemoveGatewayOnlyState(room, voiceState);
+			const shouldRemove = await this.confirmGatewayOnlyCandidate(room.guildId, room.channelId, voiceState);
 			if (!shouldRemove) {
 				gatewayOnlyDeferred++;
 				continue;
@@ -951,67 +918,6 @@ export class VoiceReconciliationWorker {
 				{error, roomName, userId: voiceState.userId, connectionId: voiceState.connectionId},
 				'Failed to remove ghost voice state from gateway',
 			);
-		}
-	}
-
-	private async shouldRemoveGatewayOnlyState(
-		room: DiscoveredRoom,
-		voiceState: GatewayVoiceStateEntry,
-	): Promise<boolean> {
-		let userId: UserID;
-		try {
-			userId = createUserID(BigInt(voiceState.userId));
-		} catch (error) {
-			this.logger.warn(
-				{error, roomName: room.roomName, userId: voiceState.userId, connectionId: voiceState.connectionId},
-				'Falling back to legacy gateway-only reconciliation because voice state user id was invalid',
-			);
-			return this.confirmGatewayOnlyCandidate(room.guildId, room.channelId, voiceState);
-		}
-		const heartbeatState = await this.getVoicePresenceHeartbeatState(room.channelId, {
-			userId,
-			connectionId: voiceState.connectionId,
-		});
-		if (heartbeatState === 'active') {
-			await this.clearGatewayOnlyCandidate(room.guildId, room.channelId, voiceState.connectionId);
-			this.logger.debug(
-				{roomName: room.roomName, userId: voiceState.userId, connectionId: voiceState.connectionId},
-				'Deferring gateway-only state because v2 voice presence heartbeat is active',
-			);
-			return false;
-		}
-		if (heartbeatState === 'expired') {
-			await this.clearGatewayOnlyCandidate(room.guildId, room.channelId, voiceState.connectionId);
-			this.logger.warn(
-				{roomName: room.roomName, userId: voiceState.userId, connectionId: voiceState.connectionId},
-				'Removing gateway-only state because v2 voice presence heartbeat expired',
-			);
-			return true;
-		}
-		return this.confirmGatewayOnlyCandidate(room.guildId, room.channelId, voiceState);
-	}
-
-	private async getVoicePresenceHeartbeatState(
-		channelId: ChannelID,
-		connection: {userId: UserID; connectionId: string},
-	): Promise<VoicePresenceHeartbeatState> {
-		try {
-			return await this.voicePresenceHeartbeatStore.getHeartbeatState({
-				channelId,
-				userId: connection.userId,
-				connectionId: connection.connectionId,
-			});
-		} catch (error) {
-			this.logger.warn(
-				{
-					error,
-					channelId: channelId.toString(),
-					userId: connection.userId.toString(),
-					connectionId: connection.connectionId,
-				},
-				'Falling back to legacy reconciliation because v2 voice presence heartbeat lookup failed',
-			);
-			return 'legacy';
 		}
 	}
 

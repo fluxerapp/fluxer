@@ -23,7 +23,6 @@ import {SystemAdminController} from './SystemAdminController';
 import {SystemDmAdminController} from './SystemDmAdminController';
 import {UserAdminController} from './UserAdminController';
 import {VoiceAdminController} from './VoiceAdminController';
-import {VoiceDiagnosticsAdminController} from './VoiceDiagnosticsAdminController';
 
 export function registerAdminControllers(app: HonoApp) {
 	AdminApiKeyAdminController(app);
@@ -42,7 +41,6 @@ export function registerAdminControllers(app: HonoApp) {
 	ReportAdminController(app);
 	BillingAdminController(app);
 	VoiceAdminController(app);
-	VoiceDiagnosticsAdminController(app);
 	GatewayAdminController(app);
 	SearchAdminController(app);
 	DiscoveryAdminController(app);

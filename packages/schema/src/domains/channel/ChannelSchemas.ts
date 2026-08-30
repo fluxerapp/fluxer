@@ -47,46 +47,6 @@ export const CallEligibilityResponse = z.object({
 
 export type CallEligibilityResponse = z.infer<typeof CallEligibilityResponse>;
 
-export const VoiceDebugLoggingStatusResponse = z.object({
-	active: z.boolean().describe('Whether clients in this channel should currently send voice diagnostics'),
-	session_id: z.string().nullable().describe('Current debug logging session id, if active'),
-	activated_by_user_id: SnowflakeStringType.nullable().describe('Staff user that activated the session, if active'),
-	started_at_ms: z.number().int().nonnegative().nullable().describe('Session start Unix timestamp in milliseconds'),
-	expires_at_ms: z
-		.number()
-		.int()
-		.nonnegative()
-		.nullable()
-		.describe('Session expiration Unix timestamp in milliseconds'),
-	poll_interval_ms: Int32Type.describe('Recommended client polling interval in milliseconds'),
-	upload_interval_ms: Int32Type.describe('Recommended client telemetry batch upload interval in milliseconds'),
-});
-
-export type VoiceDebugLoggingStatusResponse = z.infer<typeof VoiceDebugLoggingStatusResponse>;
-
-export const VoiceDebugLoggingEventsResponse = z.object({
-	accepted: z.boolean().describe('Whether the telemetry batch was accepted for storage'),
-	active: z.boolean().describe('Whether the server still considers this logging session active'),
-	stored_event_count: Int32Type.describe('Number of events written to diagnostics storage'),
-});
-
-export type VoiceDebugLoggingEventsResponse = z.infer<typeof VoiceDebugLoggingEventsResponse>;
-
-export const VoicePresenceHeartbeatResponse = z.object({
-	ok: z.boolean().describe('Whether the heartbeat was accepted'),
-	heartbeat_interval_ms: Int32Type.describe('Recommended client heartbeat interval in milliseconds'),
-	heartbeat_ttl_ms: Int32Type.describe('Server-side heartbeat expiration window in milliseconds'),
-	expires_at_ms: z.number().int().nonnegative().describe('Unix timestamp in milliseconds when this heartbeat expires'),
-});
-
-export type VoicePresenceHeartbeatResponse = z.infer<typeof VoicePresenceHeartbeatResponse>;
-
-export const VoicePresenceHeartbeatEndResponse = z.object({
-	ok: z.boolean().describe('Whether the heartbeat was ended'),
-});
-
-export type VoicePresenceHeartbeatEndResponse = z.infer<typeof VoicePresenceHeartbeatEndResponse>;
-
 export const ChannelResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier (snowflake) for this channel'),
 	guild_id: SnowflakeStringType.optional().describe('The ID of the guild this channel belongs to'),

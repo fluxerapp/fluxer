@@ -647,9 +647,10 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 	const layoutMode = VoiceCallLayout.layoutMode;
 	const isGrid = layoutMode === 'grid';
 	const connectedChannelId = MediaEngine.channelId;
-	const canControlDebugLogging = connectedChannelId != null && (Users.currentUser?.isStaff() ?? false);
 	const canOpenDebugEventSink =
-		canControlDebugLogging && VoiceDebugEventSinkCommands.canOpenVoiceDebugEventSinkPopout();
+		connectedChannelId != null &&
+		(Users.currentUser?.isStaff() ?? false) &&
+		VoiceDebugEventSinkCommands.canOpenVoiceDebugEventSinkPopout();
 	const isDmVoiceCall = connectedChannelId != null && (MediaEngine.guildId ?? null) === null;
 	const currentRegion =
 		isDmVoiceCall && connectedChannelId
@@ -841,25 +842,6 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 				>
 					{i18n._(PRIORITIZE_SPEAKERS_DESCRIPTOR)}
 				</CheckboxItem>
-				{canControlDebugLogging && (
-					<CheckboxItem
-						icon={
-							<ChartBarIcon
-								weight="fill"
-								className={styles.icon}
-								data-flx="voice.voice-settings-menus.voice-more-options-menu.icon.debug-logging"
-							/>
-						}
-						checked={MediaEngine.voiceDebugLoggingActive}
-						disabled={MediaEngine.voiceDebugLoggingToggleInFlight}
-						onCheckedChange={(checked) => {
-							void MediaEngine.setVoiceDebugLoggingEnabled(checked);
-						}}
-						data-flx="voice.voice-settings-menus.voice-more-options-menu.checkbox-item.debug-logging"
-					>
-						<Trans>Start debug logging session</Trans>
-					</CheckboxItem>
-				)}
 				{canOpenDebugEventSink && (
 					<MenuItem
 						icon={

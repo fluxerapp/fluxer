@@ -111,7 +111,6 @@ export const AdminACLs = {
 	VOICE_REGION_DELETE: 'voice:region:delete',
 	VOICE_REGION_LIST: 'voice:region:list',
 	VOICE_REGION_UPDATE: 'voice:region:update',
-	VOICE_DIAGNOSTICS_VIEW: 'voice:diagnostics:view',
 	VOICE_SERVER_CREATE: 'voice:server:create',
 	VOICE_SERVER_DELETE: 'voice:server:delete',
 	VOICE_SERVER_LIST: 'voice:server:list',

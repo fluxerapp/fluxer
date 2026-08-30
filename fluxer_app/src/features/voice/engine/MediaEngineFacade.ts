@@ -59,11 +59,7 @@ import {
 	saveCurrentVoiceSessionRestoreSnapshot,
 	type VoiceSessionRestoreSyncHandle,
 } from '@app/features/voice/engine/media_engine_facade/VoiceSessionRestoreSync';
-import {getScreenShareCaptureDiagnosticSnapshot} from '@app/features/voice/engine/ScreenShareCaptureDiagnostics';
-import ScreenShareCodecNegotiation, {
-	buildLocalCodecAdvertisements,
-	getScreenShareCodecPreferenceOrder,
-} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
+import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {Store, useStoreVersion} from '@app/features/voice/engine/Store';
 import {shouldMoveToAfkOnTick} from '@app/features/voice/engine/VoiceAfkTracking';
@@ -118,7 +114,7 @@ import {
 	createVoiceEngineV2AppControllerHost,
 	type VoiceEngineV2AppControllerHost,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHost';
-import voiceEngineV2AppDebugLoggingHostAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppDebugLoggingHostAdapter';
+import voiceEngineV2AppDebugEventSinkHostAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppDebugEventSinkHostAdapter';
 import {createVoiceEngineV2AppEventLogSpillLoggerSink} from '@app/features/voice/engine/v2/VoiceEngineV2AppEventLogSpillLoggerSink';
 import {createVoiceEngineV2AppIngestionPort} from '@app/features/voice/engine/v2/VoiceEngineV2AppHostPorts';
 import type {VoiceEngineV2AppLifecycleDisposable} from '@app/features/voice/engine/v2/VoiceEngineV2AppLifecycleAdapter';
@@ -153,18 +149,9 @@ import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import VoiceSessionRestore, {type VoiceSessionRestoreSnapshot} from '@app/features/voice/state/VoiceSessionRestore';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {type CodecPreference, getCodecCapabilityReport} from '@app/features/voice/utils/CodecCapabilityDetector';
-import {getGpuEncoderReportSync, loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
-import {
-	getNativeAudioCaptureDiagnosticState,
-	setNativeAudioCaptureBridgeLifecycleBridge,
-} from '@app/features/voice/utils/NativeAudioCaptureBridge';
-import {getOpenH264StatusSync, loadOpenH264Status} from '@app/features/voice/utils/OpenH264Status';
+import type {CodecPreference} from '@app/features/voice/utils/CodecCapabilityDetector';
+import {setNativeAudioCaptureBridgeLifecycleBridge} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
-import {
-	getVideoDecoderExclusionsSync,
-	loadVideoDecoderExclusions,
-} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {
 	isVoiceServerMuteActive,
@@ -212,8 +199,6 @@ import {
 import {makeObservable, observable} from 'mobx';
 
 const logger = new Logger('MediaEngineFacade');
-const MAX_DIAGNOSTIC_LINUX_AUDIO_TARGETS = 200;
-const MAX_DIAGNOSTIC_PIPEWIRE_GRAPH_RECORDS = 500;
 
 function isCameraPermissionDeniedCommandFailure(error: unknown): boolean {
 	if (!(error instanceof Error)) return false;
@@ -315,137 +300,6 @@ function buildRoomEventDependencies(facade: {
 					bind: (track, options) => sourceLifecycleBridge.bindRemoteTrackLifecycle(track, options),
 				}
 			: undefined,
-	};
-}
-
-function voiceDiagnosticError(error: unknown): Record<string, unknown> {
-	if (error instanceof Error) {
-		return {
-			name: error.name,
-			message: error.message,
-			stack: error.stack,
-		};
-	}
-	return {message: String(error)};
-}
-
-function limitLinuxAudioTargets(result: unknown): unknown {
-	if (!result || typeof result !== 'object' || !('targets' in result)) return result;
-	const record = result as {targets?: unknown};
-	if (!Array.isArray(record.targets)) return result;
-	return {
-		...result,
-		targets: record.targets.slice(0, MAX_DIAGNOSTIC_LINUX_AUDIO_TARGETS),
-		targetCount: record.targets.length,
-		truncated: record.targets.length > MAX_DIAGNOSTIC_LINUX_AUDIO_TARGETS,
-	};
-}
-
-function limitGraphArray(record: Record<string, unknown>, key: string): Record<string, unknown> {
-	const value = record[key];
-	if (!Array.isArray(value)) return record;
-	return {
-		...record,
-		[key]: value.slice(0, MAX_DIAGNOSTIC_PIPEWIRE_GRAPH_RECORDS),
-		[`${key}Count`]: value.length,
-		[`${key}Truncated`]: value.length > MAX_DIAGNOSTIC_PIPEWIRE_GRAPH_RECORDS,
-	};
-}
-
-function limitPipewireRoutingGraph(graph: unknown): unknown {
-	if (!graph || typeof graph !== 'object') return graph;
-	let limited = graph as Record<string, unknown>;
-	limited = limitGraphArray(limited, 'nodes');
-	limited = limitGraphArray(limited, 'ports');
-	limited = limitGraphArray(limited, 'ownedLinks');
-	return limited;
-}
-
-function limitPipewireRoutingGraphResult(result: unknown): unknown {
-	if (!result || typeof result !== 'object') return result;
-	const record = result as Record<string, unknown>;
-	if ('graph' in record) {
-		return {...record, graph: limitPipewireRoutingGraph(record.graph)};
-	}
-	if (Array.isArray(record.graphs)) {
-		return {
-			...record,
-			graphs: record.graphs.map((entry) =>
-				entry && typeof entry === 'object'
-					? {...entry, graph: limitPipewireRoutingGraph((entry as Record<string, unknown>).graph)}
-					: entry,
-			),
-		};
-	}
-	return result;
-}
-
-function hasPipewireRoutingGraph(result: unknown): boolean {
-	if (!result || typeof result !== 'object') return false;
-	const record = result as Record<string, unknown>;
-	if (record.ok !== true) return false;
-	if (record.graph && typeof record.graph === 'object') return true;
-	return (
-		Array.isArray(record.graphs) &&
-		record.graphs.some((entry) => {
-			if (!entry || typeof entry !== 'object') return false;
-			const graph = (entry as Record<string, unknown>).graph;
-			return Boolean(graph && typeof graph === 'object');
-		})
-	);
-}
-
-async function createVoiceAudioDiagnosticsSnapshot(): Promise<Record<string, unknown>> {
-	const electron = getElectronAPI();
-	const [
-		nativeAudioAvailability,
-		nativeAudioApplications,
-		nativeAudioRoutingGraph,
-		virtmicAvailability,
-		virtmicTargets,
-		virtmicRoutingGraph,
-	] = await Promise.all([
-		electron?.nativeAudio
-			? electron.nativeAudio.getAvailability().catch((error) => ({error: voiceDiagnosticError(error)}))
-			: Promise.resolve(null),
-		electron?.nativeAudio
-			? electron.nativeAudio.listAudibleApplications().catch((error) => ({error: voiceDiagnosticError(error)}))
-			: Promise.resolve(null),
-		electron?.nativeAudio
-			? electron.nativeAudio.getRoutingGraph().catch((error) => ({error: voiceDiagnosticError(error)}))
-			: Promise.resolve(null),
-		electron?.virtmic
-			? electron.virtmic.getAvailability().catch((error) => ({error: voiceDiagnosticError(error)}))
-			: Promise.resolve(null),
-		electron?.virtmic
-			? electron.virtmic.listTargets({granular: true}).catch((error) => ({error: voiceDiagnosticError(error)}))
-			: Promise.resolve(null),
-		electron?.virtmic
-			? electron.virtmic.getRoutingGraph().catch((error) => ({error: voiceDiagnosticError(error)}))
-			: Promise.resolve(null),
-	]);
-	return {
-		platform: electron?.platform ?? null,
-		nativeAudio: {
-			availability: nativeAudioAvailability,
-			audibleApplications: nativeAudioApplications,
-			capture: getNativeAudioCaptureDiagnosticState(),
-			pipewireRoutingGraph: limitPipewireRoutingGraphResult(nativeAudioRoutingGraph),
-		},
-		linuxRouting: {
-			virtmicAvailability,
-			pipewireNodeInventory: limitLinuxAudioTargets(virtmicTargets),
-			pipewireRoutingGraph: limitPipewireRoutingGraphResult(virtmicRoutingGraph),
-			activeLinkGraphExported:
-				hasPipewireRoutingGraph(virtmicRoutingGraph) || hasPipewireRoutingGraph(nativeAudioRoutingGraph),
-			routingSettings: {
-				screenShareAudioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
-				screenShareAudioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
-				screenShareAudioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),
-				shareAppAudio: VoiceSettings.getShareAppAudio(),
-				shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
-			},
-		},
 	};
 }
 
@@ -656,7 +510,6 @@ class MediaEngineFacade extends Store {
 		voiceEngineV2AppScreenShareExecutionAdapter.subscribe(forwardChange);
 		VoiceEngineV2AppSubscriptionAdapter.subscribe(forwardChange);
 		VoiceEngineV2AppPermissionAdapter.subscribe(forwardChange);
-		voiceEngineV2AppDebugLoggingHostAdapter.subscribe(forwardChange);
 		ScreenSharePublicationMigration.subscribe(forwardChange);
 	}
 
@@ -815,18 +668,6 @@ class MediaEngineFacade extends Store {
 
 	get voiceServerEndpoint(): string | null {
 		return voiceEngineV2AppConnectionHostAdapter.voiceServerEndpoint;
-	}
-
-	get voiceDebugLoggingActive(): boolean {
-		return voiceEngineV2AppDebugLoggingHostAdapter.active;
-	}
-
-	get voiceDebugLoggingToggleInFlight(): boolean {
-		return voiceEngineV2AppDebugLoggingHostAdapter.toggleInFlight;
-	}
-
-	async setVoiceDebugLoggingEnabled(enabled: boolean): Promise<void> {
-		await voiceEngineV2AppDebugLoggingHostAdapter.setEnabled(enabled);
 	}
 
 	get connectionContext(): VoiceEngineConnectionContext {
@@ -2522,19 +2363,18 @@ class MediaEngineFacade extends Store {
 		this.startAfkTracking();
 		const channelId = voiceEngineV2AppConnectionHostAdapter.channelId;
 		if (channelId) {
-			void voiceEngineV2AppDebugLoggingHostAdapter.start({
+			voiceEngineV2AppDebugEventSinkHostAdapter.start({
 				guildId: voiceEngineV2AppConnectionHostAdapter.guildId,
 				channelId,
 				connectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
 				room,
-				collectSnapshot: () => this.createVoiceDiagnosticsSnapshot(),
 			});
 		}
 		logger.info('All tracking started');
 	}
 
 	private stopTracking(): void {
-		void voiceEngineV2AppDebugLoggingHostAdapter.stop('tracking-stopped');
+		voiceEngineV2AppDebugEventSinkHostAdapter.stop('tracking-stopped');
 		this.statsHostAdapter.stopLatencyTracking();
 		this.statsHostAdapter.stopStatsTracking();
 		VoiceEngineV2AppRemoteSpeakingAdapter.clear();
@@ -2553,83 +2393,6 @@ class MediaEngineFacade extends Store {
 		this.previousWatchedStreamCodecGossip = new Map();
 		this.stopAfkTracking();
 		logger.info('All tracking stopped');
-	}
-
-	private async createVoiceDiagnosticsSnapshot(): Promise<Record<string, unknown>> {
-		await Promise.allSettled([loadGpuEncoderReport(), loadOpenH264Status(), loadVideoDecoderExclusions()]);
-		return {
-			connection: {
-				guildId: voiceEngineV2AppConnectionHostAdapter.guildId,
-				channelId: voiceEngineV2AppConnectionHostAdapter.channelId,
-				connectionId: voiceEngineV2AppConnectionHostAdapter.connectionId,
-				connected: voiceEngineV2AppConnectionHostAdapter.connected,
-				connecting: voiceEngineV2AppConnectionHostAdapter.connecting,
-				reconnecting: voiceEngineV2AppConnectionHostAdapter.reconnecting,
-				disconnecting: voiceEngineV2AppConnectionHostAdapter.disconnecting,
-				voiceServerEndpoint: voiceEngineV2AppConnectionHostAdapter.voiceServerEndpoint,
-				regionHotSwapInProgress: voiceEngineV2AppConnectionHostAdapter.regionHotSwapInProgress,
-				reconnectAttempts: voiceEngineV2AppConnectionHostAdapter.reconnectAttempts,
-			},
-			localVoiceState: {
-				selfMute: LocalVoiceState.getSelfMute(),
-				selfDeaf: LocalVoiceState.getSelfDeaf(),
-				selfVideo: LocalVoiceState.getSelfVideo(),
-				selfStream: LocalVoiceState.getSelfStream(),
-				selfStreamAudio: LocalVoiceState.getSelfStreamAudio(),
-				selfStreamAudioMute: LocalVoiceState.getSelfStreamAudioMute(),
-				viewerStreamKeys: LocalVoiceState.getViewerStreamKeys(),
-				hasUserSetMute: LocalVoiceState.getHasUserSetMute(),
-				hasUserSetDeaf: LocalVoiceState.getHasUserSetDeaf(),
-			},
-			effectiveAudioState: getEffectiveAudioState(),
-			connectionVoiceStates: voiceEngineV2AppVoiceStateAdapter.getConnectionVoiceStates(),
-			participants: Object.values(this.voiceEngineV2Participants.participants),
-			stats: {
-				currentLatency: this.currentLatency,
-				averageLatency: this.averageLatency,
-				displayLatency: this.displayLatency,
-				estimatedLatency: this.estimatedLatency,
-				reconnectionCount: this.reconnectionCount,
-				voiceStats: this.voiceStats,
-				perTrackStats: this.perTrackStats,
-				statsTimeSeriesTail: this.statsTimeSeries.slice(-30),
-				latencyHistoryTail: this.latencyHistory.slice(-30),
-				publisherTransport: this.publisherTransport,
-				subscriberTransport: this.subscriberTransport,
-			},
-			screenShare: {
-				selectedCodec: ScreenShareCodecNegotiation.getSelectedCodec(),
-				preferenceOrder: getScreenShareCodecPreferenceOrder(),
-				capture: await getScreenShareCaptureDiagnosticSnapshot(),
-				audioCapture: await createVoiceAudioDiagnosticsSnapshot(),
-				codecCapabilities: {
-					localAdvertisements: buildLocalCodecAdvertisements(),
-					report: getCodecCapabilityReport(),
-					gpuEncoderReport: getGpuEncoderReportSync(),
-					openH264Status: getOpenH264StatusSync(),
-					decoderExclusions: getVideoDecoderExclusionsSync(),
-				},
-				adaptiveQuality: AdaptiveScreenShareEngine.qualitySnapshot,
-				settings: {
-					preferredScreenShareCodec: VoiceSettings.getPreferredScreenShareCodec(),
-					screenShareEncoderMode: VoiceSettings.getScreenShareEncoderMode(),
-					screenShareSoftwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
-					screenShareScalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-					screenShareBackupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
-					screenShareMaxBitrateMbps: VoiceSettings.getScreenShareMaxBitrateMbps(),
-					adaptiveScreenShareQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
-					screenshareResolution: VoiceSettings.getScreenshareResolution(),
-					videoFrameRate: VoiceSettings.getVideoFrameRate(),
-					streamingMode: VoiceSettings.getStreamingMode(),
-					shareAppAudio: VoiceSettings.getShareAppAudio(),
-					shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
-					shareDeviceAudio: VoiceSettings.getShareDeviceAudio(),
-					screenShareAudioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
-					screenShareAudioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
-					screenShareAudioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),
-				},
-			},
-		};
 	}
 
 	private abortVoiceConnection(): void {

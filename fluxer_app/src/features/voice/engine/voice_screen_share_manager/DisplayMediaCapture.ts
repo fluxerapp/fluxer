@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {updateScreenShareDisplayMediaSettings} from '@app/features/voice/engine/ScreenShareCaptureDiagnostics';
 import {
 	type CapturedScreenShareTracks,
 	stopMediaTrack,
 	stopUnselectedStreamTracks,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import type {ScreenShareCaptureOptions} from 'livekit-client';
 
 type DisplayMediaVideoConstraints = MediaTrackConstraints & {
@@ -108,9 +106,6 @@ export async function createDisplayScreenShareTracks(
 		videoTrack.contentHint = options.contentHint;
 	}
 	await videoTrack.applyConstraints({colorSpace: 'rec709'} as MediaTrackConstraints).catch(() => undefined);
-	updateScreenShareDisplayMediaSettings(videoTrack, {
-		sourceId: ActiveScreenShareSource.getSourceId(),
-	});
 	const cursor = resolveCapturedDisplayMediaCursorCapture(videoTrack, options);
 	if ((videoTrack.getSettings() as DisplayMediaTrackSettings).cursor !== cursor) {
 		await videoTrack.applyConstraints({cursor} as MediaTrackConstraints).catch(() => undefined);

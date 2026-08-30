@@ -144,17 +144,6 @@ export function assertDisconnectReason(
 	assert.fail(`${fieldName} must be one of 'user' | 'error' | 'server'`);
 }
 
-export function isPresenceConnectionReady(
-	connected: boolean,
-	channelId: string | null,
-	connectionId: string | null,
-): boolean {
-	if (!connected) return false;
-	if (channelId === null || channelId.length === 0) return false;
-	if (connectionId === null || connectionId.length === 0) return false;
-	return true;
-}
-
 export interface TerminalTransportSnapshot {
 	readonly current: {readonly room?: unknown};
 	readonly hotSwap: {readonly pendingRoom?: unknown; readonly previousRoom?: unknown};

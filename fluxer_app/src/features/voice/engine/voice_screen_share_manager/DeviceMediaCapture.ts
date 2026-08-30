@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {markScreenShareCaptureActive} from '@app/features/voice/engine/ScreenShareCaptureDiagnostics';
 import {
 	type CapturedScreenShareTracks,
 	type DeviceScreenShareCaptureOptions,
@@ -134,13 +133,6 @@ export async function createDeviceReplacementTracks(
 		throw new Error('No video track found in device screen share capture');
 	}
 	const audioTrack = stream.getAudioTracks()[0];
-	markScreenShareCaptureActive({
-		method: 'device-media',
-		device: {
-			videoDeviceId: options?.videoDeviceId,
-			audioDeviceId: options?.audioDeviceId,
-		},
-	});
 	stopUnselectedStreamTracks(stream, [videoTrack, audioTrack]);
 	return {
 		videoTrack,

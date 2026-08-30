@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	coerceNumberFromString,
-	createStringType,
-	SnowflakeStringType,
-	SnowflakeType,
-} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createStringType, SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 function areServerCoordinatesPaired(
@@ -265,64 +260,6 @@ export const GetVoiceServerResponse = z.object({
 });
 
 export type GetVoiceServerResponse = z.infer<typeof GetVoiceServerResponse>;
-
-const DiagnosticsTimestampMs = coerceNumberFromString(z.number().int().min(0).max(8640000000000000)).describe(
-	'Unix timestamp in milliseconds',
-);
-
-const DiagnosticsSessionId = z
-	.string()
-	.min(1)
-	.max(128)
-	.regex(/^[A-Za-z0-9_.:-]+$/)
-	.optional()
-	.describe('Optional voice diagnostics session id filter');
-
-export const VoiceDiagnosticsQueryRequest = z
-	.object({
-		channel_id: SnowflakeStringType.describe('Channel id to query diagnostics for'),
-		start_ms: DiagnosticsTimestampMs.describe('Inclusive start timestamp in milliseconds'),
-		end_ms: DiagnosticsTimestampMs.describe('Inclusive end timestamp in milliseconds'),
-		session_id: DiagnosticsSessionId,
-		limit_objects: coerceNumberFromString(z.number().int().min(1).max(5000))
-			.optional()
-			.default(1000)
-			.describe('Maximum matching S3 objects to include'),
-	})
-	.superRefine((value, ctx) => {
-		if (value.end_ms < value.start_ms) {
-			ctx.addIssue({
-				code: 'custom',
-				path: ['end_ms'],
-				message: 'INVALID_FORMAT',
-			});
-		}
-		const maxRangeMs = 31 * 24 * 60 * 60 * 1000;
-		if (value.end_ms - value.start_ms > maxRangeMs) {
-			ctx.addIssue({
-				code: 'custom',
-				path: ['end_ms'],
-				message: 'INVALID_FORMAT',
-			});
-		}
-	});
-
-export type VoiceDiagnosticsQueryRequest = z.infer<typeof VoiceDiagnosticsQueryRequest>;
-
-const VoiceDiagnosticsObjectResponse = z.object({
-	key: z.string().describe('S3 object key'),
-	session_id: z.string().describe('Voice diagnostics session id'),
-	start_ns: z.string().describe('First client event timestamp in the object, in nanoseconds'),
-	end_ns: z.string().describe('Last client event timestamp in the object, in nanoseconds'),
-	last_modified: z.iso.datetime().nullable().describe('S3 object last-modified timestamp'),
-});
-
-export const VoiceDiagnosticsObjectListResponse = z.object({
-	bucket: z.string().describe('Diagnostics S3 bucket'),
-	objects: z.array(VoiceDiagnosticsObjectResponse).describe('Matching diagnostics objects'),
-});
-
-export type VoiceDiagnosticsObjectListResponse = z.infer<typeof VoiceDiagnosticsObjectListResponse>;
 
 export const CreateVoiceServerResponse = z.object({
 	server: VoiceServerAdminResponse.describe('Created voice server'),

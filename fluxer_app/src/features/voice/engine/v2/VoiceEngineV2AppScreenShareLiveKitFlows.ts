@@ -3,10 +3,6 @@
 import assert from 'node:assert/strict';
 import {isDesktop, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
 import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
-import {
-	markScreenShareCaptureActive,
-	markScreenShareCaptureEnded,
-} from '@app/features/voice/engine/ScreenShareCaptureDiagnostics';
 import {updateLocalParticipantFromRoom} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {
 	enforceLocalMediaPublicationCap,
@@ -150,7 +146,6 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 					? null
 					: async () => {
 							await this.adapter.cleanupLingeringScreenShareTracks(participant, stopCleanupSnapshot ?? undefined);
-							markScreenShareCaptureEnded('screen-share-disabled');
 						},
 				updateLocalParticipant: true,
 				audioSync: {kind: 'participant-after-watch'},
@@ -179,7 +174,6 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 	): Promise<void> {
 		assert.ok(participant);
 		const cancelled = isUserCancelledScreenShareError(error);
-		const endedReason = cancelled ? 'screen-share-cancelled' : 'screen-share-failed';
 		if (cancelled) {
 			logger.debug('User cancelled or permission denied', {name: (error as Error).name});
 		} else {
@@ -192,7 +186,6 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 		}
 		if (!actual) {
 			await this.adapter.cleanupLingeringScreenShareTracks(participant, stopCleanupSnapshot ?? undefined);
-			markScreenShareCaptureEnded(endedReason);
 		}
 		settleScreenShareFailure({
 			adapter: this.adapter,
@@ -356,8 +349,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 		playSound: boolean,
 	): Promise<void> {
 		assert.ok(participant);
-		const {videoDeviceId, audioDeviceId} = options || {};
-		markScreenShareCaptureActive({method: 'device-media', device: {videoDeviceId, audioDeviceId}});
+		const {videoDeviceId} = options || {};
 		await runScreenShareActivationRitual({
 			adapter: this.adapter,
 			room,
@@ -409,7 +401,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			participant,
 			actual: participant.isScreenShareEnabled,
 			applyState,
-			onInactiveAfterSync: () => markScreenShareCaptureEnded('device-screen-share-failed'),
+			onInactiveAfterSync: null,
 			monitorEndOnActive: false,
 			playSound: false,
 			buildTransition: (actualNow) =>

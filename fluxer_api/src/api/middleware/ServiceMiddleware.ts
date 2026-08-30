@@ -81,7 +81,6 @@ import {UserContentRequestService} from '../user/services/UserContentRequestServ
 import {UserRelationshipRequestService} from '../user/services/UserRelationshipRequestService';
 import {UserService} from '../user/services/UserService';
 import {resolveRequestClientIp} from '../utils/IpUtils';
-import {VoicePresenceHeartbeatStore} from '../voice/VoicePresenceHeartbeatStore';
 import {VoiceService} from '../voice/VoiceService';
 import {WebhookRequestService} from '../webhook/WebhookRequestService';
 import {WebhookService} from '../webhook/WebhookService';
@@ -334,7 +333,6 @@ function getLiveKitWebhookService(): LiveKitWebhookService | null {
 				liveKitService,
 				voiceTopology,
 				getLimitConfigService(),
-				new VoicePresenceHeartbeatStore(getKVClient()),
 			);
 		}
 	}
