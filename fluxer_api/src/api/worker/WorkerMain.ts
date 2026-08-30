@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {setupGracefulShutdown} from '@fluxer/hono/src/Server';
-import {initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
+import {BACKGROUND_READ_TIMEOUT_MS, initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
@@ -163,6 +163,7 @@ export async function startWorkerMain(): Promise<void> {
 				localDc: Config.cassandra.localDc,
 				username: Config.cassandra.username || undefined,
 				password: Config.cassandra.password || undefined,
+				readTimeoutMs: BACKGROUND_READ_TIMEOUT_MS,
 			});
 			cassandraInitialized = true;
 			Logger.info('Cassandra client initialised for worker backend');

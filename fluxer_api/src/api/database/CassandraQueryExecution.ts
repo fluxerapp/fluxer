@@ -164,6 +164,7 @@ export async function fetchPage<T = Record<string, unknown>, P extends Cassandra
 	options: {
 		pageSize: number;
 		pageState?: string | null;
+		readTimeout?: number | undefined;
 	},
 ): Promise<PagedQueryResult<T>> {
 	const {cql, params: boundRaw} = normalizeExecuteArgs(queryOrPrepared, params);
@@ -193,6 +194,7 @@ export async function fetchPage<T = Record<string, unknown>, P extends Cassandra
 		prepare: true,
 		fetchSize: options.pageSize,
 		pageState: options.pageState ?? undefined,
+		readTimeout: options.readTimeout,
 	});
 	return {
 		rows: (result.rows as Array<T>) ?? [],

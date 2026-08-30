@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
 import {createUserID, type UserID} from '../../../../BrandedTypes';
 import {fetchMany, fetchOne, fetchPage, upsertOne} from '../../../../database/CassandraQueryExecution';
 import {Db, type DbOp, nextVersion} from '../../../../database/CassandraTypes';
@@ -94,7 +95,11 @@ export class UserDataRepository {
 		users: Array<User>;
 		pageState: string | null;
 	}> {
-		const result = await fetchPage<UserRow>(FETCH_ALL_USERS_SCAN_CQL, {}, {pageSize: limit, pageState});
+		const result = await fetchPage<UserRow>(
+			FETCH_ALL_USERS_SCAN_CQL,
+			{},
+			{pageSize: limit, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
 		return {
 			users: result.rows.map((user) => new User(user)),
 			pageState: result.pageState,
