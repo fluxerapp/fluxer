@@ -24,17 +24,17 @@ export async function getCachedUserPartialResponses(params: {
 	return await userCacheService.getUserPartialResponses(userIds, requestCache);
 }
 
-export async function mapUserToPartialResponseWithCache(params: {
+export function mapUserToPartialResponseWithCache(params: {
 	user: User;
-	userCacheService: Pick<UserCacheService, 'setUserPartialResponseFromUserInBackground'>;
+	userCacheService: Pick<UserCacheService, 'setUserPartialResponseFromUserInRequestCache'>;
 	requestCache: RequestCache;
-}): Promise<UserPartialResponse> {
+}): UserPartialResponse {
 	const {user, userCacheService, requestCache} = params;
 	const cached = requestCache.userPartials.get(user.id);
 	if (cached) {
 		return cached;
 	}
-	return userCacheService.setUserPartialResponseFromUserInBackground(user, requestCache);
+	return userCacheService.setUserPartialResponseFromUserInRequestCache(user, requestCache);
 }
 
 export async function invalidateUserCache(params: {

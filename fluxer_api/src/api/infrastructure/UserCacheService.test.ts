@@ -136,6 +136,21 @@ describe('UserCacheService', () => {
 		expect(usersServiceClient.requests).toEqual([[userId]]);
 	});
 
+	it('seeds only the request cache when mapping a user on a read path', () => {
+		const userId = createUserID(4501n);
+		const usersServiceClient = new FakeUsersServiceClient();
+		const service = new UserCacheService(usersServiceClient);
+		const user = createUser(userId, 'ReadUser');
+		const requestCache = createRequestCache();
+
+		const partial = service.setUserPartialResponseFromUserInRequestCache(user, requestCache);
+
+		expect(partial.username).toBe('ReadUser');
+		expect(requestCache.userPartials.get(userId)).toBe(partial);
+		expect(usersServiceClient.invalidated).toEqual([]);
+		expect(usersServiceClient.requests).toEqual([]);
+	});
+
 	it('invalidates the users service cache when seeding a partial from a user update', async () => {
 		const userId = createUserID(4001n);
 		const usersServiceClient = new FakeUsersServiceClient();

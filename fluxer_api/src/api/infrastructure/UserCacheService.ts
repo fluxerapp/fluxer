@@ -94,6 +94,12 @@ export class UserCacheService {
 		return response;
 	}
 
+	setUserPartialResponseFromUserInRequestCache(user: User, requestCache: RequestCache): UserPartialResponse {
+		const response = mapUserToPartialResponse(user);
+		requestCache.userPartials.set(user.id, response);
+		return response;
+	}
+
 	private createDeletedUserPartialFallback(userId: UserID): UserPartialResponse {
 		return {
 			id: userId.toString(),

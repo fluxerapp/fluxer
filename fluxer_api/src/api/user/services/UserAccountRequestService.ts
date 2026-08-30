@@ -479,19 +479,17 @@ export class UserAccountRequestService {
 		const guildMemberProfile = mapGuildMemberToProfileResponse(profile.guildMemberDomain ?? null, {restrictProfile});
 		const timezoneOffset = profile.timezoneVisible ? getCurrentTimeZoneOffsetMinutes(profileUser.timezone) : null;
 		const mutualFriends = profile.mutualFriends
-			? await Promise.all(
-					profile.mutualFriends.map((user) =>
-						mapUserToPartialResponseWithCache({
-							user,
-							userCacheService: this.userCacheService,
-							requestCache: params.requestCache,
-						}),
-					),
+			? profile.mutualFriends.map((user) =>
+					mapUserToPartialResponseWithCache({
+						user,
+						userCacheService: this.userCacheService,
+						requestCache: params.requestCache,
+					}),
 				)
 			: undefined;
 		const connectedAccounts = profile.connections ? this.mapConnectionsToResponse(profile.connections) : undefined;
 		return {
-			user: await mapUserToPartialResponseWithCache({
+			user: mapUserToPartialResponseWithCache({
 				user: profileUser,
 				userCacheService: this.userCacheService,
 				requestCache: params.requestCache,
