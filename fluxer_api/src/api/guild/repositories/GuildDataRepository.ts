@@ -4,6 +4,7 @@ import type {GuildID, UserID} from '../../BrandedTypes';
 import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
 import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
 import {GUILD_COLUMNS, type GuildMemberByUserIdRow, type GuildRow} from '../../database/types/GuildTypes';
+import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import {Guild} from '../../models/Guild';
 import {GuildMembersByUserId, Guilds} from '../../Tables';
 import {IGuildDataRepository} from './IGuildDataRepository';
@@ -26,7 +27,15 @@ function createFetchAllGuildsFirstPageQuery(limit: number) {
 }
 
 export class GuildDataRepository extends IGuildDataRepository {
+	constructor(private readonly requestCache?: RequestCache) {
+		super();
+	}
+
 	async findUnique(guildId: GuildID): Promise<Guild | null> {
+		const prefetched = this.requestCache?.takeGuild(guildId);
+		if (prefetched !== undefined) {
+			return prefetched;
+		}
 		const guild = await fetchOne<GuildRow>(FETCH_GUILD_BY_ID_QUERY, {
 			guild_id: guildId,
 		});
@@ -87,6 +96,7 @@ export class GuildDataRepository extends IGuildDataRepository {
 
 	async upsert(data: GuildRow, oldData?: GuildRow | null, _previousOwnerId?: UserID): Promise<Guild> {
 		const guildId = data.guild_id;
+		this.requestCache?.guilds.delete(guildId);
 		const result = await executeVersionedUpdate<GuildRow, 'guild_id'>(
 			async () => fetchOne<GuildRow>(FETCH_GUILD_BY_ID_QUERY, {guild_id: guildId}),
 			(current) => ({
@@ -105,6 +115,7 @@ export class GuildDataRepository extends IGuildDataRepository {
 		oldData?: GuildRow | null,
 		_previousOwnerId?: UserID,
 	): Promise<Guild> {
+		this.requestCache?.guilds.delete(guildId);
 		const result = await executeVersionedUpdate<GuildRow, 'guild_id'>(
 			async () => fetchOne<GuildRow>(FETCH_GUILD_BY_ID_QUERY, {guild_id: guildId}),
 			(current) => ({
@@ -122,6 +133,7 @@ export class GuildDataRepository extends IGuildDataRepository {
 	}
 
 	async delete(guildId: GuildID, _ownerId?: UserID): Promise<void> {
+		this.requestCache?.guilds.delete(guildId);
 		const guild = await fetchOne<GuildRow>(FETCH_GUILD_BY_ID_QUERY, {guild_id: guildId});
 		if (!guild) {
 			return;

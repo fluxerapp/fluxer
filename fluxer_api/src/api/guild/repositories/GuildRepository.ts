@@ -12,6 +12,7 @@ import type {
 	GuildRow,
 	GuildStickerRow,
 } from '../../database/types/GuildTypes';
+import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import type {Guild} from '../../models/Guild';
 import type {GuildAuditLog} from '../../models/GuildAuditLog';
 import type {GuildBan} from '../../models/GuildBan';
@@ -33,11 +34,11 @@ export class GuildRepository implements IGuildRepositoryAggregate {
 	private moderationRepo: GuildModerationRepository;
 	private contentRepo: GuildContentRepository;
 
-	constructor() {
-		this.dataRepo = new GuildDataRepository();
+	constructor(requestCache?: RequestCache) {
+		this.dataRepo = new GuildDataRepository(requestCache);
 		this.memberRepo = new GuildMemberRepository();
 		this.roleRepo = new GuildRoleRepository();
-		this.moderationRepo = new GuildModerationRepository();
+		this.moderationRepo = new GuildModerationRepository(requestCache);
 		this.contentRepo = new GuildContentRepository();
 	}
 

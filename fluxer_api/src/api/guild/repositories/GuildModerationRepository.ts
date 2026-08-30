@@ -13,6 +13,7 @@ import type {
 	GuildBanRow,
 	GuildRow,
 } from '../../database/types/GuildTypes';
+import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import {GuildAuditLog} from '../../models/GuildAuditLog';
 import {GuildBan} from '../../models/GuildBan';
 import {
@@ -55,6 +56,10 @@ const FETCH_GUILD_AUDIT_LOGS_BY_IDS_QUERY = GuildAuditLogs.selectCql({
 });
 
 export class GuildModerationRepository extends IGuildModerationRepository {
+	constructor(private readonly requestCache?: RequestCache) {
+		super();
+	}
+
 	async getBan(guildId: GuildID, userId: UserID): Promise<GuildBan | null> {
 		const ban = await fetchOne<GuildBanRow>(FETCH_GUILD_BAN_BY_GUILD_AND_USER_ID_QUERY, {
 			guild_id: guildId,
@@ -279,6 +284,7 @@ export class GuildModerationRepository extends IGuildModerationRepository {
 	}
 
 	async updateAuditLogsIndexedAt(guildId: GuildID, indexedAt: Date | null): Promise<void> {
+		this.requestCache?.guilds.delete(guildId);
 		await executeVersionedUpdate<GuildRow, 'guild_id'>(
 			() => fetchOne<GuildRow>(FETCH_GUILD_BY_ID_QUERY, {guild_id: guildId}),
 			(current) => {

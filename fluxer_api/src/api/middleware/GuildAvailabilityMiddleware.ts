@@ -64,6 +64,7 @@ async function resolveGuildIdForRequest(ctx: Context<HonoEnv>, path: string): Pr
 		return null;
 	}
 	const channel = await ctx.get('channelRepository').findUnique(channelId);
+	ctx.get('requestCache')?.channels.set(channelId, channel);
 	return channel?.guildId ?? null;
 }
 
@@ -81,6 +82,7 @@ export const GuildAvailabilityMiddleware = createMiddleware<HonoEnv>(async (ctx,
 	}
 	try {
 		const guild = await ctx.get('guildService').data.getGuildSystem(guildId);
+		ctx.get('requestCache')?.guilds.set(guildId, guild);
 		if (isGuildUnavailableForUser(guild, user)) {
 			throw new MissingAccessError();
 		}

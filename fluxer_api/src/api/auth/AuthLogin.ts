@@ -29,7 +29,7 @@ import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDel
 import {REGISTRATION_PENDING_APPROVAL_TRAIT, REGISTRATION_REJECTED_TRAIT} from '../instance/InstanceConfigRepository';
 import type {InviteService} from '../invite/InviteService';
 import {Logger} from '../Logger';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
+import {createRequestCache} from '../middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
 import type {User} from '../models/User';
 import {lookupGeoip} from '../utils/IpUtils';
@@ -37,19 +37,6 @@ import * as AuthMfa from './AuthMfa';
 import * as AuthPassword from './AuthPassword';
 import * as AuthSession from './AuthSession';
 import * as AuthUtility from './AuthUtility';
-
-function createRequestCache(): RequestCache {
-	const userPartials = new Map();
-	const messageMentionChannels = new Map();
-	return {
-		userPartials,
-		messageMentionChannels,
-		clear: () => {
-			userPartials.clear();
-			messageMentionChannels.clear();
-		},
-	};
-}
 
 interface LoginParams {
 	data: LoginRequest;

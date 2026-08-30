@@ -3,6 +3,7 @@
 import type {AttachmentID, ChannelID, EmojiID, GuildID, MessageID, UserID} from '../BrandedTypes';
 import type {ChannelRow} from '../database/types/ChannelTypes';
 import type {MessageRow} from '../database/types/MessageTypes';
+import type {RequestCache} from '../middleware/RequestCacheMiddleware';
 import type {Channel} from '../models/Channel';
 import type {Message} from '../models/Message';
 import type {MessageReaction} from '../models/MessageReaction';
@@ -12,9 +13,9 @@ import {ChannelRepository as NewChannelRepository} from './repositories/ChannelR
 export class ChannelRepository extends IChannelRepository {
 	private repository: NewChannelRepository;
 
-	constructor() {
+	constructor(requestCache?: RequestCache) {
 		super();
-		this.repository = new NewChannelRepository();
+		this.repository = new NewChannelRepository(requestCache);
 	}
 
 	get channelData() {

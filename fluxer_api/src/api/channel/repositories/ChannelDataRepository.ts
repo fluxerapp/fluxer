@@ -7,6 +7,7 @@ import {buildPatchFromData, executeVersionedUpdate} from '../../database/Cassand
 import type {ChannelRow} from '../../database/types/ChannelTypes';
 import {CHANNEL_COLUMNS} from '../../database/types/ChannelTypes';
 import {Logger} from '../../Logger';
+import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import {Channel} from '../../models/Channel';
 import {Channels, ChannelsByGuild, PrivateChannels} from '../../Tables';
 import {
@@ -33,7 +34,15 @@ const FETCH_OPEN_PRIVATE_CHANNEL_TARGET = PrivateChannels.selectCql({
 });
 
 export class ChannelDataRepository extends IChannelDataRepository {
+	constructor(private readonly requestCache?: RequestCache) {
+		super();
+	}
+
 	async findUnique(channelId: ChannelID): Promise<Channel | null> {
+		const prefetched = this.requestCache?.takeChannel(channelId);
+		if (prefetched !== undefined) {
+			return prefetched;
+		}
 		const channel = await fetchOne<ChannelRow>(
 			FETCH_CHANNEL_BY_ID.bind({
 				channel_id: channelId,
@@ -45,6 +54,7 @@ export class ChannelDataRepository extends IChannelDataRepository {
 
 	async upsert(data: ChannelRow, oldData?: ChannelRow | null): Promise<Channel> {
 		const channelId = data.channel_id;
+		this.requestCache?.channels.delete(channelId);
 		const result = await executeVersionedUpdate<ChannelRow, 'channel_id' | 'soft_deleted'>(
 			async () => fetchOne<ChannelRow>(FETCH_CHANNEL_BY_ID.bind({channel_id: channelId, soft_deleted: false})),
 			(current) => ({
@@ -68,6 +78,7 @@ export class ChannelDataRepository extends IChannelDataRepository {
 	}
 
 	async updateLastMessageId(channelId: ChannelID, messageId: MessageID): Promise<void> {
+		this.requestCache?.channels.delete(channelId);
 		const existing = await fetchOne<ChannelRow>(
 			FETCH_CHANNEL_BY_ID.bind({
 				channel_id: channelId,
@@ -159,6 +170,7 @@ export class ChannelDataRepository extends IChannelDataRepository {
 	}
 
 	async delete(channelId: ChannelID, guildId?: GuildID): Promise<void> {
+		this.requestCache?.channels.delete(channelId);
 		const batch = new BatchBuilder();
 		batch.addPrepared(
 			Channels.deleteByPk({

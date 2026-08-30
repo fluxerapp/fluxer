@@ -17,6 +17,7 @@ import {SsoService} from '../auth/services/SsoService';
 import type {IBlueskyOAuthService} from '../bluesky/IBlueskyOAuthService';
 import {Config} from '../Config';
 import {createApiContext} from '../CreateApiContext';
+import {ChannelRepository} from '../channel/ChannelRepository';
 import {ChannelRequestService} from '../channel/services/ChannelRequestService';
 import {MessageRequestService} from '../channel/services/message/MessageRequestService';
 import {createMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
@@ -29,6 +30,7 @@ import {DonationCheckoutService} from '../donation/services/DonationCheckoutServ
 import {DonationMagicLinkService} from '../donation/services/DonationMagicLinkService';
 import {FavoriteMemeRequestService} from '../favorite_meme/FavoriteMemeRequestService';
 import {FavoriteMemeService} from '../favorite_meme/FavoriteMemeService';
+import {GuildRepository} from '../guild/repositories/GuildRepository';
 import {DisabledLiveKitService} from '../infrastructure/DisabledLiveKitService';
 import type {IGatewayService} from '../infrastructure/IGatewayService';
 import type {ILiveKitService} from '../infrastructure/ILiveKitService';
@@ -83,6 +85,7 @@ import {WebhookRequestService} from '../webhook/WebhookRequestService';
 import {WebhookService} from '../webhook/WebhookService';
 import {createGuildStackServices, type GuildStackServices} from './GuildStackServiceFactory';
 import {installLazyServices, type RequestScopedServices} from './LazyServiceProvider';
+import type {RequestCache} from './RequestCacheMiddleware';
 import {
 	ensureVoiceResourcesInitialized,
 	getBillingRepository,
@@ -348,6 +351,8 @@ class RequestServices implements RequestScopedServices {
 	private cachedVoiceRooms: IVoiceRoomStore | undefined;
 	private cachedVoice: VoiceService | null | undefined;
 	private cachedGuildStack: GuildStackServices | undefined;
+	private cachedChannelRepository: ChannelRepository | undefined;
+	private cachedGuildRepository: GuildRepository | undefined;
 	private cachedAdminService: AdminService | undefined;
 	private cachedApplicationService: ApplicationService | undefined;
 	private cachedAuthRequestService: AuthRequestService | undefined;
@@ -386,7 +391,13 @@ class RequestServices implements RequestScopedServices {
 	constructor(
 		private readonly context: ApiContext,
 		private readonly bluesky: IBlueskyOAuthService,
+		private readonly entityCache: RequestCache | undefined,
 	) {}
+
+	private get requestGuildRepository(): GuildRepository {
+		this.cachedGuildRepository ??= this.entityCache ? new GuildRepository(this.entityCache) : getGuildRepository();
+		return this.cachedGuildRepository;
+	}
 
 	get gatewayService(): IGatewayService {
 		this.cachedGateway ??= getGatewayService();
@@ -437,9 +448,9 @@ class RequestServices implements RequestScopedServices {
 		this.cachedGuildStack ??= createGuildStackServices({
 			apiContext: this.context,
 			packRepository: getPackRepository(),
-			channelRepository: getChannelRepository(),
+			channelRepository: this.channelRepository,
 			userRepository: getUserRepository(),
-			guildRepository: getGuildRepository(),
+			guildRepository: this.requestGuildRepository,
 			inviteRepository: getInviteRepository(),
 			webhookRepository: getWebhookRepository(),
 			favoriteMemeRepository: getFavoriteMemeRepository(),
@@ -504,8 +515,11 @@ class RequestServices implements RequestScopedServices {
 		return getCacheService();
 	}
 
-	get channelRepository() {
-		return getChannelRepository();
+	get channelRepository(): ChannelRepository {
+		this.cachedChannelRepository ??= this.entityCache
+			? new ChannelRepository(this.entityCache)
+			: getChannelRepository();
+		return this.cachedChannelRepository;
 	}
 
 	get contactChangeLogService() {
@@ -1058,7 +1072,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	await ensureVirusScanInitialized();
 	await ensureVoiceResourcesInitialized();
 	const blueskyOAuthService = await resolveBlueskyOAuthService(getInstanceConfigRepository());
-	installLazyServices(ctx, new RequestServices(apiContext, blueskyOAuthService));
+	installLazyServices(ctx, new RequestServices(apiContext, blueskyOAuthService, ctx.get('requestCache')));
 	await next();
 });
 
