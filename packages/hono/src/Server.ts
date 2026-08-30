@@ -4,10 +4,17 @@ import {applyFluxerVersionHeader} from '@fluxer/hono/src/middleware/VersionHeade
 import {type Http2Bindings, type HttpBindings, type ServerType, serve} from '@hono/node-server';
 import type {Env, Hono} from 'hono';
 
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_KEEP_ALIVE_TIMEOUT_MS = 125_000;
+const DEFAULT_MAX_REQUESTS_PER_SOCKET = 1_000;
+
 interface ServerOptions {
 	port: number;
 	hostname?: string;
 	onListen?: (info: {address: string; port: number}) => void;
+	requestTimeoutMs?: number;
+	keepAliveTimeoutMs?: number;
+	maxRequestsPerSocket?: number;
 }
 
 type NodeFetchCallback = (request: Request, env: HttpBindings | Http2Bindings) => Promise<unknown> | unknown;
@@ -17,15 +24,30 @@ function createVersionedFetch<E extends Env>(app: Hono<E>): NodeFetchCallback {
 }
 
 export function createServer<E extends Env = Env>(app: Hono<E>, options: ServerOptions): ServerType {
-	const {port, hostname, onListen} = options;
-	return serve(
+	const {
+		port,
+		hostname,
+		onListen,
+		requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+		keepAliveTimeoutMs = DEFAULT_KEEP_ALIVE_TIMEOUT_MS,
+		maxRequestsPerSocket = DEFAULT_MAX_REQUESTS_PER_SOCKET,
+	} = options;
+	const server = serve(
 		{
 			fetch: createVersionedFetch(app),
 			port,
 			...(hostname !== undefined && {hostname}),
+			serverOptions: {
+				keepAliveTimeout: keepAliveTimeoutMs,
+				requestTimeout: requestTimeoutMs,
+			},
 		},
 		onListen,
 	);
+	if ('maxRequestsPerSocket' in server) {
+		server.maxRequestsPerSocket = maxRequestsPerSocket;
+	}
+	return server;
 }
 
 type CleanupFunction = () => void | Promise<void>;

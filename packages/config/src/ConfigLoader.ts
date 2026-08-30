@@ -91,6 +91,7 @@ function defaultConfig(): MasterConfig {
 		services: {
 			api: {
 				port: 8080,
+				max_inflight_requests: 512,
 				ip_ban_exempt_ips: [],
 				desktop_github_redirect_countries: [],
 				presigned_attachment_uploads_enabled: false,
@@ -408,6 +409,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	);
 	validatePostgresConfig(config);
 	validateApiWorkerConfig(config);
+	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	requireString(config.domain.base_domain, 'FLUXER_BASE_DOMAIN');
 	requireString(config.auth.sudo_mode_secret, 'FLUXER_SUDO_MODE_SECRET');
 	requireString(config.auth.connection_initiation_secret, 'FLUXER_CONNECTION_INITIATION_SECRET');

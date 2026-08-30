@@ -9,6 +9,7 @@ import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
 import type {ILogger} from '../ILogger';
 import {ClientErrorAbuseSignalMiddleware} from '../middleware/AbusiveIpAutoBanner';
 import {AuditLogMiddleware} from '../middleware/AuditLogMiddleware';
+import {ConcurrencyLimitMiddleware} from '../middleware/ConcurrencyLimitMiddleware';
 import ContentFilterMiddleware from '../middleware/ContentFilterMiddleware';
 import {GuildAvailabilityMiddleware} from '../middleware/GuildAvailabilityMiddleware';
 import {IpBanMiddleware} from '../middleware/IpBanMiddleware';
@@ -27,10 +28,11 @@ interface MiddlewarePipelineOptions {
 	corsOrigins: Array<string>;
 	trustClientIpHeader: boolean;
 	clientIpHeaderName?: string;
+	maxInflightRequests: number;
 }
 
 export function configureMiddleware(routes: HonoApp, options: MiddlewarePipelineOptions): void {
-	const {logger, nodeEnv, corsOrigins, trustClientIpHeader, clientIpHeaderName} = options;
+	const {logger, nodeEnv, corsOrigins, trustClientIpHeader, clientIpHeaderName, maxInflightRequests} = options;
 	const resolvedHeader = resolveClientIpHeaderName(clientIpHeaderName);
 	routes.use('/webhooks/:webhook_id/:token', cors({origins: '*'}));
 	routes.use('/webhooks/:webhook_id/:token/messages/:message_id', cors({origins: '*'}));
@@ -40,6 +42,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 		skipLogger: true,
 		skipErrorHandler: true,
 	});
+	routes.use(ConcurrencyLimitMiddleware({maxInflightRequests}));
 	routes.get('/_health', async (ctx) => ctx.text('OK'));
 	routes.use(IpBanMiddleware);
 	routes.use(
