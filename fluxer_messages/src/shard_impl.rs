@@ -757,8 +757,10 @@ impl MessagesShard {
         } else {
             HashMap::new()
         };
-        let mut all_messages = messages.to_vec();
-        all_messages.extend(referenced_messages.values().cloned());
+        let all_messages = messages
+            .iter()
+            .chain(referenced_messages.values())
+            .collect::<Vec<_>>();
         let mention_context = build_message_mention_context(&all_messages);
         let attachment_ids = collect_attachment_ids(&all_messages);
         let channel_ids = collect_channel_mention_ids(&all_messages, &mention_context);
@@ -766,12 +768,13 @@ impl MessagesShard {
         let reactions_future = self.fetch_reactions_for_messages(messages, options);
         let attachment_decay_future = self.fetch_attachment_decay(attachment_ids);
         let channel_mentions_future = self.resolve_channel_mentions(channel_ids, options);
-        let (reactions, attachment_decay, channel_mentions) = tokio::join!(
+        let users_future = self.fetch_user_partials(user_ids);
+        let (reactions, attachment_decay, channel_mentions, users) = tokio::join!(
             reactions_future,
             attachment_decay_future,
-            channel_mentions_future
+            channel_mentions_future,
+            users_future
         );
-        let users = self.fetch_user_partials(user_ids).await;
         let attachment_decay = attachment_decay?;
         Ok(ResponseContext {
             users,
@@ -2449,7 +2452,7 @@ fn map_embed_field_response(field: MessageEmbedField) -> ApiEmbedFieldResponse {
     }
 }
 
-fn build_message_mention_context(messages: &[Message]) -> HashMap<i64, MessageMentionContext> {
+fn build_message_mention_context(messages: &[&Message]) -> HashMap<i64, MessageMentionContext> {
     messages
         .iter()
         .map(|message| {
@@ -2478,7 +2481,7 @@ fn ids_present_in_set(ids: &[i64], present: &HashSet<i64>) -> Vec<String> {
         .collect()
 }
 
-fn collect_attachment_ids(messages: &[Message]) -> HashSet<i64> {
+fn collect_attachment_ids(messages: &[&Message]) -> HashSet<i64> {
     let mut ids = HashSet::new();
     for message in messages {
         if let Some(attachments) = &message.attachments {
@@ -2504,7 +2507,7 @@ fn collect_attachment_ids(messages: &[Message]) -> HashSet<i64> {
 }
 
 fn collect_channel_mention_ids(
-    messages: &[Message],
+    messages: &[&Message],
     mention_context: &HashMap<i64, MessageMentionContext>,
 ) -> HashSet<i64> {
     let mut ids = HashSet::new();
@@ -2534,7 +2537,7 @@ fn collect_channel_mention_ids(
 }
 
 fn collect_user_ids(
-    messages: &[Message],
+    messages: &[&Message],
     mention_context: &HashMap<i64, MessageMentionContext>,
 ) -> HashSet<i64> {
     let mut ids = HashSet::new();
@@ -3338,5 +3341,64 @@ mod tests {
         assert_eq!(mapped[1].count, 2);
         assert_eq!(mapped[1].me, Some(true));
         assert_eq!(mapped[2].emoji.name, "z");
+    }
+
+    #[test]
+    fn response_context_id_collection_spans_referenced_messages() {
+        let message = decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": "100"},
+            "author_id": {"__fluxer_type": "bigint", "value": "1"},
+            "content": "hey <@2> over in <#20>",
+            "mention_users": {"__fluxer_type": "set", "value": [
+                {"__fluxer_type": "bigint", "value": "2"}
+            ]},
+            "mention_channels": {"__fluxer_type": "set", "value": [
+                {"__fluxer_type": "bigint", "value": "20"}
+            ]},
+            "attachments": [{
+                "attachment_id": {"__fluxer_type": "bigint", "value": "1000"},
+                "filename": "a.png"
+            }]
+        }))
+        .unwrap();
+        let referenced = decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": "99"},
+            "author_id": {"__fluxer_type": "bigint", "value": "3"},
+            "content": "look at <#21>",
+            "mention_channels": {"__fluxer_type": "set", "value": [
+                {"__fluxer_type": "bigint", "value": "21"}
+            ]},
+            "attachments": [{
+                "attachment_id": {"__fluxer_type": "bigint", "value": "1001"},
+                "filename": "b.png"
+            }]
+        }))
+        .unwrap();
+        let messages = [message];
+        let referenced_messages: HashMap<(i64, i64), Message> =
+            [((10, 99), referenced)].into_iter().collect();
+
+        let all_messages = messages
+            .iter()
+            .chain(referenced_messages.values())
+            .collect::<Vec<_>>();
+        let mention_context = build_message_mention_context(&all_messages);
+
+        assert_eq!(
+            collect_attachment_ids(&all_messages),
+            HashSet::from([1000, 1001])
+        );
+        assert_eq!(
+            collect_channel_mention_ids(&all_messages, &mention_context),
+            HashSet::from([20, 21])
+        );
+        assert_eq!(
+            collect_user_ids(&all_messages, &mention_context),
+            HashSet::from([1, 2, 3])
+        );
     }
 }
