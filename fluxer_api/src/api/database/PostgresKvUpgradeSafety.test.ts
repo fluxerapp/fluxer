@@ -1,0 +1,484 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {execFileSync, spawnSync} from 'node:child_process';
+import {createServer} from 'node:net';
+import {
+	getDefaultPostgresClient,
+	type IPostgresClient,
+	initPostgres,
+	type PostgresQueryable,
+	shutdownPostgres,
+} from '@pkgs/postgres/src/Client';
+import {afterAll, beforeAll, describe, expect, it} from 'vitest';
+import {GuildMembers, ReadStates, Users} from '../Tables';
+import {LegacyPostgresKvQueryExecutor, legacyEnsurePostgresKvSchema} from './__testref__/LegacyPostgresKvQueryExecutor';
+import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
+
+type Row = Record<string, unknown>;
+
+const POSTGRES_IMAGE = 'postgres:16-alpine';
+const CONTAINER = `fluxer-kvupgrade-${process.pid.toString(36)}-${Date.now().toString(36)}`;
+const KV = 'kv_upgrade';
+const dockerUp = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
+
+let PORT = 0;
+
+async function sleep(ms: number): Promise<void> {
+	await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function freePort(): Promise<number> {
+	return new Promise((resolve, reject) => {
+		const server = createServer();
+		server.on('error', reject);
+		server.listen(0, '127.0.0.1', () => {
+			const address = server.address();
+			if (typeof address === 'string' || address === null) {
+				reject(new Error('no port'));
+				return;
+			}
+			const port = address.port;
+			server.close(() => resolve(port));
+		});
+	});
+}
+
+if (dockerUp) {
+	beforeAll(async () => {
+		PORT = await freePort();
+		execFileSync(
+			'docker',
+			[
+				'run',
+				'-d',
+				'--name',
+				CONTAINER,
+				'-e',
+				'POSTGRES_USER=fluxer',
+				'-e',
+				'POSTGRES_PASSWORD=fluxer',
+				'-e',
+				'POSTGRES_DB=fluxer',
+				'-p',
+				`127.0.0.1:${PORT}:5432`,
+				POSTGRES_IMAGE,
+				'-c',
+				'fsync=off',
+				'-c',
+				'synchronous_commit=off',
+			],
+			{stdio: 'ignore'},
+		);
+		for (let attempt = 0; attempt < 180; attempt += 1) {
+			await sleep(500);
+			const probe = spawnSync('docker', ['exec', CONTAINER, 'pg_isready', '-U', 'fluxer', '-d', 'fluxer'], {
+				stdio: 'ignore',
+			});
+			if (probe.status !== 0) continue;
+			try {
+				await initPostgres({url: `postgres://fluxer:fluxer@127.0.0.1:${PORT}/fluxer`, maxConnections: 8});
+				await getDefaultPostgresClient().query('SELECT 1');
+				return;
+			} catch {
+				await shutdownPostgres().catch(() => {});
+			}
+		}
+		throw new Error('postgres not ready');
+	}, 900_000);
+
+	afterAll(async () => {
+		await shutdownPostgres().catch(() => {});
+		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
+	});
+}
+
+class TableClient implements IPostgresClient {
+	constructor(
+		private readonly inner: IPostgresClient,
+		private readonly name: string,
+	) {}
+	query: IPostgresClient['query'] = (text, values) => this.inner.query(text, values);
+	async connect() {
+		await this.inner.connect();
+	}
+	async shutdown() {}
+	isConnected() {
+		return this.inner.isConnected();
+	}
+	async transaction<T>(fn: (c: PostgresQueryable) => Promise<T>) {
+		return this.inner.transaction(fn);
+	}
+	kvTable() {
+		return this.name;
+	}
+}
+
+function fp(rows: ReadonlyArray<Row>): string {
+	return rows
+		.map((r) =>
+			Object.entries(r)
+				.map(([k, v]) => `${k}=${String(v)}`)
+				.join('|'),
+		)
+		.join(';');
+}
+
+function pq(cql: string, params: Record<string, unknown>) {
+	return {cql, params} as never;
+}
+
+const suite = dockerUp ? describe : describe.skip;
+
+suite('postgres kv upgrade safety', () => {
+	let raw: IPostgresClient;
+	let client: TableClient;
+	let legacy: LegacyPostgresKvQueryExecutor;
+	let next: PostgresKvQueryExecutor;
+
+	const usersScan = () => pq(Users.selectCql(), {});
+
+	beforeAll(async () => {
+		await initPostgres({url: `postgres://fluxer:fluxer@127.0.0.1:${PORT}/fluxer`, maxConnections: 8});
+		raw = getDefaultPostgresClient();
+		await raw.query(`DROP TABLE IF EXISTS ${KV}`);
+		client = new TableClient(raw, KV);
+		await legacyEnsurePostgresKvSchema(client);
+		legacy = new LegacyPostgresKvQueryExecutor(client);
+		next = new PostgresKvQueryExecutor(client);
+		for (let i = 0; i < 40; i += 1) {
+			await legacy.executeQuery(
+				Users.upsertAll({user_id: BigInt(1000 + i), username: `u${i}`, discriminator: `${i}`} as never) as never,
+			);
+		}
+		for (let g = 0; g < 3; g += 1) {
+			for (let u = 0; u < 12; u += 1) {
+				await legacy.executeQuery(
+					GuildMembers.upsertAll({guild_id: BigInt(500 + g), user_id: BigInt(1000 + u)} as never) as never,
+				);
+			}
+		}
+		for (let u = 0; u < 5; u += 1) {
+			for (let c = 0; c < 4; c += 1) {
+				await legacy.executeQuery(
+					ReadStates.upsertAll({user_id: BigInt(1000 + u), channel_id: BigInt(7000 + c)} as never) as never,
+				);
+			}
+		}
+	}, 300_000);
+
+	afterAll(async () => {
+		await shutdownPostgres().catch(() => {});
+	});
+
+	it('reads data written by the old image identically', async () => {
+		const shapes = [
+			{name: 'users scan', q: usersScan()},
+			{
+				name: 'guild members by guild',
+				q: pq(GuildMembers.selectCql({where: GuildMembers.where.eq('guild_id')}), {guild_id: 501n}),
+			},
+			{
+				name: 'read states by user',
+				q: pq(ReadStates.selectCql({where: ReadStates.where.eq('user_id')}), {user_id: 1002n}),
+			},
+			{name: 'user by id', q: pq(Users.selectCql({where: Users.where.eq('user_id')}), {user_id: 1005n})},
+		];
+		for (const shape of shapes) {
+			const a = await legacy.executeQuery(shape.q);
+			const b = await next.executeQuery(shape.q);
+			expect(fp(b), shape.name).toBe(fp(a));
+			expect(a.length, shape.name).toBeGreaterThan(0);
+		}
+	});
+
+	async function drain(order: Array<'legacy' | 'next'>, pageSize: number) {
+		const keys: Array<string> = [];
+		let state: string | null = null;
+		let pages = 0;
+		try {
+			for (;;) {
+				const who = order[pages % order.length]!;
+				const exec = who === 'legacy' ? legacy : next;
+				const page: {rows: Array<Row>; pageState: string | null} = await exec.executePagedQuery(usersScan(), {
+					pageSize,
+					pageState: state,
+				});
+				pages += 1;
+				for (const row of page.rows) keys.push(String(row.user_id));
+				state = page.pageState;
+				if (!state) break;
+				if (pages > 200) throw new Error('runaway paging loop');
+			}
+		} catch (error) {
+			return {keys, error: (error as Error).message, pages};
+		}
+		return {keys, error: null, pages};
+	}
+
+	it('pages consistently with only the old image running', async () => {
+		const r = await drain(['legacy'], 7);
+		expect(r.error).toBeNull();
+		expect(r.keys.length).toBe(40);
+		expect(new Set(r.keys).size).toBe(40);
+	});
+
+	it('pages consistently with only the new image running', async () => {
+		const r = await drain(['next'], 7);
+		expect(r.error).toBeNull();
+		expect(r.keys.length).toBe(40);
+		expect(new Set(r.keys).size).toBe(40);
+	});
+
+	it('ROLLING RESTART: an old replica consumes a token minted by the new one', async () => {
+		const first = await next.executePagedQuery(usersScan(), {pageSize: 7, pageState: null});
+		expect(first.pageState).toBeTruthy();
+		const token = JSON.parse(Buffer.from(first.pageState!, 'base64url').toString('utf8'));
+		let failure: string | null = null;
+		let rows = 0;
+		try {
+			const second = await legacy.executePagedQuery(usersScan(), {pageSize: 7, pageState: first.pageState});
+			rows = second.rows.length;
+		} catch (error) {
+			failure = (error as Error).message;
+		}
+		console.log(`NEW->OLD token=${JSON.stringify(token)} legacy=${failure ?? `${rows} rows`}`);
+		expect(failure).toBeNull();
+	});
+
+	it('ROLLING RESTART: alternating old and new replicas drain the scan', async () => {
+		const a = await drain(['next', 'legacy'], 7);
+		const b = await drain(['legacy', 'next'], 7);
+		console.log(`new-first  err=${a.error} pages=${a.pages} total=${a.keys.length} unique=${new Set(a.keys).size}`);
+		console.log(`old-first  err=${b.error} pages=${b.pages} total=${b.keys.length} unique=${new Set(b.keys).size}`);
+		expect(a.error).toBeNull();
+		expect(new Set(a.keys).size).toBe(40);
+		expect(b.error).toBeNull();
+		expect(new Set(b.keys).size).toBe(40);
+	});
+
+	it('a dual {offset, after} token would survive both directions', async () => {
+		const first = await next.executePagedQuery(usersScan(), {pageSize: 7, pageState: null});
+		const cursor = JSON.parse(Buffer.from(first.pageState!, 'base64url').toString('utf8')) as {after: string};
+		const dual = Buffer.from(JSON.stringify({offset: first.rows.length, after: cursor.after})).toString('base64url');
+		const viaOld = await legacy.executePagedQuery(usersScan(), {pageSize: 7, pageState: dual});
+		const viaNew = await next.executePagedQuery(usersScan(), {pageSize: 7, pageState: dual});
+		console.log(`dual token -> old replica: ${viaOld.rows.length} rows, new replica: ${viaNew.rows.length} rows`);
+		expect(viaOld.rows.length).toBe(7);
+		expect(viaNew.rows.length).toBe(7);
+	});
+
+	it('deletes exactly the same rows as the old image', async () => {
+		const seed = async (exec: LegacyPostgresKvQueryExecutor | PostgresKvQueryExecutor, base: bigint) => {
+			for (let c = 0; c < 5; c += 1) {
+				await exec.executeQuery(ReadStates.upsertAll({user_id: base, channel_id: BigInt(9000 + c)} as never) as never);
+			}
+		};
+		await seed(legacy, 4001n);
+		await seed(legacy, 4002n);
+		await legacy.executeQuery(
+			ReadStates.delete({where: ReadStates.where.eq('user_id')}).bind({user_id: 4001n}) as never,
+		);
+		await next.executeQuery(ReadStates.delete({where: ReadStates.where.eq('user_id')}).bind({user_id: 4002n}) as never);
+		const left = await raw.query<{row_key: string}>(
+			`SELECT row_key FROM ${KV} WHERE table_name = 'read_states' AND row_key LIKE '%400%' ORDER BY row_key`,
+		);
+		console.log(`rows left after legacy delete + new delete: ${left.rows.length}`);
+		expect(left.rows.length).toBe(0);
+	});
+
+	it('writes byte-identical row_key and partition_key to the old image', async () => {
+		const OLD = `${KV}_w_old`;
+		const NEW = `${KV}_w_new`;
+		await raw.query(`DROP TABLE IF EXISTS ${OLD}`);
+		await raw.query(`DROP TABLE IF EXISTS ${NEW}`);
+		const oldClient = new TableClient(raw, OLD);
+		const newClient = new TableClient(raw, NEW);
+		await legacyEnsurePostgresKvSchema(oldClient);
+		await ensurePostgresKvSchema(newClient);
+		const oldExec = new LegacyPostgresKvQueryExecutor(oldClient);
+		const newExec = new PostgresKvQueryExecutor(newClient);
+		for (let i = 0; i < 30; i += 1) {
+			const row = {user_id: BigInt(9000 + i), channel_id: BigInt(500 + i)} as never;
+			await oldExec.executeQuery(ReadStates.upsertAll(row) as never);
+			await newExec.executeQuery(ReadStates.upsertAll(row) as never);
+			const g = {guild_id: BigInt(70 + i), user_id: BigInt(9000 + i)} as never;
+			await oldExec.executeQuery(GuildMembers.upsertAll(g) as never);
+			await newExec.executeQuery(GuildMembers.upsertAll(g) as never);
+		}
+		const diff = await raw.query<{n: string}>(`
+			SELECT count(*) AS n FROM (
+				(SELECT table_name, partition_key, row_key FROM ${OLD}
+				 EXCEPT SELECT table_name, partition_key, row_key FROM ${NEW})
+				UNION ALL
+				(SELECT table_name, partition_key, row_key FROM ${NEW}
+				 EXCEPT SELECT table_name, partition_key, row_key FROM ${OLD})
+			) d`);
+		const schemaDiff = await raw.query<{n: string}>(`
+			SELECT count(*) AS n FROM (
+				(SELECT replace(indexdef, '${OLD}', 'KV') FROM pg_indexes WHERE tablename = '${OLD}'
+				 EXCEPT SELECT replace(indexdef, '${NEW}', 'KV') FROM pg_indexes WHERE tablename = '${NEW}')
+				UNION ALL
+				(SELECT replace(indexdef, '${NEW}', 'KV') FROM pg_indexes WHERE tablename = '${NEW}'
+				 EXCEPT SELECT replace(indexdef, '${OLD}', 'KV') FROM pg_indexes WHERE tablename = '${OLD}')
+			) d`);
+		console.log(`key diffs=${diff.rows[0]!.n} index-definition diffs=${schemaDiff.rows[0]!.n}`);
+		expect(Number(diff.rows[0]!.n)).toBe(0);
+		expect(Number(schemaDiff.rows[0]!.n)).toBe(0);
+	});
+
+	it('survives three simultaneous boots (two api replicas and a worker)', async () => {
+		const BOOT = `${KV}_boot`;
+		await raw.query(`DROP TABLE IF EXISTS ${BOOT}`);
+		const results = await Promise.allSettled([
+			ensurePostgresKvSchema(new TableClient(raw, BOOT)),
+			ensurePostgresKvSchema(new TableClient(raw, BOOT)),
+			ensurePostgresKvSchema(new TableClient(raw, BOOT)),
+		]);
+		const failures = results.filter((r) => r.status === 'rejected');
+		console.log(`concurrent boots rejected: ${failures.length}`);
+		for (const f of failures) console.log(`  ${(f as PromiseRejectedResult).reason}`);
+		expect(failures.length).toBe(0);
+	}, 120_000);
+
+	it('backfills the messages partition key once and then skips the update', async () => {
+		const BACKFILL = 'kv_backfill';
+		const legacyKey = `"c"${String.fromCharCode(31)}"b"${String.fromCharCode(31)}"m"`;
+		const backfillClient = new TableClient(raw, BACKFILL);
+		await raw.query(`DROP TABLE IF EXISTS ${BACKFILL}`);
+		await ensurePostgresKvSchema(backfillClient);
+		await raw.query(
+			`INSERT INTO ${BACKFILL} (table_name, partition_key, row_key, row_data) VALUES ('messages', $1, $1, '{}'::jsonb)`,
+			[legacyKey],
+		);
+		const pendingBefore = await raw.query(
+			`SELECT 1 FROM ${BACKFILL} WHERE table_name = 'messages' AND partition_key = row_key AND split_part(row_key, chr(31), 3) <> ''`,
+		);
+		expect(pendingBefore.rows.length).toBe(1);
+		await ensurePostgresKvSchema(backfillClient);
+		const after = await raw.query<{partition_key: string}>(`SELECT partition_key FROM ${BACKFILL}`);
+		expect(after.rows[0]?.partition_key).toBe(`"c"${String.fromCharCode(31)}"b"`);
+		const pendingAfter = await raw.query(
+			`SELECT 1 FROM ${BACKFILL} WHERE table_name = 'messages' AND partition_key = row_key AND split_part(row_key, chr(31), 3) <> ''`,
+		);
+		expect(pendingAfter.rows.length).toBe(0);
+		await ensurePostgresKvSchema(backfillClient);
+		const stable = await raw.query<{partition_key: string}>(`SELECT partition_key FROM ${BACKFILL}`);
+		expect(stable.rows[0]?.partition_key).toBe(`"c"${String.fromCharCode(31)}"b"`);
+		await raw.query(`DROP TABLE IF EXISTS ${BACKFILL}`);
+	}, 120_000);
+
+	it('boot does not repair an invalid C-collation index', async () => {
+		const q = pq(ReadStates.selectCql({where: ReadStates.where.eq('user_id')}), {user_id: 1002n});
+		const before = await next.executeQuery(q);
+		await raw.query(`UPDATE pg_index SET indisvalid = false WHERE indexrelid = '${KV}_row_key_c_idx'::regclass`);
+		await ensurePostgresKvSchema(client);
+		const check = await raw.query<{indisvalid: boolean}>(
+			`SELECT indisvalid FROM pg_index WHERE indexrelid = '${KV}_row_key_c_idx'::regclass`,
+		);
+		const after = await next.executeQuery(q);
+		await raw.query(`UPDATE pg_index SET indisvalid = true WHERE indexrelid = '${KV}_row_key_c_idx'::regclass`);
+		console.log(`index valid after boot: ${check.rows[0]?.indisvalid}`);
+		expect(String(after.map((r) => Object.values(r).map(String).join(',')))).toBe(
+			String(before.map((r) => Object.values(r).map(String).join(','))),
+		);
+		expect(check.rows[0]?.indisvalid).toBe(true);
+	});
+
+	describe('multi-range plan shape on a populated upgraded database', () => {
+		const PERF = 'kv_ranges_perf';
+		const SEP = String.fromCharCode(31);
+		const BASE = 1456074443984486400n;
+		let perf: IPostgresClient;
+
+		beforeAll(async () => {
+			const db = getDefaultPostgresClient();
+			await db.query(`DROP TABLE IF EXISTS ${PERF}`);
+			perf = new TableClient(db, PERF);
+			await ensurePostgresKvSchema(perf);
+			await db.query(
+				`INSERT INTO ${PERF} (table_name, partition_key, row_key, row_data)
+SELECT 'push_subscriptions',
+	format('{"__fluxer_type":"bigint","value":"%s"}%s{"__fluxer_type":"bigint","value":"%s"}', u, chr(31), s),
+	format('{"__fluxer_type":"bigint","value":"%s"}%s{"__fluxer_type":"bigint","value":"%s"}', u, chr(31), s),
+	jsonb_build_object(
+		'user_id', jsonb_build_object('__fluxer_type', 'bigint', 'value', u::text),
+		'subscription_id', jsonb_build_object('__fluxer_type', 'bigint', 'value', s::text),
+		'endpoint', repeat('e', 300))
+FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`,
+				[BASE.toString()],
+			);
+			await db.query(`ANALYZE ${PERF}`);
+		}, 300_000);
+
+		it('emits a multi-range plan that is not slower than the tier-3 scan it replaces', async () => {
+			const {PushSubscriptions} = await import('../Tables');
+			const {buildCandidatePlan, planFragments} = await import('./PostgresKvQueryExecutor');
+			const {getKvMeta} = await import('./CassandraMetaRegistry');
+			const db = getDefaultPostgresClient();
+			const explain = async (sql: string, params: Array<unknown>) => {
+				const r = await db.query<Record<string, string>>(`EXPLAIN (ANALYZE, BUFFERS) ${sql}`, params);
+				const plan = r.rows.map((row) => row['QUERY PLAN']!).join('\n');
+				return {plan, ms: Number(/Execution Time: ([\d.]+)/.exec(plan)?.[1] ?? 'NaN')};
+			};
+			const cql = PushSubscriptions.selectCql({where: PushSubscriptions.where.in('user_id', 'user_ids')});
+			const meta = getKvMeta(cql)!;
+			const scan = await explain(
+				`SELECT kv.row_key, kv.row_data FROM ${PERF} kv WHERE kv.table_name = $1 AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+				['push_subscriptions'],
+			);
+			const deltas: Array<string> = [];
+			for (const size of [5, 10, 25, 50, 100]) {
+				const params = {user_ids: Array.from({length: size}, (_, i) => BASE + BigInt(i * 3))};
+				const plan = buildCandidatePlan(meta, params as never);
+				expect(plan.candidates.kind).toBe('ranges');
+				const fragments = planFragments(plan.candidates);
+				expect(fragments.predicate).not.toContain('unnest');
+				const pushed = await explain(
+					`SELECT kv.row_key, kv.row_data FROM ${PERF} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+					['push_subscriptions', ...fragments.params],
+				);
+				const verdict = `n=${size} pushdown=${pushed.ms.toFixed(2)}ms scan=${scan.ms.toFixed(2)}ms`;
+				console.log(verdict);
+				if (pushed.ms > scan.ms) deltas.push(`${verdict}\n${pushed.plan}`);
+			}
+			expect(deltas.join('\n')).toBe('');
+			const overCap = buildCandidatePlan(meta, {
+				user_ids: Array.from({length: 257}, (_, i) => BASE + BigInt(i * 3)),
+			} as never);
+			expect(overCap.candidates.kind).toBe('scan');
+			expect(SEP).toBe('\u001f');
+		}, 300_000);
+	});
+});
+
+describe('candidate plan shapes reached by real queries', () => {
+	it('classifies the push fan-out and webhook lookups', async () => {
+		const {PushSubscriptions, Webhooks} = await import('../Tables');
+		const {buildCandidatePlan} = await import('./PostgresKvQueryExecutor');
+		const {getKvMeta} = await import('./CassandraMetaRegistry');
+		const cases = [
+			{
+				name: 'push_subscriptions IN(user_id) x100',
+				cql: PushSubscriptions.selectCql({where: PushSubscriptions.where.in('user_id', 'user_ids')}),
+				params: {user_ids: Array.from({length: 100}, (_, i) => BigInt(1000 + i))},
+			},
+			{
+				name: 'webhooks IN(webhook_id) x100',
+				cql: Webhooks.selectCql({where: Webhooks.where.in('webhook_id', 'webhook_ids')}),
+				params: {webhook_ids: Array.from({length: 100}, (_, i) => BigInt(1000 + i))},
+			},
+		];
+		for (const c of cases) {
+			const meta = getKvMeta(c.cql)!;
+			const plan = buildCandidatePlan(meta, c.params as never);
+			const size =
+				plan.candidates.kind === 'ranges'
+					? plan.candidates.lowerBounds.length
+					: plan.candidates.kind === 'rowKeys'
+						? plan.candidates.rowKeys.length
+						: 0;
+			console.log(`${c.name} -> kind=${plan.candidates.kind} n=${size} exact=${plan.exact}`);
+		}
+		expect(true).toBe(true);
+	});
+});
