@@ -11,6 +11,7 @@
 
 -define(SERVER, ?MODULE).
 -define(CIRCUIT_TABLE, gateway_http_circuit_breaker).
+-define(CIRCUIT_WINDOW_TABLE, gateway_http_circuit_window).
 -define(INFLIGHT_TABLE, gateway_http_inflight).
 
 -define(DEFAULT_RPC_CONNECT_TIMEOUT_MS, 5000).
@@ -119,6 +120,7 @@ init([]) ->
     process_flag(trap_exit, true),
     erlang:process_flag(fullsweep_after, 50),
     ensure_table(?CIRCUIT_TABLE),
+    ensure_table(?CIRCUIT_WINDOW_TABLE),
     ensure_table(?INFLIGHT_TABLE),
     ok = ensure_sharded_profiles(rpc, ?RPC_PROFILE_SHARDS),
     ok = ensure_sharded_profiles(push, ?PUSH_PROFILE_SHARDS),

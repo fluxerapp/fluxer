@@ -11,24 +11,26 @@
     prune_circuit_table/0,
     is_stale_circuit/3
 ]).
--export_type([response/0]).
+-export_type([response/0, circuit/0]).
 
 -define(CIRCUIT_TABLE, gateway_http_circuit_breaker).
+-define(CIRCUIT_WINDOW_TABLE, gateway_http_circuit_window).
 -define(INFLIGHT_TABLE, gateway_http_inflight).
+-define(CIRCUIT_STATE_POS, 2).
 
 -define(CB_WINDOW_MS, 10000).
 -define(CB_FAILURE_RATE_PCT, 80).
 
 -type response() :: {ok, non_neg_integer(), [{binary(), binary()}], binary()} | {error, term()}.
+-type circuit_state() :: closed | open | half_open.
+-type circuit() :: {circuit_state(), integer() | undefined, integer()}.
+-type window_entry() :: {boolean(), integer()}.
 
 -spec allow_circuit_request({atom(), binary()}, pos_integer()) -> ok | {error, circuit_open}.
 allow_circuit_request(CircuitKey, RecoveryTimeoutMs) ->
-    Now = erlang:system_time(millisecond),
-    case safe_lookup_circuit(CircuitKey) of
-        [] ->
-            ok;
-        [{_, #{state := open, opened_at := OpenedAt}}] ->
-            maybe_transition_half_open(CircuitKey, OpenedAt, Now, RecoveryTimeoutMs);
+    case circuit_state(CircuitKey) of
+        open ->
+            maybe_transition_half_open(CircuitKey, RecoveryTimeoutMs);
         _ ->
             ok
     end.
@@ -73,10 +75,11 @@ prune_circuit_table() ->
     Now = erlang:system_time(millisecond),
     MaxAgeMs = gateway_http_client:cleanup_max_age_ms(),
     ok = ensure_named_table(?CIRCUIT_TABLE),
+    ok = ensure_named_table(?CIRCUIT_WINDOW_TABLE),
     try
         _ = ets:foldl(
-            fun({Key, CircuitState}, Acc) ->
-                delete_stale_circuit(Key, CircuitState, Now, MaxAgeMs),
+            fun(Record, Acc) ->
+                prune_circuit_record(Record, Now, MaxAgeMs),
                 Acc
             end,
             ok,
@@ -87,47 +90,76 @@ prune_circuit_table() ->
         error:badarg -> ok
     end.
 
--spec delete_stale_circuit({atom(), binary()}, map(), integer(), integer()) -> ok.
-delete_stale_circuit(Key, CircuitState, Now, MaxAgeMs) ->
-    case is_stale_circuit(CircuitState, Now, MaxAgeMs) of
+-spec prune_circuit_record(tuple(), integer(), integer()) -> ok.
+prune_circuit_record({Key, State, OpenedAt, UpdatedAt}, Now, MaxAgeMs) ->
+    delete_stale_circuit(Key, {State, OpenedAt, UpdatedAt}, Now, MaxAgeMs);
+prune_circuit_record(_Record, _Now, _MaxAgeMs) ->
+    ok.
+
+-spec delete_stale_circuit({atom(), binary()}, circuit(), integer(), integer()) -> ok.
+delete_stale_circuit(Key, Circuit, Now, MaxAgeMs) ->
+    case is_stale_circuit(Circuit, Now, MaxAgeMs) of
         true ->
             safe_delete(?CIRCUIT_TABLE, Key),
-            ok;
+            clear_window(Key);
         false ->
             ok
     end.
 
--spec is_stale_circuit(map(), integer(), integer()) -> boolean().
-is_stale_circuit(#{state := open, opened_at := OpenedAt}, Now, MaxAgeMs) ->
+-spec is_stale_circuit(circuit(), integer(), integer()) -> boolean().
+is_stale_circuit({open, OpenedAt, _UpdatedAt}, Now, MaxAgeMs) when is_integer(OpenedAt) ->
     Now - OpenedAt > MaxAgeMs;
-is_stale_circuit(#{state := closed, updated_at := UpdatedAt}, Now, MaxAgeMs) ->
+is_stale_circuit({closed, _OpenedAt, UpdatedAt}, Now, MaxAgeMs) when is_integer(UpdatedAt) ->
     Now - UpdatedAt > MaxAgeMs;
-is_stale_circuit(_, _, _) ->
+is_stale_circuit(_Circuit, _Now, _MaxAgeMs) ->
     false.
 
--spec maybe_transition_half_open({atom(), binary()}, integer(), integer(), pos_integer()) ->
+-spec maybe_transition_half_open({atom(), binary()}, pos_integer()) ->
     ok | {error, circuit_open}.
-maybe_transition_half_open(CircuitKey, OpenedAt, Now, RecoveryTimeoutMs) ->
+maybe_transition_half_open(CircuitKey, RecoveryTimeoutMs) ->
+    Now = erlang:system_time(millisecond),
+    case lookup_circuit(CircuitKey) of
+        {open, OpenedAt, _UpdatedAt} when is_integer(OpenedAt) ->
+            transition_half_open(CircuitKey, OpenedAt, Now, RecoveryTimeoutMs);
+        _ ->
+            ok
+    end.
+
+-spec transition_half_open({atom(), binary()}, integer(), integer(), pos_integer()) ->
+    ok | {error, circuit_open}.
+transition_half_open(CircuitKey, OpenedAt, Now, RecoveryTimeoutMs) ->
     case Now - OpenedAt >= RecoveryTimeoutMs of
         true ->
-            insert_circuit(
-                CircuitKey,
-                #{
-                    state => half_open,
-                    results => [],
-                    opened_at => OpenedAt,
-                    updated_at => Now
-                }
-            ),
-            ok;
+            clear_window(CircuitKey),
+            insert_circuit(CircuitKey, half_open, OpenedAt, Now);
         false ->
             {error, circuit_open}
     end.
 
--spec safe_lookup_circuit({atom(), binary()}) -> list().
-safe_lookup_circuit(Key) ->
-    try ets:lookup(?CIRCUIT_TABLE, Key) of
-        Result -> Result
+-spec circuit_state({atom(), binary()}) -> circuit_state().
+circuit_state(CircuitKey) ->
+    try ets:lookup_element(?CIRCUIT_TABLE, CircuitKey, ?CIRCUIT_STATE_POS, closed) of
+        open -> open;
+        half_open -> half_open;
+        _ -> closed
+    catch
+        error:badarg -> closed
+    end.
+
+-spec lookup_circuit({atom(), binary()}) -> circuit() | none.
+lookup_circuit(CircuitKey) ->
+    try ets:lookup(?CIRCUIT_TABLE, CircuitKey) of
+        [{_Key, State, OpenedAt, UpdatedAt}] -> {State, OpenedAt, UpdatedAt};
+        _ -> none
+    catch
+        error:badarg -> none
+    end.
+
+-spec lookup_window({atom(), binary()}) -> [window_entry()].
+lookup_window(CircuitKey) ->
+    try ets:lookup(?CIRCUIT_WINDOW_TABLE, CircuitKey) of
+        [{_Key, Results}] -> Results;
+        _ -> []
     catch
         error:badarg -> []
     end.
@@ -165,83 +197,50 @@ is_countable_failure(_) -> false.
 -spec record_result({atom(), binary()}, boolean(), integer(), pos_integer()) -> ok.
 record_result(CircuitKey, IsFailure, Now, FailureThreshold) ->
     Entry = {IsFailure, Now},
-    case safe_lookup_circuit(CircuitKey) of
-        [] ->
+    case lookup_circuit(CircuitKey) of
+        none ->
             record_new(CircuitKey, Entry, Now);
-        [{_, #{state := half_open} = Existing}] ->
-            record_half_open(CircuitKey, Existing, IsFailure, Entry, Now);
-        [{_, #{state := open} = Existing}] ->
-            insert_circuit(CircuitKey, Existing#{updated_at => Now}),
-            ok;
-        [{_, #{results := Results} = Existing}] ->
-            record_closed(CircuitKey, Existing, Results, Entry, Now, FailureThreshold)
+        {half_open, _OpenedAt, _UpdatedAt} ->
+            record_half_open(CircuitKey, IsFailure, Entry, Now);
+        {open, OpenedAt, _UpdatedAt} ->
+            insert_circuit(CircuitKey, open, OpenedAt, Now);
+        {_State, _OpenedAt, _UpdatedAt} ->
+            record_closed(CircuitKey, Entry, Now, FailureThreshold)
     end.
 
--spec record_new({atom(), binary()}, {boolean(), integer()}, integer()) -> ok.
+-spec record_new({atom(), binary()}, window_entry(), integer()) -> ok.
 record_new(CircuitKey, Entry, Now) ->
-    insert_circuit(
-        CircuitKey,
-        #{
-            state => closed,
-            results => [Entry],
-            updated_at => Now
-        }
-    ),
-    ok.
+    insert_window(CircuitKey, [Entry]),
+    insert_circuit(CircuitKey, closed, undefined, Now).
 
--spec record_half_open({atom(), binary()}, map(), boolean(), {boolean(), integer()}, integer()) ->
-    ok.
-record_half_open(CircuitKey, _Existing, false, Entry, Now) ->
-    insert_circuit(
-        CircuitKey,
-        #{
-            state => closed,
-            results => [Entry],
-            updated_at => Now
-        }
-    ),
-    ok;
-record_half_open(CircuitKey, Existing, true, _Entry, Now) ->
-    insert_circuit(
-        CircuitKey,
-        Existing#{
-            state => open,
-            opened_at => Now,
-            updated_at => Now
-        }
-    ),
-    ok.
+-spec record_half_open({atom(), binary()}, boolean(), window_entry(), integer()) -> ok.
+record_half_open(CircuitKey, false, Entry, Now) ->
+    insert_window(CircuitKey, [Entry]),
+    insert_circuit(CircuitKey, closed, undefined, Now);
+record_half_open(CircuitKey, true, _Entry, Now) ->
+    insert_circuit(CircuitKey, open, Now, Now).
 
--spec record_closed(
-    {atom(), binary()}, map(), list(), {boolean(), integer()}, integer(), pos_integer()
-) ->
-    ok.
-record_closed(CircuitKey, Existing, Results, Entry, Now, FailureThreshold) ->
+-spec record_closed({atom(), binary()}, window_entry(), integer(), pos_integer()) -> ok.
+record_closed(CircuitKey, Entry, Now, FailureThreshold) ->
     Cutoff = Now - ?CB_WINDOW_MS,
-    Pruned = [R || {_, T} = R <- Results, T > Cutoff],
+    Pruned = [R || {_, T} = R <- lookup_window(CircuitKey), T > Cutoff],
     NewResults = lists:sublist([Entry | Pruned], erlang:max(100, FailureThreshold)),
+    insert_window(CircuitKey, NewResults),
     case has_open_failure_rate(NewResults, FailureThreshold) of
         true ->
             open_circuit(CircuitKey, NewResults, Now);
         false ->
-            insert_circuit(
-                CircuitKey,
-                Existing#{
-                    results => NewResults,
-                    updated_at => Now
-                }
-            ),
-            ok
+            insert_circuit(CircuitKey, closed, undefined, Now)
     end.
 
--spec has_open_failure_rate(list(), pos_integer()) -> boolean().
+-spec has_open_failure_rate([window_entry()], pos_integer()) -> boolean().
 has_open_failure_rate(NewResults, FailureThreshold) ->
     Total = length(NewResults),
     Failures = length([1 || {true, _} <- NewResults]),
     Rate = (Failures * 100) div Total,
     Failures >= FailureThreshold andalso Rate >= ?CB_FAILURE_RATE_PCT.
 
--spec open_circuit({atom(), binary()}, list(), integer()) -> ok.
+-spec open_circuit({atom(), binary()}, [window_entry()], integer()) -> ok.
 open_circuit(CircuitKey, NewResults, Now) ->
     Total = length(NewResults),
     Failures = length([1 || {true, _} <- NewResults]),
@@ -249,33 +248,37 @@ open_circuit(CircuitKey, NewResults, Now) ->
     logger:warning("Circuit breaker opening", #{
         failure_rate => Rate, failures => Failures, total => Total
     }),
-    insert_circuit(
-        CircuitKey,
-        #{
-            state => open,
-            results => NewResults,
-            opened_at => Now,
-            updated_at => Now
-        }
-    ),
-    ok.
+    insert_circuit(CircuitKey, open, Now, Now).
 
--spec insert_circuit({atom(), binary()}, map()) -> ok.
-insert_circuit(CircuitKey, CircuitState) ->
+-spec insert_circuit({atom(), binary()}, circuit_state(), integer() | undefined, integer()) ->
+    ok.
+insert_circuit(CircuitKey, State, OpenedAt, UpdatedAt) ->
+    safe_insert(?CIRCUIT_TABLE, {CircuitKey, State, OpenedAt, UpdatedAt}).
+
+-spec insert_window({atom(), binary()}, [window_entry()]) -> ok.
+insert_window(CircuitKey, Results) ->
+    safe_insert(?CIRCUIT_WINDOW_TABLE, {CircuitKey, Results}).
+
+-spec clear_window({atom(), binary()}) -> ok.
+clear_window(CircuitKey) ->
+    safe_delete(?CIRCUIT_WINDOW_TABLE, CircuitKey).
+
+-spec safe_insert(atom(), tuple()) -> ok.
+safe_insert(Table, Record) ->
     try
-        ets:insert(?CIRCUIT_TABLE, {CircuitKey, CircuitState}),
+        ets:insert(Table, Record),
         ok
     catch
         error:badarg ->
             ok = gateway_http_client:ensure_started(),
-            ok = ensure_named_table(?CIRCUIT_TABLE),
-            retry_insert_circuit(CircuitKey, CircuitState)
+            ok = ensure_named_table(Table),
+            retry_insert(Table, Record)
     end.
 
--spec retry_insert_circuit({atom(), binary()}, map()) -> ok.
-retry_insert_circuit(CircuitKey, CircuitState) ->
+-spec retry_insert(atom(), tuple()) -> ok.
+retry_insert(Table, Record) ->
     try
-        ets:insert(?CIRCUIT_TABLE, {CircuitKey, CircuitState}),
+        ets:insert(Table, Record),
         ok
     catch
         error:badarg -> ok
