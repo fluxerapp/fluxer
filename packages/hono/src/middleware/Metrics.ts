@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isLoopbackIpAddress} from '@fluxer/ip_utils/src/IpAddress';
+import type {HttpBindings} from '@hono/node-server';
 import type {Handler, MiddlewareHandler} from 'hono';
 
 const SKIP_PATHS = new Set(['/_health', '/_healthz', '/_metrics']);
+
+function isLoopbackPeer(env: unknown): boolean {
+	const remoteAddress = (env as Partial<HttpBindings> | null | undefined)?.incoming?.socket?.remoteAddress;
+	if (typeof remoteAddress !== 'string' || remoteAddress === '') {
+		return false;
+	}
+	return isLoopbackIpAddress(remoteAddress);
+}
 
 const DEFAULT_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10];
 
@@ -140,6 +150,9 @@ export function createMetricsMiddleware(serviceName: string): MetricsResult {
 	};
 
 	const metricsHandler: Handler = (c) => {
+		if (!isLoopbackPeer(c.env)) {
+			return c.text('FORBIDDEN', 403, {'Content-Type': 'text/plain'});
+		}
 		const sections = [
 			requestsTotal.render(`${prefix}_http_requests_total`, 'Total HTTP requests'),
 			requestDuration.render(`${prefix}_http_request_duration_seconds`, 'HTTP request duration in seconds'),

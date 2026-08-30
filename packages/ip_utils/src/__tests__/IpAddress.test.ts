@@ -4,6 +4,7 @@ import {
 	getIpNetworkKey,
 	getSameIpDecisionKey,
 	getSubnet,
+	isLoopbackIpAddress,
 	isPublicIpAddress,
 	isSameIpDecisionMatch,
 	isValidIp,
@@ -116,6 +117,36 @@ describe('maskIpForDisplay', () => {
 	});
 	it('returns null for invalid values', () => {
 		expect(maskIpForDisplay('not-an-ip')).toBeNull();
+	});
+});
+
+describe('isLoopbackIpAddress', () => {
+	it('accepts IPv4 loopback addresses', () => {
+		expect(isLoopbackIpAddress('127.0.0.1')).toBe(true);
+		expect(isLoopbackIpAddress('127.0.0.2')).toBe(true);
+		expect(isLoopbackIpAddress('127.255.255.254')).toBe(true);
+	});
+	it('accepts IPv6 loopback and its IPv4-mapped form', () => {
+		expect(isLoopbackIpAddress('::1')).toBe(true);
+		expect(isLoopbackIpAddress('[::1]')).toBe(true);
+		expect(isLoopbackIpAddress('0:0:0:0:0:0:0:1')).toBe(true);
+		expect(isLoopbackIpAddress('::ffff:127.0.0.1')).toBe(true);
+		expect(isLoopbackIpAddress('::ffff:7f00:1')).toBe(true);
+	});
+	it('rejects non-loopback addresses', () => {
+		expect(isLoopbackIpAddress('8.8.8.8')).toBe(false);
+		expect(isLoopbackIpAddress('10.0.0.5')).toBe(false);
+		expect(isLoopbackIpAddress('172.18.0.4')).toBe(false);
+		expect(isLoopbackIpAddress('192.168.1.1')).toBe(false);
+		expect(isLoopbackIpAddress('128.0.0.1')).toBe(false);
+		expect(isLoopbackIpAddress('126.255.255.255')).toBe(false);
+		expect(isLoopbackIpAddress('::2')).toBe(false);
+		expect(isLoopbackIpAddress('fe80::1')).toBe(false);
+		expect(isLoopbackIpAddress('::ffff:8.8.8.8')).toBe(false);
+	});
+	it('rejects invalid values', () => {
+		expect(isLoopbackIpAddress('not-an-ip')).toBe(false);
+		expect(isLoopbackIpAddress('')).toBe(false);
 	});
 });
 

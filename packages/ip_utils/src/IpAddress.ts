@@ -316,6 +316,30 @@ export function isPublicIpAddress(ip: string): boolean {
 	return isPublicIpv6Address(parsed.normalized);
 }
 
+function isLoopbackIpv4Address(address: string): boolean {
+	const octets = parseIpv4Octets(address);
+	if (!octets) {
+		return false;
+	}
+	return isIpv4InCidr(octets, 0x7f000000, 8);
+}
+
+export function isLoopbackIpAddress(ip: string): boolean {
+	const parsed = parseIpAddress(ip);
+	if (!parsed) {
+		return false;
+	}
+	if (parsed.family === 'ipv4') {
+		return isLoopbackIpv4Address(parsed.normalized);
+	}
+	const mappedIpv4 = getIpv4MappedIpv6(parsed.normalized);
+	if (mappedIpv4) {
+		return isLoopbackIpv4Address(mappedIpv4);
+	}
+	const groups = expandIpv6ToGroups(parsed.normalized);
+	return groups.length === 8 && groups.slice(0, 7).every((group) => group === '0000') && groups[7] === '0001';
+}
+
 export function isSameIpDecisionMatch(left: string | null | undefined, right: string | null | undefined): boolean {
 	if (!left || !right) {
 		return false;
