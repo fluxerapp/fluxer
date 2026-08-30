@@ -2,6 +2,7 @@
 
 import {Logger} from '../Logger';
 import {getIsDev} from './CassandraMetaRegistry';
+import {getStatementMeta} from './CassandraTypes';
 
 const colors = {
 	reset: '\x1b[0m',
@@ -67,16 +68,6 @@ function formatParams(params: Record<string, unknown>): string {
 	return entries.map(([k, v]) => `  ${colors.blue}:${k}${colors.reset} = ${formatValue(v)}`).join('\n');
 }
 
-export function getQueryType(cql: string): string {
-	const trimmed = cql.trim().toUpperCase();
-	if (trimmed.startsWith('SELECT')) return 'SELECT';
-	if (trimmed.startsWith('INSERT')) return 'INSERT';
-	if (trimmed.startsWith('UPDATE')) return 'UPDATE';
-	if (trimmed.startsWith('DELETE')) return 'DELETE';
-	if (trimmed.startsWith('BEGIN BATCH')) return 'BATCH';
-	return 'QUERY';
-}
-
 function formatCql(cql: string): string {
 	return cql
 		.replace(/\s+/g, ' ')
@@ -128,7 +119,7 @@ export function logBatch(
 	];
 	for (let i = 0; i < queries.length; i++) {
 		const {query, params} = queries[i];
-		const queryType = getQueryType(query);
+		const queryType = getStatementMeta(query).type;
 		const typeColors: Record<string, string> = {
 			SELECT: colors.cyan,
 			INSERT: colors.green,

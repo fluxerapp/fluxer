@@ -215,11 +215,15 @@ export function normalizeExecuteArgs<P extends CassandraParams>(
 	return queryOrPrepared;
 }
 
-const IN_PARAM_CACHE = new Map<string, Array<string>>();
+interface CqlStatementMeta {
+	unsafe: boolean;
+	type: string;
+	inParams: ReadonlyArray<string>;
+}
 
-function getInParamNames(cql: string): Array<string> {
-	const cached = IN_PARAM_CACHE.get(cql);
-	if (cached) return cached;
+const STATEMENT_META_CACHE = new Map<string, CqlStatementMeta>();
+
+function computeInParamNames(cql: string): Array<string> {
 	const regex = /\bIN\s*\(?\s*:([A-Za-z_][A-Za-z0-9_]*)/g;
 	const names: Array<string> = [];
 	const seen = new Set<string>();
@@ -230,16 +234,42 @@ function getInParamNames(cql: string): Array<string> {
 		seen.add(name);
 		names.push(name);
 	}
-	IN_PARAM_CACHE.set(cql, names);
 	return names;
 }
 
-export function normalizeInParams<P extends CassandraParams>(cql: string, params: P): P {
-	const inParams = getInParamNames(cql);
-	if (inParams.length === 0) return params;
+function computeQueryType(trimmed: string): string {
+	const upper = trimmed.toUpperCase();
+	if (upper.startsWith('SELECT')) return 'SELECT';
+	if (upper.startsWith('INSERT')) return 'INSERT';
+	if (upper.startsWith('UPDATE')) return 'UPDATE';
+	if (upper.startsWith('DELETE')) return 'DELETE';
+	if (upper.startsWith('BEGIN BATCH')) return 'BATCH';
+	return 'QUERY';
+}
+
+function computeStatementMeta(cql: string): CqlStatementMeta {
+	const trimmed = cql.trim();
+	const tokens = trimmed.split(/\s+/);
+	return {
+		unsafe: tokens.length >= 2 && tokens[0].toLowerCase() === 'select' && tokens[1] === '*',
+		type: computeQueryType(trimmed),
+		inParams: computeInParamNames(cql),
+	};
+}
+
+export function getStatementMeta(cql: string): CqlStatementMeta {
+	const cached = STATEMENT_META_CACHE.get(cql);
+	if (cached) return cached;
+	const meta = computeStatementMeta(cql);
+	STATEMENT_META_CACHE.set(cql, meta);
+	return meta;
+}
+
+export function normalizeInParams<P extends CassandraParams>(meta: CqlStatementMeta, params: P): P {
+	if (meta.inParams.length === 0) return params;
 	let changed = false;
 	const out: Record<string, CassandraParam> = {...params};
-	for (const paramName of inParams) {
+	for (const paramName of meta.inParams) {
 		const value = out[paramName];
 		if (value instanceof Set) {
 			out[paramName] = Array.from(value.values());
@@ -247,11 +277,6 @@ export function normalizeInParams<P extends CassandraParams>(cql: string, params
 		}
 	}
 	return (changed ? (out as P) : params) as P;
-}
-
-export function isUnsafePreparedStatement(query: string): boolean {
-	const tokens = query.trim().split(/\s+/);
-	return tokens.length >= 2 && tokens[0].toLowerCase() === 'select' && tokens[1] === '*';
 }
 
 function hasUndefinedDeep(value: unknown): boolean {
