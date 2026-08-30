@@ -12,7 +12,7 @@ use crate::{
     request_log::{self, ErrorReason, Stage},
     signing,
     spool::{SpoolError, spool_to_temp},
-    storage::{HeadResult, RelayBody, RelayPutOptions, StorageError, Store, StreamObject},
+    storage::{RelayBody, RelayPutOptions, StorageError, Store, StreamObject},
     timed_semaphore::TimedSemaphore,
     upload_relay,
 };
@@ -1770,6 +1770,56 @@ async fn serve_stored_passthrough_stream(
     headers: &HeaderMap,
     disposition: PassthroughDisposition<'_>,
 ) -> Response {
+    if method == Method::HEAD {
+        return serve_stored_passthrough_head(app, bucket, key, headers, &disposition).await;
+    }
+    if app.cfg.mode == DeploymentMode::Mp
+        && image_extension_from_filename(key) == Some(AssetExtension::Svg)
+    {
+        return serve_stored_passthrough_svg(app, method, bucket, key, headers, &disposition).await;
+    }
+    let range_header = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
+    let forwarded_range = match range::classify_request_range(range_header) {
+        range::RequestRange::Absent => None,
+        range::RequestRange::Forwardable(value) => Some(value),
+        range::RequestRange::Unsatisfiable => {
+            return passthrough_unsatisfiable_response(app, bucket, key, None).await;
+        }
+    };
+    let object = match app.store.stream_object(bucket, key, forwarded_range).await {
+        Ok(object) => object,
+        Err(err) => return storage_error_response(key, err),
+    };
+    if object.status == StatusCode::RANGE_NOT_SATISFIABLE {
+        return passthrough_unsatisfiable_response(app, bucket, key, object.total_length).await;
+    }
+    let content_type = passthrough_content_type(&object.content_type, key);
+    if app.cfg.mode == DeploymentMode::Mp && is_svg_content_type(&content_type) {
+        return serve_stored_passthrough_svg(app, method, bucket, key, headers, &disposition).await;
+    }
+    let total_len = match passthrough_total_len(app, bucket, key, object.total_length).await {
+        Ok(value) => value,
+        Err(err) => return storage_error_response(key, err),
+    };
+    if total_len > constants::MAX_MEDIA_PROXY_BYTES {
+        return storage_error_response(key, StorageError::StreamTooLong);
+    }
+    streaming_media_response(
+        method,
+        object,
+        total_len,
+        &content_type,
+        passthrough_disposition_header(&disposition, &content_type),
+    )
+}
+
+async fn serve_stored_passthrough_head(
+    app: &Arc<AppState>,
+    bucket: &str,
+    key: &str,
+    headers: &HeaderMap,
+    disposition: &PassthroughDisposition<'_>,
+) -> Response {
     let head = match app.store.head_object(bucket, key).await {
         Ok(head) => head,
         Err(err) => return storage_error_response(key, err),
@@ -1777,25 +1827,13 @@ async fn serve_stored_passthrough_stream(
     if head.content_length > constants::MAX_MEDIA_PROXY_BYTES as u64 {
         return storage_error_response(key, StorageError::StreamTooLong);
     }
-    let content_type = passthrough_content_type(&head, key);
+    let content_type = passthrough_content_type(&head.content_type, key);
     if app.cfg.mode == DeploymentMode::Mp
         && (is_svg_content_type(&content_type)
             || image_extension_from_filename(key) == Some(AssetExtension::Svg))
     {
-        let object = match app.store.read_object(bucket, key).await {
-            Ok(object) => object,
-            Err(err) => return storage_error_response(key, err),
-        };
-        let cache_identity = format!("{bucket}/{key}");
-        return serve_stored_svg_rasterized(
-            app,
-            method,
-            object.data,
-            &cache_identity,
-            headers,
-            &disposition,
-        )
-        .await;
+        return serve_stored_passthrough_svg(app, Method::HEAD, bucket, key, headers, disposition)
+            .await;
     }
     let total_len = match usize::try_from(head.content_length) {
         Ok(value) => value,
@@ -1804,53 +1842,85 @@ async fn serve_stored_passthrough_stream(
     let range_header = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
     let parsed_range = range::parse_range(range_header, total_len);
     if parsed_range.unsatisfiable {
-        let mut response = Response::new(Body::empty());
-        *response.status_mut() = StatusCode::RANGE_NOT_SATISFIABLE;
-        http_headers::add_unsatisfiable_headers(response.headers_mut(), total_len);
-        return response;
+        return unsatisfiable_response(total_len);
     }
-    let normalized_range = parsed_range
-        .range
-        .map(|r| format!("bytes={}-{}", r.start, r.end));
-    if method == Method::HEAD {
-        return passthrough_head_response(
-            &content_type,
-            total_len,
-            parsed_range.range,
-            passthrough_disposition_header(&disposition, &content_type),
-        );
-    }
-    let object = match app
-        .store
-        .stream_object(bucket, key, normalized_range.as_deref())
-        .await
-    {
-        Ok(object) => object,
-        Err(err) => return storage_error_response(key, err),
-    };
-    streaming_media_response(
-        method,
-        object,
+    passthrough_head_response(
+        &content_type,
         total_len,
         parsed_range.range,
-        &content_type,
-        passthrough_disposition_header(&disposition, &content_type),
+        passthrough_disposition_header(disposition, &content_type),
     )
 }
 
-fn passthrough_content_type(head: &HeadResult, key: &str) -> String {
+async fn serve_stored_passthrough_svg(
+    app: &Arc<AppState>,
+    method: Method,
+    bucket: &str,
+    key: &str,
+    headers: &HeaderMap,
+    disposition: &PassthroughDisposition<'_>,
+) -> Response {
+    let object = match app.store.read_object(bucket, key).await {
+        Ok(object) => object,
+        Err(err) => return storage_error_response(key, err),
+    };
+    let cache_identity = format!("{bucket}/{key}");
+    serve_stored_svg_rasterized(
+        app,
+        method,
+        object.data,
+        &cache_identity,
+        headers,
+        disposition,
+    )
+    .await
+}
+
+async fn passthrough_total_len(
+    app: &Arc<AppState>,
+    bucket: &str,
+    key: &str,
+    known: Option<u64>,
+) -> Result<usize, StorageError> {
+    let total = match known {
+        Some(value) => value,
+        None => app.store.head_object(bucket, key).await?.content_length,
+    };
+    usize::try_from(total).map_err(|_| StorageError::StreamTooLong)
+}
+
+async fn passthrough_unsatisfiable_response(
+    app: &Arc<AppState>,
+    bucket: &str,
+    key: &str,
+    known_total: Option<u64>,
+) -> Response {
+    match passthrough_total_len(app, bucket, key, known_total).await {
+        Ok(total_len) => unsatisfiable_response(total_len),
+        Err(err) => storage_error_response(key, err),
+    }
+}
+
+fn unsatisfiable_response(total_len: usize) -> Response {
+    let mut response = Response::new(Body::empty());
+    *response.status_mut() = StatusCode::RANGE_NOT_SATISFIABLE;
+    http_headers::add_unsatisfiable_headers(response.headers_mut(), total_len);
+    response
+}
+
+fn passthrough_content_type(source_content_type: &str, key: &str) -> String {
     let extension_mime = mime::extension_mime(key);
     if extension_mime == Some("audio/mp4")
-        && mime::normalize(Some(&head.content_type)) == Some("video/mp4")
+        && mime::normalize(Some(source_content_type)) == Some("video/mp4")
     {
         return "audio/mp4".to_owned();
     }
-    if content_type_is_trustworthy(&head.content_type) {
-        head.content_type.clone()
+    if content_type_is_trustworthy(source_content_type) {
+        source_content_type.to_owned()
     } else {
         extension_mime
             .or_else(|| {
-                mime::normalize(Some(&head.content_type)).filter(|value| {
+                mime::normalize(Some(source_content_type)).filter(|value| {
                     !value.is_empty() && !value.eq_ignore_ascii_case("application/octet-stream")
                 })
             })
@@ -1992,7 +2062,6 @@ fn streaming_media_response(
     method: Method,
     object: StreamObject,
     total_len: usize,
-    byte_range: Option<range::ByteRange>,
     content_type: &str,
     disposition: Option<String>,
 ) -> Response {
@@ -2002,7 +2071,7 @@ fn streaming_media_response(
         StatusCode::OK
     };
     let effective_byte_range = if status == StatusCode::PARTIAL_CONTENT {
-        byte_range
+        object.byte_range
     } else {
         None
     };
@@ -3653,34 +3722,281 @@ mod tests {
         assert_eq!("image/webp", mime::sniff(&raster.data).mime);
     }
 
+    type PassthroughOriginRequests = Arc<tokio::sync::Mutex<Vec<(Method, Option<String>)>>>;
+
+    fn parse_origin_range(raw: &str) -> Option<(usize, usize)> {
+        let spec = raw.strip_prefix("bytes=")?;
+        let (start, end) = spec.split_once('-')?;
+        Some((start.parse().ok()?, end.parse().ok()?))
+    }
+
+    async fn passthrough_origin(
+        body: &'static [u8],
+        answer_416_with_total: bool,
+    ) -> (String, PassthroughOriginRequests) {
+        use axum::body::Body;
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let seen: PassthroughOriginRequests = Arc::new(tokio::sync::Mutex::new(Vec::new()));
+        let handler = Arc::clone(&seen);
+        let router = Router::new().fallback(any(move |request: axum::extract::Request| {
+            let seen = Arc::clone(&handler);
+            async move {
+                let (parts, _body) = request.into_parts();
+                let range = parts
+                    .headers
+                    .get(header::RANGE)
+                    .and_then(|value| value.to_str().ok())
+                    .map(ToOwned::to_owned);
+                seen.lock().await.push((parts.method, range.clone()));
+                let total = body.len();
+                let mut response = Response::new(Body::empty());
+                response
+                    .headers_mut()
+                    .insert(header::CONTENT_TYPE, HeaderValue::from_static("image/png"));
+                match range.as_deref().and_then(parse_origin_range) {
+                    None => {
+                        response
+                            .headers_mut()
+                            .insert(header::CONTENT_LENGTH, HeaderValue::from(total));
+                        *response.body_mut() = Body::from(body);
+                    }
+                    Some((start, end)) if start < total => {
+                        let end = end.min(total - 1);
+                        *response.status_mut() = StatusCode::PARTIAL_CONTENT;
+                        response.headers_mut().insert(
+                            header::CONTENT_RANGE,
+                            HeaderValue::from_str(&format!("bytes {start}-{end}/{total}")).unwrap(),
+                        );
+                        response
+                            .headers_mut()
+                            .insert(header::CONTENT_LENGTH, HeaderValue::from(end - start + 1));
+                        *response.body_mut() = Body::from(&body[start..=end]);
+                    }
+                    Some(_) => {
+                        *response.status_mut() = StatusCode::RANGE_NOT_SATISFIABLE;
+                        if answer_416_with_total {
+                            response.headers_mut().insert(
+                                header::CONTENT_RANGE,
+                                HeaderValue::from_str(&format!("bytes */{total}")).unwrap(),
+                            );
+                        }
+                    }
+                }
+                response
+            }
+        }));
+        tokio::spawn(async move {
+            axum::serve(listener, router).await.unwrap();
+        });
+        (format!("http://{addr}"), seen)
+    }
+
+    fn s3_mode_test_config(endpoint: &str) -> Config {
+        Config::load_from_iter([
+            (
+                "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
+                "secret".to_owned(),
+            ),
+            ("FLUXER_MEDIA_PROXY_MODE".to_owned(), "mp".to_owned()),
+            (
+                "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
+                "s3".to_owned(),
+            ),
+            ("FLUXER_S3_ENDPOINT".to_owned(), endpoint.to_owned()),
+            (
+                "FLUXER_S3_ACCESS_KEY_ID".to_owned(),
+                "AKIAIOSFODNN7EXAMPLE".to_owned(),
+            ),
+            (
+                "FLUXER_S3_SECRET_ACCESS_KEY".to_owned(),
+                "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY".to_owned(),
+            ),
+        ])
+        .unwrap()
+    }
+
+    async fn passthrough_request(cfg: Config, range: Option<&str>) -> Response {
+        use axum::{body::Body, http::Request};
+        let state = test_app_state(cfg);
+        let router = Router::new()
+            .fallback(any(catch_all))
+            .with_state(Arc::clone(&state));
+        let mut request = Request::builder().uri("/attachments/1/2/pic.png");
+        if let Some(range) = range {
+            request = request.header(header::RANGE, range);
+        }
+        tower::ServiceExt::oneshot(router, request.body(Body::empty()).unwrap())
+            .await
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn passthrough_get_serves_the_whole_object_in_one_round_trip() {
+        let (endpoint, seen) = passthrough_origin(b"0123456789", true).await;
+        let response = passthrough_request(s3_mode_test_config(&endpoint), None).await;
+
+        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(
+            "10",
+            response.headers().get(header::CONTENT_LENGTH).unwrap()
+        );
+        assert_eq!(
+            "image/png",
+            response.headers().get(header::CONTENT_TYPE).unwrap()
+        );
+        assert!(response.headers().get(header::CONTENT_RANGE).is_none());
+        let body = axum::body::to_bytes(response.into_body(), 64)
+            .await
+            .unwrap();
+        assert_eq!(b"0123456789", &body[..]);
+        assert_eq!(vec![(Method::GET, None)], seen.lock().await.clone());
+    }
+
+    #[tokio::test]
+    async fn passthrough_ranged_get_reuses_the_upstream_content_range() {
+        let (endpoint, seen) = passthrough_origin(b"0123456789", true).await;
+        let response = passthrough_request(s3_mode_test_config(&endpoint), Some("bytes=2-5")).await;
+
+        assert_eq!(StatusCode::PARTIAL_CONTENT, response.status());
+        assert_eq!(
+            "bytes 2-5/10",
+            response.headers().get(header::CONTENT_RANGE).unwrap()
+        );
+        assert_eq!("4", response.headers().get(header::CONTENT_LENGTH).unwrap());
+        let body = axum::body::to_bytes(response.into_body(), 64)
+            .await
+            .unwrap();
+        assert_eq!(b"2345", &body[..]);
+        assert_eq!(
+            vec![(Method::GET, Some("bytes=2-5".to_owned()))],
+            seen.lock().await.clone()
+        );
+    }
+
+    #[tokio::test]
+    async fn passthrough_unsatisfiable_range_reuses_the_upstream_total() {
+        let (endpoint, seen) = passthrough_origin(b"0123456789", true).await;
+        let response =
+            passthrough_request(s3_mode_test_config(&endpoint), Some("bytes=20-30")).await;
+
+        assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, response.status());
+        assert_eq!(
+            "bytes */10",
+            response.headers().get(header::CONTENT_RANGE).unwrap()
+        );
+        assert_eq!(
+            vec![(Method::GET, Some("bytes=20-30".to_owned()))],
+            seen.lock().await.clone()
+        );
+    }
+
+    #[tokio::test]
+    async fn passthrough_falls_back_to_a_head_when_the_upstream_416_omits_the_total() {
+        let (endpoint, seen) = passthrough_origin(b"0123456789", false).await;
+        let response =
+            passthrough_request(s3_mode_test_config(&endpoint), Some("bytes=20-30")).await;
+
+        assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, response.status());
+        assert_eq!(
+            "bytes */10",
+            response.headers().get(header::CONTENT_RANGE).unwrap()
+        );
+        assert_eq!(
+            vec![
+                (Method::GET, Some("bytes=20-30".to_owned())),
+                (Method::HEAD, None)
+            ],
+            seen.lock().await.clone()
+        );
+    }
+
+    #[tokio::test]
+    async fn passthrough_ignores_a_malformed_range_instead_of_forwarding_it() {
+        let (endpoint, seen) = passthrough_origin(b"0123456789", true).await;
+        let response =
+            passthrough_request(s3_mode_test_config(&endpoint), Some("bytes=abc-def")).await;
+
+        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(vec![(Method::GET, None)], seen.lock().await.clone());
+    }
+
+    #[tokio::test]
+    async fn passthrough_answers_a_reversed_range_without_asking_for_the_body() {
+        let (endpoint, seen) = passthrough_origin(b"0123456789", true).await;
+        let response =
+            passthrough_request(s3_mode_test_config(&endpoint), Some("bytes=10-5")).await;
+
+        assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, response.status());
+        assert_eq!(
+            "bytes */10",
+            response.headers().get(header::CONTENT_RANGE).unwrap()
+        );
+        assert_eq!(vec![(Method::HEAD, None)], seen.lock().await.clone());
+    }
+
+    #[tokio::test]
+    async fn passthrough_get_never_touches_the_write_endpoint() {
+        let (origin, origin_seen) = passthrough_origin(b"0123456789", true).await;
+        let (read, read_seen) = passthrough_origin(b"0123456789", true).await;
+        let mut cfg = s3_mode_test_config(&origin);
+        cfg.s3_read_endpoint = Some(read);
+        let response = passthrough_request(cfg, None).await;
+
+        assert_eq!(StatusCode::OK, response.status());
+        assert!(origin_seen.lock().await.is_empty());
+        assert_eq!(vec![(Method::GET, None)], read_seen.lock().await.clone());
+    }
+
+    #[tokio::test]
+    async fn passthrough_head_stays_a_single_round_trip() {
+        use axum::{body::Body, http::Request};
+        let (endpoint, seen) = passthrough_origin(b"0123456789", true).await;
+        let state = test_app_state(s3_mode_test_config(&endpoint));
+        let router = Router::new()
+            .fallback(any(catch_all))
+            .with_state(Arc::clone(&state));
+        let response = tower::ServiceExt::oneshot(
+            router,
+            Request::builder()
+                .method(Method::HEAD)
+                .uri("/attachments/1/2/pic.png")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(
+            "10",
+            response.headers().get(header::CONTENT_LENGTH).unwrap()
+        );
+        assert_eq!(vec![(Method::HEAD, None)], seen.lock().await.clone());
+    }
+
     #[test]
     fn passthrough_content_type_preserves_non_media_metadata() {
-        let head = HeadResult {
-            content_length: 10,
-            content_type: "application/zip".to_owned(),
-        };
         assert_eq!(
             "application/zip",
-            passthrough_content_type(&head, "downloads/app.zip")
+            passthrough_content_type("application/zip", "downloads/app.zip")
         );
     }
 
     #[test]
     fn passthrough_content_type_prefers_known_extension_over_bad_metadata() {
-        let head = HeadResult {
-            content_length: 10,
-            content_type: "text/plain".to_owned(),
-        };
-        assert_eq!("image/png", passthrough_content_type(&head, "image.png"));
+        assert_eq!(
+            "image/png",
+            passthrough_content_type("text/plain", "image.png")
+        );
     }
 
     #[test]
     fn passthrough_content_type_prefers_m4a_extension_over_mp4_metadata() {
-        let head = HeadResult {
-            content_length: 10,
-            content_type: "video/mp4".to_owned(),
-        };
-        assert_eq!("audio/mp4", passthrough_content_type(&head, "track.m4a"));
+        assert_eq!(
+            "audio/mp4",
+            passthrough_content_type("video/mp4", "track.m4a")
+        );
     }
 
     #[test]

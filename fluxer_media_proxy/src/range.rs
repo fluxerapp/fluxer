@@ -19,6 +19,13 @@ pub struct ContentRange {
     pub size: Option<usize>,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RequestRange<'a> {
+    Absent,
+    Forwardable(&'a str),
+    Unsatisfiable,
+}
+
 pub fn parse_range(header: Option<&str>, file_size: usize) -> ParsedRange {
     let Some(raw) = header else {
         return ParsedRange::default();
@@ -110,6 +117,52 @@ pub fn parse_bounded_request_range(header: Option<&str>, max_len: usize) -> Opti
         return None;
     }
     Some(ByteRange { start, end })
+}
+
+pub fn classify_request_range(header: Option<&str>) -> RequestRange<'_> {
+    let Some(raw) = header else {
+        return RequestRange::Absent;
+    };
+    let trimmed = raw.trim_matches([' ', '\t']);
+    let Some(spec) = trimmed.strip_prefix("bytes=") else {
+        return RequestRange::Absent;
+    };
+    if spec.contains(',') {
+        return RequestRange::Absent;
+    }
+    let Some(dash) = spec.find('-') else {
+        return RequestRange::Absent;
+    };
+    let start_part = &spec[..dash];
+    let end_part = &spec[dash + 1..];
+    if start_part.is_empty() && end_part.is_empty() {
+        return RequestRange::Absent;
+    }
+    if start_part.is_empty() {
+        return match end_part.parse::<usize>() {
+            Ok(0) => RequestRange::Unsatisfiable,
+            Ok(_) => RequestRange::Forwardable(trimmed),
+            Err(_) => RequestRange::Absent,
+        };
+    }
+    let Ok(start) = start_part.parse::<usize>() else {
+        return RequestRange::Absent;
+    };
+    if end_part.is_empty() {
+        return RequestRange::Forwardable(trimmed);
+    }
+    match end_part.parse::<usize>() {
+        Ok(end) if end < start => RequestRange::Unsatisfiable,
+        Ok(_) => RequestRange::Forwardable(trimmed),
+        Err(_) => RequestRange::Absent,
+    }
+}
+
+pub fn parse_unsatisfiable_content_range(header: Option<&str>) -> Option<usize> {
+    let raw = header?;
+    let spec = raw.trim_matches([' ', '\t']).strip_prefix("bytes ")?;
+    let size_part = spec.strip_prefix('*')?.strip_prefix('/')?;
+    size_part.trim_matches([' ', '\t']).parse::<usize>().ok()
 }
 
 pub fn parse_content_range(header: Option<&str>) -> Option<ContentRange> {
@@ -235,6 +288,72 @@ mod tests {
             None,
             parse_bounded_request_range(Some("bytes=0-1, 2-3"), 32)
         );
+    }
+
+    #[test]
+    fn classified_request_ranges_agree_with_the_size_aware_parser() {
+        for raw in ["bytes=0-9", "bytes=-5", "bytes=50-", "bytes=0-9999"] {
+            assert_eq!(
+                RequestRange::Forwardable(raw),
+                classify_request_range(Some(raw)),
+                "range={raw} must reach the upstream"
+            );
+            assert!(parse_range(Some(raw), 100).range.is_some());
+        }
+        assert_eq!(
+            RequestRange::Forwardable("bytes=0-9"),
+            classify_request_range(Some(" bytes=0-9 "))
+        );
+        assert_eq!(
+            RequestRange::Forwardable("bytes=100-200"),
+            classify_request_range(Some("bytes=100-200")),
+            "only the object size can settle a range that starts past the end"
+        );
+        for raw in ["bytes=10-5", "bytes=-0"] {
+            assert_eq!(
+                RequestRange::Unsatisfiable,
+                classify_request_range(Some(raw)),
+                "range={raw} is unsatisfiable at every size"
+            );
+            assert!(parse_range(Some(raw), 100).unsatisfiable);
+            assert!(parse_range(Some(raw), 1).unsatisfiable);
+        }
+        for raw in [
+            "rows=0-9",
+            "bytes=",
+            "bytes=abc-def",
+            "bytes=0-abc",
+            "bytes=0-1, 2-3",
+            "bytes=0",
+        ] {
+            assert_eq!(
+                RequestRange::Absent,
+                classify_request_range(Some(raw)),
+                "range={raw} must not reach the upstream"
+            );
+            assert_eq!(None, parse_range(Some(raw), 100).range);
+            assert!(!parse_range(Some(raw), 100).unsatisfiable);
+        }
+        assert_eq!(RequestRange::Absent, classify_request_range(None));
+    }
+
+    #[test]
+    fn unsatisfiable_content_range_parser_reads_the_total() {
+        assert_eq!(
+            Some(100),
+            parse_unsatisfiable_content_range(Some("bytes */100"))
+        );
+        assert_eq!(
+            Some(0),
+            parse_unsatisfiable_content_range(Some("bytes */0"))
+        );
+        assert_eq!(None, parse_unsatisfiable_content_range(Some("bytes */*")));
+        assert_eq!(
+            None,
+            parse_unsatisfiable_content_range(Some("bytes 0-9/100"))
+        );
+        assert_eq!(None, parse_unsatisfiable_content_range(Some("*/100")));
+        assert_eq!(None, parse_unsatisfiable_content_range(None));
     }
 
     #[test]

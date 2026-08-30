@@ -56,6 +56,8 @@ pub struct StreamObject {
     pub status: StatusCode,
     pub content_length: Option<u64>,
     pub content_type: String,
+    pub byte_range: Option<crate::range::ByteRange>,
+    pub total_length: Option<u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -334,6 +336,19 @@ impl Store {
         }
         let total_len = meta.len() as usize;
         let parsed_range = crate::range::parse_range(range_header, total_len);
+        let content_type = mime::extension_mime(key)
+            .unwrap_or("application/octet-stream")
+            .to_owned();
+        if parsed_range.unsatisfiable {
+            return Ok(StreamObject {
+                content_length: Some(0),
+                body: Body::empty(),
+                status: StatusCode::RANGE_NOT_SATISFIABLE,
+                content_type,
+                byte_range: None,
+                total_length: Some(meta.len()),
+            });
+        }
         let (status, body_len, start) = if let Some(r) = parsed_range.range {
             (
                 StatusCode::PARTIAL_CONTENT,
@@ -352,9 +367,9 @@ impl Store {
             content_length: Some(body_len),
             body: Body::from_stream(ReaderStream::new(reader)),
             status,
-            content_type: mime::extension_mime(key)
-                .unwrap_or("application/octet-stream")
-                .to_owned(),
+            content_type,
+            byte_range: parsed_range.range,
+            total_length: Some(meta.len()),
         })
     }
 
@@ -469,15 +484,10 @@ impl Store {
     }
 
     async fn head_s3(&self, bucket: &str, key: &str) -> Result<HeadResult, StorageError> {
-        let url = self.s3_url(bucket, key)?;
-        let signed = self.sign(Method::HEAD, &url, &[], None, &[])?;
-        let response = self
-            .client
-            .head(&url)
-            .headers(signed_headers(&signed, &self.cfg))
-            .send()
-            .await?;
-        if response.status() == reqwest::StatusCode::NOT_FOUND {
+        let url = self.s3_read_url(bucket, key)?;
+        let headers = self.read_headers(bucket, Method::HEAD, &url, &[])?;
+        let response = self.client.head(&url).headers(headers).send().await?;
+        if self.read_status_is_miss(bucket, response.status()) {
             return Err(StorageError::NotFound);
         }
         if !response.status().is_success() {
@@ -526,10 +536,28 @@ impl Store {
         if self.read_status_is_miss(bucket, response.status()) {
             return Err(StorageError::NotFound);
         }
-        if !response.status().is_success() {
+        let status = response.status();
+        let content_range = response
+            .headers()
+            .get(header::CONTENT_RANGE)
+            .and_then(|v| v.to_str().ok())
+            .map(ToOwned::to_owned);
+        if status == StatusCode::RANGE_NOT_SATISFIABLE {
+            return Ok(StreamObject {
+                body: Body::empty(),
+                status,
+                content_length: Some(0),
+                content_type: String::new(),
+                byte_range: None,
+                total_length: crate::range::parse_unsatisfiable_content_range(
+                    content_range.as_deref(),
+                )
+                .map(|total| total as u64),
+            });
+        }
+        if !status.is_success() {
             return Err(StorageError::S3(s3_error_summary(response).await));
         }
-        let status = response.status();
         let content_length: Option<u64> = response
             .headers()
             .get(header::CONTENT_LENGTH)
@@ -541,6 +569,22 @@ impl Store {
         {
             return Err(StorageError::StreamTooLong);
         }
+        let (byte_range, total_length) = if status == StatusCode::PARTIAL_CONTENT {
+            let Some(parsed) = crate::range::parse_content_range(content_range.as_deref()) else {
+                return Err(StorageError::S3(
+                    "partial response without a usable Content-Range".to_owned(),
+                ));
+            };
+            (
+                Some(crate::range::ByteRange {
+                    start: parsed.start,
+                    end: parsed.end,
+                }),
+                parsed.size.map(|size| size as u64),
+            )
+        } else {
+            (None, content_length)
+        };
         let content_type = response
             .headers()
             .get(header::CONTENT_TYPE)
@@ -552,6 +596,8 @@ impl Store {
             status,
             content_length,
             content_type,
+            byte_range,
+            total_length,
         })
     }
 
@@ -1390,8 +1436,147 @@ mod tests {
         assert_unsigned(&headers);
     }
 
+    async fn range_server(
+        status: u16,
+        content_range: Option<&'static str>,
+    ) -> (String, CapturedRequests) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let captured: CapturedRequests = std::sync::Arc::new(tokio::sync::Mutex::new(Vec::new()));
+        let handler = std::sync::Arc::clone(&captured);
+        let app = axum::Router::new().fallback(axum::routing::any(
+            move |request: axum::extract::Request| {
+                let captured = std::sync::Arc::clone(&handler);
+                async move {
+                    let (parts, _body) = request.into_parts();
+                    captured
+                        .lock()
+                        .await
+                        .push((parts.method, parts.uri, parts.headers));
+                    let mut response = axum::response::Response::new(Body::from("partial"));
+                    *response.status_mut() = StatusCode::from_u16(status).unwrap();
+                    if let Some(content_range) = content_range {
+                        response.headers_mut().insert(
+                            header::CONTENT_RANGE,
+                            http::HeaderValue::from_static(content_range),
+                        );
+                    }
+                    response
+                }
+            },
+        ));
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        (format!("http://{addr}"), captured)
+    }
+
     #[tokio::test]
-    async fn head_object_always_uses_origin_for_authoritative_length() {
+    async fn stream_s3_reads_the_span_and_the_total_off_a_partial_response() {
+        let (s3, _s3_seen) = range_server(206, Some("bytes 10-16/100")).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(s3_test_config(tmp.path(), &s3));
+
+        let object = store
+            .stream_object("cdn", "video.mp4", Some("bytes=10-16"))
+            .await
+            .unwrap();
+
+        assert_eq!(StatusCode::PARTIAL_CONTENT, object.status);
+        assert_eq!(
+            Some(crate::range::ByteRange { start: 10, end: 16 }),
+            object.byte_range
+        );
+        assert_eq!(Some(100), object.total_length);
+    }
+
+    #[tokio::test]
+    async fn stream_s3_rejects_a_partial_response_without_a_usable_content_range() {
+        let (s3, _s3_seen) = range_server(206, None).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(s3_test_config(tmp.path(), &s3));
+
+        let result = store
+            .stream_object("cdn", "video.mp4", Some("bytes=10-16"))
+            .await;
+
+        assert!(matches!(result, Err(StorageError::S3(_))));
+    }
+
+    #[tokio::test]
+    async fn stream_s3_surfaces_an_upstream_416_with_the_total_it_reports() {
+        let (s3, _s3_seen) = range_server(416, Some("bytes */100")).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(s3_test_config(tmp.path(), &s3));
+
+        let object = store
+            .stream_object("cdn", "video.mp4", Some("bytes=900-999"))
+            .await
+            .unwrap();
+
+        assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, object.status);
+        assert_eq!(None, object.byte_range);
+        assert_eq!(Some(100), object.total_length);
+    }
+
+    #[tokio::test]
+    async fn stream_s3_surfaces_an_upstream_416_that_omits_the_total() {
+        let (s3, _s3_seen) = range_server(416, None).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(s3_test_config(tmp.path(), &s3));
+
+        let object = store
+            .stream_object("cdn", "video.mp4", Some("bytes=900-999"))
+            .await
+            .unwrap();
+
+        assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, object.status);
+        assert_eq!(None, object.total_length);
+    }
+
+    #[tokio::test]
+    async fn local_stream_reports_an_unsatisfiable_range_instead_of_the_whole_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(test_config(&tmp.path().canonicalize().unwrap()));
+        store
+            .write_object("cdn", "a/b.txt", b"hello world", "text/plain")
+            .await
+            .unwrap();
+
+        let object = store
+            .stream_object("cdn", "a/b.txt", Some("bytes=99-200"))
+            .await
+            .unwrap();
+
+        assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, object.status);
+        assert_eq!(Some(11), object.total_length);
+        assert_eq!(None, object.byte_range);
+    }
+
+    #[tokio::test]
+    async fn local_stream_reports_the_total_alongside_a_partial_span() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(test_config(&tmp.path().canonicalize().unwrap()));
+        store
+            .write_object("cdn", "a/b.txt", b"hello world", "text/plain")
+            .await
+            .unwrap();
+
+        let object = store
+            .stream_object("cdn", "a/b.txt", Some("bytes=6-10"))
+            .await
+            .unwrap();
+
+        assert_eq!(StatusCode::PARTIAL_CONTENT, object.status);
+        assert_eq!(Some(11), object.total_length);
+        assert_eq!(
+            Some(crate::range::ByteRange { start: 6, end: 10 }),
+            object.byte_range
+        );
+    }
+
+    #[tokio::test]
+    async fn head_object_uses_the_read_endpoint_like_every_other_read() {
         let (s3, s3_seen) = capture_server().await;
         let (cdn, cdn_seen) = capture_server().await;
         let tmp = tempfile::tempdir().unwrap();
@@ -1403,9 +1588,23 @@ mod tests {
         store.head_object("cdn", "a.png").await.unwrap();
 
         assert!(
-            cdn_seen.lock().await.is_empty(),
-            "HEAD must not hit the CDN"
+            s3_seen.lock().await.is_empty(),
+            "HEAD must not hit the origin"
         );
+        let (method, uri, headers) = only_request(&cdn_seen).await;
+        assert_eq!(http::Method::HEAD, method);
+        assert_eq!("/a.png", uri.path());
+        assert_unsigned(&headers);
+    }
+
+    #[tokio::test]
+    async fn head_object_without_a_read_endpoint_still_signs_the_origin() {
+        let (s3, s3_seen) = capture_server().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let store = Store::new(s3_test_config(tmp.path(), &s3));
+
+        store.head_object("cdn", "a.png").await.unwrap();
+
         let (method, uri, headers) = only_request(&s3_seen).await;
         assert_eq!(http::Method::HEAD, method);
         assert_eq!("/cdn/a.png", uri.path());
@@ -1413,7 +1612,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn body_reads_use_cdn_while_head_uses_origin() {
+    async fn body_reads_and_heads_both_use_the_cdn() {
         let (s3, s3_seen) = capture_server().await;
         let (cdn, cdn_seen) = capture_server().await;
         let tmp = tempfile::tempdir().unwrap();
@@ -1428,13 +1627,12 @@ mod tests {
             .await
             .unwrap();
 
-        let s3_reqs = s3_seen.lock().await.clone();
+        assert!(s3_seen.lock().await.is_empty());
         let cdn_reqs = cdn_seen.lock().await.clone();
-        assert_eq!(1, s3_reqs.len());
-        assert_eq!(http::Method::HEAD, s3_reqs[0].0);
-        assert_eq!(1, cdn_reqs.len());
-        assert_eq!(http::Method::GET, cdn_reqs[0].0);
-        assert_eq!("bytes=0-3", cdn_reqs[0].2.get(header::RANGE).unwrap());
+        assert_eq!(2, cdn_reqs.len());
+        assert_eq!(http::Method::HEAD, cdn_reqs[0].0);
+        assert_eq!(http::Method::GET, cdn_reqs[1].0);
+        assert_eq!("bytes=0-3", cdn_reqs[1].2.get(header::RANGE).unwrap());
     }
 
     #[tokio::test]
