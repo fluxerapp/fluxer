@@ -20,8 +20,11 @@ import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} 
 import * as AuthSession from './AuthSession';
 import * as AuthUtility from './AuthUtility';
 
+const PWNED_PASSWORDS_TIMEOUT_MS = ms('5 seconds');
+const PWNED_PASSWORD_CACHE_MAX_PREFIXES = 128;
+
 interface CacheEntry {
-	result: boolean;
+	pwnedSuffixes: ReadonlySet<string>;
 	expiresAt: number;
 }
 
@@ -30,34 +33,34 @@ class PwnedPasswordCache {
 	private readonly maxSize: number;
 	private readonly ttlMs: number;
 
-	constructor(maxSize = 1000, ttlMs = ms('1 hour')) {
+	constructor(maxSize = PWNED_PASSWORD_CACHE_MAX_PREFIXES, ttlMs = ms('1 hour')) {
 		this.maxSize = maxSize;
 		this.ttlMs = ttlMs;
 	}
 
-	get(key: string): boolean | undefined {
-		const entry = this.cache.get(key);
+	get(hashPrefix: string): ReadonlySet<string> | undefined {
+		const entry = this.cache.get(hashPrefix);
 		if (!entry) {
 			return undefined;
 		}
 		if (Date.now() > entry.expiresAt) {
-			this.cache.delete(key);
+			this.cache.delete(hashPrefix);
 			return undefined;
 		}
-		this.cache.delete(key);
-		this.cache.set(key, entry);
-		return entry.result;
+		this.cache.delete(hashPrefix);
+		this.cache.set(hashPrefix, entry);
+		return entry.pwnedSuffixes;
 	}
 
-	set(key: string, result: boolean): void {
-		if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
+	set(hashPrefix: string, pwnedSuffixes: ReadonlySet<string>): void {
+		if (this.cache.size >= this.maxSize && !this.cache.has(hashPrefix)) {
 			const firstKey = this.cache.keys().next().value;
 			if (firstKey !== undefined) {
 				this.cache.delete(firstKey);
 			}
 		}
-		this.cache.set(key, {
-			result,
+		this.cache.set(hashPrefix, {
+			pwnedSuffixes,
 			expiresAt: Date.now() + this.ttlMs,
 		});
 	}
@@ -95,7 +98,11 @@ type ResetPasswordResult =
 			webauthn: boolean;
 	  };
 
-const pwnedPasswordCache = new PwnedPasswordCache(1000, ms('1 hour'));
+const pwnedPasswordCache = new PwnedPasswordCache(PWNED_PASSWORD_CACHE_MAX_PREFIXES, ms('1 hour'));
+
+export function resetPwnedPasswordCacheForTesting(): void {
+	pwnedPasswordCache.clear();
+}
 
 export async function hashPassword(_ctx: ApiContext, password: string): Promise<string> {
 	return hashPasswordUtil(password);
@@ -112,9 +119,9 @@ export async function isPasswordPwned(_ctx: ApiContext, password: string): Promi
 	const hashed = crypto.createHash('sha1').update(password).digest('hex').toUpperCase();
 	const hashPrefix = hashed.slice(0, 5);
 	const hashSuffix = hashed.slice(5);
-	const cachedResult = pwnedPasswordCache.get(hashed);
-	if (cachedResult !== undefined) {
-		return cachedResult;
+	const cachedSuffixes = pwnedPasswordCache.get(hashPrefix);
+	if (cachedSuffixes !== undefined) {
+		return cachedSuffixes.has(hashSuffix);
 	}
 	try {
 		const response = await fetch(`https://api.pwnedpasswords.com/range/${hashPrefix}`, {
@@ -122,6 +129,7 @@ export async function isPasswordPwned(_ctx: ApiContext, password: string): Promi
 				'User-Agent': FLUXER_USER_AGENT,
 				'Add-Padding': 'true',
 			},
+			signal: AbortSignal.timeout(PWNED_PASSWORDS_TIMEOUT_MS),
 		});
 		if (!response.ok) {
 			Logger.warn(
@@ -153,20 +161,16 @@ export async function isPasswordPwned(_ctx: ApiContext, password: string): Promi
 			);
 		}
 		const limit = Math.min(lines.length, MAX_PWNED_LINES);
+		const pwnedSuffixes = new Set<string>();
 		for (let i = 0; i < limit; i++) {
 			const line = lines[i];
 			const [hashSuffixLine, count] = line.split(':', 2);
-			if (
-				hashSuffixLine.length === hashSuffix.length &&
-				crypto.timingSafeEqual(Buffer.from(hashSuffixLine), Buffer.from(hashSuffix)) &&
-				Number.parseInt(count, 10) > 0
-			) {
-				pwnedPasswordCache.set(hashed, true);
-				return true;
+			if (hashSuffixLine.length === hashSuffix.length && Number.parseInt(count, 10) > 0) {
+				pwnedSuffixes.add(hashSuffixLine);
 			}
 		}
-		pwnedPasswordCache.set(hashed, false);
-		return false;
+		pwnedPasswordCache.set(hashPrefix, pwnedSuffixes);
+		return pwnedSuffixes.has(hashSuffix);
 	} catch (error) {
 		Logger.error({error}, 'Failed to check password against Pwned Passwords API');
 		return false;

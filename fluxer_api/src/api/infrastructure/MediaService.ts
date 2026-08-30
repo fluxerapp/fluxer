@@ -2,6 +2,7 @@
 
 import {ExplicitContentCannotBeSentError} from '@fluxer/errors/src/domains/moderation/ExplicitContentCannotBeSentError';
 import * as MediaProxyUtils from '@pkgs/media_proxy_utils/src/MediaProxyUtils';
+import {ms} from 'itty-time';
 import {Config} from '../Config';
 import {Logger} from '../Logger';
 import * as FetchUtils from '../utils/FetchUtils';
@@ -29,6 +30,7 @@ const MEDIA_PROXY_METADATA_WITH_BASE64_MAX_BYTES = 64 * 1024 * 1024;
 const MEDIA_PROXY_ERROR_MAX_BYTES = 16 * 1024;
 const MEDIA_PROXY_THUMBNAIL_MAX_BYTES = 8 * 1024 * 1024;
 const MEDIA_PROXY_FRAMES_MAX_BYTES = 512 * 1024;
+const MEDIA_PROXY_REQUEST_TIMEOUT_MS = ms('30 seconds');
 
 function isMediaProxyMetadataResponse(value: unknown): value is MediaProxyMetadataResponse {
 	if (!isJsonRecord(value)) return false;
@@ -191,6 +193,7 @@ export class MediaService extends IMediaService {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${Config.mediaProxy.secretKey}`,
 				},
+				signal: AbortSignal.timeout(MEDIA_PROXY_REQUEST_TIMEOUT_MS),
 			});
 			if (!response.ok) {
 				const errorText = await FetchUtils.streamToStringWithLimit(response.body, {

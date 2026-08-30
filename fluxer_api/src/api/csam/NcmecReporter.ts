@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ms} from 'itty-time';
 import {Config} from '../Config';
 import {Logger} from '../Logger';
 import {EXTERNAL_RESPONSE_LIMITS} from '../utils/ExternalResponseLimits';
 import * as FetchUtils from '../utils/FetchUtils';
+
+const NCMEC_REQUEST_TIMEOUT_MS = ms('2 minutes');
 
 type NcmecOperation = 'report' | 'evidence' | 'fileinfo' | 'finish' | 'retract';
 type NcmecApiConfig =
@@ -163,6 +166,7 @@ export class NcmecReporter implements NcmecApiClient {
 				Authorization: basicAuth(cfg.username, cfg.password),
 				...(init.headers ?? {}),
 			},
+			signal: AbortSignal.timeout(NCMEC_REQUEST_TIMEOUT_MS),
 		});
 		const text = await FetchUtils.streamToStringWithLimit(res.body, {
 			maxBytes: EXTERNAL_RESPONSE_LIMITS.ncmecResponseBytes,
