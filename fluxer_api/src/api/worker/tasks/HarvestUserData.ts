@@ -604,7 +604,7 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 	let output: fs.WriteStream | null = null;
 	try {
 		output = fs.createWriteStream(zipPath);
-		const archive = archiver('zip', {zlib: {level: 9}});
+		const archive = archiver('zip', {zlib: {level: 6}});
 		archive.pipe(output);
 		archive.append(userDataJsonBuffer, {name: 'user.json'});
 		if (user.avatarHash) {
