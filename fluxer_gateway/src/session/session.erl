@@ -96,6 +96,8 @@ init(SessionData) ->
     {reply, term(), session_state()} | {stop, normal, term(), session_state()}.
 handle_call({token_verify, Token}, _From, State) when is_binary(Token) ->
     session_lifecycle:handle_token_verify(Token, State);
+handle_call({is_staff}, _From, State) ->
+    session_lifecycle:handle_is_staff(State);
 handle_call({heartbeat_ack, Seq}, _From, State) when is_integer(Seq), Seq >= 0 ->
     session_lifecycle:handle_heartbeat_ack(Seq, State);
 handle_call({resume, Seq, SocketPid}, _From, State) when

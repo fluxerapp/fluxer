@@ -264,7 +264,8 @@ dispatch_ready_data_includes_gateway_timings_test() ->
         #{},
         []
     ))#{
-        gw_timings => GwTimings
+        gw_timings => GwTimings,
+        is_staff => true
     },
     {noreply, _State1} = session_ready:dispatch_ready_data(State0),
     receive
@@ -300,6 +301,39 @@ dispatch_ready_data_includes_gateway_timings_test() ->
             ?assertNot(maps:is_key(<<"role">>, Timings)),
             ?assertNot(maps:is_key(<<"steps">>, Timings)),
             ?assertNot(maps:is_key(<<"nodes">>, Timings));
+        OtherReady ->
+            ?assert(false, {unexpected_ready_message, OtherReady})
+    after 1000 ->
+        ?assert(false, ready_not_dispatched)
+    end.
+
+dispatch_ready_data_omits_timings_for_non_staff_test() ->
+    drain_mailbox(),
+    GwTimings = gateway_timings:record(
+        test_gateway_step, gateway_timings:start() - 10, gateway_timings:new()
+    ),
+    ApiTimings = #{
+        <<"unit">> => <<"microseconds">>,
+        <<"total_us">> => 1234,
+        <<"pod_name">> => <<"fluxer-api-abc123">>
+    },
+    BaseState = base_ready_state(
+        <<"session-ready-non-staff-timings-test">>,
+        49,
+        false,
+        #{},
+        []
+    ),
+    State0 = BaseState#{
+        gw_timings => GwTimings,
+        is_staff => false,
+        ready => (maps:get(ready, BaseState))#{<<"_timings">> => ApiTimings}
+    },
+    {noreply, _State1} = session_ready:dispatch_ready_data(State0),
+    receive
+        {dispatch, ready, ReadyData, _ReadySeq} ->
+            ?assertNot(maps:is_key(<<"_timings_gw">>, ReadyData)),
+            ?assertNot(maps:is_key(<<"_timings">>, ReadyData));
         OtherReady ->
             ?assert(false, {unexpected_ready_message, OtherReady})
     after 1000 ->

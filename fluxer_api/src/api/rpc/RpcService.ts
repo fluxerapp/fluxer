@@ -4,7 +4,12 @@ import {createHash} from 'node:crypto';
 import {AUTOMATIC_VOICE_REGION_ID, ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_PRIVATE_CHANNELS_PER_USER} from '@fluxer/constants/src/LimitConstants';
-import {GroupDmAddPermissionFlags, IncomingCallFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {
+	GroupDmAddPermissionFlags,
+	IncomingCallFlags,
+	UserFlags,
+	UserPremiumTypes,
+} from '@fluxer/constants/src/UserConstants';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
@@ -1189,6 +1194,9 @@ export class RpcService {
 			version,
 		};
 		timings.record('build_session_response_payload', responseBuildStartedAtNs, responseBuildSteps);
+		if ((user.flags & UserFlags.STAFF) === 0n) {
+			return responsePayload;
+		}
 		return {
 			_timings: timings.finalize(),
 			...responsePayload,

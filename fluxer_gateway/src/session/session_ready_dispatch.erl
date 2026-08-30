@@ -61,9 +61,9 @@ dispatch_ready_to_socket(State) ->
         #{children => [PresencesSpan, UsersSpan, BuildSpan]},
         GwTimings0
     ),
-    FinalReadyData = FinalReadyData0#{
-        <<"_timings_gw">> => gateway_timings_payload:finalize(GwTimings)
-    },
+    FinalReadyData = apply_timings_visibility(
+        is_staff_session(State), GwTimings, FinalReadyData0
+    ),
     StateWithTimings = gateway_timings:put_state(GwTimings, State),
     StateAfterReady = dispatch_event(ready, FinalReadyData, StateWithTimings),
     StateAfterGuilds = dispatch_bot_guild_creates(
@@ -78,6 +78,18 @@ dispatch_ready_to_socket(State) ->
     },
     erlang:garbage_collect(),
     {noreply, FinalState}.
+
+-spec is_staff_session(session_state()) -> boolean().
+is_staff_session(#{is_staff := true}) ->
+    true;
+is_staff_session(_State) ->
+    false.
+
+-spec apply_timings_visibility(boolean(), gateway_timings:recorder(), map()) -> map().
+apply_timings_visibility(true, GwTimings, ReadyData) ->
+    ReadyData#{<<"_timings_gw">> => gateway_timings_payload:finalize(GwTimings)};
+apply_timings_visibility(false, _GwTimings, ReadyData) ->
+    maps:without([<<"_timings">>], ReadyData).
 
 -spec build_final_ready_data(
     session_state(),

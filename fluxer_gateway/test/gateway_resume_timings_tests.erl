@@ -7,7 +7,7 @@
 
 handle_resume_success_dispatches_gateway_timings_test() ->
     drain_mailbox(),
-    SessionPid = spawn(fun() -> fake_resume_session_loop(<<"resume-token">>, 12) end),
+    SessionPid = spawn(fun() -> fake_resume_session_loop(<<"resume-token">>, 12, true) end),
     meck:new(session_manager, [passthrough, no_link]),
     meck:new(rpc_client, [passthrough, no_link]),
     meck:expect(
@@ -30,6 +30,37 @@ handle_resume_success_dispatches_gateway_timings_test() ->
         ),
         ?assertEqual(SessionPid, maps:get(session_pid, State1)),
         assert_resumed_timing_dispatch(12)
+    after
+        SessionPid ! stop,
+        meck:unload(rpc_client),
+        meck:unload(session_manager)
+    end.
+
+handle_resume_omits_gateway_timings_for_non_staff_test() ->
+    drain_mailbox(),
+    SessionPid = spawn(fun() -> fake_resume_session_loop(<<"resume-token">>, 12, false) end),
+    meck:new(session_manager, [passthrough, no_link]),
+    meck:new(rpc_client, [passthrough, no_link]),
+    meck:expect(
+        session_manager,
+        lookup_or_rehydrate,
+        fun(<<"session-non-staff">>, <<"resume-token">>, SocketPid) when is_pid(SocketPid) ->
+            {ok, SessionPid}
+        end
+    ),
+    meck:expect(rpc_client, call, fun(_Request) -> error(unexpected_resume_api_call) end),
+    try
+        State0 = maps:remove(peer_ip, new_json_state()),
+        {ok, State1} = gateway_handler_identify:handle_resume(
+            #{
+                <<"token">> => <<"resume-token">>,
+                <<"session_id">> => <<"session-non-staff">>,
+                <<"seq">> => 7
+            },
+            State0
+        ),
+        ?assertEqual(SessionPid, maps:get(session_pid, State1)),
+        assert_resumed_dispatch_without_timings(12)
     after
         SessionPid ! stop,
         meck:unload(rpc_client),
@@ -60,6 +91,14 @@ handle_resume_missing_session_sends_invalid_session_without_api_test() ->
         meck:unload(session_manager)
     end.
 
+assert_resumed_dispatch_without_timings(ExpectedSeq) ->
+    receive
+        {dispatch, resumed, ResumedData, ExpectedSeq} ->
+            ?assertNot(maps:is_key(<<"_timings_gw">>, ResumedData))
+    after 1000 ->
+        ?assert(false, resumed_not_dispatched)
+    end.
+
 assert_resumed_timing_dispatch(ExpectedSeq) ->
     receive
         {dispatch, resumed, ResumedData, ExpectedSeq} ->
@@ -85,14 +124,17 @@ assert_resumed_timing_dispatch(ExpectedSeq) ->
         ?assert(false, resumed_not_dispatched)
     end.
 
-fake_resume_session_loop(Token, CurrentSeq) ->
+fake_resume_session_loop(Token, CurrentSeq, IsStaff) ->
     receive
         {'$gen_call', From, {token_verify, Candidate}} ->
             gen_server:reply(From, Candidate =:= Token),
-            fake_resume_session_loop(Token, CurrentSeq);
+            fake_resume_session_loop(Token, CurrentSeq, IsStaff);
         {'$gen_call', From, {resume, _Seq, SocketPid}} when is_pid(SocketPid) ->
             gen_server:reply(From, {ok, [], CurrentSeq}),
-            fake_resume_session_loop(Token, CurrentSeq);
+            fake_resume_session_loop(Token, CurrentSeq, IsStaff);
+        {'$gen_call', From, {is_staff}} ->
+            gen_server:reply(From, IsStaff),
+            fake_resume_session_loop(Token, CurrentSeq, IsStaff);
         stop ->
             ok
     after 30000 ->

@@ -16,6 +16,7 @@
     serialize_state/1,
     serialize_transfer_state/1,
     handle_token_verify/2,
+    handle_is_staff/1,
     handle_heartbeat_ack/2,
     handle_resume/3,
     handle_resume_offline_timeout/2,
@@ -267,6 +268,12 @@ token_hash_matches(HashedInput, TokenHash) when
     crypto:hash_equals(HashedInput, TokenHash);
 token_hash_matches(_HashedInput, _TokenHash) ->
     false.
+
+-spec handle_is_staff(session_state()) -> {reply, boolean(), session_state()}.
+handle_is_staff(#{is_staff := true} = State) ->
+    {reply, true, State};
+handle_is_staff(State) ->
+    {reply, false, State}.
 
 -spec handle_heartbeat_ack(seq(), session_state()) ->
     {reply, boolean(), session_state()}.

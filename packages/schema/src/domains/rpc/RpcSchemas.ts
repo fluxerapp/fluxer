@@ -274,8 +274,12 @@ export const RpcSessionTimings = z.object({
 export type RpcSessionTimings = z.infer<typeof RpcSessionTimings>;
 
 export const RpcResponseSessionData = z.object({
-	_timings: RpcSessionTimings.describe('Structured server-side timings for this session initialization'),
-	_timings_gw: RpcSessionTimings.optional().describe('Structured gateway-side timings for this session initialization'),
+	_timings: RpcSessionTimings.optional().describe(
+		'Structured server-side timings for this session initialization, sent to staff sessions only',
+	),
+	_timings_gw: RpcSessionTimings.optional().describe(
+		'Structured gateway-side timings for this session initialization, sent to staff sessions only',
+	),
 	auth_session_id_hash: z.string().nullish().describe('Hash of the authentication session ID'),
 	user: UserPrivateResponse.describe('Private user data for the authenticated user'),
 	user_settings: UserSettingsResponse.nullish().describe('User settings configuration'),

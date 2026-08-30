@@ -154,7 +154,7 @@ finalize_resume(Pid, Seq, MissedEvents, GwTimings0, State) ->
         ReplayStartedAt,
         GwTimings0
     ),
-    ResumedData = put_resumed_gateway_timings(GwTimings),
+    ResumedData = put_resumed_gateway_timings(session_is_staff(Pid), GwTimings),
     SocketPid ! {dispatch, resumed, ResumedData, Seq},
     erlang:garbage_collect(self(), [{type, major}]),
     {ok, State#{
@@ -209,9 +209,20 @@ remote_trace_meta(Operation, NodeName) ->
         _ -> #{}
     end.
 
--spec put_resumed_gateway_timings(gateway_timings:recorder()) -> map().
-put_resumed_gateway_timings(GwTimings) ->
-    #{<<"_timings_gw">> => gateway_timings_payload:finalize(GwTimings)}.
+-spec session_is_staff(pid()) -> boolean().
+session_is_staff(Pid) ->
+    try gen_server:call(Pid, {is_staff}, 5000) of
+        IsStaff when is_boolean(IsStaff) -> IsStaff;
+        _Other -> false
+    catch
+        exit:_Reason -> false
+    end.
+
+-spec put_resumed_gateway_timings(boolean(), gateway_timings:recorder()) -> map().
+put_resumed_gateway_timings(true, GwTimings) ->
+    #{<<"_timings_gw">> => gateway_timings_payload:finalize(GwTimings)};
+put_resumed_gateway_timings(false, _GwTimings) ->
+    #{}.
 
 -spec replay_missed_events([term()], pid()) -> ok.
 replay_missed_events([], _SocketPid) ->
