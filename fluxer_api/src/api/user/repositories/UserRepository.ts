@@ -430,6 +430,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.relationshipRepo.listRelationships(sourceUserId);
 	}
 
+	async listBlockedUserIds(sourceUserId: UserID): Promise<Array<UserID>> {
+		return this.relationshipRepo.listBlockedUserIds(sourceUserId);
+	}
+
 	async hasReachedRelationshipLimit(sourceUserId: UserID, limit: number): Promise<boolean> {
 		return this.relationshipRepo.hasReachedRelationshipLimit(sourceUserId, limit);
 	}

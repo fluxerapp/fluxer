@@ -26,6 +26,8 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
+const RPC_USER_BATCH_MAX = 1000;
+
 export const RpcGuildCollectionType = z.enum([
 	'guild',
 	'roles',
@@ -79,7 +81,7 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z.literal('get_user_guild_settings').describe('Request type for fetching user guild settings'),
-		user_ids: z.array(SnowflakeType).describe('IDs of users to fetch settings for'),
+		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to fetch settings for'),
 		guild_id: SnowflakeType.describe('ID of the guild'),
 	}),
 	z.object({
@@ -118,7 +120,7 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z.literal('get_user_blocked_ids').describe('Request type for fetching blocked user IDs'),
-		user_ids: z.array(SnowflakeType).describe('IDs of users to fetch blocked lists for'),
+		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to fetch blocked lists for'),
 	}),
 	z.object({
 		type: z.literal('voice_get_token').describe('Request type for getting voice connection token'),

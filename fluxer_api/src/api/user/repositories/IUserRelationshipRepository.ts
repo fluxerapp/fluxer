@@ -7,6 +7,7 @@ import type {UserNote} from '../../models/UserNote';
 
 export interface IUserRelationshipRepository {
 	listRelationships(sourceUserId: UserID): Promise<Array<Relationship>>;
+	listBlockedUserIds(sourceUserId: UserID): Promise<Array<UserID>>;
 	listIncomingRequests(userId: UserID): Promise<Array<Relationship>>;
 	hasReachedRelationshipLimit(sourceUserId: UserID, limit: number): Promise<boolean>;
 	getRelationship(sourceUserId: UserID, targetUserId: UserID, type: number): Promise<Relationship | null>;

@@ -21,6 +21,10 @@ const FETCH_NOTE_CQL = Notes.selectCql({
 const FETCH_RELATIONSHIPS_CQL = Relationships.selectCql({
 	where: Relationships.where.eq('source_user_id'),
 });
+const FETCH_RELATIONSHIP_TARGET_TYPES_CQL = Relationships.selectCql({
+	columns: ['target_user_id', 'type'],
+	where: Relationships.where.eq('source_user_id'),
+});
 const FETCH_RELATIONSHIPS_BY_TARGET_CQL = RelationshipsByTarget.selectCql({
 	where: RelationshipsByTarget.where.eq('target_user_id'),
 });
@@ -165,6 +169,14 @@ export class UserRelationshipRepository implements IUserRelationshipRepository {
 			source_user_id: sourceUserId,
 		});
 		return relationships.map((rel) => new Relationship(rel));
+	}
+
+	async listBlockedUserIds(sourceUserId: UserID): Promise<Array<UserID>> {
+		const rows = await fetchMany<Pick<RelationshipRow, 'target_user_id' | 'type'>>(
+			FETCH_RELATIONSHIP_TARGET_TYPES_CQL,
+			{source_user_id: sourceUserId},
+		);
+		return rows.filter((row) => row.type === RelationshipTypes.BLOCKED).map((row) => row.target_user_id);
 	}
 
 	async listIncomingRequests(userId: UserID): Promise<Array<Relationship>> {

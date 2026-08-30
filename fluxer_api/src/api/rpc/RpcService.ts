@@ -1627,9 +1627,16 @@ export class RpcService {
 	}> {
 		const {userIds, guildId} = params;
 		const actualGuildId = guildId === createGuildID(0n) ? null : guildId;
-		const userGuildSettings = await Promise.all(
-			userIds.map((userId) => this.userRepository.findGuildSettings(userId, actualGuildId)),
+		const settled = await allSettledWithConcurrency(userIds, RPC_RESPONSE_MAP_CONCURRENCY, (userId) =>
+			this.userRepository.findGuildSettings(userId, actualGuildId),
 		);
+		const userGuildSettings: Array<UserGuildSettings | null> = [];
+		for (const result of settled) {
+			if (result.status === 'rejected') {
+				throw result.reason;
+			}
+			userGuildSettings.push(result.value);
+		}
 		return {user_guild_settings: userGuildSettings};
 	}
 
@@ -1861,15 +1868,15 @@ export class RpcService {
 
 	private async getUserBlockedIds(params: {userIds: Array<UserID>}): Promise<Record<string, Array<string>>> {
 		const {userIds} = params;
+		const settled = await allSettledWithConcurrency(userIds, RPC_RESPONSE_MAP_CONCURRENCY, (userId) =>
+			this.userRepository.listBlockedUserIds(userId),
+		);
 		const result: Record<string, Array<string>> = {};
-		const relationshipsPromises = userIds.map(async (userId) => {
-			const relationships = await this.userRepository.listRelationships(userId);
-			const blockedIds = relationships.filter((rel) => rel.type === 2).map((rel) => rel.targetUserId.toString());
-			return {userId, blockedIds};
-		});
-		const results = await Promise.all(relationshipsPromises);
-		for (const {userId, blockedIds} of results) {
-			result[userId.toString()] = blockedIds;
+		for (const [index, settledBlockedIds] of settled.entries()) {
+			if (settledBlockedIds.status === 'rejected') {
+				throw settledBlockedIds.reason;
+			}
+			result[userIds[index]!.toString()] = settledBlockedIds.value.map((blockedUserId) => blockedUserId.toString());
 		}
 		return result;
 	}
