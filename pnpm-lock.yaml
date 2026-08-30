@@ -440,6 +440,9 @@ importers:
       '@bufbuild/protobuf':
         specifier: ^2.12.0
         version: 2.12.0
+      '@elastic/elasticsearch':
+        specifier: 'catalog:'
+        version: 9.3.2
       '@fluxer/config':
         specifier: workspace:*
         version: link:../packages/config
@@ -476,6 +479,15 @@ importers:
       '@fluxer/snowflake':
         specifier: workspace:*
         version: link:../packages/snowflake
+      '@hono/node-server':
+        specifier: 'catalog:'
+        version: 1.19.9(patch_hash=8736af0d82dad75a667b7daed93f88c00065adc9a809d526353e290b150827ed)(hono@4.12.2)
+      '@messageformat/core':
+        specifier: 'catalog:'
+        version: 3.4.0
+      '@messageformat/parser':
+        specifier: 'catalog:'
+        version: 5.1.1
       '@pkgs/cache':
         specifier: workspace:*
         version: link:pkgs/cache
@@ -536,6 +548,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.3.0
+      '@vvo/tzdb':
+        specifier: 'catalog:'
+        version: 6.198.0
       archiver:
         specifier: 'catalog:'
         version: 7.0.1
@@ -548,6 +563,9 @@ importers:
       cassandra-driver:
         specifier: 'catalog:'
         version: 4.8.0
+      emoji-regex:
+        specifier: 'catalog:'
+        version: 10.6.0
       fast-xml-parser:
         specifier: 'catalog:'
         version: 5.3.7
@@ -563,6 +581,9 @@ importers:
       idna-uts46-hx:
         specifier: 'catalog:'
         version: 6.1.1
+      ioredis:
+        specifier: 'catalog:'
+        version: 5.9.3
       itty-time:
         specifier: 'catalog:'
         version: 2.0.2
@@ -578,12 +599,24 @@ importers:
       luxon:
         specifier: 'catalog:'
         version: 3.7.2
+      maxmind:
+        specifier: 'catalog:'
+        version: 5.0.5
       mime:
         specifier: 'catalog:'
         version: 4.1.0
       nats:
         specifier: 'catalog:'
         version: 2.29.3
+      nodemailer:
+        specifier: 'catalog:'
+        version: 8.0.1
+      pg:
+        specifier: 'catalog:'
+        version: 8.16.3
+      pino:
+        specifier: 'catalog:'
+        version: 10.3.1
       sharp:
         specifier: 'catalog:'
         version: 0.34.5
@@ -602,6 +635,9 @@ importers:
       uint8array-extras:
         specifier: 'catalog:'
         version: 1.5.0
+      validator:
+        specifier: 'catalog:'
+        version: 13.15.26
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -618,6 +654,9 @@ importers:
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260224.1
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.27.3
       msw:
         specifier: 'catalog:'
         version: 2.12.10(@types/node@25.3.0)(typescript@5.9.3)
@@ -10867,10 +10906,6 @@ packages:
     resolution: {integrity: sha512-4yqz8a3n5HmGTlsbADNtr/dJlhkh/55Rq798G6ibiULcXbDtaLpTl1pvdqcbFfeoj3iSi52lePFM7h9H21cw/A==}
     engines: {node: '>=18.17'}
 
-  undici@7.22.0:
-    resolution: {integrity: sha512-RqslV2Us5BrllB+JeiZnK4peryVTndy9Dnqq62S3yYRRTj0tFQCwEniUy2167skdGOy3vqRzEvl1Dm4sV2ReDg==}
-    engines: {node: '>=20.18.1'}
-
   undici@7.29.0:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
     engines: {node: '>=20.18.1'}
@@ -13471,7 +13506,7 @@ snapshots:
       ms: 2.1.3
       secure-json-parse: 4.1.0
       tslib: 2.8.1
-      undici: 7.22.0
+      undici: 7.29.0
     transitivePeerDependencies:
       - supports-color
 
@@ -21175,7 +21210,7 @@ snapshots:
 
   tsx@4.21.0:
     dependencies:
-      esbuild: 0.27.3
+      esbuild: 0.27.2
       get-tsconfig: 4.13.6
     optionalDependencies:
       fsevents: 2.3.3
@@ -21246,10 +21281,7 @@ snapshots:
 
   undici@6.26.0: {}
 
-  undici@7.22.0: {}
-
-  undici@7.29.0:
-    optional: true
+  undici@7.29.0: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 

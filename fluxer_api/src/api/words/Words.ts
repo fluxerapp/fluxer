@@ -2,11 +2,7 @@
 
 import {randomInt} from 'node:crypto';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
-import {fileURLToPath} from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {resolveAssetPath} from '../utils/AssetPaths';
 
 let tails: Array<string> | undefined;
 let scales: Array<string> | undefined;
@@ -34,9 +30,8 @@ export function generateConnectionId(): string {
 }
 
 function initWords(): void {
-	const wordsDir = path.join(__dirname);
-	tails = parseWordsFile(path.join(wordsDir, 'tails.txt'));
-	scales = parseWordsFile(path.join(wordsDir, 'scales.txt'));
+	tails = parseWordsFile(resolveAssetPath('words', 'tails.txt'));
+	scales = parseWordsFile(resolveAssetPath('words', 'scales.txt'));
 }
 
 function parseWordsFile(filePath: string): Array<string> {

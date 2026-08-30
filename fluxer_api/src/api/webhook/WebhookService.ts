@@ -42,6 +42,7 @@ import type {RequestCache} from '../middleware/RequestCacheMiddleware';
 import type {Channel} from '../models/Channel';
 import type {Message} from '../models/Message';
 import type {Webhook} from '../models/Webhook';
+import {resolveAssetPath} from '../utils/AssetPaths';
 import * as RandomUtils from '../utils/RandomUtils';
 import type {IWebhookRepository} from './IWebhookRepository';
 import {transform as GitHubTransform} from './transformers/GitHubTransformer';
@@ -620,7 +621,7 @@ export class WebhookService {
 		const cacheKey = `webhook:${webhookId}:avatar:${provider}`;
 		const avatarCache = await this.cacheService.get<string | null>(cacheKey);
 		if (avatarCache) return avatarCache;
-		const avatarFile = await fs.readFile(new URL(`../assets/${provider}.webp`, import.meta.url));
+		const avatarFile = await fs.readFile(resolveAssetPath('assets', `${provider}.webp`));
 		const avatar = await this.avatarService.uploadAvatar({
 			prefix: 'avatars',
 			entityId: webhookId,

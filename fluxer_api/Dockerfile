@@ -23,6 +23,7 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @fluxer/config run --if-present generate
+RUN pnpm --filter fluxer_api run build
 RUN pnpm deploy --legacy --filter=fluxer_api --prod /out
 
 FROM node:24-bookworm-slim
@@ -48,6 +49,7 @@ RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/s
 RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
 
 COPY --from=deploy /out ./
+COPY --from=deploy /usr/src/app/fluxer_api/dist ./dist
 COPY --from=deploy /usr/src/app/tsconfigs /usr/src/app/tsconfigs
 
 RUN rm -rf pkgs && \
@@ -57,7 +59,7 @@ RUN rm -rf pkgs && \
 ENV HOME=/usr/src/app
 ENV COREPACK_HOME=/usr/src/app/.cache/corepack
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV NODE_OPTIONS="--max-old-space-size=2048 --enable-source-maps"
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 ENV BUILD_VERSION=${BUILD_VERSION}
 
@@ -65,4 +67,4 @@ USER 65532:65532
 
 EXPOSE 8080
 
-CMD ["./node_modules/.bin/tsx", "src/AppEntrypoint.ts"]
+CMD ["node", "dist/AppEntrypoint.js"]

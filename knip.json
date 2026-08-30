@@ -30,6 +30,22 @@
 		".": {
 			"project": ["scripts/**/*.mjs"]
 		},
+		"fluxer_api": {
+			"ignoreDependencies": [
+				"@elastic/elasticsearch",
+				"@hono/node-server",
+				"@messageformat/core",
+				"@messageformat/parser",
+				"@vvo/tzdb",
+				"emoji-regex",
+				"ioredis",
+				"maxmind",
+				"nodemailer",
+				"pg",
+				"pino",
+				"validator"
+			]
+		},
 		"fluxer_app": {
 			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"],
 			"ignoreDependencies": ["@lingui/swc-plugin"]
