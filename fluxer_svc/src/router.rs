@@ -11,7 +11,7 @@ use tokio::sync::{Semaphore, TryAcquireError};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
-const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
+pub(crate) const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const INFLIGHT_TTL: Duration = Duration::from_millis(200);
 const INFLIGHT_MAX_ENTRIES: u64 = 10_000;
 const MAX_ROUTER_REQUEST_BYTES: usize = 2 * 1024 * 1024;
