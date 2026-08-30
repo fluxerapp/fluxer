@@ -44,7 +44,9 @@ const SEARCH_REQUIRED_TASKS = new Set<string>([
 
 function registerCronJobs(cron: CronScheduler): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
-	cron.upsert('processBunnyPurgeQueue', 'processBunnyPurgeQueue', {}, '*/10 * * * * *', {ledger: false});
+	if (Config.bunny.purgeEnabled) {
+		cron.upsert('processBunnyPurgeQueue', 'processBunnyPurgeQueue', {}, '*/10 * * * * *', {ledger: false});
+	}
 	cron.upsert('processPendingBulkMessageDeletions', 'processPendingBulkMessageDeletions', {}, '0 */10 * * * *', {
 		ledger: false,
 	});
@@ -73,7 +75,11 @@ function registerCronJobs(cron: CronScheduler): void {
 	}
 	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *', {ledger: false});
 	Logger.info(
-		{blocklistFeeds: Config.blocklistFeeds.enabled, selfHosted: Config.instance.selfHosted},
+		{
+			blocklistFeeds: Config.blocklistFeeds.enabled,
+			bunnyPurge: Config.bunny.purgeEnabled,
+			selfHosted: Config.instance.selfHosted,
+		},
 		'Cron jobs registered successfully',
 	);
 }
