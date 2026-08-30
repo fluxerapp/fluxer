@@ -16,9 +16,11 @@ import type {User} from '../../models/User';
 import type {UserRepository} from '../../user/repositories/UserRepository';
 import {reschedulePendingDeletion} from '../../user/services/PendingDeletionCoordinator';
 import type {UserDeletionEligibilityService} from '../../user/services/UserDeletionEligibilityService';
+import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
 import {getWorkerDependencies} from '../WorkerContext';
 
 const BATCH_SIZE = 100;
+const USER_PROCESSING_CONCURRENCY = 8;
 
 interface InactivityCheckResult {
 	warningsSent: number;
@@ -63,7 +65,24 @@ interface ProcessUserDeps {
 	deletionEligibilityService: UserDeletionEligibilityService;
 }
 
-async function processUser(user: User, deps: ProcessUserDeps, result: InactivityCheckResult): Promise<void> {
+async function loadPageActivities(
+	activityTracker: KVActivityTracker,
+	users: ReadonlyArray<User>,
+): Promise<ReadonlyMap<UserID, Date | null> | null> {
+	try {
+		return await activityTracker.getActivities(users.map((user) => user.id));
+	} catch (error) {
+		Logger.warn({error}, 'Batched activity lookup failed, falling back to per-user activity lookups');
+		return null;
+	}
+}
+
+async function processUser(
+	user: User,
+	deps: ProcessUserDeps,
+	pageActivities: ReadonlyMap<UserID, Date | null> | null,
+	result: InactivityCheckResult,
+): Promise<void> {
 	const {
 		userRepository,
 		deletionQueueService,
@@ -85,7 +104,9 @@ async function processUser(user: User, deps: ProcessUserDeps, result: Inactivity
 		Logger.debug({userId}, 'User is an app store reviewer, skipping');
 		return;
 	}
-	const lastActivity = await activityTracker.getActivity(userId);
+	const prefetchedActivity = pageActivities?.get(userId);
+	const lastActivity =
+		prefetchedActivity !== undefined ? prefetchedActivity : await activityTracker.getActivity(userId);
 	const now = new Date();
 	const userInactiveMs = lastActivity ? now.getTime() - lastActivity.getTime() : Infinity;
 	if (userInactiveMs < ms('2 years')) {
@@ -182,14 +203,15 @@ export async function processInactivityDeletionsCore(
 		if (users.length === 0) {
 			break;
 		}
-		for (const user of users) {
+		const pageActivities = await loadPageActivities(activityTracker, users);
+		await mapWithConcurrency(users, USER_PROCESSING_CONCURRENCY, async (user) => {
 			try {
-				await processUser(user, userDeps, result);
+				await processUser(user, userDeps, pageActivities, result);
 			} catch (userError) {
 				Logger.error({error: userError, userId: user.id}, 'Failed to process inactive user');
 				result.errors++;
 			}
-		}
+		});
 		processedUsers += users.length;
 		pageState = page.pageState;
 		if (processedUsers % 1000 === 0) {

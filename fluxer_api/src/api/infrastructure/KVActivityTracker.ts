@@ -11,6 +11,17 @@ const STATE_VERSION_KEY = 'activity_tracker:state_version';
 const STATE_VERSION_TTL_SECONDS = seconds('1 day');
 const REBUILD_BATCH_SIZE = 100;
 
+function parseActivityValue(value: string | null): Date | null {
+	if (!value) {
+		return null;
+	}
+	const timestamp = parseInt(value, 10);
+	if (Number.isNaN(timestamp)) {
+		return null;
+	}
+	return new Date(timestamp);
+}
+
 export class KVActivityTracker {
 	private kvClient: IKVProvider;
 	private isShuttingDown = false;
@@ -35,15 +46,19 @@ export class KVActivityTracker {
 
 	async getActivity(userId: UserID): Promise<Date | null> {
 		const key = this.getActivityKey(userId);
-		const value = await this.kvClient.get(key);
-		if (!value) {
-			return null;
+		return parseActivityValue(await this.kvClient.get(key));
+	}
+
+	async getActivities(userIds: ReadonlyArray<UserID>): Promise<Map<UserID, Date | null>> {
+		const activities = new Map<UserID, Date | null>();
+		if (userIds.length === 0) {
+			return activities;
 		}
-		const timestamp = parseInt(value, 10);
-		if (Number.isNaN(timestamp)) {
-			return null;
+		const values = await this.kvClient.mget(...userIds.map((userId) => this.getActivityKey(userId)));
+		for (const [index, userId] of userIds.entries()) {
+			activities.set(userId, parseActivityValue(values[index] ?? null));
 		}
-		return new Date(timestamp);
+		return activities;
 	}
 
 	async needsRebuild(): Promise<boolean> {

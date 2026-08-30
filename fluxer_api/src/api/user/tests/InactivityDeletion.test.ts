@@ -5,6 +5,7 @@ import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {createUserID} from '../../BrandedTypes';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import type {MockKVProvider} from '../../test/mocks/MockKVProvider';
 import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {UserRepository} from '../repositories/UserRepository';
 import {expectDataExists} from './UserTestUtils';
@@ -152,6 +153,30 @@ describe('Inactivity Deletion', () => {
 		const data2 = await expectDataExists(harness, account2.userId);
 		expect(data1.hasSelfDeletedFlag).toBe(false);
 		expect(data2.hasSelfDeletedFlag).toBe(false);
+	});
+	test('a page issues one batched activity lookup instead of per-user reads', async () => {
+		const kvProvider = harness.kvProvider as MockKVProvider;
+		const accounts = [
+			await createTestAccount(harness),
+			await createTestAccount(harness),
+			await createTestAccount(harness),
+		];
+		const threeYearsAgo = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000);
+		for (const account of accounts) {
+			await setUserActivity(harness, account.userId, threeYearsAgo);
+		}
+		kvProvider.mgetSpy.mockClear();
+		kvProvider.getSpy.mockClear();
+		await processInactivityDeletions(harness);
+		const activityBatches = kvProvider.mgetSpy.mock.calls.filter((keys) =>
+			keys.some((key) => String(key).startsWith('user_activity:')),
+		);
+		expect(activityBatches).toHaveLength(1);
+		for (const account of accounts) {
+			expect(activityBatches[0]).toContain(`user_activity:${account.userId}`);
+		}
+		const activityGets = kvProvider.getSpy.mock.calls.filter((call) => String(call[0]).startsWith('user_activity:'));
+		expect(activityGets).toHaveLength(0);
 	});
 	test('should return processing statistics', async () => {
 		const result = await processInactivityDeletions(harness);
