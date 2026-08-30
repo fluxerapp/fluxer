@@ -179,6 +179,30 @@ describe('Guild audit log endpoint', () => {
 			expect(entry.action_type).toBe(AuditLogActionType.ROLE_CREATE);
 		}
 	});
+	test('serves a created entry through every audit log index', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
+		const role = await createRole(harness, owner.token, guild.id, {
+			name: 'Index Role',
+			permissions: Permissions.VIEW_CHANNEL.toString(),
+		});
+		const queries = [
+			'',
+			`?user_id=${owner.userId}`,
+			`?action_type=${AuditLogActionType.ROLE_CREATE}`,
+			`?user_id=${owner.userId}&action_type=${AuditLogActionType.ROLE_CREATE}`,
+		];
+		for (const query of queries) {
+			const response = await createBuilder<AuditLogResponse>(harness, owner.token)
+				.get(`/guilds/${guild.id}/audit-logs${query}`)
+				.execute();
+			const entry = response.audit_log_entries.find((log) => log.target_id === role.id);
+			expect(entry, `missing entry for query "${query}"`).toBeDefined();
+			expect(entry?.action_type).toBe(AuditLogActionType.ROLE_CREATE);
+			expect(entry?.user_id).toBe(owner.userId);
+			const nameChange = entry?.changes?.find((change) => change.key === 'name');
+			expect(nameChange?.new_value).toBe('Index Role');
+		}
+	});
 	test('includes target users for user-target audit log entries', async () => {
 		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
 		const member = members[0];

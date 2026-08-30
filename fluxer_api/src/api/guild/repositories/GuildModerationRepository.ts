@@ -135,7 +135,7 @@ export class GuildModerationRepository extends IGuildModerationRepository {
 		batch.addPrepared(GuildAuditLogsByUser.insertWithTtl(payload, AUDIT_LOG_TTL_SECONDS));
 		batch.addPrepared(GuildAuditLogsByAction.insertWithTtl(payload, AUDIT_LOG_TTL_SECONDS));
 		batch.addPrepared(GuildAuditLogsByUserAction.insertWithTtl(payload, AUDIT_LOG_TTL_SECONDS));
-		await batch.execute();
+		await batch.execute(false);
 		return this.mapRowToGuildAuditLog(data);
 	}
 
