@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import type {IKVPipeline, IKVProvider, IKVSubscription, KVRateLimitResult} from '@pkgs/kv_client/src/IKVProvider';
 import {
 	type IKVLogger,
@@ -231,6 +232,8 @@ redis.call('ZREM', KEYS[1], value)
 redis.call('DEL', KEYS[2])
 return 1
 `;
+
+const SCRIPT_SHA_CACHE = new Map<string, string>();
 
 interface ScriptPurgeBatchResult {
 	urls: Array<string>;
@@ -699,7 +702,18 @@ export class KVClient implements IKVProvider {
 		keyCount: number,
 		...args: Array<string | number>
 	): Promise<unknown> {
-		return await this.execute(command, async () => this.client.eval(script, keyCount, ...args));
+		return await this.execute(command, async () => this.evalCachedScript(script, keyCount, args));
+	}
+
+	private async evalCachedScript(script: string, keyCount: number, args: Array<string | number>): Promise<unknown> {
+		try {
+			return await this.client.evalsha(getScriptSha(script), keyCount, ...args);
+		} catch (error) {
+			if (!isNoScriptError(error)) {
+				throw error;
+			}
+			return await this.client.eval(script, keyCount, ...args);
+		}
 	}
 
 	private async executeJsonScript<T>(
@@ -793,6 +807,23 @@ function normalizeRateLimitResult(result: KVRateLimitResult): KVRateLimitResult 
 		resetAtMs: Number(result.resetAtMs),
 		retryAfterMs: Number(result.retryAfterMs),
 	};
+}
+
+function getScriptSha(script: string): string {
+	const cached = SCRIPT_SHA_CACHE.get(script);
+	if (cached !== undefined) {
+		return cached;
+	}
+	const sha = createHash('sha1').update(script).digest('hex');
+	SCRIPT_SHA_CACHE.set(script, sha);
+	return sha;
+}
+
+function isNoScriptError(error: unknown): boolean {
+	if (!(error instanceof Error)) {
+		return false;
+	}
+	return error.message.includes('NOSCRIPT');
 }
 
 function isTimeoutError(error: unknown): boolean {
