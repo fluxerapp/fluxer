@@ -507,7 +507,10 @@ export class EmbedService {
 				nsfwMode,
 				...(expectedContentHash ? {expectedContentHash} : {}),
 			},
-			{jobKey: expectedContentHash ? `${messageId.toString()}:${expectedContentHash}` : messageId.toString()},
+			{
+				jobKey: expectedContentHash ? `${messageId.toString()}:${expectedContentHash}` : messageId.toString(),
+				skipLedger: true,
+			},
 		);
 	}
 

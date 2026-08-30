@@ -71,7 +71,7 @@ export class JobLedgerRepository extends IJobLedgerRepository {
 		batch.addPrepared(JobsById.insert(idRow));
 		batch.addPrepared(JobsByDayBucket.insert(bucketRow));
 		batch.addPrepared(JobsActive.insert(activeRow));
-		await batch.executeChunked(10, true);
+		await batch.executeChunked(10, false);
 	}
 
 	async getJob(jobId: bigint): Promise<JobByIdRow | null> {

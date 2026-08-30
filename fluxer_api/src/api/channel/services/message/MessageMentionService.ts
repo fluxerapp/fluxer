@@ -499,7 +499,7 @@ export class MessageMentionService {
 			mentionEveryone ||
 			(message.reference && message.type === MessageTypes.REPLY);
 		if (hasMentions) {
-			await this.workerService.addJob('handleMentions', taskData);
+			await this.workerService.addJob('handleMentions', taskData, {skipLedger: true});
 		}
 	}
 }

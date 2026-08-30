@@ -6284,7 +6284,7 @@
 				}
 			],
 			"primary_key": "(bucket_day, created_at, job_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, job_id DESC)"
+			"options": "CLUSTERING ORDER BY (created_at DESC, job_id DESC) AND default_time_to_live = 7776000"
 		},
 		{
 			"name": "jobs_by_id",
@@ -6375,7 +6375,7 @@
 				}
 			],
 			"primary_key": "(job_id)",
-			"options": ""
+			"options": "default_time_to_live = 7776000"
 		},
 		{
 			"name": "latest_risk_context_by_user",
