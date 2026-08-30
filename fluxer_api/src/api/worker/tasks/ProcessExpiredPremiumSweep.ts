@@ -105,10 +105,6 @@ async function processUser(user: User, deps: SweepDeps, result: SweepResult): Pr
 		result.skipped += 1;
 		return;
 	}
-	if (Config.instance.selfHosted) {
-		result.skipped += 1;
-		return;
-	}
 	if ((user.premiumType ?? 0) <= 0) {
 		result.skipped += 1;
 		return;
@@ -190,6 +186,10 @@ async function processExpiredPremiumSweepCore(deps: SweepDeps): Promise<SweepRes
 		skipped: 0,
 		failed: 0,
 	};
+	if (Config.instance.selfHosted) {
+		Logger.debug('Skipping expired premium sweep on a self-hosted instance');
+		return result;
+	}
 	Logger.debug('Starting expired premium sweep');
 	let pageState: string | null = null;
 	while (true) {

@@ -58,7 +58,9 @@ function registerCronJobs(cron: CronScheduler): void {
 		`*/${resolveScheduledJobDrainIntervalSeconds()} * * * * *`,
 		{ledger: false},
 	);
-	cron.upsert('processExpiredPremiumSweep', 'processExpiredPremiumSweep', {}, '0 0 * * * *', {ledger: false});
+	if (!Config.instance.selfHosted) {
+		cron.upsert('processExpiredPremiumSweep', 'processExpiredPremiumSweep', {}, '0 0 * * * *', {ledger: false});
+	}
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
 	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *', {ledger: false});
@@ -69,7 +71,10 @@ function registerCronJobs(cron: CronScheduler): void {
 		cron.upsert('syncFileShaBlocklists', 'syncFileShaBlocklists', {}, '0 0 */12 * * *', {ledger: true});
 	}
 	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *', {ledger: false});
-	Logger.info({blocklistFeeds: Config.blocklistFeeds.enabled}, 'Cron jobs registered successfully');
+	Logger.info(
+		{blocklistFeeds: Config.blocklistFeeds.enabled, selfHosted: Config.instance.selfHosted},
+		'Cron jobs registered successfully',
+	);
 }
 
 function workerLanesRequireSearch(activeWorkerLanes: ReadonlyArray<WorkerLaneDefinition>): boolean {
