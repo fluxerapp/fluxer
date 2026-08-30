@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {getClient} from '@pkgs/cassandra/src/Client';
-import type cassandra from 'cassandra-driver';
+import cassandra from 'cassandra-driver';
 import {Logger} from '../Logger';
 import {getQueryType, logBatch, logQuery} from './CassandraDevLogger';
 import {getIsDev} from './CassandraMetaRegistry';
@@ -15,6 +16,22 @@ import {
 } from './CassandraTypes';
 
 const DEFAULT_MAX_PARTITION_KEYS_PER_QUERY = 100;
+
+function isDriverOverloadError(err: unknown): boolean {
+	if (err instanceof cassandra.errors.BusyConnectionError) {
+		return true;
+	}
+	if (err instanceof cassandra.errors.NoHostAvailableError && err.innerErrors) {
+		return Object.values(err.innerErrors as Record<string, unknown>).some(
+			(innerError) => innerError instanceof cassandra.errors.BusyConnectionError,
+		);
+	}
+	return false;
+}
+
+export function mapCassandraDriverError(err: unknown): unknown {
+	return isDriverOverloadError(err) ? new ServiceUnavailableError() : err;
+}
 
 export interface CassandraQueryExecutorForTesting {
 	executeQuery<T = Record<string, unknown>, P extends CassandraParams = CassandraParams>(
@@ -121,7 +138,7 @@ export async function executeQuery<T = Record<string, unknown>, P extends Cassan
 		}
 		const errorMessage = err instanceof Error ? err.message : String(err);
 		Logger.warn({error: errorMessage, query: cql, params: paramSummary}, 'Cassandra query failed');
-		throw err;
+		throw mapCassandraDriverError(err);
 	}
 }
 
@@ -249,10 +266,14 @@ async function executeBatch(queries: Array<BatchQuery>, atomic = true): Promise<
 		counter: false,
 	};
 	const startTime = getIsDev() ? performance.now() : 0;
-	await getClient().batch(
-		queries.map(({query, params}) => ({query, params: normalizeInParams(query, params as CassandraParams)})),
-		options,
-	);
+	try {
+		await getClient().batch(
+			queries.map(({query, params}) => ({query, params: normalizeInParams(query, params as CassandraParams)})),
+			options,
+		);
+	} catch (err: unknown) {
+		throw mapCassandraDriverError(err);
+	}
 	if (getIsDev()) {
 		const durationMs = performance.now() - startTime;
 		logBatch(queries, durationMs);
