@@ -3,24 +3,21 @@
 import {TURN_OFF_CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Permission from '@app/features/permissions/state/Permission';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
-import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
-import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {ActiveScreenShareMenu} from '@app/features/voice/components/ActiveScreenShareMenu';
 import {
 	CameraPreviewModalInRoom,
 	CameraPreviewModalStandalone,
 } from '@app/features/voice/components/modals/CameraPreviewModal';
 import {
 	openScreenSharePickerModal,
-	openScreenShareSourceSwitcherModal,
 	preloadScreenSharePickerSources,
 } from '@app/features/voice/components/modals/ScreenSharePickerModal';
-import {StreamSettingsMenuContent} from '@app/features/voice/components/StreamSettingsMenuContent';
 import styles from '@app/features/voice/components/VoiceConnectionStatus.module.css';
 import {VoiceCameraSettingsMenu} from '@app/features/voice/components/VoiceSettingsMenus';
 import {selectLocalParticipantControlsViewState} from '@app/features/voice/components/voice_connection_status/LocalParticipantControlsStateMachine';
@@ -45,14 +42,6 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {type MouseEvent as ReactMouseEvent, useCallback} from 'react';
 
-const CHANGE_SOURCE_DESCRIPTOR = msg({
-	message: 'Change source',
-	comment: 'Tooltip / button label in the screen-share status pill. Opens the picker to change what is being shared.',
-});
-const END_SCREEN_SHARE_DESCRIPTOR = msg({
-	message: 'End screen share',
-	comment: 'Button label that stops the current screen share.',
-});
 const WAITING_FOR_CONNECTION_DESCRIPTOR = msg({
 	message: 'Waiting for connection...',
 	comment:
@@ -146,56 +135,20 @@ export const LocalParticipantControls = observer(() => {
 			if (!isConnected || !isScreenShareEnabled) return;
 			event.preventDefault();
 			event.stopPropagation();
+			const shareContext = ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display';
+			const shareContextResolved = ActiveScreenShareSource.getSourceId() != null;
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-				<>
-					<MenuGroup data-flx="voice.voice-connection-status.open-screen-share-menu.menu-group">
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-connection-status.open-screen-share-menu.icon"
-								/>
-							}
-							onClick={async () => {
-								onClose();
-								try {
-									await openScreenShareSourceSwitcherModal();
-								} catch (error) {
-									logger.error('Failed to open screen share source switcher:', error);
-								}
-							}}
-							data-flx="voice.voice-connection-status.open-screen-share-menu.menu-item.close"
-						>
-							{i18n._(CHANGE_SOURCE_DESCRIPTOR)}
-						</MenuItem>
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-connection-status.open-screen-share-menu.icon--2"
-								/>
-							}
-							danger
-							onClick={async () => {
-								onClose();
-								await MediaEngine.setScreenShareEnabled(false);
-							}}
-							data-flx="voice.voice-connection-status.open-screen-share-menu.menu-item.close--2"
-						>
-							{i18n._(END_SCREEN_SHARE_DESCRIPTOR)}
-						</MenuItem>
-					</MenuGroup>
-					<StreamSettingsMenuContent
-						displayShareEnvironment={displayShareEnvironment}
-						shareContext={ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display'}
-						data-flx="voice.voice-connection-status.open-screen-share-menu.stream-settings-menu-content"
-					/>
-				</>
+				<ActiveScreenShareMenu
+					onClose={onClose}
+					displayShareEnvironment={displayShareEnvironment}
+					shareContext={shareContext}
+					shareContextResolved={shareContextResolved}
+					iconClassName={styles.icon}
+					data-flx="voice.voice-connection-status.open-screen-share-menu.active-screen-share-menu"
+				/>
 			));
 		},
-		[displayShareEnvironment, isConnected, isScreenShareEnabled, i18n],
+		[displayShareEnvironment, isConnected, isScreenShareEnabled],
 	);
 	const handleScreenShare = useCallback(async () => {
 		if (!isConnected) return;

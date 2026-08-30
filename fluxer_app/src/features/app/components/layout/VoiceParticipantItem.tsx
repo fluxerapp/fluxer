@@ -10,6 +10,7 @@ import {PreloadableUserPopout} from '@app/features/channel/components/Preloadabl
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
+import type {VoiceParticipantMenuSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
 import {VoiceParticipantContextMenu} from '@app/features/ui/action_menu/VoiceParticipantContextMenu';
 import {AvatarWithPresence} from '@app/features/ui/avatars/AvatarWithPresence';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -126,6 +127,11 @@ export const VoiceParticipantItem = observer(function VoiceParticipantItem({
 	const isActuallySpeaking = displayState.speaking;
 	const displayCameraOn = displayState.cameraOn;
 	const displayLive = displayState.streaming;
+	const participantMenuSource = useMemo<VoiceParticipantMenuSource>(() => {
+		if (displayCameraOn) return {kind: 'participant', focusSource: 'camera'};
+		if (displayLive) return {kind: 'participant', focusSource: 'screen-share'};
+		return {kind: 'participant'};
+	}, [displayCameraOn, displayLive]);
 	const streamKey = useMemo(
 		() => getStreamKey(guildId, currentChannelId, connectionId),
 		[guildId, currentChannelId, connectionId],
@@ -166,12 +172,14 @@ export const VoiceParticipantItem = observer(function VoiceParticipantItem({
 					onClose={onClose}
 					guildId={guildId}
 					connectionId={connectionId}
+					surface="participant-list"
+					source={participantMenuSource}
 					isGroupedItem={isGroupedItem}
 					data-flx="app.voice-participant-item.handle-context-menu.voice-participant-context-menu"
 				/>
 			));
 		},
-		[user, guildId, connectionId, currentChannelId],
+		[user, guildId, connectionId, currentChannelId, isGroupedItem, participantMenuSource],
 	);
 	const handleProfilePopoutOpen = useCallback(() => {
 		setIsProfilePopoutOpen(true);
@@ -318,6 +326,8 @@ export const VoiceParticipantItem = observer(function VoiceParticipantItem({
 					participant={participant}
 					guildId={guildId}
 					connectionId={connectionId}
+					surface="participant-list"
+					source={participantMenuSource}
 					isConnectionItem={isGroupedItem}
 					data-flx="app.voice-participant-item.voice-participant-bottom-sheet"
 				/>

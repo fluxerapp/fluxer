@@ -19,6 +19,7 @@ import {TooltipWithKeybind} from '@app/features/ui/keybind_hint/KeybindHint';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {ActiveScreenShareMenu} from '@app/features/voice/components/ActiveScreenShareMenu';
 import {
 	VoiceAudioSettingsBottomSheet,
 	VoiceCameraSettingsBottomSheet,
@@ -30,7 +31,6 @@ import {
 } from '@app/features/voice/components/modals/CameraPreviewModal';
 import {
 	openScreenSharePickerModal,
-	openScreenShareSourceSwitcherModal,
 	preloadScreenSharePickerSources,
 } from '@app/features/voice/components/modals/ScreenSharePickerModal';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
@@ -105,10 +105,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-const CHANGE_SOURCE_DESCRIPTOR = msg({
-	message: 'Change source',
-	comment: 'Voice control menu action to choose a different screen-share source.',
-});
 const END_SCREEN_SHARE_DESCRIPTOR = msg({
 	message: 'End screen share',
 	comment: 'Voice control menu action to stop sharing the screen.',
@@ -353,56 +349,10 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		}
 	}, [localParticipant, isCameraEnabled, isConnected]);
 	const renderScreenShareMenu = useCallback(
-		({onClose}: {onClose: () => void}) => (
-			<>
-				{isScreenShareEnabled && (
-					<MenuGroup data-flx="voice.voice-control-bar.render-screen-share-menu.menu-group">
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-control-bar.render-screen-share-menu.icon"
-								/>
-							}
-							onClick={async () => {
-								onClose();
-								try {
-									await openScreenShareSourceSwitcherModal();
-								} catch (error) {
-									logger.error('Failed to open screen share source switcher:', error);
-								}
-							}}
-							data-flx="voice.voice-control-bar.render-screen-share-menu.menu-item.close"
-						>
-							{i18n._(CHANGE_SOURCE_DESCRIPTOR)}
-						</MenuItem>
-						<MenuItem
-							icon={
-								<MonitorPlayIcon
-									weight="fill"
-									className={styles.icon}
-									data-flx="voice.voice-control-bar.render-screen-share-menu.icon--2"
-								/>
-							}
-							danger
-							onClick={async () => {
-								onClose();
-								await MediaEngine.setScreenShareEnabled(false);
-							}}
-							data-flx="voice.voice-control-bar.render-screen-share-menu.menu-item.close--2"
-						>
-							{i18n._(END_SCREEN_SHARE_DESCRIPTOR)}
-						</MenuItem>
-					</MenuGroup>
-				)}
-				<StreamSettingsMenuContent
-					applyToLiveStream={isScreenShareEnabled}
-					displayShareEnvironment={displayShareEnvironment}
-					shareContext={ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display'}
-					shareContextResolved={ActiveScreenShareSource.getSourceId() != null}
-					data-flx="voice.voice-control-bar.render-screen-share-menu.stream-settings-menu-content"
-				/>
+		({onClose}: {onClose: () => void}) => {
+			const shareContext = ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display';
+			const shareContextResolved = ActiveScreenShareSource.getSourceId() != null;
+			const screenShareSettingsMenu = (
 				<MenuGroup data-flx="voice.voice-control-bar.render-screen-share-menu.menu-group--2">
 					<MenuItem
 						icon={
@@ -418,8 +368,33 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 						{i18n._(VOICE_SCREEN_SHARE_SETTINGS_DESCRIPTOR)}
 					</MenuItem>
 				</MenuGroup>
-			</>
-		),
+			);
+			if (isScreenShareEnabled) {
+				return (
+					<ActiveScreenShareMenu
+						onClose={onClose}
+						displayShareEnvironment={displayShareEnvironment}
+						shareContext={shareContext}
+						shareContextResolved={shareContextResolved}
+						iconClassName={styles.icon}
+						tail={screenShareSettingsMenu}
+						data-flx="voice.voice-control-bar.render-screen-share-menu.active-screen-share-menu"
+					/>
+				);
+			}
+			return (
+				<>
+					<StreamSettingsMenuContent
+						applyToLiveStream={false}
+						displayShareEnvironment={displayShareEnvironment}
+						shareContext={shareContext}
+						shareContextResolved={shareContextResolved}
+						data-flx="voice.voice-control-bar.render-screen-share-menu.stream-settings-menu-content"
+					/>
+					{screenShareSettingsMenu}
+				</>
+			);
+		},
 		[displayShareEnvironment, isScreenShareEnabled, i18n],
 	);
 	const openScreenShareMenu = useCallback(

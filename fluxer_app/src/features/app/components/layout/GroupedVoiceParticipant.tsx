@@ -8,6 +8,7 @@ import {PreloadableUserPopout} from '@app/features/channel/components/Preloadabl
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import type {VoiceParticipantMenuSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
 import {VoiceParticipantContextMenu} from '@app/features/ui/action_menu/VoiceParticipantContextMenu';
 import {AvatarWithPresence} from '@app/features/ui/avatars/AvatarWithPresence';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -70,6 +71,19 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 	const isContextMenuOpen = useContextMenuHoverState(rowRef);
 	const toggleExpanded = useCallback(() => setIsExpanded((prev) => !prev), []);
 	const connectionCount = voiceStates.length;
+	const containsLocalConnection =
+		currentConnectionId !== null && voiceStates.some((state) => state.connection_id === currentConnectionId);
+	const participantMenuSource = useMemo<VoiceParticipantMenuSource>(() => {
+		const hasCamera =
+			voiceStates.some((state) => state.self_video === true) ||
+			(isCurrentUser && containsLocalConnection && localSelfVideo);
+		if (hasCamera) return {kind: 'participant', focusSource: 'camera'};
+		const hasScreenShare =
+			voiceStates.some((state) => state.self_stream === true) ||
+			(isCurrentUser && containsLocalConnection && localSelfStream);
+		if (hasScreenShare) return {kind: 'participant', focusSource: 'screen-share'};
+		return {kind: 'participant'};
+	}, [containsLocalConnection, isCurrentUser, localSelfStream, localSelfVideo, voiceStates]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			event.preventDefault();
@@ -80,13 +94,16 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 					participantName={NicknameUtils.getNickname(user, guildId)}
 					onClose={onClose}
 					guildId={guildId}
+					surface="participant-list"
+					source={participantMenuSource}
 					isGroupedItem={true}
 					isParentGroupedItem={true}
+					groupContainsLocalConnection={containsLocalConnection}
 					data-flx="app.grouped-voice-participant.handle-context-menu.voice-participant-context-menu"
 				/>
 			));
 		},
-		[user, guildId],
+		[user, guildId, participantMenuSource, containsLocalConnection],
 	);
 	const stateAgg = useMemo(() => {
 		let anySpeaking = propAnySpeaking ?? false;
@@ -128,7 +145,7 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 			allSelfMuted = allSelfMuted && displayState.selfMute;
 			allSelfDeaf = allSelfDeaf && displayState.selfDeaf;
 		}
-		if (isCurrentUser) {
+		if (isCurrentUser && containsLocalConnection) {
 			anyCameraOn = anyCameraOn || localSelfVideo;
 			anyLive = anyLive || localSelfStream;
 		}
@@ -138,6 +155,7 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 		user.id,
 		guildId,
 		isCurrentUser,
+		containsLocalConnection,
 		currentConnectionId,
 		localSelfMute,
 		localSelfDeaf,
@@ -154,15 +172,19 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 			const live = state.self_stream === true || (participant ? participant.isScreenShareEnabled : false);
 			if (live) return state;
 		}
-		if (isCurrentUser && localSelfStream) {
-			return (
-				voiceStates.find((state) => state.connection_id === currentConnectionId) ??
-				voiceStates.find((state) => Boolean(state.connection_id)) ??
-				null
-			);
+		if (isCurrentUser && containsLocalConnection && localSelfStream) {
+			return voiceStates.find((state) => state.connection_id === currentConnectionId) ?? null;
 		}
 		return null;
-	}, [voiceStates, user.id, isCurrentUser, localSelfStream, currentConnectionId, mediaEngineVersion]);
+	}, [
+		voiceStates,
+		user.id,
+		isCurrentUser,
+		containsLocalConnection,
+		localSelfStream,
+		currentConnectionId,
+		mediaEngineVersion,
+	]);
 	const streamKey = activeStreamState?.connection_id
 		? getStreamKey(guildId, activeStreamState.channel_id ?? null, activeStreamState.connection_id)
 		: '';

@@ -50,6 +50,7 @@ import {
 	MagnifyingGlassIcon,
 	MicrophoneIcon,
 	MicrophoneSlashIcon,
+	MonitorArrowUpIcon,
 	MonitorPlayIcon,
 	NotePencilIcon,
 	PaperPlaneIcon,
@@ -881,6 +882,13 @@ export const TurnOffStreamIcon: React.FC<IconProps> = observer(({size = 16}) => 
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.turn-off-stream-icon.monitor-play-icon"
+	/>
+));
+export const ChangeStreamIcon: React.FC<IconProps> = observer(({size = 16}) => (
+	<MonitorArrowUpIcon
+		size={remFromPx(size)}
+		weight="fill"
+		data-flx="ui.action-menu.context-menu-icons.change-stream-icon.monitor-arrow-up-icon"
 	/>
 ));
 export const DisconnectIcon: React.FC<IconProps> = observer(({size = 16}) => (

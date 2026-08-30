@@ -149,6 +149,14 @@ const ADAPTIVE_QUALITY_ACTIVE_DESCRIPTOR = msg({
 	comment:
 		'Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.',
 });
+const STREAM_QUALITY_DESCRIPTOR = msg({
+	message: 'Stream Quality',
+	comment: 'Compact submenu label for changing the resolution and frame rate of an active stream.',
+});
+const SHARE_STREAM_AUDIO_DESCRIPTOR = msg({
+	message: 'Share Stream Audio',
+	comment: 'Toggle label for sharing audio with an active stream.',
+});
 const logger = new Logger('StreamSettingsMenuContent');
 const SCREEN_SHARE_AUDIO_SOURCE = VoiceTrackSource.ScreenShareAudio as Track.Source;
 
@@ -329,6 +337,7 @@ interface StreamSettingsMenuContentProps {
 	shareContext?: StreamSettingsShareContext;
 	shareContextResolved?: boolean;
 	displayShareEnvironment: DisplayShareEnvironment;
+	variant?: 'full' | 'compactLive';
 }
 
 export const StreamSettingsMenuContent = observer(
@@ -337,6 +346,7 @@ export const StreamSettingsMenuContent = observer(
 		shareContext = 'display',
 		shareContextResolved = true,
 		displayShareEnvironment,
+		variant = 'full',
 	}: StreamSettingsMenuContentProps) => {
 		const {i18n} = useLingui();
 		useMediaEngineVersion();
@@ -348,6 +358,18 @@ export const StreamSettingsMenuContent = observer(
 		const currentMode = VoiceSettings.getStreamingMode();
 		const currentResolution = VoiceSettings.getScreenshareResolution();
 		const currentFrameRate = resolveScreenShareFrameRate(VoiceSettings.getVideoFrameRate());
+		const effectiveMode = normaliseStreamingModeForContext(currentMode, getScreenShareContext(shareContext));
+		const effectiveResolution = normaliseResolutionForContext(
+			currentResolution,
+			getScreenShareContext(shareContext),
+			hasHigherVideoQuality,
+		);
+		const effectiveQuality = resolveStreamingModeSettings(
+			effectiveMode,
+			effectiveResolution,
+			currentFrameRate,
+			hasHigherVideoQuality,
+		);
 		const captureAudioEnabled = isAppShare
 			? VoiceSettings.getShareAppAudio()
 			: isDeviceShare
@@ -552,6 +574,117 @@ export const StreamSettingsMenuContent = observer(
 		const selectedAudioDeviceLabel = selectedAudioDevice
 			? formatVoiceAudioDeviceLabel(i18n, selectedAudioDevice, i18n._(UNNAMED_INPUT_DESCRIPTOR))
 			: i18n._(SYSTEM_DEFAULT_DESCRIPTOR);
+		if (variant === 'compactLive') {
+			const selectCompactResolution = (option: Option<ScreenshareResolution>) => {
+				if (option.isPremium && !hasHigherVideoQuality) {
+					if (showPremiumFeatures) PremiumModalCommands.open();
+					return;
+				}
+				if (currentMode === 'custom' && effectiveQuality.resolution === option.value) return;
+				VoiceSettingsCommands.update({
+					streamingMode: 'custom',
+					screenshareResolution: option.value,
+					videoFrameRate: effectiveQuality.frameRate,
+				});
+				runApply();
+			};
+			const selectCompactFrameRate = (option: Option<SupportedScreenShareFrameRate>) => {
+				if (option.isPremium && !hasHigherVideoQuality) {
+					if (showPremiumFeatures) PremiumModalCommands.open();
+					return;
+				}
+				if (currentMode === 'custom' && effectiveQuality.frameRate === option.value) return;
+				VoiceSettingsCommands.update({
+					streamingMode: 'custom',
+					screenshareResolution: effectiveQuality.resolution,
+					videoFrameRate: option.value,
+				});
+				runApply();
+			};
+			return (
+				<>
+					<MenuItemSubmenu
+						label={i18n._(STREAM_QUALITY_DESCRIPTOR)}
+						render={() => (
+							<>
+								<MenuGroup data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-group">
+									<MenuGroupLabel data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-label">
+										{i18n._(FRAMERATE_DESCRIPTOR)}
+									</MenuGroupLabel>
+									{frameRateOptions.map((option) => {
+										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+										return (
+											<MenuItemRadio
+												key={option.value}
+												selected={effectiveQuality.frameRate === option.value}
+												onSelect={() => selectCompactFrameRate(option)}
+												data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-option"
+											>
+												<span
+													className={styles.row}
+													data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-row"
+												>
+													<span
+														className={styles.rowLabel}
+														data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-row-label"
+													>
+														{option.label}
+													</span>
+													{premiumLocked && (
+														<PremiumBadge data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-premium-badge" />
+													)}
+												</span>
+											</MenuItemRadio>
+										);
+									})}
+								</MenuGroup>
+								<MenuGroup data-flx="voice.stream-settings-menu-content.compact-live.resolution-group">
+									<MenuGroupLabel data-flx="voice.stream-settings-menu-content.compact-live.resolution-label">
+										{i18n._(RESOLUTION_DESCRIPTOR)}
+									</MenuGroupLabel>
+									{resolutionOptions.map((option) => {
+										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+										return (
+											<MenuItemRadio
+												key={option.value}
+												selected={effectiveQuality.resolution === option.value}
+												onSelect={() => selectCompactResolution(option)}
+												data-flx="voice.stream-settings-menu-content.compact-live.resolution-option"
+											>
+												<span
+													className={styles.row}
+													data-flx="voice.stream-settings-menu-content.compact-live.resolution-row"
+												>
+													<span
+														className={styles.rowLabel}
+														data-flx="voice.stream-settings-menu-content.compact-live.resolution-row-label"
+													>
+														{option.label}
+													</span>
+													{premiumLocked && (
+														<PremiumBadge data-flx="voice.stream-settings-menu-content.compact-live.resolution-premium-badge" />
+													)}
+												</span>
+											</MenuItemRadio>
+										);
+									})}
+								</MenuGroup>
+							</>
+						)}
+						data-flx="voice.stream-settings-menu-content.compact-live.quality-submenu"
+					/>
+					{audioMenuState.control.value === 'toggle' && (
+						<CheckboxItem
+							checked={audioMenuState.control.checked}
+							onCheckedChange={handleCaptureAudioToggle}
+							data-flx="voice.stream-settings-menu-content.compact-live.share-audio"
+						>
+							{i18n._(SHARE_STREAM_AUDIO_DESCRIPTOR)}
+						</CheckboxItem>
+					)}
+				</>
+			);
+		}
 		return (
 			<>
 				<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group">

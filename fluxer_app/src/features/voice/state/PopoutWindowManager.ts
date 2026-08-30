@@ -13,7 +13,7 @@ export const VOICE_TILE_POPOUT_DEFAULT_HEIGHT = 480;
 export const VOICE_CALL_POPOUT_DEFAULT_WIDTH = 960;
 export const VOICE_CALL_POPOUT_DEFAULT_HEIGHT = 600;
 
-export type VoiceTilePopoutSource = 'camera' | 'screen_share';
+export type VoiceTilePopoutSource = 'user' | 'camera' | 'screen_share';
 
 export interface VoiceTilePopoutDescriptor {
 	kind: 'tile';

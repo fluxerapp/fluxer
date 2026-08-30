@@ -17,6 +17,22 @@ export const STREAM_VOLUME_DESCRIPTOR = msg({
 	message: 'Stream volume',
 	comment: 'Voice menu slider label that controls volume of an incoming screen share with audio.',
 });
+export const STOP_STREAMING_DESCRIPTOR = msg({
+	message: 'Stop Streaming',
+	comment: 'Voice screen share menu action that stops the current user stream.',
+});
+export const CHANGE_STREAM_DESCRIPTOR = msg({
+	message: 'Change Stream',
+	comment: 'Voice screen share menu action that changes the shared source.',
+});
+export const PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR = msg({
+	message: 'Pause Preview When Fluxer Isn’t Focused',
+	comment: 'Voice screen share menu preference that pauses the local stream preview while the app is unfocused.',
+});
+export const SCREEN_SHARE_PRIVACY_DESCRIPTOR = msg({
+	message: 'Screen Share Privacy',
+	comment: 'Voice screen share menu action that opens the screen share preview privacy controls.',
+});
 export const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
 	comment:
@@ -27,11 +43,19 @@ export const UNFOCUS_DESCRIPTOR = msg({
 	comment: 'Voice call layout action that removes focus from the currently pinned participant.',
 });
 export const POP_OUT_CAMERA_DESCRIPTOR = msg({
-	message: 'Pop out camera',
-	comment: 'Voice menu action on desktop that opens the participant camera feed in a separate window.',
+	message: 'Pop Out Video',
+	comment: 'Voice menu action on desktop that opens the active participant camera feed in a separate window.',
+});
+export const POP_OUT_USER_DESCRIPTOR = msg({
+	message: 'Pop Out User',
+	comment: 'Voice menu action on desktop that opens the participant placeholder tile in a separate window.',
+});
+export const PREVIEW_CAMERA_DESCRIPTOR = msg({
+	message: 'Preview Camera',
+	comment: 'Voice menu action that opens a preview of the current user camera.',
 });
 export const POP_OUT_STREAM_DESCRIPTOR = msg({
-	message: 'Pop out stream',
+	message: 'Pop Out Stream',
 	comment: 'Voice menu action on desktop that opens the participant screen share in a separate window.',
 });
 export const FOCUS_THIS_DEVICE_DESCRIPTOR = msg({
@@ -71,7 +95,7 @@ export const SHOW_MY_OWN_CAMERA_DESCRIPTOR = msg({
 	comment: 'Voice display preference checkbox that controls whether the current user sees their own camera tile.',
 });
 export const SHOW_MY_SCREEN_SHARE_DESCRIPTOR = msg({
-	message: 'Show my screen share',
+	message: 'Show My Screen Share',
 	comment: 'Voice display preference checkbox that controls whether the current user sees their own screen share tile.',
 });
 export const SHOW_NON_VIDEO_PARTICIPANTS_DESCRIPTOR = msg({

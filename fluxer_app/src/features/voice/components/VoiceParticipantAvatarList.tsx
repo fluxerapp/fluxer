@@ -279,6 +279,8 @@ function VoiceParticipantPopoutRow({entry, guildId, channelId}: VoiceParticipant
 					onClose={onClose}
 					guildId={guildId ?? undefined}
 					connectionId={entry.connectionId}
+					surface="participant-avatar-list"
+					source={{kind: 'participant'}}
 					data-flx="voice.voice-participant-avatar-list.handle-context-menu.voice-participant-context-menu"
 				/>
 			));
@@ -414,6 +416,8 @@ export const VoiceParticipantSpeakingAvatarStack: React.FC<VoiceParticipantSpeak
 						onClose={onClose}
 						guildId={guildId ?? undefined}
 						connectionId={entry.connectionId}
+						surface="participant-avatar-list"
+						source={{kind: 'participant'}}
 						data-flx="voice.voice-participant-avatar-list.handle-user-context-menu.voice-participant-context-menu"
 					/>
 				));
@@ -563,6 +567,8 @@ export const VoiceParticipantWrappedAvatarList: React.FC<VoiceParticipantWrapped
 						onClose={onClose}
 						guildId={guildId ?? undefined}
 						connectionId={entry.connectionId}
+						surface="participant-avatar-list"
+						source={{kind: 'participant'}}
 						data-flx="voice.voice-participant-avatar-list.voice-participant-wrapped-avatar-list.handle-context-menu.voice-participant-context-menu"
 					/>
 				));

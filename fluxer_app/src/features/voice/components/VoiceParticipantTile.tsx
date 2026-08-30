@@ -5,6 +5,7 @@ import {WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDes
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {dimColor} from '@app/features/theme/utils/ColorUtils';
+import type {VoiceParticipantMenuSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
 import {VoiceParticipantContextMenu} from '@app/features/ui/action_menu/VoiceParticipantContextMenu';
 import {Button} from '@app/features/ui/button/Button';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -624,6 +625,43 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 			other: 'Keep watching # streams and add this one',
 		},
 	);
+	const participantMenuSource = useMemo<VoiceParticipantMenuSource>(() => {
+		if (!isScreenShare) {
+			return isCameraTile && isCameraPublicationActive ? {kind: 'camera'} : {kind: 'participant'};
+		}
+		if (isOwnScreenShare) {
+			return {kind: 'screen-share', streamKey, state: {kind: 'own'}};
+		}
+		if (isWatching) {
+			return {
+				kind: 'screen-share',
+				streamKey,
+				state: {kind: 'remote-watched', hasAudio: hasScreenShareAudio, onStopWatching: stopWatching},
+			};
+		}
+		return {
+			kind: 'screen-share',
+			streamKey,
+			state: {
+				kind: 'remote-unwatched',
+				onWatch: () => {
+					startWatching();
+					VoiceCallLayoutCommands.setPinnedParticipant(identity, VoiceTrackSource.ScreenShare);
+				},
+			},
+		};
+	}, [
+		hasScreenShareAudio,
+		identity,
+		isCameraPublicationActive,
+		isCameraTile,
+		isOwnScreenShare,
+		isScreenShare,
+		isWatching,
+		startWatching,
+		stopWatching,
+		streamKey,
+	]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent | MouseEvent) => {
 			if (!participantUser) return;
@@ -635,13 +673,9 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 					onClose={onClose}
 					guildId={guildId}
 					connectionId={connectionId}
+					surface="call-tile"
+					source={participantMenuSource}
 					isGroupedItem={isGroupedItem}
-					streamKey={streamKey}
-					isScreenShare={isScreenShare}
-					isWatching={isWatching}
-					hasScreenShareAudio={hasScreenShareAudio}
-					isOwnScreenShare={isOwnScreenShare}
-					onStopWatching={stopWatching}
 					hiddenConnectionCount={groupHiddenCount}
 					deviceConnectionCount={groupDeviceConnectionCount}
 					isDeviceGroupExpanded={tileGroup?.isExpanded ?? false}
@@ -656,12 +690,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 			guildId,
 			connectionId,
 			isCurrentUser,
-			streamKey,
-			isScreenShare,
-			isWatching,
-			hasScreenShareAudio,
-			isOwnScreenShare,
-			stopWatching,
+			participantMenuSource,
 			groupHiddenCount,
 			groupDeviceConnectionCount,
 			tileGroup,
@@ -1395,13 +1424,9 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 					participant={connectionParticipant}
 					guildId={guildId}
 					connectionId={connectionId}
+					surface="call-tile"
+					source={participantMenuSource}
 					isConnectionItem
-					streamKey={streamKey}
-					isScreenShare={isScreenShare}
-					isWatching={isWatching}
-					hasScreenShareAudio={hasScreenShareAudio}
-					isOwnScreenShare={isOwnScreenShare}
-					onStopWatching={stopWatching}
 					data-flx="voice.voice-participant-tile.voice-participant-tile-inner.voice-participant-bottom-sheet"
 				/>
 			)}

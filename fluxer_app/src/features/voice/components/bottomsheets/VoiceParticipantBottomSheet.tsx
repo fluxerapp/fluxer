@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useVoiceParticipantMenuData} from '@app/features/ui/action_menu/items/VoiceParticipantMenuData';
+import type {
+	VoiceParticipantMenuSource,
+	VoiceParticipantMenuSurface,
+} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import type {User} from '@app/features/user/models/User';
 import {observer} from 'mobx-react-lite';
@@ -12,15 +16,11 @@ interface VoiceParticipantBottomSheetProps {
 	user: User;
 	guildId?: string;
 	connectionId?: string;
+	surface: VoiceParticipantMenuSurface;
+	source: VoiceParticipantMenuSource;
 	isConnectionItem?: boolean;
 	isParentGroupedItem?: boolean;
 	participant?: unknown;
-	streamKey?: string;
-	isScreenShare?: boolean;
-	isWatching?: boolean;
-	hasScreenShareAudio?: boolean;
-	isOwnScreenShare?: boolean;
-	onStopWatching?: () => void;
 }
 
 export const VoiceParticipantBottomSheet: React.FC<VoiceParticipantBottomSheetProps> = observer(
@@ -30,27 +30,19 @@ export const VoiceParticipantBottomSheet: React.FC<VoiceParticipantBottomSheetPr
 		user,
 		guildId,
 		connectionId,
+		surface,
+		source,
 		isConnectionItem = false,
 		isParentGroupedItem = false,
-		streamKey,
-		isScreenShare = false,
-		isWatching = false,
-		hasScreenShareAudio = false,
-		isOwnScreenShare = false,
-		onStopWatching,
 	}) => {
 		const {groups} = useVoiceParticipantMenuData({
 			user,
 			guildId,
 			connectionId,
+			surface,
+			source,
 			isGroupedItem: isConnectionItem,
 			isParentGroupedItem,
-			streamKey,
-			isScreenShare,
-			isWatching,
-			hasScreenShareAudio,
-			isOwnScreenShare,
-			onStopWatching,
 			onClose,
 		});
 		return (

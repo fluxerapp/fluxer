@@ -247,6 +247,8 @@ const SpectatorRow = observer(function SpectatorRow({
 					onClose={onClose}
 					guildId={guildId}
 					connectionId={connectionId}
+					surface="stream-spectator-list"
+					source={{kind: 'participant'}}
 					data-flx="voice.stream-spectators-popout.handle-context-menu.voice-participant-context-menu"
 				/>
 			));

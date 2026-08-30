@@ -527,16 +527,18 @@ const ScreenSharePreviewInfoModal = observer(() => {
 	);
 });
 
+export function openScreenSharePreviewPrivacyModal(): void {
+	ModalCommands.push(
+		ModalCommands.modal(() => (
+			<ScreenSharePreviewInfoModal data-flx="voice.screen-share-picker-modal.open-preview-privacy-modal.screen-share-preview-info-modal" />
+		)),
+	);
+}
+
 const ScreenSharePreviewFooterNotice = observer(() => {
 	const {i18n} = useLingui();
 	const previewsEnabled = !PrivacyPreferences.getDisableStreamPreviews();
-	const openInfoModal = useCallback(() => {
-		ModalCommands.push(
-			ModalCommands.modal(() => (
-				<ScreenSharePreviewInfoModal data-flx="voice.screen-share-picker-modal.open-info-modal.screen-share-preview-info-modal" />
-			)),
-		);
-	}, []);
+	const openInfoModal = useCallback(openScreenSharePreviewPrivacyModal, []);
 	const handleDisable = useCallback(() => {
 		PrivacyPreferences.setDisableStreamPreviews(true);
 	}, []);

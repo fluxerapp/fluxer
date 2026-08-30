@@ -81,6 +81,8 @@ export const CallParticipantsRow = observer(
 							onClose={onClose}
 							guildId={channel.guildId ?? undefined}
 							connectionId={participantEntry.connectionId}
+							surface="call-avatar"
+							source={{kind: 'participant'}}
 							data-flx="channel.channel-view.dm-channel-view.handle-context-menu.voice-participant-context-menu"
 						/>
 					) : (

@@ -25,7 +25,7 @@ const textValueFromNode = (node: React.ReactNode): string => {
 	return '';
 };
 export const MenuItemRadio = React.forwardRef<HTMLDivElement, MenuItemRadioProps>(
-	({label, children, icon: _icon, selected, disabled = false, onSelect, closeOnSelect = false}, forwardedRef) => {
+	({label, children, icon, selected, disabled = false, onSelect, closeOnSelect = false}, forwardedRef) => {
 		const closeMenu = useContextMenuClose();
 		const handleAction = useCallback(() => {
 			if (disabled) return;
@@ -48,7 +48,16 @@ export const MenuItemRadio = React.forwardRef<HTMLDivElement, MenuItemRadioProps
 				data-flx="ui.action-menu.menu-item-radio.selectable-menu-item"
 			>
 				<div className={styles.itemLabel} data-flx="ui.action-menu.menu-item-radio.item-label">
-					{visibleLabel}
+					<div className={radioStyles.labelContent} data-flx="ui.action-menu.menu-item-radio.div">
+						{icon && (
+							<span className={radioStyles.icon} data-flx="ui.action-menu.menu-item-radio.span">
+								{icon}
+							</span>
+						)}
+						<span className={radioStyles.labelText} data-flx="ui.action-menu.menu-item-radio.span--2">
+							{visibleLabel}
+						</span>
+					</div>
 				</div>
 				<div
 					className={styles.checkboxIndicator}
