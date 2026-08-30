@@ -384,6 +384,7 @@ services:
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "20"
     depends_on:
       nats: {condition: service_started}
       postgres: {condition: service_healthy}
@@ -428,6 +429,7 @@ services:
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "20"
     depends_on:
       nats: {condition: service_started}
       postgres: {condition: service_healthy}
