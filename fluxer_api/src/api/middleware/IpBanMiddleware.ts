@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
-import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey, type IpAddressFamily} from '@fluxer/ip_utils/src/IpAddress';
 import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
 import {createMiddleware} from 'hono/factory';
 import {AdminRepository} from '../admin/AdminRepository';
 import type {BannedIpEntry, BannedIpKind} from '../admin/IAdminRepository';
-import {Config} from '../Config';
 import {IP_BAN_REFRESH_CHANNEL} from '../constants/IpBan';
 import {Logger} from '../Logger';
 import {isIpBanExempt} from '../risk/IpBanExemptions';
 import type {HonoEnv} from '../types/HonoEnv';
 import {parseIpBanEntry, tryParseSingleIp} from '../utils/IpRangeUtils';
+import {getRequestClientIp} from '../utils/RequestClientIp';
 
 type FamilyMap<T> = Record<IpAddressFamily, Map<string, T>>;
 
@@ -371,10 +370,7 @@ class IpBanCache {
 
 export const ipBanCache = new IpBanCache();
 export const IpBanMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
-	const clientIp = extractClientIp(ctx.req.raw, {
-		trustClientIpHeader: Config.proxy.trust_client_ip_header,
-		clientIpHeaderName: Config.proxy.client_ip_header,
-	});
+	const clientIp = getRequestClientIp(ctx);
 	const match = clientIp ? ipBanCache.getMatch(clientIp) : null;
 	if (match) {
 		throw new IpBannedError({

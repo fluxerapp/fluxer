@@ -77,7 +77,7 @@ import {UserChannelRequestService} from '../user/services/UserChannelRequestServ
 import {UserContentRequestService} from '../user/services/UserContentRequestService';
 import {UserRelationshipRequestService} from '../user/services/UserRelationshipRequestService';
 import {UserService} from '../user/services/UserService';
-import {resolveRequestClientIp} from '../utils/IpUtils';
+import {getRequestClientIp} from '../utils/RequestClientIp';
 import {VoiceService} from '../voice/VoiceService';
 import {WebhookRequestService} from '../webhook/WebhookRequestService';
 import {WebhookService} from '../webhook/WebhookService';
@@ -1050,7 +1050,7 @@ class RequestServices implements RequestScopedServices {
 export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const apiContext = createApiContext({
 		requestId: ctx.get('requestId') ?? crypto.randomUUID(),
-		clientIp: resolveRequestClientIp(ctx.req.raw),
+		clientIp: getRequestClientIp(ctx),
 		userAgent: ctx.req.header('user-agent') ?? null,
 	});
 	ctx.set('apiContext', apiContext);

@@ -81,6 +81,7 @@ import type {UserContactChangeLogService} from '../user/services/UserContactChan
 import type {UserContentRequestService} from '../user/services/UserContentRequestService';
 import type {UserRelationshipRequestService} from '../user/services/UserRelationshipRequestService';
 import type {UserService} from '../user/services/UserService';
+import type {ClientIpResolution} from '../utils/RequestClientIp';
 import type {SweegoWebhookService} from '../webhook/SweegoWebhookService';
 import type {WebhookRequestService} from '../webhook/WebhookRequestService';
 import type {WebhookService} from '../webhook/WebhookService';
@@ -91,6 +92,7 @@ export interface HonoEnv {
 		apiContext: ApiContext;
 		user: User;
 		requestId?: string;
+		clientIpResolution?: ClientIpResolution;
 		responseSchema: unknown;
 		adminService: AdminService;
 		adminArchiveService: AdminArchiveService;

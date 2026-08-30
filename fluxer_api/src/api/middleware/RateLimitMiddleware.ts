@@ -3,7 +3,6 @@
 import {createHash} from 'node:crypto';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
-import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {BucketConfig, RateLimitResult, RateLimitScope} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {Context, MiddlewareHandler} from 'hono';
@@ -11,6 +10,7 @@ import {createMiddleware} from 'hono/factory';
 import * as AuthSession from '../auth/AuthSession';
 import {Config} from '../Config';
 import type {HonoEnv} from '../types/HonoEnv';
+import {getRequestClientIp} from '../utils/RequestClientIp';
 
 type AccountType = 'user' | 'bot' | 'webhook';
 
@@ -58,10 +58,7 @@ function getClientIdentifier(ctx: Context<HonoEnv>): string {
 		}
 		return `user:${user.id}:${tokenType}`;
 	}
-	const ip = extractClientIp(ctx.req.raw, {
-		trustClientIpHeader: Config.proxy.trust_client_ip_header,
-		clientIpHeaderName: Config.proxy.client_ip_header,
-	});
+	const ip = getRequestClientIp(ctx);
 	if (!ip) return 'internal';
 	return `ip:${getSameIpDecisionKey(ip) ?? ip}`;
 }

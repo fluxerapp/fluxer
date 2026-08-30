@@ -59,6 +59,20 @@ describe('TrustedClientIpHeaderMiddleware', () => {
 		});
 		expect(response.status).toBe(403);
 	});
+	it('accepts requests when the IP header holds only whitespace (passthrough)', async () => {
+		const app = createApp();
+		const response = await app.request('http://localhost/v1/messages', {
+			headers: {'x-real-ip': '   '},
+		});
+		expect(response.status).toBe(200);
+	});
+	it('rejects x-forwarded-for with an empty first hop', async () => {
+		const app = createApp('x-forwarded-for');
+		const response = await app.request('http://localhost/v1/messages', {
+			headers: {'x-forwarded-for': ', 10.0.0.1'},
+		});
+		expect(response.status).toBe(403);
+	});
 	it('accepts x-forwarded-for with multiple hops and a valid first hop', async () => {
 		const app = createApp('x-forwarded-for');
 		const response = await app.request('http://localhost/v1/messages', {
