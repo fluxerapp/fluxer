@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const MAX_SAFE_INTEGER_DECIMAL = Number.MAX_SAFE_INTEGER.toString();
+const UNSAFE_INTEGER_DIGIT_RUN = new RegExp(String.raw`\d{${MAX_SAFE_INTEGER_DECIMAL.length}}`);
 
 function isDigit(char: string): boolean {
 	return char >= '0' && char <= '9';
@@ -21,7 +22,7 @@ function isUnsafeIntegerToken(token: string): boolean {
 	return digits > MAX_SAFE_INTEGER_DECIMAL;
 }
 
-function coerceUnsafeIntegersToStrings(jsonText: string): string {
+export function coerceUnsafeIntegersToStrings(jsonText: string): string {
 	let inString = false;
 	let escaped = false;
 	let i = 0;
@@ -76,7 +77,7 @@ function coerceUnsafeIntegersToStrings(jsonText: string): string {
 }
 
 export function parseJsonPreservingLargeIntegers(jsonText: string): unknown {
-	const processed = coerceUnsafeIntegersToStrings(jsonText);
+	const processed = UNSAFE_INTEGER_DIGIT_RUN.test(jsonText) ? coerceUnsafeIntegersToStrings(jsonText) : jsonText;
 	const parsed: unknown = JSON.parse(processed);
 	return parsed;
 }
