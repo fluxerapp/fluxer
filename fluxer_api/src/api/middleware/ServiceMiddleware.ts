@@ -3,8 +3,8 @@
 import crypto from 'node:crypto';
 import {createIpInfoService, createUnavailableIpInfoService, type IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import {createMiddleware} from 'hono/factory';
+import type {ApiContext} from '../ApiContext';
 import {AdminService} from '../admin/AdminService';
-import {AdminArchiveService} from '../admin/services/AdminArchiveService';
 import {AuthRequestService} from '../auth/AuthRequestService';
 import {DesktopHandoffService} from '../auth/services/DesktopHandoffService';
 import {
@@ -14,6 +14,7 @@ import {
 import type {IRegistrationRiskEvaluator} from '../auth/services/IRegistrationRiskEvaluator';
 import {noopRegistrationRiskEvaluator, RegistrationRiskEvaluator} from '../auth/services/RegistrationRiskEvaluator';
 import {SsoService} from '../auth/services/SsoService';
+import type {IBlueskyOAuthService} from '../bluesky/IBlueskyOAuthService';
 import {Config} from '../Config';
 import {createApiContext} from '../CreateApiContext';
 import {ChannelRequestService} from '../channel/services/ChannelRequestService';
@@ -28,10 +29,10 @@ import {DonationCheckoutService} from '../donation/services/DonationCheckoutServ
 import {DonationMagicLinkService} from '../donation/services/DonationMagicLinkService';
 import {FavoriteMemeRequestService} from '../favorite_meme/FavoriteMemeRequestService';
 import {FavoriteMemeService} from '../favorite_meme/FavoriteMemeService';
-import {GatewayRequestService} from '../gateway/GatewayRequestService';
-import {GuildDiscoveryService} from '../guild/services/GuildDiscoveryService';
 import {DisabledLiveKitService} from '../infrastructure/DisabledLiveKitService';
+import type {IGatewayService} from '../infrastructure/IGatewayService';
 import type {ILiveKitService} from '../infrastructure/ILiveKitService';
+import type {IMediaService} from '../infrastructure/IMediaService';
 import {InMemoryVoiceRoomStore} from '../infrastructure/InMemoryVoiceRoomStore';
 import type {IVoiceRoomStore} from '../infrastructure/IVoiceRoomStore';
 import {LiveKitService} from '../infrastructure/LiveKitService';
@@ -45,7 +46,6 @@ import {ApplicationService} from '../oauth/ApplicationService';
 import {OAuth2ApplicationsRequestService} from '../oauth/OAuth2ApplicationsRequestService';
 import {OAuth2RequestService} from '../oauth/OAuth2RequestService';
 import {OAuth2Service} from '../oauth/OAuth2Service';
-import {ReadStateRequestService} from '../read_state/ReadStateRequestService';
 import {ReportRequestService} from '../report/ReportRequestService';
 import {ReportService} from '../report/ReportService';
 import type {IAccountPolicyEvaluator} from '../risk/AccountPolicyEvaluator';
@@ -63,14 +63,11 @@ import {CassandraRiskAssessmentRepository} from '../risk/RiskAssessmentRepositor
 import {createRiskToolbox} from '../risk/RiskToolboxFactory';
 import {CassandraSuspiciousIpRepository} from '../risk/SuspiciousIpRepository';
 import {RpcService} from '../rpc/RpcService';
-import {getGuildSearchService, getReportSearchService} from '../SearchFactory';
+import {getReportSearchService} from '../SearchFactory';
 import {SearchService} from '../search/SearchService';
 import {StripeService} from '../stripe/StripeService';
 import {AgeVerificationService} from '../stripe/services/AgeVerificationService';
 import type {HonoEnv} from '../types/HonoEnv';
-import {EntranceSoundPlayService} from '../user/entrance_sound/EntranceSoundPlayService';
-import {EntranceSoundRepository} from '../user/entrance_sound/EntranceSoundRepository';
-import {EntranceSoundService} from '../user/entrance_sound/EntranceSoundService';
 import type {UserRepository} from '../user/repositories/UserRepository';
 import {EmailChangeService} from '../user/services/EmailChangeService';
 import {PasswordChangeService} from '../user/services/PasswordChangeService';
@@ -84,7 +81,8 @@ import {resolveRequestClientIp} from '../utils/IpUtils';
 import {VoiceService} from '../voice/VoiceService';
 import {WebhookRequestService} from '../webhook/WebhookRequestService';
 import {WebhookService} from '../webhook/WebhookService';
-import {createGuildStackServices} from './GuildStackServiceFactory';
+import {createGuildStackServices, type GuildStackServices} from './GuildStackServiceFactory';
+import {installLazyServices, type RequestScopedServices} from './LazyServiceProvider';
 import {
 	ensureVoiceResourcesInitialized,
 	getBillingRepository,
@@ -100,10 +98,9 @@ import {
 	resolveBlueskyOAuthService,
 } from './ServiceRegistry';
 import {
-	createUserCacheService,
 	ensureVirusScanInitialized,
 	getAdminApiKeyService,
-	getAdminArchiveRepository,
+	getAdminArchiveService,
 	getAdminRepository,
 	getApplicationRepository,
 	getAssetDeletionQueue,
@@ -122,12 +119,15 @@ import {
 	getEmailService,
 	getEmbedService,
 	getEntityAssetService,
+	getEntranceSoundPlayService,
+	getEntranceSoundService,
 	getErrorI18nService,
 	getExpressionAssetPurger,
 	getFavoriteMemeRepository,
+	getGatewayRequestService,
 	getGifService,
 	getGuildAuditLogService,
-	getGuildDiscoveryRepository,
+	getGuildDiscoveryService,
 	getGuildRepository,
 	getInstanceConfigRepository,
 	getInviteRepository,
@@ -142,6 +142,7 @@ import {
 	getPremiumStateReconciliationQueueService,
 	getPurgeQueue,
 	getRateLimitService,
+	getReadStateRequestService,
 	getReadStateService,
 	getReportRepository,
 	getScheduledMessageRepository,
@@ -151,6 +152,7 @@ import {
 	getThemeService,
 	getUnfurlerService,
 	getUserActivityBuffer,
+	getUserCacheService,
 	getUserPermissionUtils,
 	getUserRepository,
 	getVirusScanServiceInstance,
@@ -339,6 +341,712 @@ function getLiveKitWebhookService(): LiveKitWebhookService | null {
 	return _liveKitWebhookService;
 }
 
+class RequestServices implements RequestScopedServices {
+	private cachedGateway: IGatewayService | undefined;
+	private cachedMedia: IMediaService | undefined;
+	private cachedLiveKit: ILiveKitService | undefined;
+	private cachedVoiceRooms: IVoiceRoomStore | undefined;
+	private cachedVoice: VoiceService | null | undefined;
+	private cachedGuildStack: GuildStackServices | undefined;
+	private cachedAdminService: AdminService | undefined;
+	private cachedApplicationService: ApplicationService | undefined;
+	private cachedAuthRequestService: AuthRequestService | undefined;
+	private cachedSsoService: SsoService | undefined;
+	private cachedDesktopHandoffService: DesktopHandoffService | undefined;
+	private cachedChannelRequestService: ChannelRequestService | undefined;
+	private cachedMessageRequestService: MessageRequestService | undefined;
+	private cachedConnectionService: ConnectionService | undefined;
+	private cachedConnectionRequestService: ConnectionRequestService | undefined;
+	private cachedStreamService: StreamService | undefined;
+	private cachedFavoriteMemeService: FavoriteMemeService | undefined;
+	private cachedFavoriteMemeRequestService: FavoriteMemeRequestService | undefined;
+	private cachedSingleCommunityService: SingleCommunityService | undefined;
+	private cachedEmailChangeService: EmailChangeService | undefined;
+	private cachedPasswordChangeService: PasswordChangeService | undefined;
+	private cachedInviteRequestService: InviteRequestService | undefined;
+	private cachedOAuth2Service: OAuth2Service | undefined;
+	private cachedOAuth2RequestService: OAuth2RequestService | undefined;
+	private cachedOAuth2ApplicationsRequestService: OAuth2ApplicationsRequestService | undefined;
+	private cachedReportRequestService: ReportRequestService | undefined;
+	private cachedRpcService: RpcService | undefined;
+	private cachedSearchService: SearchService | undefined;
+	private cachedStripeService: StripeService | undefined;
+	private cachedAgeVerificationService: AgeVerificationService | undefined;
+	private cachedDonationService: DonationService | undefined;
+	private cachedUserService: UserService | undefined;
+	private cachedUserAccountRequestService: UserAccountRequestService | undefined;
+	private cachedUserAuthRequestService: UserAuthRequestService | undefined;
+	private cachedUserChannelRequestService: UserChannelRequestService | undefined;
+	private cachedUserContentRequestService: UserContentRequestService | undefined;
+	private cachedUserRelationshipRequestService: UserRelationshipRequestService | undefined;
+	private cachedScheduledMessageService: ScheduledMessageService | undefined;
+	private cachedWebhookService: WebhookService | undefined;
+	private cachedWebhookRequestService: WebhookRequestService | undefined;
+
+	constructor(
+		private readonly context: ApiContext,
+		private readonly bluesky: IBlueskyOAuthService,
+	) {}
+
+	get gatewayService(): IGatewayService {
+		this.cachedGateway ??= getGatewayService();
+		return this.cachedGateway;
+	}
+
+	get mediaService(): IMediaService {
+		this.cachedMedia ??= getMediaService();
+		return this.cachedMedia;
+	}
+
+	private get liveKit(): ILiveKitService {
+		this.cachedLiveKit ??= getLiveKitServiceInstance() ?? new DisabledLiveKitService();
+		return this.cachedLiveKit;
+	}
+
+	private get voiceRooms(): IVoiceRoomStore {
+		this.cachedVoiceRooms ??= getVoiceRoomStoreInstance() ?? new InMemoryVoiceRoomStore();
+		return this.cachedVoiceRooms;
+	}
+
+	private get voice(): VoiceService | null {
+		if (this.cachedVoice === undefined) {
+			const liveKitService = this.liveKit;
+			const voiceRoomStore = this.voiceRooms;
+			const voiceAvailabilityService = getVoiceAvailabilityService();
+			const hasVoiceInfrastructure =
+				Config.voice.enabled &&
+				getVoiceTopology() !== null &&
+				liveKitService instanceof LiveKitService &&
+				voiceRoomStore instanceof VoiceRoomStore;
+			this.cachedVoice =
+				hasVoiceInfrastructure && voiceAvailabilityService !== null
+					? new VoiceService(
+							liveKitService,
+							getGuildRepository(),
+							getUserRepository(),
+							getChannelRepository(),
+							voiceRoomStore,
+							voiceAvailabilityService,
+						)
+					: null;
+		}
+		return this.cachedVoice;
+	}
+
+	private get guildStack(): GuildStackServices {
+		this.cachedGuildStack ??= createGuildStackServices({
+			apiContext: this.context,
+			packRepository: getPackRepository(),
+			channelRepository: getChannelRepository(),
+			userRepository: getUserRepository(),
+			guildRepository: getGuildRepository(),
+			inviteRepository: getInviteRepository(),
+			webhookRepository: getWebhookRepository(),
+			favoriteMemeRepository: getFavoriteMemeRepository(),
+			avatarService: getAvatarService(),
+			entityAssetService: getEntityAssetService(),
+			assetDeletionQueue: getAssetDeletionQueue(),
+			expressionAssetPurger: getExpressionAssetPurger(),
+			userCacheService: getUserCacheService(),
+			limitConfigService: getLimitConfigService(),
+			embedService: getEmbedService(),
+			readStateService: getReadStateService(),
+			storageService: getStorageService(),
+			attachmentUploadTraceRepository: getAttachmentUploadTraceRepository(),
+			virusScanService: getVirusScanServiceInstance(),
+			purgeQueue: getPurgeQueue(),
+			guildAuditLogService: getGuildAuditLogService(),
+			voiceRoomStore: this.voiceRooms,
+			liveKitService: this.liveKit,
+			voiceAvailabilityService: getVoiceAvailabilityService(),
+			ipInfoService: getIpInfoService(),
+		});
+		return this.cachedGuildStack;
+	}
+
+	get packService() {
+		return this.guildStack.packService;
+	}
+
+	get channelService() {
+		return this.guildStack.channelService;
+	}
+
+	get guildService() {
+		return this.guildStack.guildService;
+	}
+
+	get inviteService() {
+		return this.guildStack.inviteService;
+	}
+
+	get blueskyOAuthService(): IBlueskyOAuthService {
+		return this.bluesky;
+	}
+
+	get adminApiKeyService() {
+		return getAdminApiKeyService();
+	}
+
+	get adminArchiveService() {
+		return getAdminArchiveService();
+	}
+
+	get applicationRepository() {
+		return getApplicationRepository();
+	}
+
+	get botAuthService() {
+		return getBotAuthService();
+	}
+
+	get cacheService() {
+		return getCacheService();
+	}
+
+	get channelRepository() {
+		return getChannelRepository();
+	}
+
+	get contactChangeLogService() {
+		return getContactChangeLogService();
+	}
+
+	get downloadService() {
+		return getDownloadService();
+	}
+
+	get emailService() {
+		return getEmailService();
+	}
+
+	get embedService() {
+		return getEmbedService();
+	}
+
+	get entityAssetService() {
+		return getEntityAssetService();
+	}
+
+	get entranceSoundService() {
+		return getEntranceSoundService();
+	}
+
+	get entranceSoundPlayService() {
+		return getEntranceSoundPlayService();
+	}
+
+	get errorI18nService() {
+		return getErrorI18nService();
+	}
+
+	get gatewayRequestService() {
+		return getGatewayRequestService();
+	}
+
+	get gifService() {
+		return getGifService();
+	}
+
+	get discoveryService() {
+		return getGuildDiscoveryService();
+	}
+
+	get instanceConfigRepository() {
+		return getInstanceConfigRepository();
+	}
+
+	get kvActivityTracker() {
+		return getKVActivityTracker();
+	}
+
+	get limitConfigService() {
+		return getLimitConfigService();
+	}
+
+	get ncmecSubmissionService() {
+		return getNcmecSubmissionService();
+	}
+
+	get oauth2TokenRepository() {
+		return getOAuth2TokenRepository();
+	}
+
+	get packRepository() {
+		return getPackRepository();
+	}
+
+	get rateLimitService() {
+		return getRateLimitService();
+	}
+
+	get readStateService() {
+		return getReadStateService();
+	}
+
+	get readStateRequestService() {
+		return getReadStateRequestService();
+	}
+
+	get reportService() {
+		return getReportServiceInstance();
+	}
+
+	get snowflakeService() {
+		return getSnowflakeService();
+	}
+
+	get storageService() {
+		return getStorageService();
+	}
+
+	get streamPreviewService() {
+		return getStreamPreviewService();
+	}
+
+	get sweegoWebhookService() {
+		return getSweegoWebhookService();
+	}
+
+	get themeService() {
+		return getThemeService();
+	}
+
+	get userActivityBuffer() {
+		return getUserActivityBuffer();
+	}
+
+	get userCacheService() {
+		return getUserCacheService();
+	}
+
+	get userRepository() {
+		return getUserRepository();
+	}
+
+	get workerService() {
+		return getWorkerService();
+	}
+
+	get liveKitWebhookService(): LiveKitWebhookService | undefined {
+		const liveKitService = this.liveKit;
+		const voiceRoomStore = this.voiceRooms;
+		const hasVoiceInfrastructure =
+			Config.voice.enabled &&
+			getVoiceTopology() !== null &&
+			liveKitService instanceof LiveKitService &&
+			voiceRoomStore instanceof VoiceRoomStore;
+		if (!hasVoiceInfrastructure) {
+			return undefined;
+		}
+		return getLiveKitWebhookService() ?? undefined;
+	}
+
+	get adminService(): AdminService {
+		this.cachedAdminService ??= new AdminService(
+			this.context,
+			getGuildRepository(),
+			getChannelRepository(),
+			getAdminRepository(),
+			getInviteRepository(),
+			getDiscriminatorService(),
+			this.guildService,
+			getUserCacheService(),
+			this.channelService,
+			this.userService,
+			getEntityAssetService(),
+			getAssetDeletionQueue(),
+			getStorageService(),
+			getReportServiceInstance(),
+			getVoiceRepository(),
+			getKVBulkMessageDeletionQueue(),
+			getApplicationRepository(),
+			this.stripeService.getStripe(),
+			getHistoricalOutcomeRepository(),
+			new JobLedgerRepository(),
+			getIpInfoService(),
+			getSuspiciousIpRepository(),
+		);
+		return this.cachedAdminService;
+	}
+
+	get applicationService(): ApplicationService {
+		this.cachedApplicationService ??= new ApplicationService(this.context, {
+			applicationRepository: getApplicationRepository(),
+			channelRepository: getChannelRepository(),
+			userCacheService: getUserCacheService(),
+			entityAssetService: getEntityAssetService(),
+			discriminatorService: getDiscriminatorService(),
+			botAuthService: getBotAuthService(),
+		});
+		return this.cachedApplicationService;
+	}
+
+	get ssoService(): SsoService {
+		this.cachedSsoService ??= new SsoService(
+			this.context,
+			getInstanceConfigRepository(),
+			getDiscriminatorService(),
+			getKVActivityTracker(),
+		);
+		return this.cachedSsoService;
+	}
+
+	get desktopHandoffService(): DesktopHandoffService {
+		this.cachedDesktopHandoffService ??= new DesktopHandoffService(this.context);
+		return this.cachedDesktopHandoffService;
+	}
+
+	get authRequestService(): AuthRequestService {
+		if (!this.cachedAuthRequestService) {
+			const adminRepository = getAdminRepository();
+			const registrationRiskEvaluator = getRegistrationRiskEvaluator();
+			this.cachedAuthRequestService = new AuthRequestService(
+				this.context,
+				this.ssoService,
+				this.desktopHandoffService,
+				{
+					inviteService: this.inviteService,
+					instanceConfigRepository: getInstanceConfigRepository(),
+					singleCommunityService: this.singleCommunityService,
+					discriminatorService: getDiscriminatorService(),
+					kvActivityTracker: getKVActivityTracker(),
+					registrationRiskEvaluator: registrationRiskEvaluator ?? noopRegistrationRiskEvaluator,
+					accountPolicyEvaluator: getAccountPolicyEvaluator(),
+					isEmailDomainSuspicious: adminRepository.isEmailDomainSuspicious.bind(adminRepository),
+					isEmailDomainDisposable: adminRepository.isEmailDomainDisposable.bind(adminRepository),
+					registrationEventsRepository: getRegistrationEventsRepository(),
+					riskAssessmentRepository: getRiskAssessmentRepository(),
+					riskHistoryRepository: getHistoricalOutcomeRepository(),
+				},
+				{
+					inviteService: this.inviteService,
+					kvDeletionQueue: getKVAccountDeletionQueue(),
+				},
+			);
+		}
+		return this.cachedAuthRequestService;
+	}
+
+	get singleCommunityService(): SingleCommunityService {
+		this.cachedSingleCommunityService ??= new SingleCommunityService(
+			getInstanceConfigRepository(),
+			this.guildService.data,
+			this.guildService.members,
+		);
+		return this.cachedSingleCommunityService;
+	}
+
+	get channelRequestService(): ChannelRequestService {
+		this.cachedChannelRequestService ??= new ChannelRequestService(this.channelService, getUserCacheService());
+		return this.cachedChannelRequestService;
+	}
+
+	get messageRequestService(): MessageRequestService {
+		this.cachedMessageRequestService ??= new MessageRequestService(
+			this.channelService,
+			createMessageResponseDataService(),
+		);
+		return this.cachedMessageRequestService;
+	}
+
+	get connectionService(): ConnectionService {
+		this.cachedConnectionService ??= new ConnectionService(
+			getConnectionRepository(),
+			this.gatewayService,
+			this.bluesky,
+		);
+		return this.cachedConnectionService;
+	}
+
+	get connectionRequestService(): ConnectionRequestService {
+		this.cachedConnectionRequestService ??= new ConnectionRequestService(
+			this.connectionService,
+			Config.auth.connectionInitiationSecret,
+		);
+		return this.cachedConnectionRequestService;
+	}
+
+	get streamService(): StreamService {
+		this.cachedStreamService ??= new StreamService(
+			getCacheService(),
+			this.channelService,
+			this.gatewayService,
+			getStreamPreviewService(),
+		);
+		return this.cachedStreamService;
+	}
+
+	get favoriteMemeService(): FavoriteMemeService {
+		this.cachedFavoriteMemeService ??= new FavoriteMemeService(
+			this.context,
+			getFavoriteMemeRepository(),
+			this.channelService,
+			getStorageService(),
+			getUnfurlerService(),
+			getLimitConfigService(),
+			getGifService(),
+		);
+		return this.cachedFavoriteMemeService;
+	}
+
+	get favoriteMemeRequestService(): FavoriteMemeRequestService {
+		this.cachedFavoriteMemeRequestService ??= new FavoriteMemeRequestService(this.favoriteMemeService);
+		return this.cachedFavoriteMemeRequestService;
+	}
+
+	get emailChangeService(): EmailChangeService {
+		this.cachedEmailChangeService ??= new EmailChangeService(this.context, getEmailChangeRepository());
+		return this.cachedEmailChangeService;
+	}
+
+	get passwordChangeService(): PasswordChangeService {
+		this.cachedPasswordChangeService ??= new PasswordChangeService(this.context, getPasswordChangeRepository());
+		return this.cachedPasswordChangeService;
+	}
+
+	get inviteRequestService(): InviteRequestService {
+		this.cachedInviteRequestService ??= new InviteRequestService(
+			this.inviteService,
+			this.channelService,
+			this.guildService,
+			this.gatewayService,
+			getPackRepository(),
+			getUserCacheService(),
+		);
+		return this.cachedInviteRequestService;
+	}
+
+	get oauth2Service(): OAuth2Service {
+		this.cachedOAuth2Service ??= new OAuth2Service(this.context, {
+			applicationRepository: getApplicationRepository(),
+			oauth2TokenRepository: getOAuth2TokenRepository(),
+		});
+		return this.cachedOAuth2Service;
+	}
+
+	get oauth2RequestService(): OAuth2RequestService {
+		this.cachedOAuth2RequestService ??= new OAuth2RequestService(
+			this.context,
+			this.oauth2Service,
+			getApplicationRepository(),
+			getOAuth2TokenRepository(),
+			getBotAuthService(),
+			this.applicationService,
+			this.guildService,
+			this.channelService,
+		);
+		return this.cachedOAuth2RequestService;
+	}
+
+	get oauth2ApplicationsRequestService(): OAuth2ApplicationsRequestService {
+		this.cachedOAuth2ApplicationsRequestService ??= new OAuth2ApplicationsRequestService(
+			this.context,
+			this.applicationService,
+			getApplicationRepository(),
+		);
+		return this.cachedOAuth2ApplicationsRequestService;
+	}
+
+	get reportRequestService(): ReportRequestService {
+		this.cachedReportRequestService ??= new ReportRequestService(getReportServiceInstance());
+		return this.cachedReportRequestService;
+	}
+
+	get rpcService(): RpcService {
+		this.cachedRpcService ??= new RpcService(
+			getUserRepository(),
+			getGuildRepository(),
+			getChannelRepository(),
+			getUserCacheService(),
+			getReadStateService(),
+			this.context,
+			this.gatewayService,
+			getDiscriminatorService(),
+			getFavoriteMemeRepository(),
+			getBotAuthService(),
+			getInviteRepository(),
+			getWebhookRepository(),
+			getStorageService(),
+			getAvatarService(),
+			getRateLimitService(),
+			getLimitConfigService(),
+			getKVClient(),
+			getWorkerService(),
+			getPremiumStateReconciliationQueueService(),
+			getInstanceConfigRepository(),
+			this.voice,
+			getVoiceAvailabilityService(),
+		);
+		return this.cachedRpcService;
+	}
+
+	get searchService(): SearchService {
+		this.cachedSearchService ??= new SearchService({
+			channelRepository: getChannelRepository(),
+			channelService: this.channelService,
+			guildService: this.guildService,
+			userRepository: getUserRepository(),
+			userCacheService: getUserCacheService(),
+			workerService: getWorkerService(),
+		});
+		return this.cachedSearchService;
+	}
+
+	get stripeService(): StripeService {
+		this.cachedStripeService ??= new StripeService(
+			getUserRepository(),
+			this.gatewayService,
+			getGuildRepository(),
+			this.guildService,
+			getCacheService(),
+			getBillingRepository(),
+		);
+		return this.cachedStripeService;
+	}
+
+	get ageVerificationService(): AgeVerificationService | undefined {
+		if (Config.instance.selfHosted) {
+			return undefined;
+		}
+		this.cachedAgeVerificationService ??= new AgeVerificationService(
+			this.stripeService.getStripe(),
+			getUserRepository(),
+			this.gatewayService,
+			getCacheService(),
+		);
+		return this.cachedAgeVerificationService;
+	}
+
+	get donationService(): DonationService | undefined {
+		if (Config.instance.selfHosted) {
+			return undefined;
+		}
+		this.cachedDonationService ??= new DonationService(
+			new DonationMagicLinkService(getDonationRepository(), getEmailService(), getEmailDnsValidationService()),
+			new DonationCheckoutService(
+				this.stripeService.getStripe(),
+				getDonationRepository(),
+				getEmailDnsValidationService(),
+			),
+		);
+		return this.cachedDonationService;
+	}
+
+	get userService(): UserService {
+		this.cachedUserService ??= new UserService(
+			this.context,
+			getUserCacheService(),
+			this.channelService,
+			getChannelRepository(),
+			this.guildService,
+			getEntityAssetService(),
+			getDiscriminatorService(),
+			getGuildRepository(),
+			getUserPermissionUtils(),
+			getKVAccountDeletionQueue(),
+			getKVBulkMessageDeletionQueue(),
+			getContactChangeLogService(),
+			getConnectionRepository(),
+			getLimitConfigService(),
+		);
+		return this.cachedUserService;
+	}
+
+	get userAccountRequestService(): UserAccountRequestService {
+		if (!this.cachedUserAccountRequestService) {
+			const adminRepository = getAdminRepository();
+			this.cachedUserAccountRequestService = new UserAccountRequestService(
+				this.emailChangeService,
+				this.userService.accountService,
+				this.userService.channelService,
+				getUserRepository(),
+				getUserCacheService(),
+				adminRepository.isEmailDomainSuspicious.bind(adminRepository),
+				adminRepository.isEmailDomainDisposable.bind(adminRepository),
+				getRegistrationRiskEvaluator(),
+				getAccountPolicyEvaluator(),
+				getRegistrationEventsRepository(),
+				getRiskAssessmentRepository(),
+				getHistoricalOutcomeRepository(),
+			);
+		}
+		return this.cachedUserAccountRequestService;
+	}
+
+	get userAuthRequestService(): UserAuthRequestService {
+		this.cachedUserAuthRequestService ??= new UserAuthRequestService(
+			this.context,
+			getUserRepository(),
+			getGuildRepository(),
+		);
+		return this.cachedUserAuthRequestService;
+	}
+
+	get userChannelRequestService(): UserChannelRequestService {
+		this.cachedUserChannelRequestService ??= new UserChannelRequestService(
+			this.userService.channelService,
+			getUserCacheService(),
+		);
+		return this.cachedUserChannelRequestService;
+	}
+
+	get userContentRequestService(): UserContentRequestService {
+		this.cachedUserContentRequestService ??= new UserContentRequestService(
+			this.userService.contentService,
+			getUserCacheService(),
+		);
+		return this.cachedUserContentRequestService;
+	}
+
+	get userRelationshipRequestService(): UserRelationshipRequestService {
+		this.cachedUserRelationshipRequestService ??= new UserRelationshipRequestService(
+			this.userService.relationshipService,
+			this.userService.channelService,
+			getUserCacheService(),
+		);
+		return this.cachedUserRelationshipRequestService;
+	}
+
+	get scheduledMessageService(): ScheduledMessageService {
+		this.cachedScheduledMessageService ??= new ScheduledMessageService(
+			this.channelService,
+			getScheduledMessageRepository(),
+			getWorkerService(),
+			getSnowflakeService(),
+		);
+		return this.cachedScheduledMessageService;
+	}
+
+	get webhookService(): WebhookService {
+		this.cachedWebhookService ??= new WebhookService(
+			getWebhookRepository(),
+			this.guildService,
+			this.channelService,
+			getChannelRepository(),
+			getCacheService(),
+			this.gatewayService,
+			getAvatarService(),
+			this.mediaService,
+			getSnowflakeService(),
+			getGuildAuditLogService(),
+			getLimitConfigService(),
+		);
+		return this.cachedWebhookService;
+	}
+
+	get webhookRequestService(): WebhookRequestService {
+		this.cachedWebhookRequestService ??= new WebhookRequestService(
+			this.webhookService,
+			getChannelRepository(),
+			getUserCacheService(),
+			this.liveKitWebhookService ?? null,
+			getSweegoWebhookService(),
+		);
+		return this.cachedWebhookRequestService;
+	}
+}
+
 export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const apiContext = createApiContext({
 		requestId: ctx.get('requestId') ?? crypto.randomUUID(),
@@ -346,419 +1054,11 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		userAgent: ctx.req.header('user-agent') ?? null,
 	});
 	ctx.set('apiContext', apiContext);
-	const snowflakeService = getSnowflakeService();
-	const limitConfigService = getLimitConfigService();
-	const userRepository = getUserRepository();
-	const guildRepository = getGuildRepository();
-	const channelRepository = getChannelRepository();
-	const inviteRepository = getInviteRepository();
-	const webhookRepository = getWebhookRepository();
-	const connectionRepository = getConnectionRepository();
-	const packRepository = getPackRepository();
-	const favoriteMemeRepository = getFavoriteMemeRepository();
-	const applicationRepository = getApplicationRepository();
-	const oauth2TokenRepository = getOAuth2TokenRepository();
-	const cacheService = getCacheService();
-	const kvClient = getKVClient();
-	const ipInfoService = getIpInfoService();
-	const rateLimitService = getRateLimitService();
-	const emailDnsValidationService = getEmailDnsValidationService();
-	const assetDeletionQueue = getAssetDeletionQueue();
-	const storageService = getStorageService();
-	const mediaService = getMediaService();
-	const gatewayService = getGatewayService();
-	const workerService = getWorkerService();
-	const emailService = getEmailService();
-	const avatarService = getAvatarService();
-	const entityAssetService = getEntityAssetService();
-	const embedService = getEmbedService();
-	const readStateService = getReadStateService();
-	const guildAuditLogService = getGuildAuditLogService();
-	const botAuthService = getBotAuthService();
-	const discriminatorService = getDiscriminatorService();
-	const userCacheService = createUserCacheService();
-	await ensureVirusScanInitialized();
-	const virusScanService = getVirusScanServiceInstance();
-	await ensureVoiceResourcesInitialized();
-	const liveKitService: ILiveKitService = getLiveKitServiceInstance() ?? new DisabledLiveKitService();
-	const voiceRoomStore: IVoiceRoomStore = getVoiceRoomStoreInstance() ?? new InMemoryVoiceRoomStore();
-	const voiceAvailabilityService = getVoiceAvailabilityService();
-	const {packService, channelService, guildService, inviteService} = createGuildStackServices({
-		apiContext,
-		packRepository,
-		channelRepository,
-		userRepository,
-		guildRepository,
-		inviteRepository,
-		webhookRepository,
-		favoriteMemeRepository,
-		avatarService,
-		entityAssetService,
-		assetDeletionQueue,
-		expressionAssetPurger: getExpressionAssetPurger(),
-		userCacheService,
-		limitConfigService,
-		embedService,
-		readStateService,
-		storageService,
-		attachmentUploadTraceRepository: getAttachmentUploadTraceRepository(),
-		virusScanService,
-		purgeQueue: getPurgeQueue(),
-		guildAuditLogService,
-		voiceRoomStore,
-		liveKitService,
-		voiceAvailabilityService,
-		ipInfoService,
-	});
-	const blueskyOAuthService = await resolveBlueskyOAuthService(getInstanceConfigRepository());
-	const connectionService = new ConnectionService(connectionRepository, gatewayService, blueskyOAuthService);
-	const favoriteMemeService = new FavoriteMemeService(
-		apiContext,
-		favoriteMemeRepository,
-		channelService,
-		storageService,
-		getUnfurlerService(),
-		limitConfigService,
-		getGifService(),
-	);
-	const contactChangeLogService = getContactChangeLogService();
-	const registrationRiskEvaluator = getRegistrationRiskEvaluator();
-	const accountPolicyEvaluator = getAccountPolicyEvaluator();
-	const adminRepo = getAdminRepository();
-	const singleCommunityService = new SingleCommunityService(
-		getInstanceConfigRepository(),
-		guildService.data,
-		guildService.members,
-	);
-	const registrationDependencies = {
-		inviteService,
-		instanceConfigRepository: getInstanceConfigRepository(),
-		singleCommunityService,
-		discriminatorService,
-		kvActivityTracker: getKVActivityTracker(),
-		registrationRiskEvaluator: registrationRiskEvaluator ?? noopRegistrationRiskEvaluator,
-		accountPolicyEvaluator,
-		isEmailDomainSuspicious: adminRepo.isEmailDomainSuspicious.bind(adminRepo),
-		isEmailDomainDisposable: adminRepo.isEmailDomainDisposable.bind(adminRepo),
-		registrationEventsRepository: getRegistrationEventsRepository(),
-		riskAssessmentRepository: getRiskAssessmentRepository(),
-		riskHistoryRepository: getHistoricalOutcomeRepository(),
-	};
-	const ssoService = new SsoService(
-		apiContext,
-		getInstanceConfigRepository(),
-		discriminatorService,
-		getKVActivityTracker(),
-	);
-	const desktopHandoffService = new DesktopHandoffService(apiContext);
-	const authRequestService = new AuthRequestService(
-		apiContext,
-		ssoService,
-		desktopHandoffService,
-		registrationDependencies,
-		{
-			inviteService,
-			kvDeletionQueue: getKVAccountDeletionQueue(),
-		},
-	);
-	const reportService = getReportServiceInstance();
-	const voiceTopology = getVoiceTopology();
-	const hasVoiceInfrastructure =
-		Config.voice.enabled &&
-		voiceTopology !== null &&
-		liveKitService instanceof LiveKitService &&
-		voiceRoomStore instanceof VoiceRoomStore;
-	const liveKitWebhookService = hasVoiceInfrastructure ? getLiveKitWebhookService() : undefined;
-	const voiceService =
-		hasVoiceInfrastructure && voiceAvailabilityService !== null
-			? new VoiceService(
-					liveKitService,
-					guildRepository,
-					userRepository,
-					channelRepository,
-					voiceRoomStore,
-					voiceAvailabilityService,
-				)
-			: null;
-	const emailChangeService = new EmailChangeService(apiContext, getEmailChangeRepository());
-	const passwordChangeService = new PasswordChangeService(apiContext, getPasswordChangeRepository());
-	const userPermissionUtils = getUserPermissionUtils();
-	const userService = new UserService(
-		apiContext,
-		userCacheService,
-		channelService,
-		channelRepository,
-		guildService,
-		entityAssetService,
-		discriminatorService,
-		guildRepository,
-		userPermissionUtils,
-		getKVAccountDeletionQueue(),
-		getKVBulkMessageDeletionQueue(),
-		contactChangeLogService,
-		getConnectionRepository(),
-		limitConfigService,
-	);
-	const stripeService: StripeService | null = new StripeService(
-		userRepository,
-		gatewayService,
-		guildRepository,
-		guildService,
-		cacheService,
-		getBillingRepository(),
-	);
-	let ageVerificationService: AgeVerificationService | null = null;
-	let donationService: DonationService | null = null;
-	if (!Config.instance.selfHosted) {
-		ageVerificationService = new AgeVerificationService(
-			stripeService.getStripe(),
-			userRepository,
-			gatewayService,
-			cacheService,
-		);
-		donationService = new DonationService(
-			new DonationMagicLinkService(getDonationRepository(), emailService, emailDnsValidationService),
-			new DonationCheckoutService(stripeService.getStripe(), getDonationRepository(), emailDnsValidationService),
-		);
-	}
-	const adminService = new AdminService(
-		apiContext,
-		guildRepository,
-		channelRepository,
-		getAdminRepository(),
-		inviteRepository,
-		discriminatorService,
-		guildService,
-		userCacheService,
-		channelService,
-		userService,
-		entityAssetService,
-		assetDeletionQueue,
-		storageService,
-		reportService,
-		getVoiceRepository(),
-		getKVBulkMessageDeletionQueue(),
-		applicationRepository,
-		stripeService?.getStripe() ?? null,
-		getHistoricalOutcomeRepository(),
-		new JobLedgerRepository(),
-		ipInfoService,
-		getSuspiciousIpRepository(),
-	);
-	const webhookService = new WebhookService(
-		webhookRepository,
-		guildService,
-		channelService,
-		channelRepository,
-		cacheService,
-		gatewayService,
-		avatarService,
-		mediaService,
-		snowflakeService,
-		guildAuditLogService,
-		limitConfigService,
-	);
-	const applicationService = new ApplicationService(apiContext, {
-		applicationRepository,
-		channelRepository,
-		userCacheService,
-		entityAssetService,
-		discriminatorService,
-		botAuthService,
-	});
-	const oauth2Service = new OAuth2Service(apiContext, {applicationRepository, oauth2TokenRepository});
-	ctx.set('adminService', adminService);
-	ctx.set(
-		'adminArchiveService',
-		new AdminArchiveService(
-			getAdminArchiveRepository(),
-			userRepository,
-			guildRepository,
-			storageService,
-			snowflakeService,
-			workerService,
-		),
-	);
-	ctx.set('adminApiKeyService', getAdminApiKeyService());
-	ctx.set('applicationRepository', applicationRepository);
-	ctx.set('applicationService', applicationService);
-	ctx.set('authRequestService', authRequestService);
-	ctx.set('ssoService', ssoService);
-	ctx.set('botAuthService', botAuthService);
-	ctx.set('cacheService', cacheService);
-	ctx.set('channelService', channelService);
-	ctx.set('channelRequestService', new ChannelRequestService(channelService, userCacheService));
-	ctx.set('messageRequestService', new MessageRequestService(channelService, createMessageResponseDataService()));
-	ctx.set('channelRepository', channelRepository);
-	ctx.set('connectionService', connectionService);
-	ctx.set(
-		'connectionRequestService',
-		new ConnectionRequestService(connectionService, Config.auth.connectionInitiationSecret),
-	);
-	ctx.set('blueskyOAuthService', blueskyOAuthService);
-	ctx.set('streamPreviewService', getStreamPreviewService());
-	ctx.set('streamService', new StreamService(cacheService, channelService, gatewayService, getStreamPreviewService()));
-	ctx.set('downloadService', getDownloadService());
-	ctx.set('desktopHandoffService', desktopHandoffService);
-	ctx.set('emailService', emailService);
-	ctx.set('embedService', embedService);
-	ctx.set('entityAssetService', entityAssetService);
-	const entranceSoundRepository = new EntranceSoundRepository();
-	const entranceSoundService = new EntranceSoundService(entranceSoundRepository, storageService, mediaService);
-	ctx.set('entranceSoundService', entranceSoundService);
-	ctx.set(
-		'entranceSoundPlayService',
-		new EntranceSoundPlayService(entranceSoundService, gatewayService, channelRepository),
-	);
-	ctx.set('favoriteMemeService', favoriteMemeService);
-	ctx.set('favoriteMemeRequestService', new FavoriteMemeRequestService(favoriteMemeService));
-	ctx.set('gatewayService', gatewayService);
-	ctx.set('gatewayRequestService', new GatewayRequestService(botAuthService));
-	ctx.set('guildService', guildService);
-	ctx.set('singleCommunityService', singleCommunityService);
-	ctx.set(
-		'discoveryService',
-		new GuildDiscoveryService(getGuildDiscoveryRepository(), guildRepository, gatewayService, getGuildSearchService()),
-	);
-	ctx.set('emailChangeService', emailChangeService);
-	ctx.set('passwordChangeService', passwordChangeService);
-	ctx.set('inviteService', inviteService);
-	ctx.set(
-		'inviteRequestService',
-		new InviteRequestService(
-			inviteService,
-			channelService,
-			guildService,
-			gatewayService,
-			packRepository,
-			userCacheService,
-		),
-	);
-	ctx.set('packService', packService);
-	ctx.set('packRepository', packRepository);
-	if (liveKitWebhookService) ctx.set('liveKitWebhookService', liveKitWebhookService);
-	ctx.set('mediaService', mediaService);
-	ctx.set('oauth2Service', oauth2Service);
-	ctx.set(
-		'oauth2RequestService',
-		new OAuth2RequestService(
-			apiContext,
-			oauth2Service,
-			applicationRepository,
-			oauth2TokenRepository,
-			botAuthService,
-			applicationService,
-			guildService,
-			channelService,
-		),
-	);
-	ctx.set(
-		'oauth2ApplicationsRequestService',
-		new OAuth2ApplicationsRequestService(apiContext, applicationService, applicationRepository),
-	);
-	ctx.set('oauth2TokenRepository', oauth2TokenRepository);
-	ctx.set('rateLimitService', rateLimitService);
-	ctx.set('readStateService', readStateService);
-	ctx.set('readStateRequestService', new ReadStateRequestService(readStateService));
-	ctx.set('kvActivityTracker', getKVActivityTracker());
-	ctx.set('userActivityBuffer', getUserActivityBuffer());
-	ctx.set('reportService', reportService);
-	ctx.set('reportRequestService', new ReportRequestService(reportService));
-	ctx.set(
-		'rpcService',
-		new RpcService(
-			userRepository,
-			guildRepository,
-			channelRepository,
-			userCacheService,
-			readStateService,
-			apiContext,
-			gatewayService,
-			discriminatorService,
-			getFavoriteMemeRepository(),
-			botAuthService,
-			inviteRepository,
-			webhookRepository,
-			storageService,
-			avatarService,
-			rateLimitService,
-			limitConfigService,
-			kvClient,
-			workerService,
-			getPremiumStateReconciliationQueueService(),
-			getInstanceConfigRepository(),
-			voiceService,
-			voiceAvailabilityService,
-		),
-	);
-	ctx.set(
-		'searchService',
-		new SearchService({
-			channelRepository,
-			channelService,
-			guildService,
-			userRepository,
-			userCacheService,
-			workerService,
-		}),
-	);
-	ctx.set('sweegoWebhookService', getSweegoWebhookService());
-	ctx.set('snowflakeService', snowflakeService);
-	ctx.set('storageService', storageService);
-	ctx.set('themeService', getThemeService());
-	if (stripeService) ctx.set('stripeService', stripeService);
-	if (ageVerificationService) ctx.set('ageVerificationService', ageVerificationService);
-	if (donationService) ctx.set('donationService', donationService);
 	ctx.set('sudoModeValid', false);
-	ctx.set('gifService', getGifService());
-	ctx.set('userCacheService', userCacheService);
-	ctx.set('userRepository', userRepository);
-	ctx.set('userService', userService);
-	ctx.set(
-		'userAccountRequestService',
-		new UserAccountRequestService(
-			emailChangeService,
-			userService.accountService,
-			userService.channelService,
-			userRepository,
-			userCacheService,
-			adminRepo.isEmailDomainSuspicious.bind(adminRepo),
-			adminRepo.isEmailDomainDisposable.bind(adminRepo),
-			registrationRiskEvaluator,
-			accountPolicyEvaluator,
-			getRegistrationEventsRepository(),
-			getRiskAssessmentRepository(),
-			getHistoricalOutcomeRepository(),
-		),
-	);
-	ctx.set('userAuthRequestService', new UserAuthRequestService(apiContext, userRepository, guildRepository));
-	ctx.set('userChannelRequestService', new UserChannelRequestService(userService.channelService, userCacheService));
-	ctx.set('userContentRequestService', new UserContentRequestService(userService.contentService, userCacheService));
-	ctx.set(
-		'userRelationshipRequestService',
-		new UserRelationshipRequestService(userService.relationshipService, userService.channelService, userCacheService),
-	);
-	ctx.set(
-		'scheduledMessageService',
-		new ScheduledMessageService(channelService, getScheduledMessageRepository(), workerService, snowflakeService),
-	);
-	ctx.set('webhookService', webhookService);
-	ctx.set(
-		'webhookRequestService',
-		new WebhookRequestService(
-			webhookService,
-			channelRepository,
-			userCacheService,
-			liveKitWebhookService ?? null,
-			getSweegoWebhookService(),
-		),
-	);
-	ctx.set('workerService', workerService);
-	ctx.set('contactChangeLogService', contactChangeLogService);
-	ctx.set('instanceConfigRepository', getInstanceConfigRepository());
-	ctx.set('limitConfigService', limitConfigService);
-	ctx.set('errorI18nService', getErrorI18nService());
-	ctx.set('ncmecSubmissionService', getNcmecSubmissionService());
+	await ensureVirusScanInitialized();
+	await ensureVoiceResourcesInitialized();
+	const blueskyOAuthService = await resolveBlueskyOAuthService(getInstanceConfigRepository());
+	installLazyServices(ctx, new RequestServices(apiContext, blueskyOAuthService));
 	await next();
 });
 

@@ -37,12 +37,14 @@ import {DonationRepository} from '../donation/DonationRepository';
 import {DownloadService} from '../download/DownloadService';
 import {createEmailProvider} from '../email/EmailProviderFactory';
 import {FavoriteMemeRepository} from '../favorite_meme/FavoriteMemeRepository';
+import {GatewayRequestService} from '../gateway/GatewayRequestService';
 import {GifService} from '../gif/GifService';
 import {createNatsGifProvider} from '../gif/NatsGifProvider';
 import {GuildAuditLogService} from '../guild/GuildAuditLogService';
 import {GuildDiscoveryRepository} from '../guild/repositories/GuildDiscoveryRepository';
 import {GuildRepository} from '../guild/repositories/GuildRepository';
 import {ExpressionAssetPurger} from '../guild/services/content/ExpressionAssetPurger';
+import {GuildDiscoveryService} from '../guild/services/GuildDiscoveryService';
 import {AssetDeletionQueue} from '../infrastructure/AssetDeletionQueue';
 import {AvatarService} from '../infrastructure/AvatarService';
 import {BunnyPurgeQueue, type IPurgeQueue, NoopPurgeQueue} from '../infrastructure/BunnyPurgeQueue';
@@ -75,9 +77,14 @@ import {ApplicationRepository} from '../oauth/repositories/ApplicationRepository
 import {OAuth2TokenRepository} from '../oauth/repositories/OAuth2TokenRepository';
 import {PackRepository} from '../pack/PackRepository';
 import {ReadStateRepository} from '../read_state/ReadStateRepository';
+import {ReadStateRequestService} from '../read_state/ReadStateRequestService';
 import {ReadStateService} from '../read_state/ReadStateService';
 import {ReportRepository} from '../report/ReportRepository';
+import {getGuildSearchService} from '../SearchFactory';
 import {ThemeService} from '../theme/ThemeService';
+import {EntranceSoundPlayService} from '../user/entrance_sound/EntranceSoundPlayService';
+import {EntranceSoundRepository} from '../user/entrance_sound/EntranceSoundRepository';
+import {EntranceSoundService} from '../user/entrance_sound/EntranceSoundService';
 import {EmailChangeRepository} from '../user/repositories/auth/EmailChangeRepository';
 import {PasswordChangeRepository} from '../user/repositories/auth/PasswordChangeRepository';
 import {ScheduledMessageRepository} from '../user/repositories/ScheduledMessageRepository';
@@ -419,6 +426,36 @@ export const getEntityAssetService = singleton(
 export const getAdminApiKeyService = singleton(
 	() => new AdminApiKeyService(getAdminApiKeyRepository(), getSnowflakeService()),
 );
+export const getAdminArchiveService = singleton(
+	() =>
+		new AdminArchiveService(
+			getAdminArchiveRepository(),
+			getUserRepository(),
+			getGuildRepository(),
+			getStorageService(),
+			getSnowflakeService(),
+			getWorkerService(),
+		),
+);
+const getEntranceSoundRepository = singleton(() => new EntranceSoundRepository());
+export const getEntranceSoundService = singleton(
+	() => new EntranceSoundService(getEntranceSoundRepository(), getStorageService(), getMediaService()),
+);
+export const getEntranceSoundPlayService = singleton(
+	() => new EntranceSoundPlayService(getEntranceSoundService(), getGatewayService(), getChannelRepository()),
+);
+export const getGatewayRequestService = singleton(() => new GatewayRequestService(getBotAuthService()));
+export const getGuildDiscoveryService = singleton(
+	() =>
+		new GuildDiscoveryService(
+			getGuildDiscoveryRepository(),
+			getGuildRepository(),
+			getGatewayService(),
+			getGuildSearchService(),
+		),
+);
+export const getReadStateRequestService = singleton(() => new ReadStateRequestService(getReadStateService()));
+export const getUserCacheService = singleton(() => createUserCacheService());
 
 export function createUserCacheService(): UserCacheService {
 	return new UserCacheService(createUsersServiceClient());
