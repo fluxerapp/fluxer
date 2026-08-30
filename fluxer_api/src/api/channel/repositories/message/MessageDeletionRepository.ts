@@ -19,6 +19,7 @@ import {
 import type {MessageDataRepository} from './MessageDataRepository';
 
 const BULK_DELETE_BATCH_SIZE = 100;
+const BULK_DELETE_BATCH_QUERY_LIMIT = 30;
 const POST_DELETE_BUCKET_CHECK_LIMIT = 25;
 const HAS_ANY_MESSAGE_IN_BUCKET = Messages.select({
 	columns: ['message_id'],
@@ -230,7 +231,7 @@ export class MessageDeletionRepository {
 				affectedBuckets.add(bucket);
 				this.addMessageDeletionBatchQueries(batch, channelId, messageId, bucket, message);
 			}
-			await batch.execute();
+			await batch.executeChunked(BULK_DELETE_BATCH_QUERY_LIMIT, false);
 			await this.postDeleteMaintenance(channelId, affectedBuckets, chunk);
 		}
 	}
@@ -264,7 +265,7 @@ export class MessageDeletionRepository {
 						message.pinnedTimestamp || undefined,
 					);
 				}
-				await batch.execute();
+				await batch.executeChunked(BULK_DELETE_BATCH_QUERY_LIMIT, false);
 			}
 			if (messages.length < 100) {
 				hasMore = false;
