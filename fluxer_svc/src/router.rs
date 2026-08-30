@@ -7,7 +7,7 @@ use crate::transport::{Transport, TransportMessage, TransportSubscriber, reply_m
 use moka::future::Cache;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::Semaphore;
+use tokio::sync::{Semaphore, TryAcquireError};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
@@ -246,9 +246,21 @@ where
                     }
                 };
 
-                let permit = match req_permits.clone().acquire_owned().await {
+                let permit = match req_permits.clone().try_acquire_owned() {
                     Ok(permit) => permit,
-                    Err(_) => return anyhow::Ok(()),
+                    Err(TryAcquireError::NoPermits) => {
+                        debug!("shedding router request, no permits available");
+                        req_metrics.record_request();
+                        req_metrics.record_request_error();
+                        if msg.has_reply() {
+                            let error_response =
+                                serde_json::to_vec(&serde_json::json!({"error": "overloaded"}))
+                                    .unwrap_or_default();
+                            let _ = reply_message(&msg, &req_transport, &error_response).await;
+                        }
+                        continue;
+                    }
+                    Err(TryAcquireError::Closed) => return anyhow::Ok(()),
                 };
                 let transport = req_transport.clone();
                 let service = req_service.clone();
@@ -585,6 +597,68 @@ mod tests {
         assert_eq!(inserted_keys.lock().unwrap().as_slice(), ["a".to_owned()]);
         assert_eq!(COUNTED_REQUEST_DECODES.load(Ordering::SeqCst), 2);
 
+        shard_task.abort();
+        router_task.abort();
+    }
+
+    #[tokio::test]
+    async fn router_sheds_requests_when_permits_are_exhausted() {
+        let transport = InMemoryTransport::new();
+        let mut shard_sub = transport.subscribe("svc.mock.shard.0").await.unwrap();
+
+        let (forwarded_tx, forwarded_rx) = tokio::sync::oneshot::channel();
+        let shard_task = tokio::spawn(async move {
+            let _msg = shard_sub.next().await.unwrap();
+            let _ = forwarded_tx.send(());
+            std::future::pending::<()>().await;
+        });
+
+        let router_config = test_config(1);
+        let router_transport = transport.clone();
+        let router_task =
+            tokio::spawn(
+                async move { run_router(&router_config, MockRouter, router_transport).await },
+            );
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let request_a = serde_json::to_vec(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+        let request_b = serde_json::to_vec(&MockRequest {
+            key: "b".to_owned(),
+        })
+        .unwrap();
+
+        let client_a = {
+            let transport = transport.clone();
+            tokio::spawn(async move {
+                transport
+                    .request("svc.mock", &request_a, Duration::from_secs(10))
+                    .await
+            })
+        };
+
+        tokio::time::timeout(Duration::from_millis(250), forwarded_rx)
+            .await
+            .expect("router should forward the first request and hold the only permit")
+            .unwrap();
+
+        let response_b = tokio::time::timeout(
+            Duration::from_millis(250),
+            transport.request("svc.mock", &request_b, Duration::from_secs(1)),
+        )
+        .await
+        .expect("shed reply should not wait behind the in-flight request")
+        .unwrap();
+
+        assert_eq!(
+            serde_json::from_slice::<serde_json::Value>(&response_b).unwrap(),
+            serde_json::json!({"error": "overloaded"})
+        );
+
+        client_a.abort();
         shard_task.abort();
         router_task.abort();
     }

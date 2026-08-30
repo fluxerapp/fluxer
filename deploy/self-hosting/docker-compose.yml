@@ -353,6 +353,7 @@ services:
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-snowflakes:${FLUXER_IMAGE_TAG:-v1}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: snowflakes
       FLUXER_SVC_MODE: router
     depends_on:
       nats: {condition: service_started}
@@ -362,6 +363,7 @@ services:
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-snowflakes:${FLUXER_IMAGE_TAG:-v1}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: snowflakes
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
     depends_on:
@@ -417,6 +419,7 @@ services:
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-messages:${FLUXER_IMAGE_TAG:-v1}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: messages
       FLUXER_SVC_MODE: router
     depends_on:
       nats: {condition: service_started}
@@ -426,6 +429,7 @@ services:
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-messages:${FLUXER_IMAGE_TAG:-v1}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: messages
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "20"

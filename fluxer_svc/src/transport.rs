@@ -8,6 +8,7 @@ use std::time::Duration;
 use tokio::sync::Notify;
 use tracing::{info, warn};
 
+const NATS_SUBSCRIPTION_CAPACITY: usize = 8_192;
 const SLOW_CONSUMER_LOG_INTERVAL_MS: u64 = 1_000;
 const SLOW_CONSUMER_LOG_NEVER_MS: u64 = u64::MAX;
 
@@ -111,7 +112,10 @@ impl NatsTransport {
             }
         });
 
-        let client = options.connect(url).await?;
+        let client = options
+            .subscription_capacity(NATS_SUBSCRIPTION_CAPACITY)
+            .connect(url)
+            .await?;
         info!(url, "connected to NATS");
 
         Ok(Self {

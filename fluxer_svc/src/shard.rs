@@ -5,7 +5,7 @@ use crate::metrics::{ServiceMetrics, now_ms};
 use crate::transport::{Transport, TransportMessage, TransportSubscriber, reply_message};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::sync::Semaphore;
+use tokio::sync::{Semaphore, TryAcquireError};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
@@ -98,11 +98,18 @@ where
                             );
                             continue;
                         }
-                        let raw_payload = msg.payload().to_vec();
-                        let permit = match shard_permits.clone().acquire_owned().await {
+                        let permit = match shard_permits.clone().try_acquire_owned() {
                             Ok(permit) => permit,
-                            Err(_) => return anyhow::Ok(()),
+                            Err(TryAcquireError::NoPermits) => {
+                                debug!("shedding shard request, no permits available");
+                                shard_metrics.record_request();
+                                shard_metrics.record_request_error();
+                                reply_shard_error(&msg, &transport, "overloaded").await;
+                                continue;
+                            }
+                            Err(TryAcquireError::Closed) => return anyhow::Ok(()),
                         };
+                        let raw_payload = msg.payload().to_vec();
 
                         tokio::spawn(async move {
                             let _permit = permit;
@@ -208,5 +215,123 @@ async fn reply_shard_error(msg: &impl TransportMessage, transport: &impl Transpo
     let response = serde_json::to_vec(&serde_json::json!({ "error": code })).unwrap_or_default();
     if let Err(err) = reply_message(msg, transport, &response).await {
         debug!(error = %err, "failed to send shard error reply");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::{DatabaseBackend, Mode, ServiceConfig};
+    use crate::transport::InMemoryTransport;
+    use serde::{Deserialize, Serialize};
+    use std::time::Duration;
+    use tokio::sync::Notify;
+
+    #[derive(Serialize, Deserialize)]
+    struct MockRequest {
+        key: String,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    struct MockResponse {
+        key: String,
+    }
+
+    struct BlockingShard {
+        started: Arc<Notify>,
+    }
+
+    impl ShardService for BlockingShard {
+        type Request = MockRequest;
+        type Response = MockResponse;
+
+        fn service_name(&self) -> &str {
+            "mock"
+        }
+
+        async fn handle(&self, _request: MockRequest) -> anyhow::Result<MockResponse> {
+            self.started.notify_one();
+            std::future::pending().await
+        }
+    }
+
+    #[tokio::test]
+    async fn shard_sheds_requests_when_permits_are_exhausted() {
+        let transport = InMemoryTransport::new();
+        let started = Arc::new(Notify::new());
+        let shard = BlockingShard {
+            started: started.clone(),
+        };
+        let config = test_config(1);
+        let shard_transport = transport.clone();
+        let shard_task =
+            tokio::spawn(async move { run_shard(&config, shard, shard_transport).await });
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let payload = rmp_serde::to_vec_named(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+
+        let client = {
+            let transport = transport.clone();
+            let payload = payload.clone();
+            tokio::spawn(async move {
+                transport
+                    .request("svc.mock.shard.0", &payload, Duration::from_secs(10))
+                    .await
+            })
+        };
+
+        tokio::time::timeout(Duration::from_millis(250), started.notified())
+            .await
+            .expect("shard should start the first request and hold the only permit");
+
+        let response = tokio::time::timeout(
+            Duration::from_millis(250),
+            transport.request("svc.mock.shard.0", &payload, Duration::from_secs(1)),
+        )
+        .await
+        .expect("shed reply should not wait behind the in-flight request")
+        .unwrap();
+
+        assert_eq!(
+            serde_json::from_slice::<serde_json::Value>(&response).unwrap(),
+            serde_json::json!({"error": "overloaded"})
+        );
+
+        client.abort();
+        shard_task.abort();
+    }
+
+    fn test_config(max_concurrent_requests: usize) -> ServiceConfig {
+        ServiceConfig {
+            service_name: "mock".to_owned(),
+            mode: Mode::Shard,
+            database_backend: DatabaseBackend::Postgres,
+            shard_id: 0,
+            shard_count: 1,
+            listen_addr: "127.0.0.1:0".parse().unwrap(),
+            nats_url: "memory".to_owned(),
+            cache_max_entries: 100,
+            cache_ttl: Duration::from_secs(30),
+            cache_hard_ttl: Duration::from_secs(600),
+            max_concurrent_requests,
+            scylla_hosts: Vec::new(),
+            scylla_keyspace: "fluxer".to_owned(),
+            scylla_username: None,
+            scylla_password: None,
+            postgres_url: None,
+            postgres_host: "127.0.0.1".to_owned(),
+            postgres_port: 5432,
+            postgres_database: "fluxer".to_owned(),
+            postgres_username: "fluxer".to_owned(),
+            postgres_password: Some("fluxer".to_owned()),
+            postgres_ssl: false,
+            postgres_ssl_ca: None,
+            postgres_max_connections: 1,
+            postgres_kv_table: "fluxer_kv".to_owned(),
+        }
     }
 }
