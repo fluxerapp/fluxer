@@ -64,19 +64,12 @@ dispatch_direct(SessionPid, Event, Payload) when is_pid(SessionPid) ->
     Msg = {dispatch, Event, Payload},
     case node(SessionPid) of
         LocalNode when LocalNode =:= node() ->
-            safe_cast_local(SessionPid, Msg);
+            gen_server:cast(SessionPid, Msg);
         RemoteNode ->
             remote_dispatch_cast(RemoteNode, SessionPid, Msg)
     end;
 dispatch_direct(_SessionPid, _Event, _Payload) ->
     ok.
-
--spec safe_cast_local(pid(), term()) -> ok.
-safe_cast_local(SessionPid, Msg) ->
-    case shard_utils:safe_cast(SessionPid, Msg) of
-        ok -> ok;
-        {error, overloaded} -> ok
-    end.
 
 -spec remote_dispatch_cast(node(), pid(), term()) -> ok.
 remote_dispatch_cast(RemoteNode, SessionPid, Msg) ->
@@ -248,6 +241,16 @@ dispatch_direct_local_cast_test() ->
     after 1000 ->
         ?assert(false)
     end.
+
+dispatch_direct_local_cast_under_mailbox_pressure_test() ->
+    Self = self(),
+    Receiver = spawn(fun() -> test_dispatch_receiver(Self, pressured) end),
+    lists:foreach(fun(N) -> Receiver ! {filler, N} end, lists:seq(1, 6000)),
+    {message_queue_len, QueueLen} = erlang:process_info(Receiver, message_queue_len),
+    ?assert(QueueLen > 5000),
+    Payload = #{<<"pressure">> => true},
+    ?assertEqual(ok, dispatch_direct(Receiver, guild_update, Payload)),
+    assert_dispatch_received(pressured, guild_update, Payload).
 
 group_by_node_empty_test() ->
     ?assertEqual([], group_by_node([])).
