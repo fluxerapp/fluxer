@@ -10,6 +10,8 @@ interface CacheMSetEntry<T> {
 
 export type CacheLookupResult<T> = {hit: true; value: T} | {hit: false};
 
+type CacheTtlSeconds<T> = number | ((value: T) => number);
+
 export abstract class ICacheService {
 	private readonly inflightValues = new Map<string, Promise<unknown>>();
 
@@ -56,7 +58,7 @@ export abstract class ICacheService {
 		return entry.hit ? entry.value : null;
 	}
 
-	async getOrSet<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: number): Promise<T> {
+	async getOrSet<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: CacheTtlSeconds<T>): Promise<T> {
 		const existing = await this.getEntry<T>(key);
 		if (existing.hit) {
 			return existing.value;
@@ -75,9 +77,13 @@ export abstract class ICacheService {
 		return await pending;
 	}
 
-	private async produceAndStore<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: number): Promise<T> {
+	private async produceAndStore<T>(
+		key: string,
+		valueFactory: () => Promise<T>,
+		ttlSeconds?: CacheTtlSeconds<T>,
+	): Promise<T> {
 		const value = await valueFactory();
-		await this.set(key, value, ttlSeconds);
+		await this.set(key, value, typeof ttlSeconds === 'function' ? ttlSeconds(value) : ttlSeconds);
 		return value;
 	}
 }

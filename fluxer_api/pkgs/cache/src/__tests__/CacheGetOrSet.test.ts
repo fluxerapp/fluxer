@@ -5,19 +5,25 @@ import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {describe, expect, it, vi} from 'vitest';
 
-function createKVCacheProvider(): {provider: KVCacheProvider; store: Map<string, string>} {
+function createKVCacheProvider(): {
+	provider: KVCacheProvider;
+	store: Map<string, string>;
+	ttls: Array<[string, number]>;
+} {
 	const store = new Map<string, string>();
+	const ttls: Array<[string, number]> = [];
 	const client = {
 		get: async (key: string) => store.get(key) ?? null,
 		set: async (key: string, value: string) => {
 			store.set(key, value);
 			return 'OK';
 		},
-		setex: async (key: string, _ttlSeconds: number, value: string) => {
+		setex: async (key: string, ttlSeconds: number, value: string) => {
+			ttls.push([key, ttlSeconds]);
 			store.set(key, value);
 		},
 	} as unknown as IKVProvider;
-	return {provider: new KVCacheProvider({client}), store};
+	return {provider: new KVCacheProvider({client}), store, ttls};
 }
 
 function delay(ms: number): Promise<void> {
@@ -74,6 +80,18 @@ describe('ICacheService.getOrSet', () => {
 		const factory = vi.fn(async () => 3);
 		await expect(provider.getOrSet('key', factory, 60)).resolves.toBe(3);
 		expect(factory).toHaveBeenCalledTimes(1);
+	});
+
+	it('resolves the ttl from the produced value', async () => {
+		const {provider, store, ttls} = createKVCacheProvider();
+		const resolver = (value: number | null) => (value === null ? 5 : 30);
+		await expect(provider.getOrSet<number | null>('present', async () => 1, resolver)).resolves.toBe(1);
+		await expect(provider.getOrSet<number | null>('absent', async () => null, resolver)).resolves.toBeNull();
+		expect(ttls).toEqual([
+			['present', 30],
+			['absent', 5],
+		]);
+		expect(store.get('absent')).toBe('null');
 	});
 
 	it('rejects every waiter and retries on the next call when the factory fails', async () => {
