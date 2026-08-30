@@ -3,6 +3,7 @@
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import type {NativePermissionResult} from '@app/features/permissions/system/utils/NativePermissions';
+import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI, getNativePlatform, isDesktop, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
 import {makeAutoObservable, runInAction} from 'mobx';
@@ -10,6 +11,7 @@ import {makeAutoObservable, runInAction} from 'mobx';
 export type LinuxInputAccessNagbarReason = 'global-hotkeys' | 'push-to-talk' | 'settings';
 export type LinuxInputAccessStatus = 'unknown' | 'granted' | 'blocked';
 
+const LINUX_INPUT_ACCESS_NAGBAR_DISMISSED_STORAGE_KEY = 'NativePermission:linuxInputAccessNagbarDismissed';
 const logger = new Logger('NativePermission');
 
 class NativePermission {
@@ -20,7 +22,8 @@ class NativePermission {
 	private _linuxFlatpak = false;
 	private _linuxInputAccessStatus: LinuxInputAccessStatus = 'unknown';
 	private _linuxInputAccessNagbarRequested = false;
-	private _linuxInputAccessNagbarDismissedThisSession = false;
+	private _linuxInputAccessNagbarDismissed =
+		AppStorage.getItem(LINUX_INPUT_ACCESS_NAGBAR_DISMISSED_STORAGE_KEY) === 'true';
 	private _linuxInputAccessNagbarReason: LinuxInputAccessNagbarReason | null = null;
 	private _linuxInputAccessGrantNeedsRelogin = false;
 	private _linuxInputAccessGrantError: string | null = null;
@@ -60,6 +63,9 @@ class NativePermission {
 			this._waylandSession = waylandSession;
 			this._linuxFlatpak = linuxFlatpak;
 			this._linuxInputAccessStatus = linuxInputAccessStatus;
+			if (linuxInputAccessStatus === 'granted') {
+				this.resolveLinuxInputAccessNagbar();
+			}
 			this._initialized = true;
 		});
 	}
@@ -119,7 +125,7 @@ class NativePermission {
 	get shouldShowLinuxInputAccessNagbar(): boolean {
 		return (
 			this._linuxInputAccessNagbarRequested &&
-			!this._linuxInputAccessNagbarDismissedThisSession &&
+			!this._linuxInputAccessNagbarDismissed &&
 			this._isDesktop &&
 			this._platform === 'linux' &&
 			this._waylandSession &&
@@ -128,13 +134,14 @@ class NativePermission {
 	}
 
 	requestLinuxInputAccessNagbar(reason: LinuxInputAccessNagbarReason): void {
-		if (this._linuxInputAccessNagbarDismissedThisSession) return;
+		if (this._linuxInputAccessNagbarDismissed) return;
 		this._linuxInputAccessNagbarRequested = true;
 		this._linuxInputAccessNagbarReason = reason;
 	}
 
 	dismissLinuxInputAccessNagbar(): void {
-		this._linuxInputAccessNagbarDismissedThisSession = true;
+		this._linuxInputAccessNagbarDismissed = true;
+		AppStorage.setItem(LINUX_INPUT_ACCESS_NAGBAR_DISMISSED_STORAGE_KEY, 'true');
 		this.clearLinuxInputAccessNagbarRequest();
 	}
 
@@ -145,7 +152,8 @@ class NativePermission {
 
 	private resolveLinuxInputAccessNagbar(): void {
 		this.clearLinuxInputAccessNagbarRequest();
-		this._linuxInputAccessNagbarDismissedThisSession = false;
+		this._linuxInputAccessNagbarDismissed = false;
+		AppStorage.removeItem(LINUX_INPUT_ACCESS_NAGBAR_DISMISSED_STORAGE_KEY);
 	}
 
 	async recheckInputMonitoring(): Promise<NativePermissionResult> {
