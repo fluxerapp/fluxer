@@ -114,7 +114,12 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
-    depends_on: [api, gateway, media-proxy, static-proxy, admin]
+    depends_on:
+      api: {condition: service_started}
+      gateway: {condition: service_healthy}
+      media-proxy: {condition: service_started}
+      static-proxy: {condition: service_started}
+      admin: {condition: service_started}
 
   postgres:
     image: postgres:16-alpine
@@ -299,6 +304,12 @@ services:
       FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
       FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}
       FLUXER_GATEWAY_LOGGER_LEVEL: info
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8080/_health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
     depends_on:
       nats: {condition: service_started}
       valkey: {condition: service_healthy}

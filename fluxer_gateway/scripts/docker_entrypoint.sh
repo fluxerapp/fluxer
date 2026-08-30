@@ -56,4 +56,4 @@ export FLUXER_ERLANG_SCHEDULERS
 export FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS
 export RELX_REPLACE_OS_VARS="${RELX_REPLACE_OS_VARS:-true}"
 
-exec /opt/fluxer_gateway/bin/fluxer_gateway foreground >/dev/null 2>&1
+exec /opt/fluxer_gateway/bin/fluxer_gateway foreground
