@@ -57,6 +57,7 @@ const USER_FLAG_STAFF: i64 = 1;
 const DELETED_USER_USERNAME: &str = "DeletedUser";
 const DELETED_USER_GLOBAL_NAME: &str = "Deleted User";
 const BUCKET_SCAN_CONCURRENCY: usize = 16;
+const BUCKET_SCAN_WAVE: usize = 4;
 const ENRICHMENT_QUERY_CONCURRENCY: usize = 16;
 const REACTION_MESSAGE_BATCH_SIZE: usize = 64;
 const ATTACHMENT_DECAY_BATCH_SIZE: usize = 128;
@@ -432,8 +433,11 @@ impl MessagesShard {
             let Some(last_bucket) = buckets.last().copied() else {
                 break;
             };
-            let results = stream::iter(buckets)
-                .map(|bucket| async move {
+            collect_bucket_waves(
+                &buckets,
+                limit as usize,
+                &mut messages,
+                |bucket| async move {
                     if let Some(before_id) = before_id {
                         self.fetch_before_bucket(channel_id, bucket, before_id, limit_i32)
                             .await
@@ -441,20 +445,16 @@ impl MessagesShard {
                         self.fetch_latest_bucket(channel_id, bucket, limit_i32)
                             .await
                     }
-                })
-                .buffer_unordered(BUCKET_SCAN_CONCURRENCY)
-                .collect::<Vec<_>>()
-                .await;
-            for result in results {
-                messages.extend(result?);
-            }
-            messages.sort_unstable_by_key(|message| std::cmp::Reverse(message.message_id));
-            messages.truncate(limit as usize);
+                },
+            )
+            .await?;
             if messages.len() >= limit as usize || last_bucket <= min_bucket {
                 break;
             }
             cursor_max = last_bucket.saturating_sub(1);
         }
+        messages.sort_unstable_by_key(|message| std::cmp::Reverse(message.message_id));
+        messages.truncate(limit as usize);
         Ok(messages)
     }
 
@@ -476,24 +476,23 @@ impl MessagesShard {
             let Some(last_bucket) = buckets.last().copied() else {
                 break;
             };
-            let results = stream::iter(buckets)
-                .map(|bucket| async move {
+            collect_bucket_waves(
+                &buckets,
+                limit as usize,
+                &mut messages,
+                |bucket| async move {
                     self.fetch_after_bucket(channel_id, bucket, after_id, limit_i32)
                         .await
-                })
-                .buffer_unordered(BUCKET_SCAN_CONCURRENCY)
-                .collect::<Vec<_>>()
-                .await;
-            for result in results {
-                messages.extend(result?);
-            }
-            messages.sort_unstable_by_key(|left| left.message_id);
-            messages.truncate(limit as usize);
+                },
+            )
+            .await?;
             if messages.len() >= limit as usize || last_bucket >= max_bucket {
                 break;
             }
             cursor_min = last_bucket.saturating_add(1);
         }
+        messages.sort_unstable_by_key(|left| left.message_id);
+        messages.truncate(limit as usize);
         Ok(messages)
     }
 
@@ -2415,6 +2414,38 @@ fn bucket_page_limit(message_limit: u32) -> u32 {
     message_limit.clamp(32, BUCKET_INDEX_PAGE_SIZE)
 }
 
+fn next_bucket_wave(wave: usize) -> usize {
+    wave.saturating_mul(2).min(BUCKET_SCAN_CONCURRENCY)
+}
+
+async fn collect_bucket_waves<T, Fetch, Fut>(
+    buckets: &[i32],
+    limit: usize,
+    collected: &mut Vec<T>,
+    fetch: Fetch,
+) -> anyhow::Result<()>
+where
+    Fetch: Fn(i32) -> Fut,
+    Fut: std::future::Future<Output = anyhow::Result<Vec<T>>>,
+{
+    let mut offset = 0;
+    let mut wave = BUCKET_SCAN_WAVE;
+    while offset < buckets.len() && collected.len() < limit {
+        let end = buckets.len().min(offset + wave);
+        let results = stream::iter(buckets[offset..end].iter().copied())
+            .map(&fetch)
+            .buffer_unordered(wave)
+            .collect::<Vec<_>>()
+            .await;
+        for result in results {
+            collected.extend(result?);
+        }
+        offset = end;
+        wave = next_bucket_wave(wave);
+    }
+    Ok(())
+}
+
 fn around_window_limits(limit: u32) -> (u32, u32) {
     let newer_limit = limit / 2;
     let older_limit = limit.saturating_sub(1).saturating_sub(newer_limit);
@@ -3217,6 +3248,63 @@ mod tests {
         assert_eq!(bucket_page_limit(25), 32);
         assert_eq!(bucket_page_limit(50), 50);
         assert_eq!(bucket_page_limit(500), BUCKET_INDEX_PAGE_SIZE);
+    }
+
+    #[test]
+    fn bucket_wave_ramp_is_bounded_by_scan_concurrency() {
+        assert_eq!(next_bucket_wave(BUCKET_SCAN_WAVE), BUCKET_SCAN_WAVE * 2);
+        assert_eq!(
+            next_bucket_wave(BUCKET_SCAN_CONCURRENCY),
+            BUCKET_SCAN_CONCURRENCY
+        );
+        assert_eq!(next_bucket_wave(usize::MAX), BUCKET_SCAN_CONCURRENCY);
+    }
+
+    #[tokio::test]
+    async fn bucket_scan_stops_once_the_newest_buckets_fill_the_page() {
+        let buckets = (0..50).map(|index| 500 - index).collect::<Vec<i32>>();
+        let scanned = std::sync::Mutex::new(Vec::new());
+        let mut collected: Vec<i64> = Vec::new();
+
+        collect_bucket_waves(&buckets, 50, &mut collected, |bucket| {
+            let scanned = &scanned;
+            async move {
+                scanned.lock().expect("scan log").push(bucket);
+                let rows = (0..200)
+                    .map(|row| i64::from(bucket) * 1_000 + row)
+                    .collect::<Vec<i64>>();
+                Ok(rows)
+            }
+        })
+        .await
+        .expect("bucket scan succeeds");
+
+        let mut scanned = scanned.into_inner().expect("scan log");
+        scanned.sort_unstable_by(|left, right| right.cmp(left));
+        assert_eq!(scanned, buckets[..BUCKET_SCAN_WAVE]);
+
+        let newest_skipped_id = i64::from(buckets[BUCKET_SCAN_WAVE]) * 1_000 + 199;
+        assert!(collected.iter().all(|id| *id > newest_skipped_id));
+    }
+
+    #[tokio::test]
+    async fn bucket_scan_walks_the_whole_page_when_buckets_are_sparse() {
+        let buckets = (0..50).map(|index| 500 - index).collect::<Vec<i32>>();
+        let scanned = std::sync::Mutex::new(0_usize);
+        let mut collected: Vec<i64> = Vec::new();
+
+        collect_bucket_waves(&buckets, 50, &mut collected, |bucket| {
+            let scanned = &scanned;
+            async move {
+                *scanned.lock().expect("scan count") += 1;
+                Ok(vec![i64::from(bucket)])
+            }
+        })
+        .await
+        .expect("bucket scan succeeds");
+
+        assert_eq!(scanned.into_inner().expect("scan count"), buckets.len());
+        assert_eq!(collected.len(), buckets.len());
     }
 
     #[test]
