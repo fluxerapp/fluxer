@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+const CACHE_INFLIGHT_MAX_ENTRIES = 10000;
+
 interface CacheMSetEntry<T> {
 	key: string;
 	value: T;
 	ttlSeconds?: number;
 }
 
+export type CacheLookupResult<T> = {hit: true; value: T} | {hit: false};
+
 export abstract class ICacheService {
-	abstract get<T>(key: string): Promise<T | null>;
+	private readonly inflightValues = new Map<string, Promise<unknown>>();
+
+	abstract getEntry<T>(key: string): Promise<CacheLookupResult<T>>;
 
 	abstract set<T>(key: string, value: T, ttlSeconds?: number): Promise<void>;
 
@@ -45,13 +51,33 @@ export abstract class ICacheService {
 
 	abstract sismember(key: string, member: string): Promise<boolean>;
 
+	async get<T>(key: string): Promise<T | null> {
+		const entry = await this.getEntry<T>(key);
+		return entry.hit ? entry.value : null;
+	}
+
 	async getOrSet<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: number): Promise<T> {
-		const existingValue = await this.get<T>(key);
-		if (existingValue !== null) {
-			return existingValue;
+		const existing = await this.getEntry<T>(key);
+		if (existing.hit) {
+			return existing.value;
 		}
-		const newValue = await valueFactory();
-		await this.set(key, newValue, ttlSeconds);
-		return newValue;
+		const inflight = this.inflightValues.get(key);
+		if (inflight) {
+			return (await inflight) as T;
+		}
+		if (this.inflightValues.size >= CACHE_INFLIGHT_MAX_ENTRIES) {
+			return await this.produceAndStore(key, valueFactory, ttlSeconds);
+		}
+		const pending = this.produceAndStore(key, valueFactory, ttlSeconds).finally(() => {
+			this.inflightValues.delete(key);
+		});
+		this.inflightValues.set(key, pending);
+		return await pending;
+	}
+
+	private async produceAndStore<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: number): Promise<T> {
+		const value = await valueFactory();
+		await this.set(key, value, ttlSeconds);
+		return value;
 	}
 }

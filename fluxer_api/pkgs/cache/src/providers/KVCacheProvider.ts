@@ -8,8 +8,8 @@ import {
 	validateLockToken,
 } from '@pkgs/cache/src/CacheLockValidation';
 import type {CacheLogger, CacheTelemetry} from '@pkgs/cache/src/CacheProviderTypes';
-import {safeJsonParse, serializeValue} from '@pkgs/cache/src/CacheSerialization';
-import {ICacheService} from '@pkgs/cache/src/ICacheService';
+import {parseCachedValue, safeJsonParse, serializeValue} from '@pkgs/cache/src/CacheSerialization';
+import {type CacheLookupResult, ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 interface KVCacheProviderConfig {
@@ -69,16 +69,16 @@ export class KVCacheProvider extends ICacheService {
 		}
 	}
 
-	async get<T>(key: string): Promise<T | null> {
+	async getEntry<T>(key: string): Promise<CacheLookupResult<T>> {
 		return this.instrumented(
 			'get',
 			key,
-			async () => {
+			async (): Promise<CacheLookupResult<T>> => {
 				const value = await this.client.get(key);
-				if (value == null) return null;
-				return safeJsonParse<T>(value, this.logger);
+				if (value == null) return {hit: false};
+				return parseCachedValue<T>(value, this.logger);
 			},
-			(result) => (result == null ? 'miss' : 'hit'),
+			(result) => (result.hit ? 'hit' : 'miss'),
 		);
 	}
 

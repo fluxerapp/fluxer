@@ -6,7 +6,7 @@ import {
 	validateLockKey,
 	validateLockToken,
 } from '@pkgs/cache/src/CacheLockValidation';
-import {ICacheService} from '@pkgs/cache/src/ICacheService';
+import {type CacheLookupResult, ICacheService} from '@pkgs/cache/src/ICacheService';
 
 interface CacheEntry<T> {
 	value: T;
@@ -67,14 +67,14 @@ export class InMemoryProvider extends ICacheService {
 		}
 	}
 
-	async get<T>(key: string): Promise<T | null> {
+	async getEntry<T>(key: string): Promise<CacheLookupResult<T>> {
 		const entry = this.cache.get(key) as CacheEntry<T> | undefined;
-		if (!entry) return null;
+		if (!entry) return {hit: false};
 		if (this.isExpired(entry)) {
 			this.cache.delete(key);
-			return null;
+			return {hit: false};
 		}
-		return entry.value;
+		return {hit: true, value: entry.value};
 	}
 
 	async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
