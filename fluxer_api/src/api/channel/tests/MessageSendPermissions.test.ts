@@ -106,9 +106,7 @@ describe('Message send permissions', () => {
 		const gatewayService = getGatewayService();
 		const getGuildData = vi.spyOn(gatewayService, 'getGuildData');
 		const getGuildMember = vi.spyOn(gatewayService, 'getGuildMember');
-		const checkPermission = vi.spyOn(gatewayService, 'checkPermission');
-		const countViewChannelChecks = () =>
-			checkPermission.mock.calls.filter((call) => call[0].permission === Permissions.VIEW_CHANNEL).length;
+		const getUserPermissions = vi.spyOn(gatewayService, 'getUserPermissions');
 
 		try {
 			const sentMessage = await createBuilder<MessageResponse>(harness, member.token)
@@ -118,11 +116,11 @@ describe('Message send permissions', () => {
 			const sendCounts = {
 				guildData: getGuildData.mock.calls.length,
 				guildMember: getGuildMember.mock.calls.length,
-				viewChannel: countViewChannelChecks(),
+				userPermissions: getUserPermissions.mock.calls.length,
 			};
 			getGuildData.mockClear();
 			getGuildMember.mockClear();
-			checkPermission.mockClear();
+			getUserPermissions.mockClear();
 			await createBuilder<MessageResponse>(harness, member.token)
 				.patch(`/channels/${systemChannel.id}/messages/${sentMessage.id}`)
 				.body({content: 'authenticate me once again'})
@@ -130,15 +128,15 @@ describe('Message send permissions', () => {
 			const editCounts = {
 				guildData: getGuildData.mock.calls.length,
 				guildMember: getGuildMember.mock.calls.length,
-				viewChannel: countViewChannelChecks(),
+				userPermissions: getUserPermissions.mock.calls.length,
 			};
 
-			expect(sendCounts).toEqual({guildData: 1, guildMember: 1, viewChannel: 1});
-			expect(editCounts).toEqual({guildData: 1, guildMember: 1, viewChannel: 1});
+			expect(sendCounts).toEqual({guildData: 1, guildMember: 1, userPermissions: 1});
+			expect(editCounts).toEqual({guildData: 1, guildMember: 1, userPermissions: 1});
 		} finally {
 			getGuildData.mockRestore();
 			getGuildMember.mockRestore();
-			checkPermission.mockRestore();
+			getUserPermissions.mockRestore();
 		}
 	});
 
