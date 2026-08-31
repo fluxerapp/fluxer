@@ -1203,7 +1203,8 @@ async function inspectAppImageLauncher(artifactPath) {
 		}
 
 		const appRunUsesNamespaceProbe = /unshare\s+(?:-Ur|--user)\s+true/.test(appRun);
-		if (!appRunUsesNamespaceProbe || !appRun.includes('NO_SANDBOX=--no-sandbox')) {
+		const appRunFallsBackToNoSandbox = /NO_SANDBOX=\(?--no-sandbox\)?/.test(appRun);
+		if (!appRunUsesNamespaceProbe || !appRunFallsBackToNoSandbox) {
 			violations.push('AppRun does not use the expected user-namespace probe before falling back to --no-sandbox');
 		}
 
