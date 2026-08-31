@@ -41,9 +41,7 @@ start_link() ->
 
 -spec dispatch(pid(), atom(), term()) -> ok.
 dispatch(SessionPid, Event, Payload) ->
-    gateway_dispatch_relay_batch:relay_or_direct(
-        SessionPid, Event, Payload, gateway_dispatch_relay_batch:max_queue()
-    ).
+    gateway_dispatch_relay_batch:relay_or_direct(SessionPid, Event, Payload).
 
 -spec dispatch(pid(), atom(), term(), term()) -> ok.
 dispatch(SessionPid, Event, Payload, _IgnoredPartitionKey) ->
@@ -51,9 +49,7 @@ dispatch(SessionPid, Event, Payload, _IgnoredPartitionKey) ->
 
 -spec dispatch_many([pid()], atom(), term()) -> ok.
 dispatch_many(SessionPids, Event, Payload) ->
-    gateway_dispatch_relay_batch:relay_or_direct_many(
-        SessionPids, Event, Payload, gateway_dispatch_relay_batch:max_queue()
-    ).
+    gateway_dispatch_relay_batch:relay_or_direct_many(SessionPids, Event, Payload).
 
 -spec dispatch_many([pid()], atom(), term(), term()) -> ok.
 dispatch_many(SessionPids, Event, Payload, _IgnoredPartitionKey) ->

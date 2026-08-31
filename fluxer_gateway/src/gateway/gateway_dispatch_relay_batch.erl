@@ -4,9 +4,8 @@
 -typing([eqwalizer]).
 
 -export([
-    relay_or_direct_many/4,
-    relay_or_direct/4,
-    max_queue/0,
+    relay_or_direct_many/3,
+    relay_or_direct/3,
     select_worker/1,
     current_workers/0,
     current_workers_tuple/0,
@@ -20,8 +19,8 @@
 
 -define(STATE_KEY, {gateway_dispatch_relay, state}).
 
--spec relay_or_direct_many([pid()], atom(), term(), non_neg_integer()) -> ok.
-relay_or_direct_many(SessionPids, Event, Payload, MaxQueue) ->
+-spec relay_or_direct_many([pid()], atom(), term()) -> ok.
+relay_or_direct_many(SessionPids, Event, Payload) ->
     Workers = current_workers_tuple_normalized(),
     case tuple_size(Workers) of
         0 ->
@@ -33,14 +32,13 @@ relay_or_direct_many(SessionPids, Event, Payload, MaxQueue) ->
                 fun gateway_dispatch_relay:dispatch_direct/3
             );
         Count ->
-            relay_many_to_shards(SessionPids, Event, Payload, Workers, Count, MaxQueue)
+            relay_many_to_shards(SessionPids, Event, Payload, Workers, Count)
     end.
 
--spec relay_many_to_shards([pid()], atom(), term(), tuple(), pos_integer(), non_neg_integer()) ->
-    ok.
-relay_many_to_shards(SessionPids, Event, Payload, Workers, Count, MaxQueue) ->
+-spec relay_many_to_shards([pid()], atom(), term(), tuple(), pos_integer()) -> ok.
+relay_many_to_shards(SessionPids, Event, Payload, Workers, Count) ->
     ShardBuckets = build_shard_buckets(SessionPids, Count),
-    deliver_shard_buckets(1, Count, ShardBuckets, Event, Payload, Workers, MaxQueue).
+    deliver_shard_buckets(1, Count, ShardBuckets, Event, Payload, Workers).
 
 -spec build_shard_buckets([pid()], pos_integer()) -> tuple().
 build_shard_buckets(SessionPids, Count) ->
@@ -57,62 +55,29 @@ build_shard_buckets(SessionPids, Count) ->
     ).
 
 -spec deliver_shard_buckets(
-    pos_integer(), pos_integer(), tuple(), atom(), term(), tuple(), non_neg_integer()
+    pos_integer(), pos_integer(), tuple(), atom(), term(), tuple()
 ) -> ok.
-deliver_shard_buckets(Index, Count, _Buckets, _Event, _Payload, _Workers, _MaxQueue) when
-    Index > Count
-->
+deliver_shard_buckets(Index, Count, _Buckets, _Event, _Payload, _Workers) when Index > Count ->
     ok;
-deliver_shard_buckets(Index, Count, Buckets, Event, Payload, Workers, MaxQueue) ->
+deliver_shard_buckets(Index, Count, Buckets, Event, Payload, Workers) ->
     case element(Index, Buckets) of
         [] -> ok;
-        Pids -> deliver_shard(Index, Pids, Event, Payload, Workers, MaxQueue)
+        Pids -> deliver_shard(Index, Pids, Event, Payload, Workers)
     end,
-    deliver_shard_buckets(Index + 1, Count, Buckets, Event, Payload, Workers, MaxQueue).
+    deliver_shard_buckets(Index + 1, Count, Buckets, Event, Payload, Workers).
 
--spec deliver_shard(pos_integer(), [pid()], atom(), term(), tuple(), non_neg_integer()) -> ok.
-deliver_shard(Index, Pids, Event, Payload, Workers, MaxQueue) ->
-    Worker = element(Index, Workers),
-    case is_backpressured(Worker, MaxQueue) of
-        true ->
-            Grouped = gateway_dispatch_relay:group_by_node(Pids),
-            gateway_dispatch_relay:dispatch_grouped(
-                Grouped,
-                Event,
-                Payload,
-                fun gateway_dispatch_relay:dispatch_direct/3
-            );
-        false ->
-            gen_server:cast(Worker, {deliver_many, Pids, Event, Payload})
-    end,
-    ok.
+-spec deliver_shard(pos_integer(), [pid()], atom(), term(), tuple()) -> ok.
+deliver_shard(Index, Pids, Event, Payload, Workers) ->
+    gen_server:cast(element(Index, Workers), {deliver_many, Pids, Event, Payload}).
 
--spec relay_or_direct(pid(), atom(), term(), non_neg_integer()) -> ok.
-relay_or_direct(SessionPid, Event, Payload, MaxQueue) ->
+-spec relay_or_direct(pid(), atom(), term()) -> ok.
+relay_or_direct(SessionPid, Event, Payload) ->
     case select_worker(SessionPid) of
         undefined ->
             gateway_dispatch_relay:dispatch_direct(SessionPid, Event, Payload);
         Worker ->
-            relay_to_worker(Worker, SessionPid, Event, Payload, MaxQueue)
+            gen_server:cast(Worker, {deliver, SessionPid, Event, Payload})
     end.
-
--spec relay_to_worker(pid(), pid(), atom(), term(), non_neg_integer()) -> ok.
-relay_to_worker(Worker, SessionPid, Event, Payload, MaxQueue) ->
-    case is_backpressured(Worker, MaxQueue) of
-        true ->
-            gateway_dispatch_relay:dispatch_direct(SessionPid, Event, Payload);
-        false ->
-            gen_server:cast(Worker, {deliver, SessionPid, Event, Payload}),
-            ok
-    end.
-
--spec is_backpressured(pid(), non_neg_integer()) -> boolean().
-is_backpressured(Worker, MaxQueue) ->
-    MaxQueue > 0 andalso message_queue_len(Worker) >= MaxQueue.
-
--spec max_queue() -> non_neg_integer().
-max_queue() ->
-    gateway_rollout_config:gateway_dispatch_relay_max_queue().
 
 -spec current_workers() -> [pid()].
 current_workers() ->
