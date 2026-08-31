@@ -86,25 +86,37 @@ pub async fn csrf_protection(
     if let Ok(value) = HeaderValue::from_str(&cookie_value) {
         response.headers_mut().append(header::SET_COOKIE, value);
     }
+    if is_production
+        && let Ok(value) = HeaderValue::from_str(&format!(
+            "{CSRF_COOKIE_NAME}=; Path=/; SameSite=Lax; HttpOnly; Max-Age=0"
+        ))
+    {
+        response.headers_mut().append(header::SET_COOKIE, value);
+    }
 
     response
 }
 
 fn extract_csrf_cookie(request: &Request) -> Option<String> {
     let cookie_header = request.headers().get(header::COOKIE)?.to_str().ok()?;
+    let mut legacy = None;
     for pair in cookie_header.split(';') {
         let pair = pair.trim();
-        let value = pair
-            .strip_prefix("__Host-csrf_token=")
-            .or_else(|| pair.strip_prefix("csrf_token="));
-        if let Some(value) = value {
+        if let Some(value) = pair.strip_prefix("__Host-csrf_token=") {
             let trimmed = value.trim();
             if !trimmed.is_empty() {
                 return Some(trimmed.to_owned());
             }
+        } else if let Some(value) = pair.strip_prefix("csrf_token=")
+            && legacy.is_none()
+        {
+            let trimmed = value.trim();
+            if !trimmed.is_empty() {
+                legacy = Some(trimmed.to_owned());
+            }
         }
     }
-    None
+    legacy
 }
 
 fn extract_csrf_header(request: &Request) -> Option<String> {
