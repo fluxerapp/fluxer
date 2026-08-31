@@ -75,9 +75,10 @@ merge_anti_entropy_entries(_, State) ->
 
 -spec record_delete(integer(), state()) -> state().
 record_delete(UserId, State) ->
-    Tombstones = tombstones(State),
-    Updated = Tombstones#{UserId => now_ms() + ?TOMBSTONE_TTL_MS},
-    State#{delete_tombstones => cap_tombstones(Updated)}.
+    ExpiresAt = now_ms() + ?TOMBSTONE_TTL_MS,
+    Tombstones = (tombstones(State))#{UserId => ExpiresAt},
+    Order = queue:in({ExpiresAt, UserId}, tombstone_order(State)),
+    evict_over_limit(State#{delete_tombstones => Tombstones, delete_tombstone_order => Order}).
 
 -spec record_put(integer(), map(), state()) -> state().
 record_put(UserId, Presence, State) ->
@@ -101,37 +102,63 @@ tombstones(State) ->
         _ -> #{}
     end.
 
+-spec tombstone_order(state()) -> queue:queue({integer(), integer()}).
+tombstone_order(State) ->
+    Order = maps:get(delete_tombstone_order, State, undefined),
+    case queue:is_queue(Order) of
+        true -> Order;
+        false -> queue:new()
+    end.
+
 -spec prune_tombstones(state()) -> state().
 prune_tombstones(State) ->
-    State#{delete_tombstones => drop_expired(tombstones(State), now_ms())}.
+    Now = now_ms(),
+    State#{
+        delete_tombstones => drop_expired(tombstones(State), Now),
+        delete_tombstone_order => drop_expired_order(tombstone_order(State), Now)
+    }.
 
 -spec drop_expired(#{integer() => integer()}, integer()) -> #{integer() => integer()}.
 drop_expired(Tombstones, Now) ->
     maps:filter(fun(_UserId, ExpiresAt) -> ExpiresAt > Now end, Tombstones).
 
--spec cap_tombstones(#{integer() => integer()}) -> #{integer() => integer()}.
-cap_tombstones(Tombstones) ->
+-spec drop_expired_order(queue:queue({integer(), integer()}), integer()) ->
+    queue:queue({integer(), integer()}).
+drop_expired_order(Order, Now) ->
+    case queue:peek(Order) of
+        {value, {ExpiresAt, _UserId}} when ExpiresAt =< Now ->
+            drop_expired_order(queue:drop(Order), Now);
+        _ ->
+            Order
+    end.
+
+-spec evict_over_limit(state()) -> state().
+evict_over_limit(State) ->
+    Tombstones = tombstones(State),
     case maps:size(Tombstones) > ?TOMBSTONE_LIMIT of
-        true -> evict_oldest_tombstones(drop_expired(Tombstones, now_ms()));
-        false -> Tombstones
+        true -> evict_oldest_tombstone(Tombstones, tombstone_order(State), State);
+        false -> State
     end.
 
--spec evict_oldest_tombstones(#{integer() => integer()}) -> #{integer() => integer()}.
-evict_oldest_tombstones(Tombstones) ->
-    Size = maps:size(Tombstones),
-    case Size > ?TOMBSTONE_LIMIT of
-        true -> keep_newest_tombstones(Tombstones, Size);
-        false -> Tombstones
+-spec evict_oldest_tombstone(
+    #{integer() => integer()}, queue:queue({integer(), integer()}), state()
+) -> state().
+evict_oldest_tombstone(Tombstones, Order, State) ->
+    case queue:out(Order) of
+        {{value, {ExpiresAt, UserId}}, Rest} ->
+            Kept = drop_if_current(UserId, ExpiresAt, Tombstones),
+            evict_over_limit(State#{delete_tombstones => Kept, delete_tombstone_order => Rest});
+        {empty, _Order} ->
+            State
     end.
 
--spec keep_newest_tombstones(#{integer() => integer()}, non_neg_integer()) ->
+-spec drop_if_current(integer(), integer(), #{integer() => integer()}) ->
     #{integer() => integer()}.
-keep_newest_tombstones(Tombstones, Size) ->
-    Ordered = lists:sort(
-        fun({_UserIdA, ExpiresA}, {_UserIdB, ExpiresB}) -> ExpiresA =< ExpiresB end,
-        maps:to_list(Tombstones)
-    ),
-    maps:from_list(lists:nthtail(Size - ?TOMBSTONE_LIMIT, Ordered)).
+drop_if_current(UserId, ExpiresAt, Tombstones) ->
+    case maps:get(UserId, Tombstones, undefined) of
+        ExpiresAt -> maps:remove(UserId, Tombstones);
+        _ -> Tombstones
+    end.
 
 -spec now_ms() -> integer().
 now_ms() ->
@@ -262,5 +289,43 @@ merge_single_entry_filters_invalid_test() ->
     ?assertEqual(State, merge_single_entry(<<"bad">>, #{}, State)),
     ?assertEqual(State, merge_single_entry(-1, #{}, State)),
     ?assertEqual(State, merge_single_entry(1, not_a_map, State)).
+
+prune_tombstones_drops_expired_order_test() ->
+    Now = now_ms(),
+    State = #{
+        delete_tombstones => #{1 => Now - 1, 2 => Now + 60000},
+        delete_tombstone_order => queue:from_list([{Now - 1, 1}, {Now + 60000, 2}])
+    },
+    Pruned = prune_tombstones(State),
+    ?assertEqual(#{2 => Now + 60000}, maps:get(delete_tombstones, Pruned)),
+    ?assertEqual([{Now + 60000, 2}], queue:to_list(maps:get(delete_tombstone_order, Pruned))).
+
+record_delete_above_limit_costs_bounded_work_test_() ->
+    {timeout, 120, fun assert_record_delete_above_limit_is_amortised/0}.
+
+assert_record_delete_above_limit_is_amortised() ->
+    Batch = 1000,
+    Empty = #{delete_tombstones => #{}, delete_tombstone_order => queue:new()},
+    Filled = record_delete_range(Empty, 1, ?TOMBSTONE_LIMIT - Batch),
+    {BelowCost, AtLimit} = measure_record_deletes(
+        Filled, ?TOMBSTONE_LIMIT - Batch + 1, ?TOMBSTONE_LIMIT
+    ),
+    ?assertEqual(?TOMBSTONE_LIMIT, maps:size(tombstones(AtLimit))),
+    {AboveCost, Above} = measure_record_deletes(
+        AtLimit, ?TOMBSTONE_LIMIT + 1, ?TOMBSTONE_LIMIT + Batch
+    ),
+    ?assert(AboveCost < BelowCost * 20),
+    ?assertEqual(?TOMBSTONE_LIMIT, maps:size(tombstones(Above))),
+    ?assert(maps:is_key(?TOMBSTONE_LIMIT + Batch, tombstones(Above))),
+    ?assertNot(maps:is_key(1, tombstones(Above))).
+
+measure_record_deletes(State, From, To) ->
+    {reductions, Before} = erlang:process_info(self(), reductions),
+    NewState = record_delete_range(State, From, To),
+    {reductions, After} = erlang:process_info(self(), reductions),
+    {After - Before, NewState}.
+
+record_delete_range(State, From, To) ->
+    lists:foldl(fun record_delete/2, State, lists:seq(From, To)).
 
 -endif.

@@ -152,6 +152,7 @@ init([]) ->
         pending_retry_timer => undefined,
         pending_nodedown_cleanups => #{},
         delete_tombstones => #{},
+        delete_tombstone_order => queue:new(),
         generation => 0,
         anti_entropy_timer => presence_cache_rebalance:schedule_anti_entropy()
     }}.
