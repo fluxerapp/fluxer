@@ -105,7 +105,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_CADDY_MEMORY_LIMIT:-256mb}
     restart: unless-stopped
     networks: [fluxer]
     ports:
@@ -130,17 +130,17 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2gb
+          memory: ${FLUXER_POSTGRES_MEMORY_LIMIT:-5gb}
         reservations:
-          memory: 768mb
+          memory: ${FLUXER_POSTGRES_MEMORY_RESERVATION:-3gb}
     restart: unless-stopped
     networks: [fluxer]
     command: >
       postgres
-      -c max_connections=150
-      -c shared_buffers=512MB
-      -c effective_cache_size=2GB
-      -c work_mem=8MB
+      -c max_connections=${FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS:-150}
+      -c shared_buffers=${FLUXER_POSTGRES_SHARED_BUFFERS:-512MB}
+      -c effective_cache_size=${FLUXER_POSTGRES_EFFECTIVE_CACHE_SIZE:-2GB}
+      -c work_mem=${FLUXER_POSTGRES_WORK_MEM:-8MB}
       -c maintenance_work_mem=256MB
       -c autovacuum_work_mem=128MB
       -c random_page_cost=1.1
@@ -177,7 +177,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_VALKEY_MEMORY_LIMIT:-256mb}
     restart: unless-stopped
     networks: [fluxer]
     command: ["valkey-server", "--save", "", "--appendonly", "no", "--maxmemory", "192mb", "--maxmemory-policy", "allkeys-lru"]
@@ -192,7 +192,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_NATS_MEMORY_LIMIT:-256mb}
     restart: unless-stopped
     networks: [fluxer]
     command: ["-js", "-sd", "/data", "-m", "8222"]
@@ -204,7 +204,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768mb
+          memory: ${FLUXER_MEILISEARCH_MEMORY_LIMIT:-768mb}
     restart: unless-stopped
     networks: [fluxer]
     environment:
@@ -220,7 +220,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512mb
+          memory: ${FLUXER_SEAWEEDFS_MEMORY_LIMIT:-512mb}
     restart: unless-stopped
     networks: [fluxer]
     command: ["server", "-s3", "-dir=/data"]
@@ -232,7 +232,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_SEAWEEDFS_INIT_MEMORY_LIMIT:-128mb}
     networks: [fluxer]
     depends_on: [seaweedfs]
     restart: "no"
@@ -269,7 +269,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512mb
+          memory: ${FLUXER_LIVEKIT_MEMORY_LIMIT:-512mb}
     restart: unless-stopped
     networks: [fluxer]
     command: ["--config", "/etc/livekit.yaml"]
@@ -287,12 +287,13 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1536mb
+          memory: ${FLUXER_API_MEMORY_LIMIT:-2560mb}
         reservations:
-          memory: 512mb
+          memory: ${FLUXER_API_MEMORY_RESERVATION:-1gb}
     environment:
       <<: *fluxer-env
       FLUXER_API_PORT: "8080"
+      NODE_OPTIONS: --max-old-space-size=${FLUXER_API_NODE_HEAP_MB:-1792} --enable-source-maps
       FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
     healthcheck:
@@ -323,11 +324,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1536mb
+          memory: ${FLUXER_WORKER_MEMORY_LIMIT:-2560mb}
+        reservations:
+          memory: ${FLUXER_WORKER_MEMORY_RESERVATION:-1gb}
     working_dir: /usr/src/app/fluxer_api
     command: ["node", "dist/WorkerEntrypoint.js"]
     environment:
       <<: *fluxer-env
+      NODE_OPTIONS: --max-old-space-size=${FLUXER_WORKER_NODE_HEAP_MB:-1792} --enable-source-maps
       FLUXER_API_WORKER_MODE: all_lanes
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
       FLUXER_API_WORKER_ENABLE_VOICE_RECONCILIATION: "true"
@@ -347,9 +351,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1gb
+          memory: ${FLUXER_GATEWAY_MEMORY_LIMIT:-1gb}
         reservations:
-          memory: 384mb
+          memory: ${FLUXER_GATEWAY_MEMORY_RESERVATION:-384mb}
     environment:
       <<: *fluxer-env
       FLUXER_GATEWAY_PORT: "8080"
@@ -372,7 +376,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512mb
+          memory: ${FLUXER_MEDIA_PROXY_MEMORY_LIMIT:-512mb}
     environment:
       <<: *fluxer-env
       FLUXER_MEDIA_PROXY_HOST: 0.0.0.0
@@ -391,7 +395,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_STATIC_PROXY_MEMORY_LIMIT:-256mb}
 
   app-proxy:
     <<: *fluxer-service
@@ -399,7 +403,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_APP_PROXY_MEMORY_LIMIT:-256mb}
     environment:
       FLUXER_APP_PROXY_HOST: 0.0.0.0
       FLUXER_APP_PROXY_PORT: "8080"
@@ -429,7 +433,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_SNOWFLAKES_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: snowflakes
@@ -443,7 +447,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_SNOWFLAKES_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: snowflakes
@@ -458,7 +462,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_USERS_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_MODE: router
@@ -471,7 +475,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_USERS_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_MODE: shard
@@ -488,7 +492,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_GIFS_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: gifs
@@ -503,7 +507,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_GIFS_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: gifs
@@ -519,7 +523,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_MESSAGES_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: messages
@@ -533,7 +537,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_MESSAGES_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: messages
@@ -551,7 +555,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_UNFURL_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_MODE: router
@@ -564,7 +568,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_UNFURL_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_MODE: shard
@@ -578,7 +582,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_ADMIN_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_ADMIN_HOST: 0.0.0.0
