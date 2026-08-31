@@ -626,14 +626,14 @@ async function updatePendingRegistrationUser(
 		return;
 	}
 	const traits = new Set(user.traits);
-	traits.delete(REGISTRATION_PENDING_APPROVAL_TRAIT);
+	const wasPendingApproval = traits.delete(REGISTRATION_PENDING_APPROVAL_TRAIT);
 	if (decision === 'reject') {
 		traits.add(REGISTRATION_REJECTED_TRAIT);
 	} else {
 		traits.delete(REGISTRATION_REJECTED_TRAIT);
 	}
 	await userRepository.patchUpsert(user.id, {traits: traits.size > 0 ? traits : null}, user.toRow());
-	if (decision === 'approve') {
+	if (decision === 'approve' && wasPendingApproval) {
 		await ctx.get('singleCommunityService').joinStockCommunity(user.id, ctx.get('requestCache'));
 	}
 	await ctx.get('adminService').auditService.createAuditLog({
