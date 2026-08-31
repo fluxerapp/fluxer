@@ -74,12 +74,56 @@ do_guild_connect_start_or_lookup_after_lookup_miss_test() ->
         GuildPid ! stop
     end.
 
+stale_guild_connect_timeout_cannot_abort_a_later_connect_test() ->
+    GuildId = 9101,
+    TestRef = make_ref(),
+    {GuildPid, ManagerPid} = start_guild_stubs(GuildId, TestRef),
+    Tracer = start_connect_timeout_tracer(),
+    try
+        State0 = stale_timer_state(<<"stale-connect">>, GuildId, 4242),
+        {State1, FirstTimeout} = begin_guild_connect(GuildId, State0, TestRef, Tracer),
+        State2 = complete_guild_connect(GuildId, GuildPid, State1),
+        {State3, SecondTimeout} = begin_guild_connect(GuildId, State2, TestRef, Tracer),
+        {noreply, State4} = session:handle_info(FirstTimeout, State3),
+        ?assertEqual(0, maps:get(GuildId, maps:get(guild_connect_inflight, State4), missing)),
+        ?assertNot(awaits_guild_connect_retry(GuildId, 1500)),
+        ?assertNotEqual(FirstTimeout, SecondTimeout),
+        {noreply, State5} = session:handle_info(SecondTimeout, State4),
+        ?assertNot(maps:is_key(GuildId, maps:get(guild_connect_inflight, State5))),
+        ?assert(awaits_guild_connect_retry(GuildId, 5000))
+    after
+        stop_connect_timeout_tracer(Tracer),
+        stop_guild_stubs(GuildPid, ManagerPid)
+    end.
+
+guild_connect_success_cancels_the_connect_timeout_test() ->
+    GuildId = 9102,
+    TestRef = make_ref(),
+    {GuildPid, ManagerPid} = start_guild_stubs(GuildId, TestRef),
+    try
+        State0 = stale_timer_state(<<"cancel-connect">>, GuildId, 4243),
+        {noreply, State1} = session_connection_guild:maybe_spawn_guild_connect(
+            GuildId, 0, <<"cancel-connect">>, 4243, State0
+        ),
+        ?assertMatch({session_connect_async, _}, await_stub_cast(TestRef, 2000)),
+        {_Token, TimerRef} = maps:get(GuildId, maps:get(guild_connect_timers, State1)),
+        ?assert(is_integer(erlang:read_timer(TimerRef))),
+        State2 = complete_guild_connect(GuildId, GuildPid, State1),
+        ?assertEqual(#{}, maps:get(guild_connect_timers, State2)),
+        ?assertEqual(false, erlang:read_timer(TimerRef))
+    after
+        stop_guild_stubs(GuildPid, ManagerPid)
+    end.
+
 guild_connect_timeout_exhaustion_marks_unavailable_test() ->
     GuildId = 9001,
     Attempt = 25,
-    State0 = exhausted_connect_state(<<"st1">>, GuildId, Attempt),
+    Token = make_ref(),
+    State0 = (exhausted_connect_state(<<"st1">>, GuildId, Attempt))#{
+        guild_connect_timers => #{GuildId => {Token, make_ref()}}
+    },
     {noreply, State1} = session_connection_guild:handle_guild_connect_timeout(
-        GuildId, Attempt, State0
+        GuildId, Attempt, Token, State0
     ),
     [E] = maps:get(collected_guild_states, State1, []),
     ?assertEqual(true, maps:get(<<"unavailable">>, E)),
@@ -242,6 +286,122 @@ not_member_removal_unblocks_initial_ready_test() ->
             GuildId, Attempt, {error, not_member}, State0
         )
     ).
+
+start_guild_stubs(GuildId, TestRef) ->
+    Parent = self(),
+    GuildPid = spawn(fun() -> guild_stub_loop(Parent, TestRef) end),
+    ManagerPid = spawn(fun() -> manager_stub_loop(GuildId, GuildPid) end),
+    true = register(guild_manager, ManagerPid),
+    {GuildPid, ManagerPid}.
+
+stop_guild_stubs(GuildPid, ManagerPid) ->
+    safe_unregister(guild_manager, ManagerPid),
+    ManagerPid ! stop,
+    GuildPid ! stop,
+    ok.
+
+begin_guild_connect(GuildId, State, TestRef, Tracer) ->
+    {noreply, State1} = session_connection_guild:maybe_spawn_guild_connect(
+        GuildId, 0, maps:get(id, State), maps:get(user_id, State), State
+    ),
+    ?assertMatch({session_connect_async, _}, await_stub_cast(TestRef, 2000)),
+    {State1, await_connect_timeout(Tracer, 2000)}.
+
+complete_guild_connect(GuildId, GuildPid, State) ->
+    {noreply, State1} = session_connection_guild:handle_guild_connect_result(
+        GuildId, 0, {ok, GuildPid, guild_state_payload(GuildId)}, State
+    ),
+    ?assertMatch({GuildPid, _}, maps:get(GuildId, maps:get(guilds, State1))),
+    dropped_guild_state(GuildId, State1).
+
+stale_timer_state(SessionId, GuildId, UserId) ->
+    (base_dispatch_state())#{
+        id => SessionId,
+        user_id => UserId,
+        user_data => #{<<"flags">> => <<"0">>},
+        guilds => #{GuildId => undefined},
+        active_guilds => sets:new(),
+        guild_subscription_state => #{},
+        guild_connect_inflight => #{},
+        guild_connect_workers => #{},
+        collected_guild_states => [],
+        ready => undefined
+    }.
+
+dropped_guild_state(GuildId, State) ->
+    Guilds = maps:get(guilds, State),
+    demonitor_guild_entry(maps:get(GuildId, Guilds, undefined)),
+    State#{guilds => Guilds#{GuildId => undefined}}.
+
+demonitor_guild_entry({_Pid, Ref}) when is_reference(Ref) ->
+    demonitor(Ref, [flush]),
+    ok;
+demonitor_guild_entry(_) ->
+    ok.
+
+guild_state_payload(GuildId) ->
+    #{<<"id">> => integer_to_binary(GuildId), <<"name">> => <<"stale">>}.
+
+awaits_guild_connect_retry(GuildId, Timeout) ->
+    receive
+        {guild_connect, GuildId, 1} -> true
+    after Timeout -> false
+    end.
+
+start_connect_timeout_tracer() ->
+    Tracer = spawn(fun() -> connect_timeout_tracer_loop([]) end),
+    erlang:trace_pattern({erlang, send_after, 3}, true, [global]),
+    erlang:trace(all, true, [call, {tracer, Tracer}]),
+    Tracer.
+
+stop_connect_timeout_tracer(Tracer) ->
+    erlang:trace(all, false, [call]),
+    erlang:trace_pattern({erlang, send_after, 3}, false, [global]),
+    Tracer ! stop,
+    ok.
+
+connect_timeout_tracer_loop(Acc) ->
+    receive
+        stop ->
+            ok;
+        {take, From} ->
+            connect_timeout_tracer_loop(reply_traced_timeout(From, Acc));
+        {trace, _Pid, call, {erlang, send_after, [_Delay, _Dest, Msg]}} ->
+            connect_timeout_tracer_loop(Acc ++ traced_connect_timeout(Msg));
+        _ ->
+            connect_timeout_tracer_loop(Acc)
+    after 60000 -> ok
+    end.
+
+traced_connect_timeout(Msg) when is_tuple(Msg), tuple_size(Msg) >= 3 ->
+    connect_timeout_only(element(1, Msg), Msg);
+traced_connect_timeout(_Msg) ->
+    [].
+
+connect_timeout_only(guild_connect_timeout, Msg) -> [Msg];
+connect_timeout_only(_Tag, _Msg) -> [].
+
+reply_traced_timeout(From, []) ->
+    From ! {traced_timeout, empty},
+    [];
+reply_traced_timeout(From, [Msg | Rest]) ->
+    From ! {traced_timeout, Msg},
+    Rest.
+
+await_connect_timeout(Tracer, Timeout) when Timeout =< 0 ->
+    Tracer,
+    ?assert(false, connect_timeout_never_armed);
+await_connect_timeout(Tracer, Timeout) ->
+    Tracer ! {take, self()},
+    receive
+        {traced_timeout, empty} ->
+            timer:sleep(20),
+            await_connect_timeout(Tracer, Timeout - 20);
+        {traced_timeout, Msg} ->
+            Msg
+    after 1000 ->
+        ?assert(false, tracer_did_not_reply)
+    end.
 
 base_dispatch_state() ->
     #{

@@ -6,7 +6,7 @@
 -export([
     handle_guild_connect/3,
     handle_guild_connect_result/4,
-    handle_guild_connect_timeout/3,
+    handle_guild_connect_timeout/4,
     handle_guild_connect_worker_down/3,
     maybe_spawn_guild_connect/5,
     finalize_guild_connection/4,
@@ -18,6 +18,7 @@
 -export_type([session_state/0, guild_id/0, attempt/0, guild_connect_result/0, session_result/0]).
 
 -define(GUILD_CONNECT_MAX_INFLIGHT, 32).
+-define(GUILD_CONNECT_TIMEOUT_MS, 120000).
 -define(GUILD_CONNECT_REPAIR_INTERVAL_MS, 30000).
 -define(GUILD_CONNECT_REPAIR_LIMIT, 8).
 -define(NOT_MEMBER_MAX_RETRIES, 3).
@@ -108,9 +109,15 @@ spawn_guild_connect_worker(GuildId, Attempt, SessionId, UserId, Bot, IsStaff, In
         do_guild_connect_with_release(Ctx)
     end),
     Workers = guild_connect_workers(State),
+    Timers = guild_connect_timers(State),
+    Token = make_ref(),
+    TimerRef = erlang:send_after(
+        ?GUILD_CONNECT_TIMEOUT_MS, self(), {guild_connect_timeout, GuildId, Attempt, Token}
+    ),
     State1 = State#{
         guild_connect_inflight => Inflight,
-        guild_connect_workers => Workers#{WorkerRef => {GuildId, Attempt, WorkerPid}}
+        guild_connect_workers => Workers#{WorkerRef => {GuildId, Attempt, WorkerPid}},
+        guild_connect_timers => Timers#{GuildId => {Token, TimerRef}}
     },
     {noreply, State1}.
 
@@ -163,28 +170,29 @@ handle_guild_connect_result(GuildId, Attempt, Result, State) ->
             {noreply, State}
     end.
 
--spec handle_guild_connect_timeout(guild_id(), attempt(), session_state()) ->
+-spec handle_guild_connect_timeout(guild_id(), attempt(), reference(), session_state()) ->
     session_result().
-handle_guild_connect_timeout(GuildId, Attempt, State) ->
-    Inflight0 = guild_connect_inflight(State),
-    case maps:find(GuildId, Inflight0) of
-        {ok, Attempt} ->
-            UserId = maps:get(user_id, State),
-            logger:warning(
-                "guild_connect_timeout: guild_id=~p"
-                " user_id=~p attempt=~p",
-                [GuildId, UserId, Attempt]
-            ),
-            State1 = remove_pending_guild_connect(GuildId, Attempt, State),
-            session_connection_retry:retry_or_fail(
-                GuildId,
-                Attempt,
-                State1,
-                fun session_ready:mark_guild_unavailable/2
-            );
-        _ ->
-            {noreply, State}
+handle_guild_connect_timeout(GuildId, Attempt, Token, State) ->
+    case maps:get(GuildId, guild_connect_timers(State), undefined) of
+        {Token, _TimerRef} -> expire_guild_connect(GuildId, Attempt, State);
+        _ -> {noreply, State}
     end.
+
+-spec expire_guild_connect(guild_id(), attempt(), session_state()) -> session_result().
+expire_guild_connect(GuildId, Attempt, State) ->
+    UserId = maps:get(user_id, State),
+    logger:warning(
+        "guild_connect_timeout: guild_id=~p"
+        " user_id=~p attempt=~p",
+        [GuildId, UserId, Attempt]
+    ),
+    State1 = remove_pending_guild_connect(GuildId, Attempt, State),
+    session_connection_retry:retry_or_fail(
+        GuildId,
+        Attempt,
+        State1,
+        fun session_ready:mark_guild_unavailable/2
+    ).
 
 -spec handle_guild_connect_worker_down(reference(), term(), session_state()) ->
     {guild_connect_worker, session_result()} | not_guild_connect_worker.
@@ -256,7 +264,22 @@ remove_pending_guild_connect(GuildId, Attempt, State) ->
 
 -spec remove_guild_connect_inflight(guild_id(), session_state()) -> session_state().
 remove_guild_connect_inflight(GuildId, State) ->
-    State#{guild_connect_inflight => maps:remove(GuildId, guild_connect_inflight(State))}.
+    State1 = cancel_guild_connect_timer(GuildId, State),
+    State1#{guild_connect_inflight => maps:remove(GuildId, guild_connect_inflight(State1))}.
+
+-spec guild_connect_timers(session_state()) -> map().
+guild_connect_timers(State) ->
+    maps:get(guild_connect_timers, State, #{}).
+
+-spec cancel_guild_connect_timer(guild_id(), session_state()) -> session_state().
+cancel_guild_connect_timer(GuildId, State) ->
+    case maps:take(GuildId, guild_connect_timers(State)) of
+        {{_Token, TimerRef}, Remaining} ->
+            _ = erlang:cancel_timer(TimerRef),
+            State#{guild_connect_timers => Remaining};
+        _ ->
+            State
+    end.
 
 -spec guild_connect_workers(session_state()) -> map().
 guild_connect_workers(State) ->

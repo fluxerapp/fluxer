@@ -7,7 +7,6 @@
 
 -export_type([guild_id/0, attempt/0, connect_ctx/0]).
 
--define(GUILD_CONNECT_ASYNC_TIMEOUT_MS, 120000).
 -define(GUILD_MANAGER_START_TIMEOUT_MS, 20000).
 -define(GUILD_MANAGER_LOOKUP_FALLBACK_TIMEOUT_MS, 200).
 -define(MAX_GUILD_OWNER_REDIRECTS, 3).
@@ -210,27 +209,22 @@ do_start_connect_async(GuildPid, Ctx) ->
         {session_connect_async, #{
             guild_id => GuildId, attempt => Attempt, request => Request
         }},
-    send_connect_cast(GuildPid, CastMsg, GuildId, Attempt, SessionPid).
+    send_connect_cast(GuildPid, CastMsg, SessionPid).
 
--spec send_connect_cast(pid(), term(), integer(), non_neg_integer(), pid()) ->
-    pending | {error, term()}.
-send_connect_cast(GuildPid, CastMsg, GuildId, Attempt, SessionPid) ->
+-spec send_connect_cast(pid(), term(), pid()) -> pending | {error, term()}.
+send_connect_cast(GuildPid, CastMsg, SessionPid) ->
     CastStartedAt = gateway_timings:start(),
     Result = shard_utils:safe_cast(GuildPid, CastMsg),
     notify_remote_timing(
         SessionPid,
         guild,
         node(GuildPid),
-        <<"session_connection_guild_resolve:send_connect_cast/5">>,
+        <<"session_connection_guild_resolve:send_connect_cast/3">>,
         CastStartedAt
     ),
     case Result of
-        ok ->
-            TimeoutMsg = {guild_connect_timeout, GuildId, Attempt},
-            _ = erlang:send_after(?GUILD_CONNECT_ASYNC_TIMEOUT_MS, SessionPid, TimeoutMsg),
-            pending;
-        {error, overloaded} ->
-            {error, {guild_manager_failed, {error, overloaded}}}
+        ok -> pending;
+        {error, overloaded} -> {error, {guild_manager_failed, {error, overloaded}}}
     end.
 
 -spec notify_remote_timing(connect_ctx() | pid(), term(), node(), binary(), integer()) -> ok.

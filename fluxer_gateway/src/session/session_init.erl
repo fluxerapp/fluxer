@@ -233,6 +233,7 @@ extract_extra_fields(D, Ready) ->
         pending_presences => [],
         guild_connect_inflight => #{},
         guild_connect_workers => #{},
+        guild_connect_timers => #{},
         debounce_reactions => maps:get(debounce_reactions, D, false),
         reaction_buffer => [],
         reaction_buffer_timer => undefined
