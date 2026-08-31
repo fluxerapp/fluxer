@@ -8,8 +8,7 @@
 		"typecheck": "tsgo --noEmit",
 		"dev": "tsx watch --clear-screen=false src/AppEntrypoint.ts",
 		"start": "tsx src/AppEntrypoint.ts",
-		"start:worker": "tsx src/WorkerEntrypoint.ts",
-		"cleanup:expression-pack-residue": "tsx src/ExpressionPackResidueEntrypoint.ts"
+		"start:worker": "tsx src/WorkerEntrypoint.ts"
 	},
 	"dependencies": {
 		"@atproto/api": "catalog:",
