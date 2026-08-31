@@ -81,7 +81,7 @@ init(Req, _Opts) ->
 
 -spec websocket_init(state()) -> ws_result().
 websocket_init(#{version := 1} = State) ->
-    case gateway_handler_rate_limit:acquire_connection(maps:get(peer_ip, State, undefined)) of
+    case gateway_ip_connections:acquire(maps:get(peer_ip, State, undefined)) of
         ok ->
             do_websocket_init(State#{connection_acquired => true});
         {error, too_many_connections} ->
@@ -168,7 +168,7 @@ terminate_with_state(_) ->
 
 -spec maybe_release_connection(state()) -> ok.
 maybe_release_connection(#{connection_acquired := true} = State) ->
-    gateway_handler_rate_limit:note_disconnect(State);
+    gateway_ip_connections:note_disconnect(State);
 maybe_release_connection(_) ->
     ok.
 
