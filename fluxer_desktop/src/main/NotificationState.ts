@@ -16,13 +16,7 @@ const execFileAsync = promisify(execFile);
 const POLICY_CACHE_TTL_MS = 1_000;
 const COMMAND_TIMEOUT_MS = 1_000;
 const MACOS_FOCUS_DB_DIR = path.join(os.homedir(), 'Library', 'DoNotDisturb', 'DB');
-const WINDOWS_SUPPRESSING_STATES = new Set([
-	'not-present',
-	'busy',
-	'running-d3d-full-screen',
-	'presentation-mode',
-	'quiet-time',
-]);
+const WINDOWS_SUPPRESSING_STATES = new Set(['not-present', 'presentation-mode', 'quiet-time']);
 
 export interface NotificationSoundPolicy {
 	shouldPlaySound: boolean;
