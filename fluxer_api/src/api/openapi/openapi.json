@@ -34718,28 +34718,46 @@
 					"attachments": {
 						"type": "array",
 						"items": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"oneOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"$ref": "#/components/schemas/Int32Type"}],
-									"description": "Attachment ID for referencing uploaded files"
-								},
-								"filename": {"type": "string", "description": "Name of the file (1-1024 characters)"},
-								"description": {
-									"type": "string",
-									"description": "Description for the attachment (max 4096 characters)"
-								},
-								"content_type": {"type": "string", "description": "MIME type of the file"},
-								"size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
-								"url": {"type": "string", "description": "URL of the attachment"},
-								"proxy_url": {"type": "string", "description": "Proxied URL of the attachment"},
-								"height": {"type": "integer", "format": "int53", "description": "Height of the image/video in pixels"},
-								"width": {"type": "integer", "format": "int53", "description": "Width of the image/video in pixels"},
-								"ephemeral": {"type": "boolean", "description": "Whether this attachment is ephemeral"},
-								"duration": {"type": "number", "description": "Duration of audio file in seconds"},
-								"waveform": {"type": "string", "description": "Base64-encoded bytearray of audio waveform"},
-								"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags"}
-							}
+							"oneOf": [
+								{"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
+								{
+									"type": "object",
+									"properties": {
+										"id": {
+											"oneOf": [
+												{"$ref": "#/components/schemas/SnowflakeType"},
+												{"$ref": "#/components/schemas/Int32Type"}
+											],
+											"description": "Attachment ID for referencing uploaded files"
+										},
+										"filename": {"type": "string", "description": "Name of the file (1-1024 characters)"},
+										"description": {
+											"type": "string",
+											"description": "Description for the attachment (max 4096 characters)"
+										},
+										"content_type": {"type": "string", "description": "MIME type of the file"},
+										"upload_filename": {"not": {}},
+										"file_size": {"not": {}},
+										"size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
+										"url": {"type": "string", "description": "URL of the attachment"},
+										"proxy_url": {"type": "string", "description": "Proxied URL of the attachment"},
+										"height": {
+											"type": "integer",
+											"format": "int53",
+											"description": "Height of the image/video in pixels"
+										},
+										"width": {
+											"type": "integer",
+											"format": "int53",
+											"description": "Width of the image/video in pixels"
+										},
+										"ephemeral": {"type": "boolean", "description": "Whether this attachment is ephemeral"},
+										"duration": {"type": "number", "description": "Duration of audio file in seconds"},
+										"waveform": {"type": "string", "description": "Base64-encoded bytearray of audio waveform"},
+										"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags"}
+									}
+								}
+							]
 						},
 						"description": "Array of attachment objects"
 					},
