@@ -89,6 +89,7 @@ handle_cast(_Unknown, State) ->
     State :: state().
 handle_info({'DOWN', Ref, process, Pid, _Reason}, State) when is_reference(Ref), is_pid(Pid) ->
     demonitor(Ref, [flush]),
+    presence_manager_cache:clean_by_pid(Pid),
     Presences = maps:get(presences, State),
     ShardIndex = shard_index(State),
     RemovedUserIds = find_user_ids_by_pid(Pid, Presences),
@@ -381,6 +382,19 @@ find_user_ids_by_pid_test() ->
     ?assertEqual([100, 300], Found),
     ?assertEqual([200], find_user_ids_by_pid(Pid2, Presences)),
     Pid2 ! stop.
+
+process_down_clears_the_pid_cache_test() ->
+    Pid = spawn(fun test_wait_for_stop/0),
+    UserId = 987654321,
+    Ref = make_ref(),
+    ok = presence_manager_cache:put_if_local(UserId, Pid),
+    ?assertEqual({hit, Pid}, presence_manager_cache:lookup(UserId)),
+    {noreply, _NewState} = handle_info(
+        {'DOWN', Ref, process, Pid, normal},
+        #{presences => #{UserId => {Pid, Ref}}, shard_index => 0}
+    ),
+    ?assertEqual([], ets:lookup(presence_pid_cache, UserId)),
+    Pid ! stop.
 
 find_user_ids_by_pid_empty_test() ->
     ?assertEqual([], find_user_ids_by_pid(self(), #{})).
