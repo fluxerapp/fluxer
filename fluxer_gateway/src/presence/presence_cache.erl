@@ -126,14 +126,13 @@ handoff_to_target(TargetNode) ->
 -spec put_local(integer(), map(), state()) -> {ok, state()}.
 put_local(UserId, Presence, State) ->
     {_Reply, NewState} = presence_cache_shards:forward_put(UserId, Presence, State),
-    Tracked = presence_cache_rebalance:record_put_tombstone(UserId, Presence, NewState),
+    Tracked = presence_cache_anti_entropy:record_put(UserId, Presence, NewState),
     {ok, presence_cache_rebalance:increment_generation(Tracked)}.
 
 -spec delete_local(integer(), state()) -> {ok, state()}.
 delete_local(UserId, State) ->
-    {_Reply, NewState} = presence_cache_shards:forward_delete(UserId, State),
-    Tracked = presence_cache_rebalance:record_delete_tombstone(UserId, NewState),
-    {ok, presence_cache_rebalance:increment_generation(Tracked)}.
+    NewState = presence_cache_rebalance:evict_local(UserId, State),
+    {ok, presence_cache_anti_entropy:record_delete(UserId, NewState)}.
 
 -spec local_snapshot(state()) -> #{integer() => map()}.
 local_snapshot(State) ->

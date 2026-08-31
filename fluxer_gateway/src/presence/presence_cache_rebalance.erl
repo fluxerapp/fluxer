@@ -6,12 +6,11 @@
 -export([
     rebalance_ownership/1,
     handoff_all_to_target/2,
+    evict_local/2,
     perform_anti_entropy/1,
     handle_anti_entropy_request/3,
     handle_anti_entropy_digest_request/3,
     merge_anti_entropy_entries/2,
-    record_delete_tombstone/2,
-    record_put_tombstone/3,
     schedule_anti_entropy/0,
     cancel_anti_entropy_timer/1,
     start_nodedown_grace/2,
@@ -82,14 +81,6 @@ handle_anti_entropy_digest_request(FromNode, RemoteDigest, State) ->
 merge_anti_entropy_entries(Entries, State) ->
     presence_cache_anti_entropy:merge_anti_entropy_entries(Entries, State).
 
--spec record_delete_tombstone(integer(), state()) -> state().
-record_delete_tombstone(UserId, State) ->
-    presence_cache_anti_entropy:record_delete(UserId, State).
-
--spec record_put_tombstone(integer(), map(), state()) -> state().
-record_put_tombstone(UserId, Presence, State) ->
-    presence_cache_anti_entropy:record_put(UserId, Presence, State).
-
 -spec start_nodedown_grace(node(), state()) -> state().
 start_nodedown_grace(Node, State) ->
     PendingCleanups = maps:get(pending_nodedown_cleanups, State, #{}),
@@ -154,6 +145,11 @@ ensure_pending_retry_timer(State) ->
 -spec cancel_pending_retry_timer(state()) -> ok.
 cancel_pending_retry_timer(State) ->
     presence_cache_pending:cancel_pending_retry_timer(State).
+
+-spec evict_local(integer(), state()) -> state().
+evict_local(UserId, State) ->
+    {_Reply, NewState} = presence_cache_shards:forward_delete(UserId, State),
+    increment_generation(NewState).
 
 -spec increment_generation(state()) -> state().
 increment_generation(State) ->
@@ -251,8 +247,7 @@ handoff_entry_to_target(TargetNode, _UserId, _Presence, State) when TargetNode =
 handoff_entry_to_target(TargetNode, UserId, Presence, State) ->
     case remote_apply_op(TargetNode, {put_local, UserId, Presence}, State) of
         {ok, State1} ->
-            {_Reply, State2} = presence_cache:delete_local(UserId, State1),
-            State2;
+            evict_local(UserId, State1);
         {error, State1} ->
             State1
     end.
@@ -276,8 +271,7 @@ finalize_rebalance(UserId, {put, _Presence}, OwnerNodes, true, State) ->
         true ->
             {ok, State};
         false ->
-            {_Reply, State1} = presence_cache:delete_local(UserId, State),
-            {ok, State1}
+            {ok, evict_local(UserId, State)}
     end;
 finalize_rebalance(_UserId, {put, _Presence}, _OwnerNodes, false, State) ->
     {error, State}.

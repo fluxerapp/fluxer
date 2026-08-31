@@ -285,6 +285,93 @@ assert_tombstone_cleared_on_put(Pid) ->
     {_SecondPut, State3} = presence_cache:put_local(UserId, Presence, State2),
     ?assertNot(maps:is_key(UserId, maps:get(delete_tombstones, State3))).
 
+rebalance_drop_does_not_suppress_repair_test() ->
+    RemoteNode = 'moved_presence_rebalance@127.0.0.1',
+    with_presence_cache(fun(Pid) -> assert_rebalance_drop_repairs(RemoteNode, Pid) end).
+
+handoff_drop_does_not_suppress_repair_test() ->
+    with_local_presence_cache(fun(Pid) -> assert_handoff_drop_repairs(Pid) end).
+
+rebalance_delete_still_tombstones_test() ->
+    RemoteNode = 'deleted_presence_rebalance@127.0.0.1',
+    with_presence_cache(fun(Pid) -> assert_rebalance_delete_tombstones(RemoteNode, Pid) end).
+
+handle_delete_still_tombstones_test() ->
+    with_local_presence_cache(fun(Pid) -> assert_handle_delete_tombstones(Pid) end).
+
+assert_rebalance_drop_repairs(RemoteNode, Pid) ->
+    State0 = cache_state(sys:get_state(Pid)),
+    {UserId, Presence, State2} = with_presence_member_nodes([node(), RemoteNode], fun() ->
+        MovedUserId = remote_owned_user_id(RemoteNode),
+        MovedPresence = anti_entropy_presence(MovedUserId),
+        {_PutReply, State1} = presence_cache:put_local(MovedUserId, MovedPresence, State0),
+        Dropped = with_reachable_remote(fun() ->
+            presence_cache_rebalance:rebalance_ownership(State1)
+        end),
+        {MovedUserId, MovedPresence, Dropped}
+    end),
+    ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State2)),
+    with_presence_member_nodes([node()], fun() ->
+        State3 = presence_cache_rebalance:merge_anti_entropy_entries(
+            #{UserId => Presence}, State2
+        ),
+        ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3))
+    end),
+    ?assertNot(maps:is_key(UserId, maps:get(delete_tombstones, State2))).
+
+assert_handoff_drop_repairs(Pid) ->
+    UserId = 77005,
+    Presence = anti_entropy_presence(UserId),
+    State0 = cache_state(sys:get_state(Pid)),
+    {_PutReply, State1} = presence_cache:put_local(UserId, Presence, State0),
+    State2 = with_reachable_remote(fun() ->
+        presence_cache_rebalance:handoff_all_to_target('handoff_target@127.0.0.1', State1)
+    end),
+    ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State2)),
+    State3 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State2),
+    ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3)),
+    ?assertNot(maps:is_key(UserId, maps:get(delete_tombstones, State2))).
+
+assert_rebalance_delete_tombstones(RemoteNode, Pid) ->
+    State0 = cache_state(sys:get_state(Pid)),
+    {UserId, Presence, State3} = with_presence_member_nodes([node(), RemoteNode], fun() ->
+        GoneUserId = remote_owned_user_id(RemoteNode),
+        GonePresence = anti_entropy_presence(GoneUserId),
+        {_PutReply, State1} = presence_cache:put_local(GoneUserId, GonePresence, State0),
+        State2 = presence_cache_rebalance:queue_pending_operation(GoneUserId, delete, State1),
+        Deleted = with_reachable_remote(fun() ->
+            presence_cache_rebalance:rebalance_ownership(State2)
+        end),
+        {GoneUserId, GonePresence, Deleted}
+    end),
+    presence_cache_rebalance:cancel_pending_retry_timer(State3),
+    ?assert(maps:is_key(UserId, maps:get(delete_tombstones, State3))),
+    with_presence_member_nodes([node()], fun() ->
+        State4 = presence_cache_rebalance:merge_anti_entropy_entries(
+            #{UserId => Presence}, State3
+        ),
+        ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State4))
+    end).
+
+assert_handle_delete_tombstones(Pid) ->
+    UserId = 77006,
+    Presence = anti_entropy_presence(UserId),
+    State0 = cache_state(sys:get_state(Pid)),
+    {_PutReply, State1} = presence_cache:put_local(UserId, Presence, State0),
+    State2 = presence_cache_ops:handle_delete(UserId, State1),
+    ?assert(maps:is_key(UserId, maps:get(delete_tombstones, State2))),
+    State3 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State2),
+    ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State3)).
+
+with_reachable_remote(Fun) ->
+    meck:new(presence_cache_bulk, [passthrough, no_link]),
+    meck:expect(presence_cache_bulk, safe_remote_call, fun(_Node, _Request, _Fallback) -> ok end),
+    try
+        Fun()
+    after
+        meck:unload(presence_cache_bulk)
+    end.
+
 anti_entropy_presence(UserId) ->
     #{
         <<"status">> => <<"online">>,
