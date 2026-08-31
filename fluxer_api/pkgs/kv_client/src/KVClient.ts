@@ -223,6 +223,17 @@ tokens = tokens - #urls
 redis.call('SET', bucketKey, cjson.encode({tokens = tokens, lastRefill = lastRefill}), 'EX', 3600)
 return cjson.encode({urls = urls, tokens = #urls})
 `;
+const CLAIM_BULK_DELETION_SCRIPT = `
+local score = redis.call('ZSCORE', KEYS[1], ARGV[1])
+if not score then
+	return 0
+end
+if tonumber(score) > tonumber(ARGV[2]) then
+	return 0
+end
+redis.call('ZADD', KEYS[1], ARGV[3], ARGV[1])
+return 1
+`;
 const REMOVE_BULK_DELETION_SCRIPT = `
 local member = ARGV[1]
 if member ~= '' and redis.call('ZREM', KEYS[1], member) == 1 then
@@ -611,6 +622,19 @@ export class KVClient implements IKVProvider {
 			score,
 			value,
 		);
+	}
+
+	async claimBulkDeletion(queueKey: string, member: string, maxScore: number, leaseScore: number): Promise<boolean> {
+		const result = await this.executeScript(
+			'claimBulkDeletion',
+			CLAIM_BULK_DELETION_SCRIPT,
+			1,
+			queueKey,
+			member,
+			maxScore,
+			leaseScore,
+		);
+		return Number(result) === 1;
 	}
 
 	async removeBulkDeletion(queueKey: string, secondaryKey: string, member = ''): Promise<boolean> {

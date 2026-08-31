@@ -26,6 +26,7 @@ interface ReconcileResult {
 
 const MAX_USERS_PER_RUN = 250;
 const RETRY_DELAY_MS = 5 * 60 * 1000;
+const CLAIM_LEASE_MS = 10 * 60 * 1000;
 
 function getStripeSubscriptionCustomerId(subscription: Stripe.Subscription): string | null {
 	if (!subscription.customer) {
@@ -305,14 +306,18 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 	let strippedNoSubscriptionCount = 0;
 	let failedCount = 0;
 	let requeuedCount = 0;
+	let claimedElsewhereCount = 0;
 	for (const userId of readyUserIds) {
+		const claimedAt = Date.now();
+		let claimed = false;
 		try {
-			await premiumStateReconciliationQueueService.removeUser(userId);
+			claimed = await premiumStateReconciliationQueueService.claimUser(userId, claimedAt, claimedAt + CLAIM_LEASE_MS);
 		} catch (error) {
-			Logger.warn(
-				{error, userId: userId.toString()},
-				'Failed to remove user from premium reconciliation queue before processing',
-			);
+			Logger.warn({error, userId: userId.toString()}, 'Failed to claim premium reconciliation queue entry');
+		}
+		if (!claimed) {
+			claimedElsewhereCount += 1;
+			continue;
 		}
 		try {
 			const result = await reconcileUserPremiumStateFromStripe({
@@ -344,6 +349,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 			} else {
 				skippedCount += 1;
 			}
+			await premiumStateReconciliationQueueService.removeUser(userId);
 		} catch (error) {
 			failedCount += 1;
 			Logger.error(
@@ -371,6 +377,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 			strippedNoSubscriptionCount,
 			failedCount,
 			requeuedCount,
+			claimedElsewhereCount,
 		},
 		'Finished processing premium reconciliation queue',
 	);

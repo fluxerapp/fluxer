@@ -140,6 +140,12 @@ describe('KVClient script execution', () => {
 					run: async (client) => client.scheduleBulkDeletion('queue:key', 'secondary:key', 1, 'value'),
 				},
 				{
+					name: 'claimBulkDeletion',
+					reply: 1,
+					keyCount: 1,
+					run: async (client) => client.claimBulkDeletion('queue:key', 'member', 1, 2),
+				},
+				{
 					name: 'removeBulkDeletion',
 					reply: 1,
 					keyCount: 2,

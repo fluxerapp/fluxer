@@ -29,6 +29,16 @@ export class PremiumStateReconciliationQueueService {
 		}
 	}
 
+	async claimUser(userId: UserID, nowMs: number, leaseUntilMs: number): Promise<boolean> {
+		try {
+			const value = this.serializeQueueValue(userId);
+			return await this.kvClient.claimBulkDeletion(QUEUE_KEY, value, nowMs, leaseUntilMs);
+		} catch (error) {
+			Logger.error({error, userId: userId.toString()}, 'Failed to claim user for premium state reconciliation');
+			throw error;
+		}
+	}
+
 	async removeUser(userId: UserID): Promise<boolean> {
 		try {
 			const secondaryKey = this.getSecondaryKey(userId);
