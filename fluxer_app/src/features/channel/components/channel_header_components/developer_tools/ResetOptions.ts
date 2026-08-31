@@ -31,7 +31,6 @@ export const DEFAULT_DEVELOPER_OPTIONS = {
 	selfHostedModeOverride: false,
 	forceShowVanityURLDisclaimer: false,
 	forceShowVoiceConnection: false,
-	showExpressionPacksSettings: false,
 	showProfileTimezoneSettings: false,
 	premiumScenarioOverride: null,
 	premiumTypeOverride: null,

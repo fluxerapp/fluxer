@@ -122,15 +122,6 @@ const FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR = msg({
 	message: 'Force show voice connection',
 	comment: 'Developer option label for always showing the voice connection status bar.',
 });
-const SHOW_EXPRESSION_PACKS_SETTINGS_DESCRIPTOR = msg({
-	message: 'Show expression packs settings',
-	comment: 'Developer option label for exposing the staff-only Expression packs page in user settings.',
-});
-const SHOW_EXPRESSION_PACKS_SETTINGS_DESC_DESCRIPTOR = msg({
-	message: 'Expose the staff-only Expression packs page in user settings.',
-	comment:
-		'Developer / debug surface — keep terse and technical. Tooltip / description for the Expression packs settings toggle.',
-});
 const SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR = msg({
 	message: 'Show profile timezone settings',
 	comment: 'Developer option label for exposing the staff-only profile timezone section in profile settings.',
@@ -253,11 +244,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 				key: 'forceShowVoiceConnection',
 				label: FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR,
 				description: ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR,
-			},
-			{
-				key: 'showExpressionPacksSettings',
-				label: SHOW_EXPRESSION_PACKS_SETTINGS_DESCRIPTOR,
-				description: SHOW_EXPRESSION_PACKS_SETTINGS_DESC_DESCRIPTOR,
 			},
 			{
 				key: 'showProfileTimezoneSettings',

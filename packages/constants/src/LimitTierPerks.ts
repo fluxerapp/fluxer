@@ -138,14 +138,6 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		unit: 'bytes',
 	},
 	{
-		id: 'emoji_sticker_packs',
-		type: 'boolean',
-		status: 'coming_soon',
-		i18nKey: 'emoji_sticker_packs',
-		restrictedValue: false,
-		stockValue: true,
-	},
-	{
 		id: 'max_favorite_memes',
 		type: 'numeric',
 		status: 'beta',

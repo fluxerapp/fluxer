@@ -9,7 +9,6 @@ import {ChannelService} from '../channel/services/ChannelService';
 import type {IFavoriteMemeRepository} from '../favorite_meme/IFavoriteMemeRepository';
 import type {GuildAuditLogService} from '../guild/GuildAuditLogService';
 import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {ExpressionAssetPurger} from '../guild/services/content/ExpressionAssetPurger';
 import {GuildService} from '../guild/services/GuildService';
 import type {AvatarService} from '../infrastructure/AvatarService';
 import type {IPurgeQueue} from '../infrastructure/BunnyPurgeQueue';
@@ -23,8 +22,6 @@ import type {UserCacheService} from '../infrastructure/UserCacheService';
 import type {InviteRepository} from '../invite/InviteRepository';
 import {InviteService} from '../invite/InviteService';
 import type {LimitConfigService} from '../limits/LimitConfigService';
-import type {PackRepository} from '../pack/PackRepository';
-import {PackService} from '../pack/PackService';
 import type {ReadStateService} from '../read_state/ReadStateService';
 import type {IUserRepository} from '../user/IUserRepository';
 import type {VoiceAvailabilityService} from '../voice/VoiceAvailabilityService';
@@ -32,7 +29,6 @@ import type {IWebhookRepository} from '../webhook/IWebhookRepository';
 
 interface GuildStackServiceFactoryDependencies {
 	apiContext: ApiContext;
-	packRepository: PackRepository;
 	channelRepository: IChannelRepository;
 	userRepository: IUserRepository;
 	guildRepository: IGuildRepositoryAggregate;
@@ -42,7 +38,6 @@ interface GuildStackServiceFactoryDependencies {
 	avatarService: AvatarService;
 	entityAssetService: EntityAssetService;
 	assetDeletionQueue: IAssetDeletionQueue;
-	expressionAssetPurger: ExpressionAssetPurger;
 	userCacheService: UserCacheService;
 	limitConfigService: LimitConfigService;
 	embedService: EmbedService;
@@ -59,32 +54,17 @@ interface GuildStackServiceFactoryDependencies {
 }
 
 export interface GuildStackServices {
-	packService: PackService;
 	channelService: ChannelService;
 	guildService: GuildService;
 	inviteService: InviteService;
 }
 
 class LazyGuildStackServices implements GuildStackServices {
-	private cachedPackService: PackService | undefined;
 	private cachedChannelService: ChannelService | undefined;
 	private cachedGuildService: GuildService | undefined;
 	private cachedInviteService: InviteService | undefined;
 
 	constructor(private readonly dependencies: GuildStackServiceFactoryDependencies) {}
-
-	get packService(): PackService {
-		this.cachedPackService ??= new PackService(
-			this.dependencies.apiContext,
-			this.dependencies.packRepository,
-			this.dependencies.guildRepository,
-			this.dependencies.avatarService,
-			this.dependencies.expressionAssetPurger,
-			this.dependencies.userCacheService,
-			this.dependencies.limitConfigService,
-		);
-		return this.cachedPackService;
-	}
 
 	get channelService(): ChannelService {
 		this.cachedChannelService ??= new ChannelService(
@@ -92,7 +72,6 @@ class LazyGuildStackServices implements GuildStackServices {
 			this.dependencies.channelRepository,
 			this.dependencies.userRepository,
 			this.dependencies.guildRepository,
-			this.packService,
 			this.dependencies.userCacheService,
 			this.dependencies.embedService,
 			this.dependencies.readStateService,
@@ -139,8 +118,6 @@ class LazyGuildStackServices implements GuildStackServices {
 			this.guildService,
 			this.channelService,
 			this.dependencies.guildAuditLogService,
-			this.dependencies.packRepository,
-			this.packService,
 			this.dependencies.limitConfigService,
 		);
 		return this.cachedInviteService;

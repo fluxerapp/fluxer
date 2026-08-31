@@ -12,12 +12,9 @@ import {MaxGuildInvitesError} from '@fluxer/errors/src/domains/guild/MaxGuildInv
 import {InvitesDisabledError} from '@fluxer/errors/src/domains/invite/InvitesDisabledError';
 import {TemporaryInviteRequiresPresenceError} from '@fluxer/errors/src/domains/invite/TemporaryInviteRequiresPresenceError';
 import {UnknownInviteError} from '@fluxer/errors/src/domains/invite/UnknownInviteError';
-import {PackAccessDeniedError} from '@fluxer/errors/src/domains/pack/PackAccessDeniedError';
-import {UnknownPackError} from '@fluxer/errors/src/domains/pack/UnknownPackError';
 import type {
 	GroupDmInviteMetadataResponse,
 	GuildInviteMetadataResponse,
-	PackInviteMetadataResponse,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import type {ApiContext} from '../ApiContext';
 import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
@@ -32,8 +29,6 @@ import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
 import type {RequestCache} from '../middleware/RequestCacheMiddleware';
 import type {Channel} from '../models/Channel';
 import {Invite} from '../models/Invite';
-import type {PackRepository, PackType} from '../pack/PackRepository';
-import type {PackService} from '../pack/PackService';
 import * as RandomUtils from '../utils/RandomUtils';
 import type {IInviteRepository} from './IInviteRepository';
 
@@ -54,15 +49,6 @@ interface CreateInviteParams {
 	maxAge: number;
 	unique: boolean;
 	temporary?: boolean;
-}
-
-interface CreatePackInviteParams {
-	inviterId: UserID;
-	packId: GuildID;
-	packType: PackType;
-	maxUses: number;
-	maxAge: number;
-	unique: boolean;
 }
 
 interface AcceptInviteParams {
@@ -108,11 +94,6 @@ interface ReusableInviteCriteria {
 	type?: number;
 }
 
-const PACK_TYPE_TO_INVITE_TYPE: Record<PackType, number> = {
-	emoji: InviteTypes.EMOJI_PACK,
-	sticker: InviteTypes.STICKER_PACK,
-};
-
 export class InviteService {
 	constructor(
 		private readonly apiContext: ApiContext,
@@ -120,8 +101,6 @@ export class InviteService {
 		private guildService: GuildService,
 		private channelService: ChannelService,
 		private readonly guildAuditLogService: GuildAuditLogService,
-		private readonly packRepository: PackRepository,
-		private readonly packService: PackService,
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 
@@ -255,51 +234,6 @@ export class InviteService {
 		return {invite: newInvite, isNew: true};
 	}
 
-	async createPackInvite({inviterId, packId, packType, maxUses, maxAge, unique}: CreatePackInviteParams): Promise<{
-		invite: Invite;
-		isNew: boolean;
-	}> {
-		const pack = await this.packRepository.getPack(packId);
-		if (!pack) {
-			throw new UnknownPackError();
-		}
-		if (pack.creatorId !== inviterId) {
-			throw new PackAccessDeniedError();
-		}
-		if (pack.type !== packType) {
-			throw new PackAccessDeniedError();
-		}
-		const allInvites = await this.inviteRepository.listGuildInvites(packId);
-		const inviteType = PACK_TYPE_TO_INVITE_TYPE[packType];
-		if (!unique) {
-			const existingInvite = this.findReusableInvite(allInvites, {
-				inviterId,
-				maxUses,
-				maxAge,
-				type: inviteType,
-			});
-			if (existingInvite) {
-				return {invite: existingInvite, isNew: false};
-			}
-		}
-		const packInviteLimit = this.resolveInviteLimit(null);
-		if (allInvites.length >= packInviteLimit) {
-			throw new MaxGuildInvitesError(packInviteLimit);
-		}
-		const newInvite = await this.inviteRepository.create({
-			code: this.createRandomInviteCode(),
-			type: inviteType,
-			guild_id: packId,
-			channel_id: null,
-			inviter_id: inviterId,
-			uses: 0,
-			max_uses: maxUses,
-			max_age: maxAge,
-			temporary: false,
-		});
-		return {invite: newInvite, isNew: true};
-	}
-
 	async acceptInvite({userId, inviteCode, requestCache}: AcceptInviteParams): Promise<Invite> {
 		const invite = await this.findInviteWithLowercaseFallback(inviteCode);
 		if (!invite) throw new UnknownInviteError();
@@ -332,11 +266,6 @@ export class InviteService {
 				inviterId: invite.inviterId,
 				requestCache,
 			});
-			return this.incrementInviteUses(invite, {deleteWhenExhausted: true});
-		}
-		if (invite.type === InviteTypes.EMOJI_PACK || invite.type === InviteTypes.STICKER_PACK) {
-			if (!invite.guildId) throw new UnknownInviteError();
-			await this.packService.installPack(userId, invite.guildId);
 			return this.incrementInviteUses(invite, {deleteWhenExhausted: true});
 		}
 		if (!invite.guildId) throw new UnknownInviteError();
@@ -433,18 +362,6 @@ export class InviteService {
 	async deleteInvite({userId, inviteCode}: DeleteInviteParams, auditLogReason?: string | null): Promise<void> {
 		const invite = await this.findInviteWithLowercaseFallback(inviteCode);
 		if (!invite) throw new UnknownInviteError();
-		if (invite.type === InviteTypes.EMOJI_PACK || invite.type === InviteTypes.STICKER_PACK) {
-			if (!invite.guildId) throw new UnknownInviteError();
-			const pack = await this.packRepository.getPack(invite.guildId);
-			if (!pack) {
-				throw new UnknownPackError();
-			}
-			if (pack.creatorId !== userId) {
-				throw new PackAccessDeniedError();
-			}
-			await this.inviteRepository.delete(invite.code);
-			return;
-		}
 		if (invite.type === InviteTypes.GROUP_DM) {
 			if (!invite.channelId) throw new UnknownInviteError();
 			const channel = await this.channelService.channelData.operations.getChannel({
@@ -497,25 +414,9 @@ export class InviteService {
 		return invites.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	}
 
-	async getPackInvitesSorted(params: {userId: UserID; packId: GuildID}): Promise<Array<Invite>> {
-		const {userId, packId} = params;
-		const pack = await this.packRepository.getPack(packId);
-		if (!pack) {
-			throw new UnknownPackError();
-		}
-		if (pack.creatorId !== userId) {
-			throw new PackAccessDeniedError();
-		}
-		const invites = await this.inviteRepository.listGuildInvites(packId);
-		const inviteType = PACK_TYPE_TO_INVITE_TYPE[pack.type];
-		return invites
-			.filter((invite) => invite.type === inviteType)
-			.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-	}
-
 	async dispatchInviteCreate(
 		invite: Invite,
-		inviteData: GuildInviteMetadataResponse | GroupDmInviteMetadataResponse | PackInviteMetadataResponse,
+		inviteData: GuildInviteMetadataResponse | GroupDmInviteMetadataResponse,
 	): Promise<void> {
 		if (invite.guildId && invite.type === InviteTypes.GUILD) {
 			await this.apiContext.services.gateway.dispatchGuild({

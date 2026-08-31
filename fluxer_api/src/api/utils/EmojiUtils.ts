@@ -8,7 +8,6 @@ import type {LimitConfigService} from '../limits/LimitConfigService';
 import {resolveLimitSafe} from '../limits/LimitConfigUtils';
 import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
 import type {GuildEmoji} from '../models/GuildEmoji';
-import type {PackExpressionAccessResolution, PackExpressionAccessResolver} from '../pack/PackExpressionAccessResolver';
 import type {IUserAccountRepository} from '../user/repositories/IUserAccountRepository';
 
 type EmojiGuildRepository = Pick<IGuildRepositoryAggregate, 'getEmoji' | 'getEmojiById'>;
@@ -26,7 +25,6 @@ interface SanitizeCustomEmojisParams {
 	guildRepository: EmojiGuildRepository;
 	limitConfigService: LimitConfigService;
 	hasPermission?: (permission: bigint) => Promise<boolean>;
-	packResolver?: PackExpressionAccessResolver;
 }
 
 interface EmojiMatch {
@@ -43,17 +41,8 @@ interface CodeBlock {
 }
 
 export async function sanitizeCustomEmojis(params: SanitizeCustomEmojisParams): Promise<string> {
-	const {
-		content,
-		userId,
-		webhookId,
-		guildId,
-		userRepository,
-		guildRepository,
-		limitConfigService,
-		hasPermission,
-		packResolver,
-	} = params;
+	const {content, userId, webhookId, guildId, userRepository, guildRepository, limitConfigService, hasPermission} =
+		params;
 	const escapedContexts = parseEscapedContexts(content);
 	const isInEscapedContext = (index: number): boolean =>
 		escapedContexts.some((ctx) => index >= ctx.start && index < ctx.end);
@@ -80,7 +69,6 @@ export async function sanitizeCustomEmojis(params: SanitizeCustomEmojisParams): 
 		isWebhook,
 		hasGlobalExpressions,
 		canUseExternalEmojis,
-		packResolver,
 	});
 	return applyReplacements(content, replacements);
 }
@@ -171,7 +159,6 @@ async function determineReplacements(params: {
 	isWebhook: boolean;
 	hasGlobalExpressions: number;
 	canUseExternalEmojis: boolean | null;
-	packResolver?: PackExpressionAccessResolver;
 }): Promise<Array<Replacement>> {
 	const {emojiMatches, emojiLookups, guildId, isWebhook, hasGlobalExpressions, canUseExternalEmojis} = params;
 	const replacements: Array<Replacement> = [];
@@ -184,7 +171,6 @@ async function determineReplacements(params: {
 			isWebhook,
 			hasGlobalExpressions,
 			canUseExternalEmojis,
-			packResolver: params.packResolver,
 		});
 		if (shouldReplace) {
 			replacements.push({
@@ -203,9 +189,8 @@ async function shouldReplaceEmoji(params: {
 	isWebhook: boolean;
 	hasGlobalExpressions: number;
 	canUseExternalEmojis: boolean | null;
-	packResolver?: PackExpressionAccessResolver;
 }): Promise<boolean> {
-	const {lookup, guildId, isWebhook, hasGlobalExpressions, canUseExternalEmojis, packResolver} = params;
+	const {lookup, guildId, isWebhook, hasGlobalExpressions, canUseExternalEmojis} = params;
 	if (!guildId) {
 		if (!lookup.globalEmoji) return true;
 		if (!isWebhook && hasGlobalExpressions === 0) return true;
@@ -215,21 +200,9 @@ async function shouldReplaceEmoji(params: {
 		return false;
 	}
 	if (!lookup.globalEmoji) return true;
-	const packAccess = await resolvePackAccessStatus(lookup.globalEmoji.guildId, packResolver);
-	if (packAccess === 'not-accessible') {
-		return true;
-	}
 	if (!isWebhook && hasGlobalExpressions === 0) return true;
 	if (hasGlobalExpressions > 0 && canUseExternalEmojis === false) return true;
 	return false;
-}
-
-async function resolvePackAccessStatus(
-	packId: GuildID,
-	packResolver?: PackExpressionAccessResolver,
-): Promise<PackExpressionAccessResolution> {
-	if (!packResolver) return 'not-pack';
-	return await packResolver.resolve(packId);
 }
 
 function applyReplacements(content: string, replacements: Array<Replacement>): string {

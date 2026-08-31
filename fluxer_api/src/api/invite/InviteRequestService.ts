@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
-import {UnknownPackError} from '@fluxer/errors/src/domains/pack/UnknownPackError';
 import type {ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildPartialResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {
 	ChannelInviteCreateRequest,
 	InviteMetadataResponseSchema,
 	InviteResponseSchema,
-	PackInviteCreateRequest,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
 import {mapChannelToPartialResponse} from '../channel/ChannelMappers';
@@ -19,14 +17,11 @@ import type {UserCacheService} from '../infrastructure/UserCacheService';
 import type {RequestCache} from '../middleware/RequestCacheMiddleware';
 import type {Channel} from '../models/Channel';
 import type {Invite} from '../models/Invite';
-import type {PackRepository} from '../pack/PackRepository';
 import {
 	mapInviteToGroupDmInviteMetadataResponse,
 	mapInviteToGroupDmInviteResponse,
 	mapInviteToGuildInviteMetadataResponse,
 	mapInviteToGuildInviteResponse,
-	mapInviteToPackInviteMetadataResponse,
-	mapInviteToPackInviteResponse,
 } from './InviteModel';
 import type {InviteService} from './InviteService';
 
@@ -41,7 +36,6 @@ interface MappingHelpers {
 		memberCount: number;
 		presenceCount: number;
 	}>;
-	packRepository: PackRepository;
 	gatewayService: IGatewayService;
 }
 
@@ -51,7 +45,6 @@ export class InviteRequestService {
 		private readonly channelService: ChannelService,
 		private readonly guildService: GuildService,
 		private readonly gatewayService: IGatewayService,
-		private readonly packRepository: PackRepository,
 		private readonly userCacheService: UserCacheService,
 	) {}
 
@@ -127,43 +120,6 @@ export class InviteRequestService {
 		return this.mapInviteList(invites, params.requestCache);
 	}
 
-	async listPackInvites(params: {
-		userId: UserID;
-		packId: GuildID;
-		requestCache: RequestCache;
-	}): Promise<Array<InviteMetadataResponseSchema>> {
-		const invites = await this.inviteService.getPackInvitesSorted({
-			userId: params.userId,
-			packId: params.packId,
-		});
-		return this.mapInviteList(invites, params.requestCache);
-	}
-
-	async createPackInvite(params: {
-		inviterId: UserID;
-		packId: GuildID;
-		requestCache: RequestCache;
-		data: PackInviteCreateRequest;
-	}): Promise<InviteMetadataResponseSchema> {
-		const pack = await this.packRepository.getPack(params.packId);
-		if (!pack) {
-			throw new UnknownPackError();
-		}
-		const {invite, isNew} = await this.inviteService.createPackInvite({
-			inviterId: params.inviterId,
-			packId: params.packId,
-			packType: pack.type,
-			maxUses: params.data.max_uses ?? 0,
-			maxAge: params.data.max_age ?? 0,
-			unique: params.data.unique ?? false,
-		});
-		const inviteData = await this.mapInviteMetadataResponse(invite, params.requestCache);
-		if (isNew) {
-			await this.inviteService.dispatchInviteCreate(invite, inviteData);
-		}
-		return inviteData;
-	}
-
 	private createMappingHelpers(requestCache: RequestCache): MappingHelpers {
 		return {
 			userCacheService: this.userCacheService,
@@ -176,7 +132,6 @@ export class InviteRequestService {
 				await this.channelService.channelData.operations.getChannelMemberCount(channelId),
 			getGuildResponse: async (guildId: GuildID) => await this.guildService.data.getPublicGuildData(guildId),
 			getGuildCounts: async (guildId: GuildID) => await this.gatewayService.getGuildCounts(guildId),
-			packRepository: this.packRepository,
 			gatewayService: this.gatewayService,
 		};
 	}
@@ -185,9 +140,6 @@ export class InviteRequestService {
 		const helpers = this.createMappingHelpers(requestCache);
 		if (invite.type === InviteTypes.GROUP_DM) {
 			return mapInviteToGroupDmInviteResponse({invite, ...helpers});
-		}
-		if (invite.type === InviteTypes.EMOJI_PACK || invite.type === InviteTypes.STICKER_PACK) {
-			return mapInviteToPackInviteResponse({invite, ...helpers});
 		}
 		return mapInviteToGuildInviteResponse({invite, ...helpers});
 	}
@@ -199,9 +151,6 @@ export class InviteRequestService {
 		const helpers = this.createMappingHelpers(requestCache);
 		if (invite.type === InviteTypes.GROUP_DM) {
 			return mapInviteToGroupDmInviteMetadataResponse({invite, ...helpers});
-		}
-		if (invite.type === InviteTypes.EMOJI_PACK || invite.type === InviteTypes.STICKER_PACK) {
-			return mapInviteToPackInviteMetadataResponse({invite, ...helpers});
 		}
 		return mapInviteToGuildInviteMetadataResponse({invite, ...helpers});
 	}

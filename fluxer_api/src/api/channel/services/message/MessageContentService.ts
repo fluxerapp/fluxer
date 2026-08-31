@@ -9,7 +9,6 @@ import type {GuildID, UserID, WebhookID} from '../../../BrandedTypes';
 import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
 import type {LimitConfigService} from '../../../limits/LimitConfigService';
 import type {Channel} from '../../../models/Channel';
-import type {PackService} from '../../../pack/PackService';
 import type {IUserRepository} from '../../../user/IUserRepository';
 import * as EmojiUtils from '../../../utils/EmojiUtils';
 
@@ -22,7 +21,6 @@ export class MessageContentService {
 	constructor(
 		private userRepository: IUserRepository,
 		private guildRepository: IGuildRepositoryAggregate,
-		private packService: PackService,
 		private limitConfigService: LimitConfigService,
 	) {}
 
@@ -33,15 +31,10 @@ export class MessageContentService {
 		guildId: GuildID | null;
 		hasPermission?: (permission: bigint) => Promise<boolean>;
 	}): Promise<string> {
-		const packResolver = await this.packService.createPackExpressionAccessResolver({
-			userId: params.userId,
-			type: 'emoji',
-		});
 		return await EmojiUtils.sanitizeCustomEmojis({
 			...params,
 			userRepository: this.userRepository,
 			guildRepository: this.guildRepository,
-			packResolver,
 			limitConfigService: this.limitConfigService,
 		});
 	}

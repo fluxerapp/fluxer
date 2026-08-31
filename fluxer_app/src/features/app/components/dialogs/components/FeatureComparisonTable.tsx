@@ -56,10 +56,6 @@ const FILE_UPLOAD_SIZE_DESCRIPTOR = msg({
 	message: 'File upload size',
 	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
 });
-const EMOJI_STICKER_PACKS_DESCRIPTOR = msg({
-	message: 'Emoji & sticker packs',
-	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
-});
 const SAVED_MEDIA_DESCRIPTOR = msg({
 	message: 'Saved media',
 	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
@@ -108,7 +104,6 @@ export const FeatureComparisonTable = observer(() => {
 			message_character_limit: i18n._(MESSAGE_CHARACTER_LIMIT_DESCRIPTOR),
 			bookmarked_messages: i18n._(BOOKMARKED_MESSAGES_DESCRIPTOR),
 			file_upload_size: i18n._(FILE_UPLOAD_SIZE_DESCRIPTOR),
-			emoji_sticker_packs: i18n._(EMOJI_STICKER_PACKS_DESCRIPTOR),
 			saved_media: i18n._(SAVED_MEDIA_DESCRIPTOR),
 			use_animated_emojis: i18n._(USE_ANIMATED_EMOJIS_DESCRIPTOR),
 			global_emoji_sticker_access: i18n._(GLOBAL_EMOJI_STICKER_ACCESS_DESCRIPTOR),

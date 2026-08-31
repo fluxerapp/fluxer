@@ -11,14 +11,12 @@ import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuild
 import type {LimitConfigService} from '../../../limits/LimitConfigService';
 import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
 import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {PackService} from '../../../pack/PackService';
 import type {IUserRepository} from '../../../user/IUserRepository';
 
 export class MessageStickerService {
 	constructor(
 		private userRepository: IUserRepository,
 		private guildRepository: IGuildRepositoryAggregate,
-		private packService: PackService,
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 
@@ -30,10 +28,6 @@ export class MessageStickerService {
 		isNSFWAllowed?: boolean;
 	}): Promise<Array<MessageStickerItem>> {
 		const {stickerIds, userId, guildId, hasPermission, isNSFWAllowed = true} = params;
-		const packResolver = await this.packService.createPackExpressionAccessResolver({
-			userId,
-			type: 'sticker',
-		});
 		let hasGlobalExpressions = 0;
 		if (userId) {
 			const user = await this.userRepository.findUnique(userId);
@@ -53,10 +47,6 @@ export class MessageStickerService {
 					}
 					const stickerFromAnyGuild = await this.guildRepository.getStickerById(stickerId);
 					if (!stickerFromAnyGuild) {
-						throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
-					}
-					const packAccess = await packResolver.resolve(stickerFromAnyGuild.guildId);
-					if (packAccess === 'not-accessible') {
 						throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
 					}
 					if (!isNSFWAllowed && stickerFromAnyGuild.isNsfw) {
@@ -96,10 +86,6 @@ export class MessageStickerService {
 					if (!canUseExternalStickers) {
 						throw new MissingPermissionsError();
 					}
-				}
-				const packAccess = await packResolver.resolve(stickerFromOtherGuild.guildId);
-				if (packAccess === 'not-accessible') {
-					throw InputValidationError.fromCode('sticker', ValidationErrorCodes.CUSTOM_STICKER_NOT_FOUND);
 				}
 				if (!isNSFWAllowed && stickerFromOtherGuild.isNsfw) {
 					throw new NsfwEmojiStickerBlockedError();

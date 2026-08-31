@@ -2,7 +2,6 @@
 
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownInviteError} from '@fluxer/errors/src/domains/invite/UnknownInviteError';
-import {UnknownPackError} from '@fluxer/errors/src/domains/pack/UnknownPackError';
 import type {ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildPartialResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {
@@ -10,8 +9,6 @@ import type {
 	GroupDmInviteResponse,
 	GuildInviteMetadataResponse,
 	GuildInviteResponse,
-	PackInviteMetadataResponse,
-	PackInviteResponse,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import type {z} from 'zod';
 import type {ChannelID, GuildID} from '../BrandedTypes';
@@ -20,8 +17,6 @@ import type {UserCacheService} from '../infrastructure/UserCacheService';
 import type {RequestCache} from '../middleware/RequestCacheMiddleware';
 import type {Channel} from '../models/Channel';
 import type {Invite} from '../models/Invite';
-import {mapPackToSummary} from '../pack/PackModel';
-import type {PackRepository} from '../pack/PackRepository';
 import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '../user/UserCacheHelpers';
 
 interface MapInviteToGuildInviteResponseParams {
@@ -214,69 +209,5 @@ export async function mapInviteToGroupDmInviteMetadataResponse({
 		created_at: invite.createdAt.toISOString(),
 		uses: invite.uses,
 		max_uses: invite.maxUses,
-	};
-}
-
-interface MapInviteToPackInviteResponseParams {
-	invite: Invite;
-	userCacheService: UserCacheService;
-	requestCache: RequestCache;
-	packRepository: PackRepository;
-}
-
-const buildPackInviteBase = async ({
-	invite,
-	userCacheService,
-	requestCache,
-	packRepository,
-}: MapInviteToPackInviteResponseParams): Promise<z.infer<typeof PackInviteResponse>> => {
-	if (!invite.guildId) {
-		throw new UnknownPackError();
-	}
-	const pack = await packRepository.getPack(invite.guildId);
-	if (!pack) {
-		throw new UnknownPackError();
-	}
-	const creator = await getCachedUserPartialResponse({
-		userId: pack.creatorId,
-		userCacheService,
-		requestCache,
-	});
-	const inviter = invite.inviterId
-		? await getCachedUserPartialResponse({
-				userId: invite.inviterId,
-				userCacheService,
-				requestCache,
-			})
-		: null;
-	const expiresAt = invite.maxAge > 0 ? new Date(invite.createdAt.getTime() + invite.maxAge * 1000) : null;
-	return {
-		code: invite.code,
-		type: invite.type as typeof InviteTypes.EMOJI_PACK | typeof InviteTypes.STICKER_PACK,
-		pack: {
-			...mapPackToSummary(pack),
-			creator,
-		},
-		inviter,
-		expires_at: expiresAt?.toISOString() ?? null,
-		temporary: invite.temporary,
-	};
-};
-
-export async function mapInviteToPackInviteResponse(
-	params: MapInviteToPackInviteResponseParams,
-): Promise<z.infer<typeof PackInviteResponse>> {
-	return buildPackInviteBase(params);
-}
-
-export async function mapInviteToPackInviteMetadataResponse(
-	params: MapInviteToPackInviteResponseParams,
-): Promise<z.infer<typeof PackInviteMetadataResponse>> {
-	const baseResponse = await buildPackInviteBase(params);
-	return {
-		...baseResponse,
-		created_at: params.invite.createdAt.toISOString(),
-		uses: params.invite.uses,
-		max_uses: params.invite.maxUses,
 	};
 }

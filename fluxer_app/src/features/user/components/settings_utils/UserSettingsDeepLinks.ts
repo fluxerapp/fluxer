@@ -38,7 +38,6 @@ const USER_SETTINGS_TAB_TYPES = new Set<UserSettingsTabType>([
 	'component_gallery',
 	'language',
 	'keybinds',
-	'expression_packs',
 	'linked_accounts',
 ]);
 const SAFE_SETTINGS_PARAM_REGEX = /^[A-Za-z0-9_-]+$/;

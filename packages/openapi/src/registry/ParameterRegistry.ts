@@ -73,13 +73,6 @@ const COMMON_PATH_PARAMETERS: Record<string, OpenAPIParameter> = {
 		schema: {type: 'string'},
 		description: 'The webhook token',
 	},
-	pack_id: {
-		name: 'pack_id',
-		in: 'path',
-		required: true,
-		schema: SnowflakeTypeRef,
-		description: 'The ID of the pack',
-	},
 	application_id: {
 		name: 'application_id',
 		in: 'path',

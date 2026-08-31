@@ -14,7 +14,6 @@ import {AppearanceInlineContent} from '@app/features/user/components/modals/tabs
 import ApplicationsTab from '@app/features/user/components/modals/tabs/applications_tab';
 import {ChatSettingsInlineContent} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline';
 import DesktopSettingsTab from '@app/features/user/components/modals/tabs/DesktopSettingsTab';
-import ExpressionPacksTab from '@app/features/user/components/modals/tabs/ExpressionPacksTab';
 import GiftInventoryTab from '@app/features/user/components/modals/tabs/GiftInventoryTab';
 import KeybindsTab from '@app/features/user/components/modals/tabs/KeybindsTab';
 import LanguageTab from '@app/features/user/components/modals/tabs/LanguageTab';
@@ -65,7 +64,6 @@ const INLINE_TAB_COMPONENTS: Partial<Record<UserSettingsTabType, React.Component
 	account_security: AccountSecurityInlineTab,
 	plutonium: PlutoniumTab,
 	gift_inventory: GiftInventoryTab,
-	expression_packs: ExpressionPacksTab,
 	privacy_safety: PrivacyDashboardContent,
 	authorized_apps: AccountSecurityInlineTab,
 	blocked_users: AccountSecurityInlineTab,

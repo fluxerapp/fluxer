@@ -43,7 +43,6 @@ import {createNatsGifProvider} from '../gif/NatsGifProvider';
 import {GuildAuditLogService} from '../guild/GuildAuditLogService';
 import {GuildDiscoveryRepository} from '../guild/repositories/GuildDiscoveryRepository';
 import {GuildRepository} from '../guild/repositories/GuildRepository';
-import {ExpressionAssetPurger} from '../guild/services/content/ExpressionAssetPurger';
 import {GuildDiscoveryService} from '../guild/services/GuildDiscoveryService';
 import {AssetDeletionQueue} from '../infrastructure/AssetDeletionQueue';
 import {AvatarService} from '../infrastructure/AvatarService';
@@ -75,7 +74,6 @@ import {BotAuthService} from '../oauth/BotAuthService';
 import {BotMfaMirrorService} from '../oauth/BotMfaMirrorService';
 import {ApplicationRepository} from '../oauth/repositories/ApplicationRepository';
 import {OAuth2TokenRepository} from '../oauth/repositories/OAuth2TokenRepository';
-import {PackRepository} from '../pack/PackRepository';
 import {ReadStateRepository} from '../read_state/ReadStateRepository';
 import {ReadStateRequestService} from '../read_state/ReadStateRequestService';
 import {ReadStateService} from '../read_state/ReadStateService';
@@ -119,7 +117,6 @@ export const getAdminArchiveRepository = singleton(() => new AdminArchiveReposit
 export const getVoiceRepository = singleton(() => new VoiceRepository());
 export const getApplicationRepository = singleton(() => new ApplicationRepository());
 export const getOAuth2TokenRepository = singleton(() => new OAuth2TokenRepository());
-export const getPackRepository = singleton(() => new PackRepository());
 export const getGuildDiscoveryRepository = singleton(() => new GuildDiscoveryRepository());
 export const getEmailChangeRepository = singleton(() => new EmailChangeRepository());
 export const getPasswordChangeRepository = singleton(() => new PasswordChangeRepository());
@@ -398,7 +395,6 @@ export const getGifService = singleton(() => {
 		createNatsGifProvider(async () => (await instanceConfigRepository.getEffectiveGifConfig()).klipy_api_key),
 	);
 });
-export const getExpressionAssetPurger = singleton(() => new ExpressionAssetPurger(getAssetDeletionQueue()));
 export const getGuildAuditLogService = singleton(
 	() => new GuildAuditLogService(getGuildRepository(), getSnowflakeService(), getWorkerService(), getGatewayService()),
 );

@@ -87,7 +87,7 @@ describe('User custom status emoji premium', () => {
 		expect(settings.custom_status?.emoji_id).toBeUndefined();
 		expect(settings.custom_status?.emoji_animated).toBe(false);
 	});
-	it('allows custom emoji status for premium users without guild or installed pack access', async () => {
+	it('allows custom emoji status for premium users without guild access', async () => {
 		const owner = await createTestAccount(harness);
 		const premiumAccount = await createTestAccount(harness);
 		await grantPremium(harness, premiumAccount.userId, UserPremiumTypes.SUBSCRIPTION);

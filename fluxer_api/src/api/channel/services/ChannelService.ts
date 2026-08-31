@@ -18,7 +18,6 @@ import type {UserCacheService} from '../../infrastructure/UserCacheService';
 import type {IInviteRepository} from '../../invite/IInviteRepository';
 import type {LimitConfigService} from '../../limits/LimitConfigService';
 import type {User} from '../../models/User';
-import type {PackService} from '../../pack/PackService';
 import type {ReadStateService} from '../../read_state/ReadStateService';
 import type {IUserRepository} from '../../user/IUserRepository';
 import {createDirectMessageSpamMitigationService} from '../../user/services/DirectMessageSpamMitigationService';
@@ -57,7 +56,6 @@ export class ChannelService {
 		channelRepository: IChannelRepository,
 		userRepository: IUserRepository,
 		guildRepository: IGuildRepositoryAggregate,
-		packService: PackService,
 		userCacheService: UserCacheService,
 		embedService: EmbedService,
 		readStateService: ReadStateService,
@@ -94,7 +92,6 @@ export class ChannelService {
 			channelRepository,
 			userRepository,
 			guildRepository,
-			packService,
 			embedService,
 			storageService,
 			attachmentUploadTraceRepository,

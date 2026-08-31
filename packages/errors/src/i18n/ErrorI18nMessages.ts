@@ -386,15 +386,10 @@ export const ERROR_I18N_MESSAGES = {
 	'invites_and_gifts.unknown_gift_code': 'Unknown gift code.',
 	'invites_and_packs.emoji_requires_access':
 		"You can't use this emoji without access to its community or installed pack.",
-	'invites_and_packs.invalid_pack_type': 'Invalid pack type.',
 	'invites_and_packs.max_animated_emojis_reached':
 		"You've reached the maximum of {count, plural, one {# animated emoji} other {# animated emojis}}.",
 	'invites_and_packs.max_emojis_reached':
 		"You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}.",
-	'invites_and_packs.max_pack_expressions_reached':
-		"You've reached the maximum of {count, plural, one {# pack expression} other {# pack expressions}}.",
-	'invites_and_packs.max_packs_reached': "You've reached the maximum of {count, plural, one {# pack} other {# packs}}.",
-	'invites_and_packs.pack_access_denied': "You don't have permission to access this pack.",
 	'limits.at_least_one_entry_required': 'At least one entry is required.',
 	'limits.base64_length_invalid': 'Base64 string length must be between {min} and {maxLength} characters.',
 	'limits.bucket_required': '`bucket` is required.',
@@ -592,7 +587,6 @@ export const ERROR_I18N_MESSAGES = {
 	'unknown_entities.unknown_invite': "Invite wasn't found or is no longer valid.",
 	'unknown_entities.unknown_member': "Member wasn't found in this community.",
 	'unknown_entities.unknown_message': "Message wasn't found.",
-	'unknown_entities.unknown_pack': "Pack wasn't found.",
 	'unknown_entities.unknown_role': "Role wasn't found.",
 	'unknown_entities.unknown_user': "User wasn't found.",
 	'unknown_entities.unknown_user_flag': "The specified user flag isn't recognized.",

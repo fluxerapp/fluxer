@@ -31,7 +31,6 @@ import {clientDeveloperSettingsIndex} from '@app/features/user/components/settin
 import {desktopSettingsIndex} from '@app/features/user/components/settings_utils/search_index/DesktopSettingsIndex';
 import {devicesIndex} from '@app/features/user/components/settings_utils/search_index/DevicesIndex';
 import {embedDebuggerIndex} from '@app/features/user/components/settings_utils/search_index/EmbedDebuggerIndex';
-import {expressionPacksIndex} from '@app/features/user/components/settings_utils/search_index/ExpressionPacksIndex';
 import {giftInventoryIndex} from '@app/features/user/components/settings_utils/search_index/GiftInventoryIndex';
 import {keybindsIndex} from '@app/features/user/components/settings_utils/search_index/KeybindsIndex';
 import {languageIndex} from '@app/features/user/components/settings_utils/search_index/LanguageIndex';
@@ -100,7 +99,6 @@ const ADDITIONAL_SEARCHABLE_ITEMS: Array<SearchableSettingDescriptor> = [
 	...devicesIndex,
 	...plutoniumIndex,
 	...giftInventoryIndex,
-	...expressionPacksIndex,
 	...appearanceIndex,
 	...notificationsIndex,
 	...chatSettingsIndex,

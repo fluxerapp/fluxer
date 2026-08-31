@@ -311,24 +311,6 @@ export interface UserGuildSettingsRow {
 	version: number;
 }
 
-export interface ExpressionPackRow {
-	pack_id: GuildID;
-	pack_type: string;
-	creator_id: UserID;
-	name: string;
-	description: Nullish<string>;
-	created_at: Date;
-	updated_at: Date;
-	version: number;
-}
-
-export interface PackInstallationRow {
-	user_id: UserID;
-	pack_id: GuildID;
-	pack_type: string;
-	installed_at: Date;
-}
-
 export interface SavedMessageRow {
 	user_id: UserID;
 	channel_id: ChannelID;
@@ -515,16 +497,6 @@ export const USER_SETTINGS_COLUMNS = [
 	'default_share_voice_activity',
 	'version',
 ] as const satisfies ReadonlyArray<keyof UserSettingsRow>;
-export const EXPRESSION_PACK_COLUMNS = [
-	'pack_id',
-	'pack_type',
-	'creator_id',
-	'name',
-	'description',
-	'created_at',
-	'updated_at',
-	'version',
-] as const satisfies ReadonlyArray<keyof ExpressionPackRow>;
 export const USER_GUILD_SETTINGS_COLUMNS = [
 	'user_id',
 	'guild_id',

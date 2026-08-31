@@ -124,7 +124,6 @@ import {
 	getEntranceSoundPlayService,
 	getEntranceSoundService,
 	getErrorI18nService,
-	getExpressionAssetPurger,
 	getFavoriteMemeRepository,
 	getGatewayRequestService,
 	getGifService,
@@ -139,7 +138,6 @@ import {
 	getLimitConfigService,
 	getNcmecSubmissionService,
 	getOAuth2TokenRepository,
-	getPackRepository,
 	getPasswordChangeRepository,
 	getPremiumStateReconciliationQueueService,
 	getPurgeQueue,
@@ -444,7 +442,6 @@ class RequestServices implements RequestScopedServices {
 	private get guildStack(): GuildStackServices {
 		this.cachedGuildStack ??= createGuildStackServices({
 			apiContext: this.context,
-			packRepository: getPackRepository(),
 			channelRepository: this.channelRepository,
 			userRepository: getUserRepository(),
 			guildRepository: this.requestGuildRepository,
@@ -454,7 +451,6 @@ class RequestServices implements RequestScopedServices {
 			avatarService: getAvatarService(),
 			entityAssetService: getEntityAssetService(),
 			assetDeletionQueue: getAssetDeletionQueue(),
-			expressionAssetPurger: getExpressionAssetPurger(),
 			userCacheService: getUserCacheService(),
 			limitConfigService: getLimitConfigService(),
 			embedService: getEmbedService(),
@@ -470,10 +466,6 @@ class RequestServices implements RequestScopedServices {
 			ipInfoService: getIpInfoService(),
 		});
 		return this.cachedGuildStack;
-	}
-
-	get packService() {
-		return this.guildStack.packService;
 	}
 
 	get channelService() {
@@ -581,10 +573,6 @@ class RequestServices implements RequestScopedServices {
 
 	get oauth2TokenRepository() {
 		return getOAuth2TokenRepository();
-	}
-
-	get packRepository() {
-		return getPackRepository();
 	}
 
 	get rateLimitService() {
@@ -822,7 +810,6 @@ class RequestServices implements RequestScopedServices {
 			this.channelService,
 			this.guildService,
 			this.gatewayService,
-			getPackRepository(),
 			getUserCacheService(),
 		);
 		return this.cachedInviteRequestService;

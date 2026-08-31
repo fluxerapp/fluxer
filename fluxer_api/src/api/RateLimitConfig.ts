@@ -10,7 +10,6 @@ import {IntegrationRateLimitConfigs} from './rate_limit_configs/IntegrationRateL
 import {InviteRateLimitConfigs} from './rate_limit_configs/InviteRateLimitConfig';
 import {MiscRateLimitConfigs} from './rate_limit_configs/MiscRateLimitConfig';
 import {OAuthRateLimitConfigs} from './rate_limit_configs/OAuthRateLimitConfig';
-import {PackRateLimitConfigs} from './rate_limit_configs/PackRateLimitConfig';
 import type {RateLimitSection} from './rate_limit_configs/RateLimitHelpers';
 import {mergeRateLimitSections} from './rate_limit_configs/RateLimitHelpers';
 import {UserRateLimitConfigs} from './rate_limit_configs/UserRateLimitConfig';
@@ -29,6 +28,5 @@ const rateLimitSections = [
 	IntegrationRateLimitConfigs,
 	AdminRateLimitConfigs,
 	MiscRateLimitConfigs,
-	PackRateLimitConfigs,
 ] satisfies ReadonlyArray<RateLimitSection>;
 export const RateLimitConfigs = mergeRateLimitSections(...rateLimitSections);

@@ -56,8 +56,6 @@ import type {OAuth2RequestService} from '../oauth/OAuth2RequestService';
 import type {OAuth2Service} from '../oauth/OAuth2Service';
 import type {IApplicationRepository} from '../oauth/repositories/IApplicationRepository';
 import type {IOAuth2TokenRepository} from '../oauth/repositories/IOAuth2TokenRepository';
-import type {PackRepository} from '../pack/PackRepository';
-import type {PackService} from '../pack/PackService';
 import type {ReadStateRequestService} from '../read_state/ReadStateRequestService';
 import type {ReadStateService} from '../read_state/ReadStateService';
 import type {ReportRequestService} from '../report/ReportRequestService';
@@ -142,8 +140,6 @@ export interface HonoEnv {
 		gatewayRequestService: GatewayRequestService;
 		discoveryService: IGuildDiscoveryService;
 		guildService: GuildService;
-		packService: PackService;
-		packRepository: PackRepository;
 		inviteService: InviteService;
 		inviteRequestService: InviteRequestService;
 		liveKitWebhookService?: LiveKitWebhookService;

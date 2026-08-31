@@ -3,39 +3,16 @@
 import styles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
-import {NO_DESCRIPTION_PROVIDED_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {isGroupDmInvite, isGuildInvite, isPackInvite} from '@app/features/invite/types/InviteTypes';
-import {Avatar} from '@app/features/ui/components/Avatar';
+import {isGroupDmInvite, isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
-import {User} from '@app/features/user/models/User';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import type {GroupDmInvite, GuildInvite, Invite, PackInvite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import {msg} from '@lingui/core/macro';
-import {Plural, Trans, useLingui} from '@lingui/react/macro';
+import type {GroupDmInvite, GuildInvite, Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
+import {Plural, Trans} from '@lingui/react/macro';
 import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useMemo, useState} from 'react';
-
-const EMOJI_PACK_DESCRIPTOR = msg({
-	message: 'Emoji pack',
-	comment: 'Short label in the authentication invite header. Keep the tone plain and specific.',
-});
-const STICKER_PACK_DESCRIPTOR = msg({
-	message: 'Sticker pack',
-	comment: 'Short label in the authentication invite header. Keep the tone plain and specific.',
-});
-const CREATED_BY_DESCRIPTOR = msg({
-	message: 'Created by {userName}',
-	comment:
-		'Short label in the authentication invite header. Preserve {userName}; it is inserted by code. Keep the tone plain and specific.',
-});
-const INVITED_BY_DESCRIPTOR = msg({
-	message: 'Invited by {inviterTag}',
-	comment:
-		'Short label in the authentication invite header. Preserve {inviterTag}; it is inserted by code. Keep the tone plain and specific.',
-});
+import {useEffect, useState} from 'react';
 
 interface InviteHeaderProps {
 	invite: Invite;
@@ -47,10 +24,6 @@ interface GuildInviteHeaderProps {
 
 interface GroupDMInviteHeaderProps {
 	invite: GroupDmInvite;
-}
-
-interface PackInviteHeaderProps {
-	invite: PackInvite;
 }
 
 interface PreviewGuildInviteHeaderProps {
@@ -175,68 +148,9 @@ export const GroupDMInviteHeader = observer(function GroupDMInviteHeader({invite
 		</div>
 	);
 });
-export const PackInviteHeader = observer(function PackInviteHeader({invite}: PackInviteHeaderProps) {
-	const {i18n} = useLingui();
-	const pack = invite.pack;
-	const creatorRecord = useMemo(() => new User(pack.creator), [pack.creator]);
-	const creatorDisplayName = NicknameUtils.getDisplayName(creatorRecord);
-	const packKindLabel = pack.type === 'emoji' ? i18n._(EMOJI_PACK_DESCRIPTOR) : i18n._(STICKER_PACK_DESCRIPTOR);
-	const inviterTag = invite.inviter ? `${invite.inviter.username}#${invite.inviter.discriminator}` : null;
-	return (
-		<div className={styles.entityHeader} data-flx="auth.flow.invite-header.pack-invite-header.entity-header">
-			<div
-				className={styles.entityIconWrapper}
-				data-flx="auth.flow.invite-header.pack-invite-header.entity-icon-wrapper"
-			>
-				<Avatar
-					user={creatorRecord}
-					size={80}
-					className={styles.entityIcon}
-					data-flx="auth.flow.invite-header.pack-invite-header.entity-icon"
-				/>
-			</div>
-			<div className={styles.entityDetails} data-flx="auth.flow.invite-header.pack-invite-header.entity-details">
-				<p className={styles.entityText} data-flx="auth.flow.invite-header.pack-invite-header.entity-text">
-					<Trans>You've been invited to install</Trans>
-				</p>
-				<div
-					className={styles.entityTitleWrapper}
-					data-flx="auth.flow.invite-header.pack-invite-header.entity-title-wrapper"
-				>
-					<h2 className={styles.entityTitle} data-flx="auth.flow.invite-header.pack-invite-header.entity-title">
-						{pack.name}
-					</h2>
-					<span className={styles.packBadge} data-flx="auth.flow.invite-header.pack-invite-header.pack-badge">
-						{packKindLabel}
-					</span>
-				</div>
-				<p className={styles.packDescription} data-flx="auth.flow.invite-header.pack-invite-header.pack-description">
-					{pack.description || i18n._(NO_DESCRIPTION_PROVIDED_DESCRIPTOR)}
-				</p>
-				<div className={styles.packMeta} data-flx="auth.flow.invite-header.pack-invite-header.pack-meta">
-					<span className={styles.packMetaText} data-flx="auth.flow.invite-header.pack-invite-header.pack-meta-text">
-						{i18n._(CREATED_BY_DESCRIPTOR, {userName: creatorDisplayName})}
-					</span>
-					{inviterTag ? (
-						<span
-							className={styles.packMetaText}
-							data-flx="auth.flow.invite-header.pack-invite-header.pack-meta-text--2"
-						>
-							{i18n._(INVITED_BY_DESCRIPTOR, {inviterTag})}
-						</span>
-					) : null}
-				</div>
-			</div>
-		</div>
-	);
-});
-
 export function InviteHeader({invite}: InviteHeaderProps) {
 	if (isGroupDmInvite(invite)) {
 		return <GroupDMInviteHeader invite={invite} data-flx="auth.flow.invite-header.group-dm-invite-header" />;
-	}
-	if (isPackInvite(invite)) {
-		return <PackInviteHeader invite={invite} data-flx="auth.flow.invite-header.pack-invite-header" />;
 	}
 	if (isGuildInvite(invite)) {
 		return <GuildInviteHeader invite={invite} data-flx="auth.flow.invite-header.guild-invite-header" />;

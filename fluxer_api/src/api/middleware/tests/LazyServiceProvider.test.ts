@@ -54,8 +54,6 @@ const REQUEST_SERVICE_VARIABLES: ReadonlyArray<keyof HonoEnv['Variables']> = [
 	'oauth2RequestService',
 	'oauth2Service',
 	'oauth2TokenRepository',
-	'packRepository',
-	'packService',
 	'passwordChangeService',
 	'rateLimitService',
 	'readStateRequestService',

@@ -33,7 +33,6 @@ import type {Channel} from '../../../models/Channel';
 import type {Message} from '../../../models/Message';
 import type {MessageSnapshot} from '../../../models/MessageSnapshot';
 import type {User} from '../../../models/User';
-import type {PackService} from '../../../pack/PackService';
 import type {ReadStateService} from '../../../read_state/ReadStateService';
 import type {IUserRepository} from '../../../user/IUserRepository';
 import {hasVisibleContent} from '../../../utils/StringUtils';
@@ -119,7 +118,6 @@ export class MessagePersistenceService {
 		private channelRepository: IChannelRepositoryAggregate,
 		private userRepository: IUserRepository,
 		private guildRepository: IGuildRepositoryAggregate,
-		private packService: PackService,
 		private embedService: EmbedService,
 		storageService: IStorageService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
@@ -136,18 +134,8 @@ export class MessagePersistenceService {
 			virusScanService,
 			snowflakeService,
 		);
-		this.contentService = new MessageContentService(
-			this.userRepository,
-			guildRepository,
-			this.packService,
-			limitConfigService,
-		);
-		this.stickerService = new MessageStickerService(
-			this.userRepository,
-			guildRepository,
-			this.packService,
-			limitConfigService,
-		);
+		this.contentService = new MessageContentService(this.userRepository, guildRepository, limitConfigService);
+		this.stickerService = new MessageStickerService(this.userRepository, guildRepository, limitConfigService);
 		this.embedAttachmentResolver = new MessageEmbedAttachmentResolver();
 		this.attachmentDecayService = new AttachmentDecayService();
 	}

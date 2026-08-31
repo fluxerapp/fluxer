@@ -4,9 +4,8 @@ import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_INVITE_AGE_SECONDS, MAX_INVITE_USES} from '@fluxer/constants/src/LimitConstants';
 import {type Channel, ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {type Guild, GuildPartialResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {PackType} from '@fluxer/schema/src/domains/pack/PackSchemas';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {Int32Type, SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {Int32Type} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 export const ChannelInviteCreateRequest = z.object({
@@ -40,32 +39,6 @@ export const ChannelInviteCreateRequest = z.object({
 
 export type ChannelInviteCreateRequest = z.infer<typeof ChannelInviteCreateRequest>;
 
-export const PackInviteCreateRequest = z.object({
-	max_uses: z
-		.number()
-		.int()
-		.min(0)
-		.max(MAX_INVITE_USES)
-		.nullish()
-		.default(0)
-		.describe('Maximum number of times this invite can be used (0 for unlimited)'),
-	max_age: z
-		.number()
-		.int()
-		.min(0)
-		.max(MAX_INVITE_AGE_SECONDS)
-		.nullish()
-		.default(0)
-		.describe('Duration in seconds before the invite expires (0 for never)'),
-	unique: z
-		.boolean()
-		.nullish()
-		.default(false)
-		.describe('Whether to create a new unique invite or reuse an existing one'),
-});
-
-export type PackInviteCreateRequest = z.infer<typeof PackInviteCreateRequest>;
-
 export const GuildInviteResponse = z.object({
 	code: z.string().describe('The unique invite code'),
 	type: z.literal(InviteTypes.GUILD).describe('The type of invite (guild)'),
@@ -98,41 +71,6 @@ export const GroupDmInviteResponse = z.object({
 
 export type GroupDmInviteResponse = z.infer<typeof GroupDmInviteResponse>;
 
-const PackInfoResponse = z.object({
-	id: SnowflakeStringType.describe('The unique identifier for the pack'),
-	name: z.string().describe('The display name of the pack'),
-	description: z.string().nullish().describe('The description of the pack'),
-	type: PackType.describe('The type of pack (emoji or sticker)'),
-	creator_id: SnowflakeStringType.describe('The ID of the user who created the pack'),
-	created_at: z.iso.datetime().describe('ISO8601 timestamp of when the pack was created'),
-	updated_at: z.iso.datetime().describe('ISO8601 timestamp of when the pack was last updated'),
-	creator: z.lazy(() => UserPartialResponse).describe('The user who created the pack'),
-});
-export const PackInviteResponse = z.object({
-	code: z.string().describe('The unique invite code'),
-	type: z
-		.union([z.literal(InviteTypes.EMOJI_PACK), z.literal(InviteTypes.STICKER_PACK)])
-		.describe('The type of pack invite (emoji or sticker pack)'),
-	pack: PackInfoResponse.describe('The pack this invite is for'),
-	inviter: z
-		.lazy(() => UserPartialResponse)
-		.nullish()
-		.describe('The user who created the invite'),
-	expires_at: z.iso.datetime().nullish().describe('ISO8601 timestamp of when the invite expires'),
-	temporary: z.boolean().describe('Whether the invite grants temporary access'),
-});
-
-export type PackInviteResponse = z.infer<typeof PackInviteResponse>;
-
-export const PackInviteMetadataResponse = z.object({
-	...PackInviteResponse.shape,
-	created_at: z.iso.datetime().describe('ISO8601 timestamp of when the invite was created'),
-	uses: Int32Type.describe('The number of times this invite has been used'),
-	max_uses: Int32Type.describe('The maximum number of times this invite can be used'),
-});
-
-export type PackInviteMetadataResponse = z.infer<typeof PackInviteMetadataResponse>;
-
 export const GuildInviteMetadataResponse = z.object({
 	...GuildInviteResponse.shape,
 	created_at: z.iso.datetime().describe('ISO8601 timestamp of when the invite was created'),
@@ -152,15 +90,11 @@ export const GroupDmInviteMetadataResponse = z.object({
 
 export type GroupDmInviteMetadataResponse = z.infer<typeof GroupDmInviteMetadataResponse>;
 
-export const InviteResponseSchema = z.union([GuildInviteResponse, GroupDmInviteResponse, PackInviteResponse]);
+export const InviteResponseSchema = z.union([GuildInviteResponse, GroupDmInviteResponse]);
 
 export type InviteResponseSchema = z.infer<typeof InviteResponseSchema>;
 
-export const InviteMetadataResponseSchema = z.union([
-	GuildInviteMetadataResponse,
-	GroupDmInviteMetadataResponse,
-	PackInviteMetadataResponse,
-]);
+export const InviteMetadataResponseSchema = z.union([GuildInviteMetadataResponse, GroupDmInviteMetadataResponse]);
 
 export type InviteMetadataResponseSchema = z.infer<typeof InviteMetadataResponseSchema>;
 
@@ -189,23 +123,4 @@ export interface GroupDmInvite extends InviteBase {
 	readonly member_count: number;
 }
 
-export interface PackSummary {
-	readonly id: string;
-	readonly name: string;
-	readonly description?: string | null;
-	readonly type: 'emoji' | 'sticker';
-	readonly item_count: number;
-	readonly preview_items: ReadonlyArray<{
-		readonly id: string;
-		readonly name: string;
-	}>;
-}
-
-export interface PackInvite extends InviteBase {
-	readonly type: typeof InviteTypes.EMOJI_PACK | typeof InviteTypes.STICKER_PACK;
-	readonly pack: PackSummary & {
-		readonly creator: UserPartialResponse;
-	};
-}
-
-export type Invite = GuildInvite | GroupDmInvite | PackInvite;
+export type Invite = GuildInvite | GroupDmInvite;

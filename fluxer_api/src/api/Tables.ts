@@ -290,13 +290,10 @@ import {
 	type SuspiciousIpRow,
 } from './database/types/RiskTypes';
 import {
-	EXPRESSION_PACK_COLUMNS,
-	type ExpressionPackRow,
 	FAVORITE_MEME_COLUMNS,
 	type FavoriteMemeRow,
 	NOTE_COLUMNS,
 	type NoteRow,
-	type PackInstallationRow,
 	PUSH_SUBSCRIPTION_COLUMNS,
 	type PushSubscriptionRow,
 	RECENT_MENTION_COLUMNS,
@@ -1003,25 +1000,6 @@ export const FavoriteMemesByMemeId = defineTable<FavoriteMemesByMemeIdRow, 'meme
 	name: 'favorite_memes_by_meme_id',
 	columns: FAVORITE_MEMES_BY_MEME_ID_COLUMNS,
 	primaryKey: ['meme_id', 'user_id'],
-});
-export const ExpressionPacks = defineTable<ExpressionPackRow, 'pack_id'>({
-	name: 'expression_packs',
-	columns: EXPRESSION_PACK_COLUMNS,
-	primaryKey: ['pack_id'],
-});
-export const ExpressionPacksByCreator = defineTable<ExpressionPackRow, 'creator_id' | 'pack_id'>({
-	name: 'expression_packs_by_creator',
-	columns: EXPRESSION_PACK_COLUMNS,
-	primaryKey: ['creator_id', 'pack_id'],
-	partitionKey: ['creator_id'],
-});
-const PACK_INSTALLATION_COLUMNS = ['user_id', 'pack_id', 'pack_type', 'installed_at'] as const satisfies ReadonlyArray<
-	keyof PackInstallationRow
->;
-export const PackInstallations = defineTable<PackInstallationRow, 'user_id' | 'pack_id'>({
-	name: 'pack_installations',
-	columns: PACK_INSTALLATION_COLUMNS,
-	primaryKey: ['user_id', 'pack_id'],
 });
 
 interface InvitesByChannelRow {

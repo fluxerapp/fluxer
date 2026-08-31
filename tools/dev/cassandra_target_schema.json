@@ -3969,84 +3969,6 @@
 			"options": "default_time_to_live = 86400 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
 		},
 		{
-			"name": "expression_packs",
-			"columns": [
-				{
-					"name": "pack_id",
-					"type": "bigint"
-				},
-				{
-					"name": "pack_type",
-					"type": "text"
-				},
-				{
-					"name": "creator_id",
-					"type": "bigint"
-				},
-				{
-					"name": "name",
-					"type": "text"
-				},
-				{
-					"name": "description",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "updated_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "version",
-					"type": "int"
-				}
-			],
-			"primary_key": "(pack_id)",
-			"options": ""
-		},
-		{
-			"name": "expression_packs_by_creator",
-			"columns": [
-				{
-					"name": "creator_id",
-					"type": "bigint"
-				},
-				{
-					"name": "pack_id",
-					"type": "bigint"
-				},
-				{
-					"name": "pack_type",
-					"type": "text"
-				},
-				{
-					"name": "name",
-					"type": "text"
-				},
-				{
-					"name": "description",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "updated_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "version",
-					"type": "int"
-				}
-			],
-			"primary_key": "((creator_id), pack_id)",
-			"options": ""
-		},
-		{
 			"name": "favorite_memes",
 			"columns": [
 				{
@@ -6906,29 +6828,6 @@
 			],
 			"primary_key": "((user_id), token_)",
 			"options": "CLUSTERING ORDER BY (token_ DESC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "pack_installations",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "pack_id",
-					"type": "bigint"
-				},
-				{
-					"name": "pack_type",
-					"type": "text"
-				},
-				{
-					"name": "installed_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "((user_id), pack_id)",
-			"options": ""
 		},
 		{
 			"name": "password_change_tickets",

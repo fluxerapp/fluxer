@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	ChannelIdParam,
-	GuildIdParam,
-	InviteCodeParam,
-	PackIdParam,
-} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+import {ChannelIdParam, GuildIdParam, InviteCodeParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	ChannelInviteCreateRequest,
 	InviteMetadataResponseSchema,
 	InviteResponseSchema,
-	PackInviteCreateRequest,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {z} from 'zod';
 import {createChannelID, createGuildID, createInviteCode} from '../BrandedTypes';
@@ -30,7 +24,7 @@ export function InviteController(app: HonoApp) {
 			operationId: 'get_invite',
 			summary: 'Get invite information',
 			description:
-				'Fetches detailed information about an invite using its code, including the guild, channel, or pack it belongs to and metadata such as expiration and usage limits. This endpoint does not require authentication and does not consume the invite.',
+				'Fetches detailed information about an invite using its code, including the guild or channel it belongs to and metadata such as expiration and usage limits. This endpoint does not require authentication and does not consume the invite.',
 			responseSchema: InviteResponseSchema,
 			statusCode: 200,
 			security: [],
@@ -53,7 +47,7 @@ export function InviteController(app: HonoApp) {
 			operationId: 'accept_invite',
 			summary: 'Accept invite',
 			description:
-				'Accepts an invite using its code, adding the authenticated user to the corresponding guild, pack, or other entity. The invite usage count is incremented, and if it reaches its maximum usage limit or expiration, the invite is automatically revoked. Returns the accepted invite details.',
+				'Accepts an invite using its code, adding the authenticated user to the corresponding guild or other entity. The invite usage count is incremented, and if it reaches its maximum usage limit or expiration, the invite is automatically revoked. Returns the accepted invite details.',
 			responseSchema: InviteResponseSchema,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -77,7 +71,7 @@ export function InviteController(app: HonoApp) {
 			operationId: 'delete_invite',
 			summary: 'Delete invite',
 			description:
-				'Permanently deletes an invite by its code, preventing any further usage. The authenticated user must have permission to manage invites for the guild, channel, or pack associated with the invite. This action can be logged in the audit log if an X-Audit-Log-Reason header is provided.',
+				'Permanently deletes an invite by its code, preventing any further usage. The authenticated user must have permission to manage invites for the guild or channel associated with the invite. This action can be logged in the audit log if an X-Audit-Log-Reason header is provided.',
 			responseSchema: null,
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
@@ -169,62 +163,6 @@ export function InviteController(app: HonoApp) {
 			const inviteRequestService = ctx.get('inviteRequestService');
 			const requestCache = ctx.get('requestCache');
 			return ctx.json(await inviteRequestService.listGuildInvites({userId, guildId, requestCache}));
-		},
-	);
-	app.get(
-		'/packs/:pack_id/invites',
-		RateLimitMiddleware(RateLimitConfigs.PACKS_INVITES_LIST),
-		LoginRequired,
-		DefaultUserOnly,
-		Validator('param', PackIdParam),
-		OpenAPI({
-			operationId: 'list_pack_invites',
-			summary: 'List pack invites',
-			description:
-				'Retrieves all currently active invites for the specified pack, including invite codes, creators, expiration times, and usage statistics. The authenticated user must have permission to manage invites for the pack and must be a default (non-bot) user. Returns an array of invite metadata objects.',
-			responseSchema: z.array(InviteMetadataResponseSchema),
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Invites'],
-		}),
-		async (ctx) => {
-			const userId = ctx.get('user').id;
-			const packId = createGuildID(ctx.req.valid('param').pack_id);
-			const inviteRequestService = ctx.get('inviteRequestService');
-			const requestCache = ctx.get('requestCache');
-			return ctx.json(await inviteRequestService.listPackInvites({userId, packId, requestCache}));
-		},
-	);
-	app.post(
-		'/packs/:pack_id/invites',
-		RateLimitMiddleware(RateLimitConfigs.PACKS_INVITES_CREATE),
-		LoginRequired,
-		DefaultUserOnly,
-		Validator('param', PackIdParam),
-		Validator('json', PackInviteCreateRequest),
-		OpenAPI({
-			operationId: 'create_pack_invite',
-			summary: 'Create pack invite',
-			description:
-				'Creates a new invite for the specified pack with optional parameters such as maximum age and maximum uses. The authenticated user must have permission to create invites for the pack and must be a default (non-bot) user. Returns the created invite with full metadata including usage statistics.',
-			responseSchema: InviteMetadataResponseSchema,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Invites'],
-		}),
-		async (ctx) => {
-			const userId = ctx.get('user').id;
-			const packId = createGuildID(ctx.req.valid('param').pack_id);
-			const inviteRequestService = ctx.get('inviteRequestService');
-			const requestCache = ctx.get('requestCache');
-			return ctx.json(
-				await inviteRequestService.createPackInvite({
-					inviterId: userId,
-					packId,
-					requestCache,
-					data: ctx.req.valid('json'),
-				}),
-			);
 		},
 	);
 }

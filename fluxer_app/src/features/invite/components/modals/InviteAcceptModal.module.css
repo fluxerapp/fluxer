@@ -100,31 +100,6 @@
 	color: var(--text-tertiary);
 }
 
-.packDescriptionText {
-	margin: 0;
-	font-size: 0.9rem;
-	color: var(--text-secondary);
-	line-height: 1.4;
-}
-
-.packMetaRow {
-	display: flex;
-	flex-direction: column;
-	gap: 0.2rem;
-	margin: 0.5rem 0;
-}
-
-.packMetaText {
-	font-size: 0.78rem;
-	color: var(--text-tertiary);
-}
-
-.packNote {
-	margin: 0;
-	font-size: 0.8rem;
-	color: var(--text-tertiary-secondary);
-}
-
 @media screen and (max-width: 480px) {
 	.root {
 		width: calc(100vw - 1.5rem);
