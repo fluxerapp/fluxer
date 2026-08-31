@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {seconds} from 'itty-time';
 import {z} from 'zod';
 import type {MessageID, UserID} from '../../BrandedTypes';
 import {createChannelID} from '../../BrandedTypes';
@@ -15,6 +16,7 @@ const PayloadSchema = z.object({
 	channelCount: z.number().optional(),
 });
 const BULK_BATCH_SIZE = 5000;
+const COMPLETION_KEY_TTL_SECONDS = seconds('1 day');
 function getMessageIndexServices(): Array<IMessageSearchService> {
 	const services: Array<IMessageSearchService> = [];
 	const defaultService = getMessageSearchService();
@@ -64,7 +66,9 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 			}
 		}
 		if (validated.completionKey && validated.channelCount) {
-			const completed = await kvClient.incr(validated.completionKey);
+			await kvClient.sadd(validated.completionKey, validated.channelId);
+			await kvClient.expire(validated.completionKey, COMPLETION_KEY_TTL_SECONDS);
+			const completed = await kvClient.scard(validated.completionKey);
 			if (completed >= validated.channelCount) {
 				try {
 					await Promise.all(searchServices.map((s) => s.refreshIndex()));
