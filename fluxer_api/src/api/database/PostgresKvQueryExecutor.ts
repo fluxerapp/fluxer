@@ -18,6 +18,13 @@ interface StoredRow {
 
 interface PageState {
 	offset: number;
+	after?: string;
+	keyed?: boolean;
+}
+
+interface PageEntry {
+	key: string;
+	row: Row;
 }
 
 interface RangeGroup {
@@ -58,6 +65,7 @@ const VALUE_SEPARATOR = '\u001f';
 const KEY_RANGE_UPPER = ' ';
 const MAX_ROW_KEY_COMBINATIONS = 32_768;
 const MAX_PREFIX_RANGES = 256;
+const PAGE_PROBE_BATCH = 10_000;
 const FULL_SCAN_LOG_INTERVAL_MS = 60_000;
 const FULL_SCAN_LOG_KEY_LIMIT = 1024;
 const ENCODED_TYPE_KEY = '__fluxer_type';
@@ -296,18 +304,53 @@ function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
 	return projected;
 }
 
-function sortRows(meta: KvQueryMeta, rows: Array<Row>): Array<Row> {
+function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
 	if (meta.orderBy) {
+		const column = meta.orderBy.col as string;
 		const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-		return rows.sort((left, right) => compareValues(left[meta.orderBy!.col], right[meta.orderBy!.col]) * direction);
+		return (left, right) => compareValues(left[column], right[column]) * direction;
 	}
-	return rows.sort((left, right) => {
-		for (const column of meta.table.primaryKey) {
+	const columns = meta.table.primaryKey as ReadonlyArray<string>;
+	return (left, right) => {
+		for (const column of columns) {
 			const cmp = compareValues(left[column], right[column]);
 			if (cmp !== 0) return cmp;
 		}
 		return 0;
-	});
+	};
+}
+
+function sortRows(meta: KvQueryMeta, rows: Array<Row>): Array<Row> {
+	return rows.sort(rowComparator(meta));
+}
+
+function decodeRowKey(key: string, columns: number): Array<unknown> | null {
+	const segments = key.split(VALUE_SEPARATOR);
+	if (segments.length !== columns) return null;
+	const values: Array<unknown> = [];
+	for (const segment of segments) {
+		try {
+			values.push(decodeValue(JSON.parse(segment)));
+		} catch {
+			return null;
+		}
+	}
+	return values;
+}
+
+function compareKeyValues(left: ReadonlyArray<unknown>, right: ReadonlyArray<unknown>): number {
+	for (let index = 0; index < left.length; index += 1) {
+		const cmp = compareValues(left[index], right[index]);
+		if (cmp !== 0) return cmp;
+	}
+	return 0;
+}
+
+function compareRowToKeyValues(meta: KvQueryMeta, row: Row, values: ReadonlyArray<unknown>): number {
+	return compareKeyValues(
+		(meta.table.primaryKey as ReadonlyArray<string>).map((column) => row[column]),
+		values,
+	);
 }
 
 function whereClauses(meta: KvQueryMeta): ReadonlyArray<WhereExpr<Row>> {
@@ -627,7 +670,42 @@ function decodePageState(pageState: string | null | undefined): PageState {
 	if (!Number.isInteger(decoded.offset) || decoded.offset < 0) {
 		throw new Error('Invalid Postgres KV page state');
 	}
-	return decoded;
+	if (typeof decoded.after !== 'string') return {offset: decoded.offset};
+	return {offset: decoded.offset, after: decoded.after, keyed: decoded.keyed === true};
+}
+
+function pageableSelect(meta: KvQueryMeta, pageSize: number): boolean {
+	return (
+		meta.action === 'select' &&
+		meta.orderBy === undefined &&
+		meta.limit === undefined &&
+		Number.isInteger(pageSize) &&
+		pageSize > 0
+	);
+}
+
+function keysetCandidates(plan: QueryPlan): boolean {
+	return (
+		plan.exact &&
+		(plan.candidates.kind === 'none' || plan.candidates.kind === 'range' || plan.candidates.kind === 'scan')
+	);
+}
+
+function pageStart(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>, state: PageState): number {
+	if (state.after === undefined) return state.offset;
+	const index = entries.findIndex((entry) => entry.key === state.after);
+	if (index >= 0) return index + 1;
+	const values = decodeRowKey(state.after, (meta.table.primaryKey as ReadonlyArray<string>).length);
+	if (values === null) return state.offset;
+	let start = 0;
+	while (start < entries.length && compareRowToKeyValues(meta, entries[start]!.row, values) <= 0) start += 1;
+	return start;
+}
+
+function pagedStatementName(prefix: string, plan: CandidatePlan, after: string | null): string | undefined {
+	const name = planStatementName(prefix, plan);
+	if (name === undefined) return undefined;
+	return after === null ? name : `${name}_after`;
 }
 
 function parseRawMeta(cql: string): KvQueryMeta<Row> | null {
@@ -850,12 +928,124 @@ export class PostgresKvQueryExecutor {
 		options: {pageSize: number; pageState?: string | null},
 	): Promise<{rows: Array<T>; pageState: string | null}> {
 		const state = decodePageState(options.pageState);
+		const meta = this.meta(query);
+		if (pageableSelect(meta, options.pageSize) && (state.after !== undefined || state.offset === 0)) {
+			const page = await this.selectPage(meta, query.params, state, options.pageSize);
+			return {rows: page.rows as Array<T>, pageState: page.pageState};
+		}
 		const rows = await this.executeQuery<T, P>(query);
 		const pageRows = rows.slice(state.offset, state.offset + options.pageSize);
 		const nextOffset = state.offset + pageRows.length;
 		return {
 			rows: pageRows,
 			pageState: nextOffset < rows.length ? encodePageState({offset: nextOffset}) : null,
+		};
+	}
+
+	private async selectPage(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		state: PageState,
+		pageSize: number,
+	): Promise<{rows: Array<Row>; pageState: string | null}> {
+		const plan = buildCandidatePlan(meta, params);
+		if (keysetCandidates(plan)) {
+			if (state.keyed === true) {
+				return this.keysetPage(meta, params, plan, state.after ?? null, state.offset, pageSize);
+			}
+			if (state.after === undefined && (await this.rowKeyOrderMatchesSort(meta, plan))) {
+				return this.keysetPage(meta, params, plan, null, 0, pageSize);
+			}
+		}
+		return this.sortedPage(meta, params, plan, state, pageSize);
+	}
+
+	private pagedSql(
+		meta: KvQueryMeta,
+		fragments: PlanFragments,
+		projection: string,
+		after: string | null,
+		limit: number,
+	): {text: string; values: Array<unknown>} {
+		const values: Array<unknown> = [meta.table.name, ...fragments.params];
+		let text = `SELECT ${projection} FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate}`;
+		if (after !== null) {
+			values.push(after);
+			text += ` AND kv.row_key COLLATE "C" > $${values.length}`;
+		}
+		text += ' AND (kv.expires_at IS NULL OR kv.expires_at > now()) ORDER BY kv.row_key COLLATE "C"';
+		values.push(limit);
+		return {text: `${text} LIMIT $${values.length}`, values};
+	}
+
+	private async rowKeyOrderMatchesSort(meta: KvQueryMeta, plan: QueryPlan): Promise<boolean> {
+		if (plan.candidates.kind === 'none') return true;
+		const fragments = planFragmentGroups(plan.candidates)[0]!;
+		const columns = (meta.table.primaryKey as ReadonlyArray<string>).length;
+		let after: string | null = null;
+		let previous: Array<unknown> | null = null;
+		for (;;) {
+			const sql = this.pagedSql(meta, fragments, 'kv.row_key', after, PAGE_PROBE_BATCH);
+			const name = pagedStatementName('kv_keys', plan.candidates, after);
+			const batch: Array<{row_key: string}> = (await this.client.query<{row_key: string}>(sql.text, sql.values, name))
+				.rows;
+			for (const stored of batch) {
+				const values = decodeRowKey(stored.row_key, columns);
+				if (values === null) return false;
+				if (previous !== null && compareKeyValues(previous, values) > 0) return false;
+				previous = values;
+			}
+			if (batch.length < PAGE_PROBE_BATCH) return true;
+			after = batch[batch.length - 1]!.row_key;
+		}
+	}
+
+	private async keysetPage(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		plan: QueryPlan,
+		after: string | null,
+		offset: number,
+		pageSize: number,
+	): Promise<{rows: Array<Row>; pageState: string | null}> {
+		if (plan.candidates.kind === 'none') return {rows: [], pageState: null};
+		if (plan.candidates.kind === 'scan') logFullScan(meta);
+		const fragments = planFragmentGroups(plan.candidates)[0]!;
+		const sql = this.pagedSql(meta, fragments, 'kv.row_key, kv.row_data', after, pageSize + 1);
+		const result = await this.client.query<StoredRow>(
+			sql.text,
+			sql.values,
+			pagedStatementName('kv_page', plan.candidates, after),
+		);
+		const stored = result.rows.slice(0, pageSize);
+		const entries = this.matchingEntries(meta, stored, params);
+		const last = entries[entries.length - 1];
+		return {
+			rows: entries.map((entry) => projectRow(entry.row, meta.columns as ReadonlyArray<string> | undefined)),
+			pageState:
+				result.rows.length > pageSize && last
+					? encodePageState({offset: offset + entries.length, after: last.key, keyed: true})
+					: null,
+		};
+	}
+
+	private async sortedPage(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		plan: QueryPlan,
+		state: PageState,
+		pageSize: number,
+	): Promise<{rows: Array<Row>; pageState: string | null}> {
+		const entries = this.matchingEntries(meta, await this.candidates(meta, plan, this.client), params);
+		const compare = rowComparator(meta);
+		entries.sort((left, right) => compare(left.row, right.row));
+		const start = pageStart(meta, entries, state);
+		const page = entries.slice(start, start + pageSize);
+		const last = page[page.length - 1];
+		const nextOffset = start + page.length;
+		return {
+			rows: page.map((entry) => projectRow(entry.row, meta.columns as ReadonlyArray<string> | undefined)),
+			pageState: nextOffset < entries.length && last ? encodePageState({offset: nextOffset, after: last.key}) : null,
 		};
 	}
 
@@ -911,11 +1101,24 @@ export class PostgresKvQueryExecutor {
 		return [...byRowKey.values()];
 	}
 
-	private matchingRows(meta: KvQueryMeta, stored: ReadonlyArray<StoredRow>, params: CassandraParams): Array<Row> {
+	private matchingEntries(
+		meta: KvQueryMeta,
+		stored: ReadonlyArray<StoredRow>,
+		params: CassandraParams,
+	): Array<PageEntry> {
 		const required = queryShape(meta).requiredColumns;
-		return stored
-			.map((entry) => (required ? decodeRowColumns(entry.row_data, required) : decodeRow(entry.row_data)))
-			.filter((row) => matchesWhere(row, meta.where as ReadonlyArray<WhereExpr<Row>> | undefined, params));
+		const entries: Array<PageEntry> = [];
+		for (const entry of stored) {
+			const row = required ? decodeRowColumns(entry.row_data, required) : decodeRow(entry.row_data);
+			if (matchesWhere(row, meta.where as ReadonlyArray<WhereExpr<Row>> | undefined, params)) {
+				entries.push({key: entry.row_key, row});
+			}
+		}
+		return entries;
+	}
+
+	private matchingRows(meta: KvQueryMeta, stored: ReadonlyArray<StoredRow>, params: CassandraParams): Array<Row> {
+		return this.matchingEntries(meta, stored, params).map((entry) => entry.row);
 	}
 
 	private async select(
