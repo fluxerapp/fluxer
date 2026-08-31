@@ -114,15 +114,44 @@ flush_reaction_buffer(DispatchFun, State) ->
             _ -> _ = erlang:cancel_timer(Timer)
         end,
     StateCleared = State#{reaction_buffer => queue:new(), reaction_buffer_timer => undefined},
-    case BufferList of
-        [] ->
-            StateCleared;
-        [Single] ->
-            {noreply, FinalState} = DispatchFun(message_reaction_add, Single, StateCleared),
-            FinalState;
-        _ ->
-            dispatch_reaction_add_many(BufferList, DispatchFun, StateCleared)
+    lists:foldl(
+        fun(Group, Acc) -> dispatch_reaction_group(Group, DispatchFun, Acc) end,
+        StateCleared,
+        group_reactions_by_message(BufferList)
+    ).
+
+-spec group_reactions_by_message([map()]) -> [[map()]].
+group_reactions_by_message(Buffer) ->
+    {Keys, Groups} = lists:foldl(fun collect_reaction_group/2, {[], #{}}, Buffer),
+    [lists:reverse(maps:get(Key, Groups)) || Key <- lists:reverse(Keys)].
+
+-spec collect_reaction_group(map(), {[term()], #{term() => [map()]}}) ->
+    {[term()], #{term() => [map()]}}.
+collect_reaction_group(Entry, {Keys, Groups}) ->
+    Key = reaction_group_key(Entry),
+    case maps:is_key(Key, Groups) of
+        true -> {Keys, Groups#{Key := [Entry | maps:get(Key, Groups)]}};
+        false -> {[Key | Keys], Groups#{Key => [Entry]}}
     end.
+
+-spec reaction_group_key(map()) -> term().
+reaction_group_key(Entry) ->
+    {
+        maps:get(<<"guild_id">>, Entry, undefined),
+        maps:get(<<"channel_id">>, Entry, undefined),
+        maps:get(<<"message_id">>, Entry, undefined)
+    }.
+
+-spec dispatch_reaction_group(
+    [map()],
+    fun((atom(), map(), session_state()) -> {noreply, session_state()}),
+    session_state()
+) -> session_state().
+dispatch_reaction_group([Single], DispatchFun, State) ->
+    {noreply, FinalState} = DispatchFun(message_reaction_add, Single, State),
+    FinalState;
+dispatch_reaction_group(Group, DispatchFun, State) ->
+    dispatch_reaction_add_many(Group, DispatchFun, State).
 
 -spec dispatch_reaction_add_many(
     [map()],
@@ -175,3 +204,50 @@ trim_queue(Q, MaxLen) ->
         true -> trim_queue(queue:drop(Q), MaxLen);
         false -> Q
     end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+reaction_entry(ChannelId, MessageId, UserId) ->
+    #{
+        <<"channel_id">> => ChannelId,
+        <<"message_id">> => MessageId,
+        <<"user_id">> => UserId,
+        <<"emoji">> => #{<<"id">> => null, <<"name">> => <<"thumbsup">>}
+    }.
+
+record_reaction_dispatch(Event, Data, State) ->
+    {noreply, State#{dispatched => [{Event, Data} | maps:get(dispatched, State, [])]}}.
+
+summarize_reaction_dispatch({message_reaction_add_many, Data}) ->
+    {message_reaction_add_many, maps:get(<<"message_id">>, Data), [
+        maps:get(<<"user_id">>, Reaction)
+     || Reaction <- maps:get(<<"reactions">>, Data)
+    ]};
+summarize_reaction_dispatch({Event, Data}) ->
+    {Event, maps:get(<<"message_id">>, Data), [maps:get(<<"user_id">>, Data)]}.
+
+flush_reaction_buffer_groups_by_message_test() ->
+    Buffer = [
+        reaction_entry(<<"10">>, <<"100">>, <<"1">>),
+        reaction_entry(<<"10">>, <<"200">>, <<"2">>),
+        reaction_entry(<<"10">>, <<"100">>, <<"3">>)
+    ],
+    State = #{reaction_buffer => queue:from_list(Buffer), reaction_buffer_timer => undefined},
+    Final = flush_reaction_buffer(fun record_reaction_dispatch/3, State),
+    Dispatched = lists:reverse(maps:get(dispatched, Final, [])),
+    ?assertEqual(
+        [
+            {message_reaction_add_many, <<"100">>, [<<"1">>, <<"3">>]},
+            {message_reaction_add, <<"200">>, [<<"2">>]}
+        ],
+        [summarize_reaction_dispatch(Entry) || Entry <- Dispatched]
+    ).
+
+flush_reaction_buffer_single_entry_dispatches_add_test() ->
+    Entry = reaction_entry(<<"10">>, <<"100">>, <<"1">>),
+    State = #{reaction_buffer => queue:from_list([Entry]), reaction_buffer_timer => undefined},
+    Final = flush_reaction_buffer(fun record_reaction_dispatch/3, State),
+    ?assertEqual([{message_reaction_add, Entry}], maps:get(dispatched, Final, [])).
+
+-endif.
