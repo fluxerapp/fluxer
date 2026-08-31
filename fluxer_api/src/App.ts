@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createAPIApp} from '@app/api/App';
-import {initializeConfig} from '@app/api/Config';
+import {buildAPIServerOptions, initializeConfig} from '@app/api/Config';
 import {initializeLogger} from '@app/api/Logger';
 import {Config} from '@app/Config';
 import {shutdownInstrumentation} from '@app/Instrument';
@@ -34,7 +34,7 @@ async function main(): Promise<void> {
 	process.on('unhandledRejection', (reason) => {
 		Logger.error({reason}, 'Unhandled rejection (suppressed)');
 	});
-	const server = createServer(app, {port: Config.port});
+	const server = createServer(app, buildAPIServerOptions(Config));
 	Logger.info({port: Config.port}, `Starting Fluxer API on port ${Config.port}`);
 	setupGracefulShutdown(
 		async () => {

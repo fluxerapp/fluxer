@@ -160,6 +160,30 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_PREPARED_STATEMENTS');
 	});
 
+	test('keeps the api http timeouts at their defaults', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.headers_timeout_ms).toBe(30_000);
+		expect(config.services.api.request_timeout_ms).toBe(120_000);
+	});
+
+	test('reads the api http timeouts from the environment', async () => {
+		stubMinimalEnv({FLUXER_API_HEADERS_TIMEOUT_MS: '45000', FLUXER_API_REQUEST_TIMEOUT_MS: '600000'});
+		const config = await loadConfig();
+		expect(config.services.api.headers_timeout_ms).toBe(45_000);
+		expect(config.services.api.request_timeout_ms).toBe(600_000);
+	});
+
+	test('rejects a non-numeric api header timeout', async () => {
+		stubMinimalEnv({FLUXER_API_HEADERS_TIMEOUT_MS: 'soon'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_HEADERS_TIMEOUT_MS');
+	});
+
+	test('rejects a non-numeric api request timeout', async () => {
+		stubMinimalEnv({FLUXER_API_REQUEST_TIMEOUT_MS: 'soon'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_REQUEST_TIMEOUT_MS');
+	});
+
 	test('rejects unsafe production Postgres defaults', async () => {
 		stubMinimalEnv({FLUXER_ENV: 'production'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_HOST');

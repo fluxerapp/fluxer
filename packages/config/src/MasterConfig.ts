@@ -91,6 +91,8 @@ export interface MasterConfig {
 	services: {
 		api: {
 			port: number;
+			headers_timeout_ms: number;
+			request_timeout_ms: number;
 			max_inflight_requests: number;
 			ip_ban_exempt_ips: Array<string>;
 			desktop_github_redirect_countries: Array<string>;
