@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {execFileSync, spawnSync} from 'node:child_process';
+import {spawnSync} from 'node:child_process';
 import {createServer} from 'node:net';
 import {
 	getDefaultPostgresClient,
@@ -11,6 +11,7 @@ import {
 } from '@pkgs/postgres/src/Client';
 import cassandra from 'cassandra-driver';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
+import {startDockerContainer} from '../test/DockerTestContainer';
 import {LegacyPostgresKvQueryExecutor} from './__testref__/LegacyPostgresKvQueryExecutor';
 import type {CassandraParams, KvQueryMeta, KvTableSpec, WhereExpr} from './CassandraTypes';
 import {buildCandidatePlan, ensurePostgresKvSchema, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
@@ -136,27 +137,23 @@ describe.skipIf(!dockerAvailable)('postgres kv non-select matrix', () => {
 
 	beforeAll(async () => {
 		const port = await freePort();
-		execFileSync(
-			'docker',
-			[
-				'run',
-				'-d',
-				'--name',
-				CONTAINER,
-				'-e',
-				'POSTGRES_USER=fluxer',
-				'-e',
-				'POSTGRES_PASSWORD=fluxer',
-				'-e',
-				'POSTGRES_DB=fluxer',
-				'-p',
-				`127.0.0.1:${port}:5432`,
-				'postgres:16-alpine',
-				'-c',
-				'fsync=off',
-			],
-			{stdio: 'ignore'},
-		);
+		startDockerContainer([
+			'run',
+			'-d',
+			'--name',
+			CONTAINER,
+			'-e',
+			'POSTGRES_USER=fluxer',
+			'-e',
+			'POSTGRES_PASSWORD=fluxer',
+			'-e',
+			'POSTGRES_DB=fluxer',
+			'-p',
+			`127.0.0.1:${port}:5432`,
+			'postgres:16-alpine',
+			'-c',
+			'fsync=off',
+		]);
 		let ready = false;
 		for (let attempt = 0; attempt < 180 && !ready; attempt += 1) {
 			await sleep(500);
