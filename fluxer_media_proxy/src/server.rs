@@ -1610,7 +1610,12 @@ async fn fetch_external_inner(
             .get(header::CONTENT_RANGE)
             .and_then(|value| value.to_str().ok())
             .map(ToOwned::to_owned);
-        let content_length = response.content_length();
+        let content_length = response
+            .headers()
+            .get(header::CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<u64>().ok())
+            .or_else(|| response.content_length());
         if let Some(len) = content_length
             && len > constants::MAX_MEDIA_PROXY_BYTES as u64
         {
