@@ -32,13 +32,14 @@ const processAssetDeletionQueue: WorkerTaskHandler = async (_payload, _helpers) 
 		return;
 	}
 	Logger.info({queueSize}, 'Starting asset deletion queue processing');
+	const maxItems = Math.min(MAX_ITEMS_PER_RUN, queueSize);
 	let totalProcessed = 0;
 	let totalDeleted = 0;
 	let totalSkipped = 0;
 	let totalFailed = 0;
 	let totalCdnPurged = 0;
-	while (totalProcessed < MAX_ITEMS_PER_RUN) {
-		const batch = await assetDeletionQueue.getBatch(BATCH_SIZE);
+	while (totalProcessed < maxItems) {
+		const batch = await assetDeletionQueue.getBatch(Math.min(BATCH_SIZE, maxItems - totalProcessed));
 		if (batch.length === 0) {
 			break;
 		}
