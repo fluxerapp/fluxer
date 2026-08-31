@@ -4,6 +4,8 @@ import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
 import {describe, expect, it} from 'vitest';
 
 const INFLIGHT_OVERFLOW_ENTRIES = 10000;
+const PRODUCE_TIMEOUT_MS = 50;
+const PRODUCE_TIMEOUT_MESSAGE = 'Cache produce timed out';
 
 function deferred<T>(): {promise: Promise<T>; resolve: (value: T) => void; reject: (error: Error) => void} {
 	let resolve!: (value: T) => void;
@@ -17,6 +19,16 @@ function deferred<T>(): {promise: Promise<T>; resolve: (value: T) => void; rejec
 
 function flush(): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function settleWithin<T>(pending: Promise<T>, ms: number): Promise<T | 'pinned' | 'rejected'> {
+	return Promise.race([
+		pending.then(
+			(value) => value,
+			() => 'rejected' as const,
+		),
+		new Promise<'pinned'>((resolve) => setTimeout(() => resolve('pinned'), ms)),
+	]);
 }
 
 function trackedProduceKeys(cache: InMemoryProvider): Array<string> {
@@ -148,6 +160,51 @@ describe('cache invalidation during an in-flight produce', () => {
 		);
 		await expect(failing).rejects.toThrow('produce failed');
 		expect(trackedProduceKeys(cache)).toEqual([]);
+	});
+
+	it('does not pin a key forever when the factory never settles', async () => {
+		const cache = new InMemoryProvider();
+		const stuck = deferred<string>();
+		const pinned = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
+		await expect(settleWithin(pinned, 500)).resolves.toBe('rejected');
+		await expect(pinned).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
+		const recovered = cache.getOrSet('session', async () => 'recovered', 30, PRODUCE_TIMEOUT_MS);
+		await expect(settleWithin(recovered, 500)).resolves.toBe('recovered');
+		stuck.resolve('never-settled');
+		await flush();
+		expect(await cache.get('session')).toBe('recovered');
+	});
+
+	it('does not store a value produced by a factory that settled after the timeout', async () => {
+		const cache = new InMemoryProvider();
+		const stuck = deferred<string>();
+		const pending = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
+		await expect(pending).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
+		stuck.resolve('late-produce');
+		await flush();
+		expect(await cache.get('session')).toBeNull();
+		expect(trackedProduceKeys(cache)).toEqual([]);
+	});
+
+	it('retries once for the joiners when the producer times out', async () => {
+		const cache = new InMemoryProvider();
+		const gates: Array<ReturnType<typeof deferred<string>>> = [];
+		const factory = async () => {
+			const gate = deferred<string>();
+			gates.push(gate);
+			return await gate.promise;
+		};
+		const producer = cache.getOrSet('session', factory, 30, PRODUCE_TIMEOUT_MS);
+		const joiner = cache.getOrSet('session', factory, 30, PRODUCE_TIMEOUT_MS);
+		await expect(producer).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
+		await flush();
+		expect(gates).toHaveLength(2);
+		gates[1].resolve('retried-session');
+		await expect(joiner).resolves.toBe('retried-session');
+		expect(await cache.get('session')).toBe('retried-session');
+		gates[0].resolve('abandoned-produce');
+		await flush();
+		expect(await cache.get('session')).toBe('retried-session');
 	});
 
 	it('keeps a later produce cacheable after an earlier one was invalidated', async () => {

@@ -790,6 +790,7 @@ export class StripeSubscriptionService {
 				cacheKey,
 				async () => this.loadCurrentSubscriptionPrice(user.stripeSubscriptionId!),
 				StripeSubscriptionService.CURRENT_PRICE_CACHE_TTL_SECONDS,
+				StripeSubscriptionService.PRICE_CACHE_PRODUCE_TIMEOUT_MS,
 			);
 		} catch (error) {
 			Logger.warn(
@@ -843,6 +844,7 @@ export class StripeSubscriptionService {
 					return price.unit_amount ?? null;
 				},
 				StripeSubscriptionService.LIST_PRICE_CACHE_TTL_SECONDS,
+				StripeSubscriptionService.PRICE_CACHE_PRODUCE_TIMEOUT_MS,
 			);
 		} catch (error) {
 			Logger.warn({error, priceId}, 'Failed to retrieve Stripe list price amount');
@@ -1023,6 +1025,7 @@ export class StripeSubscriptionService {
 
 	private static readonly CURRENT_PRICE_CACHE_TTL_SECONDS = seconds('5 minutes');
 	private static readonly LIST_PRICE_CACHE_TTL_SECONDS = seconds('1 hour');
+	private static readonly PRICE_CACHE_PRODUCE_TIMEOUT_MS = 90000;
 	private static readonly USER_TRIAL_LOCK_TTL_SECONDS = seconds('30 seconds');
 	private static readonly USER_TRIAL_LOCK_MAX_WAIT_MS = 15000;
 	private static readonly USER_TRIAL_LOCK_RETRY_DELAY_MS = 100;

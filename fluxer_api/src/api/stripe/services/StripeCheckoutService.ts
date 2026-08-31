@@ -1055,6 +1055,7 @@ export class StripeCheckoutService {
 	private static readonly LOCALIZED_CARD_PREAPPROVAL_CONTINUE_LOCK_TTL_SECONDS = seconds('30 seconds');
 	private static readonly LOCALIZED_CARD_PREAPPROVAL_TTL_SECONDS = seconds('1 day');
 	private static readonly PRICE_CACHE_TTL_SECONDS = seconds('1 hour');
+	private static readonly PRICE_CACHE_PRODUCE_TIMEOUT_MS = 90000;
 
 	private resolveConfiguredPriceIds(countryCode?: string, pricingMode: PricingMode = 'localized'): ResolvedPriceIds {
 		const recurringCurrencyPreferences =
@@ -1247,6 +1248,7 @@ export class StripeCheckoutService {
 					};
 				},
 				StripeCheckoutService.PRICE_CACHE_TTL_SECONDS,
+				StripeCheckoutService.PRICE_CACHE_PRODUCE_TIMEOUT_MS,
 			);
 		} catch (error: unknown) {
 			Logger.warn({error, priceId}, 'Failed to retrieve Stripe price summary');

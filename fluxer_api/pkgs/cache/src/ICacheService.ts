@@ -2,6 +2,8 @@
 
 const CACHE_INFLIGHT_MAX_ENTRIES = 10000;
 const CACHE_INFLIGHT_JOIN_RETRIES = 1;
+const CACHE_PRODUCE_TIMEOUT_MS = 15000;
+const CACHE_PRODUCE_TIMEOUT_MESSAGE = 'Cache produce timed out';
 
 interface CacheMSetEntry<T> {
 	key: string;
@@ -75,7 +77,12 @@ export abstract class ICacheService {
 		return entry.hit ? entry.value : null;
 	}
 
-	async getOrSet<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: CacheTtlSeconds<T>): Promise<T> {
+	async getOrSet<T>(
+		key: string,
+		valueFactory: () => Promise<T>,
+		ttlSeconds?: CacheTtlSeconds<T>,
+		produceTimeoutMs: number = CACHE_PRODUCE_TIMEOUT_MS,
+	): Promise<T> {
 		let generation = this.trackProduce(key);
 		try {
 			for (let attempt = 0; ; attempt++) {
@@ -85,7 +92,7 @@ export abstract class ICacheService {
 				}
 				const inflight = this.inflightValues.get(key);
 				if (!inflight) {
-					return await this.produceSingleFlight(key, valueFactory, ttlSeconds, generation);
+					return await this.produceSingleFlight(key, valueFactory, ttlSeconds, generation, produceTimeoutMs);
 				}
 				const joined = await this.joinInflight<T>(inflight);
 				if (joined.joined) {
@@ -115,6 +122,14 @@ export abstract class ICacheService {
 		return this.produceInvalidations.get(key)?.generation ?? 0;
 	}
 
+	private abandonProduce(key: string, generation: number): void {
+		this.trackProduce(key);
+		const tracked = this.produceInvalidations.get(key);
+		if (tracked?.generation === generation) {
+			tracked.generation += 1;
+		}
+	}
+
 	private releaseProduce(key: string): void {
 		const tracked = this.produceInvalidations.get(key);
 		if (!tracked) {
@@ -139,15 +154,49 @@ export abstract class ICacheService {
 		valueFactory: () => Promise<T>,
 		ttlSeconds: CacheTtlSeconds<T> | undefined,
 		generation: number,
+		produceTimeoutMs: number,
 	): Promise<T> {
+		const produced = this.boundProduce(
+			this.produceAndStore(key, valueFactory, ttlSeconds, generation),
+			key,
+			generation,
+			produceTimeoutMs,
+		);
 		if (this.inflightValues.size >= CACHE_INFLIGHT_MAX_ENTRIES) {
-			return await this.produceAndStore(key, valueFactory, ttlSeconds, generation);
+			return await produced;
 		}
-		const pending = this.produceAndStore(key, valueFactory, ttlSeconds, generation).finally(() => {
+		const pending = produced.finally(() => {
 			this.inflightValues.delete(key);
 		});
 		this.inflightValues.set(key, pending);
 		return await pending;
+	}
+
+	private boundProduce<T>(produced: Promise<T>, key: string, generation: number, produceTimeoutMs: number): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			let abandoned = false;
+			const timer = setTimeout(() => {
+				abandoned = true;
+				this.abandonProduce(key, generation);
+				reject(new Error(CACHE_PRODUCE_TIMEOUT_MESSAGE));
+			}, produceTimeoutMs);
+			const settle = () => {
+				clearTimeout(timer);
+				if (abandoned) {
+					this.releaseProduce(key);
+				}
+			};
+			produced.then(
+				(value) => {
+					settle();
+					resolve(value);
+				},
+				(error: unknown) => {
+					settle();
+					reject(error);
+				},
+			);
+		});
 	}
 
 	private async produceAndStore<T>(
