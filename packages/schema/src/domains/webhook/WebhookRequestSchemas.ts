@@ -62,7 +62,7 @@ export const WebhookTokenUpdateRequest = z
 
 export type WebhookTokenUpdateRequest = z.infer<typeof WebhookTokenUpdateRequest>;
 
-const WebhookAttachmentRequest = z.object({
+const WebhookMultipartAttachmentRequest = z.object({
 	id: z
 		.union([SnowflakeType, coerceNumberFromString(Int32Type)])
 		.optional()
@@ -70,8 +70,6 @@ const WebhookAttachmentRequest = z.object({
 	filename: createStringType(1, 1024).optional().describe('Name of the file (1-1024 characters)'),
 	description: createStringType(1, 4096).optional().describe('Description for the attachment (max 4096 characters)'),
 	content_type: createStringType(1, 256).optional().describe('MIME type of the file'),
-	upload_filename: z.never().optional(),
-	file_size: z.never().optional(),
 	size: NonNegativeSafeIntegerType.optional().describe('Size of the file in bytes'),
 	url: URLType.optional().describe('URL of the attachment'),
 	proxy_url: URLType.optional().describe('Proxied URL of the attachment'),
@@ -88,14 +86,10 @@ const WebhookAttachmentRequest = z.object({
 	).optional(),
 });
 
-export const WebhookMessageRequest = z
+const WebhookMessageRequestBase = z
 	.object({
 		content: MessageContentRequest.nullish(),
 		embeds: z.array(RichEmbedRequest).optional().describe('Array of embed objects to include in the message'),
-		attachments: z
-			.array(z.union([ClientUploadedAttachmentRequest, WebhookAttachmentRequest]))
-			.optional()
-			.describe('Array of attachment objects'),
 		message_reference: MessageReferenceRequest.nullish().describe(
 			'Reference to another message (for replies or forwards)',
 		),
@@ -115,7 +109,23 @@ export const WebhookMessageRequest = z
 	})
 	.partial();
 
+export const WebhookMessageRequest = WebhookMessageRequestBase.extend({
+	attachments: z
+		.array(ClientUploadedAttachmentRequest)
+		.optional()
+		.describe('Array of attachments uploaded through the presigned upload endpoint'),
+});
+
 export type WebhookMessageRequest = z.infer<typeof WebhookMessageRequest>;
+
+export const WebhookMultipartMessageRequest = WebhookMessageRequestBase.extend({
+	attachments: z
+		.array(WebhookMultipartAttachmentRequest)
+		.optional()
+		.describe('Array of multipart attachment metadata objects'),
+});
+
+export type WebhookMultipartMessageRequest = z.infer<typeof WebhookMultipartMessageRequest>;
 
 export const WebhookMessageEditRequest = z
 	.object({

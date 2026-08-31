@@ -22220,7 +22220,7 @@
 					"required": true,
 					"content": {
 						"application/json": {"schema": {"$ref": "#/components/schemas/WebhookMessageRequest"}},
-						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/WebhookMessageRequest"}}
+						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/WebhookMultipartMessageRequest"}}
 					}
 				}
 			}
@@ -34715,51 +34715,51 @@
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 						"description": "Array of embed objects to include in the message"
 					},
+					"message_reference": {
+						"anyOf": [{"$ref": "#/components/schemas/MessageReferenceRequest"}, {"type": "null"}],
+						"description": "Reference to another message (for replies or forwards)"
+					},
+					"allowed_mentions": {
+						"anyOf": [{"$ref": "#/components/schemas/AllowedMentionsRequest"}, {"type": "null"}],
+						"description": "Controls which mentions trigger notifications"
+					},
+					"flags": {"$ref": "#/components/schemas/MessageFlags"},
+					"nonce": {"$ref": "#/components/schemas/MessageNonceRequest"},
+					"favorite_meme_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
+						"description": "ID of a favorite meme to attach"
+					},
+					"sticker_ids": {
+						"anyOf": [
+							{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}, "maxItems": 3},
+							{"type": "null"}
+						],
+						"description": "Array of sticker IDs to include (max 3)"
+					},
+					"tts": {"type": "boolean", "description": "Whether this is a text-to-speech message"},
+					"username": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Override the default username of the webhook for this message"
+					},
+					"avatar_url": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Override the default avatar URL of the webhook for this message"
+					},
 					"attachments": {
 						"type": "array",
-						"items": {
-							"oneOf": [
-								{"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
-								{
-									"type": "object",
-									"properties": {
-										"id": {
-											"oneOf": [
-												{"$ref": "#/components/schemas/SnowflakeType"},
-												{"$ref": "#/components/schemas/Int32Type"}
-											],
-											"description": "Attachment ID for referencing uploaded files"
-										},
-										"filename": {"type": "string", "description": "Name of the file (1-1024 characters)"},
-										"description": {
-											"type": "string",
-											"description": "Description for the attachment (max 4096 characters)"
-										},
-										"content_type": {"type": "string", "description": "MIME type of the file"},
-										"upload_filename": {"not": {}},
-										"file_size": {"not": {}},
-										"size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
-										"url": {"type": "string", "description": "URL of the attachment"},
-										"proxy_url": {"type": "string", "description": "Proxied URL of the attachment"},
-										"height": {
-											"type": "integer",
-											"format": "int53",
-											"description": "Height of the image/video in pixels"
-										},
-										"width": {
-											"type": "integer",
-											"format": "int53",
-											"description": "Width of the image/video in pixels"
-										},
-										"ephemeral": {"type": "boolean", "description": "Whether this attachment is ephemeral"},
-										"duration": {"type": "number", "description": "Duration of audio file in seconds"},
-										"waveform": {"type": "string", "description": "Base64-encoded bytearray of audio waveform"},
-										"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags"}
-									}
-								}
-							]
-						},
-						"description": "Array of attachment objects"
+						"items": {"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
+						"description": "Array of attachments uploaded through the presigned upload endpoint"
+					}
+				}
+			},
+			"WebhookMultipartMessageRequest": {
+				"type": "object",
+				"properties": {
+					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
+					"embeds": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
+						"description": "Array of embed objects to include in the message"
 					},
 					"message_reference": {
 						"anyOf": [{"$ref": "#/components/schemas/MessageReferenceRequest"}, {"type": "null"}],
@@ -34790,6 +34790,34 @@
 					"avatar_url": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Override the default avatar URL of the webhook for this message"
+					},
+					"attachments": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"oneOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"$ref": "#/components/schemas/Int32Type"}],
+									"description": "Attachment ID for referencing uploaded files"
+								},
+								"filename": {"type": "string", "description": "Name of the file (1-1024 characters)"},
+								"description": {
+									"type": "string",
+									"description": "Description for the attachment (max 4096 characters)"
+								},
+								"content_type": {"type": "string", "description": "MIME type of the file"},
+								"size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
+								"url": {"type": "string", "description": "URL of the attachment"},
+								"proxy_url": {"type": "string", "description": "Proxied URL of the attachment"},
+								"height": {"type": "integer", "format": "int53", "description": "Height of the image/video in pixels"},
+								"width": {"type": "integer", "format": "int53", "description": "Width of the image/video in pixels"},
+								"ephemeral": {"type": "boolean", "description": "Whether this attachment is ephemeral"},
+								"duration": {"type": "number", "description": "Duration of audio file in seconds"},
+								"waveform": {"type": "string", "description": "Base64-encoded bytearray of audio waveform"},
+								"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags"}
+							}
+						},
+						"description": "Array of multipart attachment metadata objects"
 					}
 				}
 			},

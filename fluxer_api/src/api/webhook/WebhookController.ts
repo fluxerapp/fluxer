@@ -19,6 +19,7 @@ import {
 	WebhookExecuteQueryRequest,
 	WebhookMessageEditRequest,
 	WebhookMessageRequest,
+	WebhookMultipartMessageRequest,
 	WebhookTokenUpdateRequest,
 	WebhookUpdateRequest,
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
@@ -41,6 +42,14 @@ import type {WebhookExecuteMessageData} from './WebhookService';
 
 function validateWebhookMessagePayload(data: unknown): WebhookMessageRequest {
 	const validationResult = WebhookMessageRequest.safeParse(normalizeMessageRequestPayload(data));
+	if (!validationResult.success) {
+		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+	}
+	return validationResult.data;
+}
+
+function validateWebhookMultipartMessagePayload(data: unknown): WebhookMultipartMessageRequest {
+	const validationResult = WebhookMultipartMessageRequest.safeParse(normalizeMessageRequestPayload(data));
 	if (!validationResult.success) {
 		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
 	}
@@ -89,10 +98,11 @@ async function parseWebhookMultipartMessageData(
 	if (!parsedPayload) {
 		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
 	}
-	const webhookData = validateWebhookMessagePayload(parsedPayload);
+	const webhookData = validateWebhookMultipartMessagePayload(parsedPayload);
 	return {
 		...webhookData,
 		...messageData,
+		attachments: messageData.attachments,
 		username: webhookData.username,
 		avatar_url: webhookData.avatar_url,
 	};
@@ -333,7 +343,7 @@ export function WebhookController(app: HonoApp) {
 				'Executes the webhook by sending a message to its configured channel. If the wait query parameter is true, returns the created message object; otherwise returns a 204 status with no content.',
 			responseSchema: MessageResponseSchema,
 			requestSchema: WebhookMessageRequest,
-			requestFormSchema: WebhookMessageRequest,
+			requestFormSchema: WebhookMultipartMessageRequest,
 			statusCode: 200,
 			tags: ['Webhooks'],
 		}),
