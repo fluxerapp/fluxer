@@ -293,7 +293,7 @@ services:
     environment:
       <<: *fluxer-env
       FLUXER_API_PORT: "8080"
-      NODE_OPTIONS: --max-old-space-size=${FLUXER_API_NODE_HEAP_MB:-1792} --enable-source-maps
+      NODE_OPTIONS: --enable-source-maps${FLUXER_API_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_API_NODE_HEAP_MB}
       FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
     healthcheck:
@@ -331,7 +331,7 @@ services:
     command: ["node", "dist/WorkerEntrypoint.js"]
     environment:
       <<: *fluxer-env
-      NODE_OPTIONS: --max-old-space-size=${FLUXER_WORKER_NODE_HEAP_MB:-1792} --enable-source-maps
+      NODE_OPTIONS: --enable-source-maps${FLUXER_WORKER_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_WORKER_NODE_HEAP_MB}
       FLUXER_API_WORKER_MODE: all_lanes
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
       FLUXER_API_WORKER_ENABLE_VOICE_RECONCILIATION: "true"

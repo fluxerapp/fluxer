@@ -59,7 +59,7 @@ RUN rm -rf pkgs && \
 ENV HOME=/usr/src/app
 ENV COREPACK_HOME=/usr/src/app/.cache/corepack
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=2048 --enable-source-maps"
+ENV NODE_OPTIONS="--enable-source-maps"
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 ENV BUILD_VERSION=${BUILD_VERSION}
 
