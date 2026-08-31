@@ -139,6 +139,7 @@ pub struct Metrics {
     pub transform_failures: AtomicU64,
     pub decode_failures: AtomicU64,
     pub fetch_failures: AtomicU64,
+    pub external_stream_overruns: AtomicU64,
     pub blocked_url_attempts: AtomicU64,
     pub framebuffer_pool_borrows: AtomicU64,
     pub framebuffer_pool_grow_events: AtomicU64,
@@ -182,6 +183,7 @@ impl Metrics {
             transform_failures: AtomicU64::new(0),
             decode_failures: AtomicU64::new(0),
             fetch_failures: AtomicU64::new(0),
+            external_stream_overruns: AtomicU64::new(0),
             blocked_url_attempts: AtomicU64::new(0),
             framebuffer_pool_borrows: AtomicU64::new(0),
             framebuffer_pool_grow_events: AtomicU64::new(0),
@@ -337,6 +339,11 @@ pub fn render() -> String {
         &mut out,
         "fluxer_media_proxy_fetch_failures_total",
         &GLOBAL.fetch_failures,
+    );
+    render_counter(
+        &mut out,
+        "fluxer_media_proxy_external_stream_overruns_total",
+        &GLOBAL.external_stream_overruns,
     );
     render_counter(
         &mut out,

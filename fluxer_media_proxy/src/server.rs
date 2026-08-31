@@ -29,7 +29,7 @@ use axum::{
 use base64::{Engine as _, engine::general_purpose};
 use bytes::Bytes;
 use http_body::Frame;
-use http_body_util::{BodyExt, Limited};
+use http_body_util::BodyExt;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{
@@ -1320,6 +1320,7 @@ async fn serve_external(
                 content_length,
                 &content_type,
                 Some(disposition),
+                &fetched_url,
             );
         }
         ExternalBody::Buffered(data) => data,
@@ -1385,9 +1386,22 @@ fn external_source_is_svg(prefix: &[u8], filename: &str, content_type: &str) -> 
         ))
 }
 
+#[derive(Debug)]
+struct ExternalStreamOverrun;
+
+impl std::fmt::Display for ExternalStreamOverrun {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("external stream exceeded the media proxy size cap")
+    }
+}
+
+impl std::error::Error for ExternalStreamOverrun {}
+
 struct ExternalStreamBody {
+    url: String,
     prefix: Option<Bytes>,
-    upstream: Limited<reqwest::Body>,
+    upstream: reqwest::Body,
+    remaining: usize,
 }
 
 impl http_body::Body for ExternalStreamBody {
@@ -1404,19 +1418,44 @@ impl http_body::Body for ExternalStreamBody {
         {
             return Poll::Ready(Some(Ok(Frame::data(prefix))));
         }
-        Pin::new(&mut this.upstream).poll_frame(cx)
+        let frame = match Pin::new(&mut this.upstream).poll_frame(cx) {
+            Poll::Pending => return Poll::Pending,
+            Poll::Ready(None) => return Poll::Ready(None),
+            Poll::Ready(Some(Err(err))) => return Poll::Ready(Some(Err(err.into()))),
+            Poll::Ready(Some(Ok(frame))) => frame,
+        };
+        let Some(len) = frame.data_ref().map(Bytes::len) else {
+            return Poll::Ready(Some(Ok(frame)));
+        };
+        let Some(remaining) = this.remaining.checked_sub(len) else {
+            this.remaining = 0;
+            warn!(url = %this.url, "external stream exceeded the size cap");
+            metrics::GLOBAL
+                .external_stream_overruns
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            return Poll::Ready(Some(Err(Box::new(ExternalStreamOverrun))));
+        };
+        this.remaining = remaining;
+        Poll::Ready(Some(Ok(frame)))
     }
 }
 
-fn external_stream_body(method: &Method, response: reqwest::Response, prefix: Bytes) -> Body {
+fn external_stream_body(
+    method: &Method,
+    response: reqwest::Response,
+    prefix: Bytes,
+    url: &str,
+) -> Body {
     if *method == Method::HEAD {
         return Body::empty();
     }
     let remaining = constants::MAX_MEDIA_PROXY_BYTES.saturating_sub(prefix.len());
     let (_, upstream) = http::Response::from(response).into_parts();
     Body::new(ExternalStreamBody {
+        url: url.to_owned(),
         prefix: Some(prefix),
-        upstream: Limited::new(upstream, remaining),
+        upstream,
+        remaining,
     })
 }
 
@@ -1426,6 +1465,7 @@ fn external_partial_response(
     disposition: Option<String>,
 ) -> Response {
     let FetchedExternal {
+        url,
         body,
         content_type,
         content_length,
@@ -1443,7 +1483,7 @@ fn external_partial_response(
             (body, body_len)
         }
         ExternalBody::Streaming { response, prefix } => (
-            external_stream_body(&method, response, prefix),
+            external_stream_body(&method, response, prefix, &url),
             content_length,
         ),
     };
@@ -1484,8 +1524,9 @@ fn external_streaming_response(
     content_length: Option<u64>,
     content_type: &str,
     disposition: Option<String>,
+    url: &str,
 ) -> Response {
-    let body = external_stream_body(&method, response, prefix);
+    let body = external_stream_body(&method, response, prefix, url);
     let mut http_response = Response::new(body);
     *http_response.status_mut() = StatusCode::OK;
     http_headers::add_media_headers(
@@ -1578,7 +1619,7 @@ async fn fetch_external_inner(
         if let Some(rv) = range {
             request = request.header(header::RANGE, format!("bytes={rv}"));
         }
-        let mut response = request.send().await.map_err(|err| {
+        let response = request.send().await.map_err(|err| {
             warn!(url = %current_url, %err, "external send failed");
             ExternalFetchError::FetchFailed
         })?;
@@ -1599,54 +1640,63 @@ async fn fetch_external_inner(
                 })?;
             continue;
         }
-        let content_type = response
-            .headers()
-            .get(header::CONTENT_TYPE)
-            .and_then(|value| value.to_str().ok())
-            .unwrap_or("application/octet-stream")
-            .to_owned();
-        let content_range = response
-            .headers()
-            .get(header::CONTENT_RANGE)
-            .and_then(|value| value.to_str().ok())
-            .map(ToOwned::to_owned);
-        let content_length = response
-            .headers()
-            .get(header::CONTENT_LENGTH)
-            .and_then(|value| value.to_str().ok())
-            .and_then(|value| value.parse::<u64>().ok())
-            .or_else(|| response.content_length());
-        if let Some(len) = content_length
-            && len > constants::MAX_MEDIA_PROXY_BYTES as u64
-        {
-            warn!(url = %current_url, len, "external payload too large");
-            return Err(ExternalFetchError::PayloadTooLarge);
-        }
-        let mut prefix = Bytes::new();
-        if status.is_success() && external_should_stream(allow_stream, &content_type) {
-            prefix = external_body_prefix(&mut response, &current_url).await?;
-            if !external_source_is_svg(&prefix, &url_filename(&current_url), &content_type) {
-                return Ok(FetchedExternal {
-                    url: current_url,
-                    status,
-                    body: ExternalBody::Streaming { response, prefix },
-                    content_type,
-                    content_length,
-                    content_range,
-                });
-            }
-        }
-        let data = buffer_external_response(response, prefix, &current_url).await?;
-        return Ok(FetchedExternal {
-            url: current_url,
-            status,
-            body: ExternalBody::Buffered(data),
-            content_type,
-            content_length,
-            content_range,
-        });
+        return external_fetched_from_response(response, current_url, allow_stream).await;
     }
     Err(ExternalFetchError::TooManyRedirects)
+}
+
+async fn external_fetched_from_response(
+    mut response: reqwest::Response,
+    url: String,
+    allow_stream: bool,
+) -> Result<FetchedExternal, ExternalFetchError> {
+    let status = response.status();
+    let content_type = response
+        .headers()
+        .get(header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or("application/octet-stream")
+        .to_owned();
+    let content_range = response
+        .headers()
+        .get(header::CONTENT_RANGE)
+        .and_then(|value| value.to_str().ok())
+        .map(ToOwned::to_owned);
+    let content_length = response
+        .headers()
+        .get(header::CONTENT_LENGTH)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse::<u64>().ok())
+        .or_else(|| response.content_length());
+    if let Some(len) = content_length
+        && len > constants::MAX_MEDIA_PROXY_BYTES as u64
+    {
+        warn!(url = %url, len, "external payload too large");
+        return Err(ExternalFetchError::PayloadTooLarge);
+    }
+    let mut prefix = Bytes::new();
+    if status.is_success() && external_should_stream(allow_stream, &content_type) {
+        prefix = external_body_prefix(&mut response, &url).await?;
+        if !external_source_is_svg(&prefix, &url_filename(&url), &content_type) {
+            return Ok(FetchedExternal {
+                url,
+                status,
+                body: ExternalBody::Streaming { response, prefix },
+                content_type,
+                content_length,
+                content_range,
+            });
+        }
+    }
+    let data = buffer_external_response(response, prefix, &url).await?;
+    Ok(FetchedExternal {
+        url,
+        status,
+        body: ExternalBody::Buffered(data),
+        content_type,
+        content_length,
+        content_range,
+    })
 }
 
 async fn external_body_prefix(
@@ -4442,6 +4492,7 @@ mod tests {
             Some(14),
             "video/mp4",
             Some("inline; filename=\"clip.mp4\"".to_owned()),
+            "https://cdn.example/clip.mp4",
         );
 
         assert_eq!(StatusCode::OK, response.status());
@@ -4482,6 +4533,7 @@ mod tests {
             None,
             "application/octet-stream",
             None,
+            "https://cdn.example/blob.bin",
         );
 
         assert_eq!(StatusCode::OK, response.status());
@@ -4491,6 +4543,207 @@ mod tests {
         );
         let body = to_bytes(response.into_body(), 64).await.unwrap();
         assert_eq!(b"prefix rest of the body", body.as_ref());
+    }
+
+    const STREAM_TEST_CHUNK_BYTES: usize = 1024 * 1024;
+    const STREAM_TEST_URL: &str = "https://cdn.example/clip.mp4";
+
+    struct TestUpstreamBody {
+        chunks: std::collections::VecDeque<Bytes>,
+        polls: Arc<std::sync::atomic::AtomicUsize>,
+    }
+
+    impl http_body::Body for TestUpstreamBody {
+        type Data = Bytes;
+        type Error = std::io::Error;
+
+        fn poll_frame(
+            self: Pin<&mut Self>,
+            _cx: &mut Context<'_>,
+        ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
+            let this = self.get_mut();
+            this.polls
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            Poll::Ready(this.chunks.pop_front().map(|chunk| Ok(Frame::data(chunk))))
+        }
+    }
+
+    fn test_chunks(total: usize) -> std::collections::VecDeque<Bytes> {
+        let filler = Bytes::from(vec![b'v'; STREAM_TEST_CHUNK_BYTES]);
+        let mut chunks = std::collections::VecDeque::new();
+        let mut remaining = total;
+        while remaining > 0 {
+            let take = remaining.min(STREAM_TEST_CHUNK_BYTES);
+            chunks.push_back(filler.slice(..take));
+            remaining -= take;
+        }
+        chunks
+    }
+
+    fn test_upstream(
+        total: usize,
+        declared: Option<u64>,
+        polls: Arc<std::sync::atomic::AtomicUsize>,
+    ) -> reqwest::Response {
+        let mut builder = http::Response::builder()
+            .status(StatusCode::OK)
+            .header(header::CONTENT_TYPE, "video/mp4");
+        if let Some(declared) = declared {
+            builder = builder.header(header::CONTENT_LENGTH, declared.to_string());
+        }
+        reqwest::Response::from(
+            builder
+                .body(reqwest::Body::wrap(TestUpstreamBody {
+                    chunks: test_chunks(total),
+                    polls,
+                }))
+                .unwrap(),
+        )
+    }
+
+    async fn drain_counting(body: Body) -> Result<usize, axum::Error> {
+        let mut body = body;
+        let mut delivered = 0usize;
+        while let Some(frame) = body.frame().await {
+            let frame = frame?;
+            if let Some(data) = frame.data_ref() {
+                delivered += data.len();
+            }
+        }
+        Ok(delivered)
+    }
+
+    async fn external_stream_delivered(total: usize) -> Result<usize, axum::Error> {
+        let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let fetched = external_fetched_from_response(
+            test_upstream(total, None, polls),
+            STREAM_TEST_URL.to_owned(),
+            true,
+        )
+        .await
+        .expect("an upstream without a declared length must be admitted");
+        assert_eq!(
+            None, fetched.content_length,
+            "the fixture must exercise the undeclared length path"
+        );
+        let ExternalBody::Streaming { response, prefix } = fetched.body else {
+            panic!("an undeclared length passthrough must stream");
+        };
+        let response = external_streaming_response(
+            Method::GET,
+            response,
+            prefix,
+            None,
+            "video/mp4",
+            None,
+            &fetched.url,
+        );
+        assert_eq!(StatusCode::OK, response.status());
+        drain_counting(response.into_body()).await
+    }
+
+    #[tokio::test]
+    async fn an_undeclared_length_stream_under_the_cap_is_delivered_whole() {
+        let total = constants::MAX_MEDIA_PROXY_BYTES - STREAM_TEST_CHUNK_BYTES;
+        assert_eq!(total, external_stream_delivered(total).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn an_undeclared_length_stream_exactly_at_the_cap_is_delivered_whole() {
+        let total = constants::MAX_MEDIA_PROXY_BYTES;
+        assert_eq!(total, external_stream_delivered(total).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn an_undeclared_length_stream_past_the_cap_fails_the_transfer() {
+        let total = constants::MAX_MEDIA_PROXY_BYTES + 1;
+        let err = external_stream_delivered(total)
+            .await
+            .expect_err("a body past the cap must not be delivered as a complete response");
+        assert!(
+            err.to_string()
+                .contains("exceeded the media proxy size cap"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_declared_length_past_the_cap_is_rejected_before_the_body_is_read() {
+        let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let declared = constants::MAX_MEDIA_PROXY_BYTES as u64 + 1;
+        let outcome = external_fetched_from_response(
+            test_upstream(STREAM_TEST_CHUNK_BYTES, Some(declared), Arc::clone(&polls)),
+            STREAM_TEST_URL.to_owned(),
+            true,
+        )
+        .await;
+        assert!(
+            matches!(outcome, Err(ExternalFetchError::PayloadTooLarge)),
+            "a declared length past the cap must be refused up front"
+        );
+        assert_eq!(
+            0,
+            polls.load(std::sync::atomic::Ordering::Relaxed),
+            "an oversized declared length must be refused without reading the body"
+        );
+    }
+
+    async fn raw_stream_transfer(budget: usize, total: usize) -> Vec<u8> {
+        let chunks = test_chunks(total);
+        let app = Router::new().route(
+            "/probe",
+            get(move || {
+                let chunks = chunks.clone();
+                async move {
+                    let mut response = Response::new(Body::new(ExternalStreamBody {
+                        url: STREAM_TEST_URL.to_owned(),
+                        prefix: None,
+                        upstream: reqwest::Body::wrap(TestUpstreamBody {
+                            chunks,
+                            polls: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
+                        }),
+                        remaining: budget,
+                    }));
+                    *response.status_mut() = StatusCode::OK;
+                    response
+                }
+            }),
+        );
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move { axum::serve(listener, app).await });
+        let mut stream = tokio::net::TcpStream::connect(addr).await.unwrap();
+        tokio::io::AsyncWriteExt::write_all(
+            &mut stream,
+            b"GET /probe HTTP/1.1\r\nHost: proxy\r\nConnection: close\r\n\r\n",
+        )
+        .await
+        .unwrap();
+        let mut raw = Vec::new();
+        tokio::io::AsyncReadExt::read_to_end(&mut stream, &mut raw)
+            .await
+            .unwrap();
+        server.abort();
+        raw
+    }
+
+    #[tokio::test]
+    async fn a_stream_within_its_budget_completes_the_chunked_transfer() {
+        let raw = raw_stream_transfer(STREAM_TEST_CHUNK_BYTES, STREAM_TEST_CHUNK_BYTES).await;
+        assert!(raw.starts_with(b"HTTP/1.1 200 OK"));
+        assert!(
+            raw.ends_with(b"0\r\n\r\n"),
+            "a stream inside the cap must terminate the chunked body"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_stream_past_its_budget_never_completes_the_chunked_transfer() {
+        let raw = raw_stream_transfer(STREAM_TEST_CHUNK_BYTES, STREAM_TEST_CHUNK_BYTES + 1).await;
+        assert!(
+            !raw.ends_with(b"0\r\n\r\n"),
+            "an overrun must not look like a complete body to the client"
+        );
     }
 
     #[test]
@@ -4637,6 +4890,7 @@ mod tests {
                 Some(14),
                 content_type,
                 None,
+                "https://cdn.example/clip.mp4",
             );
 
             assert_eq!(
