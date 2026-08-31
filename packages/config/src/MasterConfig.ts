@@ -61,6 +61,7 @@ export interface MasterConfig {
 			ssl_ca: string;
 			max_connections: number;
 			kv_table: string;
+			prepared_statements: boolean;
 		};
 	};
 	s3?: {

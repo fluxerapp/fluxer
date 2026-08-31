@@ -56,6 +56,7 @@ export interface APIConfig {
 		sslCa: string;
 		maxConnections: number;
 		kvTable: string;
+		preparedStatements: boolean;
 	};
 	database: {
 		backend: 'cassandra' | 'postgres';

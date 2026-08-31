@@ -21,6 +21,7 @@ interface Statement {
 }
 
 const KV_TABLE = 'kv_stmt_names';
+const KV_TABLE_POOLED = 'kv_stmt_names_pooled';
 const CONTAINER = `fluxer-kvstmt-${process.pid.toString(36)}-${Date.now().toString(36)}`;
 const dockerAvailable = spawnSync('docker', ['version'], {stdio: 'ignore'}).status === 0;
 
@@ -171,12 +172,103 @@ describe('PostgresKvQueryExecutor statement names', () => {
 	});
 });
 
+async function exerciseKvShapes(executor: PostgresKvQueryExecutor): Promise<void> {
+	for (let index = 0; index < 4; index += 1) {
+		await executor.executeQuery({
+			cql: '__stmt_seed',
+			params: {owner_id: `o${index % 2}`, item_id: `i${index}`, payload: `p${index}`} as CassandraParams,
+			kvMeta: meta(Composite, 'upsert', []) as KvQueryMeta,
+		});
+	}
+	for (let index = 0; index < 12; index += 1) {
+		const point = await executor.executeQuery<Row>({
+			cql: '__stmt_point',
+			params: {owner_id: 'o0', item_id: 'i0'} as CassandraParams,
+			kvMeta: meta(Composite, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
+		});
+		expect(point.map((row) => row.payload)).toEqual(['p0']);
+		const range = await executor.executeQuery<Row>({
+			cql: '__stmt_range',
+			params: {owner_id: 'o0'} as CassandraParams,
+			kvMeta: meta(Composite, 'select', [eq('owner_id')]) as KvQueryMeta,
+		});
+		expect(range).toHaveLength(2);
+	}
+	await executor.executeQuery({
+		cql: '__stmt_patch',
+		params: {owner_id: 'o0', item_id: 'i0', payload: 'patched'} as CassandraParams,
+		kvMeta: meta(Composite, 'patch', [eq('owner_id'), eq('item_id')], {patchKeys: ['payload']}) as KvQueryMeta,
+	});
+	const reapplied = await executor.executeQuery<Row>({
+		cql: '__stmt_lwt',
+		params: {owner_id: 'o0', item_id: 'i0', payload: 'ignored'} as CassandraParams,
+		kvMeta: meta(Composite, 'upsert', [], {ifNotExists: true}) as KvQueryMeta,
+	});
+	expect(reapplied).toEqual([{'[applied]': false}]);
+	const claimed = await executor.executeQuery<Row>({
+		cql: '__stmt_lwt',
+		params: {owner_id: 'o9', item_id: 'i9', payload: 'claimed'} as CassandraParams,
+		kvMeta: meta(Composite, 'upsert', [], {ifNotExists: true}) as KvQueryMeta,
+	});
+	expect(claimed).toEqual([{'[applied]': true}]);
+	await executor.executeQuery({
+		cql: '__stmt_patch_ttl',
+		params: {owner_id: 'o9', item_id: 'i9', payload: 'expiring', ttl_: 600} as CassandraParams,
+		kvMeta: meta(Composite, 'patch', [eq('owner_id'), eq('item_id')], {
+			patchKeys: ['payload'],
+			ttlParamName: 'ttl_',
+		}) as KvQueryMeta,
+	});
+	const expiring = await executor.executeQuery<Row>({
+		cql: '__stmt_point',
+		params: {owner_id: 'o9', item_id: 'i9'} as CassandraParams,
+		kvMeta: meta(Composite, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
+	});
+	expect(expiring.map((row) => row.payload)).toEqual(['expiring']);
+	const patched = await executor.executeQuery<Row>({
+		cql: '__stmt_point',
+		params: {owner_id: 'o0', item_id: 'i0'} as CassandraParams,
+		kvMeta: meta(Composite, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
+	});
+	expect(patched.map((row) => row.payload)).toEqual(['patched']);
+	await executor.executeQuery({
+		cql: '__stmt_delete',
+		params: {owner_id: 'o0', item_id: 'i0'} as CassandraParams,
+		kvMeta: meta(Composite, 'delete', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
+	});
+	const remaining = await executor.executeQuery<Row>({
+		cql: '__stmt_range',
+		params: {owner_id: 'o0'} as CassandraParams,
+		kvMeta: meta(Composite, 'select', [eq('owner_id')]) as KvQueryMeta,
+	});
+	expect(remaining).toHaveLength(1);
+	await executor.executeBatch([
+		{
+			query: '__stmt_batch',
+			params: {owner_id: 'o7', item_id: 'i7', payload: 'batched'},
+			meta: meta(Composite, 'upsert', []) as KvQueryMeta,
+		},
+		{
+			query: '__stmt_batch',
+			params: {owner_id: 'o7', item_id: 'i8', payload: 'batched'},
+			meta: meta(Composite, 'upsert', []) as KvQueryMeta,
+		},
+	]);
+	const batched = await executor.executeQuery<Row>({
+		cql: '__stmt_range',
+		params: {owner_id: 'o7'} as CassandraParams,
+		kvMeta: meta(Composite, 'select', [eq('owner_id')]) as KvQueryMeta,
+	});
+	expect(batched.map((row) => row.payload)).toEqual(['batched', 'batched']);
+}
+
 describe.skipIf(!dockerAvailable)('PostgresKvQueryExecutor statement names against postgres', () => {
 	let raw: IPostgresClient;
 	let executor: PostgresKvQueryExecutor;
+	let port: number;
 
 	beforeAll(async () => {
-		const port = await freePort();
+		port = await freePort();
 		startDockerContainer([
 			'run',
 			'-d',
@@ -225,75 +317,7 @@ describe.skipIf(!dockerAvailable)('PostgresKvQueryExecutor statement names again
 	});
 
 	it('prepares each named shape server side and keeps reading the right rows', async () => {
-		for (let index = 0; index < 4; index += 1) {
-			await executor.executeQuery({
-				cql: '__stmt_seed',
-				params: {owner_id: `o${index % 2}`, item_id: `i${index}`, payload: `p${index}`} as CassandraParams,
-				kvMeta: meta(Composite, 'upsert', []) as KvQueryMeta,
-			});
-		}
-		for (let index = 0; index < 12; index += 1) {
-			const point = await executor.executeQuery<Row>({
-				cql: '__stmt_point',
-				params: {owner_id: 'o0', item_id: 'i0'} as CassandraParams,
-				kvMeta: meta(Composite, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
-			});
-			expect(point.map((row) => row.payload)).toEqual(['p0']);
-			const range = await executor.executeQuery<Row>({
-				cql: '__stmt_range',
-				params: {owner_id: 'o0'} as CassandraParams,
-				kvMeta: meta(Composite, 'select', [eq('owner_id')]) as KvQueryMeta,
-			});
-			expect(range).toHaveLength(2);
-		}
-		await executor.executeQuery({
-			cql: '__stmt_patch',
-			params: {owner_id: 'o0', item_id: 'i0', payload: 'patched'} as CassandraParams,
-			kvMeta: meta(Composite, 'patch', [eq('owner_id'), eq('item_id')], {patchKeys: ['payload']}) as KvQueryMeta,
-		});
-		const reapplied = await executor.executeQuery<Row>({
-			cql: '__stmt_lwt',
-			params: {owner_id: 'o0', item_id: 'i0', payload: 'ignored'} as CassandraParams,
-			kvMeta: meta(Composite, 'upsert', [], {ifNotExists: true}) as KvQueryMeta,
-		});
-		expect(reapplied).toEqual([{'[applied]': false}]);
-		const claimed = await executor.executeQuery<Row>({
-			cql: '__stmt_lwt',
-			params: {owner_id: 'o9', item_id: 'i9', payload: 'claimed'} as CassandraParams,
-			kvMeta: meta(Composite, 'upsert', [], {ifNotExists: true}) as KvQueryMeta,
-		});
-		expect(claimed).toEqual([{'[applied]': true}]);
-		await executor.executeQuery({
-			cql: '__stmt_patch_ttl',
-			params: {owner_id: 'o9', item_id: 'i9', payload: 'expiring', ttl_: 600} as CassandraParams,
-			kvMeta: meta(Composite, 'patch', [eq('owner_id'), eq('item_id')], {
-				patchKeys: ['payload'],
-				ttlParamName: 'ttl_',
-			}) as KvQueryMeta,
-		});
-		const expiring = await executor.executeQuery<Row>({
-			cql: '__stmt_point',
-			params: {owner_id: 'o9', item_id: 'i9'} as CassandraParams,
-			kvMeta: meta(Composite, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
-		});
-		expect(expiring.map((row) => row.payload)).toEqual(['expiring']);
-		const patched = await executor.executeQuery<Row>({
-			cql: '__stmt_point',
-			params: {owner_id: 'o0', item_id: 'i0'} as CassandraParams,
-			kvMeta: meta(Composite, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
-		});
-		expect(patched.map((row) => row.payload)).toEqual(['patched']);
-		await executor.executeQuery({
-			cql: '__stmt_delete',
-			params: {owner_id: 'o0', item_id: 'i0'} as CassandraParams,
-			kvMeta: meta(Composite, 'delete', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
-		});
-		const remaining = await executor.executeQuery<Row>({
-			cql: '__stmt_range',
-			params: {owner_id: 'o0'} as CassandraParams,
-			kvMeta: meta(Composite, 'select', [eq('owner_id')]) as KvQueryMeta,
-		});
-		expect(remaining).toHaveLength(1);
+		await exerciseKvShapes(executor);
 		const prepared = await raw.query<{name: string}>('SELECT name FROM pg_prepared_statements ORDER BY name');
 		expect(prepared.rows.map((row) => row.name)).toEqual([
 			'kv_del_expired',
@@ -305,5 +329,19 @@ describe.skipIf(!dockerAvailable)('PostgresKvQueryExecutor statement names again
 			'kv_sel_rowkeys',
 			'kv_upsert',
 		]);
+	});
+
+	it('prepares nothing server side when prepared statements are disabled', async () => {
+		await initPostgres({
+			url: `postgres://fluxer:fluxer@127.0.0.1:${port}/fluxer`,
+			maxConnections: 1,
+			kvTable: KV_TABLE_POOLED,
+			preparedStatements: false,
+		});
+		const pooled = getDefaultPostgresClient();
+		await ensurePostgresKvSchema(pooled);
+		await exerciseKvShapes(new PostgresKvQueryExecutor(pooled));
+		const prepared = await pooled.query<{name: string}>('SELECT name FROM pg_prepared_statements ORDER BY name');
+		expect(prepared.rows).toEqual([]);
 	});
 });

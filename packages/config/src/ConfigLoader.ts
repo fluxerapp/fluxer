@@ -71,6 +71,7 @@ function defaultConfig(): MasterConfig {
 				ssl_ca: '',
 				max_connections: 20,
 				kv_table: 'fluxer_kv',
+				prepared_statements: true,
 			},
 		},
 		s3: {
@@ -356,6 +357,7 @@ function validatePostgresConfig(config: MasterConfig): void {
 	assertIntegerInRange(postgres.max_connections, 'FLUXER_POSTGRES_MAX_CONNECTIONS', 1, 1000);
 	assertBoolean(postgres.ssl, 'FLUXER_POSTGRES_SSL');
 	assertIdentifier(postgres.kv_table, 'FLUXER_POSTGRES_KV_TABLE');
+	assertBoolean(postgres.prepared_statements, 'FLUXER_POSTGRES_PREPARED_STATEMENTS');
 	if (config.env !== 'production' || config.database.backend !== 'postgres') {
 		return;
 	}

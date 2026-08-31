@@ -110,6 +110,7 @@ describe('ConfigLoader', () => {
 			FLUXER_POSTGRES_PORT: '5544',
 			FLUXER_POSTGRES_MAX_CONNECTIONS: '7',
 			FLUXER_POSTGRES_SSL_CA: '-----BEGIN CERTIFICATE-----\\n-----END CERTIFICATE-----',
+			FLUXER_POSTGRES_PREPARED_STATEMENTS: 'false',
 			FLUXER_API_WORKER_MODE: 'single_task',
 			FLUXER_API_WORKER_TASK: 'processStripeWebhook',
 			FLUXER_GATEWAY_PUSH_ENABLED: 'false',
@@ -127,6 +128,7 @@ describe('ConfigLoader', () => {
 		expect(config.database.postgres.port).toBe(5544);
 		expect(config.database.postgres.max_connections).toBe(7);
 		expect(config.database.postgres.ssl_ca).toBe('-----BEGIN CERTIFICATE-----\\n-----END CERTIFICATE-----');
+		expect(config.database.postgres.prepared_statements).toBe(false);
 		expect(config.services.api.worker?.mode).toBe('single_task');
 		expect(config.services.api.worker?.task).toBe('processStripeWebhook');
 		expect(config.services.gateway.push_enabled).toBe(false);
@@ -146,6 +148,16 @@ describe('ConfigLoader', () => {
 	test('rejects invalid Postgres typed environment values', async () => {
 		stubMinimalEnv({FLUXER_POSTGRES_PORT: 'abc'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_PORT');
+	});
+
+	test('keeps Postgres prepared statements on by default', async () => {
+		stubMinimalEnv();
+		expect((await loadConfig()).database.postgres.prepared_statements).toBe(true);
+	});
+
+	test('rejects a non-boolean Postgres prepared statements value', async () => {
+		stubMinimalEnv({FLUXER_POSTGRES_PREPARED_STATEMENTS: 'maybe'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_PREPARED_STATEMENTS');
 	});
 
 	test('rejects unsafe production Postgres defaults', async () => {

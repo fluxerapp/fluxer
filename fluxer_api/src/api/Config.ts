@@ -185,6 +185,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			sslCa: postgresSource?.ssl_ca ?? '',
 			maxConnections: postgresSource?.max_connections ?? 20,
 			kvTable: postgresSource?.kv_table ?? 'fluxer_kv',
+			preparedStatements: postgresSource?.prepared_statements ?? true,
 		},
 		database: {
 			backend: master.database.backend,
