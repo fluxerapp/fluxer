@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID} from '../BrandedTypes';
+import type {AttachmentID} from '../BrandedTypes';
 import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne} from '../database/CassandraQueryExecution';
-import {AttachmentDecayByExpiry, AttachmentDecayById} from '../Tables';
+import {AttachmentDecayByExpiry, AttachmentDecayById, type AttachmentDecayByExpiryRow} from '../Tables';
 import type {AttachmentDecayRow} from '../types/AttachmentDecayTypes';
-
-interface AttachmentDecayExpiryRow {
-	expiry_bucket: number;
-	expires_at: Date;
-	attachment_id: AttachmentID;
-	channel_id: ChannelID;
-	message_id: MessageID;
-}
+import {getExpiryBucket} from '../utils/AttachmentDecay';
 
 const FETCH_BY_ID_CQL = AttachmentDecayById.selectCql({
 	where: AttachmentDecayById.where.eq('attachment_id'),
@@ -68,7 +61,11 @@ export class AttachmentDecayRepository {
 		return map;
 	}
 
-	async fetchExpiredByBucket(bucket: number, currentTime: Date, limit = 200): Promise<Array<AttachmentDecayExpiryRow>> {
+	async fetchExpiredByBucket(
+		bucket: number,
+		currentTime: Date,
+		limit = 200,
+	): Promise<Array<AttachmentDecayByExpiryRow>> {
 		const query = createFetchExpiredByBucketQuery(limit);
 		return fetchMany(query.bind({expiry_bucket: bucket, current_time: currentTime}));
 	}
@@ -86,12 +83,12 @@ export class AttachmentDecayRepository {
 		await batch.execute();
 	}
 
-	async fetchAllByBucket(bucket: number, limit = 200): Promise<Array<AttachmentDecayExpiryRow>> {
+	async fetchAllByBucket(bucket: number, limit = 200): Promise<Array<AttachmentDecayByExpiryRow>> {
 		const query = AttachmentDecayByExpiry.select({
 			where: [AttachmentDecayByExpiry.where.eq('expiry_bucket')],
 			limit,
 		});
-		return fetchMany<AttachmentDecayExpiryRow>(query.bind({expiry_bucket: bucket}));
+		return fetchMany<AttachmentDecayByExpiryRow>(query.bind({expiry_bucket: bucket}));
 	}
 
 	async deleteAllByBucket(bucket: number): Promise<number> {
@@ -117,10 +114,7 @@ export class AttachmentDecayRepository {
 		for (let i = 0; i < days; i++) {
 			const date = new Date();
 			date.setUTCDate(date.getUTCDate() - i);
-			const bucket = parseInt(
-				`${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, '0')}${String(date.getUTCDate()).padStart(2, '0')}`,
-				10,
-			);
+			const bucket = getExpiryBucket(date);
 			const deletedInBucket = await this.deleteAllByBucket(bucket);
 			totalDeleted += deletedInBucket;
 		}

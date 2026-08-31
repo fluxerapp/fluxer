@@ -218,6 +218,7 @@ export const ERROR_I18N_MESSAGES = {
 		"You can't position a channel relative to itself or its descendants.",
 	'channels_and_guilds.cannot_report_guild': "You can't report this community.",
 	'channels_and_guilds.cannot_report_own_guild': "You can't report your own community.",
+	'channels_and_guilds.cannot_send_poll_in_personal_notes': "You can't send a poll in your personal notes.",
 	'channels_and_guilds.cannot_transfer_ownership_to_bot': "Community ownership can't be transferred to a bot.",
 	'channels_and_guilds.categories_cannot_have_parent_channel': "Categories can't have a parent channel.",
 	'channels_and_guilds.categories_cannot_have_parents': "Categories can't have parents.",
@@ -423,10 +424,15 @@ export const ERROR_I18N_MESSAGES = {
 	'messages.cannot_delete_more_than_100':
 		"You can't delete more than {max, plural, one {# message} other {# messages}} at once.",
 	'messages.cannot_edit_others_message': "You can't edit another user's message.",
+	'messages.cannot_forward_poll': "You can't forward a message containing a poll.",
+	'messages.cannot_modify_poll': "You can't edit a message containing a poll.",
 	'messages.cannot_preload_more_than_100_channels':
 		"You can't preload more than {max, plural, one {# channel} other {# channels}} at once.",
 	'messages.cannot_reply_to_system_message': "You can't reply to a system message.",
+	'messages.cannot_select_multiple_answers': "You can't select multiple answers on this poll.",
 	'messages.cannot_send_empty_message': "You can't send an empty message.",
+	'messages.cannot_vote_on_finalized_poll_error': "You cannot vote on a poll that has already ended.",
+	'messages.cannot_vote_on_non_poll_error': "You cannot vote on a message that doesn't contain a poll.",
 	'messages.forward_messages_cannot_include_extra_content':
 		"Forwarded messages can't include content, embeds, attachments, or stickers.",
 	'messages.forward_reference_requires_channel_and_message':
@@ -442,6 +448,7 @@ export const ERROR_I18N_MESSAGES = {
 	'messages.voice_messages_attachment_must_be_audio': 'Voice message attachments must be audio files.',
 	'messages.voice_messages_cannot_have_content': "Voice messages can't have text content.",
 	'messages.voice_messages_cannot_have_embeds': "Voice messages can't have embeds.",
+	'messages.voice_messages_cannot_have_a_poll': "Voice messages can't have a poll.",
 	'messages.voice_messages_cannot_have_favorite_memes': "Voice messages can't have favorite memes.",
 	'messages.voice_messages_cannot_have_stickers': "Voice messages can't have stickers.",
 	'mfa_and_passkeys.invalid_mfa_code': 'Invalid MFA code.',
@@ -483,6 +490,7 @@ export const ERROR_I18N_MESSAGES = {
 	'misc_limits.max_invites_reached': "You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
 	'misc_limits.max_pins_per_channel_reached':
 		"You've reached the maximum of {count, plural, one {# pin} other {# pins}} per channel.",
+	'misc_limits.max_poll_votes': "You've reached the maximum of {count, plural, one {# vote} other {# votes}} per answer.",
 	'moderation_and_reports.cannot_report_own_message': "You can't report your own message.",
 	'moderation_and_reports.cannot_report_yourself': "You can't report yourself.",
 	'moderation_and_reports.invalid_dsa_report_target': 'Invalid DSA report target.',
@@ -516,6 +524,7 @@ export const ERROR_I18N_MESSAGES = {
 	'phone.number_format_required': 'Phone number must be in E.164 format (for example, +1234567890).',
 	'phone.verification_code_invalid': 'Invalid phone verification code.',
 	'phone.verification_required': 'Phone verification is required.',
+	'polls.too_many_poll_answers': 'Too many poll answers. Maximum {maxPollAnswers, plural, one {# answer} other {# answers}} allowed.',
 	'premium_and_plans.animated_avatars_require_premium': 'Animated avatars require Premium.',
 	'premium_and_plans.banners_require_premium': 'Banners require Premium.',
 	'premium_and_plans.bio_requires_premium_for_length': 'A bio longer than {maxLength} characters requires Premium.',
@@ -597,6 +606,7 @@ export const ERROR_I18N_MESSAGES = {
 	'unknown_entities.unknown_member': "Member wasn't found in this community.",
 	'unknown_entities.unknown_message': "Message wasn't found.",
 	'unknown_entities.unknown_pack': "Pack wasn't found.",
+	'unknown_entities.unknown_poll_answer': "Poll answer wasn't found.",
 	'unknown_entities.unknown_role': "Role wasn't found.",
 	'unknown_entities.unknown_user': "User wasn't found.",
 	'unknown_entities.unknown_user_flag': "The specified user flag isn't recognized.",

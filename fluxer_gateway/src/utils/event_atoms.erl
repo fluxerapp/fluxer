@@ -111,6 +111,8 @@ message_event_map() ->
         <<"MESSAGE_REACTION_REMOVE">> => message_reaction_remove,
         <<"MESSAGE_REACTION_REMOVE_ALL">> => message_reaction_remove_all,
         <<"MESSAGE_REACTION_REMOVE_EMOJI">> => message_reaction_remove_emoji,
+        <<"MESSAGE_POLL_VOTE_ADD">> => message_poll_vote_add,
+        <<"MESSAGE_POLL_VOTE_REMOVE">> => message_poll_vote_remove,
         <<"MESSAGE_UPDATE">> => message_update
     }.
 

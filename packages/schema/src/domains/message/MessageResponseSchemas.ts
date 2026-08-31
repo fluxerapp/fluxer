@@ -18,6 +18,7 @@ import {
 	SnowflakeStringType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
+import {type MessagePoll, MessagePollResponse} from './PollSchemas';
 
 export const MessageAttachmentResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this attachment'),
@@ -148,6 +149,7 @@ const MessageBaseResponseSchema = z.object({
 			'Users referenced from non-notifying content, embed, and snapshot text, included for client-side resolution',
 		),
 	embeds: z.array(MessageEmbedResponse).nullish().describe('The embeds attached to the message'),
+	poll: MessagePollResponse.nullish().describe('The poll attached to the message'),
 	attachments: z.array(MessageAttachmentResponse).nullish().describe('The files attached to the message'),
 	stickers: z.array(MessageStickerResponse).nullish().describe('The stickers sent with the message'),
 	nsfw_emojis: z
@@ -202,6 +204,14 @@ export const ReactionUsersPageResponse = z.object({
 });
 
 export type ReactionUsersPageResponse = z.infer<typeof ReactionUsersPageResponse>;
+
+export const PollAnswerVotersResponse = z.object({
+	users: z.array(z.lazy(() => UserPartialResponse)).describe('Users who reacted with the requested answer'),
+	has_more: z.boolean().describe('Whether more reaction users can be fetched'),
+	next_after: SnowflakeStringType.nullable().describe('Cursor for the next page, or null when there are no more users'),
+});
+
+export type PollAnswerVotersResponse = z.infer<typeof PollAnswerVotersResponse>;
 
 export const MessageSearchResultsResponse = z.object({
 	messages: z
@@ -350,6 +360,7 @@ export interface Message {
 	readonly mention_channels?: ReadonlyArray<ChannelMention>;
 	readonly users?: ReadonlyArray<UserPartial>;
 	readonly embeds?: ReadonlyArray<MessageEmbed>;
+	readonly poll?: MessagePoll | null;
 	readonly attachments?: ReadonlyArray<MessageAttachment>;
 	readonly stickers?: ReadonlyArray<MessageStickerItem>;
 	readonly nsfw_emojis?: ReadonlyArray<string>;

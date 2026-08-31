@@ -6,9 +6,10 @@ import type {
 	BulkMessageFetchResponse,
 	MessageResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {ChannelID, MessageID, UserID} from '../../../BrandedTypes';
+import {createMessageID, type ChannelID, type MessageID, type UserID} from '../../../BrandedTypes';
 import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
 import type {User} from '../../../models/User';
+import type {ChannelRepository} from '../../ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
 import type {ChannelService} from '../ChannelService';
 import {isPersonalNotesChannel} from './MessageHelpers';
@@ -17,6 +18,7 @@ import type {MessageResponseDataService} from './MessageResponseDataService';
 export class MessageRequestService {
 	constructor(
 		private readonly channelService: ChannelService,
+		private readonly channelRepository: ChannelRepository,
 		private readonly responseDataService: MessageResponseDataService,
 	) {}
 
@@ -35,7 +37,7 @@ export class MessageRequestService {
 			userId: params.userId,
 			channelId: params.channelId,
 		});
-		return this.responseDataService.listMessages({
+		const messages = await this.responseDataService.listMessages({
 			userId: params.userId,
 			channelId: params.channelId,
 			limit: params.query.limit,
@@ -44,6 +46,17 @@ export class MessageRequestService {
 			around: params.query.around,
 			access,
 		});
+		await Promise.all(
+			messages.map((message) =>
+				this.fillMessagePollAnswerAuthorInfo(
+					params.channelId,
+					createMessageID(BigInt(message.id)),
+					params.userId,
+					message,
+				),
+			),
+		);
+		return messages;
 	}
 
 	async listMessagesBulk(params: {
@@ -59,15 +72,28 @@ export class MessageRequestService {
 		}>;
 		requestCache: RequestCache;
 	}): Promise<BulkMessageFetchResponse> {
-		const channels = await mapWithConcurrency(params.requests, 4, async (request) => ({
-			channel_id: request.channelId.toString(),
-			messages: await this.listMessages({
+		const channels = await mapWithConcurrency(params.requests, 4, async (request) => {
+			const messages = await this.listMessages({
 				userId: params.userId,
 				channelId: request.channelId,
 				query: request.query,
 				requestCache: params.requestCache,
-			}),
-		}));
+			});
+			await Promise.all(
+				messages.map((message) =>
+					this.fillMessagePollAnswerAuthorInfo(
+						request.channelId,
+						createMessageID(BigInt(message.id)),
+						params.userId,
+						message,
+					),
+				),
+			);
+			return {
+				channel_id: request.channelId.toString(),
+				messages,
+			};
+		});
 		return {channels};
 	}
 
@@ -88,8 +114,11 @@ export class MessageRequestService {
 			messageId: params.messageId,
 			access,
 		});
+
 		if (response === null) {
 			throw new UnknownMessageError();
+		} else {
+			await this.fillMessagePollAnswerAuthorInfo(params.channelId, params.messageId, params.userId, response);
 		}
 		return response;
 	}
@@ -117,13 +146,15 @@ export class MessageRequestService {
 			channelId: params.channelId,
 			authChannel,
 		});
-		return this.responseDataService.buildMessage({
+		const messageResponse = await this.responseDataService.buildMessage({
 			userId: params.user.id,
 			message,
 			access: {...access, messageHistoryCutoff: null, canReadMessageHistory: true},
 			nonce: params.data.nonce,
 			tts: params.data.tts ?? false,
 		});
+		await this.fillMessagePollAnswerAuthorInfo(params.channelId, message.id, params.user.id, messageResponse);
+		return messageResponse;
 	}
 
 	async editMessage(params: {
@@ -151,6 +182,19 @@ export class MessageRequestService {
 			message,
 			access,
 		});
+	}
+
+	private async fillMessagePollAnswerAuthorInfo(
+		channelId: ChannelID,
+		messageId: MessageID,
+		userId: UserID,
+		message: MessageResponse,
+	) {
+		if (!message.poll?.results?.answer_counts) return;
+		const answers = await this.channelRepository.messageInteractions.getVoteAnswers(channelId, messageId, userId);
+		for (const answerCount of message.poll.results.answer_counts) {
+			if (answers.find((answer) => answer.id === answerCount.id)) answerCount.me_voted = true;
+		}
 	}
 }
 

@@ -7,6 +7,7 @@ import type {Attachment} from '../../models/Attachment';
 import type {Embed} from '../../models/Embed';
 import type {Message} from '../../models/Message';
 import type {MessageSnapshot} from '../../models/MessageSnapshot';
+import type { Poll } from '@app/api/models/Poll';
 
 const LINK_URL_MATCHER = /https?:\/\/[^\s<>"']+/gi;
 const HAS_LINK_REGEX = /https?:\/\/[^\s/]+/i;
@@ -101,6 +102,7 @@ interface IndexAccumulator {
 	mentionedUserIds: Array<string>;
 	hasLink: boolean;
 	hasEmbed: boolean;
+	hasPoll: boolean;
 	hasFile: boolean;
 	hasImage: boolean;
 	hasVideo: boolean;
@@ -120,6 +122,7 @@ function emptyAccumulator(): IndexAccumulator {
 		mentionedUserIds: [],
 		hasLink: false,
 		hasEmbed: false,
+		hasPoll: false,
 		hasFile: false,
 		hasImage: false,
 		hasVideo: false,
@@ -132,6 +135,7 @@ function accumulateContent(
 	acc: IndexAccumulator,
 	content: string | null,
 	embeds: Array<Embed>,
+	poll: Poll | null,
 	attachments: Array<Attachment>,
 	mentionedUserIds: Iterable<UserID>,
 	stickerCount: number,
@@ -153,6 +157,9 @@ function accumulateContent(
 			}
 			collectEmbedText(embed, acc.embedContent);
 		}
+	}
+	if (poll) {
+		acc.hasPoll = true;
 	}
 	if (attachments.length > 0) {
 		acc.hasFile = true;
@@ -180,6 +187,7 @@ function mergeSnapshotsIntoAccumulator(acc: IndexAccumulator, snapshots: Array<M
 			acc,
 			snapshot.content,
 			snapshot.embeds,
+			snapshot.poll,
 			snapshot.attachments,
 			snapshot.mentionedUserIds,
 			snapshot.stickers.length,
@@ -196,6 +204,7 @@ export function convertToSearchableMessage(message: Message, authorIsBot?: boole
 		acc,
 		message.content,
 		message.embeds,
+		message.poll,
 		message.attachments,
 		message.mentionedUserIds,
 		message.stickers.length,
@@ -219,7 +228,7 @@ export function convertToSearchableMessage(message: Message, authorIsBot?: boole
 		mentionEveryone: message.mentionEveryone,
 		hasLink: acc.hasLink,
 		hasEmbed: acc.hasEmbed,
-		hasPoll: false,
+		hasPoll: acc.hasPoll,
 		hasFile: acc.hasFile,
 		hasVideo: acc.hasVideo,
 		hasImage: acc.hasImage,

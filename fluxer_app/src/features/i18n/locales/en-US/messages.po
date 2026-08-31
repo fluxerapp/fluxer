@@ -14,6 +14,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. Separator that goes between answer qualifiers that are only readable for screenreaders. Example: "Winning answer[, ]Selected answer".
+#: src/features/channel/components/Poll.tsx:88
+msgid ", "
+msgstr ", "
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:51
 msgid "... turn dense mode on. Nice!"
@@ -21,7 +26,7 @@ msgstr "... turn dense mode on. Nice!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:358
-#: src/features/channel/components/UserMessage.tsx:59
+#: src/features/channel/components/UserMessage.tsx:61
 msgid "(edited)"
 msgstr "(edited)"
 
@@ -53,6 +58,21 @@ msgstr "(you)"
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:184
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# member} other {# members}}"
+
+#. placeholder {0}: Math.floor(secondsLeft / 86400)
+#: src/features/channel/components/Poll.tsx:191
+msgid "{0}d left"
+msgstr "{0}d left"
+
+#. placeholder {0}: Math.round(secondsLeft / 3600)
+#: src/features/channel/components/Poll.tsx:190
+msgid "{0}h left"
+msgstr "{0}h left"
+
+#. placeholder {0}: Math.round(secondsLeft / 60)
+#: src/features/channel/components/Poll.tsx:189
+msgid "{0}m left"
+msgstr "{0}m left"
 
 #: src/features/channel/components/TypingUsers.tsx:66
 msgid "{a} and {b} are typing..."
@@ -370,7 +390,9 @@ msgstr "{count, plural, one {# community is temporarily unavailable due to a flu
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# connection} other {# connections}}"
 
+#. Generic description for a duration option that is measured in days.
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:131
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:73
 msgid "{count, plural, one {# day} other {# days}}"
 msgstr "{count, plural, one {# day} other {# days}}"
 
@@ -384,7 +406,9 @@ msgstr "{count, plural, one {# emoji} other {# emojis}}"
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# gift} other {# gifts}}"
 
+#. Generic description for a duration option that is measured in hours.
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:139
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:77
 msgid "{count, plural, one {# hour} other {# hours}}"
 msgstr "{count, plural, one {# hour} other {# hours}}"
 
@@ -436,6 +460,16 @@ msgstr "{count, plural, one {# saved media item} other {# saved media items}}"
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {# second} other {# seconds}}"
 
+#. Small text indicating the number of votes on the poll or on a specific answer of the poll.
+#: src/features/channel/components/Poll.tsx:76
+msgid "{count, plural, one {# vote} other {# votes}}"
+msgstr "{count, plural, one {# vote} other {# votes}}"
+
+#. Generic description for a duration option that is measured in weeks.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:69
+msgid "{count, plural, one {# week} other {# weeks}}"
+msgstr "{count, plural, one {# week} other {# weeks}}"
+
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx:63
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
 msgstr "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
@@ -456,7 +490,7 @@ msgstr "{count, plural, one {Expand (# line)} other {Expand (# lines)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:303
+#: src/features/voice/components/VoiceParticipantTile.tsx:304
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 
@@ -464,8 +498,8 @@ msgstr "{count, plural, one {Expand # other device} other {Expand # other device
 msgid "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
 msgstr "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:252
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:273
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:274
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:295
 msgid "{count, plural, one {Hide # device} other {Hide # devices}}"
 msgstr "{count, plural, one {Hide # device} other {Hide # devices}}"
 
@@ -477,7 +511,7 @@ msgstr "{count, plural, one {In call} other {# in call}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:620
+#: src/features/voice/components/VoiceParticipantTile.tsx:621
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 
@@ -493,8 +527,8 @@ msgstr "{count, plural, one {Revoke # app} other {Revoke # apps}}"
 msgid "{count, plural, one {sent # attachment} other {sent # attachments}}"
 msgstr "{count, plural, one {sent # attachment} other {sent # attachments}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:259
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:280
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:281
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:302
 msgid "{count, plural, one {Show # device} other {Show # devices}}"
 msgstr "{count, plural, one {Show # device} other {Show # devices}}"
 
@@ -777,7 +811,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "{guildName} channels"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:673
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 
@@ -890,7 +924,7 @@ msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName
 msgstr "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName} checkout, so it is not a recurring subscription path here."
 
 #. Screen share bitrate option label. Mbps means megabits per second.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:167
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
 msgid "{megabits} Mbps"
 msgstr "{megabits} Mbps"
 
@@ -900,7 +934,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
 msgid "{mentionCount} mentions"
 msgstr "{mentionCount} mentions"
 
@@ -1492,6 +1526,10 @@ msgstr "<0/> started a call that lasted {durationText}."
 msgid "<0/> started a call."
 msgstr "<0/> started a call."
 
+#: src/features/channel/components/PollClosedMessage.tsx:67
+msgid "<0/>'s poll <1/> has closed."
+msgstr "<0/>'s poll <1/> has closed."
+
 #: src/features/app/components/alerts/RoleDeleteFailedModal.tsx:23
 msgid "<0>\"{roleName}\"</0> wouldn't delete. Try again."
 msgstr "<0>\"{roleName}\"</0> wouldn't delete. Try again."
@@ -1560,6 +1598,11 @@ msgstr "<0>Unmuted</0> the member."
 #: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:72
 msgid "<0>URL-only favorites (default)</0>: synced across your devices, no upload, doesn't count against saved media. The original media may disappear if its host removes it."
 msgstr "<0>URL-only favorites (default)</0>: synced across your devices, no upload, doesn't count against saved media. The original media may disappear if its host removes it."
+
+#. Very short text informing the user that the poll ends in less than one minute.
+#: src/features/channel/components/Poll.tsx:64
+msgid "<1m left"
+msgstr "<1m left"
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:167
@@ -1968,6 +2011,11 @@ msgstr "A new verification code has been sent."
 msgid "a poll"
 msgstr "a poll"
 
+#. Placeholder text for each answer input.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:25
+msgid "A possible answer"
+msgstr "A possible answer"
+
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:53
 msgid "A redirect_uri is required when the bot scope is not the only scope."
@@ -2293,7 +2341,7 @@ msgstr "Active monthly subscriber (cancellation scheduled)"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -2480,6 +2528,11 @@ msgstr "Add another custom shortcut"
 msgid "Add another reaction"
 msgstr "Add another reaction"
 
+#. Label for the button that adds a new answer to the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:40
+msgid "Add answer"
+msgstr "Add answer"
+
 #. Setup wizard body for Bluesky integration credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:965
 msgid "Add Bluesky OAuth client metadata and a signing key."
@@ -2491,7 +2544,7 @@ msgid "Add bot to a destination"
 msgstr "Add bot to a destination"
 
 #. Generic action label that opens the create-channel flow from inside a category or sidebar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:510
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:514
 msgid "Add channel"
 msgstr "Add channel"
 
@@ -2582,13 +2635,13 @@ msgstr "Add passkey"
 
 #. Generic action label that opens the reaction picker for a message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:522
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:526
 #: src/features/input/state/input_keybind/shared.ts:17
 msgid "Add reaction"
 msgstr "Add reaction"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:253
 msgid "Add reactions"
 msgstr "Add reactions"
 
@@ -2737,7 +2790,7 @@ msgid "Added to favorite GIFs"
 msgstr "Added to favorite GIFs"
 
 #. Toast confirming an item was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:615
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:619
 msgid "Added to favorites"
 msgstr "Added to favorites"
 
@@ -2772,7 +2825,7 @@ msgid "Address"
 msgstr "Address"
 
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Adds H.264 for mixed clients. Uses more encode work."
 
@@ -2828,10 +2881,8 @@ msgstr "Admins paused invites — you can't join right now."
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#. Voice participant context menu submenu label for IDs and diagnostics.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:145
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
 msgid "Advanced"
@@ -2843,7 +2894,7 @@ msgid "Advanced video settings"
 msgstr "Advanced video settings"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:100
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "Advertise a capped decode codec to force publisher migration"
 msgstr "Advertise a capped decode codec to force publisher migration"
 
@@ -3066,6 +3117,13 @@ msgstr "Allow anyone to see this connection on your profile"
 msgid "Allow anyone who can view your full profile to see your profile local time"
 msgstr "Allow anyone who can view your full profile to see your profile local time"
 
+#. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:236
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+msgid "Allow AV1 for screen sharing"
+msgstr "Allow AV1 for screen sharing"
+
 #. Toggle label that allows DMs from bots in this community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:81
 msgid "Allow bot direct messages"
@@ -3113,6 +3171,13 @@ msgstr "Allow flexible text channel names"
 msgid "Allow for all communities"
 msgstr "Allow for all communities"
 
+#. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:240
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+msgid "Allow H.265 (HEVC) for screen sharing"
+msgstr "Allow H.265 (HEVC) for screen sharing"
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:95
 msgid "Allow members from communities you're in to see this connection"
 msgstr "Allow members from communities you're in to see this connection"
@@ -3135,6 +3200,11 @@ msgstr "Allow mentions for this role"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
 msgid "Allow microphone"
 msgstr "Allow microphone"
+
+#. Label for the checkbox that allows users of the poll to select multiple answers.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:48
+msgid "Allow multiple answers"
+msgstr "Allow multiple answers"
 
 #: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:56
 msgid "Allow others to clone your emojis"
@@ -3234,7 +3304,7 @@ msgid "Already set to cancel"
 msgstr "Already set to cancel"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:82
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Also report this message to the {productName} Safety Team"
 
@@ -3620,6 +3690,11 @@ msgstr "Announcements"
 msgid "Annual"
 msgstr "Annual"
 
+#. Label for the checkbox that makes the poll anonymous (only moderators/admins of the community can see who voted).
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:52
+msgid "Anonymous voting"
+msgstr "Anonymous voting"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "Another checkbox"
@@ -3637,6 +3712,11 @@ msgstr "Another round checkbox"
 #: src/features/input/state/input_keybind/shared.ts:213
 msgid "Answer the incoming call"
 msgstr "Answer the incoming call"
+
+#. Label for the answers section of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:36
+msgid "Answers"
+msgstr "Answers"
 
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:100
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:28
@@ -3733,7 +3813,7 @@ msgid "App zoom"
 msgstr "App zoom"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
 msgid "App zoom level"
 msgstr "App zoom level"
 
@@ -3900,7 +3980,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "Are you sure you want to delete every message in your personal notes? This will permanently remove all messages and their attachments. This action cannot be undone."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 
@@ -4239,7 +4319,7 @@ msgid "Audio settings"
 msgstr "Audio settings"
 
 #. Voice control button label for microphone and speaker settings.
-#: src/features/voice/components/VoiceControlBar.tsx:146
+#: src/features/voice/components/VoiceControlBar.tsx:142
 msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "Audio settings"
@@ -4443,7 +4523,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -4452,11 +4531,10 @@ msgstr "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCou
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:126
@@ -4468,6 +4546,11 @@ msgstr "Automatic"
 msgctxt "rtc-region-value"
 msgid "Automatic"
 msgstr "Automatic"
+
+#. Option label for the screen-share codec select. codec is the automatically selected codec label.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:222
+msgid "Automatic ({codec})"
+msgstr "Automatic ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -4495,96 +4578,6 @@ msgstr "Automatic message reading"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "Automatic start"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep Firefox as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:8
-msgid "Automatic would use {codecName} because Firefox screen sharing works most reliably with it."
-msgstr "Automatic would use {codecName} because Firefox screen sharing works most reliably with it."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:70
-msgid "Automatic would use {codecName} because no hardware encoder is available and this browser exposes H.265."
-msgstr "Automatic would use {codecName} because no hardware encoder is available and this browser exposes H.265."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:75
-msgid "Automatic would use {codecName} because no hardware encoder is available and your computer exposes H.265."
-msgstr "Automatic would use {codecName} because no hardware encoder is available and your computer exposes H.265."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:90
-msgid "Automatic would use {codecName} because no higher-quality encoder is available and H.264 is compatible."
-msgstr "Automatic would use {codecName} because no higher-quality encoder is available and H.264 is compatible."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep OpenH264 and Linux literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:101
-msgid "Automatic would use {codecName} because no video encoder is exposed. On Linux, OpenH264 may need to be installed."
-msgstr "Automatic would use {codecName} because no video encoder is exposed. On Linux, OpenH264 may need to be installed."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:60
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes AV1."
-msgstr "Automatic would use {codecName} because software encoding is preferred and this browser exposes AV1."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:80
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes VP9."
-msgstr "Automatic would use {codecName} because software encoding is preferred and this browser exposes VP9."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:95
-msgid "Automatic would use {codecName} because software encoding is preferred and VP8 is the safest software fallback."
-msgstr "Automatic would use {codecName} because software encoding is preferred and VP8 is the safest software fallback."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:65
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes AV1."
-msgstr "Automatic would use {codecName} because software encoding is preferred and your computer exposes AV1."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:85
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes VP9."
-msgstr "Automatic would use {codecName} because software encoding is preferred and your computer exposes VP9."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:25
-msgid "Automatic would use {codecName} because this browser does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automatic would use {codecName} because this browser does not expose H.264, so VP8 is the safest fallback."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:13
-msgid "Automatic would use {codecName} because this browser supports it and it is the best fallback outside Chromium."
-msgstr "Automatic would use {codecName} because this browser supports it and it is the best fallback outside Chromium."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:30
-msgid "Automatic would use {codecName} because your computer does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automatic would use {codecName} because your computer does not expose H.264, so VP8 is the safest fallback."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:19
-msgid "Automatic would use {codecName} because your computer supports it and it is the best fallback outside Chromium."
-msgstr "Automatic would use {codecName} because your computer supports it and it is the best fallback outside Chromium."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:54
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it gives strong screen-share quality."
-msgstr "Automatic would use {codecName} because your GPU can encode it in hardware and it gives strong screen-share quality."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:42
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it is the most compatible screen-share default."
-msgstr "Automatic would use {codecName} because your GPU can encode it in hardware and it is the most compatible screen-share default."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:48
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with excellent compression and low CPU usage."
-msgstr "Automatic would use {codecName} because your GPU can encode it in hardware, with excellent compression and low CPU usage."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:36
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with the best compression for screen sharing."
-msgstr "Automatic would use {codecName} because your GPU can encode it in hardware, with the best compression for screen sharing."
 
 #. Short label in the animation tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:52
@@ -4648,6 +4641,16 @@ msgstr "Autoread"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:307
 msgid "Autoscrolling"
 msgstr "Autoscrolling"
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
+msgid "AV1"
+msgstr "AV1"
+
+#. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:226
+msgid "AV1 (requires opt-in)"
+msgstr "AV1 (requires opt-in)"
 
 #. Label for the available desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
@@ -4876,7 +4879,7 @@ msgid "Badge"
 msgstr "Badge"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Balanced"
 msgstr "Balanced"
 
@@ -4918,7 +4921,7 @@ msgstr "Ban expires at {0}."
 #: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:118
 msgid "Ban member"
 msgstr "Ban member"
 
@@ -5100,7 +5103,7 @@ msgid "Biometrics"
 msgstr "Biometrics"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:181
 msgid "Bitrate"
 msgstr "Bitrate"
 
@@ -5247,7 +5250,7 @@ msgstr "Bookmark limit reached"
 #. Generic action label that saves a message to the bookmarks list.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:526
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:530
 #: src/features/input/state/input_keybind/shared.ts:265
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:66
 msgid "Bookmark message"
@@ -5614,7 +5617,7 @@ msgid "Bypass mention suppression"
 msgstr "Bypass mention suppression"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:257
 msgid "Bypass slowmode"
 msgstr "Bypass slowmode"
 
@@ -5672,7 +5675,7 @@ msgstr "Calls"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:70
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:157
 #: src/features/voice/utils/SettingsDeviceOptions.ts:23
@@ -5722,7 +5725,7 @@ msgstr "Camera off"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "Camera on"
@@ -5762,7 +5765,7 @@ msgid "Cameras and virtual capture devices are selected here in {productName}, n
 msgstr "Cameras and virtual capture devices are selected here in {productName}, not in the Wayland system picker. If nothing appears here, check permissions or connect a device."
 
 #. Tooltip in the voice control bar when cameras are disabled because the participant count exceeds the limit. {voiceChannelCameraUserLimit} is the configured threshold.
-#: src/features/voice/components/VoiceControlBar.tsx:136
+#: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Cameras are off above {voiceChannelCameraUserLimit} participants"
 
@@ -5956,15 +5959,15 @@ msgstr "Captcha verification failed. Try again."
 msgid "Capture"
 msgstr "Capture"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture app audio"
 msgstr "Capture app audio"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture desktop audio"
 msgstr "Capture desktop audio"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
 msgid "Capture device audio"
 msgstr "Capture device audio"
 
@@ -6135,7 +6138,7 @@ msgid "Change emoji"
 msgstr "Change emoji"
 
 #. Generic action label that opens the friend-nickname edit flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:538
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:542
 msgid "Change friend nickname"
 msgstr "Change friend nickname"
 
@@ -6179,7 +6182,7 @@ msgid "Change my group nickname"
 msgstr "Change my group nickname"
 
 #. Action label for changing a user nickname in a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:470
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:474
 msgid "Change nickname"
 msgstr "Change nickname"
 
@@ -6222,12 +6225,12 @@ msgstr "Change password form"
 msgid "Change scheduled"
 msgstr "Change scheduled"
 
-#. Tooltip / button label in the screen-share status pill. Opens the picker to change what is being shared.
-#. Voice control menu action to choose a different screen-share source.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
-#: src/features/voice/components/VoiceControlBar.tsx:108
-msgid "Change source"
-msgstr "Change source"
+#. Action that opens the source picker for the active screen share.
+#. Voice screen share menu action that changes the shared source.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:23
+msgid "Change Stream"
+msgstr "Change Stream"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
@@ -6367,7 +6370,7 @@ msgid "Channel actions"
 msgstr "Channel actions"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
 msgid "Channel added to favorites"
 msgstr "Channel added to favorites"
 
@@ -6388,14 +6391,14 @@ msgid "Channel created"
 msgstr "Channel created"
 
 #. Title of the developer-mode channel debug modal (distinct from the action label that opens it).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:546
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:550
 msgid "Channel debug"
 msgstr "Channel debug"
 
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
 msgid "Channel deleted"
 msgstr "Channel deleted"
 
@@ -6500,7 +6503,7 @@ msgid "Channel record"
 msgstr "Channel record"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
 msgid "Channel removed from favorites"
 msgstr "Channel removed from favorites"
 
@@ -6977,7 +6980,7 @@ msgid "Choose your profile accent color"
 msgstr "Choose your profile accent color"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:108
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7158,7 +7161,7 @@ msgstr "Clear attachment mocks"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Clear command"
@@ -7172,7 +7175,7 @@ msgid "Clear custom status"
 msgstr "Clear custom status"
 
 #. Body of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:72
+#: src/features/channel/components/MessageActionUtils.tsx:73
 msgid "Clear every reaction from this message?"
 msgstr "Clear every reaction from this message?"
 
@@ -7205,7 +7208,7 @@ msgid "Clear quick CSS?"
 msgstr "Clear quick CSS?"
 
 #. Generic short button / icon label that clears the active search query.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:514
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:518
 #: src/features/theme_studio/sections/TokensSection.tsx:204
 msgid "Clear search"
 msgstr "Clear search"
@@ -7585,7 +7588,7 @@ msgid "Codec"
 msgstr "Codec"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Codec negotiation testing"
 msgstr "Codec negotiation testing"
 
@@ -7629,8 +7632,8 @@ msgstr "Collapse channel topic"
 
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:98
-#: src/features/voice/components/VoiceParticipantTile.tsx:165
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
+#: src/features/voice/components/VoiceParticipantTile.tsx:166
 msgid "Collapse devices"
 msgstr "Collapse devices"
 
@@ -7828,7 +7831,7 @@ msgid "Community debug"
 msgstr "Community debug"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
 msgid "Community default"
 msgstr "Community default"
 
@@ -8105,7 +8108,7 @@ msgstr "Composer focus"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 msgid "Configure"
 msgstr "Configure"
 
@@ -8128,7 +8131,7 @@ msgid "Configure now"
 msgstr "Configure now"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:69
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
 msgid "Configure or end screen share"
 msgstr "Configure or end screen share"
 
@@ -8250,7 +8253,7 @@ msgstr "Connect a camera or virtual capture device, then try again."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:273
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:56
 msgid "Connect to voice"
 msgstr "Connect to voice"
@@ -8435,7 +8438,7 @@ msgid "Content filtering"
 msgstr "Content filtering"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 msgid "Content hint"
 msgstr "Content hint"
 
@@ -8481,7 +8484,7 @@ msgstr "Context menus can be opened with left-click (on buttons) or right-click 
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
@@ -8692,7 +8695,7 @@ msgid "Copy code"
 msgstr "Copy code"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
 msgid "Copy community ID"
 msgstr "Copy community ID"
 
@@ -8790,7 +8793,7 @@ msgid "Copy invite URL"
 msgstr "Copy invite URL"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -8817,13 +8820,13 @@ msgid "Copy media to clipboard"
 msgstr "Copy media to clipboard"
 
 #. Message context menu item that copies the message text content to the clipboard.
-#: src/features/channel/components/MessageActionMenu.tsx:91
+#: src/features/channel/components/MessageActionMenu.tsx:92
 msgid "Copy message"
 msgstr "Copy message"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "Copy message ID"
@@ -8831,7 +8834,7 @@ msgstr "Copy message ID"
 #. Generic action label that copies a permalink to the selected message.
 #. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:518
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:522
 #: src/features/input/state/input_keybind/shared.ts:273
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:415
 msgid "Copy message link"
@@ -8899,7 +8902,7 @@ msgid "Copy user ID"
 msgstr "Copy user ID"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
 msgid "Copy username"
 msgstr "Copy username"
 
@@ -9326,7 +9329,7 @@ msgid "Couldn't ring this person"
 msgstr "Couldn't ring this person"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:46
+#: src/features/messaging/hooks/useTextareaSubmit.ts:47
 msgid "Couldn't run that command: {detail}"
 msgstr "Couldn't run that command: {detail}"
 
@@ -9346,7 +9349,7 @@ msgid "Couldn't send invite"
 msgstr "Couldn't send invite"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
 msgid "Couldn't send invite. Try again."
 msgstr "Couldn't send invite. Try again."
 
@@ -9553,6 +9556,11 @@ msgstr "Create a new community or join an existing one."
 msgid "Create a new group with {userName}"
 msgstr "Create a new group with {userName}"
 
+#. Title of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:24
+msgid "Create a poll"
+msgstr "Create a poll"
+
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:46
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:82
@@ -9603,7 +9611,7 @@ msgid "Create category"
 msgstr "Create category"
 
 #. Action label that opens the create-channel flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:474
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:478
 msgid "Create channel"
 msgstr "Create channel"
 
@@ -9683,6 +9691,16 @@ msgstr "Create new link"
 #: src/features/input/state/input_keybind/shared.ts:121
 msgid "Create or join a community"
 msgstr "Create or join a community"
+
+#. Plus menu item that opens a form to create a poll.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
+msgid "Create poll"
+msgstr "Create poll"
+
+#. Permission name: allows creating polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:233
+msgid "Create polls"
+msgstr "Create polls"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
@@ -10167,7 +10185,7 @@ msgid "Custom warning text"
 msgstr "Custom warning text"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
 msgid "Custom…"
 msgstr "Custom…"
 
@@ -10179,7 +10197,7 @@ msgid "Customer portal"
 msgstr "Customer portal"
 
 #. Plus menu submenu label for visibility toggles on textarea adornment buttons.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:39
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
 msgid "Customize"
 msgstr "Customize"
 
@@ -10408,7 +10426,7 @@ msgid "Deafen device"
 msgstr "Deafen device"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:298
 msgid "Deafen members"
 msgstr "Deafen members"
 
@@ -10462,7 +10480,7 @@ msgstr "Debug member"
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
 #: src/features/channel/components/MessageActionBar.tsx:82
-#: src/features/channel/components/MessageActionMenu.tsx:103
+#: src/features/channel/components/MessageActionMenu.tsx:108
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
 msgstr "Debug message"
@@ -10470,7 +10488,7 @@ msgstr "Debug message"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:167
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:542
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:546
 msgid "Debug user"
 msgstr "Debug user"
 
@@ -10620,7 +10638,7 @@ msgstr "Defaults to off on mobile to preserve battery life and data usage."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:78
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10686,6 +10704,11 @@ msgstr "Delete action."
 msgid "Delete all messages"
 msgstr "Delete all messages"
 
+#. Tooltip text for the button that deletes an answer from the poll.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:33
+msgid "Delete answer"
+msgstr "Delete answer"
+
 #. Button or menu action label in the application detail. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:50
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:721
@@ -10693,7 +10716,7 @@ msgid "Delete application"
 msgstr "Delete application"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
 msgid "Delete attachment"
 msgstr "Delete attachment"
 
@@ -10724,7 +10747,9 @@ msgid "Delete community"
 msgstr "Delete community"
 
 #. Confirmation modal title for deleting a custom emoji.
+#. Title of a context menu item to delete the emoji of a poll answer.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:196
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:41
 msgid "Delete emoji"
 msgstr "Delete emoji"
 
@@ -10859,7 +10884,7 @@ msgid "Delete this message"
 msgstr "Delete this message"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:74
 msgid "Delete this message? Can't be undone."
 msgstr "Delete this message? Can't be undone."
 
@@ -10991,7 +11016,7 @@ msgstr "Describe what your community is about"
 #. Generic form-field label for a free-form description.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:415
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:498
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:502
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:137
 msgid "Description"
 msgstr "Description"
@@ -11140,7 +11165,7 @@ msgid "Detached banner"
 msgstr "Detached banner"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "Detail"
 
@@ -11219,11 +11244,6 @@ msgstr "Device"
 msgid "Device alerts"
 msgstr "Device alerts"
 
-#. Voice participant context menu submenu label for actions that affect one or more voice devices.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:182
-msgid "Device controls"
-msgstr "Device controls"
-
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "Device details"
@@ -11233,7 +11253,7 @@ msgstr "Device details"
 msgid "Device revoked"
 msgstr "Device revoked"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1024
 msgid "Device selection"
 msgstr "Device selection"
 
@@ -11307,7 +11327,7 @@ msgstr "Direct input"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:562
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:566
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:85
 msgid "Direct message"
 msgstr "Direct message"
@@ -11438,7 +11458,7 @@ msgid "Disable mobile push notifications"
 msgstr "Disable mobile push notifications"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Disable picture-in-picture popout for screen shares"
 
@@ -11479,7 +11499,7 @@ msgstr "Disable two-factor authentication form"
 
 #. Voice menu checkbox label. Hides another participant's video only for the current user.
 #. Voice menu checkbox that hides a participant video on the current device only.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:86
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:110
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:77
 msgid "Disable video locally"
 msgstr "Disable video locally"
@@ -11755,11 +11775,6 @@ msgstr "Display name"
 msgid "Display name (optional)"
 msgstr "Display name (optional)"
 
-#. Voice participant context menu submenu label for call display and diagnostics preferences.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:186
-msgid "Display options"
-msgstr "Display options"
-
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:661
 msgid "Display role members separately."
 msgstr "Display role members separately."
@@ -11792,7 +11807,7 @@ msgstr "DM & friend request settings"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:87
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:558
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:562
 msgid "DM closed"
 msgstr "DM closed"
 
@@ -11917,7 +11932,7 @@ msgstr "Doesn't block. You can reopen later."
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "Domain"
@@ -12270,6 +12285,11 @@ msgstr "Duplicate channel"
 msgid "Duplicate role"
 msgstr "Duplicate role"
 
+#. Label for the duration input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:44
+msgid "Duration"
+msgstr "Duration"
+
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
 msgid "Duration:"
@@ -12409,7 +12429,7 @@ msgstr "Edit global settings like name, description, and icon."
 
 #. Action label for editing a group DM (name, icon, members).
 #: src/features/channel/components/direct_message/GroupDMWelcomeSection.tsx:103
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:466
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:470
 msgid "Edit group"
 msgstr "Edit group"
 
@@ -12440,7 +12460,7 @@ msgstr "Edit media"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "Edit message"
@@ -12715,12 +12735,12 @@ msgid "Embeds"
 msgstr "Embeds"
 
 #. Toast confirmation after hiding link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:84
+#: src/features/channel/components/MessageActionUtils.tsx:85
 msgid "Embeds suppressed"
 msgstr "Embeds suppressed"
 
 #. Toast confirmation after re-enabling link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:80
+#: src/features/channel/components/MessageActionUtils.tsx:81
 msgid "Embeds unsuppressed"
 msgstr "Embeds unsuppressed"
 
@@ -12883,8 +12903,8 @@ msgstr "Empty favorites"
 
 #. Label for an advanced select that caps the best video codec this client advertises it can decode.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "Emulate decode codec (testing)"
 msgstr "Emulate decode codec (testing)"
 
@@ -13040,7 +13060,7 @@ msgstr "Enable mobile push notifications"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "Enable notifications"
@@ -13178,18 +13198,18 @@ msgstr "Enabled mature content."
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "Encoder path"
 msgstr "Encoder path"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Encoder preference for new screen shares."
 msgstr "Encoder preference for new screen shares."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:185
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "Encoder, SVC, backup stream, and bitrate presets"
 
@@ -13221,10 +13241,15 @@ msgstr "End grace period"
 msgid "End grace period now?"
 msgstr "End grace period now?"
 
-#. Button label that stops the current screen share.
+#. Action label for ending a poll now.
+#. Message context menu item that ends the poll now. Only displayed on poll messages.
+#: src/features/channel/components/MessageActionMenu.tsx:96
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:466
+msgid "End poll now"
+msgstr "End poll now"
+
 #. Voice control menu action to stop sharing the screen.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:52
-#: src/features/voice/components/VoiceControlBar.tsx:112
+#: src/features/voice/components/VoiceControlBar.tsx:108
 msgid "End screen share"
 msgstr "End screen share"
 
@@ -13269,7 +13294,7 @@ msgstr "English (US)"
 #. Noise suppression option label (mobile voice settings). Enhanced engine (DeepFilterNet3).
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
@@ -13541,7 +13566,9 @@ msgstr "Entire system audio"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
+#. Voice menu submenu label for per-user entrance sound controls.
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
@@ -13569,6 +13596,8 @@ msgid "Entrance sound saved"
 msgstr "Entrance sound saved"
 
 #. Voice menu slider label adjusting playback volume of this user's entrance sound, locally only.
+#. Voice menu slider label for a user's entrance sound playback volume.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:187
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:318
 msgid "Entrance sound volume"
 msgstr "Entrance sound volume"
@@ -13977,7 +14006,7 @@ msgid "Expression packs are not enabled on this instance. Contact your instance 
 msgstr "Expression packs are not enabled on this instance. Contact your instance administrator for more information."
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 msgid "Expression picker categories"
 msgstr "Expression picker categories"
 
@@ -14267,12 +14296,12 @@ msgid "Failed to send code. Try again."
 msgstr "Failed to send code. Try again."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:67
+#: src/features/channel/components/UserMessage.tsx:69
 msgid "Failed to send message."
 msgstr "Failed to send message."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:63
+#: src/features/channel/components/UserMessage.tsx:65
 msgid "Failed to send message. Hold for options."
 msgstr "Failed to send message. Hold for options."
 
@@ -14754,14 +14783,14 @@ msgstr "Focus the text area"
 
 #. Voice call layout action that pins one of several active devices of the same participant.
 #. Voice layout menu action that focuses one device/session for a participant.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:37
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:101
 msgid "Focus this device"
 msgstr "Focus this device"
 
 #. Voice call layout action that pins the selected participant in the focused view.
 #. Voice layout menu action that focuses one participant in the call view.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:105
 msgid "Focus this person"
 msgstr "Focus this person"
@@ -14808,7 +14837,7 @@ msgstr "Folder settings"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Follow us on {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:826
 msgid "Follow voice input"
 msgstr "Follow voice input"
 
@@ -15026,7 +15055,7 @@ msgstr "forward"
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
 #: src/features/channel/components/MessageActionBar.tsx:86
-#: src/features/channel/components/MessageActionMenu.tsx:83
+#: src/features/channel/components/MessageActionMenu.tsx:84
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
 msgstr "Forward"
@@ -15394,7 +15423,7 @@ msgid "Germany"
 msgstr "Germany"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
 msgid "Get {premiumProductName}"
 msgstr "Get {premiumProductName}"
 
@@ -15697,6 +15726,11 @@ msgstr "Go back"
 msgid "Go back and enter a valid email."
 msgstr "Go back and enter a valid email."
 
+#. Label of the button to go back to vote when the user is looking at poll results.
+#: src/features/channel/components/Poll.tsx:35
+msgid "Go back to vote"
+msgstr "Go back to vote"
+
 #. CTA label that opens the premium settings tab from gift inventory.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:95
 msgid "Go to {premiumProductName}"
@@ -15832,7 +15866,7 @@ msgstr "Granted {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1011
 msgid "Granular selection"
 msgstr "Granular selection"
 
@@ -15868,7 +15902,7 @@ msgstr "Greek"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:784
+#: src/features/voice/components/VoiceSettingsMenus.tsx:785
 msgid "Grid view"
 msgstr "Grid view"
 
@@ -16011,19 +16045,24 @@ msgid "Grouping"
 msgstr "Grouping"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:104
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "H.264 backup stream"
 msgstr "H.264 backup stream"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
 msgid "H.264 simulcast backup"
 msgstr "H.264 simulcast backup"
+
+#. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:231
+msgid "H.265 (requires opt-in)"
+msgstr "H.265 (requires opt-in)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -16076,12 +16115,8 @@ msgstr "Hardware acceleration"
 msgid "Hardware acceleration can cause rendering glitches with transparent windows. Try --disable-gpu if you see flicker or smearing."
 msgstr "Hardware acceleration can cause rendering glitches with transparent windows. Try --disable-gpu if you see flicker or smearing."
 
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:132
-msgid "Hardware acceleration is off, so codecs will encode on your CPU. <0>Turn it back on in {advancedSettingsLabel}</0>."
-msgstr "Hardware acceleration is off, so codecs will encode on your CPU. <0>Turn it back on in {advancedSettingsLabel}</0>."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Hardware encoder"
 msgstr "Hardware encoder"
 
@@ -16216,9 +16251,14 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "Helps the browser choose motion, detail, or text handling."
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
+msgid "HEVC"
+msgstr "HEVC"
 
 #. Codec description in the screen share codec policy menu. HEVC is a codec name; keep WebRTC literal.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:28
@@ -16323,7 +16363,7 @@ msgid "Hide expiry footnotes"
 msgstr "Hide expiry footnotes"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
 msgid "Hide favorites"
 msgstr "Hide favorites"
 
@@ -16371,7 +16411,7 @@ msgid "Hide muted channels by default?"
 msgstr "Hide muted channels by default?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
 msgid "Hide my stream preview thumbnail"
 msgstr "Hide my stream preview thumbnail"
 
@@ -16390,7 +16430,7 @@ msgstr "Hide password"
 msgid "Hide picture-in-picture popout?"
 msgstr "Hide picture-in-picture popout?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:860
 msgid "Hide preview thumbnail"
 msgstr "Hide preview thumbnail"
 
@@ -16452,7 +16492,7 @@ msgid "High dynamic range display mode"
 msgstr "High dynamic range display mode"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Higher quality can cost more CPU and latency."
 msgstr "Higher quality can cost more CPU and latency."
 
@@ -16475,7 +16515,7 @@ msgstr "Hints"
 msgid "Hoist order"
 msgstr "Hoist order"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:522
 msgid "Hoist order reset to default"
 msgstr "Hoist order reset to default"
 
@@ -16699,7 +16739,7 @@ msgstr "Identity"
 
 #. Generic presence-status label indicating the user is idle / AFK.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:639
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:643
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:46
 msgid "Idle"
 msgstr "Idle"
@@ -16835,11 +16875,11 @@ msgstr "Ignore"
 msgid "Ignore friend request"
 msgstr "Ignore friend request"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1001
 msgid "Ignore hardware devices"
 msgstr "Ignore hardware devices"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Ignore input media"
 msgstr "Ignore input media"
 
@@ -16865,7 +16905,7 @@ msgstr "Ignore spam flag"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Ignore the friend request from {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:988
 msgid "Ignore virtual"
 msgstr "Ignore virtual"
 
@@ -17181,7 +17221,7 @@ msgstr "Inappropriate profile"
 
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:486
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:490
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:21
 msgid "Inbox"
 msgstr "Inbox"
@@ -17230,7 +17270,7 @@ msgstr "Include the community ID."
 #. Generic label for an incoming voice or video call.
 #. Notification sound setting label. Ringtone for an incoming DM or group DM call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:502
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:506
 #: src/features/notification/utils/SoundLabels.ts:48
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:171
 msgid "Incoming call"
@@ -17828,7 +17868,7 @@ msgstr "Inviter:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
 msgid "Invites"
 msgstr "Invites"
 
@@ -17939,6 +17979,11 @@ msgstr "It may have been deleted. The name was reverted to what it was before."
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 
+#. Small explanatory text informing the user that the poll resulted in a draw.
+#: src/features/channel/components/PollClosedMessage.tsx:27
+msgid "It's a draw"
+msgstr "It's a draw"
+
 #. Label in the channel and chat typing users.
 #: src/features/channel/components/TypingUsers.tsx:33
 msgid "It's a full-blown typing fiesta in here"
@@ -18016,7 +18061,7 @@ msgid "Join call"
 msgstr "Join call"
 
 #. Generic action label that accepts a community invite / joins a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
 msgid "Join community"
 msgstr "Join community"
 
@@ -18093,7 +18138,7 @@ msgid "Joined {productName}"
 msgstr "Joined {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:494
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:498
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
 msgid "Jump"
 msgstr "Jump"
@@ -18138,7 +18183,7 @@ msgid "Jump to message"
 msgstr "Jump to message"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:54
+#: src/features/channel/components/UserMessage.tsx:56
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Jump to message from {displayName}, sent {formattedDate}"
 
@@ -18328,7 +18373,7 @@ msgid "Kick a member from this community."
 msgstr "Kick a member from this community."
 
 #. Moderation action label that removes a member from a community without banning.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:675
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
 msgid "Kick member"
 msgstr "Kick member"
 
@@ -18441,7 +18486,7 @@ msgid "Launch at login"
 msgstr "Launch at login"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Layering for AV1 and VP9 when available."
 
@@ -18476,7 +18521,7 @@ msgid "Leave call"
 msgstr "Leave call"
 
 #. Destructive action label that removes the current user from a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:671
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:675
 msgid "Leave community"
 msgstr "Leave community"
 
@@ -19224,7 +19269,7 @@ msgid "Manage blocked users"
 msgstr "Manage blocked users"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:310
 msgid "Manage channel"
 msgstr "Manage channel"
 
@@ -19277,7 +19322,7 @@ msgid "Manage payment methods"
 msgstr "Manage payment methods"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:306
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:314
 msgid "Manage permissions"
 msgstr "Manage permissions"
 
@@ -19365,7 +19410,7 @@ msgstr "Mark as spoiler"
 
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:667
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:671
 #: src/features/input/state/input_keybind/shared.ts:33
 msgid "Mark as unread"
 msgstr "Mark as unread"
@@ -19594,6 +19639,11 @@ msgstr "Max {maxSize}."
 msgid "Max number of uses"
 msgstr "Max number of uses"
 
+#. Short label in the max poll vote count reached modal.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:8
+msgid "Max poll vote count reached"
+msgstr "Max poll vote count reached"
+
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:980
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
@@ -19639,9 +19689,14 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "Maximum protection for family-friendly spaces"
 
 #. Label for an advanced screen-share bitrate select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Maximum screen share bitrate"
 msgstr "Maximum screen share bitrate"
+
+#. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
+msgid "May cause compatibility issues for viewers. We’re working on improving this."
+msgstr "May cause compatibility issues for viewers. We’re working on improving this."
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
@@ -19691,9 +19746,7 @@ msgid "Media buttons"
 msgstr "Media buttons"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
-#. Voice participant context menu submenu label for camera, stream, and video actions.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "Media controls"
 
@@ -19840,7 +19893,7 @@ msgstr "members"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:190
 #: src/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.tsx:591
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:490
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:494
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:346
 msgid "Members"
 msgstr "Members"
@@ -19899,7 +19952,7 @@ msgstr "Members, selected"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice participant menu action that inserts a mention of the selected user into the message composer.
 #: src/features/ui/action_menu/items/MentionUserMenuItem.tsx:13
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:67
 msgid "Mention"
 msgstr "Mention"
@@ -19953,7 +20006,7 @@ msgstr "mentioned role"
 #. Generic section / tab label for the mentions inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:643
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:647
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:166
 msgid "Mentions"
 msgstr "Mentions"
@@ -20005,7 +20058,7 @@ msgstr "message"
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -20067,7 +20120,7 @@ msgstr "Message contains attached media"
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
 #: src/features/channel/components/MessageActionBar.tsx:74
-#: src/features/channel/components/MessageActionMenu.tsx:71
+#: src/features/channel/components/MessageActionMenu.tsx:72
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
 msgstr "Message debug"
@@ -20343,7 +20396,7 @@ msgstr "Microphone permission required"
 msgid "Microphone test"
 msgstr "Microphone test"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
 msgid "Microphone workaround"
 msgstr "Microphone workaround"
 
@@ -20533,9 +20586,7 @@ msgid "Mod"
 msgstr "Mod"
 
 #. Permission category for moderation actions against members or messages.
-#. Voice participant context menu submenu label for member moderation actions.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:194
 msgid "Moderation"
 msgstr "Moderation"
 
@@ -20668,7 +20719,7 @@ msgstr "Most relevant"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -20686,7 +20737,7 @@ msgid "Move"
 msgstr "Move"
 
 #. Submenu label that moves every active device into another voice channel.
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:22
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:37
 msgid "Move all devices to…"
 msgstr "Move all devices to…"
 
@@ -20703,7 +20754,7 @@ msgstr "Move back through viewed channel history"
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:21
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:18
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:33
 msgid "Move device to…"
 msgstr "Move device to…"
 
@@ -20728,7 +20779,7 @@ msgid "Move item up"
 msgstr "Move item up"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:294
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
 msgid "Move members"
 msgstr "Move members"
 
@@ -20740,7 +20791,7 @@ msgstr "Move to"
 #. Submenu label that moves the selected participant or content into another channel.
 #. Submenu label that moves the selected participant or content into another channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:29
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:26
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:41
 msgid "Move to…"
 msgstr "Move to…"
 
@@ -20805,7 +20856,7 @@ msgstr "Music note"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:132
 #: src/features/channel/components/embeds/media/EmbedVideo.tsx:72
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:141
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:36
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:73
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:178
@@ -20819,7 +20870,7 @@ msgid "Mute"
 msgstr "Mute"
 
 #. Voice control button label to turn the user's microphone off.
-#: src/features/voice/components/VoiceControlBar.tsx:126
+#: src/features/voice/components/VoiceControlBar.tsx:122
 msgctxt "voice-control-action"
 msgid "Mute"
 msgstr "Mute"
@@ -20860,7 +20911,7 @@ msgid "Mute calls"
 msgstr "Mute calls"
 
 #. Action label that mutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:575
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:579
 msgid "Mute category"
 msgstr "Mute category"
 
@@ -20875,7 +20926,7 @@ msgid "Mute communities"
 msgstr "Mute communities"
 
 #. Generic action label that mutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:550
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:554
 msgid "Mute community"
 msgstr "Mute community"
 
@@ -20885,7 +20936,7 @@ msgid "Mute conversation"
 msgstr "Mute conversation"
 
 #. Voice menu toggle that mutes a single device when the current user is connected on multiple devices.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
 msgid "Mute device"
 msgstr "Mute device"
 
@@ -20899,18 +20950,20 @@ msgstr "Mute DM"
 msgid "Mute DMs"
 msgstr "Mute DMs"
 
+#. Voice menu checkbox label that locally silences a user's entrance sound.
 #. Voice menu checkbox label. Locally silences this user's custom entrance sound when they join, only for the current user.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:183
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
 msgid "Mute entrance sound"
 msgstr "Mute entrance sound"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
 msgid "Mute favourites"
 msgstr "Mute favourites"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:294
 msgid "Mute members"
 msgstr "Mute members"
 
@@ -21299,7 +21352,7 @@ msgid "Neutral (inherit)"
 msgstr "Neutral (inherit)"
 
 #. Generic short option label for "never" in time / frequency dropdowns.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:647
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:651
 msgid "Never"
 msgstr "Never"
 
@@ -21457,7 +21510,7 @@ msgstr "Newest first"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:79
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
 msgid "Next"
 msgstr "Next"
 
@@ -21676,7 +21729,7 @@ msgid "No custom shortcuts yet."
 msgstr "No custom shortcuts yet."
 
 #. Generic short empty-state body shown when an entity has no description set.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:651
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:655
 msgid "No description provided."
 msgstr "No description provided."
 
@@ -22110,6 +22163,11 @@ msgstr "Nobody has reacted with this yet."
 msgid "Nobody matches that search."
 msgstr "Nobody matches that search."
 
+#. Small explanatory text informing the user that nobody voted on the poll.
+#: src/features/channel/components/PollClosedMessage.tsx:23
+msgid "Nobody voted!"
+msgstr "Nobody voted!"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:109
 msgid "Noise"
@@ -22296,7 +22354,7 @@ msgstr "Notification volume"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -22367,7 +22425,7 @@ msgstr "Objects"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:59
 msgid "Off"
 msgstr "Off"
@@ -22385,7 +22443,7 @@ msgid "Off"
 msgstr "Off"
 
 #. Generic presence-status label indicating the user is offline.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:635
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:639
 msgid "Offline"
 msgstr "Offline"
 
@@ -22501,7 +22559,7 @@ msgstr "Only applies on wide screens."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
 msgid "Only default speakers"
 msgstr "Only default speakers"
 
@@ -22549,7 +22607,7 @@ msgstr "Only run code here if you understand exactly what it does."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Only show message previews for DMs with unread messages"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
 msgid "Only speakers"
 msgstr "Only speakers"
 
@@ -22581,7 +22639,7 @@ msgstr "Only the selected ones"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 
-#: src/features/channel/components/UserMessage.tsx:427
+#: src/features/channel/components/UserMessage.tsx:440
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Only you can see this message. <0>Dismiss</0>"
 
@@ -22821,7 +22879,7 @@ msgstr "Open emoji in browser"
 msgid "Open emoji picker"
 msgstr "Open emoji picker"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:877
+#: src/features/voice/components/VoiceSettingsMenus.tsx:859
 msgid "Open event sink"
 msgstr "Open event sink"
 
@@ -22939,13 +22997,13 @@ msgstr "Open profile for {directMessageName}"
 
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:47
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:48
 #: src/features/ui/avatars/AvatarStack.tsx:21
 msgid "Open profile for {displayName}"
 msgstr "Open profile for {displayName}"
 
 #. Short label in the app layout grouped voice participant. Preserve {nickname}; it is inserted by code.
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:35
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:36
 msgid "Open profile for {nickname}"
 msgstr "Open profile for {nickname}"
 
@@ -23080,17 +23138,17 @@ msgid "Open your settings"
 msgstr "Open your settings"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:112
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "OpenH264 software codec on Linux"
 msgstr "OpenH264 software codec on Linux"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
 msgid "OpenH264 video codec"
 msgstr "OpenH264 video codec"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "OpenH264 Video Codec provided by Cisco Systems, Inc."
 
@@ -23567,7 +23625,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Pause invites? New users won't be able to join through invite links until you re-enable them. Existing members won't be affected."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Pause my screen share preview in the background"
 msgstr "Pause my screen share preview in the background"
 
@@ -23575,6 +23633,11 @@ msgstr "Pause my screen share preview in the background"
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:39
 msgid "Pause notifications"
 msgstr "Pause notifications"
+
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
+msgid "Pause Preview When Fluxer Isn’t Focused"
+msgstr "Pause Preview When Fluxer Isn’t Focused"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23909,13 +23972,13 @@ msgid "Picture"
 msgstr "Picture"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:124
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Picture in picture"
 msgstr "Picture in picture"
 
 #. Confirm button label on the pin message alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MessageActionUtils.tsx:64
+#: src/features/channel/components/MessageActionUtils.tsx:65
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:70
 msgid "Pin"
 msgstr "Pin"
@@ -23933,8 +23996,8 @@ msgstr "Pin group DM"
 #. Generic action label that pins a message to the channel pins.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:56
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:534
+#: src/features/channel/components/MessageActionUtils.tsx:57
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:538
 #: src/features/input/state/input_keybind/shared.ts:13
 msgid "Pin message"
 msgstr "Pin message"
@@ -23950,7 +24013,7 @@ msgid "Pin messages here for everyone to see."
 msgstr "Pin messages here for everyone to see."
 
 #. Body of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:60
+#: src/features/channel/components/MessageActionUtils.tsx:61
 msgid "Pin this message to the channel for everyone to see."
 msgstr "Pin this message to the channel for everyone to see."
 
@@ -23984,7 +24047,7 @@ msgid "pinned"
 msgstr "pinned"
 
 #. Generic short toast / status label confirming a DM was pinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:655
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:659
 msgid "Pinned DM"
 msgstr "Pinned DM"
 
@@ -24029,7 +24092,7 @@ msgid "Pins popout"
 msgstr "Pins popout"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:128
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "PiP"
 msgstr "PiP"
 
@@ -24156,6 +24219,16 @@ msgstr "Polish"
 msgid "poll"
 msgstr "poll"
 
+#. Small text informing the user that the poll is closed.
+#: src/features/channel/components/Poll.tsx:68
+msgid "Poll closed"
+msgstr "Poll closed"
+
+#. Small text informing the user that the poll message has not been sent yet.
+#: src/features/channel/components/Poll.tsx:72
+msgid "Poll not sent"
+msgstr "Poll not sent"
+
 #. Button label in a popped-out voice window titlebar that restores the content into the main app window.
 #. Button label on the popped-out overlay that closes the popout window and restores the view in the app.
 #: src/features/voice/components/popout/PopoutTitlebar.tsx:22
@@ -24168,15 +24241,20 @@ msgstr "Pop back in"
 msgid "Pop out call"
 msgstr "Pop out call"
 
-#. Voice menu action on desktop that opens the participant camera feed in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:29
-msgid "Pop out camera"
-msgstr "Pop out camera"
-
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:33
-msgid "Pop out stream"
-msgstr "Pop out stream"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+msgid "Pop Out Stream"
+msgstr "Pop Out Stream"
+
+#. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+msgid "Pop Out User"
+msgstr "Pop Out User"
+
+#. Voice menu action on desktop that opens the active participant camera feed in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+msgid "Pop Out Video"
+msgstr "Pop Out Video"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:19
@@ -24226,7 +24304,7 @@ msgid "Prefer @mention"
 msgstr "Prefer @mention"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "Prefer hardware"
 msgstr "Prefer hardware"
 
@@ -24238,7 +24316,7 @@ msgid "Prefer no @mention"
 msgstr "Prefer no @mention"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Prefer software"
 msgstr "Prefer software"
 
@@ -24256,6 +24334,11 @@ msgstr "Preferences"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:20
 msgid "Preferences..."
 msgstr "Preferences..."
+
+#. Accessible label for the advanced screen-share codec preference select.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:218
+msgid "Preferred screen share codec"
+msgstr "Preferred screen share codec"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -24392,6 +24475,11 @@ msgstr "Preview button"
 msgid "Preview camera"
 msgstr "Preview camera"
 
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+msgid "Preview Camera"
+msgstr "Preview Camera"
+
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
 msgid "Preview hidden"
@@ -24425,7 +24513,7 @@ msgid "Preview sound"
 msgstr "Preview sound"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:136
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "Preview, popout, and stream thumbnail behavior"
 
@@ -24524,12 +24612,12 @@ msgid "Primary navigation"
 msgstr "Primary navigation"
 
 #. Voice display preference checkbox that moves active speakers toward the front of the call grid when enabled.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:105
 msgid "Prioritize speakers"
 msgstr "Prioritize speakers"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:282
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
 msgid "Priority speaker"
 msgstr "Priority speaker"
 
@@ -24553,7 +24641,7 @@ msgid "Privacy policy"
 msgstr "Privacy policy"
 
 #. Generic section heading / button label for the privacy settings area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:663
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:667
 msgid "Privacy settings"
 msgstr "Privacy settings"
 
@@ -24978,7 +25066,7 @@ msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custo
 msgstr "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 
 #. Tooltip on the mic button in the voice control bar when push-to-talk is enabled. {pushToTalkHint} is the formatted shortcut key combo.
-#: src/features/voice/components/VoiceControlBar.tsx:116
+#: src/features/voice/components/VoiceControlBar.tsx:112
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 
@@ -24998,7 +25086,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Quality"
 msgstr "Quality"
 
@@ -25007,6 +25095,11 @@ msgstr "Quality"
 msgctxt "adaptive-screen-share"
 msgid "quality limited"
 msgstr "quality limited"
+
+#. Label for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:28
+msgid "Question"
+msgstr "Question"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
@@ -25149,7 +25242,7 @@ msgstr "React with {emojiShortcode}"
 
 #. Generic short section / tab / aria label for emoji reactions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:659
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:663
 #: src/features/messaging/components/modals/MessageReactionsModal.tsx:144
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:10
 msgid "Reactions"
@@ -25178,7 +25271,7 @@ msgid "Read message aloud"
 msgstr "Read message aloud"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:233
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:241
 msgid "Read message history"
 msgstr "Read message history"
 
@@ -25213,7 +25306,7 @@ msgid "Ready to upgrade?"
 msgstr "Ready to upgrade?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Realtime"
 msgstr "Realtime"
 
@@ -25288,11 +25381,9 @@ msgstr "Recheck"
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "Recipients will be taken to {0} <0>{1}</0>"
 
-#. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
 msgstr "Recommended"
@@ -25557,11 +25648,6 @@ msgstr "Reject"
 msgid "Rejected"
 msgstr "Rejected"
 
-#. Voice participant context menu submenu label for friend and block actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:198
-msgid "Relationship"
-msgstr "Relationship"
-
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:129
 msgid "Relative"
@@ -25704,7 +25790,7 @@ msgid "Remove {userName} from your friends?"
 msgstr "Remove {userName} from your friends?"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
-#: src/features/channel/components/MessageActionUtils.tsx:76
+#: src/features/channel/components/MessageActionUtils.tsx:77
 msgid "Remove all"
 msgstr "Remove all"
 
@@ -25716,8 +25802,8 @@ msgstr "Remove all {emojiNameWithColons} reactions from this message?"
 #. Destructive message context menu item for moderators that clears every reaction on a message.
 #. Message action that removes every reaction from the selected message.
 #. Title of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionMenu.tsx:79
-#: src/features/channel/components/MessageActionUtils.tsx:68
+#: src/features/channel/components/MessageActionMenu.tsx:80
+#: src/features/channel/components/MessageActionUtils.tsx:69
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:70
 msgid "Remove all reactions"
 msgstr "Remove all reactions"
@@ -25748,7 +25834,7 @@ msgid "Remove banner"
 msgstr "Remove banner"
 
 #. Action label that removes a saved bookmark.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:478
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:482
 msgid "Remove bookmark"
 msgstr "Remove bookmark"
 
@@ -25902,6 +25988,11 @@ msgstr "Remove timeout"
 msgid "Remove translator"
 msgstr "Remove translator"
 
+#. Label of the button to remove the user's vote.
+#: src/features/channel/components/Poll.tsx:39
+msgid "Remove vote"
+msgstr "Remove vote"
+
 #. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:31
 msgid "Remove when you first bought {premiumProductName} from your badge"
@@ -25945,7 +26036,7 @@ msgid "Removed from favorite GIFs"
 msgstr "Removed from favorite GIFs"
 
 #. Toast confirming an item was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:611
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:615
 msgid "Removed from favorites"
 msgstr "Removed from favorites"
 
@@ -26113,6 +26204,11 @@ msgstr "Replace background"
 msgid "Replace background?"
 msgstr "Replace background?"
 
+#. Title of a context menu item to replace the emoji of a poll answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:37
+msgid "Replace emoji"
+msgstr "Replace emoji"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:159
 msgid "Replace with a GIF"
@@ -26125,7 +26221,7 @@ msgstr "Replies"
 
 #. Generic action label that opens the reply composer for a message.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:607
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:611
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:71
 msgid "Reply"
 msgstr "Reply"
@@ -26220,7 +26316,7 @@ msgstr "Report issue"
 
 #. Generic action label that opens the report flow targeting a specific message.
 #. Modal title for the IAR flow when reporting a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:530
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:534
 #: src/features/moderation/components/report_modal/IARModalContext.ts:22
 msgid "Report message"
 msgstr "Report message"
@@ -26883,7 +26979,7 @@ msgstr "Reverse image"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:603
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:607
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "Reverse image search"
@@ -27111,8 +27207,8 @@ msgstr "Role color"
 msgid "Role created"
 msgstr "Role created"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:352
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:402
 msgid "Role created successfully"
 msgstr "Role created successfully"
 
@@ -27121,8 +27217,8 @@ msgstr "Role created successfully"
 msgid "Role deleted"
 msgstr "Role deleted"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:440
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:469
 msgid "Role deleted successfully"
 msgstr "Role deleted successfully"
 
@@ -27162,7 +27258,7 @@ msgstr "Roles"
 msgid "Roles and members"
 msgstr "Roles and members"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:296
 msgid "Roles updated successfully"
 msgstr "Roles updated successfully"
 
@@ -27445,7 +27541,7 @@ msgstr "Scopes"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:599
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:603
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:51
 msgid "Screen reader"
 msgstr "Screen reader"
@@ -27491,7 +27587,7 @@ msgid "Screen share codec"
 msgstr "Screen share codec"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:140
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Screen share encoder controls"
 msgstr "Screen share encoder controls"
 
@@ -27512,12 +27608,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "Screen share is using software encoding ({codec}). Quality may be reduced and CPU usage increased. Your GPU may not support hardware encoding for this codec."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:120
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 msgid "Screen share preview"
 msgstr "Screen share preview"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:116
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "Screen share preview behavior"
 msgstr "Screen share preview behavior"
 
@@ -27535,6 +27631,11 @@ msgstr "Screen share previews are disabled."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
 msgid "Screen share previews are enabled."
 msgstr "Screen share previews are enabled."
+
+#. Voice screen share menu action that opens the screen share preview privacy controls.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
+msgid "Screen Share Privacy"
+msgstr "Screen Share Privacy"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
@@ -27562,11 +27663,6 @@ msgstr "Screen share start"
 #: src/features/notification/utils/SoundLabels.ts:64
 msgid "Screen share stop"
 msgstr "Screen share stop"
-
-#. Accessible label for the screen-share codec radio group.
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:42
-msgid "Screen share video codec"
-msgstr "Screen share video codec"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -28063,6 +28159,11 @@ msgstr "See the member list for channels in this community."
 msgid "See the member list for this channel."
 msgstr "See the member list for this channel."
 
+#. Permission name: allows looking at votes on anonymous polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:237
+msgid "See votes on anonymous polls"
+msgstr "See votes on anonymous polls"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
 msgid "Seek preview"
@@ -28152,6 +28253,11 @@ msgstr "Select an account to continue, or add a different one."
 msgid "Select an option from the radio group"
 msgstr "Select an option from the radio group"
 
+#. Tooltip text for the emoji selection button on an answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:29
+msgid "Select emoji"
+msgstr "Select emoji"
+
 #. Button or menu action label in the add friends to group modal. Keep it concise.
 #. Button or menu action label in the create dm bottom sheet. Keep it concise.
 #. Button or menu action label in the create dm modal. Keep it concise.
@@ -28170,6 +28276,16 @@ msgstr "Select GIF {title}"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:75
 msgid "Select interface language"
 msgstr "Select interface language"
+
+#. Small explanatory text instructing the user to select one answer on the poll.
+#: src/features/channel/components/Poll.tsx:27
+msgid "Select one answer"
+msgstr "Select one answer"
+
+#. Small explanatory text instructing the user to select one or multiple answers on the poll.
+#: src/features/channel/components/Poll.tsx:31
+msgid "Select one or multiple answers"
+msgstr "Select one or multiple answers"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -28221,6 +28337,11 @@ msgstr "Selectable text"
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "selected"
+
+#. Label showing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:84
+msgid "Selected answer"
+msgstr "Selected answer"
 
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx:15
@@ -28381,10 +28502,8 @@ msgid "Send GIF {title}"
 msgstr "Send GIF {title}"
 
 #. Action label for sending a gift to a friend.
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the gift purchase flow.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:39
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Send gift"
@@ -28470,7 +28589,7 @@ msgstr "Send verification code"
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
 #: src/features/channel/components/VoiceMessageRecorder.tsx:69
 #: src/features/input/state/input_keybind/shared.ts:285
 msgid "Send voice message"
@@ -28529,7 +28648,7 @@ msgid "Sensitive media"
 msgstr "Sensitive media"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:807
 msgid "Sent"
 msgstr "Sent"
 
@@ -28817,7 +28936,7 @@ msgid "Set verification level to <0>none</0>."
 msgstr "Set verification level to <0>none</0>."
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:298
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:306
 msgid "Set voice region"
 msgstr "Set voice region"
 
@@ -28931,6 +29050,11 @@ msgstr "Share screens and windows."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
 msgid "Share source"
 msgstr "Share source"
+
+#. Toggle label for sharing audio with an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+msgid "Share Stream Audio"
+msgstr "Share Stream Audio"
 
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:40
@@ -29232,7 +29356,7 @@ msgstr "Show embeds and preview website links"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:63
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:121
 msgid "Show emoji button"
 msgstr "Show emoji button"
@@ -29276,7 +29400,7 @@ msgstr "Show GIF indicator"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:101
 msgid "Show GIFs button"
 msgstr "Show GIFs button"
@@ -29325,7 +29449,7 @@ msgstr "Show max 5 (+5 badge)"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:105
 msgid "Show media button"
 msgstr "Show media button"
@@ -29382,16 +29506,16 @@ msgstr "Show muted channels"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:814
+#: src/features/voice/components/VoiceSettingsMenus.tsx:815
 msgid "Show my own camera"
 msgstr "Show my own camera"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-msgid "Show my screen share"
-msgstr "Show my screen share"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
+msgid "Show My Screen Share"
+msgstr "Show My Screen Share"
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
@@ -29418,9 +29542,9 @@ msgstr "Show new device modal"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether participants without video are shown in the grid.
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:828
+#: src/features/voice/components/VoiceSettingsMenus.tsx:829
 msgid "Show non-video participants"
 msgstr "Show non-video participants"
 
@@ -29459,6 +29583,11 @@ msgstr "Show profile timezone settings"
 msgid "Show quick reactions"
 msgstr "Show quick reactions"
 
+#. Label of the button to show poll answer results.
+#: src/features/channel/components/Poll.tsx:47
+msgid "Show results"
+msgstr "Show results"
+
 #. Description for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:289
 msgid "Show rich previews for YouTube links."
@@ -29473,7 +29602,7 @@ msgstr "Show saved media in expression autocomplete"
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:67
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:125
 msgid "Show send button"
 msgstr "Show send button"
@@ -29485,7 +29614,7 @@ msgstr "Show spoiler content when clicked"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:117
 msgid "Show stickers button"
 msgstr "Show stickers button"
@@ -29608,7 +29737,7 @@ msgstr "Sign in with your organization's single sign-on provider."
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:195
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:256
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:313
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:595
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:599
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
 msgstr "Sign out"
@@ -29760,7 +29889,7 @@ msgid "Single community mode"
 msgstr "Single community mode"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 msgid "Single layer"
 msgstr "Single layer"
 
@@ -30064,12 +30193,12 @@ msgid "Social"
 msgstr "Social"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Software encoder"
 msgstr "Software encoder"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 msgid "Software encoder quality"
 msgstr "Software encoder quality"
 
@@ -30292,7 +30421,7 @@ msgstr "Sound volume"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:807
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:811
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "Sounds"
@@ -30394,12 +30523,12 @@ msgid "Spanish (Spain)"
 msgstr "Spanish (Spain)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Spatial and temporal layers"
 msgstr "Spatial and temporal layers"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:277
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "Speak"
@@ -30411,7 +30540,7 @@ msgstr "Speak all messages out loud"
 
 #. Message action that has the screen reader read the selected message aloud.
 #. Message context menu item that reads the message aloud via text-to-speech.
-#: src/features/channel/components/MessageActionMenu.tsx:99
+#: src/features/channel/components/MessageActionMenu.tsx:104
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:78
 msgid "Speak message"
 msgstr "Speak message"
@@ -30698,10 +30827,6 @@ msgstr "Start date"
 msgid "Start date must be earlier than end date."
 msgstr "Start date must be earlier than end date."
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:860
-msgid "Start debug logging session"
-msgstr "Start debug logging session"
-
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:125
 msgid "Start drag and drop"
@@ -30728,7 +30853,7 @@ msgid "Start uploading attachments as soon as they are added to the message inpu
 msgstr "Start uploading attachments as soon as they are added to the message input"
 
 #. Action label that initiates a video call (DM or group DM).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:591
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:595
 msgid "Start video call"
 msgstr "Start video call"
 
@@ -31035,10 +31160,17 @@ msgstr "Stop sharing voice activity with all friends?"
 
 #. Message action that stops the screen reader from speaking the selected message.
 #. Message context menu item that stops the text-to-speech playback in progress.
-#: src/features/channel/components/MessageActionMenu.tsx:95
+#: src/features/channel/components/MessageActionMenu.tsx:100
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:74
 msgid "Stop speaking"
 msgstr "Stop speaking"
+
+#. Danger action that stops the active screen share.
+#. Voice screen share menu action that stops the current user stream.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:19
+msgid "Stop Streaming"
+msgstr "Stop Streaming"
 
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31
@@ -31051,7 +31183,7 @@ msgid "Stop watching"
 msgstr "Stop watching"
 
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
-#: src/features/voice/components/VoiceControlBar.tsx:151
+#: src/features/voice/components/VoiceControlBar.tsx:147
 msgid "Stop watching stream"
 msgstr "Stop watching stream"
 
@@ -31089,10 +31221,15 @@ msgstr "Stream hidden"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "Stream preview"
+
+#. Compact submenu label for changing the resolution and frame rate of an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+msgid "Stream Quality"
+msgstr "Stream Quality"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
@@ -31100,7 +31237,7 @@ msgid "Stream settings"
 msgstr "Stream settings"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:282
 msgid "Stream video"
 msgstr "Stream video"
 
@@ -31193,6 +31330,11 @@ msgstr "Styling"
 msgid "Submenu"
 msgstr "Submenu"
 
+#. Label for the poll submit button.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:57
+msgid "Submit"
+msgstr "Submit"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:445
 msgid "Submitting"
 msgstr "Submitting"
@@ -31274,7 +31416,7 @@ msgid "Suppress all role mentions"
 msgstr "Suppress all role mentions"
 
 #. Action label on a message that hides link previews / embeds.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:587
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:591
 msgid "Suppress embeds"
 msgstr "Suppress embeds"
 
@@ -31303,12 +31445,12 @@ msgid "Suspend"
 msgstr "Suspend"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:177
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
 msgid "SVC mode"
 msgstr "SVC mode"
 
@@ -31758,7 +31900,7 @@ msgid "Template URL"
 msgstr "Template URL"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Temporal layers"
 msgstr "Temporal layers"
 
@@ -31819,7 +31961,7 @@ msgstr "Test URL unfurls and rendered embeds"
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
 msgid "Text"
 msgstr "Text"
 
@@ -32125,6 +32267,11 @@ msgstr "The provided redirect_uri is not registered for this application."
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:49
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "The provided redirect_uri must use HTTP or HTTPS."
+
+#. Placeholder text for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:32
+msgid "The question you want to ask"
+msgstr "The question you want to ask"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
 #: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
@@ -32874,6 +33021,16 @@ msgstr "This picker is only available in the desktop app."
 msgid "This plan isn't available. Contact support."
 msgstr "This plan isn't available. Contact support."
 
+#. Small disclaimer explaining to the user that this poll is anonymous, but they can see votes because they have the permission for it.
+#: src/features/channel/components/Poll.tsx:55
+msgid "This poll is anonymous, but you can see votes."
+msgstr "This poll is anonymous, but you can see votes."
+
+#. Small disclaimer explaining to the user that this poll is anonymous.
+#: src/features/channel/components/Poll.tsx:51
+msgid "This poll is anonymous."
+msgstr "This poll is anonymous."
+
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
 msgstr "This purchase is not eligible for a refund."
@@ -33032,13 +33189,18 @@ msgid "This voice channel is no longer available."
 msgstr "This voice channel is no longer available."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:71
+#: src/features/channel/components/UserMessage.tsx:73
 msgid "This was a {silentMention} message."
 msgstr "This was a {silentMention} message."
 
 #: src/features/voice/components/dialogs/DisableScreenSharePiPConfirmModal.tsx:52
 msgid "This will close the current popout and stop screen share picture-in-picture popouts from opening automatically. You can turn them back on in {audioVideoSettingsPath}."
 msgstr "This will close the current popout and stop screen share picture-in-picture popouts from opening automatically. You can turn them back on in {audioVideoSettingsPath}."
+
+#. Description of the action of ending a poll in a confirmation modal.
+#: src/features/messaging/commands/PollCommands.tsx:24
+msgid "This will close the poll now and show the results."
+msgstr "This will close the poll now and show the results."
 
 #: src/features/messaging/commands/FavoritesCommands.tsx:30
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>{favoritesSettingsPath}</0>."
@@ -33178,7 +33340,7 @@ msgid "Time format selection"
 msgstr "Time format selection"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:253
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
 msgid "Time out members"
 msgstr "Time out members"
 
@@ -33531,7 +33693,7 @@ msgstr "Transferred ownership to {0}."
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:583
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:587
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "Translate"
@@ -33805,7 +33967,7 @@ msgstr "Turn off"
 
 #. Bulk voice action that turns off the camera on every active device of the current user.
 #. Voice menu action that turns off every active device/session's camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:90
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:114
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:93
 msgid "Turn off all device cameras"
 msgstr "Turn off all device cameras"
@@ -33815,20 +33977,20 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Turn off anything you're not comfortable with. Some features may stop working."
 
 #. Voice / call action label that disables the local camera.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:506
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:510
 msgid "Turn off camera"
 msgstr "Turn off camera"
 
 #. Voice menu action that turns off the camera on a single device of the current user.
 #. Voice menu action that turns off the camera on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:81
 msgid "Turn off device camera"
 msgstr "Turn off device camera"
 
 #. Voice menu action that ends the screen share on a single device of the current user.
 #. Voice menu action that stops screen sharing or streaming on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:85
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:85
 msgid "Turn off device stream"
 msgstr "Turn off device stream"
@@ -33840,7 +34002,7 @@ msgstr "Turn off private messaging and friends across the instance. This can be 
 
 #. Voice menu action that ends the current user screen share.
 #. Voice menu action that stops the current user's screen share or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:89
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:69
 msgid "Turn off stream"
 msgstr "Turn off stream"
@@ -34151,7 +34313,7 @@ msgid "Unblock user"
 msgstr "Unblock user"
 
 #. Generic label for items that do not belong to a category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:631
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:635
 msgid "Uncategorized"
 msgstr "Uncategorized"
 
@@ -34266,7 +34428,7 @@ msgstr "Unfavorite sticker"
 
 #. Voice call layout action that removes focus from the currently pinned participant.
 #. Voice layout menu action that removes the focused participant or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:25
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:97
 msgid "Unfocus"
 msgstr "Unfocus"
@@ -34308,7 +34470,7 @@ msgstr "Universal fallback. Lowest quality, but it works everywhere."
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:585
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -34351,7 +34513,7 @@ msgstr "Unknown date"
 #. Fallback device or operating-system label in the devices tab when session client data is unavailable.
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:43
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:44
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
@@ -34387,7 +34549,7 @@ msgid "Unknown message type"
 msgstr "Unknown message type"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:410
+#: src/features/permissions/utils/PermissionUtils.ts:412
 msgid "Unknown permission"
 msgstr "Unknown permission"
 
@@ -34429,7 +34591,7 @@ msgstr "unknown user"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:161
+#: src/features/voice/components/VoiceParticipantTile.tsx:162
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Unknown user"
@@ -34526,7 +34688,7 @@ msgid "Unmute"
 msgstr "Unmute"
 
 #. Voice control button label to turn the user's microphone back on.
-#: src/features/voice/components/VoiceControlBar.tsx:121
+#: src/features/voice/components/VoiceControlBar.tsx:117
 msgctxt "voice-control-action"
 msgid "Unmute"
 msgstr "Unmute"
@@ -34547,7 +34709,7 @@ msgid "Unmute all devices"
 msgstr "Unmute all devices"
 
 #. Action label that unmutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:579
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:583
 msgid "Unmute category"
 msgstr "Unmute category"
 
@@ -34562,7 +34724,7 @@ msgid "Unmute communities"
 msgstr "Unmute communities"
 
 #. Generic action label that unmutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:554
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:558
 msgid "Unmute community"
 msgstr "Unmute community"
 
@@ -34582,7 +34744,7 @@ msgid "Unmute DMs"
 msgstr "Unmute DMs"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
 msgid "Unmute favourites"
 msgstr "Unmute favourites"
 
@@ -34631,7 +34793,7 @@ msgid "Unordered"
 msgstr "Unordered"
 
 #. Confirm button label on the unpin message alert.
-#: src/features/channel/components/MessageActionUtils.tsx:52
+#: src/features/channel/components/MessageActionUtils.tsx:53
 msgid "Unpin"
 msgstr "Unpin"
 
@@ -34656,12 +34818,12 @@ msgid "Unpin message"
 msgstr "Unpin message"
 
 #. Body of the confirmation alert shown when unpinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:48
+#: src/features/channel/components/MessageActionUtils.tsx:49
 msgid "Unpin this message?"
 msgstr "Unpin this message?"
 
 #. Generic short toast / status label confirming a DM was unpinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:627
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:631
 msgid "Unpinned DM"
 msgstr "Unpinned DM"
 
@@ -34789,7 +34951,7 @@ msgstr "Unsupported sticker file"
 
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionMenu.tsx:87
+#: src/features/channel/components/MessageActionMenu.tsx:88
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
 msgstr "Unsuppress embeds"
@@ -35061,9 +35223,7 @@ msgstr "Upload directly to {displayName}"
 msgid "Upload emoji"
 msgstr "Upload emoji"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the system file picker to attach a file.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:13
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:23
 msgid "Upload file"
 msgstr "Upload file"
@@ -35110,10 +35270,8 @@ msgstr "Upload sticker"
 msgid "Upload to {displayName}"
 msgstr "Upload to {displayName}"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that uploads the current textarea content as a .txt file when it exceeds the size limit.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:17
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:27
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
 msgid "Upload your message as a file"
 msgstr "Upload your message as a file"
 
@@ -35166,7 +35324,7 @@ msgid "Uploading emojis"
 msgstr "Uploading emojis"
 
 #. Description for the maximum screen share bitrate select. Keep WebRTC literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
 msgid "Upper bitrate cap before WebRTC adapts to the network."
 msgstr "Upper bitrate cap before WebRTC adapts to the network."
 
@@ -35369,12 +35527,12 @@ msgid "Use emoji from other communities."
 msgstr "Use emoji from other communities."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:237
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
 msgid "Use external emoji"
 msgstr "Use external emoji"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:241
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
 msgid "Use external stickers"
 msgstr "Use external stickers"
 
@@ -35541,7 +35699,7 @@ msgid "Use video and camera previews."
 msgstr "Use video and camera previews."
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
 msgid "Use voice activity"
 msgstr "Use voice activity"
 
@@ -35597,11 +35755,6 @@ msgstr "Used only in this community."
 msgid "User"
 msgstr "User"
 
-#. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "User actions"
-msgstr "User actions"
-
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:251
 msgid "User appears underage, or is involved in grooming or child exploitation."
@@ -35618,7 +35771,7 @@ msgid "User controls"
 msgstr "User controls"
 
 #. Title of the developer-mode user debug modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:571
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:575
 msgid "User debug"
 msgstr "User debug"
 
@@ -35701,7 +35854,7 @@ msgstr "user, bot, or webhook"
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:995
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:567
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:571
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
@@ -36346,12 +36499,12 @@ msgid "View call controls"
 msgstr "View call controls"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:257
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
 msgid "View channel"
 msgstr "View channel"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
 msgid "View channel members"
 msgstr "View channel members"
 
@@ -36439,6 +36592,11 @@ msgstr "View permissions"
 msgid "View plans"
 msgstr "View plans"
 
+#. Title of the button that redirects to the poll message.
+#: src/features/channel/components/PollClosedMessage.tsx:31
+msgid "View poll"
+msgstr "View poll"
+
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:353
 msgid "View profile"
@@ -36452,7 +36610,7 @@ msgid "View profile for {displayName}"
 msgstr "View profile for {displayName}"
 
 #. Message context menu item that opens the reactions list sheet for the message.
-#: src/features/channel/components/MessageActionMenu.tsx:75
+#: src/features/channel/components/MessageActionMenu.tsx:76
 msgid "View reactions"
 msgstr "View reactions"
 
@@ -36842,6 +37000,11 @@ msgstr "Volume control"
 msgid "Volume sliders"
 msgstr "Volume sliders"
 
+#. Label of the vote button.
+#: src/features/channel/components/Poll.tsx:43
+msgid "Vote"
+msgstr "Vote"
+
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
@@ -36862,7 +37025,7 @@ msgid "Wait here"
 msgstr "Wait here"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:56
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
 msgstr "Waiting for connection..."
 
@@ -36902,7 +37065,7 @@ msgid "Watch"
 msgstr "Watch"
 
 #. Voice action label that starts watching a remote screen share.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:482
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:486
 msgid "Watch stream"
 msgstr "Watch stream"
 
@@ -37565,6 +37728,11 @@ msgstr "Windows cut off at the top or bottom of the screen, and docked DevTools,
 msgid "Windows default"
 msgstr "Windows default"
 
+#. Label showing or describing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:80
+msgid "Winning answer"
+msgstr "Winning answer"
+
 #. Switch description in the leave-community confirmation modal. Warns that deleting the caller's community messages is destructive.
 #. Switch description in the leave-group confirmation modal. Warns that deleting the caller's group messages is destructive.
 #: src/features/guild/hooks/useLeaveGroup.tsx:44
@@ -37849,6 +38017,11 @@ msgstr "You can't befriend yourself"
 msgid "You can't change your nickname here"
 msgstr "You can't change your nickname here"
 
+#. Tooltip on the disabled create poll item when the user lacks Create Poll permission. Calm, factual tone.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:27
+msgid "You can't create polls in this channel."
+msgstr "You can't create polls in this channel."
+
 #. Title of the error modal shown when the user lacks permission to delete a channel or category.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:18
 msgid "You can't delete this"
@@ -37943,8 +38116,8 @@ msgstr "You can't send messages in this community."
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:65
-#: src/features/voice/components/VoiceControlBar.tsx:141
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
+#: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "You can't share your screen in this channel"
 
@@ -37957,8 +38130,8 @@ msgstr "You can't speak in this channel"
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:74
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
-#: src/features/voice/components/VoiceControlBar.tsx:131
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
+#: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "You can't turn on your camera in this channel"
 
@@ -38080,6 +38253,11 @@ msgstr "You don't have permission to join this voice channel"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:73
 msgid "You don't have permission to rename this emoji. The name was reverted to what it was before."
 msgstr "You don't have permission to rename this emoji. The name was reverted to what it was before."
+
+#. Error message for when no question has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:61
+msgid "You forgot to enter a question."
+msgstr "You forgot to enter a question."
 
 #. Body of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
@@ -38260,6 +38438,11 @@ msgstr "You need to verify your email address before you can send friend request
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "You need to verify your email address before you can start a direct message."
 
+#. Small disclaimer explaining to the user that email verification is necessary to vote on a poll.
+#: src/features/channel/components/Poll.tsx:60
+msgid "You need to verify your email address to vote on a poll."
+msgstr "You need to verify your email address to vote on a poll."
+
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
@@ -38273,6 +38456,11 @@ msgstr "You need to verify your email to send messages in this community."
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:60
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
+
+#. Error message for when no answer has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:65
+msgid "You should enter at least one answer."
+msgstr "You should enter at least one answer."
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:61
@@ -38554,6 +38742,11 @@ msgstr "You've reached the maximum number of emojis. Delete some existing emojis
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 
+#. Modal body shown when the maximum vote count per answer has been reached on a poll. Keep plain.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:12
+msgid "You've reached the maximum number of votes per answer."
+msgstr "You've reached the maximum number of votes per answer."
+
 #. Description text in the background image gallery modal. Preserve {maxBackgroundImages}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:106
 msgid "You've reached the maximum of {maxBackgroundImages} backgrounds. Remove one to add a new background."
@@ -38752,27 +38945,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Your last purchase is outside the refund window. Contact support for billing issues."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:77
+#: src/features/messaging/state/MessageQueue.tsx:78
 msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
 msgstr "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:72
+#: src/features/messaging/state/MessageQueue.tsx:73
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:59
+#: src/features/messaging/state/MessageQueue.tsx:60
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:64
+#: src/features/messaging/state/MessageQueue.tsx:65
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Your message could not be delivered. You need to claim your account to send direct messages."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:68
+#: src/features/messaging/state/MessageQueue.tsx:69
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Your message could not be delivered. You need to claim your account to send messages."
 
@@ -38957,7 +39150,7 @@ msgstr "Zoom"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that increases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:623
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:627
 #: src/features/input/state/input_keybind/shared.ts:253
 #: src/features/platform/utils/DesktopLocaleBridge.ts:62
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
@@ -38968,7 +39161,7 @@ msgstr "Zoom in"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that decreases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:619
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:623
 #: src/features/input/state/input_keybind/shared.ts:257
 #: src/features/platform/utils/DesktopLocaleBridge.ts:66
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86

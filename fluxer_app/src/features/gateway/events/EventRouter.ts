@@ -40,6 +40,8 @@ import {handleMessageAck} from '@app/features/messaging/events/MessageAck';
 import {handleMessageCreate} from '@app/features/messaging/events/MessageCreate';
 import {handleMessageDelete} from '@app/features/messaging/events/MessageDelete';
 import {handleMessageDeleteBulk} from '@app/features/messaging/events/MessageDeleteBulk';
+import {handleMessagePollVoteAdd} from '@app/features/messaging/events/MessagePollVoteAdd';
+import {handleMessagePollVoteRemove} from '@app/features/messaging/events/MessagePollVoteRemove';
 import {handleMessageReactionAdd} from '@app/features/messaging/events/MessageReactionAdd';
 import {handleMessageReactionAddMany} from '@app/features/messaging/events/MessageReactionAddMany';
 import {handleMessageReactionRemove} from '@app/features/messaging/events/MessageReactionRemove';
@@ -139,6 +141,8 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('MESSAGE_REACTION_REMOVE', handleMessageReactionRemove as GatewayEventHandler);
 	registry.set('MESSAGE_REACTION_REMOVE_ALL', handleMessageReactionRemoveAll as GatewayEventHandler);
 	registry.set('MESSAGE_REACTION_REMOVE_EMOJI', handleMessageReactionRemoveEmoji as GatewayEventHandler);
+	registry.set('MESSAGE_POLL_VOTE_ADD', handleMessagePollVoteAdd as GatewayEventHandler);
+	registry.set('MESSAGE_POLL_VOTE_REMOVE', handleMessagePollVoteRemove as GatewayEventHandler);
 	registry.set('TYPING_START', handleTypingStart as GatewayEventHandler);
 	registry.set('RECENT_MENTION_DELETE', handleRecentMentionDelete as GatewayEventHandler);
 	registry.set('SAVED_MESSAGE_CREATE', handleSavedMessageCreate as GatewayEventHandler);

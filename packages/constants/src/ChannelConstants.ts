@@ -46,6 +46,7 @@ export const MessageTypes = {
 	CHANNEL_PINNED_MESSAGE: 6,
 	USER_JOIN: 7,
 	REPLY: 19,
+	POLL_RESULT: 46,
 	CLIENT_SYSTEM: 99,
 } as const;
 
@@ -54,6 +55,7 @@ export type MessageTypeValue = ValueOf<typeof MessageTypes>;
 const MESSAGE_TYPE_DELETABLE = {
 	[MessageTypes.DEFAULT]: true,
 	[MessageTypes.REPLY]: true,
+	[MessageTypes.POLL_RESULT]: true,
 	[MessageTypes.CHANNEL_PINNED_MESSAGE]: true,
 	[MessageTypes.USER_JOIN]: true,
 	[MessageTypes.RECIPIENT_ADD]: false,
@@ -173,10 +175,12 @@ export const Permissions = {
 	USE_EXTERNAL_STICKERS: 1n << 37n,
 	MODERATE_MEMBERS: 1n << 40n,
 	CREATE_EXPRESSIONS: 1n << 43n,
+	SEND_POLLS: 1n << 49n,
 	PIN_MESSAGES: 1n << 51n,
 	BYPASS_SLOWMODE: 1n << 52n,
 	UPDATE_RTC_REGION: 1n << 53n,
 	VIEW_CHANNEL_MEMBERS: 1n << 54n,
+	SEE_VOTES_ON_ANONYMOUS_POLLS: 1n << 55n,
 } as const;
 export const PermissionsDescriptions: Record<keyof typeof Permissions, string> = {
 	CREATE_INSTANT_INVITE: 'Allows creation of instant invites',
@@ -212,10 +216,12 @@ export const PermissionsDescriptions: Record<keyof typeof Permissions, string> =
 	USE_EXTERNAL_STICKERS: 'Allows using stickers from other guilds',
 	MODERATE_MEMBERS: 'Allows timing out users',
 	CREATE_EXPRESSIONS: 'Allows creating guild expressions',
+	SEND_POLLS: 'Allows sending polls',
 	PIN_MESSAGES: 'Allows pinning messages',
 	BYPASS_SLOWMODE: 'Allows bypassing slowmode',
 	UPDATE_RTC_REGION: 'Allows updating the voice region',
 	VIEW_CHANNEL_MEMBERS: 'Allows viewing the member list in a channel',
+	SEE_VOTES_ON_ANONYMOUS_POLLS: 'Allows seeing votes on anonymous polls',
 };
 export const ALL_PERMISSIONS = Object.values(Permissions).reduce((acc, p) => acc | p, 0n);
 export const DEFAULT_PERMISSIONS =
@@ -233,6 +239,7 @@ export const DEFAULT_PERMISSIONS =
 	Permissions.USE_VAD |
 	Permissions.CHANGE_NICKNAME |
 	Permissions.USE_EXTERNAL_STICKERS |
+	Permissions.SEND_POLLS |
 	Permissions.VIEW_CHANNEL_MEMBERS;
 export const ElevatedPermissions =
 	Permissions.KICK_MEMBERS |
@@ -244,5 +251,6 @@ export const ElevatedPermissions =
 	Permissions.MANAGE_MESSAGES |
 	Permissions.MANAGE_WEBHOOKS |
 	Permissions.MANAGE_EXPRESSIONS |
-	Permissions.MODERATE_MEMBERS;
+	Permissions.MODERATE_MEMBERS |
+	Permissions.SEE_VOTES_ON_ANONYMOUS_POLLS;
 export const CHANNEL_REINDEX_AFTER_TIMESTAMP = 1779557400;

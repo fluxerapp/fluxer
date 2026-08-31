@@ -21,6 +21,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import * as PollCommands from '@app/features/messaging/commands/PollCommands';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {parse} from '@app/features/messaging/components/markdown/renderers';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
@@ -50,6 +51,7 @@ import {ArrowsClockwiseIcon, BellSlashIcon, EyeIcon, WarningCircleIcon} from '@p
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {type MouseEvent, useCallback, useMemo} from 'react';
+import {Poll} from './Poll';
 
 const JUMP_TO_MESSAGE_FROM_SENT_DESCRIPTOR = msg({
 	message: 'Jump to message from {displayName}, sent {formattedDate}',
@@ -246,7 +248,18 @@ export const UserMessage = observer(() => {
 		},
 		[message],
 	);
+	const handlePollVote = useCallback(
+		(add: boolean, selectedAnswers: Array<number>) => {
+			if (add) {
+				PollCommands.addVote(i18n, message.channelId, message.id, selectedAnswers);
+			} else {
+				PollCommands.removeVote(i18n, message.channelId, message.id);
+			}
+		},
+		[message],
+	);
 	const shouldShowEditingInput = isEditing && !previewContext && !mobileLayout.enabled;
+
 	const compactAuthorPrefix = (
 		<CompactAuthorPrefix
 			message={message}
@@ -530,6 +543,7 @@ export const UserMessage = observer(() => {
 					}
 				</CompactMessageLayout>
 				<div className={styles.container} data-flx="channel.user-message.container--2">
+					{message.poll ? <Poll guild={guild} channelId={channel.id} messageId={message.id} poll={message.poll} isMobile={mobileLayout.enabled} messageState={message.state} onVote={handlePollVote} /> : undefined}
 					<MessageAttachments data-flx="channel.user-message.message-attachments--2" />
 					{renderFailedFooter()}
 				</div>
@@ -727,6 +741,7 @@ export const UserMessage = observer(() => {
 							</span>
 						</TimestampWithTooltip>
 					))}
+				{message.poll ? <Poll guild={guild} channelId={channel.id} messageId={message.id} poll={message.poll} isMobile={mobileLayout.enabled} messageState={message.state} onVote={handlePollVote} /> : undefined}
 				<MessageAttachments data-flx="channel.user-message.message-attachments--3" />
 				{message.content.length === 0 &&
 					!isEditing &&

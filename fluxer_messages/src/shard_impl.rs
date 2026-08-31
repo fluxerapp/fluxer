@@ -11,8 +11,9 @@ use crate::types::{
     ApiMessageResponse, ApiMessageSnapshotResponse, ApiMessageStickerResponse,
     ApiReactionEmojiResponse, ApiUserPartialResponse, Message, MessageAttachment, MessageCall,
     MessageEmbed, MessageEmbedAuthor, MessageEmbedChild, MessageEmbedField, MessageEmbedFooter,
-    MessageEmbedMedia, MessageEmbedProvider, MessageReference, MessageRequest, MessageResponse,
-    MessageSnapshot, MessageStickerItem,
+    MessageEmbedMedia, MessageEmbedProvider, MessagePoll, MessagePollAnswer,
+    MessagePollAnswerCount, MessagePollEmoji, MessagePollMedia, MessagePollResults,
+    MessageReference, MessageRequest, MessageResponse, MessageSnapshot, MessageStickerItem,
 };
 use crate::udt;
 use chrono::{DateTime, Utc};
@@ -139,6 +140,7 @@ struct MessageDbRow {
     nsfw_emojis: Option<std::collections::HashSet<i64>>,
     attachments: Option<Vec<udt::AttachmentUdt>>,
     embeds: Option<Vec<udt::EmbedUdt>>,
+    poll: Option<udt::PollUdt>,
     sticker_items: Option<Vec<udt::StickerItemUdt>>,
     message_reference: Option<udt::MessageReferenceUdt>,
     call: Option<udt::MessageCallUdt>,
@@ -1045,6 +1047,7 @@ impl MessagesShard {
         } else {
             Vec::new()
         };
+        let poll = message.poll.clone();
         let stickers = message
             .sticker_items
             .as_deref()
@@ -1138,6 +1141,7 @@ impl MessagesShard {
             mention_channels: (!mention_channels.is_empty()).then_some(mention_channels),
             users: (!users.is_empty()).then_some(users),
             embeds,
+            poll,
             attachments,
             stickers,
             nsfw_emojis: (!message.nsfw_emojis.is_empty()).then(|| {
@@ -2952,6 +2956,57 @@ fn convert_embed(e: udt::EmbedUdt) -> MessageEmbed {
     }
 }
 
+fn convert_poll_emoji(p: udt::PollEmojiUdt) -> MessagePollEmoji {
+    MessagePollEmoji {
+        id: p.id,
+        name: p.name,
+    }
+}
+
+fn convert_poll_media(p: udt::PollMediaUdt) -> MessagePollMedia {
+    MessagePollMedia {
+        emoji: p.emoji.map(convert_poll_emoji),
+        text: p.text,
+    }
+}
+
+fn convert_poll_answer(p: udt::PollAnswerUdt) -> MessagePollAnswer {
+    MessagePollAnswer {
+        answer_id: p.answer_id,
+        poll_media: p.poll_media.map(convert_poll_media),
+    }
+}
+
+fn convert_poll_answer_count(p: udt::PollAnswerCountUdt) -> MessagePollAnswerCount {
+    MessagePollAnswerCount {
+        id: p.id,
+        count: p.count,
+        me_voted: p.me_voted,
+    }
+}
+
+fn convert_poll_results(p: udt::PollResultsUdt) -> MessagePollResults {
+    MessagePollResults {
+        answer_counts: p
+            .answer_counts
+            .map(|v| v.into_iter().map(convert_poll_answer_count).collect()),
+        is_finalized: p.is_finalized,
+    }
+}
+
+fn convert_poll(p: udt::PollUdt) -> MessagePoll {
+    MessagePoll {
+        question: p.question.map(convert_poll_media),
+        answers: (p.answers).map(|v| v.into_iter().map(convert_poll_answer).collect()),
+        expiry: (p.expiry)
+            .map(|expiry| expiry.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)),
+        anonymous_voting: p.anonymous_voting,
+        allow_multiselect: p.allow_multiselect,
+        layout_type: p.layout_type,
+        results: p.results.map(convert_poll_results),
+    }
+}
+
 fn convert_sticker_item(s: udt::StickerItemUdt) -> MessageStickerItem {
     MessageStickerItem {
         sticker_id: s.sticker_id,
@@ -3056,6 +3111,7 @@ impl From<MessageDbRow> for Message {
             embeds: row
                 .embeds
                 .map(|v| v.into_iter().map(convert_embed).collect()),
+            poll: row.poll.map(convert_poll),
             sticker_items: row
                 .sticker_items
                 .map(|v| v.into_iter().map(convert_sticker_item).collect()),

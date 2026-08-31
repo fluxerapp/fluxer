@@ -13,6 +13,11 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Plural-Forms: \n"
 
+#. Separator that goes between answer qualifiers that are only readable for screenreaders. Example: "Winning answer[, ]Selected answer".
+#: src/features/channel/components/Poll.tsx:88
+msgid ", "
+msgstr ", "
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:51
 msgid "... turn dense mode on. Nice!"
@@ -20,7 +25,7 @@ msgstr "... uključite zbijeni način rada. Super!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:358
-#: src/features/channel/components/UserMessage.tsx:59
+#: src/features/channel/components/UserMessage.tsx:61
 msgid "(edited)"
 msgstr "(uredio)"
 
@@ -52,6 +57,21 @@ msgstr "(vi)"
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:184
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# član} other {# članova}}"
+
+#. placeholder {0}: Math.floor(secondsLeft / 86400)
+#: src/features/channel/components/Poll.tsx:191
+msgid "{0}d left"
+msgstr "{0}d left"
+
+#. placeholder {0}: Math.round(secondsLeft / 3600)
+#: src/features/channel/components/Poll.tsx:190
+msgid "{0}h left"
+msgstr "{0}h left"
+
+#. placeholder {0}: Math.round(secondsLeft / 60)
+#: src/features/channel/components/Poll.tsx:189
+msgid "{0}m left"
+msgstr "{0}m left"
 
 #: src/features/channel/components/TypingUsers.tsx:66
 msgid "{a} and {b} are typing..."
@@ -369,7 +389,9 @@ msgstr "{count, plural, one {# zajednica privremeno nije dostupna zbog kvara na 
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# veza} other {# veze}}"
 
+#. Generic description for a duration option that is measured in days.
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:131
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:73
 msgid "{count, plural, one {# day} other {# days}}"
 msgstr "{count, plural, one {# dan} other {# dana}}"
 
@@ -383,7 +405,9 @@ msgstr "{count, plural, one {# emoji} few {# emojija} other {# emojija}}"
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# poklon} other {# poklona}}"
 
+#. Generic description for a duration option that is measured in hours.
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:139
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:77
 msgid "{count, plural, one {# hour} other {# hours}}"
 msgstr "{count, plural, one {# sat} other {# sati}}"
 
@@ -435,6 +459,16 @@ msgstr "{count, plural, one {# spremljeni medijski sadržaj} other {# spremljena
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {# sekunda} few {# sekunde} other {# sekundi}}"
 
+#. Small text indicating the number of votes on the poll or on a specific answer of the poll.
+#: src/features/channel/components/Poll.tsx:76
+msgid "{count, plural, one {# vote} other {# votes}}"
+msgstr "{count, plural, one {# vote} other {# votes}}"
+
+#. Generic description for a duration option that is measured in weeks.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:69
+msgid "{count, plural, one {# week} other {# weeks}}"
+msgstr "{count, plural, one {# week} other {# weeks}}"
+
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx:63
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
 msgstr "{count, plural, one {Sažmi (# redak)} other {Sažmi (# redaka)}}"
@@ -455,7 +489,7 @@ msgstr "{count, plural, one {Proširi (# redak)} other {Proširi (# redaka)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Prikaži (# red)} other {Prikaži (# redova)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:303
+#: src/features/voice/components/VoiceParticipantTile.tsx:304
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Proširi # drugi uređaj} other {Proširi # druga uređaja}}"
 
@@ -463,8 +497,8 @@ msgstr "{count, plural, one {Proširi # drugi uređaj} other {Proširi # druga u
 msgid "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
 msgstr "{count, plural, one {Grupna izravna poruka · # član} other {Grupna izravna poruka · # članova}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:252
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:273
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:274
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:295
 msgid "{count, plural, one {Hide # device} other {Hide # devices}}"
 msgstr "{count, plural, one {Sakrij # uređaj} other {Sakrij # uređaja}}"
 
@@ -476,7 +510,7 @@ msgstr "{count, plural, one {U pozivu} other {# u pozivu}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Pridruži se videopozivu (# sudionik)} other {Pridruži se videopozivu (# sudionika)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:620
+#: src/features/voice/components/VoiceParticipantTile.tsx:621
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Nastavi gledati # stream i dodaj ovaj} other {Nastavi gledati # streama i dodaj ovaj}}"
 
@@ -492,8 +526,8 @@ msgstr "{count, plural, one {Opozovi # aplikaciju} other {Opozovi # aplikacije}}
 msgid "{count, plural, one {sent # attachment} other {sent # attachments}}"
 msgstr "{count, plural, one {poslao # privitak} few {poslao # privitka} other {poslao # privitaka}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:259
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:280
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:281
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:302
 msgid "{count, plural, one {Show # device} other {Show # devices}}"
 msgstr "{count, plural, one {Prikaži # uređaj} other {Prikaži # uređaja}}"
 
@@ -776,7 +810,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "Kanali {guildName}"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:673
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {Proširi # drugi uređaj} other {Proširi # drugih uređaja}}"
 
@@ -889,7 +923,7 @@ msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName
 msgstr "{mbWayPaymentMethod} je jednokratna metoda plaćanja u naplati putem {paymentProviderName}, tako da ovdje nije put za ponavljajuću pretplatu."
 
 #. Screen share bitrate option label. Mbps means megabits per second.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:167
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
 msgid "{megabits} Mbps"
 msgstr "{megabits} Mbps"
 
@@ -899,7 +933,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {član} other {članova}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
 msgid "{mentionCount} mentions"
 msgstr "{mentionCount} spominjanja"
 
@@ -1491,6 +1525,10 @@ msgstr "<0/> je započeo poziv koji je trajao {durationText}."
 msgid "<0/> started a call."
 msgstr "<0/> je započeo poziv."
 
+#: src/features/channel/components/PollClosedMessage.tsx:67
+msgid "<0/>'s poll <1/> has closed."
+msgstr "<0/>'s poll <1/> has closed."
+
 #: src/features/app/components/alerts/RoleDeleteFailedModal.tsx:23
 msgid "<0>\"{roleName}\"</0> wouldn't delete. Try again."
 msgstr "<0>\"{roleName}\"</0> nije izbrisana. Pokušajte ponovno."
@@ -1559,6 +1597,11 @@ msgstr "<0>Uklonjena blokada zvuka</0> za člana."
 #: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:72
 msgid "<0>URL-only favorites (default)</0>: synced across your devices, no upload, doesn't count against saved media. The original media may disappear if its host removes it."
 msgstr "<0>Favoriti samo s URL-om (zadano)</0>: sinkronizirano na svim vašim uređajima, bez prijenosa, ne računa se u spremljene medije. Izvorni medij može nestati ako ga njegov davatelj ukloni."
+
+#. Very short text informing the user that the poll ends in less than one minute.
+#: src/features/channel/components/Poll.tsx:64
+msgid "<1m left"
+msgstr "<1m left"
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:167
@@ -1967,6 +2010,11 @@ msgstr "Novi verifikacijski kod je poslan."
 msgid "a poll"
 msgstr "anketa"
 
+#. Placeholder text for each answer input.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:25
+msgid "A possible answer"
+msgstr "A possible answer"
+
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:53
 msgid "A redirect_uri is required when the bot scope is not the only scope."
@@ -2292,7 +2340,7 @@ msgstr "Aktivni mjesečni pretplatnik (otkazivanje zakazano)"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -2479,6 +2527,11 @@ msgstr "Dodajte još jedan prilagođeni prečac"
 msgid "Add another reaction"
 msgstr "Dodaj drugu reakciju"
 
+#. Label for the button that adds a new answer to the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:40
+msgid "Add answer"
+msgstr "Add answer"
+
 #. Setup wizard body for Bluesky integration credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:965
 msgid "Add Bluesky OAuth client metadata and a signing key."
@@ -2490,7 +2543,7 @@ msgid "Add bot to a destination"
 msgstr "Dodajte bota na odredište"
 
 #. Generic action label that opens the create-channel flow from inside a category or sidebar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:510
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:514
 msgid "Add channel"
 msgstr "Dodaj kanal"
 
@@ -2581,13 +2634,13 @@ msgstr "Dodaj pristupni ključ"
 
 #. Generic action label that opens the reaction picker for a message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:522
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:526
 #: src/features/input/state/input_keybind/shared.ts:17
 msgid "Add reaction"
 msgstr "Dodaj reakciju"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:253
 msgid "Add reactions"
 msgstr "Dodavanje reakcija"
 
@@ -2736,7 +2789,7 @@ msgid "Added to favorite GIFs"
 msgstr "Dodano u omiljene GIF-ove"
 
 #. Toast confirming an item was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:615
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:619
 msgid "Added to favorites"
 msgstr "Dodano u favorite"
 
@@ -2771,7 +2824,7 @@ msgid "Address"
 msgstr "Adresa"
 
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Dodaje H.264 za mješovite klijente. Koristi više resursa za kodiranje."
 
@@ -2827,10 +2880,8 @@ msgstr "Administratori su pauzirali pozivnice — trenutačno se ne možete prid
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#. Voice participant context menu submenu label for IDs and diagnostics.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:145
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
 msgid "Advanced"
@@ -2842,7 +2893,7 @@ msgid "Advanced video settings"
 msgstr "Napredne video postavke"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:100
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "Advertise a capped decode codec to force publisher migration"
 msgstr "Ponudi ograničeni kodek za dekodiranje kako bi se prisilila migracija izdavača"
 
@@ -3065,6 +3116,13 @@ msgstr "Dopusti svima da vide ovu vezu na tvom profilu"
 msgid "Allow anyone who can view your full profile to see your profile local time"
 msgstr "Dopusti svima koji mogu vidjeti vaš cijeli profil da vide vaše lokalno vrijeme profila"
 
+#. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:236
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+msgid "Allow AV1 for screen sharing"
+msgstr ""
+
 #. Toggle label that allows DMs from bots in this community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:81
 msgid "Allow bot direct messages"
@@ -3112,6 +3170,13 @@ msgstr "Dopusti fleksibilne nazive tekstualnih kanala"
 msgid "Allow for all communities"
 msgstr "Dopusti za sve zajednice"
 
+#. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:240
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+msgid "Allow H.265 (HEVC) for screen sharing"
+msgstr ""
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:95
 msgid "Allow members from communities you're in to see this connection"
 msgstr "Dopusti članovima zajednica u kojima si da vide ovu vezu"
@@ -3134,6 +3199,11 @@ msgstr "Dopusti spominjanje za ovu ulogu"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
 msgid "Allow microphone"
 msgstr "Dopusti mikrofon"
+
+#. Label for the checkbox that allows users of the poll to select multiple answers.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:48
+msgid "Allow multiple answers"
+msgstr "Allow multiple answers"
 
 #: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:56
 msgid "Allow others to clone your emojis"
@@ -3233,7 +3303,7 @@ msgid "Already set to cancel"
 msgstr "Već je postavljeno za otkazivanje"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:82
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Prijavi ovu poruku i sigurnosnom timu {productName}a"
 
@@ -3619,6 +3689,11 @@ msgstr "Obavijesti"
 msgid "Annual"
 msgstr "Godišnje"
 
+#. Label for the checkbox that makes the poll anonymous (only moderators/admins of the community can see who voted).
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:52
+msgid "Anonymous voting"
+msgstr "Anonymous voting"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "Još jedna kvačica"
@@ -3636,6 +3711,11 @@ msgstr "Još jedan potvrdni okvir"
 #: src/features/input/state/input_keybind/shared.ts:213
 msgid "Answer the incoming call"
 msgstr "Javi se na dolazni poziv"
+
+#. Label for the answers section of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:36
+msgid "Answers"
+msgstr "Answers"
 
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:100
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:28
@@ -3732,7 +3812,7 @@ msgid "App zoom"
 msgstr "Povećanje prikaza aplikacije"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
 msgid "App zoom level"
 msgstr "Razina zumiranja aplikacije"
 
@@ -3899,7 +3979,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "Želite li zaista izbrisati sve poruke u svojim osobnim bilješkama? Ovo će trajno ukloniti sve poruke i njihove privitke. Ovu radnju nije moguće poništiti."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "Želite li sigurno izbrisati ulogu <0>{0}</0>? Svi članovi s ovom ulogom više je neće imati."
 
@@ -4238,7 +4318,7 @@ msgid "Audio settings"
 msgstr "Postavke zvuka"
 
 #. Voice control button label for microphone and speaker settings.
-#: src/features/voice/components/VoiceControlBar.tsx:146
+#: src/features/voice/components/VoiceControlBar.tsx:142
 msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "Audio postavke"
@@ -4442,7 +4522,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "Prijedlog automatskog dovršavanja: {label}, {selectedOptionPosition} od {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -4451,11 +4530,10 @@ msgstr "Prijedlog automatskog dovršavanja: {label}, {selectedOptionPosition} od
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:126
@@ -4467,6 +4545,11 @@ msgstr "Automatski"
 msgctxt "rtc-region-value"
 msgid "Automatic"
 msgstr "Automatski"
+
+#. Option label for the screen-share codec select. codec is the automatically selected codec label.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:222
+msgid "Automatic ({codec})"
+msgstr ""
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -4494,96 +4577,6 @@ msgstr "Automatsko čitanje poruka"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "Automatsko pokretanje"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep Firefox as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:8
-msgid "Automatic would use {codecName} because Firefox screen sharing works most reliably with it."
-msgstr "Automatski bi koristio {codecName} jer dijeljenje zaslona u Firefoxu najpouzdanije radi s njim."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:70
-msgid "Automatic would use {codecName} because no hardware encoder is available and this browser exposes H.265."
-msgstr "Automatski bi se koristio {codecName} jer hardverski koder nije dostupan i ovaj preglednik podržava H.265."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:75
-msgid "Automatic would use {codecName} because no hardware encoder is available and your computer exposes H.265."
-msgstr "Automatski bi se koristio {codecName} jer hardverski koder nije dostupan i vaše računalo podržava H.265."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:90
-msgid "Automatic would use {codecName} because no higher-quality encoder is available and H.264 is compatible."
-msgstr "Automatski bi se koristio {codecName} jer nije dostupan nijedan koder više kvalitete, a H.264 je kompatibilan."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep OpenH264 and Linux literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:101
-msgid "Automatic would use {codecName} because no video encoder is exposed. On Linux, OpenH264 may need to be installed."
-msgstr "Automatski bi se koristio {codecName} jer nije izložen nijedan video koder. Na Linuxu će možda trebati instalirati OpenH264."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:60
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes AV1."
-msgstr "Automatski bi se koristio {codecName} jer je softversko kodiranje preferirano i ovaj preglednik podržava AV1."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:80
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes VP9."
-msgstr "Automatski bi se koristio {codecName} jer je softversko kodiranje preferirano i ovaj preglednik podržava VP9."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:95
-msgid "Automatic would use {codecName} because software encoding is preferred and VP8 is the safest software fallback."
-msgstr "Automatski bi koristio {codecName} jer je softversko kodiranje preferirano, a VP8 je najsigurnija softverska zamjena."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:65
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes AV1."
-msgstr "Automatski bi koristio {codecName} jer je softversko kodiranje preferirano i vaše računalo podržava AV1."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:85
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes VP9."
-msgstr "Automatski bi koristio {codecName} jer je softversko kodiranje preferirano i vaše računalo podržava VP9."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:25
-msgid "Automatic would use {codecName} because this browser does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automatski bi se koristio {codecName} jer ovaj preglednik ne podržava H.264, pa je VP8 najsigurnija zamjenska opcija."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:13
-msgid "Automatic would use {codecName} because this browser supports it and it is the best fallback outside Chromium."
-msgstr "Automatski bi koristio {codecName} jer ga ovaj preglednik podržava i najbolja je zamjena izvan Chromiuma."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:30
-msgid "Automatic would use {codecName} because your computer does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automatski bi koristio {codecName} jer vaše računalo ne podržava H.264, pa je VP8 najsigurnija zamjena."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:19
-msgid "Automatic would use {codecName} because your computer supports it and it is the best fallback outside Chromium."
-msgstr "Automatski bi koristio {codecName} jer ga vaše računalo podržava i najbolja je zamjena izvan Chromiuma."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:54
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it gives strong screen-share quality."
-msgstr "Automatski bi se koristio {codecName} jer ga vaš GPU može hardverski kodirati, a pruža visoku kvalitetu dijeljenja zaslona."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:42
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it is the most compatible screen-share default."
-msgstr "Automatski bi se koristio {codecName} jer ga vaš GPU može hardverski kodirati i to je najkompatibilnija zadana postavka za dijeljenje zaslona."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:48
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with excellent compression and low CPU usage."
-msgstr "Automatski bi koristio {codecName} jer ga vaš GPU može hardverski kodirati, uz izvrsnu kompresiju i nisku upotrebu procesora."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:36
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with the best compression for screen sharing."
-msgstr "Automatski bi se koristio {codecName} jer ga vaš GPU može hardverski kodirati, uz najbolju kompresiju za dijeljenje zaslona."
 
 #. Short label in the animation tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:52
@@ -4647,6 +4640,16 @@ msgstr "Automatsko čitanje"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:307
 msgid "Autoscrolling"
 msgstr "Automatsko pomicanje"
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
+msgid "AV1"
+msgstr ""
+
+#. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:226
+msgid "AV1 (requires opt-in)"
+msgstr ""
 
 #. Label for the available desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
@@ -4875,7 +4878,7 @@ msgid "Badge"
 msgstr "Značka"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Balanced"
 msgstr "Uravnoteženo"
 
@@ -4917,7 +4920,7 @@ msgstr "Zabrana istječe u {0}."
 #: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:118
 msgid "Ban member"
 msgstr "Zabrani članu"
 
@@ -5099,7 +5102,7 @@ msgid "Biometrics"
 msgstr "Biometrija"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:181
 msgid "Bitrate"
 msgstr "Brzina prijenosa podataka"
 
@@ -5246,7 +5249,7 @@ msgstr "Dosegnuto ograničenje oznaka"
 #. Generic action label that saves a message to the bookmarks list.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:526
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:530
 #: src/features/input/state/input_keybind/shared.ts:265
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:66
 msgid "Bookmark message"
@@ -5613,7 +5616,7 @@ msgid "Bypass mention suppression"
 msgstr "Zaobiđi blokiranje spominjanja"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:257
 msgid "Bypass slowmode"
 msgstr "Zaobiđi usporeni način rada"
 
@@ -5671,7 +5674,7 @@ msgstr "Pozivi"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:70
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:157
 #: src/features/voice/utils/SettingsDeviceOptions.ts:23
@@ -5721,7 +5724,7 @@ msgstr "Kamera isključena"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "Kamera uključena"
@@ -5761,7 +5764,7 @@ msgid "Cameras and virtual capture devices are selected here in {productName}, n
 msgstr "Kamere i uređaji za virtualno snimanje odabiru se ovdje u aplikaciji {productName}, a ne u Wayland sustavu za odabir. Ako se ovdje ništa ne prikazuje, provjerite dopuštenja ili povežite uređaj."
 
 #. Tooltip in the voice control bar when cameras are disabled because the participant count exceeds the limit. {voiceChannelCameraUserLimit} is the configured threshold.
-#: src/features/voice/components/VoiceControlBar.tsx:136
+#: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Kamere su isključene iznad {voiceChannelCameraUserLimit} sudionika"
 
@@ -5955,15 +5958,15 @@ msgstr "Provjera Captche nije uspjela. Pokušajte ponovno."
 msgid "Capture"
 msgstr "Snimanje"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture app audio"
 msgstr "Snimanje zvuka aplikacije"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture desktop audio"
 msgstr "Snimanje zvuka s radne površine"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
 msgid "Capture device audio"
 msgstr "Snimanje zvuka uređaja"
 
@@ -6134,7 +6137,7 @@ msgid "Change emoji"
 msgstr "Promijeni emoji"
 
 #. Generic action label that opens the friend-nickname edit flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:538
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:542
 msgid "Change friend nickname"
 msgstr "Promijeni nadimak prijatelja"
 
@@ -6178,7 +6181,7 @@ msgid "Change my group nickname"
 msgstr "Promijeni moj nadimak u grupi"
 
 #. Action label for changing a user nickname in a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:470
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:474
 msgid "Change nickname"
 msgstr "Promijeni nadimak"
 
@@ -6221,12 +6224,12 @@ msgstr "Obrazac za promjenu lozinke"
 msgid "Change scheduled"
 msgstr "Promjena zakazana"
 
-#. Tooltip / button label in the screen-share status pill. Opens the picker to change what is being shared.
-#. Voice control menu action to choose a different screen-share source.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
-#: src/features/voice/components/VoiceControlBar.tsx:108
-msgid "Change source"
-msgstr "Promijeni izvor"
+#. Action that opens the source picker for the active screen share.
+#. Voice screen share menu action that changes the shared source.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:23
+msgid "Change Stream"
+msgstr ""
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
@@ -6366,7 +6369,7 @@ msgid "Channel actions"
 msgstr "Radnje kanala"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
 msgid "Channel added to favorites"
 msgstr "Kanal dodan u favorite"
 
@@ -6387,14 +6390,14 @@ msgid "Channel created"
 msgstr "Kanal izrađen"
 
 #. Title of the developer-mode channel debug modal (distinct from the action label that opens it).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:546
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:550
 msgid "Channel debug"
 msgstr "Otklanjanje pogrešaka kanala"
 
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
 msgid "Channel deleted"
 msgstr "Kanal izbrisan"
 
@@ -6499,7 +6502,7 @@ msgid "Channel record"
 msgstr "Zapis kanala"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
 msgid "Channel removed from favorites"
 msgstr "Kanal uklonjen iz favorita"
 
@@ -6976,7 +6979,7 @@ msgid "Choose your profile accent color"
 msgstr "Odaberite boju naglaska profila"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:108
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7157,7 +7160,7 @@ msgstr "Očisti lažne privitke"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Očisti naredbu"
@@ -7171,7 +7174,7 @@ msgid "Clear custom status"
 msgstr "Obriši prilagođeni status"
 
 #. Body of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:72
+#: src/features/channel/components/MessageActionUtils.tsx:73
 msgid "Clear every reaction from this message?"
 msgstr "Izbrisati sve reakcije s ove poruke?"
 
@@ -7204,7 +7207,7 @@ msgid "Clear quick CSS?"
 msgstr "Očistiti brzi CSS?"
 
 #. Generic short button / icon label that clears the active search query.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:514
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:518
 #: src/features/theme_studio/sections/TokensSection.tsx:204
 msgid "Clear search"
 msgstr "Očisti pretragu"
@@ -7584,7 +7587,7 @@ msgid "Codec"
 msgstr "Kodek"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Codec negotiation testing"
 msgstr "Testiranje pregovaranja o kodeku"
 
@@ -7628,8 +7631,8 @@ msgstr "Sažmi temu kanala"
 
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:98
-#: src/features/voice/components/VoiceParticipantTile.tsx:165
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
+#: src/features/voice/components/VoiceParticipantTile.tsx:166
 msgid "Collapse devices"
 msgstr "Sažmi uređaje"
 
@@ -7827,7 +7830,7 @@ msgid "Community debug"
 msgstr "Otklanjanje pogrešaka zajednice"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
 msgid "Community default"
 msgstr "Zadano za zajednicu"
 
@@ -8104,7 +8107,7 @@ msgstr "Fokusiranje sastavljača"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 msgid "Configure"
 msgstr "Konfiguriraj"
 
@@ -8127,7 +8130,7 @@ msgid "Configure now"
 msgstr "Konfiguriraj sada"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:69
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
 msgid "Configure or end screen share"
 msgstr "Konfigurirajte ili prekinite dijeljenje zaslona"
 
@@ -8249,7 +8252,7 @@ msgstr "Povežite kameru ili virtualni uređaj za snimanje, pa pokušajte ponovn
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:273
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:56
 msgid "Connect to voice"
 msgstr "Povezivanje na glasovni kanal"
@@ -8434,7 +8437,7 @@ msgid "Content filtering"
 msgstr "Filtriranje sadržaja"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 msgid "Content hint"
 msgstr "Savjet za sadržaj"
 
@@ -8480,7 +8483,7 @@ msgstr "Kontekstni izbornici mogu se otvoriti lijevim klikom (na gumbe) ili desn
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
@@ -8691,7 +8694,7 @@ msgid "Copy code"
 msgstr "Kopiraj kod"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
 msgid "Copy community ID"
 msgstr "Kopiraj ID zajednice"
 
@@ -8789,7 +8792,7 @@ msgid "Copy invite URL"
 msgstr "Kopiraj URL pozivnice"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -8816,13 +8819,13 @@ msgid "Copy media to clipboard"
 msgstr "Kopiraj medij u međuspremnik"
 
 #. Message context menu item that copies the message text content to the clipboard.
-#: src/features/channel/components/MessageActionMenu.tsx:91
+#: src/features/channel/components/MessageActionMenu.tsx:92
 msgid "Copy message"
 msgstr "Kopiraj poruku"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "Kopiraj ID poruke"
@@ -8830,7 +8833,7 @@ msgstr "Kopiraj ID poruke"
 #. Generic action label that copies a permalink to the selected message.
 #. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:518
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:522
 #: src/features/input/state/input_keybind/shared.ts:273
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:415
 msgid "Copy message link"
@@ -8898,7 +8901,7 @@ msgid "Copy user ID"
 msgstr "Kopiraj korisnički ID"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
 msgid "Copy username"
 msgstr "Kopiraj korisničko ime"
 
@@ -9325,7 +9328,7 @@ msgid "Couldn't ring this person"
 msgstr "Nije moguće pozvati ovu osobu"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:46
+#: src/features/messaging/hooks/useTextareaSubmit.ts:47
 msgid "Couldn't run that command: {detail}"
 msgstr "Nije moguće pokrenuti tu naredbu: {detail}"
 
@@ -9345,7 +9348,7 @@ msgid "Couldn't send invite"
 msgstr "Nije moguće poslati pozivnicu"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
 msgid "Couldn't send invite. Try again."
 msgstr "Nije moguće poslati pozivnicu. Pokušajte ponovno."
 
@@ -9552,6 +9555,11 @@ msgstr "Stvorite novu zajednicu ili se pridružite postojećoj."
 msgid "Create a new group with {userName}"
 msgstr "Stvori novu grupu s korisnikom {userName}"
 
+#. Title of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:24
+msgid "Create a poll"
+msgstr "Create a poll"
+
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:46
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:82
@@ -9602,7 +9610,7 @@ msgid "Create category"
 msgstr "Stvori kategoriju"
 
 #. Action label that opens the create-channel flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:474
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:478
 msgid "Create channel"
 msgstr "Stvori kanal"
 
@@ -9682,6 +9690,16 @@ msgstr "Stvori novu poveznicu"
 #: src/features/input/state/input_keybind/shared.ts:121
 msgid "Create or join a community"
 msgstr "Stvori ili se pridruži zajednici"
+
+#. Plus menu item that opens a form to create a poll.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
+msgid "Create poll"
+msgstr "Create poll"
+
+#. Permission name: allows creating polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:233
+msgid "Create polls"
+msgstr "Create polls"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
@@ -10166,7 +10184,7 @@ msgid "Custom warning text"
 msgstr "Prilagođeni tekst upozorenja"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
 msgid "Custom…"
 msgstr "Prilagođeno…"
 
@@ -10178,7 +10196,7 @@ msgid "Customer portal"
 msgstr "Korisnički portal"
 
 #. Plus menu submenu label for visibility toggles on textarea adornment buttons.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:39
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
 msgid "Customize"
 msgstr "Prilagodi"
 
@@ -10407,7 +10425,7 @@ msgid "Deafen device"
 msgstr "Zanemari uređaj"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:298
 msgid "Deafen members"
 msgstr "Isključi zvuk članovima"
 
@@ -10461,7 +10479,7 @@ msgstr "Otklanjanje pogrešaka člana"
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
 #: src/features/channel/components/MessageActionBar.tsx:82
-#: src/features/channel/components/MessageActionMenu.tsx:103
+#: src/features/channel/components/MessageActionMenu.tsx:108
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
 msgstr "Otklanjanje pogrešaka poruke"
@@ -10469,7 +10487,7 @@ msgstr "Otklanjanje pogrešaka poruke"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:167
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:542
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:546
 msgid "Debug user"
 msgstr "Otklanjanje pogrešaka korisnika"
 
@@ -10619,7 +10637,7 @@ msgstr "Na mobilnim uređajima je zadano isključeno radi očuvanja baterije i u
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:78
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10685,6 +10703,11 @@ msgstr "Izbriši radnju."
 msgid "Delete all messages"
 msgstr "Izbriši sve poruke"
 
+#. Tooltip text for the button that deletes an answer from the poll.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:33
+msgid "Delete answer"
+msgstr "Delete answer"
+
 #. Button or menu action label in the application detail. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:50
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:721
@@ -10692,7 +10715,7 @@ msgid "Delete application"
 msgstr "Izbriši aplikaciju"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
 msgid "Delete attachment"
 msgstr "Izbriši privitak"
 
@@ -10723,7 +10746,9 @@ msgid "Delete community"
 msgstr "Izbriši zajednicu"
 
 #. Confirmation modal title for deleting a custom emoji.
+#. Title of a context menu item to delete the emoji of a poll answer.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:196
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:41
 msgid "Delete emoji"
 msgstr "Izbriši emoji"
 
@@ -10858,7 +10883,7 @@ msgid "Delete this message"
 msgstr "Izbriši ovu poruku"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:74
 msgid "Delete this message? Can't be undone."
 msgstr "Izbrisati ovu poruku? Ne može se poništiti."
 
@@ -10990,7 +11015,7 @@ msgstr "Opišite o čemu se radi u vašoj zajednici"
 #. Generic form-field label for a free-form description.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:415
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:498
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:502
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:137
 msgid "Description"
 msgstr "Opis"
@@ -11139,7 +11164,7 @@ msgid "Detached banner"
 msgstr "Odvojeni natpis"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "Detalji"
 
@@ -11218,11 +11243,6 @@ msgstr "Uređaj"
 msgid "Device alerts"
 msgstr "Upozorenja uređaja"
 
-#. Voice participant context menu submenu label for actions that affect one or more voice devices.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:182
-msgid "Device controls"
-msgstr "Kontrole uređaja"
-
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "Detalji uređaja"
@@ -11232,7 +11252,7 @@ msgstr "Detalji uređaja"
 msgid "Device revoked"
 msgstr "Uređaj opozvan"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1024
 msgid "Device selection"
 msgstr "Odabir uređaja"
 
@@ -11306,7 +11326,7 @@ msgstr "Izravan unos"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:562
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:566
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:85
 msgid "Direct message"
 msgstr "Izravna poruka"
@@ -11437,7 +11457,7 @@ msgid "Disable mobile push notifications"
 msgstr "Isključi mobilne push obavijesti"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Onemogući skočni prozor slike u slici za dijeljenje zaslona"
 
@@ -11478,7 +11498,7 @@ msgstr "Obrazac za isključivanje dvostruke provjere autentičnosti"
 
 #. Voice menu checkbox label. Hides another participant's video only for the current user.
 #. Voice menu checkbox that hides a participant video on the current device only.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:86
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:110
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:77
 msgid "Disable video locally"
 msgstr "Onemogući videozapis lokalno"
@@ -11754,11 +11774,6 @@ msgstr "Ime za prikaz"
 msgid "Display name (optional)"
 msgstr "Ime za prikaz (neobavezno)"
 
-#. Voice participant context menu submenu label for call display and diagnostics preferences.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:186
-msgid "Display options"
-msgstr "Opcije prikaza"
-
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:661
 msgid "Display role members separately."
 msgstr "Prikaži članove uloga zasebno."
@@ -11791,7 +11806,7 @@ msgstr "Postavke DM-a i zahtjeva za prijateljstvo"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:87
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:558
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:562
 msgid "DM closed"
 msgstr "DM zatvoren"
 
@@ -11916,7 +11931,7 @@ msgstr "Ne blokira. Možete ponovno otvoriti kasnije."
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "Domena"
@@ -12269,6 +12284,11 @@ msgstr "Dupliciraj kanal"
 msgid "Duplicate role"
 msgstr "Dupliciraj ulogu"
 
+#. Label for the duration input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:44
+msgid "Duration"
+msgstr ""
+
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
 msgid "Duration:"
@@ -12408,7 +12428,7 @@ msgstr "Uredite globalne postavke poput imena, opisa i ikone."
 
 #. Action label for editing a group DM (name, icon, members).
 #: src/features/channel/components/direct_message/GroupDMWelcomeSection.tsx:103
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:466
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:470
 msgid "Edit group"
 msgstr "Uredi grupu"
 
@@ -12439,7 +12459,7 @@ msgstr "Uredi medij"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "Uredi poruku"
@@ -12714,12 +12734,12 @@ msgid "Embeds"
 msgstr "Ugrađeni sadržaj"
 
 #. Toast confirmation after hiding link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:84
+#: src/features/channel/components/MessageActionUtils.tsx:85
 msgid "Embeds suppressed"
 msgstr "Ugrađeni sadržaj potisnut"
 
 #. Toast confirmation after re-enabling link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:80
+#: src/features/channel/components/MessageActionUtils.tsx:81
 msgid "Embeds unsuppressed"
 msgstr "Ugrađeni sadržaj je prikazan"
 
@@ -12882,8 +12902,8 @@ msgstr "Prazni favoriti"
 
 #. Label for an advanced select that caps the best video codec this client advertises it can decode.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "Emulate decode codec (testing)"
 msgstr "Emuliraj kodek za dekodiranje (testiranje)"
 
@@ -13039,7 +13059,7 @@ msgstr "Omogući mobilne push obavijesti"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "Omogući obavijesti"
@@ -13177,18 +13197,18 @@ msgstr "Omogućen je sadržaj za odrasle."
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "Encoder path"
 msgstr "Putanja kodera"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Encoder preference for new screen shares."
 msgstr "Željeni enkoder za nove dijeljene zaslone."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:185
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "Postavke enkodera, SVC-a, rezervne datoteke i brzine prijenosa."
 
@@ -13220,10 +13240,15 @@ msgstr "Završi prijelazno razdoblje"
 msgid "End grace period now?"
 msgstr "Završiti poček sada?"
 
-#. Button label that stops the current screen share.
+#. Action label for ending a poll now.
+#. Message context menu item that ends the poll now. Only displayed on poll messages.
+#: src/features/channel/components/MessageActionMenu.tsx:96
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:466
+msgid "End poll now"
+msgstr "End poll now"
+
 #. Voice control menu action to stop sharing the screen.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:52
-#: src/features/voice/components/VoiceControlBar.tsx:112
+#: src/features/voice/components/VoiceControlBar.tsx:108
 msgid "End screen share"
 msgstr "Zaustavi dijeljenje zaslona"
 
@@ -13268,7 +13293,7 @@ msgstr "Engleski (SAD)"
 #. Noise suppression option label (mobile voice settings). Enhanced engine (DeepFilterNet3).
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
@@ -13540,7 +13565,9 @@ msgstr "Zvuk cijelog sustava"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
+#. Voice menu submenu label for per-user entrance sound controls.
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
@@ -13568,6 +13595,8 @@ msgid "Entrance sound saved"
 msgstr "Zvuk ulaska spremljen"
 
 #. Voice menu slider label adjusting playback volume of this user's entrance sound, locally only.
+#. Voice menu slider label for a user's entrance sound playback volume.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:187
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:318
 msgid "Entrance sound volume"
 msgstr "Glasnoća zvuka ulaska"
@@ -13976,7 +14005,7 @@ msgid "Expression packs are not enabled on this instance. Contact your instance 
 msgstr "Paketi izraza nisu omogućeni na ovoj instanci. Za više informacija obratite se administratoru instance."
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 msgid "Expression picker categories"
 msgstr "Kategorije birača izraza"
 
@@ -14266,12 +14295,12 @@ msgid "Failed to send code. Try again."
 msgstr "Slanje koda nije uspjelo. Pokušajte ponovno."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:67
+#: src/features/channel/components/UserMessage.tsx:69
 msgid "Failed to send message."
 msgstr "Slanje poruke nije uspjelo."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:63
+#: src/features/channel/components/UserMessage.tsx:65
 msgid "Failed to send message. Hold for options."
 msgstr "Slanje poruke nije uspjelo. Dodirnite i držite za opcije."
 
@@ -14753,14 +14782,14 @@ msgstr "Fokusiraj tekstualno polje"
 
 #. Voice call layout action that pins one of several active devices of the same participant.
 #. Voice layout menu action that focuses one device/session for a participant.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:37
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:101
 msgid "Focus this device"
 msgstr "Fokusiraj ovaj uređaj"
 
 #. Voice call layout action that pins the selected participant in the focused view.
 #. Voice layout menu action that focuses one participant in the call view.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:105
 msgid "Focus this person"
 msgstr "Fokusiraj ovu osobu"
@@ -14807,7 +14836,7 @@ msgstr "Postavke mape"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Pratite nas na {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:826
 msgid "Follow voice input"
 msgstr "Prati glasovni unos"
 
@@ -15025,7 +15054,7 @@ msgstr "proslijeđeno"
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
 #: src/features/channel/components/MessageActionBar.tsx:86
-#: src/features/channel/components/MessageActionMenu.tsx:83
+#: src/features/channel/components/MessageActionMenu.tsx:84
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
 msgstr "Proslijedi"
@@ -15393,7 +15422,7 @@ msgid "Germany"
 msgstr "Njemačka"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
 msgid "Get {premiumProductName}"
 msgstr "Nabavite {premiumProductName}"
 
@@ -15696,6 +15725,11 @@ msgstr "Natrag"
 msgid "Go back and enter a valid email."
 msgstr "Vratite se i unesite valjanu e-adresu."
 
+#. Label of the button to go back to vote when the user is looking at poll results.
+#: src/features/channel/components/Poll.tsx:35
+msgid "Go back to vote"
+msgstr "Go back to vote"
+
 #. CTA label that opens the premium settings tab from gift inventory.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:95
 msgid "Go to {premiumProductName}"
@@ -15831,7 +15865,7 @@ msgstr "Dodijeljeno {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Daje sva dopuštenja i zaobilazi ograničenja kanala. Vrlo osjetljivo."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1011
 msgid "Granular selection"
 msgstr "Detaljan odabir"
 
@@ -15867,7 +15901,7 @@ msgstr "Grčki"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:784
+#: src/features/voice/components/VoiceSettingsMenus.tsx:785
 msgid "Grid view"
 msgstr "Prikaz rešetke"
 
@@ -16010,19 +16044,24 @@ msgid "Grouping"
 msgstr "Grupiranje"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:104
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "H.264 backup stream"
 msgstr "H.264 rezervni prijenos"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
 msgid "H.264 simulcast backup"
 msgstr "H.264 simulcast sigurnosna kopija"
+
+#. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:231
+msgid "H.265 (requires opt-in)"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -16075,12 +16114,8 @@ msgstr "Hardversko ubrzanje"
 msgid "Hardware acceleration can cause rendering glitches with transparent windows. Try --disable-gpu if you see flicker or smearing."
 msgstr "Hardversko ubrzanje može uzrokovati greške u renderiranju s prozirnim prozorima. Pokušajte s --disable-gpu ako primijetite treperenje ili zamućenje."
 
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:132
-msgid "Hardware acceleration is off, so codecs will encode on your CPU. <0>Turn it back on in {advancedSettingsLabel}</0>."
-msgstr "Ubrzanje hardverom je isključeno, pa će kodeci obavljati kodiranje na vašem procesoru. <0>Ponovno ga uključite u {advancedSettingsLabel}</0>."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Hardware encoder"
 msgstr "Hardverski enkoder"
 
@@ -16215,9 +16250,14 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "Pomozite prevesti {PRODUCT_NAME} na vaš jezik na <0>{I18N_WEBLATE_DOMAIN}</0>."
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "Pomaže pregledniku da odabere obradu pokreta, detalja ili teksta."
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
+msgid "HEVC"
+msgstr ""
 
 #. Codec description in the screen share codec policy menu. HEVC is a codec name; keep WebRTC literal.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:28
@@ -16322,7 +16362,7 @@ msgid "Hide expiry footnotes"
 msgstr "Sakrij bilješke o isteku"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
 msgid "Hide favorites"
 msgstr "Sakrij favorite"
 
@@ -16370,7 +16410,7 @@ msgid "Hide muted channels by default?"
 msgstr "Sakriti isključene kanale po zadanim postavkama?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
 msgid "Hide my stream preview thumbnail"
 msgstr "Sakrij sličicu pretpregleda mog streama"
 
@@ -16389,7 +16429,7 @@ msgstr "Sakrij lozinku"
 msgid "Hide picture-in-picture popout?"
 msgstr "Sakriti skočni prozor slike u slici?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:860
 msgid "Hide preview thumbnail"
 msgstr "Sakrij sličicu pretpregleda"
 
@@ -16451,7 +16491,7 @@ msgid "High dynamic range display mode"
 msgstr "Način prikaza visokog dinamičkog raspona"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Higher quality can cost more CPU and latency."
 msgstr "Viša kvaliteta može zahtijevati više CPU snage i uzrokovati veću latenciju."
 
@@ -16474,7 +16514,7 @@ msgstr "Savjeti"
 msgid "Hoist order"
 msgstr "Redoslijed isticanja"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:522
 msgid "Hoist order reset to default"
 msgstr "Redoslijed isticanja vraćen na zadano"
 
@@ -16698,7 +16738,7 @@ msgstr "Identitet"
 
 #. Generic presence-status label indicating the user is idle / AFK.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:639
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:643
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:46
 msgid "Idle"
 msgstr "Neaktivan"
@@ -16834,11 +16874,11 @@ msgstr "Zanemari"
 msgid "Ignore friend request"
 msgstr "Zanemari zahtjev za prijateljstvo"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1001
 msgid "Ignore hardware devices"
 msgstr "Zanemari hardverske uređaje"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Ignore input media"
 msgstr "Zanemari ulazne medije"
 
@@ -16864,7 +16904,7 @@ msgstr "Zanemari oznaku neželjene pošte"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Zanemariti zahtjev za prijateljstvo od {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:988
 msgid "Ignore virtual"
 msgstr "Zanemari virtualno"
 
@@ -17180,7 +17220,7 @@ msgstr "Neprikladan profil"
 
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:486
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:490
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:21
 msgid "Inbox"
 msgstr "Ulazna pošta"
@@ -17229,7 +17269,7 @@ msgstr "Uključite ID zajednice."
 #. Generic label for an incoming voice or video call.
 #. Notification sound setting label. Ringtone for an incoming DM or group DM call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:502
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:506
 #: src/features/notification/utils/SoundLabels.ts:48
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:171
 msgid "Incoming call"
@@ -17827,7 +17867,7 @@ msgstr "Pozivatelj:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
 msgid "Invites"
 msgstr "Pozivnice"
 
@@ -17938,6 +17978,11 @@ msgstr "Možda je izbrisan. Naziv je vraćen na prethodno stanje."
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "Moguće je da je napustila otkrivanje ili isključila nova pridruživanja. Osvježite stranicu i više je nećete vidjeti."
 
+#. Small explanatory text informing the user that the poll resulted in a draw.
+#: src/features/channel/components/PollClosedMessage.tsx:27
+msgid "It's a draw"
+msgstr "It's a draw"
+
 #. Label in the channel and chat typing users.
 #: src/features/channel/components/TypingUsers.tsx:33
 msgid "It's a full-blown typing fiesta in here"
@@ -18015,7 +18060,7 @@ msgid "Join call"
 msgstr "Pridruži se pozivu"
 
 #. Generic action label that accepts a community invite / joins a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
 msgid "Join community"
 msgstr "Pridruži se zajednici"
 
@@ -18092,7 +18137,7 @@ msgid "Joined {productName}"
 msgstr "Pridružio/la se {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:494
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:498
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
 msgid "Jump"
 msgstr "Skoči"
@@ -18137,7 +18182,7 @@ msgid "Jump to message"
 msgstr "Skoči na poruku"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:54
+#: src/features/channel/components/UserMessage.tsx:56
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Skoči na poruku od {displayName}, poslanu {formattedDate}"
 
@@ -18327,7 +18372,7 @@ msgid "Kick a member from this community."
 msgstr "Izbaci člana iz ove zajednice."
 
 #. Moderation action label that removes a member from a community without banning.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:675
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
 msgid "Kick member"
 msgstr "Izbaci člana"
 
@@ -18440,7 +18485,7 @@ msgid "Launch at login"
 msgstr "Pokreni pri prijavi"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Slojni način rada za AV1 i VP9 kada je dostupan."
 
@@ -18475,7 +18520,7 @@ msgid "Leave call"
 msgstr "Napusti poziv"
 
 #. Destructive action label that removes the current user from a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:671
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:675
 msgid "Leave community"
 msgstr "Napusti zajednicu"
 
@@ -19223,7 +19268,7 @@ msgid "Manage blocked users"
 msgstr "Upravljanje blokiranim korisnicima"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:310
 msgid "Manage channel"
 msgstr "Upravljanje kanalom"
 
@@ -19276,7 +19321,7 @@ msgid "Manage payment methods"
 msgstr "Upravljanje načinima plaćanja"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:306
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:314
 msgid "Manage permissions"
 msgstr "Upravljanje dopuštenjima"
 
@@ -19364,7 +19409,7 @@ msgstr "Označi kao spojler"
 
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:667
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:671
 #: src/features/input/state/input_keybind/shared.ts:33
 msgid "Mark as unread"
 msgstr "Označi kao nepročitano"
@@ -19593,6 +19638,11 @@ msgstr "Maksimalna veličina datoteke za učitavanje: {maxSize}."
 msgid "Max number of uses"
 msgstr "Maksimalan broj korištenja"
 
+#. Short label in the max poll vote count reached modal.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:8
+msgid "Max poll vote count reached"
+msgstr "Max poll vote count reached"
+
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:980
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "Maksimalna veličina: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
@@ -19638,9 +19688,14 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "Maksimalna zaštita za prostore prikladne za obitelj"
 
 #. Label for an advanced screen-share bitrate select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Maximum screen share bitrate"
 msgstr "Maksimalna brzina prijenosa zaslona"
+
+#. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
+msgid "May cause compatibility issues for viewers. We’re working on improving this."
+msgstr ""
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
@@ -19690,9 +19745,7 @@ msgid "Media buttons"
 msgstr "Medijske tipke"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
-#. Voice participant context menu submenu label for camera, stream, and video actions.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "Kontrole medija"
 
@@ -19839,7 +19892,7 @@ msgstr "članova"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:190
 #: src/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.tsx:591
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:490
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:494
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:346
 msgid "Members"
 msgstr "Članovi"
@@ -19898,7 +19951,7 @@ msgstr "Članovi, odabrano"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice participant menu action that inserts a mention of the selected user into the message composer.
 #: src/features/ui/action_menu/items/MentionUserMenuItem.tsx:13
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:67
 msgid "Mention"
 msgstr "Spomeni"
@@ -19952,7 +20005,7 @@ msgstr "spomenuta uloga"
 #. Generic section / tab label for the mentions inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:643
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:647
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:166
 msgid "Mentions"
 msgstr "Spominjanja"
@@ -20004,7 +20057,7 @@ msgstr "Poruka"
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -20066,7 +20119,7 @@ msgstr "Poruka sadrži priložene medije"
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
 #: src/features/channel/components/MessageActionBar.tsx:74
-#: src/features/channel/components/MessageActionMenu.tsx:71
+#: src/features/channel/components/MessageActionMenu.tsx:72
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
 msgstr "Otklanjanje pogrešaka poruke"
@@ -20342,7 +20395,7 @@ msgstr "Potrebno je dopuštenje za mikrofon"
 msgid "Microphone test"
 msgstr "Test mikrofona"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
 msgid "Microphone workaround"
 msgstr "Zaobilazno rješenje za mikrofon"
 
@@ -20532,9 +20585,7 @@ msgid "Mod"
 msgstr "Način rada"
 
 #. Permission category for moderation actions against members or messages.
-#. Voice participant context menu submenu label for member moderation actions.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:194
 msgid "Moderation"
 msgstr "Moderiranje"
 
@@ -20667,7 +20718,7 @@ msgstr "Najrelevantnije"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -20685,7 +20736,7 @@ msgid "Move"
 msgstr "Premjesti"
 
 #. Submenu label that moves every active device into another voice channel.
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:22
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:37
 msgid "Move all devices to…"
 msgstr "Premjesti sve uređaje na…"
 
@@ -20702,7 +20753,7 @@ msgstr "Kretanje unatrag kroz povijest pregledanih kanala"
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:21
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:18
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:33
 msgid "Move device to…"
 msgstr "Premjesti uređaj u…"
 
@@ -20727,7 +20778,7 @@ msgid "Move item up"
 msgstr "Pomakni stavku gore"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:294
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
 msgid "Move members"
 msgstr "Premještanje članova"
 
@@ -20739,7 +20790,7 @@ msgstr "Premjesti u"
 #. Submenu label that moves the selected participant or content into another channel.
 #. Submenu label that moves the selected participant or content into another channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:29
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:26
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:41
 msgid "Move to…"
 msgstr "Premjesti u…"
 
@@ -20804,7 +20855,7 @@ msgstr "Glazbena nota"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:132
 #: src/features/channel/components/embeds/media/EmbedVideo.tsx:72
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:141
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:36
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:73
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:178
@@ -20818,7 +20869,7 @@ msgid "Mute"
 msgstr "Isključi zvuk"
 
 #. Voice control button label to turn the user's microphone off.
-#: src/features/voice/components/VoiceControlBar.tsx:126
+#: src/features/voice/components/VoiceControlBar.tsx:122
 msgctxt "voice-control-action"
 msgid "Mute"
 msgstr "Isključi mikrofon"
@@ -20859,7 +20910,7 @@ msgid "Mute calls"
 msgstr "Isključi pozive"
 
 #. Action label that mutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:575
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:579
 msgid "Mute category"
 msgstr "Isključi obavijesti za kategoriju"
 
@@ -20874,7 +20925,7 @@ msgid "Mute communities"
 msgstr "Isključi zvuk zajednicama"
 
 #. Generic action label that mutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:550
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:554
 msgid "Mute community"
 msgstr "Isključi obavijesti zajednice"
 
@@ -20884,7 +20935,7 @@ msgid "Mute conversation"
 msgstr "Isključi razgovor"
 
 #. Voice menu toggle that mutes a single device when the current user is connected on multiple devices.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
 msgid "Mute device"
 msgstr "Isključi zvuk uređaja"
 
@@ -20898,18 +20949,20 @@ msgstr "Isključi obavijesti za DM"
 msgid "Mute DMs"
 msgstr "Isključi izravne poruke"
 
+#. Voice menu checkbox label that locally silences a user's entrance sound.
 #. Voice menu checkbox label. Locally silences this user's custom entrance sound when they join, only for the current user.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:183
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
 msgid "Mute entrance sound"
 msgstr "Isključi zvuk ulaska"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
 msgid "Mute favourites"
 msgstr "Isključi obavijesti za favorite"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:294
 msgid "Mute members"
 msgstr "Isključi zvuk članovima"
 
@@ -21298,7 +21351,7 @@ msgid "Neutral (inherit)"
 msgstr "Neutralno (naslijeđeno)"
 
 #. Generic short option label for "never" in time / frequency dropdowns.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:647
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:651
 msgid "Never"
 msgstr "Nikad"
 
@@ -21456,7 +21509,7 @@ msgstr "Prvo najnovije"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:79
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
 msgid "Next"
 msgstr "Dalje"
 
@@ -21675,7 +21728,7 @@ msgid "No custom shortcuts yet."
 msgstr "Još nema prilagođenih prečaca."
 
 #. Generic short empty-state body shown when an entity has no description set.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:651
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:655
 msgid "No description provided."
 msgstr "Nema opisa."
 
@@ -22109,6 +22162,11 @@ msgstr "Nitko još nije reagirao na ovo."
 msgid "Nobody matches that search."
 msgstr "Nitko ne odgovara tom pretraživanju."
 
+#. Small explanatory text informing the user that nobody voted on the poll.
+#: src/features/channel/components/PollClosedMessage.tsx:23
+msgid "Nobody voted!"
+msgstr "Nobody voted!"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:109
 msgid "Noise"
@@ -22295,7 +22353,7 @@ msgstr "Glasnoća obavijesti"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -22366,7 +22424,7 @@ msgstr "Predmeti"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:59
 msgid "Off"
 msgstr "Isključeno"
@@ -22384,7 +22442,7 @@ msgid "Off"
 msgstr "Isključeno"
 
 #. Generic presence-status label indicating the user is offline.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:635
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:639
 msgid "Offline"
 msgstr "Izvan mreže"
 
@@ -22500,7 +22558,7 @@ msgstr "Primjenjuje se samo na širokim zaslonima."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Prihvaćaju se samo kreditne kartice. Debitne i prepaid kartice ne mogu se koristiti za provjeru zrelog sadržaja."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
 msgid "Only default speakers"
 msgstr "Samo zadani zvučnici"
 
@@ -22548,7 +22606,7 @@ msgstr "Ovdje pokrećite kod samo ako točno razumijete što radi."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Prikazuj pretpreglede poruka samo za izravne poruke s nepročitanim porukama"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
 msgid "Only speakers"
 msgstr "Samo govornici"
 
@@ -22580,7 +22638,7 @@ msgstr "Samo odabrane"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Samo članovi s pretplatom Visionary mogu se pridružiti ovoj zajednici. Vaš pristup se možda promijenio od otvaranja ovog zaslona."
 
-#: src/features/channel/components/UserMessage.tsx:427
+#: src/features/channel/components/UserMessage.tsx:440
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Samo vi možete vidjeti ovu poruku. <0>Odbaci</0>"
 
@@ -22820,7 +22878,7 @@ msgstr "Otvori emoji u pregledniku"
 msgid "Open emoji picker"
 msgstr "Otvori birač emojija"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:877
+#: src/features/voice/components/VoiceSettingsMenus.tsx:859
 msgid "Open event sink"
 msgstr "Otvorite sink događaja"
 
@@ -22938,13 +22996,13 @@ msgstr "Otvori profil za {directMessageName}"
 
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:47
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:48
 #: src/features/ui/avatars/AvatarStack.tsx:21
 msgid "Open profile for {displayName}"
 msgstr "Otvori profil za {displayName}"
 
 #. Short label in the app layout grouped voice participant. Preserve {nickname}; it is inserted by code.
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:35
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:36
 msgid "Open profile for {nickname}"
 msgstr "Otvori profil za {nickname}"
 
@@ -23079,17 +23137,17 @@ msgid "Open your settings"
 msgstr "Otvori postavke"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:112
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "OpenH264 software codec on Linux"
 msgstr "Omogućavanje softverskog kodeka OpenH264 na Linuxu"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
 msgid "OpenH264 video codec"
 msgstr "Otvori H264 video kodek"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "OpenH264 video kodek osigurava Cisco Systems, Inc."
 
@@ -23566,7 +23624,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Pauzirati pozivnice? Novi se korisnici neće moći pridružiti putem poveznica za poziv dok ih ponovno ne omogućite. To neće utjecati na postojeće članove."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Pause my screen share preview in the background"
 msgstr "Pauziraj pregled dijeljenja zaslona u pozadini"
 
@@ -23574,6 +23632,11 @@ msgstr "Pauziraj pregled dijeljenja zaslona u pozadini"
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:39
 msgid "Pause notifications"
 msgstr "Pauziraj obavijesti"
+
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
+msgid "Pause Preview When Fluxer Isn’t Focused"
+msgstr ""
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23908,13 +23971,13 @@ msgid "Picture"
 msgstr "Slika"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:124
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Picture in picture"
 msgstr "Slika u slici"
 
 #. Confirm button label on the pin message alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MessageActionUtils.tsx:64
+#: src/features/channel/components/MessageActionUtils.tsx:65
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:70
 msgid "Pin"
 msgstr "Prikvači"
@@ -23932,8 +23995,8 @@ msgstr "Prikvači grupni izravni razgovor"
 #. Generic action label that pins a message to the channel pins.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:56
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:534
+#: src/features/channel/components/MessageActionUtils.tsx:57
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:538
 #: src/features/input/state/input_keybind/shared.ts:13
 msgid "Pin message"
 msgstr "Prikvači poruku"
@@ -23949,7 +24012,7 @@ msgid "Pin messages here for everyone to see."
 msgstr "Ovdje prikvačite poruke da ih svi vide."
 
 #. Body of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:60
+#: src/features/channel/components/MessageActionUtils.tsx:61
 msgid "Pin this message to the channel for everyone to see."
 msgstr "Prikvačite ovu poruku na kanal kako bi je svi vidjeli."
 
@@ -23983,7 +24046,7 @@ msgid "pinned"
 msgstr "prikvačeno"
 
 #. Generic short toast / status label confirming a DM was pinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:655
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:659
 msgid "Pinned DM"
 msgstr "Prikvačena izravna poruka"
 
@@ -24028,7 +24091,7 @@ msgid "Pins popout"
 msgstr "Skočni prozor s pribadačama"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:128
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "PiP"
 msgstr "Slika u slici"
 
@@ -24155,6 +24218,16 @@ msgstr "Poljski"
 msgid "poll"
 msgstr "anketa"
 
+#. Small text informing the user that the poll is closed.
+#: src/features/channel/components/Poll.tsx:68
+msgid "Poll closed"
+msgstr "Poll closed"
+
+#. Small text informing the user that the poll message has not been sent yet.
+#: src/features/channel/components/Poll.tsx:72
+msgid "Poll not sent"
+msgstr "Poll not sent"
+
 #. Button label in a popped-out voice window titlebar that restores the content into the main app window.
 #. Button label on the popped-out overlay that closes the popout window and restores the view in the app.
 #: src/features/voice/components/popout/PopoutTitlebar.tsx:22
@@ -24167,15 +24240,20 @@ msgstr "Vrati u glavni prozor"
 msgid "Pop out call"
 msgstr "Premjesti poziv u novi prozor"
 
-#. Voice menu action on desktop that opens the participant camera feed in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:29
-msgid "Pop out camera"
-msgstr "Premjesti kameru u novi prozor"
-
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:33
-msgid "Pop out stream"
-msgstr "Premjesti prijenos uživo u novi prozor"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+msgid "Pop Out Stream"
+msgstr ""
+
+#. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+msgid "Pop Out User"
+msgstr ""
+
+#. Voice menu action on desktop that opens the active participant camera feed in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+msgid "Pop Out Video"
+msgstr ""
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:19
@@ -24225,7 +24303,7 @@ msgid "Prefer @mention"
 msgstr "Preferiraj spominjanje"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "Prefer hardware"
 msgstr "Preferiraj hardver"
 
@@ -24237,7 +24315,7 @@ msgid "Prefer no @mention"
 msgstr "Bez spominjanja (@)"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Prefer software"
 msgstr "Preferiraj softver"
 
@@ -24255,6 +24333,11 @@ msgstr "Postavke"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:20
 msgid "Preferences..."
 msgstr "Postavke..."
+
+#. Accessible label for the advanced screen-share codec preference select.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:218
+msgid "Preferred screen share codec"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -24391,6 +24474,11 @@ msgstr "Gumb za pretpregled"
 msgid "Preview camera"
 msgstr "Pregled kamere"
 
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+msgid "Preview Camera"
+msgstr ""
+
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
 msgid "Preview hidden"
@@ -24424,7 +24512,7 @@ msgid "Preview sound"
 msgstr "Pretpregled zvuka"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:136
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "Pregled, ponašanje u odvojenom prozoru i sličica za prijenos uživo"
 
@@ -24523,12 +24611,12 @@ msgid "Primary navigation"
 msgstr "Glavna navigacija"
 
 #. Voice display preference checkbox that moves active speakers toward the front of the call grid when enabled.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:105
 msgid "Prioritize speakers"
 msgstr "Prioritiziraj govornike"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:282
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
 msgid "Priority speaker"
 msgstr "Prioritetni govornik"
 
@@ -24552,7 +24640,7 @@ msgid "Privacy policy"
 msgstr "Pravila privatnosti"
 
 #. Generic section heading / button label for the privacy settings area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:663
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:667
 msgid "Privacy settings"
 msgstr "Postavke privatnosti"
 
@@ -24977,7 +25065,7 @@ msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custo
 msgstr "Pritisni za govor zanemaruje se u izravnom unosu. Prebacite se na fokusirani glas ili prilagođeno da biste ga koristili."
 
 #. Tooltip on the mic button in the voice control bar when push-to-talk is enabled. {pushToTalkHint} is the formatted shortcut key combo.
-#: src/features/voice/components/VoiceControlBar.tsx:116
+#: src/features/voice/components/VoiceControlBar.tsx:112
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Uključeno je pritisni za govor. Držite {pushToTalkHint} za govor."
 
@@ -24997,7 +25085,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Pritisnite i držite za govor, ali mikrofon neće biti uključen dok ste isključili zvuk. Uključite zvuk kako biste mogli razgovarati."
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Quality"
 msgstr "Kvaliteta"
 
@@ -25006,6 +25094,11 @@ msgstr "Kvaliteta"
 msgctxt "adaptive-screen-share"
 msgid "quality limited"
 msgstr "kvaliteta ograničena"
+
+#. Label for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:28
+msgid "Question"
+msgstr "Question"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
@@ -25148,7 +25241,7 @@ msgstr "Reagiraj s {emojiShortcode}"
 
 #. Generic short section / tab / aria label for emoji reactions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:659
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:663
 #: src/features/messaging/components/modals/MessageReactionsModal.tsx:144
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:10
 msgid "Reactions"
@@ -25177,7 +25270,7 @@ msgid "Read message aloud"
 msgstr "Pročitaj poruku naglas"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:233
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:241
 msgid "Read message history"
 msgstr "Čitanje povijesti poruka"
 
@@ -25212,7 +25305,7 @@ msgid "Ready to upgrade?"
 msgstr "Spremni za nadogradnju?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Realtime"
 msgstr "Stvarno vrijeme"
 
@@ -25287,11 +25380,9 @@ msgstr "Ponovno provjeri"
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "Primatelji će biti preusmjereni na {0} <0>{1}</0>"
 
-#. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
 msgstr "Preporučeno"
@@ -25556,11 +25647,6 @@ msgstr "Odbij"
 msgid "Rejected"
 msgstr "Odbijeno"
 
-#. Voice participant context menu submenu label for friend and block actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:198
-msgid "Relationship"
-msgstr "Odnosi"
-
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:129
 msgid "Relative"
@@ -25703,7 +25789,7 @@ msgid "Remove {userName} from your friends?"
 msgstr "Ukloniti {userName} iz prijatelja?"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
-#: src/features/channel/components/MessageActionUtils.tsx:76
+#: src/features/channel/components/MessageActionUtils.tsx:77
 msgid "Remove all"
 msgstr "Ukloni sve"
 
@@ -25715,8 +25801,8 @@ msgstr "Ukloniti sve reakcije {emojiNameWithColons} s ove poruke?"
 #. Destructive message context menu item for moderators that clears every reaction on a message.
 #. Message action that removes every reaction from the selected message.
 #. Title of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionMenu.tsx:79
-#: src/features/channel/components/MessageActionUtils.tsx:68
+#: src/features/channel/components/MessageActionMenu.tsx:80
+#: src/features/channel/components/MessageActionUtils.tsx:69
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:70
 msgid "Remove all reactions"
 msgstr "Ukloni sve reakcije"
@@ -25747,7 +25833,7 @@ msgid "Remove banner"
 msgstr "Ukloni naslovnu sliku"
 
 #. Action label that removes a saved bookmark.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:478
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:482
 msgid "Remove bookmark"
 msgstr "Ukloni oznaku"
 
@@ -25901,6 +25987,11 @@ msgstr "Ukloni privremenu zabranu"
 msgid "Remove translator"
 msgstr "Ukloni prevoditelja"
 
+#. Label of the button to remove the user's vote.
+#: src/features/channel/components/Poll.tsx:39
+msgid "Remove vote"
+msgstr "Remove vote"
+
 #. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:31
 msgid "Remove when you first bought {premiumProductName} from your badge"
@@ -25944,7 +26035,7 @@ msgid "Removed from favorite GIFs"
 msgstr "Uklonjeno iz omiljenih GIF-ova"
 
 #. Toast confirming an item was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:611
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:615
 msgid "Removed from favorites"
 msgstr "Uklonjeno iz favorita"
 
@@ -26112,6 +26203,11 @@ msgstr "Zamijeni pozadinu"
 msgid "Replace background?"
 msgstr "Zamijeniti pozadinu?"
 
+#. Title of a context menu item to replace the emoji of a poll answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:37
+msgid "Replace emoji"
+msgstr "Replace emoji"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:159
 msgid "Replace with a GIF"
@@ -26124,7 +26220,7 @@ msgstr "Odgovori"
 
 #. Generic action label that opens the reply composer for a message.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:607
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:611
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:71
 msgid "Reply"
 msgstr "Odgovori"
@@ -26219,7 +26315,7 @@ msgstr "Prijavi problem"
 
 #. Generic action label that opens the report flow targeting a specific message.
 #. Modal title for the IAR flow when reporting a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:530
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:534
 #: src/features/moderation/components/report_modal/IARModalContext.ts:22
 msgid "Report message"
 msgstr "Prijavi poruku"
@@ -26882,7 +26978,7 @@ msgstr "Obrnuta pretraga slike"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:603
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:607
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "Obrnuto pretraživanje slika"
@@ -27110,8 +27206,8 @@ msgstr "Boja uloge"
 msgid "Role created"
 msgstr "Uloga stvorena"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:352
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:402
 msgid "Role created successfully"
 msgstr "Uloga uspješno izrađena"
 
@@ -27120,8 +27216,8 @@ msgstr "Uloga uspješno izrađena"
 msgid "Role deleted"
 msgstr "Uloga izbrisana"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:440
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:469
 msgid "Role deleted successfully"
 msgstr "Uloga je uspješno izbrisana"
 
@@ -27161,7 +27257,7 @@ msgstr "Uloge"
 msgid "Roles and members"
 msgstr "Uloge i članovi"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:296
 msgid "Roles updated successfully"
 msgstr "Uloge su uspješno ažurirane"
 
@@ -27444,7 +27540,7 @@ msgstr "Dozvole"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:599
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:603
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:51
 msgid "Screen reader"
 msgstr "Čitač zaslona"
@@ -27490,7 +27586,7 @@ msgid "Screen share codec"
 msgstr "Kodek za dijeljenje zaslona"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:140
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Screen share encoder controls"
 msgstr "Kontrole za enkoder dijeljenja zaslona"
 
@@ -27511,12 +27607,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "Dijeljenje zaslona koristi softversko kodiranje ({codec}). Kvaliteta može biti smanjena, a upotreba procesora povećana. Vaš GPU možda ne podržava hardversko kodiranje za ovaj kodek."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:120
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 msgid "Screen share preview"
 msgstr "Pregled dijeljenja zaslona"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:116
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "Screen share preview behavior"
 msgstr "Ponašanje pregleda dijeljenja zaslona"
 
@@ -27534,6 +27630,11 @@ msgstr "Prikaz snimki zaslona tijekom dijeljenja zaslona je onemogućen."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
 msgid "Screen share previews are enabled."
 msgstr "Pregledi dijeljenja zaslona su omogućeni."
+
+#. Voice screen share menu action that opens the screen share preview privacy controls.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
+msgid "Screen Share Privacy"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
@@ -27561,11 +27662,6 @@ msgstr "Početak dijeljenja zaslona"
 #: src/features/notification/utils/SoundLabels.ts:64
 msgid "Screen share stop"
 msgstr "Zaustavi dijeljenje zaslona"
-
-#. Accessible label for the screen-share codec radio group.
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:42
-msgid "Screen share video codec"
-msgstr "Video kodek za dijeljenje zaslona"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -28062,6 +28158,11 @@ msgstr "Pogledajte popis članova kanala u ovoj zajednici."
 msgid "See the member list for this channel."
 msgstr "Pogledajte popis članova ovog kanala."
 
+#. Permission name: allows looking at votes on anonymous polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:237
+msgid "See votes on anonymous polls"
+msgstr "See votes on anonymous polls"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
 msgid "Seek preview"
@@ -28151,6 +28252,11 @@ msgstr "Odaberite račun za nastavak ili dodajte drugi."
 msgid "Select an option from the radio group"
 msgstr "Odaberite opciju iz grupe radio gumba"
 
+#. Tooltip text for the emoji selection button on an answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:29
+msgid "Select emoji"
+msgstr "Select emoji"
+
 #. Button or menu action label in the add friends to group modal. Keep it concise.
 #. Button or menu action label in the create dm bottom sheet. Keep it concise.
 #. Button or menu action label in the create dm modal. Keep it concise.
@@ -28169,6 +28275,16 @@ msgstr "Odaberi GIF {title}"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:75
 msgid "Select interface language"
 msgstr "Odaberite jezik sučelja"
+
+#. Small explanatory text instructing the user to select one answer on the poll.
+#: src/features/channel/components/Poll.tsx:27
+msgid "Select one answer"
+msgstr "Select one answer"
+
+#. Small explanatory text instructing the user to select one or multiple answers on the poll.
+#: src/features/channel/components/Poll.tsx:31
+msgid "Select one or multiple answers"
+msgstr "Select one or multiple answers"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -28220,6 +28336,11 @@ msgstr "Tekst koji se može odabrati"
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "odabrano"
+
+#. Label showing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:84
+msgid "Selected answer"
+msgstr "Selected answer"
 
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx:15
@@ -28380,10 +28501,8 @@ msgid "Send GIF {title}"
 msgstr "Pošalji GIF {title}"
 
 #. Action label for sending a gift to a friend.
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the gift purchase flow.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:39
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Pošalji dar"
@@ -28469,7 +28588,7 @@ msgstr "Pošalji kod za provjeru"
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
 #: src/features/channel/components/VoiceMessageRecorder.tsx:69
 #: src/features/input/state/input_keybind/shared.ts:285
 msgid "Send voice message"
@@ -28528,7 +28647,7 @@ msgid "Sensitive media"
 msgstr "Osjetljivi medijski sadržaj"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:807
 msgid "Sent"
 msgstr "Poslano"
 
@@ -28816,7 +28935,7 @@ msgid "Set verification level to <0>none</0>."
 msgstr "Razina provjere postavljena na <0>nema</0>."
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:298
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:306
 msgid "Set voice region"
 msgstr "Postavi glasovnu regiju"
 
@@ -28930,6 +29049,11 @@ msgstr "Dijelite zaslone i prozore."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
 msgid "Share source"
 msgstr "Dijeli izvor"
+
+#. Toggle label for sharing audio with an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+msgid "Share Stream Audio"
+msgstr ""
 
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:40
@@ -29231,7 +29355,7 @@ msgstr "Prikaži ugrađene i pretpregledaj poveznice web-mjesta"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:63
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:121
 msgid "Show emoji button"
 msgstr "Prikaži gumb za emotikone"
@@ -29275,7 +29399,7 @@ msgstr "Prikaži GIF indikator"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:101
 msgid "Show GIFs button"
 msgstr "Prikaži gumb za GIF-ove"
@@ -29324,7 +29448,7 @@ msgstr "Prikaži najviše 5 (+5 značka)"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:105
 msgid "Show media button"
 msgstr "Prikaži gumb za medije"
@@ -29381,16 +29505,16 @@ msgstr "Prikaži isključene kanale"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:814
+#: src/features/voice/components/VoiceSettingsMenus.tsx:815
 msgid "Show my own camera"
 msgstr "Prikaži moju kameru"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-msgid "Show my screen share"
-msgstr "Prikaži moju podijeljenu sliku zaslona"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
+msgid "Show My Screen Share"
+msgstr ""
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
@@ -29417,9 +29541,9 @@ msgstr "Prikaži skočni prozor za novi uređaj"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether participants without video are shown in the grid.
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:828
+#: src/features/voice/components/VoiceSettingsMenus.tsx:829
 msgid "Show non-video participants"
 msgstr "Prikaži sudionike bez videa"
 
@@ -29458,6 +29582,11 @@ msgstr "Prikaži postavke vremenske zone profila"
 msgid "Show quick reactions"
 msgstr "Prikaži brze reakcije"
 
+#. Label of the button to show poll answer results.
+#: src/features/channel/components/Poll.tsx:47
+msgid "Show results"
+msgstr "Show results"
+
 #. Description for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:289
 msgid "Show rich previews for YouTube links."
@@ -29472,7 +29601,7 @@ msgstr "Prikaži spremljene medije u automatskom dovršavanju izraza"
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:67
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:125
 msgid "Show send button"
 msgstr "Prikaži gumb za slanje"
@@ -29484,7 +29613,7 @@ msgstr "Prikaži sadržaj spojlera kad se klikne"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:117
 msgid "Show stickers button"
 msgstr "Prikaži gumb za naljepnice"
@@ -29607,7 +29736,7 @@ msgstr "Prijavite se putem davatelja jedinstvene prijave vaše organizacije."
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:195
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:256
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:313
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:595
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:599
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
 msgstr "Odjava"
@@ -29759,7 +29888,7 @@ msgid "Single community mode"
 msgstr "Način rada jedne zajednice"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 msgid "Single layer"
 msgstr "Jednoslojno"
 
@@ -30063,12 +30192,12 @@ msgid "Social"
 msgstr "Društveno"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Software encoder"
 msgstr "Softverski enkoder"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 msgid "Software encoder quality"
 msgstr "Kvaliteta softverskog kodera"
 
@@ -30291,7 +30420,7 @@ msgstr "Glasnoća zvuka"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:807
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:811
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "Zvukovi"
@@ -30393,12 +30522,12 @@ msgid "Spanish (Spain)"
 msgstr "Španjolski (Španjolska)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Spatial and temporal layers"
 msgstr "Prostorni i vremenski slojevi"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:277
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "Govoriti"
@@ -30410,7 +30539,7 @@ msgstr "Čitaj sve poruke naglas"
 
 #. Message action that has the screen reader read the selected message aloud.
 #. Message context menu item that reads the message aloud via text-to-speech.
-#: src/features/channel/components/MessageActionMenu.tsx:99
+#: src/features/channel/components/MessageActionMenu.tsx:104
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:78
 msgid "Speak message"
 msgstr "Pročitaj poruku"
@@ -30697,10 +30826,6 @@ msgstr "Datum početka"
 msgid "Start date must be earlier than end date."
 msgstr "Datum početka mora biti prije datuma završetka."
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:860
-msgid "Start debug logging session"
-msgstr "Pokreni sesiju bilježenja pogrešaka"
-
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:125
 msgid "Start drag and drop"
@@ -30727,7 +30852,7 @@ msgid "Start uploading attachments as soon as they are added to the message inpu
 msgstr "Počnite s prijenosom priloga čim se dodaju u polje za unos poruke"
 
 #. Action label that initiates a video call (DM or group DM).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:591
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:595
 msgid "Start video call"
 msgstr "Započni videopoziv"
 
@@ -31034,10 +31159,17 @@ msgstr "Zaustaviti dijeljenje glasovne aktivnosti sa svim prijateljima?"
 
 #. Message action that stops the screen reader from speaking the selected message.
 #. Message context menu item that stops the text-to-speech playback in progress.
-#: src/features/channel/components/MessageActionMenu.tsx:95
+#: src/features/channel/components/MessageActionMenu.tsx:100
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:74
 msgid "Stop speaking"
 msgstr "Prestani govoriti"
+
+#. Danger action that stops the active screen share.
+#. Voice screen share menu action that stops the current user stream.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:19
+msgid "Stop Streaming"
+msgstr ""
 
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31
@@ -31050,7 +31182,7 @@ msgid "Stop watching"
 msgstr "Zaustavi gledanje"
 
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
-#: src/features/voice/components/VoiceControlBar.tsx:151
+#: src/features/voice/components/VoiceControlBar.tsx:147
 msgid "Stop watching stream"
 msgstr "Zaustavi gledanje prijenosa"
 
@@ -31088,10 +31220,15 @@ msgstr "Strim skriven"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "Pregled prijenosa"
+
+#. Compact submenu label for changing the resolution and frame rate of an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+msgid "Stream Quality"
+msgstr ""
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
@@ -31099,7 +31236,7 @@ msgid "Stream settings"
 msgstr "Postavke prijenosa"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:282
 msgid "Stream video"
 msgstr "Streamanje videozapisa"
 
@@ -31192,6 +31329,11 @@ msgstr "Stil"
 msgid "Submenu"
 msgstr "Podizbornik"
 
+#. Label for the poll submit button.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:57
+msgid "Submit"
+msgstr "Submit"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:445
 msgid "Submitting"
 msgstr "Slanje u tijeku"
@@ -31273,7 +31415,7 @@ msgid "Suppress all role mentions"
 msgstr "Isključi sva spominjanja uloge"
 
 #. Action label on a message that hides link previews / embeds.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:587
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:591
 msgid "Suppress embeds"
 msgstr "Sakrij pretpreglede"
 
@@ -31302,12 +31444,12 @@ msgid "Suspend"
 msgstr "Obustavi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:177
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
 msgid "SVC mode"
 msgstr "SVC način rada"
 
@@ -31757,7 +31899,7 @@ msgid "Template URL"
 msgstr "URL predloška"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Temporal layers"
 msgstr "Vremenski slojevi"
 
@@ -31818,7 +31960,7 @@ msgstr "Testirajte URL-ove i prikazane ugrađene sadržaje"
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
 msgid "Text"
 msgstr "Tekst"
 
@@ -32124,6 +32266,11 @@ msgstr "Navedeni redirect_uri nije registriran za ovu aplikaciju."
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:49
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Navedeni redirect_uri mora koristiti HTTP ili HTTPS."
+
+#. Placeholder text for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:32
+msgid "The question you want to ask"
+msgstr "The question you want to ask"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
 #: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
@@ -32873,6 +33020,16 @@ msgstr "Ovaj je birač dostupan samo u aplikaciji za stolna računala."
 msgid "This plan isn't available. Contact support."
 msgstr "Ovaj plan nije dostupan. Obratite se podršci."
 
+#. Small disclaimer explaining to the user that this poll is anonymous, but they can see votes because they have the permission for it.
+#: src/features/channel/components/Poll.tsx:55
+msgid "This poll is anonymous, but you can see votes."
+msgstr "This poll is anonymous, but you can see votes."
+
+#. Small disclaimer explaining to the user that this poll is anonymous.
+#: src/features/channel/components/Poll.tsx:51
+msgid "This poll is anonymous."
+msgstr "This poll is anonymous."
+
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
 msgstr "Ova kupnja ne ispunjava uvjete za povrat novca."
@@ -32912,7 +33069,7 @@ msgstr "Ovo uklanja sve prilagođene prečace i ponovno omogućuje sve ugrađene
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:114
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
-msgstr "Ova poveznica za poništavanje lozinke istekla je. Poveznice za poništavanje vrijede 1 sat. Zatražite novu."
+msgstr "This reset link has expired. Reset links last 1 hour. Please request a new one."
 
 #. Fallback role name in a mass-mention warning title.
 #: src/features/channel/components/MentionEveryonePopout.tsx:15
@@ -33031,13 +33188,18 @@ msgid "This voice channel is no longer available."
 msgstr "Ovaj glasovni kanal više nije dostupan."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:71
+#: src/features/channel/components/UserMessage.tsx:73
 msgid "This was a {silentMention} message."
 msgstr "Ovo je bila {silentMention} poruka."
 
 #: src/features/voice/components/dialogs/DisableScreenSharePiPConfirmModal.tsx:52
 msgid "This will close the current popout and stop screen share picture-in-picture popouts from opening automatically. You can turn them back on in {audioVideoSettingsPath}."
 msgstr "Zatvorit će se trenutni pop-up prozor i automatski spriječiti otvaranje slika u slikama pri dijeljenju zaslona. Možete ih ponovno uključiti u {audioVideoSettingsPath}."
+
+#. Description of the action of ending a poll in a confirmation modal.
+#: src/features/messaging/commands/PollCommands.tsx:24
+msgid "This will close the poll now and show the results."
+msgstr "This will close the poll now and show the results."
 
 #: src/features/messaging/commands/FavoritesCommands.tsx:30
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>{favoritesSettingsPath}</0>."
@@ -33177,7 +33339,7 @@ msgid "Time format selection"
 msgstr "Odabir formata vremena"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:253
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
 msgid "Time out members"
 msgstr "Privremeno isključi članove"
 
@@ -33530,7 +33692,7 @@ msgstr "Vlasništvo preneseno na {0}."
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:583
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:587
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "Prevedi"
@@ -33804,7 +33966,7 @@ msgstr "Isključi"
 
 #. Bulk voice action that turns off the camera on every active device of the current user.
 #. Voice menu action that turns off every active device/session's camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:90
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:114
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:93
 msgid "Turn off all device cameras"
 msgstr "Isključi sve kamere uređaja"
@@ -33814,20 +33976,20 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Isključite sve s čime vam nije ugodno. Neke značajke možda neće raditi."
 
 #. Voice / call action label that disables the local camera.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:506
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:510
 msgid "Turn off camera"
 msgstr "Isključi kameru"
 
 #. Voice menu action that turns off the camera on a single device of the current user.
 #. Voice menu action that turns off the camera on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:81
 msgid "Turn off device camera"
 msgstr "Isključi kameru uređaja"
 
 #. Voice menu action that ends the screen share on a single device of the current user.
 #. Voice menu action that stops screen sharing or streaming on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:85
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:85
 msgid "Turn off device stream"
 msgstr "Isključi prijenos zvuka s uređaja"
@@ -33839,7 +34001,7 @@ msgstr "Isključi privatne poruke i prijatelje na cijeloj instanci. Ovo se može
 
 #. Voice menu action that ends the current user screen share.
 #. Voice menu action that stops the current user's screen share or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:89
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:69
 msgid "Turn off stream"
 msgstr "Isključi stream"
@@ -34150,7 +34312,7 @@ msgid "Unblock user"
 msgstr "Deblokiraj korisnika"
 
 #. Generic label for items that do not belong to a category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:631
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:635
 msgid "Uncategorized"
 msgstr "Nekategorizirano"
 
@@ -34265,7 +34427,7 @@ msgstr "Ukloni iz favorita"
 
 #. Voice call layout action that removes focus from the currently pinned participant.
 #. Voice layout menu action that removes the focused participant or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:25
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:97
 msgid "Unfocus"
 msgstr "Ukloni fokus"
@@ -34307,7 +34469,7 @@ msgstr "Univerzalna zamjena. Najniža kvaliteta, ali radi svugdje."
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:585
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -34350,7 +34512,7 @@ msgstr "Nepoznat datum"
 #. Fallback device or operating-system label in the devices tab when session client data is unavailable.
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:43
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:44
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
@@ -34386,7 +34548,7 @@ msgid "Unknown message type"
 msgstr "Nepoznata vrsta poruke"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:410
+#: src/features/permissions/utils/PermissionUtils.ts:412
 msgid "Unknown permission"
 msgstr "Nepoznata dozvola"
 
@@ -34428,7 +34590,7 @@ msgstr "nepoznat korisnik"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:161
+#: src/features/voice/components/VoiceParticipantTile.tsx:162
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Nepoznat korisnik"
@@ -34525,7 +34687,7 @@ msgid "Unmute"
 msgstr "Uključi zvuk"
 
 #. Voice control button label to turn the user's microphone back on.
-#: src/features/voice/components/VoiceControlBar.tsx:121
+#: src/features/voice/components/VoiceControlBar.tsx:117
 msgctxt "voice-control-action"
 msgid "Unmute"
 msgstr "Uključi mikrofon"
@@ -34546,7 +34708,7 @@ msgid "Unmute all devices"
 msgstr "Uključi zvuk na svim uređajima"
 
 #. Action label that unmutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:579
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:583
 msgid "Unmute category"
 msgstr "Uključi zvuk kategorije"
 
@@ -34561,7 +34723,7 @@ msgid "Unmute communities"
 msgstr "Uključi zvuk zajednicama"
 
 #. Generic action label that unmutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:554
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:558
 msgid "Unmute community"
 msgstr "Uključi zvuk zajednice"
 
@@ -34581,7 +34743,7 @@ msgid "Unmute DMs"
 msgstr "Uključi zvuk za izravne poruke"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
 msgid "Unmute favourites"
 msgstr "Uključi zvuk favorita"
 
@@ -34630,7 +34792,7 @@ msgid "Unordered"
 msgstr "Bez redoslijeda"
 
 #. Confirm button label on the unpin message alert.
-#: src/features/channel/components/MessageActionUtils.tsx:52
+#: src/features/channel/components/MessageActionUtils.tsx:53
 msgid "Unpin"
 msgstr "Ukloni s vrha"
 
@@ -34655,12 +34817,12 @@ msgid "Unpin message"
 msgstr "Otkvači poruku"
 
 #. Body of the confirmation alert shown when unpinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:48
+#: src/features/channel/components/MessageActionUtils.tsx:49
 msgid "Unpin this message?"
 msgstr "Otkvačiti ovu poruku?"
 
 #. Generic short toast / status label confirming a DM was unpinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:627
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:631
 msgid "Unpinned DM"
 msgstr "DM je otkvačen"
 
@@ -34788,7 +34950,7 @@ msgstr "Nepodržana datoteka naljepnice"
 
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionMenu.tsx:87
+#: src/features/channel/components/MessageActionMenu.tsx:88
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
 msgstr "Prikaži privitke"
@@ -35060,9 +35222,7 @@ msgstr "Izravno prenesi u {displayName}"
 msgid "Upload emoji"
 msgstr "Učitaj emoji"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the system file picker to attach a file.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:13
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:23
 msgid "Upload file"
 msgstr "Učitaj datoteku"
@@ -35109,10 +35269,8 @@ msgstr "Učitaj naljepnicu"
 msgid "Upload to {displayName}"
 msgstr "Učitaj u {displayName}"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that uploads the current textarea content as a .txt file when it exceeds the size limit.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:17
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:27
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
 msgid "Upload your message as a file"
 msgstr "Učitajte poruku kao datoteku"
 
@@ -35165,7 +35323,7 @@ msgid "Uploading emojis"
 msgstr "Prijenos emojija"
 
 #. Description for the maximum screen share bitrate select. Keep WebRTC literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
 msgid "Upper bitrate cap before WebRTC adapts to the network."
 msgstr "Gornja granica brzine prijenosa prije nego što se WebRTC prilagodi mreži."
 
@@ -35368,12 +35526,12 @@ msgid "Use emoji from other communities."
 msgstr "Koristite emojije iz drugih zajednica."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:237
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
 msgid "Use external emoji"
 msgstr "Koristi vanjske emotikone"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:241
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
 msgid "Use external stickers"
 msgstr "Koristi vanjske naljepnice"
 
@@ -35540,7 +35698,7 @@ msgid "Use video and camera previews."
 msgstr "Upotrijebite pretpreglede videozapisa i kamere."
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
 msgid "Use voice activity"
 msgstr "Koristi glasovnu aktivnost"
 
@@ -35596,11 +35754,6 @@ msgstr "Koristi se samo u ovoj zajednici."
 msgid "User"
 msgstr "Korisnik"
 
-#. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "User actions"
-msgstr "Radnje za korisnika"
-
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:251
 msgid "User appears underage, or is involved in grooming or child exploitation."
@@ -35617,7 +35770,7 @@ msgid "User controls"
 msgstr "Korisničke kontrole"
 
 #. Title of the developer-mode user debug modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:571
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:575
 msgid "User debug"
 msgstr "Otklanjanje pogrešaka korisnika"
 
@@ -35700,7 +35853,7 @@ msgstr "korisnik, bot ili webhook"
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:995
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:567
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:571
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
@@ -36345,12 +36498,12 @@ msgid "View call controls"
 msgstr "Prikaži kontrole poziva"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:257
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
 msgid "View channel"
 msgstr "Prikaz kanala"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
 msgid "View channel members"
 msgstr "Prikaz članova kanala"
 
@@ -36438,6 +36591,11 @@ msgstr "Prikaži dopuštenja"
 msgid "View plans"
 msgstr "Pregledaj planove"
 
+#. Title of the button that redirects to the poll message.
+#: src/features/channel/components/PollClosedMessage.tsx:31
+msgid "View poll"
+msgstr "View poll"
+
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:353
 msgid "View profile"
@@ -36451,7 +36609,7 @@ msgid "View profile for {displayName}"
 msgstr "Prikaži profil za {displayName}"
 
 #. Message context menu item that opens the reactions list sheet for the message.
-#: src/features/channel/components/MessageActionMenu.tsx:75
+#: src/features/channel/components/MessageActionMenu.tsx:76
 msgid "View reactions"
 msgstr "Pogledaj reakcije"
 
@@ -36841,6 +36999,11 @@ msgstr "Kontrola glasnoće"
 msgid "Volume sliders"
 msgstr "Klizači glasnoće"
 
+#. Label of the vote button.
+#: src/features/channel/components/Poll.tsx:43
+msgid "Vote"
+msgstr "Vote"
+
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
@@ -36861,7 +37024,7 @@ msgid "Wait here"
 msgstr "Pričekajte ovdje"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:56
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
 msgstr "Čekanje veze..."
 
@@ -36901,7 +37064,7 @@ msgid "Watch"
 msgstr "Gledaj"
 
 #. Voice action label that starts watching a remote screen share.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:482
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:486
 msgid "Watch stream"
 msgstr "Gledaj prijenos"
 
@@ -37564,6 +37727,11 @@ msgstr "Ako je prozor sustava Windows odrezan pri vrhu ili dnu zaslona, a DevToo
 msgid "Windows default"
 msgstr "Zadana postavka za Windows"
 
+#. Label showing or describing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:80
+msgid "Winning answer"
+msgstr "Winning answer"
+
 #. Switch description in the leave-community confirmation modal. Warns that deleting the caller's community messages is destructive.
 #. Switch description in the leave-group confirmation modal. Warns that deleting the caller's group messages is destructive.
 #: src/features/guild/hooks/useLeaveGroup.tsx:44
@@ -37848,6 +38016,11 @@ msgstr "Ne možete se sprijateljiti sami sa sobom"
 msgid "You can't change your nickname here"
 msgstr "Ovdje ne možete promijeniti nadimak"
 
+#. Tooltip on the disabled create poll item when the user lacks Create Poll permission. Calm, factual tone.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:27
+msgid "You can't create polls in this channel."
+msgstr "You can't create polls in this channel."
+
 #. Title of the error modal shown when the user lacks permission to delete a channel or category.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:18
 msgid "You can't delete this"
@@ -37942,8 +38115,8 @@ msgstr "Ne možete slati poruke u ovoj zajednici."
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:65
-#: src/features/voice/components/VoiceControlBar.tsx:141
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
+#: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "Ne možete dijeliti zaslon u ovom kanalu"
 
@@ -37956,8 +38129,8 @@ msgstr "Ne možete govoriti u ovom kanalu"
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:74
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
-#: src/features/voice/components/VoiceControlBar.tsx:131
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
+#: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "Ne možete uključiti kameru u ovom kanalu"
 
@@ -38079,6 +38252,11 @@ msgstr "Nemate dopuštenje za pridruživanje ovom glasovnom kanalu"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:73
 msgid "You don't have permission to rename this emoji. The name was reverted to what it was before."
 msgstr "Nemate dopuštenje za preimenovanje ovog emojija. Naziv je vraćen na prethodni."
+
+#. Error message for when no question has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:61
+msgid "You forgot to enter a question."
+msgstr "You forgot to enter a question."
 
 #. Body of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
@@ -38259,6 +38437,11 @@ msgstr "Morate potvrditi svoju e-adresu prije nego što možete slati zahtjeve z
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "Morate potvrditi svoju adresu e-pošte prije nego što možete započeti izravnu poruku."
 
+#. Small disclaimer explaining to the user that email verification is necessary to vote on a poll.
+#: src/features/channel/components/Poll.tsx:60
+msgid "You need to verify your email address to vote on a poll."
+msgstr "You need to verify your email address to vote on a poll."
+
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
@@ -38272,6 +38455,11 @@ msgstr "Morate potvrditi svoju e-poštu da biste slali poruke u ovoj zajednici."
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:60
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "Vi ili netko koga dodajete već ima maksimalan broj otvorenih grupnih izravnih poruka. Napustite jednu i pokušajte ponovno."
+
+#. Error message for when no answer has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:65
+msgid "You should enter at least one answer."
+msgstr "You should enter at least one answer."
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:61
@@ -38553,6 +38741,11 @@ msgstr "Dosegnuli ste maksimalan broj emojija. Izbrišite neke postojeće emojij
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "Dosegnuli ste maksimalan broj naljepnica. Izbrišite neke postojeće naljepnice kako biste oslobodili prostor."
 
+#. Modal body shown when the maximum vote count per answer has been reached on a poll. Keep plain.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:12
+msgid "You've reached the maximum number of votes per answer."
+msgstr "You've reached the maximum number of votes per answer."
+
 #. Description text in the background image gallery modal. Preserve {maxBackgroundImages}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:106
 msgid "You've reached the maximum of {maxBackgroundImages} backgrounds. Remove one to add a new background."
@@ -38751,27 +38944,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Vaša posljednja kupnja je izvan roka za povrat novca. Obratite se podršci za probleme s naplatom."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:77
+#: src/features/messaging/state/MessageQueue.tsx:78
 msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
 msgstr "Vaša poruka nije mogla biti isporučena jer sadrži neprimjerene emojije ili naljepnice koje nisu dopuštene u ovom kontekstu."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:72
+#: src/features/messaging/state/MessageQueue.tsx:73
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Vaša poruka nije mogla biti isporučena jer ju je naš sustav sigurnosti označio. Ako mislite da je ovo pogreška, obratite se podršci."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:59
+#: src/features/messaging/state/MessageQueue.tsx:60
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Vaša poruka nije mogla biti isporučena. To je obično zato što ne dijelite zajednicu s primateljem ili primatelj prihvaća izravne poruke samo od prijatelja. Možda ćete također morati prilagoditi vlastite postavke privatnosti izravnih poruka u {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:64
+#: src/features/messaging/state/MessageQueue.tsx:65
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Vaša poruka nije mogla biti isporučena. Morate potvrditi svoj račun da biste slali izravne poruke."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:68
+#: src/features/messaging/state/MessageQueue.tsx:69
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Vaša poruka nije mogla biti isporučena. Morate potvrditi svoj račun da biste slali poruke."
 
@@ -38956,7 +39149,7 @@ msgstr "Povećaj"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that increases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:623
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:627
 #: src/features/input/state/input_keybind/shared.ts:253
 #: src/features/platform/utils/DesktopLocaleBridge.ts:62
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
@@ -38967,7 +39160,7 @@ msgstr "Povećaj"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that decreases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:619
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:623
 #: src/features/input/state/input_keybind/shared.ts:257
 #: src/features/platform/utils/DesktopLocaleBridge.ts:66
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86

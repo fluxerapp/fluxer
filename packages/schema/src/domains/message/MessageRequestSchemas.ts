@@ -21,6 +21,7 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {AttachmentURLType, URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {z} from 'zod';
+import {MessagePollRequest} from './PollSchemas';
 
 const RICH_EMBED_AUTHOR_NAME_MAX_LENGTH = 256 as const;
 const RICH_EMBED_MEDIA_DESCRIPTION_MAX_LENGTH = 4096 as const;
@@ -93,6 +94,7 @@ const RichEmbedFieldRequest = z.object({
 });
 
 export const RichEmbedRequest = z.object({
+	type: z.string().optional().describe('Type of the embed'),
 	url: URLType.nullish().describe('URL of the embed'),
 	title: createStringType(0, RICH_EMBED_TITLE_MAX_LENGTH)
 		.nullish()
@@ -330,6 +332,7 @@ export const MessageRequestSchema = z
 	.object({
 		content: MessageContentRequest.nullish(),
 		embeds: z.array(RichEmbedRequest).describe('Array of embed objects to include in the message'),
+		poll: MessagePollRequest.nullish(),
 		attachments: z
 			.array(z.union([ClientUploadedAttachmentRequest, ClientAttachmentRequest]))
 			.describe('Array of attachment objects'),
@@ -398,6 +401,12 @@ export const MessagesQuery = z.object({
 });
 
 export type MessagesQuery = z.infer<typeof MessagesQuery>;
+
+export const PollVoteRequestSchema = z.object({
+	answerIds: z.array(z.string()),
+});
+
+export type PollVoteRequestSchema = z.infer<typeof PollVoteRequestSchema>;
 
 const BulkMessageFetchEntryRequest = z.object({
 	channel_id: SnowflakeType.describe('The ID of the channel to fetch messages from'),

@@ -10,6 +10,7 @@ import type {
 	MessageReference,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 
 const DEFAULT_ALLOWED_MENTIONS: AllowedMentions = {replied_user: true};
 
@@ -47,6 +48,7 @@ export interface MessageCreateRequest {
 	flags?: number;
 	favorite_meme_id?: string;
 	sticker_ids?: Array<string>;
+	poll?: MessagePoll;
 	tts?: true;
 }
 
@@ -73,6 +75,7 @@ export interface MessageCreatePayload {
 	flags?: number;
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
+	poll?: MessagePoll;
 	tts?: boolean;
 }
 
@@ -95,7 +98,7 @@ export function normalizeMessageEditContent(content: string): string {
 }
 
 export function buildMessageCreateRequest(payload: MessageCreatePayload): MessageCreateRequest {
-	const {content, nonce, attachments, allowedMentions, messageReference, flags, favoriteMemeId, stickers, tts} =
+	const {content, nonce, attachments, allowedMentions, messageReference, flags, favoriteMemeId, stickers, poll, tts} =
 		payload;
 	const requestBody: MessageCreateRequest = {};
 	if (content != null && hasVisibleMessageContent(content)) {
@@ -121,6 +124,9 @@ export function buildMessageCreateRequest(payload: MessageCreatePayload): Messag
 	}
 	if (stickers?.length) {
 		requestBody.sticker_ids = stickers.map((sticker) => sticker.id);
+	}
+	if (poll) {
+		requestBody.poll = poll;
 	}
 	if (tts) {
 		requestBody.tts = true;

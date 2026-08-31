@@ -5,6 +5,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnclaimedAccountCannotAddReactionsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotAddReactionsError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {
+	ChannelIdMessageIdAnswerIdParam,
 	ChannelIdMessageIdEmojiParam,
 	ChannelIdMessageIdEmojiTargetIdParam,
 	ChannelIdMessageIdParam,
@@ -13,10 +14,12 @@ import {
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	ChannelPinsQuerySchema,
+	PollVoteRequestSchema,
 	ReactionUsersQuerySchema,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {
 	ChannelPinsResponse,
+	PollAnswerVotersResponse,
 	ReactionUsersListResponse,
 	ReactionUsersPageResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -366,6 +369,77 @@ export function MessageInteractionController(app: HonoApp) {
 			const messageId = createMessageID(message_id);
 			await ctx.get('channelService').interactions.removeAllReactions({userId, channelId, messageId});
 			return ctx.body(null, 204);
+		},
+	);
+	app.put(
+		'/channels/:channel_id/polls/:message_id/answers/@me',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_REACTIONS),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		Validator('json', PollVoteRequestSchema),
+		OpenAPI({
+			operationId: 'vote',
+			summary: 'Vote on the poll',
+			description: 'Vote on the poll.',
+			responseSchema: null,
+			requestSchema: PollVoteRequestSchema,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Channels', 'Messages'],
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			const {answerIds} = ctx.req.valid('json');
+			const user = ctx.get('user');
+			const channelId = createChannelID(channel_id);
+			const messageId = createMessageID(message_id);
+			await ctx.get('channelService').messages.poll.vote({
+				user,
+				channelId,
+				messageId,
+				answerIds: answerIds.map((id) => Number(id)),
+			});
+			return ctx.body(null, 204);
+		},
+	);
+	app.get(
+		'/channels/:channel_id/polls/:message_id/answers/:answer_id',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_REACTIONS),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdAnswerIdParam),
+		Validator('query', ReactionUsersQuerySchema),
+		OpenAPI({
+			operationId: 'get_answer_voters',
+			summary: 'Get answer voters',
+			description: 'Get a list of users that voted for this specific answer.',
+			responseSchema: PollAnswerVotersResponse,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Channels', 'Messages'],
+		}),
+		async (ctx) => {
+			const {channel_id, message_id, answer_id} = ctx.req.valid('param');
+			const {limit, after} = ctx.req.valid('query');
+			const userId = ctx.get('user').id;
+			const channelId = createChannelID(channel_id);
+			const messageId = createMessageID(message_id);
+			const afterUserId = after ? createUserID(after) : undefined;
+			const response = await ctx.get('channelService').messages.poll.getVotesForAnswer({
+				userId,
+				channelId,
+				messageId,
+				answerId: Number(answer_id),
+				limit,
+				after: afterUserId,
+			});
+			return ctx.json(
+				{
+					users: response.users,
+					has_more: response.has_more,
+					next_after: response.next_after,
+				},
+				200,
+			);
 		},
 	);
 }

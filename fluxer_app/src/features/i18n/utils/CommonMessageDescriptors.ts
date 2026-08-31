@@ -463,6 +463,10 @@ export const UNPIN_MESSAGE_DESCRIPTOR = msg({
 	message: 'Unpin message',
 	comment: 'Action label for removing a pinned message from the channel pins.',
 });
+export const END_POLL_NOW_DESCRIPTOR = msg({
+	message: 'End poll now',
+	comment: 'Action label for ending a poll now.',
+});
 export const EDIT_GROUP_DESCRIPTOR = msg({
 	message: 'Edit group',
 	comment: 'Action label for editing a group DM (name, icon, members).',

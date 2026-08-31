@@ -15,8 +15,11 @@ import {
 	MessageReactions,
 	Messages,
 	MessagesByAuthorV2,
+	PollMessageById,
+	PollMessageExpiry,
 } from '../../../Tables';
 import type {MessageDataRepository} from './MessageDataRepository';
+import {getExpiryBucket} from '../PollMessageExpiryRepository';
 
 const BULK_DELETE_BATCH_SIZE = 100;
 const BULK_DELETE_BATCH_QUERY_LIMIT = 30;
@@ -78,6 +81,21 @@ export class MessageDeletionRepository {
 					channel_id: channelId,
 					message_id: messageId,
 					pinned_timestamp: effectivePinned,
+				}),
+			);
+		}
+		if (message?.poll) {
+			const expiryDate = new Date(message.poll.expiry ?? "");
+			batch.addPrepared(
+				PollMessageExpiry.deleteByPk({
+					expiry_bucket: getExpiryBucket(expiryDate),
+					expires_at: expiryDate,
+					message_id: messageId,
+				}),
+			);
+			batch.addPrepared(
+				PollMessageById.deleteByPk({
+					message_id: messageId,
 				}),
 			);
 		}

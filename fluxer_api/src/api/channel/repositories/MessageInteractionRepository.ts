@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MessagePollAnswerVotersPage, MessagePollSelectedAnswer, MessagePollVoteRow} from '@app/api/database/types/PollTypes';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {ChannelID, EmojiID, MessageID, UserID} from '../../BrandedTypes';
 import {createEmojiID} from '../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
 import {Db} from '../../database/CassandraTypes';
 import type {ChannelPinRow, MessageReactionRow} from '../../database/types/MessageTypes';
 import type {Message} from '../../models/Message';
 import {MessageReaction} from '../../models/MessageReaction';
-import {ChannelPins, MessageReactions, Messages} from '../../Tables';
+import {ChannelPins, MessagePollVotes, MessageReactions, Messages} from '../../Tables';
 import {IMessageInteractionRepository} from './IMessageInteractionRepository';
 import type {MessageRepository} from './MessageRepository';
 
@@ -65,6 +66,34 @@ const CHECK_USER_REACTION_EXISTS_QUERY = MessageReactions.selectCql({
 	],
 	limit: 1,
 });
+const CHECK_USER_VOTE_ANSWERS_QUERY = MessagePollVotes.select({
+	columns: ['answer_id'],
+	where: [
+		MessagePollVotes.where.eq('bucket'),
+		MessagePollVotes.where.eq('channel_id'),
+		MessagePollVotes.where.eq('message_id'),
+		MessagePollVotes.where.eq('user_id'),
+	],
+});
+const createCheckAnswerVotesQuery = (limit: number, hasAfter: boolean = false) =>
+	MessagePollVotes.select({
+		columns: ['user_id'],
+		where: hasAfter
+			? [
+					MessagePollVotes.where.eq('bucket'),
+					MessagePollVotes.where.eq('channel_id'),
+					MessagePollVotes.where.eq('message_id'),
+					MessagePollVotes.where.eq('answer_id'),
+					MessagePollVotes.where.gt('user_id', 'after_user_id'),
+				]
+			: [
+					MessagePollVotes.where.eq('bucket'),
+					MessagePollVotes.where.eq('channel_id'),
+					MessagePollVotes.where.eq('message_id'),
+					MessagePollVotes.where.eq('answer_id'),
+				],
+		limit,
+	});
 
 export class MessageInteractionRepository extends IMessageInteractionRepository {
 	private messageRepository: MessageRepository;
@@ -212,6 +241,126 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 		);
 		const hasReactions = await this.messageHasAnyReactions(channelId, messageId);
 		await this.setHasReaction(channelId, messageId, hasReactions);
+	}
+
+	async getVoteAnswers(
+		channelId: ChannelID,
+		messageId: MessageID,
+		userId: UserID,
+	): Promise<Array<MessagePollSelectedAnswer>> {
+		const bucket = BucketUtils.makeBucket(messageId);
+		const rows = await fetchMany<Pick<MessagePollVoteRow, 'answer_id'>>(
+			CHECK_USER_VOTE_ANSWERS_QUERY.bind({
+				channel_id: channelId,
+				bucket,
+				message_id: messageId,
+				user_id: userId,
+			}),
+		);
+		return rows?.map((row) => ({id: row.answer_id})) ?? [];
+	}
+
+	async getVotesForAnswer(
+		channelId: ChannelID,
+		messageId: MessageID,
+		answerId: number,
+		limit: number = 25,
+		after?: UserID,
+	): Promise<MessagePollAnswerVotersPage> {
+		const requestedLimit = limit !== undefined && Number.isFinite(limit) ? Math.floor(limit) : 25;
+		const validatedLimit = Math.min(Math.max(requestedLimit, 1), 100);
+		const fetchLimit = validatedLimit + 1;
+
+		const bucket = BucketUtils.makeBucket(messageId);
+		const hasAfter = !!after;
+		const rows = hasAfter
+			? await fetchMany<Pick<MessagePollVoteRow, 'user_id'>>(
+					createCheckAnswerVotesQuery(fetchLimit, true).bind({
+						channel_id: channelId,
+						bucket,
+						message_id: messageId,
+						answer_id: answerId,
+						after_user_id: after,
+					}),
+				)
+			: await fetchMany<Pick<MessagePollVoteRow, 'user_id'>>(
+					createCheckAnswerVotesQuery(fetchLimit, false).bind({
+						channel_id: channelId,
+						bucket,
+						message_id: messageId,
+						answer_id: answerId,
+					}),
+				);
+		const hasMore = rows.length > validatedLimit;
+		const pageRows = hasMore ? rows.slice(0, validatedLimit) : rows;
+		if (!pageRows.length) return {userIds: [], hasMore: false, nextAfter: null};
+		const nextAfter = hasMore ? pageRows[pageRows.length - 1].user_id.toString() : null;
+		return {
+			userIds: rows?.map((row) => row.user_id) ?? [],
+			hasMore,
+			nextAfter,
+		};
+	}
+
+	async addVote(channelId: ChannelID, messageId: MessageID, userId: UserID, answerId: number): Promise<void> {
+		const votes: MessagePollVoteRow = {
+			channel_id: channelId,
+			bucket: BucketUtils.makeBucket(messageId),
+			message_id: messageId,
+			user_id: userId,
+			answer_id: answerId,
+		};
+		await upsertOne(MessagePollVotes.upsertAll(votes));
+	}
+
+	async removeVote(channelId: ChannelID, messageId: MessageID, userId: UserID, answerId: number): Promise<void> {
+		const bucket = BucketUtils.makeBucket(messageId);
+		const voteData: MessagePollVoteRow = {
+			channel_id: channelId,
+			bucket,
+			message_id: messageId,
+			user_id: userId,
+			answer_id: answerId,
+		};
+		await deleteOneOrMany(MessagePollVotes.deleteByPk(voteData));
+	}
+
+	async removeAllVotes(channelId: ChannelID, messageId: MessageID): Promise<void> {
+		const bucket = BucketUtils.makeBucket(messageId);
+		await deleteOneOrMany(
+			MessagePollVotes.delete({
+				where: [
+					MessagePollVotes.where.eq('channel_id'),
+					MessagePollVotes.where.eq('bucket'),
+					MessagePollVotes.where.eq('message_id'),
+				],
+			}).bind({
+				channel_id: channelId,
+				bucket,
+				message_id: messageId,
+			}),
+		);
+	}
+
+	async removeAllVotesBulk(channelId: ChannelID, messageIds: Array<MessageID>): Promise<void> {
+		const batch = new BatchBuilder();
+		for (const messageId of messageIds) {
+			const bucket = BucketUtils.makeBucket(messageId);
+			batch.addPrepared(
+				MessagePollVotes.delete({
+					where: [
+						MessagePollVotes.where.eq('channel_id'),
+						MessagePollVotes.where.eq('bucket'),
+						MessagePollVotes.where.eq('message_id'),
+					],
+				}).bind({
+					channel_id: channelId,
+					bucket,
+					message_id: messageId,
+				}),
+			);
+		}
+		await batch.execute();
 	}
 
 	async removeAllReactions(channelId: ChannelID, messageId: MessageID): Promise<void> {

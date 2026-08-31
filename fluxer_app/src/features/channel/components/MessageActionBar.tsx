@@ -263,7 +263,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		const showFullActions = shouldListenForShift && shiftPressed;
 		const {canSendMessages, canAddReactions, canEditMessage, canDeleteMessage, canPinMessage, canForwardMessage} =
 			permissions;
-		const showsEditInTail = message.isUserMessage() && !message.messageSnapshots && canEditMessage;
+		const showsEditInTail = message.isUserMessage() && !message.messageSnapshots && canEditMessage && !message.poll;
 		const supportsInteractiveActions = useMemo(() => !isClientSystemMessage(message), [message]);
 		const handlers = useMemo(
 			() => createMessageActionHandlers(message, {i18n, channel: permissions.channel}),
@@ -603,7 +603,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.reply"
 									/>
 								)}
-								{message.isUserMessage() && supportsInteractiveActions && canForwardMessage && (
+								{message.isUserMessage() && supportsInteractiveActions && !message.poll && canForwardMessage && (
 									<MessageActionBarButton
 										icon={
 											<ForwardIcon

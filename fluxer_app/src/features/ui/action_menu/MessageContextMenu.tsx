@@ -499,6 +499,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 		const bookmarkMessageItem = itemById.get(ids.bookmarkMessage);
 		const markUnreadItem = itemById.get(ids.markUnread);
 		const copyMessageLinkItem = itemById.get(ids.copyMessageLink);
+		const endPollNowItem = itemById.get(ids.endPollNow);
 		const speakMessageItem = itemById.get(ids.speakMessage);
 		const suppressEmbedsItem = itemById.get(ids.suppressEmbeds);
 		const deleteItem = itemById.get(ids.deleteMessage);
@@ -592,7 +593,9 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 				bookmarkMessageItem ||
 				markUnreadItem ||
 				copyMessageLinkItem ||
-				speakMessageItem;
+				speakMessageItem ||
+				suppressEmbedsItem ||
+				endPollNowItem;
 			if (!hasAny) return null;
 			return (
 				<MenuGroup data-flx="ui.action-menu.message-context-menu.render-utility-group.menu-group">
@@ -603,6 +606,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					{copyMessageLinkItem && renderDataMenuItem(copyMessageLinkItem, 'copy-message-link')}
 					{speakMessageItem && renderDataMenuItem(speakMessageItem, 'speak-message')}
 					{suppressEmbedsItem && renderDataMenuItem(suppressEmbedsItem, 'suppress-embeds')}
+					{endPollNowItem && renderDataMenuItem(endPollNowItem, 'end-poll-now')}
 				</MenuGroup>
 			);
 		};

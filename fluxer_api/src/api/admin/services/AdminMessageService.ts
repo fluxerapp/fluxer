@@ -322,6 +322,7 @@ export class AdminMessageService {
 			content: message.content ?? '',
 			timestamp: message.timestamp,
 			user_prior_ncmec_report_ids: priorReports.get(message.author.id) ?? [],
+			poll: message.poll,
 			attachments:
 				message.attachments?.map((attachment) => ({
 					id: attachment.id,

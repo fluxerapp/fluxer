@@ -194,6 +194,8 @@ pub struct Message {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub embeds: Option<Vec<MessageEmbed>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll: Option<MessagePoll>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sticker_items: Option<Vec<MessageStickerItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_reference: Option<MessageReference>,
@@ -455,6 +457,8 @@ pub struct ApiMessageResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub users: Option<Vec<ApiUserPartialResponse>>,
     pub embeds: Vec<ApiMessageEmbedResponse>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll: Option<MessagePoll>,
     pub attachments: Vec<ApiMessageAttachmentResponse>,
     pub stickers: Vec<ApiMessageStickerResponse>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -616,6 +620,48 @@ pub struct MessageEmbed {
     pub html: Option<String>,
     pub html_width: Option<i32>,
     pub html_height: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollEmoji {
+    pub id: Option<String>,
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollMedia {
+    pub emoji: Option<MessagePollEmoji>,
+    pub text: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollAnswer {
+    pub answer_id: Option<i32>,
+    pub poll_media: Option<MessagePollMedia>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollAnswerCount {
+    pub id: Option<i32>,
+    pub count: Option<i32>,
+    pub me_voted: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollResults {
+    pub answer_counts: Option<Vec<MessagePollAnswerCount>>,
+    pub is_finalized: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePoll {
+    pub question: Option<MessagePollMedia>,
+    pub answers: Option<Vec<MessagePollAnswer>>,
+    pub expiry: Option<String>,
+    pub anonymous_voting: Option<bool>,
+    pub allow_multiselect: Option<bool>,
+    pub layout_type: Option<i32>,
+    pub results: Option<MessagePollResults>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

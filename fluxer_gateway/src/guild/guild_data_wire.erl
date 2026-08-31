@@ -141,6 +141,7 @@ is_opaque_id_key(<<"device_id">>) -> true;
 is_opaque_id_key(<<"region_id">>) -> true;
 is_opaque_id_key(<<"server_id">>) -> true;
 is_opaque_id_key(<<"target_id">>) -> true;
+is_opaque_id_key(<<"answer_id">>) -> true;
 is_opaque_id_key(_) -> false.
 
 -spec is_snowflake_list_key(binary(), term()) -> boolean().

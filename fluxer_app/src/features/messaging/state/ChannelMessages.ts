@@ -16,6 +16,7 @@ import {
 } from '@fluxer/constants/src/LimitConstants';
 import type {MessageId} from '@fluxer/schema/src/branded/WireIds';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import PollVotes from './PollVotes';
 
 const IS_MOBILE_CLIENT = /Mobi|Android/i.test(navigator.userAgent);
 
@@ -124,6 +125,11 @@ function hydrateMessage(
 		MessageReactions.hydrateMessageReactions(wire.id, wire.reactions);
 	} else if (missingReactions === 'empty') {
 		MessageReactions.hydrateMessageReactions(wire.id, []);
+	}
+	if ('poll' in wire) {
+		PollVotes.hydrateMessagePollVotes(wire.id, wire.poll?.results?.answer_counts);
+	} else if (missingReactions === 'empty') {
+		PollVotes.hydrateMessagePollVotes(wire.id, []);
 	}
 	const current = channelMessages.get(wire.id);
 	if (!current || channelMessages.cached || shouldUseIncoming(current, raw)) {

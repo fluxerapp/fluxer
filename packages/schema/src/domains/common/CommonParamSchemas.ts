@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createStringType, Int64Type, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 export const GuildIdParam = z.object({
@@ -101,6 +101,14 @@ export const ChannelIdMessageIdAttachmentIdParam = z.object({
 });
 
 export type ChannelIdMessageIdAttachmentIdParam = z.infer<typeof ChannelIdMessageIdAttachmentIdParam>;
+
+export const ChannelIdMessageIdAnswerIdParam = z.object({
+	channel_id: SnowflakeType.describe('The ID of the channel'),
+	message_id: SnowflakeType.describe('The ID of the message'),
+	answer_id: Int64Type.describe('The ID of the answer.'),
+});
+
+export type ChannelIdMessageIdAnswerIdParam = z.infer<typeof ChannelIdMessageIdAnswerIdParam>;
 
 export const WebhookIdTokenParam = z.object({
 	webhook_id: SnowflakeType.describe('The ID of the webhook'),

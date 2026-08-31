@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, GuildID, MemeID, PasswordResetToken, UserID} from './BrandedTypes';
+import type {AttachmentID, ChannelID, GuildID, MemeID, MessageID, PasswordResetToken, UserID} from './BrandedTypes';
 import {defineTable} from './database/CassandraTableDsl';
 import {
 	ADMIN_ARCHIVE_COLUMNS,
@@ -245,6 +245,7 @@ import {
 	VISIONARY_SLOT_COLUMNS,
 	type VisionarySlotRow,
 } from './database/types/PaymentTypes';
+import {MESSAGE_POLL_VOTES_COLUMNS, type MessagePollVoteRow} from './database/types/PollTypes';
 import {
 	DSA_REPORT_EMAIL_VERIFICATION_COLUMNS,
 	DSA_REPORT_TICKET_COLUMNS,
@@ -625,6 +626,33 @@ export const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
 	columns: READ_STATE_COLUMNS,
 	primaryKey: ['user_id', 'channel_id'],
 });
+
+export interface PollMessageExpiryRow {
+	expiry_bucket: number;
+	expires_at: Date;
+	channel_id: ChannelID;
+	message_id: MessageID;
+}
+
+const POLL_MESSAGE_EXPIRY_COLUMNS = [
+	'expiry_bucket',
+	'expires_at',
+	'channel_id',
+	'message_id',
+] as const satisfies ReadonlyArray<keyof PollMessageExpiryRow>;
+export const PollMessageById = defineTable<PollMessageExpiryRow, 'message_id'>({
+	name: 'poll_message_by_id',
+	columns: POLL_MESSAGE_EXPIRY_COLUMNS,
+	primaryKey: ['message_id'],
+	partitionKey: ['message_id'],
+});
+export const PollMessageExpiry = defineTable<PollMessageExpiryRow, 'expiry_bucket' | 'expires_at' | 'message_id'>({
+	name: 'poll_message_expiry',
+	columns: POLL_MESSAGE_EXPIRY_COLUMNS,
+	primaryKey: ['expiry_bucket', 'expires_at', 'message_id'],
+	partitionKey: ['expiry_bucket'],
+});
+
 export const Messages = defineTable<MessageRow, 'channel_id' | 'bucket' | 'message_id', 'channel_id' | 'bucket'>({
 	name: 'messages',
 	columns: MESSAGE_COLUMNS,
@@ -644,6 +672,16 @@ export const MessageReactions = defineTable<
 	name: 'message_reactions',
 	columns: MESSAGE_REACTION_COLUMNS,
 	primaryKey: ['channel_id', 'bucket', 'message_id', 'emoji_id', 'emoji_name', 'user_id'],
+	partitionKey: ['channel_id', 'bucket'],
+});
+export const MessagePollVotes = defineTable<
+	MessagePollVoteRow,
+	'channel_id' | 'bucket' | 'message_id' | 'answer_id' | 'user_id',
+	'channel_id' | 'bucket'
+>({
+	name: 'message_poll_votes',
+	columns: MESSAGE_POLL_VOTES_COLUMNS,
+	primaryKey: ['channel_id', 'bucket', 'message_id', 'answer_id', 'user_id'],
 	partitionKey: ['channel_id', 'bucket'],
 });
 export const AttachmentLookup = defineTable<AttachmentLookupRow, 'channel_id' | 'attachment_id' | 'filename'>({
@@ -964,12 +1002,12 @@ export const EmailChangeTokens = defineTable<EmailChangeTokenRow, 'token_'>({
 	primaryKey: ['token_'],
 });
 
-interface AttachmentDecayByExpiryRow {
+export interface AttachmentDecayByExpiryRow {
 	expiry_bucket: number;
 	expires_at: Date;
 	attachment_id: AttachmentID;
 	channel_id: ChannelID;
-	message_id: bigint;
+	message_id: MessageID;
 }
 
 const ATTACHMENT_DECAY_BY_EXPIRY_COLUMNS = [

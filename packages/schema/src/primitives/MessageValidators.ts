@@ -17,6 +17,7 @@ export const MessageTypeSchema = withOpenApiType(
 	createInt32EnumType(
 		[
 			[MessageTypes.DEFAULT, 'DEFAULT', 'A regular message'],
+			[MessageTypes.POLL_RESULT, 'POLL_RESULT', "A system message indicating a poll has closed"],
 			[MessageTypes.RECIPIENT_ADD, 'RECIPIENT_ADD', 'A system message indicating a user was added to the conversation'],
 			[
 				MessageTypes.RECIPIENT_REMOVE,

@@ -66,6 +66,7 @@ import type {
 	MessageStickerItem,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageCreatePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -295,6 +296,7 @@ interface SendMessageParams {
 	flags?: number;
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
+	poll?: MessageCreatePoll;
 	tts?: boolean;
 }
 
@@ -538,6 +540,7 @@ export async function send(channelId: string, params: SendMessageParams): Promis
 		flags: params.flags,
 		favoriteMemeId: params.favoriteMemeId,
 		stickers: params.stickers,
+		poll: params.poll,
 		tts: params.tts,
 	};
 	if (params.hasAttachments) {

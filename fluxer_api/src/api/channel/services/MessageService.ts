@@ -18,6 +18,8 @@ import type {IUserRepository} from '../../user/IUserRepository';
 import type {DirectMessageSpamMitigationService} from '../../user/services/DirectMessageSpamMitigationService';
 import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
 import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
+import {PollMessageExpiryRepository} from '../repositories/PollMessageExpiryRepository';
+import type {MessageReactionService} from './interaction/MessageReactionService';
 import type {AttachmentUploadTraceRepository} from '../repositories/message/AttachmentUploadTraceRepository';
 import {MessageAnonymizationService} from './message/MessageAnonymizationService';
 import {MessageChannelAuthService} from './message/MessageChannelAuthService';
@@ -27,6 +29,7 @@ import {MessageEditService} from './message/MessageEditService';
 import {MessageMentionService} from './message/MessageMentionService';
 import {MessageOperationsHelpers} from './message/MessageOperationsHelpers';
 import type {MessagePersistenceService} from './message/MessagePersistenceService';
+import {MessagePollService} from './message/MessagePollService';
 import {MessageProcessingService} from './message/MessageProcessingService';
 import {createMessageResponseDataService} from './message/MessageResponseDataService';
 import {MessageRetrievalService} from './message/MessageRetrievalService';
@@ -46,6 +49,7 @@ export class MessageService {
 	public readonly system: MessageSystemService;
 	public readonly send: MessageSendService;
 	public readonly edit: MessageEditService;
+	public readonly poll: MessagePollService;
 	public readonly deletion: MessageDeleteService;
 	public readonly retrieval: MessageRetrievalService;
 	public readonly anonymization: MessageAnonymizationService;
@@ -70,6 +74,7 @@ export class MessageService {
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
 		directMessageSpamMitigationService: DirectMessageSpamMitigationService,
+		messageReactionService: MessageReactionService,
 	) {
 		this.validation = new MessageValidationService(cacheService, limitConfigService);
 		this.mention = new MessageMentionService(
@@ -111,7 +116,9 @@ export class MessageService {
 			snowflakeService,
 			favoriteMemeRepository,
 		});
+		const pollMessageExpiryRepository = new PollMessageExpiryRepository();
 		this.send = new MessageSendService({
+			guildRepository,
 			channelRepository,
 			userRepository,
 			storageService,
@@ -127,6 +134,7 @@ export class MessageService {
 			processingService: this.processing,
 			dispatchService: this.dispatch,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
+			pollMessageExpiryRepository,
 			attachmentUploadTraceRepository,
 			operationsHelpers,
 			limitConfigService,
@@ -145,6 +153,16 @@ export class MessageService {
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			mentionService: this.mention,
 		});
+		this.poll = new MessagePollService({
+			channelAuthService: this.channelAuth,
+			channelRepository,
+			userRepository,
+			dispatchService: this.dispatch,
+			pollExpiryRepository: pollMessageExpiryRepository,
+			messageReactionService,
+			messageSendService: this.send,
+			limitConfigService,
+		});
 		this.deletion = new MessageDeleteService({
 			channelRepository,
 			storageService,
@@ -153,6 +171,7 @@ export class MessageService {
 			channelAuthService: this.channelAuth,
 			dispatchService: this.dispatch,
 			searchService: this.search,
+			pollService: this.poll,
 			gatewayService,
 			guildAuditLogService,
 		});

@@ -342,6 +342,35 @@ export function MessageController(app: HonoApp) {
 			return ctx.body(null, 204);
 		},
 	);
+	app.post(
+		'/channels/:channel_id/polls/:message_id/expire',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_UPDATE),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'end_poll',
+			summary: 'End poll immediately',
+			description: 'End the poll immediately. You cannot end polls from other users.',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Channels', 'Messages'],
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const channelId = createChannelID(channel_id);
+			const messageId = createMessageID(message_id);
+			const requestCache = ctx.get('requestCache');
+			await ctx.get('channelService').messages.poll.endPoll({
+				userId,
+				channelId,
+				messageId,
+				requestCache,
+			});
+			return ctx.body(null, 204);
+		},
+	);
 	app.delete(
 		'/channels/:channel_id/messages/:message_id',
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_DELETE),

@@ -22,6 +22,7 @@ use crate::{
             section_card::section_card,
         },
         layout::admin_layout,
+        pages::messages_page::poll_from_value,
     },
     utils::timestamps::format_admin_timestamp,
 };
@@ -596,6 +597,7 @@ fn message_from_value(value: &Value) -> Message {
             .and_then(Value::as_str)
             .map(ToOwned::to_owned),
         guild_nsfw: value.get("guild_nsfw").and_then(Value::as_bool),
+        poll: value.get("poll").map(poll_from_value),
         attachments,
     }
 }

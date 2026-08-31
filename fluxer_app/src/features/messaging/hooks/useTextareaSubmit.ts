@@ -38,6 +38,7 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import type React from 'react';
@@ -76,7 +77,7 @@ interface UseTextareaSubmitOptions {
 	handleSendMessage: (
 		content: string,
 		hasAttachments: boolean,
-		stickersOrTts?: Array<MessageStickerItem> | boolean,
+		stickersOrTtsOrPoll?: Array<MessageStickerItem> | MessagePoll | boolean,
 		favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 		maybeFavoriteMemeId?: string,
 	) => boolean;

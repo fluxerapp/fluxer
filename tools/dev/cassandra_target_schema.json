@@ -147,6 +147,10 @@
 					"type": "frozen<list<message_embed>>"
 				},
 				{
+					"name": "poll",
+					"type": "frozen<message_poll>"
+				},
+				{
 					"name": "sticker_items",
 					"type": "frozen<list<message_sticker_item>>"
 				}
@@ -490,6 +494,104 @@
 			]
 		},
 		{
+			"name": "message_poll",
+			"fields": [
+				{
+					"name": "question",
+					"type": "frozen<message_poll_media>"
+				},
+				{
+					"name": "answers",
+					"type": "frozen<list<message_poll_answer>>"
+				},
+				{
+					"name": "expiry",
+					"type": "timestamp"
+				},
+				{
+					"name": "allow_multiselect",
+					"type": "boolean"
+				},
+				{
+					"name": "layout_type",
+					"type": "int"
+				},
+				{
+					"name": "results",
+					"type": "frozen<message_poll_results>"
+				}
+			]
+		},
+		{
+			"name": "message_poll_media",
+			"fields": [
+				{
+					"name": "emoji",
+					"type": "frozen<message_poll_emoji>"
+				},
+				{
+					"name": "text",
+					"type": "text"
+				}
+			]
+		},
+		{
+			"name": "message_poll_emoji",
+			"fields": [
+				{
+					"name": "id",
+					"type": "text"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				}
+			]
+		},
+		{
+			"name": "message_poll_answer",
+			"fields": [
+				{
+					"name": "answer_id",
+					"type": "int"
+				},
+				{
+					"name": "poll_media",
+					"type": "frozen<message_poll_media>"
+				}
+			]
+		},
+		{
+			"name": "message_poll_answer_count",
+			"fields": [
+				{
+					"name": "id",
+					"type": "int"
+				},
+				{
+					"name": "count",
+					"type": "int"
+				},
+				{
+					"name": "me_voted",
+					"type": "boolean"
+				}
+			]
+		},
+		{
+			"name": "message_poll_results",
+			"fields": [
+				{
+					"name": "answer_counts",
+					"type": "frozen<list<message_poll_answer_count>>"
+				},
+				{
+					"name": "is_finalized",
+					"type": "boolean"
+				}
+			]
+		},
+		{
 			"name": "message_reference",
 			"fields": [
 				{
@@ -544,6 +646,10 @@
 				{
 					"name": "embeds",
 					"type": "frozen<list<message_embed>>"
+				},
+				{
+					"name": "poll",
+					"type": "frozen<message_poll>"
 				},
 				{
 					"name": "sticker_items",
@@ -6409,6 +6515,33 @@
 			"options": ""
 		},
 		{
+			"name": "message_poll_votes",
+			"columns": [
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "bucket",
+					"type": "int"
+				},
+				{
+					"name": "message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "answer_id",
+					"type": "int"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((bucket, channel_id), message_id, user_id, answer_id)",
+			"options": ""
+		},
+		{
 			"name": "message_reactions",
 			"columns": [
 				{
@@ -6548,6 +6681,10 @@
 				{
 					"name": "embeds",
 					"type": "frozen<list<message_embed>>"
+				},
+				{
+					"name": "poll",
+					"type": "frozen<message_poll>"
 				},
 				{
 					"name": "sticker_items",
@@ -7285,6 +7422,52 @@
 				}
 			],
 			"primary_key": "((user_id), channel_id)",
+			"options": ""
+		},
+		{
+			"name": "poll_message_by_id",
+			"columns": [
+				{
+					"name": "expiry_bucket",
+					"type": "int"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((message_id))",
+			"options": ""
+		},
+		{
+			"name": "poll_message_expiry",
+			"columns": [
+				{
+					"name": "expiry_bucket",
+					"type": "int"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((expiry_bucket), expires_at, message_id)",
 			"options": ""
 		},
 		{

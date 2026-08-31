@@ -9,6 +9,7 @@ import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import PollVotes from '../state/PollVotes';
 
 interface ReactionEmojiPayload {
 	id?: string | null;
@@ -19,6 +20,7 @@ interface ReactionEntry {
 	user_id: string;
 	emoji: ReactionEmojiPayload;
 	member?: GuildMemberData;
+	reaction_type?: number;
 }
 
 interface MessageReactionAddManyPayload {
@@ -39,7 +41,8 @@ export function handleMessageReactionAddMany(
 				GuildMembers.hydrateIfMissing(data.guild_id, reaction.member);
 			}
 			SavedMessages.handleMessageReactionAdd(data.message_id);
-			MessageReactions.handleReactionAdd(data.message_id, reaction.user_id, emoji);
+			if ((reaction.reaction_type ?? 0) === 2) PollVotes.handlePollVoteAdd(data.message_id, reaction.user_id, Number(emoji.id));
+			else MessageReactions.handleReactionAdd(data.message_id, reaction.user_id, emoji);
 			ChannelPins.handleMessageReactionAdd(data.channel_id, data.message_id);
 			MentionFeed.handleMessageReactionAdd(data.message_id);
 			Messages.handleReaction({

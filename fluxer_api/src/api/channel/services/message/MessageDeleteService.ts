@@ -28,6 +28,7 @@ import type {MessageDispatchService} from './MessageDispatchService';
 import {isOperationDisabled, purgeMessageAttachments} from './MessageHelpers';
 import type {MessageSearchService} from './MessageSearchService';
 import type {MessageValidationService} from './MessageValidationService';
+import type { MessagePollService } from './MessagePollService';
 
 interface MessageDeleteServiceDeps {
 	channelRepository: IChannelRepositoryAggregate;
@@ -37,6 +38,7 @@ interface MessageDeleteServiceDeps {
 	channelAuthService: MessageChannelAuthService;
 	dispatchService: MessageDispatchService;
 	searchService: MessageSearchService;
+	pollService: MessagePollService;
 	gatewayService: IGatewayService;
 	guildAuditLogService: GuildAuditLogService;
 }
@@ -101,6 +103,7 @@ export class MessageDeleteService {
 				.commit();
 		}
 		await this.deps.searchService.deleteMessageIndex(messageId);
+		await this.deps.pollService.removeAllVotes(channelId, messageId);
 	}
 
 	async deleteWebhookMessage({

@@ -736,6 +736,7 @@ class Messages {
 		emoji: ReactionEmoji;
 		optimistic?: boolean;
 		skipReactionStore?: boolean;
+		reactionType?: number;
 	}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
@@ -743,12 +744,15 @@ class Messages {
 		const isCurrentUser = currentUser?.id === action.userId;
 		if (action.optimistic && !isCurrentUser) return false;
 		const updated = existing.update(action.messageId, (message) => {
-			if (action.skipReactionStore) {
-				return message.withUpdates({});
+			const add = action.type === 'MESSAGE_REACTION_ADD';
+			if (action.reactionType === 2) {
+				return message.withPollVote(Number(action.emoji.id), add, isCurrentUser);
+			} else {
+				if (action.skipReactionStore) {
+					return message.withUpdates({});
+				}
+				return message.withReaction(action.emoji, add, isCurrentUser);
 			}
-			return action.type === 'MESSAGE_REACTION_ADD'
-				? message.withReaction(action.emoji, true, isCurrentUser)
-				: message.withReaction(action.emoji, false, isCurrentUser);
 		});
 		this.commitMessages(updated);
 		this.notifyChange();
@@ -770,6 +774,28 @@ class Messages {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
 		const updated = existing.update(action.messageId, (message) => message.withoutReactionEmoji(action.emoji));
+		this.commitMessages(updated);
+		this.notifyChange();
+		return true;
+	}
+
+	@action
+	handlePollVote(action: {
+		type: 'MESSAGE_POLE_VOTE_ADD' | 'MESSAGE_POLE_VOTE_REMOVE';
+		channelId: string;
+		messageId: string;
+		userId: string;
+		answerId: number;
+		optimistic?: boolean;
+	}): boolean {
+		const existing = ChannelMessages.get(action.channelId);
+		if (!existing) return false;
+		const currentUser = Users.getCurrentUser();
+		const isCurrentUser = currentUser?.id === action.userId;
+		if (action.optimistic && !isCurrentUser) return false;
+		const updated = existing.update(action.messageId, (message) => {
+			return message.withPollVote(action.answerId, action.type === 'MESSAGE_POLE_VOTE_ADD', isCurrentUser);
+		});
 		this.commitMessages(updated);
 		this.notifyChange();
 		return true;

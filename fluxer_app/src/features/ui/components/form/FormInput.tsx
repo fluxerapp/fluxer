@@ -43,9 +43,9 @@ type FieldSetProps = Omit<React.HTMLProps<HTMLFieldSetElement>, 'label'> & {
 	htmlFor?: string;
 };
 
-const FieldSet = React.forwardRef<HTMLFieldSetElement, FieldSetProps>(
-	({label, labelRight, children, error, errorId, footer, htmlFor}, ref) => (
-		<fieldset ref={ref} className={styles.fieldset} data-flx="ui.form.input.field-set.fieldset">
+export const FieldSet = React.forwardRef<HTMLFieldSetElement, FieldSetProps>(
+	({label, labelRight, children, error, errorId, footer, htmlFor, className}, ref) => (
+		<fieldset ref={ref} className={clsx(styles.fieldset, className)} data-flx="ui.form.input.field-set.fieldset">
 			{label && (
 				<div className={styles.labelContainer} data-flx="ui.form.input.field-set.label-container">
 					<label htmlFor={htmlFor} className={styles.label} data-flx="ui.form.input.field-set.label">

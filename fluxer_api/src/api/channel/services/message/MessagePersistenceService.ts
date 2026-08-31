@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import type {MessagePoll} from '@app/api/database/types/PollTypes';
 import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -88,6 +89,7 @@ interface CreateMessageParams {
 	attachmentUploadUserId?: UserID;
 	processedAttachments?: Array<MessageAttachment>;
 	stickerIds?: Array<StickerID>;
+	poll?: MessagePoll;
 	messageReference?: MessageReference;
 	messageSnapshots?: Array<MessageSnapshot>;
 	guildId: GuildID | null;
@@ -243,6 +245,7 @@ export class MessagePersistenceService {
 			mention_channels: mentionData.mentionChannelIds.length > 0 ? new Set(mentionData.mentionChannelIds) : null,
 			attachments: messageAttachments.length > 0 ? messageAttachments : null,
 			embeds: allowEmbeds ? initialEmbeds : null,
+			poll: params.poll || null,
 			sticker_items: processedStickers.length > 0 ? processedStickers : null,
 			message_reference: params.messageReference || null,
 			message_snapshots:

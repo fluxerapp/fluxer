@@ -78,6 +78,7 @@ function makeMessage(): Message {
 		mention_channels: null,
 		attachments: null,
 		embeds: null,
+		poll: null,
 		sticker_items: null,
 		message_reference: null,
 		message_snapshots: null,
