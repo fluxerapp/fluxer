@@ -251,10 +251,7 @@ impl AppProxyConfig {
             postgres_ssl_ca: cfg::non_empty_env("FLUXER_POSTGRES_SSL_CA"),
             postgres_max_connections,
             postgres_kv_table: cfg::read_env("FLUXER_POSTGRES_KV_TABLE", "fluxer_kv"),
-            postgres_prepared_statements: cfg::read_bool_env(
-                &["FLUXER_POSTGRES_PREPARED_STATEMENTS"],
-                true,
-            ),
+            postgres_prepared_statements: resolve_postgres_prepared_statements_from_env(),
         }
     }
 }
@@ -274,6 +271,10 @@ fn resolve_time_freeze_enabled_from_env() -> bool {
     resolve_time_freeze_enabled(|name| env::var(name).ok())
 }
 
+fn resolve_postgres_prepared_statements_from_env() -> bool {
+    resolve_postgres_prepared_statements(|name| env::var(name).ok())
+}
+
 fn resolve_time_freeze_enabled<F>(mut read_var: F) -> bool
 where
     F: FnMut(&str) -> Option<String>,
@@ -290,6 +291,31 @@ fn parse_boolish(value: &str) -> bool {
         value.trim().to_ascii_lowercase().as_str(),
         "1" | "true" | "yes" | "on"
     )
+}
+
+fn resolve_postgres_prepared_statements<F>(mut read_var: F) -> bool
+where
+    F: FnMut(&str) -> Option<String>,
+{
+    let Some(value) = read_var("FLUXER_POSTGRES_PREPARED_STATEMENTS")
+        .map(|value| value.trim().to_ascii_lowercase())
+        .filter(|value| !value.is_empty())
+    else {
+        return true;
+    };
+
+    match value.as_str() {
+        "1" | "true" | "yes" | "y" | "on" => true,
+        "0" | "false" | "no" | "n" | "off" => false,
+        other => {
+            tracing::warn!(
+                env = "FLUXER_POSTGRES_PREPARED_STATEMENTS",
+                value = other,
+                "invalid value; falling back to default"
+            );
+            true
+        }
+    }
 }
 
 fn resolve_discovery_upstream_url<F>(mut read_var: F) -> String
@@ -340,6 +366,11 @@ mod tests {
     fn resolve_time_freeze_from_pairs(pairs: &[(&str, &str)]) -> bool {
         let env: HashMap<&str, &str> = pairs.iter().copied().collect();
         resolve_time_freeze_enabled(|name| env.get(name).map(|value| value.to_string()))
+    }
+
+    fn resolve_prepared_statements_from_pairs(pairs: &[(&str, &str)]) -> bool {
+        let env: HashMap<&str, &str> = pairs.iter().copied().collect();
+        resolve_postgres_prepared_statements(|name| env.get(name).map(|value| value.to_string()))
     }
 
     #[test]
@@ -427,6 +458,43 @@ mod tests {
             resolve_discovery_from_pairs(&[("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api")]),
             DEFAULT_DISCOVERY_UPSTREAM_URL
         );
+    }
+
+    #[test]
+    fn a_set_but_empty_prepared_statements_value_keeps_the_shared_default() {
+        assert!(resolve_prepared_statements_from_pairs(&[]));
+        assert!(
+            resolve_prepared_statements_from_pairs(&[("FLUXER_POSTGRES_PREPARED_STATEMENTS", "")]),
+            "an empty value disabled named statements here while every other service kept them"
+        );
+        assert!(resolve_prepared_statements_from_pairs(&[(
+            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
+            "   ",
+        )]));
+    }
+
+    #[test]
+    fn an_explicit_prepared_statements_value_is_honoured() {
+        assert!(!resolve_prepared_statements_from_pairs(&[(
+            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
+            "false",
+        )]));
+        assert!(!resolve_prepared_statements_from_pairs(&[(
+            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
+            "OFF",
+        )]));
+        assert!(resolve_prepared_statements_from_pairs(&[(
+            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
+            "yes",
+        )]));
+    }
+
+    #[test]
+    fn a_non_boolean_prepared_statements_value_keeps_the_shared_default() {
+        assert!(resolve_prepared_statements_from_pairs(&[(
+            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
+            "maybe",
+        )]));
     }
 
     #[test]
