@@ -195,13 +195,44 @@ finalize_dispatch(Event, Data, State) ->
 do_handle_dispatch_pre_encoded(Event, {pre_encoded, EncodedData} = Data, State) ->
     Seq = maps:get(seq, State),
     NewSeq = Seq + 1,
+    BufferedState = buffer_pre_encoded_event(Event, Data, NewSeq, State),
     send_to_socket(maps:get(socket_pid, State, undefined), Event, Data, NewSeq),
     StateAfterMain =
         case needs_state_update(Event) of
-            true -> apply_pre_encoded_state_update(Event, EncodedData, State, NewSeq);
-            false -> State#{seq => NewSeq}
+            true -> apply_pre_encoded_state_update(Event, EncodedData, BufferedState, NewSeq);
+            false -> BufferedState#{seq => NewSeq}
         end,
     {noreply, StateAfterMain}.
+
+-spec buffer_pre_encoded_event(
+    event(), {pre_encoded, binary()}, non_neg_integer(), session_state()
+) ->
+    session_state().
+buffer_pre_encoded_event(Event, Data, NewSeq, State) ->
+    case should_buffer_pre_encoded(Event) of
+        false ->
+            State;
+        true ->
+            Request = #{event => Event, data => Data, seq => NewSeq},
+            RequestBytes = buffer_entry_bytes(Request),
+            case is_oversized_event(RequestBytes) of
+                true ->
+                    State;
+                false ->
+                    Buffer = maps:get(buffer, State),
+                    Deque =
+                        case is_list(Buffer) of
+                            true ->
+                                limited_deque:from_list(
+                                    Buffer, ?MAX_EVENT_BUFFER_SIZE, ?MAX_TOTAL_BUFFER_BYTES
+                                );
+                            false ->
+                                Buffer
+                        end,
+                    NewBuffer = limited_deque:push(Request, RequestBytes, Deque),
+                    State#{buffer => NewBuffer, buffer_bytes => limited_deque:bytes(NewBuffer)}
+            end
+    end.
 
 -spec apply_pre_encoded_state_update(event(), binary(), session_state(), non_neg_integer()) ->
     session_state().
@@ -231,6 +262,10 @@ needs_state_update(_) -> false.
 -spec is_oversized_event(non_neg_integer()) -> boolean().
 is_oversized_event(RequestBytes) ->
     RequestBytes > ?MAX_SINGLE_EVENT_BUFFER_BYTES.
+
+-spec should_buffer_pre_encoded(event()) -> boolean().
+should_buffer_pre_encoded(Event) ->
+    event_name(Event) =:= <<"VOICE_STATE_UPDATE">>.
 
 -spec should_skip_replay_buffer(event()) -> boolean().
 should_skip_replay_buffer(Event) ->

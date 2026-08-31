@@ -138,6 +138,24 @@ pre_encoded_not_buffered_test() ->
     ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))),
     ?assertEqual(1, maps:get(seq, State1)).
 
+pre_encoded_voice_state_is_buffered_for_replay_test() ->
+    State0 = base_state(#{}),
+    Data = {pre_encoded, <<"{\"user_id\":\"1\",\"channel_id\":\"2\"}">>},
+    {noreply, State1} = session_dispatch:handle_dispatch(voice_state_update, Data, State0),
+    ?assertEqual(1, limited_deque:size(maps:get(buffer, State1))),
+    [Entry] = limited_deque:to_list(maps:get(buffer, State1)),
+    ?assertEqual(voice_state_update, maps:get(event, Entry)),
+    ?assertEqual(Data, maps:get(data, Entry)),
+    ?assertEqual(1, maps:get(seq, Entry)).
+
+pre_encoded_member_list_stays_out_of_replay_test() ->
+    State0 = base_state(#{}),
+    Data = {pre_encoded, <<"[{\"test\":true}]">>},
+    {noreply, State1} = session_dispatch:handle_dispatch(
+        guild_member_list_update, Data, State0
+    ),
+    ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
+
 pre_encoded_increments_seq_test() ->
     State0 = base_state(#{seq => 10}),
     Data = {pre_encoded, <<"[{\"test\":true}]">>},
