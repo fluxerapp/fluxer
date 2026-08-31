@@ -17,7 +17,9 @@ execute_method(<<"push.invalidate_badge_counts">>, P) ->
 execute_method(<<"push.clear_channel_notifications">>, P) ->
     do_clear_channel_notifications(P);
 execute_method(<<"push.invalidate_subscriptions">>, P) ->
-    do_invalidate_subscriptions(P).
+    do_invalidate_subscriptions(P);
+execute_method(Method, _Params) ->
+    gateway_rpc_error:raise(<<"Unknown method: ", Method/binary>>).
 
 -spec do_sync_user_guild_settings(map()) -> true.
 do_sync_user_guild_settings(#{

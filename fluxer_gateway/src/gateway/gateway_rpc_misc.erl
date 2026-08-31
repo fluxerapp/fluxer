@@ -33,7 +33,9 @@ execute_method(<<"process.voice_state_counts">>, _Params) ->
     gateway_rpc_misc_presence:collect_and_aggregate_voice_state_counts(ActiveNodes);
 execute_method(<<"process.active_voice_rooms">>, _Params) ->
     ActiveNodes = gateway_node_router:active_nodes(),
-    gateway_rpc_misc_push:collect_and_aggregate_active_voice_rooms(ActiveNodes).
+    gateway_rpc_misc_push:collect_and_aggregate_active_voice_rooms(ActiveNodes);
+execute_method(Method, _Params) ->
+    gateway_rpc_error:raise(<<"Unknown method: ", Method/binary>>).
 
 -spec get_local_node_id() -> binary().
 get_local_node_id() ->

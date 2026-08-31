@@ -20,7 +20,9 @@ execute_method(<<"presence.terminate_all_sessions">>, P) -> handle_terminate_all
 execute_method(<<"presence.has_active">>, P) -> handle_has_active(P);
 execute_method(<<"presence.add_temporary_guild">>, P) -> handle_add_temp_guild(P);
 execute_method(<<"presence.remove_temporary_guild">>, P) -> handle_remove_temp_guild(P);
-execute_method(<<"presence.sync_group_dm_recipients">>, P) -> handle_sync_dm_recipients(P).
+execute_method(<<"presence.sync_group_dm_recipients">>, P) -> handle_sync_dm_recipients(P);
+execute_method(Method, _Params) ->
+    gateway_rpc_error:raise(<<"Unknown method: ", Method/binary>>).
 
 -spec handle_dispatch(map()) -> true.
 handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> := Data}) ->
