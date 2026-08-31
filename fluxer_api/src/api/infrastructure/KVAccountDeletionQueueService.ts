@@ -59,7 +59,7 @@ export class KVAccountDeletionQueueService {
 		}
 	}
 
-	async rebuildState(): Promise<void> {
+	async rebuildState(lockToken: string | null = null): Promise<void> {
 		Logger.info('Starting deletion queue rebuild from primary database');
 		try {
 			await this.kvClient.del(QUEUE_KEY);
@@ -91,6 +91,9 @@ export class KVAccountDeletionQueueService {
 				totalQueued += batchQueued;
 				totalProcessed += users.length;
 				pageState = page.pageState;
+				if (lockToken !== null) {
+					await this.renewRebuildLock(lockToken);
+				}
 				if (totalProcessed % 10000 === 0) {
 					Logger.debug({totalProcessed, totalQueued}, 'Deletion queue rebuild progress');
 				}
@@ -171,6 +174,17 @@ export class KVAccountDeletionQueueService {
 		} catch (error) {
 			Logger.error({error}, 'Failed to acquire rebuild lock');
 			throw error;
+		}
+	}
+
+	private async renewRebuildLock(token: string): Promise<void> {
+		try {
+			const renewed = await this.kvClient.extendLock(REBUILD_LOCK_KEY, token, REBUILD_LOCK_TTL);
+			if (!renewed) {
+				Logger.warn({token}, 'Deletion queue rebuild lock was no longer held on renewal');
+			}
+		} catch (error) {
+			Logger.error({error, token}, 'Failed to renew deletion queue rebuild lock');
 		}
 	}
 

@@ -18,7 +18,7 @@ const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers)
 			const lockToken = await deletionQueueService.acquireRebuildLock();
 			if (lockToken) {
 				try {
-					await deletionQueueService.rebuildState();
+					await deletionQueueService.rebuildState(lockToken);
 					await deletionQueueService.releaseRebuildLock(lockToken);
 				} catch (error) {
 					await deletionQueueService.releaseRebuildLock(lockToken);
