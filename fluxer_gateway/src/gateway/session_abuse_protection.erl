@@ -14,7 +14,7 @@
 ]).
 
 -ifdef(TEST).
--export([prune_old_identify_entries/0]).
+-export([prune_old_identify_entries/1]).
 -endif.
 
 -define(IDENTIFY_TABLE, gateway_identify_rate).
@@ -179,28 +179,36 @@ create_identify_table() ->
 
 -spec schedule_identify_cleanup() -> ok.
 schedule_identify_cleanup() ->
-    _ = spawn(fun identify_cleanup_loop/0),
+    case ets:whereis(?IDENTIFY_TABLE) of
+        undefined -> ok;
+        Tid -> spawn_identify_cleanup(Tid)
+    end.
+
+-spec spawn_identify_cleanup(ets:table()) -> ok.
+spawn_identify_cleanup(Tid) ->
+    _ = spawn(fun() -> identify_cleanup_loop(Tid) end),
     ok.
 
--spec identify_cleanup_loop() -> no_return().
-identify_cleanup_loop() ->
+-spec identify_cleanup_loop(ets:table()) -> ok.
+identify_cleanup_loop(Table) ->
     ok = gateway_retry_timer:wait(?IDENTIFY_CLEANUP_INTERVAL_MS),
-    prune_old_identify_entries(),
-    identify_cleanup_loop().
+    case prune_old_identify_entries(Table) of
+        ok -> identify_cleanup_loop(Table);
+        gone -> ok
+    end.
 
--spec prune_old_identify_entries() -> ok.
-prune_old_identify_entries() ->
+-spec prune_old_identify_entries(ets:table()) -> ok | gone.
+prune_old_identify_entries(Table) ->
     Now = erlang:system_time(second),
     Cutoff = Now div ?IDENTIFY_WINDOW_SECS - 1,
     try
-        _ = ets:select_delete(?IDENTIFY_TABLE, [
+        _ = ets:select_delete(Table, [
             {{{'$1', '$2'}, '_'}, [{'<', '$2', Cutoff}], [true]}
         ]),
         ok
     catch
-        error:badarg -> ok
-    end,
-    ok.
+        error:badarg -> gone
+    end.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -290,7 +298,7 @@ prune_old_identify_entries_removes_old_buckets_test() ->
     CurrentKey = {<<"10.0.0.2">>, CurrentBucket},
     ets:insert(?IDENTIFY_TABLE, {OldKey, 3}),
     ets:insert(?IDENTIFY_TABLE, {CurrentKey, 7}),
-    prune_old_identify_entries(),
+    prune_old_identify_entries(?IDENTIFY_TABLE),
     ?assertEqual([], ets:lookup(?IDENTIFY_TABLE, OldKey)),
     ?assertEqual([{CurrentKey, 7}], ets:lookup(?IDENTIFY_TABLE, CurrentKey)),
     ets:delete(?IDENTIFY_TABLE, CurrentKey).
@@ -301,9 +309,92 @@ prune_old_identify_entries_keeps_recent_buckets_test() ->
     CurrentBucket = Now div ?IDENTIFY_WINDOW_SECS,
     RecentKey = {<<"10.0.0.3">>, CurrentBucket - 1},
     ets:insert(?IDENTIFY_TABLE, {RecentKey, 5}),
-    prune_old_identify_entries(),
+    prune_old_identify_entries(?IDENTIFY_TABLE),
     ?assertNotEqual([], ets:lookup(?IDENTIFY_TABLE, RecentKey)),
     ets:delete(?IDENTIFY_TABLE, RecentKey).
+
+identify_cleanup_loops_do_not_outlive_their_table_test() ->
+    meck:new(gateway_retry_timer, [passthrough]),
+    meck:expect(gateway_retry_timer, wait, fun(_) -> timer:sleep(5) end),
+    try
+        assert_identify_cleanup_loops_do_not_leak()
+    after
+        meck:unload(gateway_retry_timer)
+    end.
+
+assert_identify_cleanup_loops_do_not_leak() ->
+    drop_identify_table(),
+    Before = count_identify_cleanup_loops(),
+    lists:foreach(fun(_) -> churn_identify_table_owner() end, lists:seq(1, 5)),
+    Owner = start_identify_table_owner(),
+    try
+        ?assert(await_identify_cleanup_loops(Before + 1, 200))
+    after
+        stop_table_owner(Owner)
+    end.
+
+drop_identify_table() ->
+    case ets:whereis(?IDENTIFY_TABLE) of
+        undefined ->
+            ok;
+        _ ->
+            ets:delete(?IDENTIFY_TABLE),
+            ok
+    end.
+
+churn_identify_table_owner() ->
+    stop_table_owner(start_identify_table_owner()).
+
+start_identify_table_owner() ->
+    Parent = self(),
+    Pid = spawn(fun() -> own_identify_table(Parent) end),
+    receive
+        {owner_ready, Pid} -> Pid
+    after 1000 -> error(owner_start_timeout)
+    end.
+
+own_identify_table(Parent) ->
+    ok = check_identify_rate(<<"192.0.2.210">>),
+    Parent ! {owner_ready, self()},
+    receive
+        stop -> ok
+    after 30000 -> ok
+    end.
+
+stop_table_owner(Pid) ->
+    Ref = erlang:monitor(process, Pid),
+    Pid ! stop,
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} -> ok
+    after 1000 -> error(owner_stop_timeout)
+    end.
+
+count_identify_cleanup_loops() ->
+    length([Pid || Pid <- erlang:processes(), is_identify_cleanup_loop(Pid)]).
+
+is_identify_cleanup_loop(Pid) ->
+    case erlang:process_info(Pid, current_stacktrace) of
+        {current_stacktrace, Stack} ->
+            lists:any(fun is_identify_cleanup_frame/1, Stack);
+        _ ->
+            false
+    end.
+
+is_identify_cleanup_frame({?MODULE, identify_cleanup_loop, _Arity, _Location}) ->
+    true;
+is_identify_cleanup_frame(_Frame) ->
+    false.
+
+await_identify_cleanup_loops(Max, 0) ->
+    count_identify_cleanup_loops() =< Max;
+await_identify_cleanup_loops(Max, Attempts) ->
+    case count_identify_cleanup_loops() =< Max of
+        true ->
+            true;
+        false ->
+            timer:sleep(10),
+            await_identify_cleanup_loops(Max, Attempts - 1)
+    end.
 
 delete_user_session_count(UserId) ->
     try ets:delete(?SESSION_USER_COUNTS, UserId) of
