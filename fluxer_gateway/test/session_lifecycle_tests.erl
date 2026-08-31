@@ -108,6 +108,34 @@ serialize_transfer_state_strips_socket_pid_test() ->
     TransferState = session_lifecycle:serialize_transfer_state(State),
     ?assertEqual(undefined, maps:get(socket_pid, TransferState)).
 
+serialize_transfer_state_preserves_deque_replay_buffer_test() ->
+    Deque = lists:foldl(
+        fun(Seq, Acc) ->
+            limited_deque:push(#{event => message_create, data => #{}, seq => Seq}, Acc)
+        end,
+        limited_deque:new(4096, 16777216),
+        [1000, 1001]
+    ),
+    State = #{
+        id => <<"session-deque-transfer">>,
+        user_id => 42,
+        user_data => #{},
+        version => 9,
+        token_hash => <<"token_hash">>,
+        auth_session_id_hash => <<"auth_hash">>,
+        properties => #{},
+        status => online,
+        afk => false,
+        mobile => false,
+        ready => undefined,
+        seq => 1001,
+        ack_seq => 999,
+        buffer => Deque
+    },
+    TransferState = session_lifecycle:serialize_transfer_state(State),
+    Restored = session_init:normalize_buffer(maps:get(buffer, TransferState)),
+    ?assertEqual([1000, 1001], [maps:get(seq, Event) || Event <- Restored]).
+
 heartbeat_ack_recalculates_buffer_bytes_test() ->
     Event1 = #{seq => 1, event => message_create, data => #{<<"content">> => <<"one">>}},
     Event2 = #{seq => 2, event => message_create, data => #{<<"content">> => <<"two">>}},

@@ -552,6 +552,10 @@ serialize_transfer_identity(State) ->
         debounce_reactions => maps:get(debounce_reactions, State, false)
     }.
 
+-spec transfer_buffer(eqwalizer:dynamic(limited_deque:deque() | [map()])) -> [term()].
+transfer_buffer(Buffer) when is_list(Buffer) -> Buffer;
+transfer_buffer(Buffer) -> limited_deque:to_list(Buffer).
+
 -spec serialize_transfer_runtime(session_state()) -> map().
 serialize_transfer_runtime(State) ->
     #{
@@ -559,7 +563,7 @@ serialize_transfer_runtime(State) ->
         relationships => maps:get(relationships, State, #{}),
         seq => maps:get(seq, State, 0),
         ack_seq => maps:get(ack_seq, State, 0),
-        buffer => maps:get(buffer, State, []),
+        buffer => transfer_buffer(maps:get(buffer, State, [])),
         collected_guild_states => maps:get(collected_guild_states, State, []),
         collected_sessions => maps:get(collected_sessions, State, []),
         collected_presences => maps:get(collected_presences, State, []),
