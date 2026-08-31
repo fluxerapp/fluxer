@@ -5,27 +5,28 @@ import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, describe, expect, test} from 'vitest';
 import {createUserID, type UserID} from '../../BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '../../database/types/UserTypes';
 import {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {User} from '../../models/User';
+import {User} from '../../models/User';
 import {MockKVProvider} from '../../test/mocks/MockKVProvider';
 import {NoopLogger} from '../../test/mocks/NoopLogger';
 import type {UserRepository} from '../../user/repositories/UserRepository';
 import userProcessPendingDeletions from '../tasks/UserProcessPendingDeletions';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
 
-interface FakeUserOptions {
-	isBot?: boolean;
-	flags?: bigint;
-}
-
-function createFakeUser(userId: UserID, pendingDeletionAt: Date, options: FakeUserOptions = {}): User {
-	return {
-		id: userId,
-		pendingDeletionAt,
-		deletionReasonCode: 1,
-		isBot: options.isBot ?? false,
+function createFakeUser(
+	userId: UserID,
+	pendingDeletionAt: Date,
+	options: Partial<Pick<UserRow, 'bot' | 'flags'>> = {},
+): User {
+	return new User({
+		...EMPTY_USER_ROW,
+		user_id: userId,
+		pending_deletion_at: pendingDeletionAt,
+		deletion_reason_code: 1,
+		bot: options.bot ?? false,
 		flags: options.flags ?? 0n,
-	} as unknown as User;
+	});
 }
 
 async function createHarness(users: Array<User>) {
@@ -83,9 +84,7 @@ describe('userProcessPendingDeletions', () => {
 		const users: Array<User> = [];
 		for (let i = 0; i < 1000; i++) {
 			const userId = createUserID(BigInt(100_000 + i));
-			users.push(
-				createFakeUser(userId, skippedAt, i % 2 === 0 ? {isBot: true} : {flags: UserFlags.APP_STORE_REVIEWER}),
-			);
+			users.push(createFakeUser(userId, skippedAt, i % 2 === 0 ? {bot: true} : {flags: UserFlags.APP_STORE_REVIEWER}));
 		}
 		const genuineUserId = createUserID(999_999n);
 		users.push(createFakeUser(genuineUserId, genuineAt));
@@ -106,7 +105,7 @@ describe('userProcessPendingDeletions', () => {
 		const botId = createUserID(1n);
 		const reviewerId = createUserID(2n);
 		const harness = await createHarness([
-			createFakeUser(botId, pendingAt, {isBot: true}),
+			createFakeUser(botId, pendingAt, {bot: true}),
 			createFakeUser(reviewerId, pendingAt, {flags: UserFlags.APP_STORE_REVIEWER}),
 		]);
 

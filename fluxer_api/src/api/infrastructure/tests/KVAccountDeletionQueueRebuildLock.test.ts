@@ -3,7 +3,8 @@
 import {ms} from 'itty-time';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {createUserID} from '../../BrandedTypes';
-import type {User} from '../../models/User';
+import {EMPTY_USER_ROW} from '../../database/types/UserTypes';
+import {User} from '../../models/User';
 import {MockKVProvider} from '../../test/mocks/MockKVProvider';
 import type {UserRepository} from '../../user/repositories/UserRepository';
 import {KVAccountDeletionQueueService} from '../KVAccountDeletionQueueService';
@@ -12,13 +13,14 @@ const PAGE_DURATION_MS = ms('3 minutes');
 const PAGE_COUNT = 3;
 
 function createPendingUser(index: number): User {
-	return {
-		id: createUserID(BigInt(7000 + index)),
-		pendingDeletionAt: new Date('2026-06-01T00:00:00.000Z'),
-		deletionReasonCode: 0,
-		isBot: false,
+	return new User({
+		...EMPTY_USER_ROW,
+		user_id: createUserID(BigInt(7000 + index)),
+		pending_deletion_at: new Date('2026-06-01T00:00:00.000Z'),
+		deletion_reason_code: 0,
+		bot: false,
 		flags: 0n,
-	} as unknown as User;
+	});
 }
 
 function createSlowUserRepository(): UserRepository {

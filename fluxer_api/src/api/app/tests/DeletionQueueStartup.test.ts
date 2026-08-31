@@ -2,8 +2,9 @@
 
 import {describe, expect, it} from 'vitest';
 import {createUserID} from '../../BrandedTypes';
+import {EMPTY_USER_ROW} from '../../database/types/UserTypes';
 import {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {User} from '../../models/User';
+import {User} from '../../models/User';
 import {MockKVProvider} from '../../test/mocks/MockKVProvider';
 import {NoopLogger} from '../../test/mocks/NoopLogger';
 import type {UserRepository} from '../../user/repositories/UserRepository';
@@ -12,11 +13,12 @@ import {ensureDeletionQueueState} from '../DeletionQueueStartup';
 const WORKER_PAGE_COUNT = 2;
 
 function createPendingUser(index: number): User {
-	return {
-		id: createUserID(BigInt(9100 + index)),
-		pendingDeletionAt: new Date('2026-06-01T00:00:00.000Z'),
-		deletionReasonCode: 0,
-	} as unknown as User;
+	return new User({
+		...EMPTY_USER_ROW,
+		user_id: createUserID(BigInt(9100 + index)),
+		pending_deletion_at: new Date('2026-06-01T00:00:00.000Z'),
+		deletion_reason_code: 0,
+	});
 }
 
 function createWorkerRepository(onPageStart: (page: number) => Promise<void>): UserRepository {
