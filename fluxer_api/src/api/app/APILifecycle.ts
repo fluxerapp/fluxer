@@ -134,12 +134,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 				setInjectedWorkerService(new WorkerService(workerQueue, getSnowflakeService(), new JobLedgerRepository()));
 				logger.info('JetStream worker service initialized');
 			}
-			try {
-				await ensureDeletionQueueState(getKVAccountDeletionQueue(), logger);
-			} catch (error) {
-				logger.error({error}, 'Failed to verify KV deletion queue state');
-				throw error;
-			}
+			await ensureDeletionQueueState(getKVAccountDeletionQueue(), logger);
 			logger.info('Initializing search indexes...');
 			let searchInitialized = false;
 			try {

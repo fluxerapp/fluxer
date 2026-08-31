@@ -72,6 +72,23 @@ describe('ensureDeletionQueueState', () => {
 		expect(apiFailures).toEqual([]);
 	});
 
+	it('does not abort startup when the paged user scan fails', async () => {
+		const kvClient = new MockKVProvider();
+		let scans = 0;
+		const repository = {
+			async scanAllUsersPage() {
+				scans += 1;
+				throw new Error('paged user scan failed');
+			},
+		} as unknown as UserRepository;
+		const queue = new KVAccountDeletionQueueService(kvClient, repository);
+
+		await expect(ensureDeletionQueueState(queue, new NoopLogger())).resolves.toBeUndefined();
+
+		expect(scans).toBe(1);
+		expect(await queue.acquireRebuildLock()).not.toBeNull();
+	});
+
 	it('rebuilds under the lock when no other instance holds it', async () => {
 		const kvClient = new MockKVProvider();
 		const queue = new KVAccountDeletionQueueService(

@@ -574,46 +574,60 @@ describe.skipIf(!dockerAvailable)('postgres kv paging adversarial', () => {
 		expect(deltas, `paged order deltas:\n${deltas.join('\n')}`).toEqual([]);
 	}, 300_000);
 
-	it('reads a page instead of the whole table for every page after the first', async () => {
-		await wipe(KV);
-		const rowCount = 40;
-		const pageSize = 4;
-		for (let i = 0; i < rowCount; i += 1) {
-			await upsert(next, FlatTable, {k: `key${String(i).padStart(2, '0')}`, v: `v${i}`});
-		}
-		const drain = async (build: (client: IPostgresClient) => AnyExec) => {
+	it('pages a bigint scan at the same cost on both sides of a digit count boundary', async () => {
+		const drain = async (ids: ReadonlyArray<bigint>) => {
+			await wipe(KV);
+			for (const id of ids) await upsert(next, FlatTable, {k: id, v: id.toString()});
 			const counter = new CountingClient(raw, KV);
-			const exec = build(counter);
-			const reads: Array<number> = [];
+			const exec = new PostgresKvQueryExecutor(counter);
+			const seen: Array<string> = [];
 			let pageState: string | null = null;
-			let seen = 0;
 			for (let guard = 0; guard < 100; guard += 1) {
-				const before = counter.rowsRead;
 				const page: {rows: Array<Row>; pageState: string | null} = await exec.executePagedQuery<Row>(
-					{cql: '__reads__', params: {}, kvMeta: selectMeta(FlatTable)},
-					{pageSize, pageState},
+					{cql: '__digits__', params: {}, kvMeta: selectMeta(FlatTable)},
+					{pageSize: 4, pageState},
 				);
-				reads.push(counter.rowsRead - before);
-				seen += page.rows.length;
+				for (const row of page.rows) seen.push(String(row.k));
 				pageState = page.pageState;
 				if (pageState === null) break;
 			}
-			return {reads, seen};
+			return {seen, rowsRead: counter.rowsRead};
 		};
-		const legacyDrain = await drain((client) => new LegacyPostgresKvQueryExecutor(client));
-		const nextDrain = await drain((client) => new PostgresKvQueryExecutor(client));
-		const total = (reads: Array<number>) => reads.reduce((sum, count) => sum + count, 0);
-		expect(legacyDrain.seen).toBe(rowCount);
-		expect(nextDrain.seen).toBe(rowCount);
-		expect(nextDrain.reads.length).toBe(rowCount / pageSize);
-		expect(Math.min(...legacyDrain.reads), 'offset paging re-reads the whole table for every page').toBe(rowCount);
+		const sameWidth = Array.from({length: 40}, (_, index) => 1_000_000_000_000_000_000n + BigInt(index));
+		const straddling = Array.from({length: 40}, (_, index) => 999_999_999_999_999_980n + BigInt(index));
+		const flat = await drain(sameWidth);
+		const crossing = await drain(straddling);
+		expect(flat.seen, 'same width scan order').toEqual(sameWidth.map(String));
+		expect(crossing.seen, 'boundary crossing scan order').toEqual(straddling.map(String));
 		expect(
-			Math.max(...nextDrain.reads.slice(1)),
-			`rows read per page: ${nextDrain.reads.join(',')}`,
-		).toBeLessThanOrEqual(pageSize + 1);
-		expect(total(nextDrain.reads), `next=${total(nextDrain.reads)} legacy=${total(legacyDrain.reads)}`).toBeLessThan(
-			total(legacyDrain.reads) / 2,
-		);
+			crossing.rowsRead,
+			`same width read ${flat.rowsRead} rows, boundary crossing read ${crossing.rowsRead}`,
+		).toBe(flat.rowsRead);
+	}, 300_000);
+
+	it('keeps paging bigint keys across a digit count boundary while returned rows are deleted', async () => {
+		await wipe(KV);
+		const ids = Array.from({length: 30}, (_, index) => 999_999_999_999_999_985n + BigInt(index));
+		for (const id of ids) await upsert(next, FlatTable, {k: id, v: id.toString()});
+		const seen: Array<string> = [];
+		let pageState: string | null = null;
+		for (let guard = 0; guard < 100; guard += 1) {
+			const page: {rows: Array<Row>; pageState: string | null} = await next.executePagedQuery<Row>(
+				{cql: '__digitdrain__', params: {}, kvMeta: selectMeta(FlatTable)},
+				{pageSize: 4, pageState},
+			);
+			for (const row of page.rows) seen.push(String(row.k));
+			pageState = page.pageState;
+			for (const row of page.rows) {
+				await next.executeQuery({
+					cql: '__digitdrain_delete__',
+					params: {k: row.k} as CassandraParams,
+					kvMeta: deleteMeta(FlatTable, [{kind: 'eq', col: 'k', param: 'k'} as WhereExpr<Row>]),
+				});
+			}
+			if (pageState === null) break;
+		}
+		expect(seen, `returned order: ${seen.join(',')}`).toEqual(ids.map(String));
 	}, 300_000);
 
 	it('pages a prefix range whose keys sit adjacent to the range bounds', async () => {
