@@ -180,7 +180,11 @@ services:
           memory: ${FLUXER_VALKEY_MEMORY_LIMIT:-256mb}
     restart: unless-stopped
     networks: [fluxer]
-    command: ["valkey-server", "--save", "", "--appendonly", "no", "--maxmemory", "192mb", "--maxmemory-policy", "allkeys-lru"]
+    command: ["valkey-server", "--appendonly", "yes", "--appendfsync", "everysec", "--dir", "/data",
+              "--maxmemory", "${FLUXER_VALKEY_MAXMEMORY:-192mb}",
+              "--maxmemory-policy", "${FLUXER_VALKEY_MAXMEMORY_POLICY:-noeviction}"]
+    volumes:
+      - valkey-data:/data
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
@@ -607,6 +611,7 @@ volumes:
   caddy-data:
   caddy-config:
   postgres-data:
+  valkey-data:
   nats-data:
   meilisearch-data:
   seaweedfs-data:
