@@ -230,6 +230,70 @@ evict_oldest_pending_drops_oldest_inserted_test() ->
         presence_cache_rebalance:cancel_pending_retry_timer(State1)
     end.
 
+anti_entropy_does_not_resurrect_deleted_presence_test() ->
+    with_local_presence_cache(fun(Pid) -> assert_delete_survives_stale_peer_entry(Pid) end).
+
+anti_entropy_repairs_missing_presence_test() ->
+    with_local_presence_cache(fun(Pid) -> assert_merge_repairs_missing_entry(Pid) end).
+
+anti_entropy_merges_once_tombstone_expires_test() ->
+    with_local_presence_cache(fun(Pid) -> assert_merge_resumes_after_expiry(Pid) end).
+
+anti_entropy_tombstone_cleared_when_user_returns_test() ->
+    with_local_presence_cache(fun(Pid) -> assert_tombstone_cleared_on_put(Pid) end).
+
+assert_delete_survives_stale_peer_entry(Pid) ->
+    UserId = 77001,
+    Presence = anti_entropy_presence(UserId),
+    State0 = cache_state(sys:get_state(Pid)),
+    ?assertEqual([node()], presence_cache_bulk:resolve_owner_nodes(UserId)),
+    {_PutReply, State1} = presence_cache:put_local(UserId, Presence, State0),
+    {_DeleteReply, State2} = presence_cache:delete_local(UserId, State1),
+    ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State2)),
+    State3 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State2),
+    ?assertMatch({not_found, _}, presence_cache_ops:get_local(UserId, State3)).
+
+assert_merge_repairs_missing_entry(Pid) ->
+    UserId = 77002,
+    Presence = anti_entropy_presence(UserId),
+    State0 = cache_state(sys:get_state(Pid)),
+    State1 = presence_cache_rebalance:merge_anti_entropy_entries(#{UserId => Presence}, State0),
+    ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State1)).
+
+assert_merge_resumes_after_expiry(Pid) ->
+    UserId = 77003,
+    Presence = anti_entropy_presence(UserId),
+    State0 = cache_state(sys:get_state(Pid)),
+    {_PutReply, State1} = presence_cache:put_local(UserId, Presence, State0),
+    {_DeleteReply, State2} = presence_cache:delete_local(UserId, State1),
+    Expired = State2#{
+        delete_tombstones => #{UserId => erlang:monotonic_time(millisecond) - 1}
+    },
+    State3 = presence_cache_rebalance:merge_anti_entropy_entries(
+        #{UserId => Presence}, Expired
+    ),
+    ?assertMatch({{ok, Presence}, _}, presence_cache_ops:get_local(UserId, State3)),
+    ?assertEqual(#{}, maps:get(delete_tombstones, State3)).
+
+assert_tombstone_cleared_on_put(Pid) ->
+    UserId = 77004,
+    Presence = anti_entropy_presence(UserId),
+    State0 = cache_state(sys:get_state(Pid)),
+    {_FirstPut, State1} = presence_cache:put_local(UserId, Presence, State0),
+    {_DeleteReply, State2} = presence_cache:delete_local(UserId, State1),
+    ?assert(maps:is_key(UserId, maps:get(delete_tombstones, State2))),
+    {_SecondPut, State3} = presence_cache:put_local(UserId, Presence, State2),
+    ?assertNot(maps:is_key(UserId, maps:get(delete_tombstones, State3))).
+
+anti_entropy_presence(UserId) ->
+    #{
+        <<"status">> => <<"online">>,
+        <<"user">> => #{<<"id">> => integer_to_binary(UserId)}
+    }.
+
+with_local_presence_cache(Fun) ->
+    with_presence_member_nodes([node()], fun() -> with_presence_cache(Fun) end).
+
 maybe_start_for_test() ->
     case whereis(presence_cache) of
         undefined -> presence_cache:start_link();
@@ -253,12 +317,15 @@ with_presence_cache(Fun) ->
     end.
 
 with_presence_members(RemoteNode, Fun) ->
+    with_presence_member_nodes([node(), RemoteNode], Fun).
+
+with_presence_member_nodes(Nodes, Fun) ->
     MembersKey = {gateway_cluster_membership, members},
     RoleMembersKey = {gateway_cluster_membership, members_by_role},
     OldMembers = persistent_term:get(MembersKey, undefined),
     OldRoleMembers = persistent_term:get(RoleMembersKey, undefined),
-    persistent_term:put(MembersKey, [node(), RemoteNode]),
-    persistent_term:put(RoleMembersKey, #{presence => [node(), RemoteNode]}),
+    persistent_term:put(MembersKey, Nodes),
+    persistent_term:put(RoleMembersKey, #{presence => Nodes}),
     try
         Fun()
     after

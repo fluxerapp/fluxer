@@ -9,7 +9,9 @@
     perform_anti_entropy/1,
     handle_anti_entropy_request/3,
     handle_anti_entropy_digest_request/3,
-    merge_anti_entropy_entries/2
+    merge_anti_entropy_entries/2,
+    record_delete/2,
+    record_put/3
 ]).
 
 -export_type([state/0]).
@@ -17,6 +19,8 @@
 -define(ANTI_ENTROPY_INTERVAL_MS, 30000).
 -define(ANTI_ENTROPY_MSG, anti_entropy_tick).
 -define(SNAPSHOT_CHUNK_SIZE, 500).
+-define(TOMBSTONE_TTL_MS, 90000).
+-define(TOMBSTONE_LIMIT, 50000).
 
 -type state() :: map().
 
@@ -38,7 +42,7 @@ cancel_anti_entropy_timer(State) ->
 perform_anti_entropy(State) ->
     case persistent_term:get(presence_noop, false) of
         true -> State;
-        false -> broadcast_anti_entropy_requests(State)
+        false -> broadcast_anti_entropy_requests(prune_tombstones(State))
     end.
 
 -spec handle_anti_entropy_request(node(), non_neg_integer(), state()) -> {noreply, state()}.
@@ -68,6 +72,70 @@ merge_anti_entropy_entries(Entries, State) when is_map(Entries) ->
     NewState;
 merge_anti_entropy_entries(_, State) ->
     State.
+
+-spec record_delete(integer(), state()) -> state().
+record_delete(UserId, State) ->
+    Tombstones = tombstones(State),
+    Updated = Tombstones#{UserId => now_ms() + ?TOMBSTONE_TTL_MS},
+    State#{delete_tombstones => cap_tombstones(Updated)}.
+
+-spec record_put(integer(), map(), state()) -> state().
+record_put(UserId, Presence, State) ->
+    case is_visible_presence(Presence) of
+        true -> clear_tombstone(UserId, State);
+        false -> record_delete(UserId, State)
+    end.
+
+-spec clear_tombstone(integer(), state()) -> state().
+clear_tombstone(UserId, State) ->
+    Tombstones = tombstones(State),
+    case maps:is_key(UserId, Tombstones) of
+        true -> State#{delete_tombstones => maps:remove(UserId, Tombstones)};
+        false -> State
+    end.
+
+-spec tombstones(state()) -> #{integer() => integer()}.
+tombstones(State) ->
+    case maps:get(delete_tombstones, State, #{}) of
+        Tombstones when is_map(Tombstones) -> Tombstones;
+        _ -> #{}
+    end.
+
+-spec prune_tombstones(state()) -> state().
+prune_tombstones(State) ->
+    State#{delete_tombstones => drop_expired(tombstones(State), now_ms())}.
+
+-spec drop_expired(#{integer() => integer()}, integer()) -> #{integer() => integer()}.
+drop_expired(Tombstones, Now) ->
+    maps:filter(fun(_UserId, ExpiresAt) -> ExpiresAt > Now end, Tombstones).
+
+-spec cap_tombstones(#{integer() => integer()}) -> #{integer() => integer()}.
+cap_tombstones(Tombstones) ->
+    case maps:size(Tombstones) > ?TOMBSTONE_LIMIT of
+        true -> evict_oldest_tombstones(drop_expired(Tombstones, now_ms()));
+        false -> Tombstones
+    end.
+
+-spec evict_oldest_tombstones(#{integer() => integer()}) -> #{integer() => integer()}.
+evict_oldest_tombstones(Tombstones) ->
+    Size = maps:size(Tombstones),
+    case Size > ?TOMBSTONE_LIMIT of
+        true -> keep_newest_tombstones(Tombstones, Size);
+        false -> Tombstones
+    end.
+
+-spec keep_newest_tombstones(#{integer() => integer()}, non_neg_integer()) ->
+    #{integer() => integer()}.
+keep_newest_tombstones(Tombstones, Size) ->
+    Ordered = lists:sort(
+        fun({_UserIdA, ExpiresA}, {_UserIdB, ExpiresB}) -> ExpiresA =< ExpiresB end,
+        maps:to_list(Tombstones)
+    ),
+    maps:from_list(lists:nthtail(Size - ?TOMBSTONE_LIMIT, Ordered)).
+
+-spec now_ms() -> integer().
+now_ms() ->
+    erlang:monotonic_time(millisecond).
 
 -spec broadcast_anti_entropy_requests(state()) -> state().
 broadcast_anti_entropy_requests(State) ->
@@ -124,9 +192,24 @@ merge_single_entry(_UserId, _Presence, AccState) ->
 merge_if_missing(UserId, Presence, State) ->
     case presence_cache_bulk:get_local_fast(UserId) of
         not_found ->
-            merge_if_visible(UserId, Presence, State);
+            merge_unless_deleted(UserId, Presence, State);
         {ok, _} ->
             State
+    end.
+
+-spec merge_unless_deleted(integer(), map(), state()) -> state().
+merge_unless_deleted(UserId, Presence, State) ->
+    Tombstones = tombstones(State),
+    Now = now_ms(),
+    case maps:get(UserId, Tombstones, undefined) of
+        ExpiresAt when is_integer(ExpiresAt), ExpiresAt > Now ->
+            State;
+        undefined ->
+            merge_if_visible(UserId, Presence, State);
+        _ ->
+            merge_if_visible(
+                UserId, Presence, State#{delete_tombstones => maps:remove(UserId, Tombstones)}
+            )
     end.
 
 -spec merge_if_visible(integer(), map(), state()) -> state().

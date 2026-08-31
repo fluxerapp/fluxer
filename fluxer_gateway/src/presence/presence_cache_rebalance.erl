@@ -10,6 +10,8 @@
     handle_anti_entropy_request/3,
     handle_anti_entropy_digest_request/3,
     merge_anti_entropy_entries/2,
+    record_delete_tombstone/2,
+    record_put_tombstone/3,
     schedule_anti_entropy/0,
     cancel_anti_entropy_timer/1,
     start_nodedown_grace/2,
@@ -79,6 +81,14 @@ handle_anti_entropy_digest_request(FromNode, RemoteDigest, State) ->
 -spec merge_anti_entropy_entries(#{integer() => map()}, state()) -> state().
 merge_anti_entropy_entries(Entries, State) ->
     presence_cache_anti_entropy:merge_anti_entropy_entries(Entries, State).
+
+-spec record_delete_tombstone(integer(), state()) -> state().
+record_delete_tombstone(UserId, State) ->
+    presence_cache_anti_entropy:record_delete(UserId, State).
+
+-spec record_put_tombstone(integer(), map(), state()) -> state().
+record_put_tombstone(UserId, Presence, State) ->
+    presence_cache_anti_entropy:record_put(UserId, Presence, State).
 
 -spec start_nodedown_grace(node(), state()) -> state().
 start_nodedown_grace(Node, State) ->
