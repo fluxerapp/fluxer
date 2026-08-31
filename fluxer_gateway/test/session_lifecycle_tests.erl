@@ -433,6 +433,16 @@ resume_test_state(Overrides) ->
         Overrides
     ).
 
+fenced_terminate_releases_the_user_session_count_test() ->
+    ok = session_abuse_protection:ensure_tables(),
+    UserId = 900201,
+    _ = ets:delete(session_user_counts, UserId),
+    ok = session_abuse_protection:increment_user_sessions(UserId),
+    ok = session_lifecycle:terminate(normal, #{
+        fenced => true, user_id => UserId, guilds => #{}, calls => #{}
+    }),
+    ?assertEqual([], ets:lookup(session_user_counts, UserId)).
+
 terminate_cleans_up_guild_monitors_test() ->
     GuildPid1 = spawn(fun test_wait_for_stop/0),
     GuildPid2 = spawn(fun test_wait_for_stop/0),
