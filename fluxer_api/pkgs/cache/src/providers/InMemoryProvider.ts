@@ -86,7 +86,7 @@ export class InMemoryProvider extends ICacheService {
 		this.cache.set(key, entry);
 	}
 
-	async delete(key: string): Promise<void> {
+	protected async deleteEntry(key: string): Promise<void> {
 		this.cache.delete(key);
 	}
 

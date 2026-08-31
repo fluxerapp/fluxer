@@ -14,12 +14,21 @@ type CacheTtlSeconds<T> = number | ((value: T) => number);
 
 export abstract class ICacheService {
 	private readonly inflightValues = new Map<string, Promise<unknown>>();
+	private readonly produceInvalidations = new Map<string, number>();
 
 	abstract getEntry<T>(key: string): Promise<CacheLookupResult<T>>;
 
 	abstract set<T>(key: string, value: T, ttlSeconds?: number): Promise<void>;
 
-	abstract delete(key: string): Promise<void>;
+	protected abstract deleteEntry(key: string): Promise<void>;
+
+	async delete(key: string): Promise<void> {
+		const pending = this.produceInvalidations.get(key);
+		if (pending !== undefined) {
+			this.produceInvalidations.set(key, pending + 1);
+		}
+		await this.deleteEntry(key);
+	}
 
 	abstract getAndDelete<T>(key: string): Promise<T | null>;
 
@@ -59,6 +68,32 @@ export abstract class ICacheService {
 	}
 
 	async getOrSet<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: CacheTtlSeconds<T>): Promise<T> {
+		const generation = this.trackProduce(key);
+		try {
+			return await this.getOrSetTracked(key, valueFactory, ttlSeconds, generation);
+		} finally {
+			this.releaseProduce(key, generation);
+		}
+	}
+
+	private trackProduce(key: string): number {
+		const generation = this.produceInvalidations.get(key) ?? 0;
+		this.produceInvalidations.set(key, generation);
+		return generation;
+	}
+
+	private releaseProduce(key: string, generation: number): void {
+		if ((this.produceInvalidations.get(key) ?? 0) === generation) {
+			this.produceInvalidations.delete(key);
+		}
+	}
+
+	private async getOrSetTracked<T>(
+		key: string,
+		valueFactory: () => Promise<T>,
+		ttlSeconds: CacheTtlSeconds<T> | undefined,
+		generation: number,
+	): Promise<T> {
 		const existing = await this.getEntry<T>(key);
 		if (existing.hit) {
 			return existing.value;
@@ -68,9 +103,9 @@ export abstract class ICacheService {
 			return (await inflight) as T;
 		}
 		if (this.inflightValues.size >= CACHE_INFLIGHT_MAX_ENTRIES) {
-			return await this.produceAndStore(key, valueFactory, ttlSeconds);
+			return await this.produceAndStore(key, valueFactory, ttlSeconds, generation);
 		}
-		const pending = this.produceAndStore(key, valueFactory, ttlSeconds).finally(() => {
+		const pending = this.produceAndStore(key, valueFactory, ttlSeconds, generation).finally(() => {
 			this.inflightValues.delete(key);
 		});
 		this.inflightValues.set(key, pending);
@@ -80,10 +115,13 @@ export abstract class ICacheService {
 	private async produceAndStore<T>(
 		key: string,
 		valueFactory: () => Promise<T>,
-		ttlSeconds?: CacheTtlSeconds<T>,
+		ttlSeconds: CacheTtlSeconds<T> | undefined,
+		generation: number,
 	): Promise<T> {
 		const value = await valueFactory();
-		await this.set(key, value, typeof ttlSeconds === 'function' ? ttlSeconds(value) : ttlSeconds);
+		if ((this.produceInvalidations.get(key) ?? 0) === generation) {
+			await this.set(key, value, typeof ttlSeconds === 'function' ? ttlSeconds(value) : ttlSeconds);
+		}
 		return value;
 	}
 }

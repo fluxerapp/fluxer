@@ -93,7 +93,7 @@ export class KVCacheProvider extends ICacheService {
 		});
 	}
 
-	async delete(key: string): Promise<void> {
+	protected async deleteEntry(key: string): Promise<void> {
 		return this.instrumented('delete', key, async () => {
 			await this.client.del(key);
 		});
