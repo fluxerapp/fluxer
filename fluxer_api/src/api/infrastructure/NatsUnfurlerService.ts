@@ -4,9 +4,10 @@ import type {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/Embe
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {StringCodec} from 'nats';
 import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
 import type {MediaProxyNsfwMode} from './IMediaService';
 import {IUnfurlerService, type UnfurlOptions, type UnfurlResult} from './IUnfurlerService';
+import {throwForSvcErrorReply} from './SvcErrorReply';
 
 const NATS_UNFURL_SUBJECT = 'svc.unfurl';
 const NATS_UNFURL_TIMEOUT_MS = 12000;
@@ -92,6 +93,7 @@ export class NatsUnfurlerService extends IUnfurlerService {
 			const responseText = this.codec.decode(responseMsg.data);
 			const response = parseJsonWithGuard(responseText, isNatsUnfurlResponse);
 			if (!response) {
+				throwForSvcErrorReply('nats-unfurl', parseJsonRecord(responseText));
 				throw new Error(`[nats-unfurl] invalid response payload: ${responseText}`);
 			}
 			if ('Resolved' in response) {

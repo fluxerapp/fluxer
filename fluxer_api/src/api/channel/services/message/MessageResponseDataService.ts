@@ -7,10 +7,11 @@ import {StringCodec} from 'nats';
 import type {ChannelID, GuildID, MessageID, UserID} from '../../../BrandedTypes';
 import {createUserID} from '../../../BrandedTypes';
 import {Config} from '../../../Config';
+import {throwForSvcErrorReply} from '../../../infrastructure/SvcErrorReply';
 import {Logger} from '../../../Logger';
 import type {Channel} from '../../../models/Channel';
 import type {Message} from '../../../models/Message';
-import {isJsonRecord, parseJsonWithGuard} from '../../../utils/JsonBoundaryUtils';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../../../utils/JsonBoundaryUtils';
 
 const MESSAGE_RESPONSE_SERVICE_SUBJECT = 'svc.messages';
 const MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS = 6000;
@@ -303,8 +304,10 @@ export class MessageResponseDataService {
 				this.codec.encode(JSON.stringify(payload)),
 				{timeout: MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS},
 			);
-			const parsed = parseJsonWithGuard(this.codec.decode(response.data), isMessageServiceResponse);
+			const decoded = this.codec.decode(response.data);
+			const parsed = parseJsonWithGuard(decoded, isMessageServiceResponse);
 			if (!parsed) {
+				throwForSvcErrorReply('message-response-service', parseJsonRecord(decoded));
 				throw new Error('[message-response-service] invalid response payload');
 			}
 			return parsed;

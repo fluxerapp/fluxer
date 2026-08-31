@@ -7,7 +7,8 @@ import {StringCodec} from 'nats';
 import {createUserID, type UserID} from '../BrandedTypes';
 import {Config} from '../Config';
 import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
+import {throwForSvcErrorReply} from './SvcErrorReply';
 
 const USERS_SERVICE_SUBJECT = process.env.FLUXER_USERS_SERVICE_SUBJECT || 'svc.users';
 const DEFAULT_USERS_SERVICE_TIMEOUT_MS = 6000;
@@ -163,8 +164,10 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 			const response = await connection.request(this.subject, this.codec.encode(JSON.stringify(payload)), {
 				timeout: this.requestTimeoutMs,
 			});
-			const parsed = parseJsonWithGuard(this.codec.decode(response.data), isUsersServiceResponse);
+			const decoded = this.codec.decode(response.data);
+			const parsed = parseJsonWithGuard(decoded, isUsersServiceResponse);
 			if (!parsed) {
+				throwForSvcErrorReply('users-service', parseJsonRecord(decoded));
 				throw new Error('[users-service] invalid response payload');
 			}
 			return parsed;

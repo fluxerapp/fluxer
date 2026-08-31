@@ -466,6 +466,7 @@ services:
     environment:
       <<: *fluxer-env
       FLUXER_SVC_MODE: router
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-20}"
     depends_on:
       nats: {condition: service_started}
 
@@ -528,6 +529,7 @@ services:
       <<: *fluxer-env
       FLUXER_SVC_NAME: messages
       FLUXER_SVC_MODE: router
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-20}"
     depends_on:
       nats: {condition: service_started}
 
