@@ -94,8 +94,8 @@ buffer_presence(Event, Data, State) ->
     Pending = ensure_queue(maps:get(pending_presences, State, [])),
     UserId = presence_user_id(Data),
     Entry = #{event => Event, data => Data, user_id => UserId},
-    Trimmed = trim_queue_from_tail(Pending, ?MAX_PENDING_PRESENCE_BUFFER_SIZE - 1),
-    NewPending = queue:in_r(Entry, Trimmed),
+    Trimmed = trim_queue_from_front(Pending, ?MAX_PENDING_PRESENCE_BUFFER_SIZE - 1),
+    NewPending = queue:in(Entry, Trimmed),
     State#{pending_presences => NewPending}.
 
 -spec maybe_flush_pending_presences(event(), map(), session_state()) ->
@@ -261,10 +261,10 @@ relationship_target_id(Data) when is_map(Data) ->
 ensure_queue(List) when is_list(List) -> queue:from_list(List);
 ensure_queue(Q) -> Q.
 
--spec trim_queue_from_tail(queue:queue(T), non_neg_integer()) -> queue:queue(T).
-trim_queue_from_tail(Queue, MaxLen) ->
+-spec trim_queue_from_front(queue:queue(T), non_neg_integer()) -> queue:queue(T).
+trim_queue_from_front(Queue, MaxLen) ->
     case queue:len(Queue) > MaxLen of
-        true -> trim_queue_from_tail(queue:drop_r(Queue), MaxLen);
+        true -> trim_queue_from_front(queue:drop(Queue), MaxLen);
         false -> Queue
     end.
 
@@ -436,5 +436,58 @@ flushed_id_list_test() ->
     ?assertEqual([], flushed_id_list(undefined)),
     ?assertEqual([42], flushed_id_list(42)),
     ok.
+
+presence_status_data(UserIdBin, Status) ->
+    #{<<"user">> => #{<<"id">> => UserIdBin}, <<"status">> => Status}.
+
+buffered_presences_flush_in_arrival_order_test() ->
+    drain_mailbox(),
+    Base = #{
+        user_id => 1,
+        seq => 0,
+        buffer => [],
+        socket_pid => self(),
+        pending_presences => queue:new()
+    },
+    S1 = buffer_presence(presence_update, presence_status_data(<<"2">>, <<"online">>), Base),
+    S2 = buffer_presence(presence_update, presence_status_data(<<"2">>, <<"dnd">>), S1),
+    Flushed = flush_all_pending_presences(S2),
+    ?assertEqual(2, maps:get(seq, Flushed)),
+    ?assertEqual([{1, <<"online">>}, {2, <<"dnd">>}], collect_dispatched_statuses(2)).
+
+pending_presence_buffer_drops_oldest_when_full_test() ->
+    Total = ?MAX_PENDING_PRESENCE_BUFFER_SIZE + 2,
+    Filled = lists:foldl(
+        fun(N, Acc) ->
+            buffer_presence(
+                presence_update,
+                presence_status_data(integer_to_binary(N), <<"online">>),
+                Acc
+            )
+        end,
+        #{user_id => 1, pending_presences => queue:new()},
+        lists:seq(1, Total)
+    ),
+    Pending = queue:to_list(maps:get(pending_presences, Filled)),
+    ?assertEqual(?MAX_PENDING_PRESENCE_BUFFER_SIZE, length(Pending)),
+    ?assertEqual(3, maps:get(user_id, hd(Pending))),
+    ?assertEqual(Total, maps:get(user_id, lists:last(Pending))).
+
+collect_dispatched_statuses(0) ->
+    [];
+collect_dispatched_statuses(N) ->
+    receive
+        {dispatch, presence_update, Data, Seq} ->
+            [{Seq, maps:get(<<"status">>, Data)} | collect_dispatched_statuses(N - 1)]
+    after 100 ->
+        []
+    end.
+
+drain_mailbox() ->
+    receive
+        _Message -> drain_mailbox()
+    after 0 ->
+        ok
+    end.
 
 -endif.
