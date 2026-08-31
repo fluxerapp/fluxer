@@ -16,6 +16,10 @@ interface CacheProduceTracking {
 	produces: number;
 }
 
+interface CacheProduceAbandonment {
+	abandoned: boolean;
+}
+
 export type CacheLookupResult<T> = {hit: true; value: T} | {hit: false};
 
 type CacheTtlSeconds<T> = number | ((value: T) => number);
@@ -122,14 +126,6 @@ export abstract class ICacheService {
 		return this.produceInvalidations.get(key)?.generation ?? 0;
 	}
 
-	private abandonProduce(key: string, generation: number): void {
-		this.trackProduce(key);
-		const tracked = this.produceInvalidations.get(key);
-		if (tracked?.generation === generation) {
-			tracked.generation += 1;
-		}
-	}
-
 	private releaseProduce(key: string): void {
 		const tracked = this.produceInvalidations.get(key);
 		if (!tracked) {
@@ -156,10 +152,10 @@ export abstract class ICacheService {
 		generation: number,
 		produceTimeoutMs: number,
 	): Promise<T> {
+		const abandonment: CacheProduceAbandonment = {abandoned: false};
 		const produced = this.boundProduce(
-			this.produceAndStore(key, valueFactory, ttlSeconds, generation),
-			key,
-			generation,
+			this.produceAndStore(key, valueFactory, ttlSeconds, generation, abandonment),
+			abandonment,
 			produceTimeoutMs,
 		);
 		if (this.inflightValues.size >= CACHE_INFLIGHT_MAX_ENTRIES) {
@@ -172,27 +168,24 @@ export abstract class ICacheService {
 		return await pending;
 	}
 
-	private boundProduce<T>(produced: Promise<T>, key: string, generation: number, produceTimeoutMs: number): Promise<T> {
+	private boundProduce<T>(
+		produced: Promise<T>,
+		abandonment: CacheProduceAbandonment,
+		produceTimeoutMs: number,
+	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
-			let abandoned = false;
 			const timer = setTimeout(() => {
-				abandoned = true;
-				this.abandonProduce(key, generation);
+				abandonment.abandoned = true;
 				reject(new Error(CACHE_PRODUCE_TIMEOUT_MESSAGE));
 			}, produceTimeoutMs);
-			const settle = () => {
-				clearTimeout(timer);
-				if (abandoned) {
-					this.releaseProduce(key);
-				}
-			};
+			timer.unref?.();
 			produced.then(
 				(value) => {
-					settle();
+					clearTimeout(timer);
 					resolve(value);
 				},
 				(error: unknown) => {
-					settle();
+					clearTimeout(timer);
 					reject(error);
 				},
 			);
@@ -204,9 +197,10 @@ export abstract class ICacheService {
 		valueFactory: () => Promise<T>,
 		ttlSeconds: CacheTtlSeconds<T> | undefined,
 		generation: number,
+		abandonment: CacheProduceAbandonment,
 	): Promise<T> {
 		const value = await valueFactory();
-		if (this.currentGeneration(key) === generation) {
+		if (!abandonment.abandoned && this.currentGeneration(key) === generation) {
 			await this.set(key, value, typeof ttlSeconds === 'function' ? ttlSeconds(value) : ttlSeconds);
 		}
 		return value;

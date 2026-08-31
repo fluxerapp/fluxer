@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 
 const INFLIGHT_OVERFLOW_ENTRIES = 10000;
 const PRODUCE_TIMEOUT_MS = 50;
@@ -90,6 +90,27 @@ describe('cache invalidation during an in-flight produce', () => {
 		gates[0].reject(new Error('produce failed'));
 		await expect(producer).rejects.toThrow('produce failed');
 		await flush();
+		gates[1].resolve('retried-session');
+		await expect(joiner).resolves.toBe('retried-session');
+		expect(await cache.get('session')).toBe('retried-session');
+	});
+
+	it('stores the value a retried produce built after the first produce was invalidated', async () => {
+		const cache = new InMemoryProvider();
+		const gates: Array<ReturnType<typeof deferred<string>>> = [];
+		const factory = async () => {
+			const gate = deferred<string>();
+			gates.push(gate);
+			return await gate.promise;
+		};
+		const producer = cache.getOrSet('session', factory, 30);
+		const joiner = cache.getOrSet('session', factory, 30);
+		await flush();
+		await cache.delete('session');
+		gates[0].reject(new Error('produce failed'));
+		await expect(producer).rejects.toThrow('produce failed');
+		await flush();
+		expect(gates).toHaveLength(2);
 		gates[1].resolve('retried-session');
 		await expect(joiner).resolves.toBe('retried-session');
 		expect(await cache.get('session')).toBe('retried-session');
@@ -205,6 +226,59 @@ describe('cache invalidation during an in-flight produce', () => {
 		gates[0].resolve('abandoned-produce');
 		await flush();
 		expect(await cache.get('session')).toBe('retried-session');
+	});
+
+	it('releases produce tracking when the factory never settles', async () => {
+		const cache = new InMemoryProvider();
+		const stuck = deferred<string>();
+		const pending = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
+		await expect(pending).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
+		await flush();
+		expect(trackedProduceKeys(cache)).toEqual([]);
+	});
+
+	it('stores a sibling produce that succeeded after an overflow produce timed out', async () => {
+		const cache = new InMemoryProvider();
+		const fillers: Array<ReturnType<typeof deferred<string>>> = [];
+		const filling: Array<Promise<string>> = [];
+		for (let index = 0; index < INFLIGHT_OVERFLOW_ENTRIES; index++) {
+			const gate = deferred<string>();
+			fillers.push(gate);
+			filling.push(cache.getOrSet(`filler:${index}`, async () => await gate.promise, 30));
+		}
+		await flush();
+		const stuck = deferred<string>();
+		const sibling = deferred<string>();
+		const abandoned = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
+		const succeeding = cache.getOrSet('session', async () => await sibling.promise, 30, PRODUCE_TIMEOUT_MS * 100);
+		await expect(abandoned).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
+		sibling.resolve('sibling-produce');
+		await expect(succeeding).resolves.toBe('sibling-produce');
+		expect(await cache.get('session')).toBe('sibling-produce');
+		for (const gate of fillers) {
+			gate.resolve('filler');
+		}
+		await Promise.all(filling);
+	});
+
+	it('does not hold the event loop open while a produce is in flight', async () => {
+		const cache = new InMemoryProvider();
+		const stuck = deferred<string>();
+		const timers: Array<NodeJS.Timeout> = [];
+		const scheduled = globalThis.setTimeout;
+		const spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((handler: () => void, ms?: number) => {
+			const timer = scheduled(handler, ms);
+			if (ms === PRODUCE_TIMEOUT_MS) {
+				timers.push(timer);
+			}
+			return timer;
+		}) as typeof globalThis.setTimeout);
+		const pending = cache.getOrSet('session', async () => await stuck.promise, 30, PRODUCE_TIMEOUT_MS);
+		await flush();
+		spy.mockRestore();
+		expect(timers).toHaveLength(1);
+		expect(timers[0].hasRef()).toBe(false);
+		await expect(pending).rejects.toThrow(PRODUCE_TIMEOUT_MESSAGE);
 	});
 
 	it('keeps a later produce cacheable after an earlier one was invalidated', async () => {
