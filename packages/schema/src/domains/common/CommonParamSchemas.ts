@@ -246,12 +246,6 @@ export const CredentialIdParam = z.object({
 
 export type CredentialIdParam = z.infer<typeof CredentialIdParam>;
 
-export const ScheduledMessageIdParam = z.object({
-	scheduled_message_id: SnowflakeType.describe('The ID of the scheduled message'),
-});
-
-export type ScheduledMessageIdParam = z.infer<typeof ScheduledMessageIdParam>;
-
 const ArchiveSubjectTypeEnum = z
 	.enum(['user', 'guild'])
 	.describe('Type of entity being archived: user for user data archives, guild for guild data archives');

@@ -7,7 +7,6 @@ import Inbox, {type InboxTab} from '@app/features/inbox/state/Inbox';
 import styles from '@app/features/messaging/components/popouts/InboxPopout.module.css';
 import {RecentMentionsContent} from '@app/features/messaging/components/popouts/RecentMentionsContent';
 import {SavedMessagesContent} from '@app/features/messaging/components/popouts/SavedMessagesContent';
-import {ScheduledMessagesContent} from '@app/features/messaging/components/popouts/ScheduledMessagesContent';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -20,10 +19,9 @@ import {
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
-import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {AtIcon, BellIcon, BookmarkSimpleIcon, CheckIcon, ClockIcon} from '@phosphor-icons/react';
+import {AtIcon, BellIcon, BookmarkSimpleIcon, CheckIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -36,10 +34,6 @@ const UNREAD_DESCRIPTOR = msg({
 const BOOKMARKS_DESCRIPTOR = msg({
 	message: 'Bookmarks',
 	comment: 'Tab label in the inbox popout listing the user bookmarks.',
-});
-const SCHEDULED_DESCRIPTOR = msg({
-	message: 'Scheduled',
-	comment: 'Tab label in the inbox popout listing the user scheduled messages.',
 });
 const INBOX_TABS_DESCRIPTOR = msg({
 	message: 'Inbox tabs',
@@ -141,15 +135,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 			icon: <AtIcon weight="bold" className={styles.iconSmall} data-flx="messaging.inbox-popout.icon-small--3" />,
 		},
 	];
-	const scheduledTab: TabConfig = {
-		key: 'scheduled',
-		label: i18n._(SCHEDULED_DESCRIPTOR),
-		icon: <ClockIcon className={styles.iconSmall} data-flx="messaging.inbox-popout.icon-small--4" />,
-	};
-	const currentUser = Users.getCurrentUser();
-	let showScheduledTab = false;
-	if (currentUser != null) showScheduledTab = currentUser.isStaff();
-	const tabs = showScheduledTab ? [...baseTabs, scheduledTab] : baseTabs;
+	const tabs = baseTabs;
 	const normalizedActiveTab = tabs.some((tab) => tab.key === activeTab) ? activeTab : tabs[0].key;
 	const setActiveTab = useCallback((tab: InboxTab) => {
 		InboxCommands.setTab(tab);
@@ -251,19 +237,6 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 						onHeaderActionsChange={setHeaderActions}
 						data-flx="messaging.inbox-popout.recent-mentions-content"
 					/>
-				</div>
-			)}
-			{showScheduledTab && normalizedActiveTab === 'scheduled' && (
-				<div
-					id="inbox-panel-scheduled"
-					className={styles.tabContent}
-					role="tabpanel"
-					tabIndex={-1}
-					aria-labelledby="scheduled"
-					data-autofocus=""
-					data-flx="messaging.inbox-popout.inbox-panel-scheduled"
-				>
-					<ScheduledMessagesContent data-flx="messaging.inbox-popout.scheduled-messages-content" />
 				</div>
 			)}
 		</div>

@@ -4,7 +4,6 @@ import {randomUUID} from 'node:crypto';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {JobCancelledError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type {ConsumerMessages, JsMsg} from 'nats';
-import {buildScheduledJobIdentity, type ParkedScheduledJob} from '../infrastructure/KVScheduledJobQueueService';
 import type {IJobLedgerRepository} from '../jobs/IJobLedgerRepository';
 import {Logger} from '../Logger';
 import {getWorkerService} from '../middleware/ServiceRegistry';
@@ -42,14 +41,9 @@ interface WorkerRunnerQueue {
 	publishToDlq(taskType: string, originalPayload: Record<string, unknown>, meta: WorkerRunnerDlqMeta): Promise<void>;
 }
 
-interface WorkerRunnerScheduledJobQueue {
-	parkJob(job: ParkedScheduledJob, releaseAt: Date): Promise<void>;
-}
-
 interface WorkerRunnerOptions {
 	tasks: Record<string, WorkerTaskHandler>;
 	queue: WorkerRunnerQueue;
-	scheduledJobQueue: WorkerRunnerScheduledJobQueue;
 	consumerName: string;
 	laneName: string;
 	ledger: IJobLedgerRepository;
@@ -62,7 +56,6 @@ interface WorkerRunnerOptions {
 export class WorkerRunner {
 	private readonly tasks: Record<string, WorkerTaskHandler>;
 	private readonly queue: WorkerRunnerQueue;
-	private readonly scheduledJobQueue: WorkerRunnerScheduledJobQueue;
 	private readonly consumerName: string;
 	private readonly laneName: string;
 	private readonly workerId: string;
@@ -78,7 +71,6 @@ export class WorkerRunner {
 	constructor(options: WorkerRunnerOptions) {
 		this.tasks = options.tasks;
 		this.queue = options.queue;
-		this.scheduledJobQueue = options.scheduledJobQueue;
 		this.consumerName = options.consumerName;
 		this.laneName = options.laneName;
 		this.workerId = options.workerId ?? `worker-${options.laneName}-${randomUUID()}`;
@@ -201,37 +193,11 @@ export class WorkerRunner {
 			if (Number.isFinite(runAtMs)) {
 				const delayMs = runAtMs - Date.now();
 				if (delayMs > 0) {
-					const deliveryCount = msg.info.deliveryCount;
-					const shouldPark = delayMs > this.ackWaitMs || deliveryCount >= this.maxDeliver - 1;
-					if (shouldPark) {
-						const ledgerJobIdValue = ledgerJobId === null ? null : ledgerJobId.toString();
-						try {
-							await this.scheduledJobQueue.parkJob(
-								{
-									jobIdentity: buildScheduledJobIdentity(taskType, jobPayload, runAtMs, ledgerJobIdValue),
-									taskType,
-									payload: jobPayload,
-									runAtMs,
-									ledgerJobId: ledgerJobIdValue,
-								},
-								new Date(runAtMs - this.ackWaitMs),
-							);
-							msg.ack();
-							Logger.debug(
-								{taskType, seq: msg.seq, runAt, deliveryCount},
-								'Parked scheduled job in the due queue to free ack slot',
-							);
-						} catch (error) {
-							Logger.error({taskType, seq: msg.seq, err: error}, 'Failed to park scheduled job, falling back to NAK');
-							msg.nak(Math.min(delayMs, this.ackWaitMs - 5000));
-						}
-					} else {
-						Logger.debug(
-							{taskType, seq: msg.seq, runAt, delayMs},
-							'Job scheduled for future execution, redelivering with delay',
-						);
-						msg.nak(delayMs);
-					}
+					Logger.debug(
+						{taskType, seq: msg.seq, runAt, delayMs},
+						'Job scheduled for future execution, redelivering with delay',
+					);
+					msg.nak(delayMs);
 					return false;
 				}
 			}

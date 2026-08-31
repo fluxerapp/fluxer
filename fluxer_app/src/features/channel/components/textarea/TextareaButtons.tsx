@@ -106,7 +106,6 @@ export const TextareaButtons = React.forwardRef<HTMLDivElement, TextareaButtonsP
 					hasContent,
 					hasAttachments,
 					hasPendingSticker,
-					isEditingScheduledMessage: false,
 				}),
 			[
 				canRecordVoice,

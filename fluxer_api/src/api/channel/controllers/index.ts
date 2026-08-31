@@ -5,14 +5,12 @@ import {CallController} from './CallController';
 import {ChannelController} from './ChannelController';
 import {MessageController} from './MessageController';
 import {MessageInteractionController} from './MessageInteractionController';
-import {ScheduledMessageController} from './ScheduledMessageController';
 import {StreamController} from './StreamController';
 
 export function registerChannelControllers(app: HonoApp) {
 	ChannelController(app);
 	MessageInteractionController(app);
 	MessageController(app);
-	ScheduledMessageController(app);
 	CallController(app);
 	StreamController(app);
 }

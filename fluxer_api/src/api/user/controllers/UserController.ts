@@ -8,7 +8,6 @@ import {UserAuthController} from './UserAuthController';
 import {UserChannelController} from './UserChannelController';
 import {UserContentController} from './UserContentController';
 import {UserRelationshipController} from './UserRelationshipController';
-import {UserScheduledMessageController} from './UserScheduledMessageController';
 
 export function UserController(app: HonoApp) {
 	UserAccountController(app);
@@ -16,7 +15,6 @@ export function UserController(app: HonoApp) {
 	UserRelationshipController(app);
 	UserChannelController(app);
 	UserContentController(app);
-	UserScheduledMessageController(app);
 	EntranceSoundController(app);
 	EntranceSoundPlayController(app);
 }

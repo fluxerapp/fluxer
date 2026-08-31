@@ -40,7 +40,6 @@ import type {IVoiceRoomStore} from '../infrastructure/IVoiceRoomStore';
 import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
 import type {KVActivityTracker} from '../infrastructure/KVActivityTracker';
 import type {KVBulkMessageDeletionQueueService} from '../infrastructure/KVBulkMessageDeletionQueueService';
-import type {KVScheduledJobQueueService} from '../infrastructure/KVScheduledJobQueueService';
 import type {PremiumStateReconciliationQueueService} from '../infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '../infrastructure/UserCacheService';
 import type {InstanceConfigRepository} from '../instance/InstanceConfigRepository';
@@ -87,7 +86,6 @@ import {
 	getKVAccountDeletionQueue,
 	getKVActivityTracker,
 	getKVBulkMessageDeletionQueue,
-	getKVScheduledJobQueue,
 	getLimitConfigService,
 	getNcmecSubmissionService,
 	getOAuth2TokenRepository,
@@ -164,7 +162,6 @@ export interface WorkerDependencies {
 	activityTracker: KVActivityTracker;
 	deletionQueueService: KVAccountDeletionQueueService;
 	bulkMessageDeletionQueueService: KVBulkMessageDeletionQueueService;
-	scheduledJobQueueService: KVScheduledJobQueueService;
 	premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService;
 	deletionEligibilityService: UserDeletionEligibilityService;
 	voiceRoomStore: IVoiceRoomStore;
@@ -229,7 +226,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	const activityTracker = getKVActivityTracker();
 	const deletionQueueService = getKVAccountDeletionQueue();
 	const bulkMessageDeletionQueueService = getKVBulkMessageDeletionQueue();
-	const scheduledJobQueueService = getKVScheduledJobQueue();
 	const premiumStateReconciliationQueueService = getPremiumStateReconciliationQueueService();
 	const deletionEligibilityService = new UserDeletionEligibilityService(kvClient);
 	await ensureVoiceResourcesInitialized();
@@ -341,7 +337,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		activityTracker,
 		deletionQueueService,
 		bulkMessageDeletionQueueService,
-		scheduledJobQueueService,
 		premiumStateReconciliationQueueService,
 		deletionEligibilityService,
 		voiceRoomStore,

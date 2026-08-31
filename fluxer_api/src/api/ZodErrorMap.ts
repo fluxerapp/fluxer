@@ -66,8 +66,6 @@ function fluxerZodErrorMap(issue: FluxerZodErrorMapIssue): FluxerZodErrorMapResu
 			const origin = 'origin' in issue ? String(issue.origin) : undefined;
 			if (origin === 'string') {
 				errorCode = ValidationErrorCodes.CONTENT_EXCEEDS_MAX_LENGTH;
-			} else if (origin === 'date') {
-				errorCode = ValidationErrorCodes.SCHEDULED_TIME_MUST_BE_FUTURE;
 			} else {
 				errorCode = ValidationErrorCodes.INVALID_FORMAT;
 			}

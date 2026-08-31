@@ -343,34 +343,6 @@ export const SAVED_MESSAGE_COLUMNS = [
 	'saved_at',
 ] as const satisfies ReadonlyArray<keyof SavedMessageRow>;
 
-export interface ScheduledMessageRow {
-	user_id: UserID;
-	scheduled_message_id: MessageID;
-	channel_id: ChannelID;
-	payload: string;
-	scheduled_at: Date;
-	scheduled_local_at: string;
-	timezone: string;
-	status: string;
-	status_reason: string | null;
-	created_at: Date;
-	invalidated_at: Date | null;
-}
-
-export const SCHEDULED_MESSAGE_COLUMNS = [
-	'user_id',
-	'scheduled_message_id',
-	'channel_id',
-	'payload',
-	'scheduled_at',
-	'scheduled_local_at',
-	'timezone',
-	'status',
-	'status_reason',
-	'created_at',
-	'invalidated_at',
-] as const satisfies ReadonlyArray<keyof ScheduledMessageRow>;
-
 export interface FavoriteMemeRow {
 	user_id: UserID;
 	meme_id: MemeID;

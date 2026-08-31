@@ -16,7 +16,6 @@ export interface MobileTextareaButtonSignals {
 	hasContent: boolean;
 	hasAttachments: boolean;
 	hasPendingSticker: boolean;
-	isEditingScheduledMessage: boolean;
 }
 
 export interface MobileTextareaButtonModel {
@@ -51,16 +50,13 @@ export function selectMobileTextareaButtonModel(signals: MobileTextareaButtonSig
 	const typedText = hasTypedText(signals.value);
 	const hasTextContent = signals.hasContent || typedText;
 	const hasSubmissionContent = hasTextContent || signals.hasAttachments || signals.hasPendingSticker;
-	const shouldShowVoice =
-		signals.canRecordVoice && !signals.isEditingMessage && !signals.isEditingScheduledMessage && !hasSubmissionContent;
+	const shouldShowVoice = signals.canRecordVoice && !signals.isEditingMessage && !hasSubmissionContent;
 	const sendDisabled =
 		signals.disabled ||
 		signals.isOverCharacterLimit ||
-		signals.isEditingScheduledMessage ||
 		(signals.isSlowmodeActive && !signals.isEditingMessage) ||
 		(!hasSubmissionContent && !signals.isEditingMessage);
-	const voiceDisabled =
-		signals.disabled || signals.isSlowmodeActive || signals.isOverCharacterLimit || signals.isEditingScheduledMessage;
+	const voiceDisabled = signals.disabled || signals.isSlowmodeActive || signals.isOverCharacterLimit;
 	const visibleButton = shouldShowVoice ? 'voice' : 'send';
 	const mode = visibleButton === 'voice' ? 'voice' : sendDisabled ? 'sendBlocked' : 'sendReady';
 	return {
@@ -84,7 +80,6 @@ const DEFAULT_SIGNALS: MobileTextareaButtonSignals = {
 	hasContent: false,
 	hasAttachments: false,
 	hasPendingSticker: false,
-	isEditingScheduledMessage: false,
 };
 const DEFAULT_MODEL = selectMobileTextareaButtonModel(DEFAULT_SIGNALS);
 

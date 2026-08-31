@@ -32,7 +32,6 @@ const LANE_CONFIG = {
 		consumerName: 'workers_lifecycle',
 		tasks: [
 			'processStripeWebhook',
-			'sendScheduledMessage',
 			'sendSystemDm',
 			'userProcessPendingDeletion',
 			'userProcessPendingDeletions',
@@ -72,7 +71,6 @@ const LANE_CONFIG = {
 			'processInactivityDeletions',
 			'processPendingBulkMessageDeletions',
 			'processPremiumStateReconciliationQueue',
-			'processScheduledJobQueue',
 			'prunePostgresKvTtl',
 			'refreshSearchIndex',
 			'syncDiscoveryIndex',
@@ -214,13 +212,6 @@ function resolveWorkerLanes(config: WorkerLaneRuntimeConfig): Array<WorkerLaneDe
 	});
 }
 
-const SCHEDULED_JOB_DRAIN_INTERVALS_PER_ACK_WAIT = 2;
-
-function resolveScheduledJobDrainIntervalSeconds(): number {
-	const minimumAckWaitMs = Math.min(...WORKER_LANES.map((lane) => lane.ackWaitMs));
-	return Math.max(1, Math.floor(minimumAckWaitMs / SCHEDULED_JOB_DRAIN_INTERVALS_PER_ACK_WAIT / 1000));
-}
-
 function resolveCronSchedulerEnabled(mode: APIWorkerMode, configuredValue: boolean | undefined): boolean {
 	if (configuredValue !== undefined) {
 		return configuredValue;
@@ -253,10 +244,4 @@ export function findLaneForTask(taskName: string): APIWorkerLaneName | null {
 }
 
 export type {WorkerLaneDefinition};
-export {
-	resolveCronSchedulerEnabled,
-	resolveScheduledJobDrainIntervalSeconds,
-	resolveWorkerLanes,
-	validateLaneCompleteness,
-	WORKER_LANES,
-};
+export {resolveCronSchedulerEnabled, resolveWorkerLanes, validateLaneCompleteness, WORKER_LANES};

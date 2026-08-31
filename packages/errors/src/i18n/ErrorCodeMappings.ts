@@ -384,10 +384,6 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.VOICE_MESSAGES_DURATION_EXCEEDS_LIMIT]: 'calls_and_voice.voice_message_duration_exceeds_limit',
 	[ValidationErrorCodes.VOICE_MESSAGES_REQUIRE_SINGLE_ATTACHMENT]:
 		'calls_and_voice.voice_messages_require_single_attachment',
-	[ValidationErrorCodes.SCHEDULED_TIME_MUST_BE_FUTURE]: 'messages.scheduled_time_must_be_future',
-	[ValidationErrorCodes.SCHEDULED_MESSAGES_MAX_30_DAYS]: 'messages.scheduled_messages_max_30_days',
-	[ValidationErrorCodes.INVALID_SCHEDULED_MESSAGE_PAYLOAD]: 'messages.invalid_scheduled_message_payload',
-	[ValidationErrorCodes.INVALID_DATETIME_FOR_SCHEDULED_SEND]: 'messages.scheduled_send_datetime_invalid',
 	[ValidationErrorCodes.MUST_START_SESSION_BEFORE_SENDING]: 'auth_and_oauth.must_start_session_before_sending_messages',
 	[ValidationErrorCodes.TOO_MANY_EMBEDS]: 'embeds.too_many_embeds',
 	[ValidationErrorCodes.ATTACHMENTS_METADATA_REQUIRED_WHEN_UPLOADING]:

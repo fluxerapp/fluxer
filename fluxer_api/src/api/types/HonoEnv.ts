@@ -18,7 +18,6 @@ import type {IChannelRepository} from '../channel/IChannelRepository';
 import type {ChannelRequestService} from '../channel/services/ChannelRequestService';
 import type {ChannelService} from '../channel/services/ChannelService';
 import type {MessageRequestService} from '../channel/services/message/MessageRequestService';
-import type {ScheduledMessageService} from '../channel/services/ScheduledMessageService';
 import type {StreamPreviewService} from '../channel/services/StreamPreviewService';
 import type {StreamService} from '../channel/services/StreamService';
 import type {ConnectionRequestService} from '../connection/ConnectionRequestService';
@@ -177,7 +176,6 @@ export interface HonoEnv {
 		webhookService: WebhookService;
 		webhookRequestService: WebhookRequestService;
 		workerService: IWorkerService<WorkerTaskName>;
-		scheduledMessageService: ScheduledMessageService;
 		stripeService: StripeService;
 		ageVerificationService: AgeVerificationService;
 		applicationService: ApplicationService;

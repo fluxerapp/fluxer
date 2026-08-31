@@ -17,7 +17,6 @@ function signals(overrides: Partial<MobileTextareaButtonSignals> = {}): MobileTe
 		hasContent: false,
 		hasAttachments: false,
 		hasPendingSticker: false,
-		isEditingScheduledMessage: false,
 		...overrides,
 	};
 }
@@ -90,15 +89,6 @@ describe('MobileTextareaButtonStateMachine', () => {
 			mode: 'sendReady',
 			visibleButton: 'send',
 			sendButton: {disabled: false},
-		});
-	});
-
-	it('does not expose voice recording while editing a scheduled message', () => {
-		expect(state({isEditingScheduledMessage: true})).toMatchObject({
-			mode: 'sendBlocked',
-			visibleButton: 'send',
-			sendButton: {disabled: true},
-			voiceButton: {disabled: true},
 		});
 	});
 

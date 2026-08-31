@@ -47,25 +47,8 @@ export const TEST_IDS = {
 	NONEXISTENT_MESSAGE: '999999999999999999',
 	NONEXISTENT_WEBHOOK: '999999999999999999',
 } as const;
-export const TEST_LIMITS = {
-	SCHEDULED_MESSAGE_MAX_DAYS: 30,
-	SCHEDULED_MESSAGE_MIN_DELAY_MS: 5 * 60 * 1000,
-	SCHEDULED_MESSAGE_MAX_DELAY_MS: 31 * 24 * 60 * 60 * 1000,
-	MFA_TICKET_SHORT_TTL: 1,
-	MFA_TICKET_LONG_TTL: 300,
-	PASSWORD_RESET_TOKEN_LENGTH: 64,
-} as const;
-
 export function generateUniquePassword(): string {
 	return `SecurePass-${Date.now()}!`;
-}
-
-export function generateFutureTimestamp(minutesInFuture = 5): string {
-	return new Date(Date.now() + minutesInFuture * 60 * 1000).toISOString();
-}
-
-export function generatePastTimestamp(hoursInPast = 1): string {
-	return new Date(Date.now() - hoursInPast * 60 * 60 * 1000).toISOString();
 }
 
 export function wait(ms: number): Promise<void> {

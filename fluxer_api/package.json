@@ -70,7 +70,6 @@
 		"jose": "catalog:",
 		"livekit-server-sdk": "catalog:",
 		"lodash": "catalog:",
-		"luxon": "catalog:",
 		"maxmind": "catalog:",
 		"mime": "catalog:",
 		"nats": "catalog:",
@@ -89,7 +88,6 @@
 	"devDependencies": {
 		"@types/archiver": "catalog:",
 		"@types/lodash": "catalog:",
-		"@types/luxon": "catalog:",
 		"@typescript/native-preview": "catalog:",
 		"esbuild": "catalog:",
 		"msw": "catalog:",

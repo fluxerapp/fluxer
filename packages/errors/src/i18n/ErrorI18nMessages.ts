@@ -432,13 +432,9 @@ export const ERROR_I18N_MESSAGES = {
 	'messages.forward_reference_requires_channel_and_message':
 		'Forward message reference must include `channel_id` and `message_id`.',
 	'messages.invalid_message_data': 'Invalid message data.',
-	'messages.invalid_scheduled_message_payload': 'Invalid scheduled message payload.',
 	'messages.message_ids_cannot_be_empty': "`message_ids` can't be empty.",
 	'messages.messages_array_required': '`messages` array is required and must not be empty.',
 	'messages.messages_with_snapshots_cannot_be_edited': "Messages with snapshots can't be edited.",
-	'messages.scheduled_messages_max_30_days': 'Scheduled messages can be at most 30 days in the future.',
-	'messages.scheduled_send_datetime_invalid': 'Invalid date or time for scheduled send.',
-	'messages.scheduled_time_must_be_future': 'Scheduled time must be in the future.',
 	'messages.voice_messages_attachment_must_be_audio': 'Voice message attachments must be audio files.',
 	'messages.voice_messages_cannot_have_content': "Voice messages can't have text content.",
 	'messages.voice_messages_cannot_have_embeds': "Voice messages can't have embeds.",

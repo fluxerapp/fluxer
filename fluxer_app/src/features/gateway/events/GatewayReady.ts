@@ -28,7 +28,6 @@ import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
-import ScheduledMessages from '@app/features/messaging/state/ScheduledMessages';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -170,7 +169,6 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	MemberSearch.handleGatewayReady();
 	SavedMessages.handleGatewayReady();
 	MentionFeed.handleGatewayReady();
-	ScheduledMessages.handleGatewayReady();
 	ChannelPins.handleGatewayReady();
 	UserConnection.handleGatewayReady();
 	UserGuildSettings.handleGatewayReady(data.user_guild_settings ?? []);

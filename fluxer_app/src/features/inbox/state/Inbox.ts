@@ -6,7 +6,7 @@ import {makeAutoObservable} from 'mobx';
 
 const logger = new Logger('Inbox');
 
-export type InboxTab = 'bookmarks' | 'mentions' | 'scheduled' | 'unreadChannels';
+export type InboxTab = 'bookmarks' | 'mentions' | 'unreadChannels';
 
 class Inbox {
 	selectedTab: InboxTab = 'bookmarks';

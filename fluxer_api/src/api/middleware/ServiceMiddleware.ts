@@ -21,7 +21,6 @@ import {ChannelRepository} from '../channel/ChannelRepository';
 import {ChannelRequestService} from '../channel/services/ChannelRequestService';
 import {MessageRequestService} from '../channel/services/message/MessageRequestService';
 import {createMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
-import {ScheduledMessageService} from '../channel/services/ScheduledMessageService';
 import {StreamService} from '../channel/services/StreamService';
 import {ConnectionRequestService} from '../connection/ConnectionRequestService';
 import {ConnectionService} from '../connection/ConnectionService';
@@ -148,7 +147,6 @@ import {
 	getReadStateRequestService,
 	getReadStateService,
 	getReportRepository,
-	getScheduledMessageRepository,
 	getStorageService,
 	getStreamPreviewService,
 	getSweegoWebhookService,
@@ -384,7 +382,6 @@ class RequestServices implements RequestScopedServices {
 	private cachedUserChannelRequestService: UserChannelRequestService | undefined;
 	private cachedUserContentRequestService: UserContentRequestService | undefined;
 	private cachedUserRelationshipRequestService: UserRelationshipRequestService | undefined;
-	private cachedScheduledMessageService: ScheduledMessageService | undefined;
 	private cachedWebhookService: WebhookService | undefined;
 	private cachedWebhookRequestService: WebhookRequestService | undefined;
 
@@ -1020,16 +1017,6 @@ class RequestServices implements RequestScopedServices {
 			getUserCacheService(),
 		);
 		return this.cachedUserRelationshipRequestService;
-	}
-
-	get scheduledMessageService(): ScheduledMessageService {
-		this.cachedScheduledMessageService ??= new ScheduledMessageService(
-			this.channelService,
-			getScheduledMessageRepository(),
-			getWorkerService(),
-			getSnowflakeService(),
-		);
-		return this.cachedScheduledMessageService;
 	}
 
 	get webhookService(): WebhookService {

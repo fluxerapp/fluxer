@@ -305,8 +305,6 @@ import {
 	type RelationshipRow,
 	SAVED_MESSAGE_COLUMNS,
 	type SavedMessageRow,
-	SCHEDULED_MESSAGE_COLUMNS,
-	type ScheduledMessageRow,
 	USER_BY_EMAIL_COLUMNS,
 	USER_BY_LAST_ACTIVE_IP_COLUMNS,
 	USER_BY_LAST_ACTIVE_IP_TRUST_KEY_COLUMNS,
@@ -683,11 +681,6 @@ export const SavedMessages = defineTable<SavedMessageRow, 'user_id' | 'message_i
 	name: 'saved_messages',
 	columns: SAVED_MESSAGE_COLUMNS,
 	primaryKey: ['user_id', 'message_id'],
-});
-export const ScheduledMessages = defineTable<ScheduledMessageRow, 'user_id' | 'scheduled_message_id'>({
-	name: 'scheduled_messages',
-	columns: SCHEDULED_MESSAGE_COLUMNS,
-	primaryKey: ['user_id', 'scheduled_message_id'],
 });
 export const PushSubscriptions = defineTable<PushSubscriptionRow, 'user_id' | 'subscription_id'>({
 	name: 'push_subscriptions',
