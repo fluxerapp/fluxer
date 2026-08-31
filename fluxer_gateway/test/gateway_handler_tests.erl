@@ -446,6 +446,20 @@ handle_session_start_result_sharding_required_closes_4011_test() ->
         ),
     ?assertEqual(constants:close_code_to_num(sharding_required), CloseCode).
 
+identify_with_non_map_payload_closes_test() ->
+    State = (new_json_state())#{peer_ip => unique_test_peer_ip(<<"198.51.100.61">>)},
+    {[{close, CloseCode, _Reason}], _NewState} = gateway_handler_dispatch:handle_opcode(
+        identify, #{<<"d">> => null}, State
+    ),
+    ?assertEqual(constants:close_code_to_num(decode_error), CloseCode).
+
+voice_state_update_with_non_map_payload_closes_test() ->
+    State = (new_json_state())#{session_pid => self()},
+    {[{close, CloseCode, _Reason}], _NewState} = gateway_handler_dispatch:handle_opcode(
+        voice_state_update, #{<<"d">> => <<"not-a-map">>}, State
+    ),
+    ?assertEqual(constants:close_code_to_num(decode_error), CloseCode).
+
 new_json_state() ->
     (gateway_handler:new_state())#{
         version => 1, encoding => json, compress_ctx => gateway_compress:new_context(none)

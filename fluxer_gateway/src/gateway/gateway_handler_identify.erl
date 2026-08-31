@@ -151,7 +151,7 @@ maybe_put(Key, Value, Map) ->
     {ok, binary(), map(), term(), [binary()], non_neg_integer(), integer() | undefined,
         gateway_sharding:shard() | undefined}
     | {error, atom()}.
-validate_identify_data(Data) ->
+validate_identify_data(Data) when is_map(Data) ->
     try
         Token = maps:get(<<"token">>, Data),
         Properties = maps:get(<<"properties">>, Data),
@@ -163,7 +163,9 @@ validate_identify_data(Data) ->
         )
     catch
         error:{badkey, _} -> {error, missing_required_field}
-    end.
+    end;
+validate_identify_data(_Data) ->
+    {error, invalid_data}.
 
 -spec validate_properties(binary(), term(), term(), term(), term(), map()) ->
     {ok, binary(), map(), term(), [binary()], non_neg_integer(), integer() | undefined,

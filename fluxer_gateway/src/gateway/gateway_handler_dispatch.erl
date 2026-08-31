@@ -56,9 +56,13 @@ handle_authenticated_opcode(presence_update, Data, #{session_pid := Pid} = State
 ->
     handle_presence_update(Data, Pid, State);
 handle_authenticated_opcode(voice_state_update, Data, #{session_pid := Pid} = State) when
-    is_pid(Pid)
+    is_pid(Pid), is_map(Data)
 ->
     gateway_handler_voice:handle_voice_state_update(Pid, Data, State);
+handle_authenticated_opcode(voice_state_update, _Data, State) ->
+    gateway_handler_encode:close_with_reason(
+        decode_error, <<"Invalid voice payload">>, State
+    );
 handle_authenticated_opcode(request_guild_members, Data, #{session_pid := Pid} = State) when
     is_pid(Pid)
 ->
