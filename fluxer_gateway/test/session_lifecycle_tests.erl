@@ -151,6 +151,18 @@ heartbeat_ack_tolerates_backwards_ack_without_trimming_test() ->
     ?assertEqual(5, maps:get(ack_seq, State1)),
     ?assertEqual([Event], maps:get(buffer, State1)).
 
+heartbeat_ack_clamps_ack_seq_to_current_seq_test() ->
+    State0 = resume_test_state(#{
+        seq => 5,
+        ack_seq => 0,
+        buffer => [#{seq => 5, event => message_create, data => #{}}]
+    }),
+    {reply, true, State1} = session_lifecycle:handle_heartbeat_ack(1000000, State0),
+    ?assertEqual(5, maps:get(ack_seq, State1)),
+    ?assertMatch(
+        {reply, {ok, [], 5}, _}, session_lifecycle:handle_resume(5, self(), State1)
+    ).
+
 handle_resume_clamps_truncated_gap_in_replay_buffer_test() ->
     State0 = resume_test_state(#{
         seq => 5,
