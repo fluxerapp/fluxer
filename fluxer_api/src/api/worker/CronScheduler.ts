@@ -6,6 +6,8 @@ import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import type {WorkerTaskName} from './WorkerLaneConfig';
 import type {WorkerService} from './WorkerService';
 
+const MAX_CATCHUP_SECONDS = 60;
+
 interface CronDefinition {
 	id: string;
 	taskType: WorkerTaskName;
@@ -77,12 +79,22 @@ function matchesCronExpression(expression: string, date: Date): boolean {
 	);
 }
 
+function findLatestDueSecond(expression: string, fromSeconds: number, toSeconds: number): number | null {
+	for (let second = toSeconds; second >= fromSeconds; second--) {
+		if (matchesCronExpression(expression, new Date(second * 1000))) {
+			return second;
+		}
+	}
+	return null;
+}
+
 export class CronScheduler {
 	private readonly workerService: WorkerService;
 	private readonly logger: LoggerInterface;
 	private readonly kvClient: IKVProvider | null;
 	private readonly definitions: Map<string, CronDefinition> = new Map();
 	private intervalId: NodeJS.Timeout | null = null;
+	private lastTickSecond: number | null = null;
 
 	constructor(workerService: WorkerService, logger: LoggerInterface, kvClient: IKVProvider | null = null) {
 		this.workerService = workerService;
@@ -124,28 +136,33 @@ export class CronScheduler {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
+		this.lastTickSecond = null;
 	}
 
 	private async tick(): Promise<void> {
-		const now = new Date();
-		const nowSeconds = Math.floor(now.getTime() / 1000);
+		const nowSeconds = Math.floor(Date.now() / 1000);
+		const previousTickSecond = this.lastTickSecond;
+		this.lastTickSecond = nowSeconds;
+		const fromSeconds =
+			previousTickSecond === null || previousTickSecond >= nowSeconds
+				? nowSeconds
+				: Math.max(previousTickSecond + 1, nowSeconds - MAX_CATCHUP_SECONDS);
 		for (const def of this.definitions.values()) {
-			if (def.lastFired === nowSeconds) {
+			const dueSecond = findLatestDueSecond(def.cronExpression, fromSeconds, nowSeconds);
+			if (dueSecond === null || def.lastFired === dueSecond) {
 				continue;
 			}
-			if (matchesCronExpression(def.cronExpression, now)) {
-				def.lastFired = nowSeconds;
-				try {
-					const jobKey = `cron:${def.id}:${nowSeconds}`;
-					const acquired = await this.acquireEnqueueLease(jobKey);
-					if (!acquired) {
-						continue;
-					}
-					await this.workerService.addJob(def.taskType, def.payload, {jobKey, skipLedger: !def.ledger});
-					this.logger.debug({cronId: def.id, taskType: def.taskType}, 'Cron job fired');
-				} catch (error) {
-					this.logger.error({err: error, cronId: def.id, taskType: def.taskType}, 'Failed to enqueue cron job');
+			def.lastFired = dueSecond;
+			try {
+				const jobKey = `cron:${def.id}:${dueSecond}`;
+				const acquired = await this.acquireEnqueueLease(jobKey);
+				if (!acquired) {
+					continue;
 				}
+				await this.workerService.addJob(def.taskType, def.payload, {jobKey, skipLedger: !def.ledger});
+				this.logger.debug({cronId: def.id, taskType: def.taskType}, 'Cron job fired');
+			} catch (error) {
+				this.logger.error({err: error, cronId: def.id, taskType: def.taskType}, 'Failed to enqueue cron job');
 			}
 		}
 	}
