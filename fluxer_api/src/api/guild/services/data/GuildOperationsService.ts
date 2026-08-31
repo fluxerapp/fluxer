@@ -859,9 +859,7 @@ export class GuildOperationsService {
 		const channels = await this.channelRepository.listGuildChannels(guildId);
 		await Promise.all(channels.map((channel) => this.channelRepository.deleteAllChannelMessages(channel.id)));
 		await Promise.all(
-			channels.map((channel) =>
-				deleteChannelMessageSearchDocuments(channel.id, {context: {source: 'guild_delete'}}),
-			),
+			channels.map((channel) => deleteChannelMessageSearchDocuments(channel.id, {context: {source: 'guild_delete'}})),
 		);
 		await Promise.all(channels.map((channel) => this.channelService.attachments.purgeChannelAttachments(channel)));
 		const discoveryRow = await this.discoveryRepository.findByGuildId(guildId);

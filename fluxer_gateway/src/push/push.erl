@@ -140,7 +140,7 @@ sync_user_blocked_ids(UserId, BlockedIds) ->
 
 -spec sync_user_blocked_ids_local(integer(), term()) -> ok.
 sync_user_blocked_ids_local(UserId, BlockedIds) ->
-    case integer_list(BlockedIds) of
+    case push_normalize:integer_list(BlockedIds) of
         {ok, TypedBlockedIds} ->
             put_blocked_ids_local(UserId, TypedBlockedIds);
         error ->
@@ -175,7 +175,7 @@ invalidate_user_badge_count_local(UserId) ->
 
 -spec invalidate_user_badge_counts_local(term()) -> ok.
 invalidate_user_badge_counts_local(UserIds) ->
-    case integer_list(UserIds) of
+    case push_normalize:integer_list(UserIds) of
         {ok, TypedUserIds} ->
             lists:foreach(fun invalidate_user_badge_count_local/1, TypedUserIds);
         error ->
@@ -419,7 +419,7 @@ dispatch_if_eligible(
 
 -spec handle_sync_user_blocked_ids(integer(), term(), state()) -> {noreply, state()}.
 handle_sync_user_blocked_ids(UserId, BlockedIds, State) ->
-    case integer_list(BlockedIds) of
+    case push_normalize:integer_list(BlockedIds) of
         {ok, TypedBlockedIds} ->
             push_ets_cache:put_blocked_ids(UserId, TypedBlockedIds),
             {noreply, State};
@@ -464,20 +464,6 @@ log_message_worker_drop(dropped, Params) ->
         message_id => maps:get(<<"id">>, MessageData, undefined),
         channel_id => maps:get(<<"channel_id">>, MessageData, undefined)
     }).
-
--spec integer_list(term()) -> {ok, [integer()]} | error.
-integer_list(Value) when is_list(Value) ->
-    integer_list(Value, []);
-integer_list(_) ->
-    error.
-
--spec integer_list([term()], [integer()]) -> {ok, [integer()]} | error.
-integer_list([], Acc) ->
-    {ok, lists:reverse(Acc)};
-integer_list([Value | Rest], Acc) when is_integer(Value) ->
-    integer_list(Rest, [Value | Acc]);
-integer_list(_, _) ->
-    error.
 
 -spec local_cache_mutation(fun(() -> ok)) -> ok.
 local_cache_mutation(Fun) ->

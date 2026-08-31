@@ -45,7 +45,7 @@ pub struct InviteMetaResolver {
 enum InviteMetaStorage {
     Postgres(PostgresInviteMetaStorage),
     #[cfg(feature = "scylla")]
-    Scylla(ScyllaInviteMetaStorage),
+    Scylla(Box<ScyllaInviteMetaStorage>),
 }
 
 struct PostgresInviteMetaStorage {
@@ -183,13 +183,13 @@ impl InviteMetaResolver {
         let cache = invite_meta_cache(config);
 
         Ok(Self {
-            storage: InviteMetaStorage::Scylla(ScyllaInviteMetaStorage {
+            storage: InviteMetaStorage::Scylla(Box::new(ScyllaInviteMetaStorage {
                 db,
                 stmt_invite,
                 stmt_guild,
                 stmt_channel,
                 stmt_user,
-            }),
+            })),
             cache,
         })
     }

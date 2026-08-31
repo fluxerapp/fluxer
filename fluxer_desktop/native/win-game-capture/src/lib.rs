@@ -792,10 +792,10 @@ fn retain_native_frame_sink_handle(
     }
 
     let handle = unsafe {
-        fluxer_screen_frame_bus::NativeScreenFrameSinkHandle::retain_from_raw(
-            data.cast::<fluxer_screen_frame_bus::NativeScreenFrameSinkHandle>(),
-        )
+        data.cast::<fluxer_screen_frame_bus::NativeScreenFrameSinkHandle>()
+            .as_ref()
     }
+    .and_then(fluxer_screen_frame_bus::NativeScreenFrameSinkHandle::retain_ref)
     .ok_or_else(|| {
         napi::Error::new(
             Status::InvalidArg,

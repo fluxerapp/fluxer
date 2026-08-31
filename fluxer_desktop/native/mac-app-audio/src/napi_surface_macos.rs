@@ -138,15 +138,14 @@ fn retain_screen_audio_sink_handle(
             "ProcessLoopback.setScreenAudioSink received an empty native external sink handle",
         ));
     }
-    let handle = unsafe {
-        NativeScreenFrameSinkHandle::retain_from_raw(data.cast::<NativeScreenFrameSinkHandle>())
-    }
-    .ok_or_else(|| {
-        napi::Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
-        )
-    })?;
+    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
+        .and_then(NativeScreenFrameSinkHandle::retain_ref)
+        .ok_or_else(|| {
+            napi::Error::new(
+                Status::InvalidArg,
+                "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
+            )
+        })?;
     Ok(Arc::new(handle))
 }
 

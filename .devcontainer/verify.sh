@@ -7,10 +7,16 @@ QUICK=0
 SKIP_INSTALL=0
 for arg in "$@"; do
 	case "$arg" in
-		--quick) QUICK=1 ;;
-		--skip-install) SKIP_INSTALL=1 ;;
-		-h|--help) sed -n '2,25p' "$0"; exit 0 ;;
-		*) echo "unknown argument: $arg" >&2; exit 2 ;;
+	--quick) QUICK=1 ;;
+	--skip-install) SKIP_INSTALL=1 ;;
+	-h | --help)
+		sed -n '2,25p' "$0"
+		exit 0
+		;;
+	*)
+		echo "unknown argument: $arg" >&2
+		exit 2
+		;;
 	esac
 done
 

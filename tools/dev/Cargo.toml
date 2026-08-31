@@ -3,10 +3,11 @@ name = "fluxer-dev"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+publish = false
 
 [dependencies]
 fluxer_common = { path = "../../fluxer_common" }
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 axum = "0.8.9"
 base64 = "0.22.1"
 clap = { version = "4.6.1", features = ["derive", "env"] }

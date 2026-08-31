@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {Logger} from '@fluxer/logger/src/Logger';
+import {beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import type {MediaProxyMetadataRequest} from '../../infrastructure/IMediaService';
 import {setInjectedMediaService} from '../../middleware/ServiceRegistry';
@@ -71,6 +72,7 @@ describe('Attachment Upload Validation', () => {
 				const guild = await createGuild(harness, account.token, 'Storage Unavailable Test Guild');
 				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 				const channelId = guild.system_channel_id ?? channel.id;
+				const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 				harness.storageService.configure({shouldFailUpload: true});
 				try {
 					const payload = {
@@ -83,8 +85,25 @@ describe('Attachment Upload Validation', () => {
 					const body = JSON.parse(text) as {code?: string};
 					expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
 					expect(body.code).toBe(APIErrorCodes.SERVICE_UNAVAILABLE);
+					expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
+					expect(errorLoggerSpy).toHaveBeenCalledWith(
+						{
+							err: expect.objectContaining({
+								cause: expect.objectContaining({message: 'Mock storage upload failure'}),
+								code: APIErrorCodes.SERVICE_UNAVAILABLE,
+								message: 'Attachment storage is temporarily unavailable',
+								status: HTTP_STATUS.SERVICE_UNAVAILABLE,
+							}),
+							method: 'POST',
+							path: `/channels/${channelId}/messages`,
+							requestId: expect.any(String),
+							status: HTTP_STATUS.SERVICE_UNAVAILABLE,
+						},
+						'Request failed',
+					);
 				} finally {
 					harness.storageService.configure({shouldFailUpload: false});
+					errorLoggerSpy.mockRestore();
 				}
 			});
 		});
@@ -160,12 +179,9 @@ describe('Attachment Upload Validation', () => {
 					content: 'Filename mismatch test',
 					attachments: [{id: 0, filename: 'expected.txt'}],
 				};
-				const {response, text, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
+				const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
 					{index: 0, filename: 'different.txt', data: fileData},
 				]);
-				if (response.status !== 200) {
-					console.log('Error response:', text);
-				}
 				expect(response.status).toBe(200);
 				expect(json.attachments).toBeDefined();
 				expect(json.attachments).not.toBeNull();

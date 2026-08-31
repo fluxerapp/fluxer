@@ -141,17 +141,15 @@ get_session_ranges(SessionId, ListId, Tab) ->
 list_ids(Tab) ->
     list_ids_loop(Tab, ets:next(Tab, {<<>>, <<>>}), []).
 
--spec fold_list_subs(
-    binary(), ets:table(), fun((binary(), [range()], map()) -> map()), map()
-) -> map().
+-spec fold_list_subs(binary(), ets:table(), fun((binary(), [range()], Acc) -> Acc), Acc) -> Acc.
 fold_list_subs(ListId, Tab, Fun, Acc0) ->
     fold_list_subs_loop(Tab, ets:next(Tab, {ListId, <<>>}), ListId, Fun, Acc0).
 
--spec fold_lists(fun((binary(), list_subs(), map()) -> map()), map(), ets:table()) -> map().
+-spec fold_lists(fun((binary(), list_subs(), Acc) -> Acc), Acc, ets:table()) -> Acc.
 fold_lists(Fun, Acc0, Tab) ->
     fold_lists_loop(Fun, Acc0, Tab, ets:next(Tab, {<<>>, <<>>})).
 
--spec fold_list_ids(fun((binary(), Acc) -> Acc), Acc, ets:table()) -> Acc when Acc :: term().
+-spec fold_list_ids(fun((binary(), Acc) -> Acc), Acc, ets:table()) -> Acc.
 fold_list_ids(Fun, Acc0, Tab) ->
     fold_list_ids_loop(Fun, Acc0, Tab, ets:next(Tab, {<<>>, <<>>})).
 
@@ -191,8 +189,8 @@ list_ids_loop(Tab, Key, Acc) ->
     list_ids_loop(Tab, ets:next(Tab, Key), Acc).
 
 -spec fold_list_subs_loop(
-    ets:table(), term(), binary(), fun((binary(), [range()], map()) -> map()), map()
-) -> map().
+    ets:table(), term(), binary(), fun((binary(), [range()], Acc) -> Acc), Acc
+) -> Acc.
 fold_list_subs_loop(_Tab, '$end_of_table', _ListId, _Fun, Acc) ->
     Acc;
 fold_list_subs_loop(_Tab, {Other, _}, ListId, _Fun, Acc) when Other =/= ListId ->
@@ -202,8 +200,8 @@ fold_list_subs_loop(Tab, {ListId, SId} = Key, ListId, Fun, Acc) when is_binary(S
     fold_list_subs_loop(Tab, ets:next(Tab, Key), ListId, Fun, Fun(SId, Ranges, Acc)).
 
 -spec fold_lists_loop(
-    fun((binary(), list_subs(), map()) -> map()), map(), ets:table(), term()
-) -> map().
+    fun((binary(), list_subs(), Acc) -> Acc), Acc, ets:table(), term()
+) -> Acc.
 fold_lists_loop(_Fun, Acc, _Tab, '$end_of_table') ->
     Acc;
 fold_lists_loop(_Fun, Acc, _Tab, {idx_tab, _}) ->
@@ -214,8 +212,7 @@ fold_lists_loop(Fun, Acc, Tab, {ListId, _} = Key) when is_binary(ListId) ->
     NextListKey = skip_past_list(Tab, Key, ListId),
     fold_lists_loop(Fun, Acc2, Tab, NextListKey).
 
--spec fold_list_ids_loop(fun((binary(), Acc) -> Acc), Acc, ets:table(), term()) -> Acc when
-    Acc :: term().
+-spec fold_list_ids_loop(fun((binary(), Acc) -> Acc), Acc, ets:table(), term()) -> Acc.
 fold_list_ids_loop(_Fun, Acc, _Tab, '$end_of_table') ->
     Acc;
 fold_list_ids_loop(_Fun, Acc, _Tab, {idx_tab, _}) ->

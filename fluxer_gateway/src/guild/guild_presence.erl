@@ -57,7 +57,7 @@ process_presence(UserId, Payload, Member, State) ->
     ),
     process_presence_change(UserId, OldPresence, PresenceMap, Status, State).
 
--spec process_presence_change(user_id(), map() | undefined, map(), atom(), guild_state()) ->
+-spec process_presence_change(user_id(), map(), map(), atom(), guild_state()) ->
     {noreply, guild_state()}.
 process_presence_change(UserId, PresenceMap, PresenceMap, Status, State) ->
     {noreply, maybe_handle_unchanged_presence(Status, UserId, State)};
@@ -397,7 +397,7 @@ handle_bus_presence_unchanged_payload_is_noop_test() ->
         <<"afk">> => false,
         <<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"Alpha">>}
     },
-    Member = guild_permissions:find_member_by_user_id(1, State),
+    Member = #{} = guild_permissions:find_member_by_user_id(1, State),
     PresenceMap = build_presence_map(Payload, Member),
     ets:insert(maps:get(member_presence, State), {1, PresenceMap}),
     {noreply, NewState} = handle_bus_presence(1, Payload, State),

@@ -6,7 +6,7 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 axum = { version = "0.8.9", features = ["macros"] }
 base64 = "0.22.1"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }

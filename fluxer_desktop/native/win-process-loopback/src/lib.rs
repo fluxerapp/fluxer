@@ -37,15 +37,14 @@ fn retain_screen_audio_sink_handle(
             "ProcessLoopback.setScreenAudioSink received an empty native external sink handle",
         ));
     }
-    let handle = unsafe {
-        NativeScreenFrameSinkHandle::retain_from_raw(data.cast::<NativeScreenFrameSinkHandle>())
-    }
-    .ok_or_else(|| {
-        Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
-        )
-    })?;
+    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
+        .and_then(NativeScreenFrameSinkHandle::retain_ref)
+        .ok_or_else(|| {
+            Error::new(
+                Status::InvalidArg,
+                "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
+            )
+        })?;
     Ok(Arc::new(handle))
 }
 
@@ -341,7 +340,7 @@ impl Callbacks {
             FrameSamples::Owned(owned) => owned.as_slice(),
         };
         let channels = u32::from(audio_contract::TARGET_CHANNELS);
-        if channels == 0 || samples.is_empty() || samples.len() % (channels as usize) != 0 {
+        if channels == 0 || samples.is_empty() || !samples.len().is_multiple_of(channels as usize) {
             return true;
         }
         let frames = samples.len() as u32 / channels;

@@ -130,7 +130,7 @@ strip_members_test() ->
         <<"channels">> => [#{<<"id">> => <<"10">>}],
         <<"roles">> => [#{<<"id">> => <<"role1">>}]
     },
-    Stripped = strip_members(Data),
+    Stripped = #{} = strip_members(Data),
     ?assertEqual(false, maps:is_key(<<"members">>, Stripped)),
     ?assertEqual(false, maps:is_key(<<"member_role_index">>, Stripped)),
     ?assertEqual([#{<<"id">> => <<"10">>}], maps:get(<<"channels">>, Stripped)),

@@ -11,7 +11,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
-const LIBFLUXCORE_WASM_BINDGEN_VERSION: &str = "0.2.122";
+const LIBFLUXCORE_WASM_BINDGEN_VERSION: &str = "0.2.123";
 const LIBFLUXCORE_WASM_SIZE_BUDGET_BYTES: u64 = 300 * 1024;
 const LIBFLUXCORE_WRAPPER_JS: &str = include_str!("../templates/libfluxcore_wrapper.js");
 const LIBFLUXCORE_WRAPPER_DTS: &str = include_str!("../templates/libfluxcore_wrapper.d.ts");

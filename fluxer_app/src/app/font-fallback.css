@@ -15,9 +15,7 @@
 		'Segoe UI Symbol', 'Segoe UI Historic', 'Apple Symbols',
 		'Noto Sans Symbols', 'Noto Sans Symbols 2', 'Noto Sans Math', 'Cambria Math';
 	--font-fallback-mono:
-		'Noto Sans Mono',
-		'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR',
-		var(--font-fallback-sans);
+		'Noto Sans Mono', 'Fluxer Sans SC', 'Fluxer Sans TC', 'Fluxer Sans JP', 'Fluxer Sans KR', var(--font-fallback-sans);
 
 	--font-sans:
 		'Fluxer Sans', 'Fluxer Sans Arabic', 'Fluxer Sans Hebrew', 'Fluxer Sans Devanagari', 'Fluxer Sans Thai Looped',

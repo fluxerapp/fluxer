@@ -7,7 +7,7 @@
 
 handle_role_delete_strips_from_members_test() ->
     RoleIdToDelete = <<"200">>,
-    Data = guild_data_index:normalize_data(#{
+    Data = guild_data_index:normalize_map(#{
         <<"roles">> => [
             #{<<"id">> => <<"100">>, <<"name">> => <<"Admin">>},
             #{<<"id">> => <<"200">>, <<"name">> => <<"Moderator">>}
@@ -138,7 +138,7 @@ handle_role_delete_removes_role_from_list_test() ->
     ?assertEqual(<<"Keep">>, maps:get(<<"name">>, hd(Roles))).
 
 strip_role_from_members_no_affected_users_test() ->
-    Data = guild_data_index:normalize_data(#{
+    Data = guild_data_index:normalize_map(#{
         <<"roles">> => [],
         <<"members">> => #{
             1 => #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"100">>]}

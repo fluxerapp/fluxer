@@ -46,7 +46,7 @@ put_state(_) ->
 
 -spec put_data(guild_id(), guild_data()) -> ok.
 put_data(GuildId, Data) when is_integer(GuildId), is_map(Data) ->
-    NormalizedData = guild_data_index:normalize_data(Data),
+    NormalizedData = guild_data_index:normalize_map(Data),
     put_normalized_data(GuildId, NormalizedData);
 put_data(_, _) ->
     ok.

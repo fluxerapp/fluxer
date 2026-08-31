@@ -90,7 +90,7 @@ pub struct MessagesShard {
 enum MessagesStorage {
     Postgres(PostgresMessagesStorage),
     #[cfg(feature = "scylla")]
-    Scylla(ScyllaMessagesStorage),
+    Scylla(Box<ScyllaMessagesStorage>),
 }
 
 #[derive(Clone)]
@@ -339,7 +339,7 @@ impl MessagesShard {
             .await?;
 
         Ok(Self {
-            storage: MessagesStorage::Scylla(ScyllaMessagesStorage {
+            storage: MessagesStorage::Scylla(Box::new(ScyllaMessagesStorage {
                 db,
                 stmt_get_by_id,
                 stmt_get_latest,
@@ -352,7 +352,7 @@ impl MessagesShard {
                 stmt_get_attachment_decay,
                 stmt_get_attachment_decay_many,
                 stmt_delete_message,
-            }),
+            })),
             transport,
         })
     }

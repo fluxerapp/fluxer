@@ -1,0 +1,216 @@
+diff --git a/dist/index.js b/dist/index.js
+index 35f72a956727fde717972442a9ad9cd079717d5f..ede82c2fc2859b4cd05acfa12be11d9b9bbea798 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -486,7 +486,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -560,7 +561,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 4a699b73eb1ce21581aa5dd426e1870cb0723070..65729d6d8e2ab85de60b00062698a6b4618d9e50 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -447,7 +447,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -521,7 +522,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }
+diff --git a/dist/listener.js b/dist/listener.js
+index ca27851e8346dedfbf16e3e2e4b9dababbe43c9a..7f422a28a9b3e79d22e143114932b48eb55bda0f 100644
+--- a/dist/listener.js
++++ b/dist/listener.js
+@@ -478,7 +478,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -552,7 +553,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }
+diff --git a/dist/listener.mjs b/dist/listener.mjs
+index e9c75a9f94dd3465b6297aff638f546431a20157..03e0a4adafff5264804dcf4863dc609be55c5a5d 100644
+--- a/dist/listener.mjs
++++ b/dist/listener.mjs
+@@ -444,7 +444,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -518,7 +519,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }
+diff --git a/dist/server.js b/dist/server.js
+index 2cebe018608110d8c2714b80070e409362bb357c..6ef93c11a75161162004387521e1eccaef4d3960 100644
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -482,7 +482,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -556,7 +557,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }
+diff --git a/dist/server.mjs b/dist/server.mjs
+index 252b2d9218ab6fa0280919b81b134367bf429f66..e69deb9ea98804014f295acbc98d729395a34c2f 100644
+--- a/dist/server.mjs
++++ b/dist/server.mjs
+@@ -447,7 +447,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -521,7 +522,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }
+diff --git a/dist/vercel.js b/dist/vercel.js
+index cf8171b29548f7284587e9561e6a36290bcbb9cc..ec5831bd79d0093af0928aea4ed2f5afcda9cf80 100644
+--- a/dist/vercel.js
++++ b/dist/vercel.js
+@@ -480,7 +480,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -554,7 +555,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }
+diff --git a/dist/vercel.mjs b/dist/vercel.mjs
+index aafdd30bb6d497c0277bd03864dc3d4de0c5e283..5762941816f7f7b25860e3329ac6947b2288b173 100644
+--- a/dist/vercel.mjs
++++ b/dist/vercel.mjs
+@@ -444,7 +444,8 @@ var responseViaCache = async (res, outgoing) => {
+       }
+     }
+   }
+-  if (!hasContentLength) {
++  const hasContentRange = Object.keys(header).some((key) => key.toLowerCase() === "content-range");
++  if (!hasContentLength && hasContentRange) {
+     if (typeof body === "string") {
+       header["Content-Length"] = Buffer.byteLength(body);
+     } else if (body instanceof Uint8Array) {
+@@ -518,7 +519,11 @@ var responseViaResponseObject = async (res, outgoing, options = {}) => {
+           break;
+         }
+       }
+-      if (done && !("content-length" in resHeaderRecord)) {
++      if (
++        done &&
++        !("content-length" in resHeaderRecord || "Content-Length" in resHeaderRecord) &&
++        ("content-range" in resHeaderRecord || "Content-Range" in resHeaderRecord)
++      ) {
+         resHeaderRecord["content-length"] = values.reduce((acc, value) => acc + value.length, 0);
+       }
+     }

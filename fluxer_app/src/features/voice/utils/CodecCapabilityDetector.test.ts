@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {HardwareEncodeReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, type MockInstance, vi} from 'vitest';
 
 let av1OptIn = false;
 let hevcOptIn = false;
 let desktop = true;
 let gpuReport: HardwareEncodeReport | null = null;
+let codecCapabilityInfo: MockInstance<(...args: Array<unknown>) => void>;
 
 vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 	default: {
@@ -70,7 +72,22 @@ const ALL_SOFTWARE: HardwareEncodeReport = {
 };
 
 describe('screen-share AV1/HEVC opt-in gate', () => {
+	afterEach(() => {
+		try {
+			expect(codecCapabilityInfo.mock.calls.length).toBeGreaterThan(0);
+			for (const call of codecCapabilityInfo.mock.calls) {
+				expect(call).toEqual([
+					'Codec capabilities probed',
+					{capabilities: {vp8: true, vp9: true, h264: true, h265: true, av1: true}},
+				]);
+			}
+		} finally {
+			codecCapabilityInfo.mockRestore();
+		}
+	});
+
 	beforeEach(() => {
+		codecCapabilityInfo = vi.spyOn(Logger.prototype, 'info').mockImplementation(() => undefined);
 		av1OptIn = false;
 		hevcOptIn = false;
 		desktop = true;

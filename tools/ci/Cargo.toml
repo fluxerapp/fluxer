@@ -5,9 +5,9 @@ edition = "2024"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 aws-config = "1.8.18"
-aws-sdk-s3 = "1.135.0"
+aws-sdk-s3 = { version = "1.135.0", default-features = false, features = ["default-https-client", "http-1x", "rt-tokio", "sigv4a"] }
 base64 = "0.22.1"
 bytes = "1.11.1"
 chrono = "0.4.45"

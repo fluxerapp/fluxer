@@ -81,9 +81,9 @@ get_auth_context_matches_get_data_scalars_test() ->
 get_auth_context_is_reachable_through_the_query_handler_test() ->
     State = test_state(),
     Request = {get_guild_auth_context, #{user_id => 200, channel_id => 500}},
-    {reply, Reply, _} = guild_query_handler:handle_call(Request, {self(), make_ref()}, State),
-    Context = maps:get(auth_context, Reply),
-    ?assertEqual(500, maps:get(<<"id">>, maps:get(<<"parent_channel">>, Context))).
+    {reply, #{auth_context := #{<<"parent_channel">> := #{<<"id">> := ParentChannelId}}}, _} =
+        guild_query_handler:handle_call(Request, {self(), make_ref()}, State),
+    ?assertEqual(500, ParentChannelId).
 
 get_guild_state_filters_channels_test() ->
     State = test_state(),

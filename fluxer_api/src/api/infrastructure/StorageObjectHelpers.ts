@@ -171,7 +171,6 @@ export async function stripNonJpegImageMetadataForUpload(
 			return {body: await image.gif().toBuffer(), contentType: 'image/gif'};
 		case 'webp':
 			return {body: await image.webp({lossless: true}).toBuffer(), contentType: 'image/webp'};
-		case 'avif':
 		case 'heif':
 			return {body: await image.avif().toBuffer(), contentType: 'image/avif'};
 		case 'tiff':
@@ -460,7 +459,6 @@ async function stripNonJpegImageFileToFile(
 		case 'webp':
 			await image.webp({lossless: true}).toFile(outputPath);
 			return {contentType: 'image/webp', ...dimensions};
-		case 'avif':
 		case 'heif':
 			await image.avif().toFile(outputPath);
 			return {contentType: 'image/avif', ...dimensions};

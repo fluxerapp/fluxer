@@ -2,7 +2,7 @@
 
 import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
-import sharp from 'sharp';
+import sharp, {type OverlayOptions} from 'sharp';
 import {convertToCodePoints} from '../src/features/expressions/utils/EmojiCodepointUtils';
 
 const EMOJI_SPRITES = {
@@ -131,7 +131,7 @@ async function renderSpriteSheet(
 		const size = EMOJI_SIZE * scale;
 		const dstW = perRow * size;
 		const dstH = rows * size;
-		const compositeOps: Array<sharp.OverlayOptions> = [];
+		const compositeOps: Array<OverlayOptions> = [];
 		for (let i = 0; i < emojiEntries.length; i++) {
 			const item = emojiEntries[i];
 			const emojiBuffer = await loadEmojiImage(item.surrogates, size);

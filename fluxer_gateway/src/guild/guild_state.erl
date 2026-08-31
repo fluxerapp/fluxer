@@ -29,7 +29,7 @@ update_state(Event, EventData, State) ->
 ensure_normalized(Data) ->
     case maps:is_key(members_normalized, Data) of
         true -> Data;
-        false -> guild_data_index:normalize_data(Data)
+        false -> guild_data_index:normalize_map(Data)
     end.
 
 -spec update_data_for_event(event(), event_data(), guild_data(), guild_state()) -> guild_data().

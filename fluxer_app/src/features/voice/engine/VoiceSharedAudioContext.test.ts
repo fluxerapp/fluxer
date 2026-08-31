@@ -40,6 +40,7 @@ interface FakeGraphHarness {
 interface FakeWindowHarness {
 	requestedOptions: Array<AudioContextOptions | undefined>;
 	contexts: Array<FakeAudioContext>;
+	constructionErrors: Array<DOMException>;
 	bodyListeners: Array<string>;
 }
 
@@ -52,7 +53,7 @@ function installFakeWindow(
 		honourSampleRate?: boolean;
 	} = {},
 ): FakeWindowHarness {
-	const harness: FakeWindowHarness = {requestedOptions: [], contexts: [], bodyListeners: []};
+	const harness: FakeWindowHarness = {requestedOptions: [], contexts: [], constructionErrors: [], bodyListeners: []};
 	const throwOn = config.throwOn ?? ((): boolean => false);
 	const honourSampleRate = config.honourSampleRate ?? true;
 
@@ -64,7 +65,9 @@ function installFakeWindow(
 		constructor(options?: AudioContextOptions) {
 			harness.requestedOptions.push(options);
 			if (throwOn(options)) {
-				throw new DOMException('sample rate not supported', 'NotSupportedError');
+				const error = new DOMException('sample rate not supported', 'NotSupportedError');
+				harness.constructionErrors.push(error);
+				throw error;
 			}
 			this.sampleRate = (honourSampleRate ? options?.sampleRate : undefined) ?? HARDWARE_SAMPLE_RATE;
 			harness.contexts.push(this as unknown as FakeAudioContext);
@@ -219,15 +222,30 @@ describe('VoiceSharedAudioContext', () => {
 	it('returns null without throwing when the construction fails', async () => {
 		const harness = installFakeWindow({throwOn: () => true});
 		const {getSharedVoiceAudioContext} = await loadModule();
+		const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		try {
+			let context: AudioContext | null | undefined;
+			expect(() => {
+				context = getSharedVoiceAudioContext();
+			}).not.toThrow();
 
-		let context: AudioContext | null | undefined;
-		expect(() => {
-			context = getSharedVoiceAudioContext();
-		}).not.toThrow();
-
-		expect(context).toBeNull();
-		expect(harness.contexts).toHaveLength(0);
-		expect(harness.requestedOptions).toHaveLength(1);
+			expect(context).toBeNull();
+			expect(harness.contexts).toHaveLength(0);
+			expect(harness.requestedOptions).toEqual([{latencyHint: 'interactive'}]);
+			expect(harness.constructionErrors).toHaveLength(1);
+			expect(warning).toHaveBeenCalledTimes(1);
+			expect(warning).toHaveBeenCalledWith(
+				expect.stringMatching(/^%c\[\d{2}:\d{2}:\d{2}\] \[VoiceSharedAudioContext\] \[Warn\]$/),
+				'color:#ffc107;font-weight:normal',
+				'Failed to construct voice AudioContext',
+				{
+					options: {latencyHint: 'interactive'},
+					error: harness.constructionErrors[0],
+				},
+			);
+		} finally {
+			warning.mockRestore();
+		}
 	});
 
 	it('caches the context across calls and rebuilds it once it has closed', async () => {
@@ -267,10 +285,25 @@ describe('VoiceSharedAudioContext', () => {
 	});
 
 	it('createVoiceAudioContext returns null instead of throwing when the rate is rejected', async () => {
-		installFakeWindow({throwOn: (options) => options?.sampleRate !== undefined});
+		const harness = installFakeWindow({throwOn: (options) => options?.sampleRate !== undefined});
 		const {createVoiceAudioContext} = await loadModule();
-
-		expect(createVoiceAudioContext({latencyHint: 'interactive', sampleRate: 48000})).toBeNull();
+		const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		try {
+			expect(createVoiceAudioContext({latencyHint: 'interactive', sampleRate: 48000})).toBeNull();
+			expect(harness.constructionErrors).toHaveLength(1);
+			expect(warning).toHaveBeenCalledTimes(1);
+			expect(warning).toHaveBeenCalledWith(
+				expect.stringMatching(/^%c\[\d{2}:\d{2}:\d{2}\] \[VoiceSharedAudioContext\] \[Warn\]$/),
+				'color:#ffc107;font-weight:normal',
+				'Failed to construct voice AudioContext',
+				{
+					options: {latencyHint: 'interactive', sampleRate: 48000},
+					error: harness.constructionErrors[0],
+				},
+			);
+		} finally {
+			warning.mockRestore();
+		}
 	});
 
 	it('leaves the context untouched when the browser has no WaveShaper', async () => {

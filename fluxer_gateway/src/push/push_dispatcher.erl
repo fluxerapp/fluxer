@@ -527,26 +527,18 @@ send_job_options(UserIds0, Options) ->
     ChannelName0 = maps:get(channel_name, Options),
     BadgeCountsTtlSeconds = maps:get(badge_counts_ttl_seconds, Options),
     MarkdownContext = maps:get(markdown_context, Options, #{}),
-    case {integer_list(UserIds0), optional_binary(GuildName0), optional_binary(ChannelName0)} of
+    case
+        {
+            push_normalize:integer_list(UserIds0),
+            optional_binary(GuildName0),
+            optional_binary(ChannelName0)
+        }
+    of
         {{ok, UserIds}, {ok, GuildName}, {ok, ChannelName}} when is_map(MarkdownContext) ->
             {ok, UserIds, GuildName, ChannelName, BadgeCountsTtlSeconds, MarkdownContext};
         _ ->
             error
     end.
-
--spec integer_list(term()) -> {ok, [integer()]} | error.
-integer_list(Value) when is_list(Value) ->
-    integer_list(Value, []);
-integer_list(_) ->
-    error.
-
--spec integer_list([term()], [integer()]) -> {ok, [integer()]} | error.
-integer_list([], Acc) ->
-    {ok, lists:reverse(Acc)};
-integer_list([Value | Rest], Acc) when is_integer(Value) ->
-    integer_list(Rest, [Value | Acc]);
-integer_list(_, _) ->
-    error.
 
 -spec optional_binary(term()) -> {ok, binary() | undefined} | error.
 optional_binary(undefined) ->

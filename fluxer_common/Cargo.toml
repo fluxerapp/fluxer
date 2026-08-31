@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 aws-credential-types = "1.2.14"
 aws-sigv4 = "1.4.5"
 axum = { version = "0.8.9", default-features = false }

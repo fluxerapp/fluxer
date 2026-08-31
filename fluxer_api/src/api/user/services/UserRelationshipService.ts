@@ -119,12 +119,8 @@ export class UserRelationshipService {
 		requestCache: RequestCache;
 	}): Promise<Relationship> {
 		const requesterUser = await this.userRepository.findUnique(userId);
-		const requesterIsStaff =
-			requesterUser != null && (requesterUser.flags & UserFlags.STAFF) === UserFlags.STAFF;
-		if (
-			!requesterIsStaff &&
-			(await getInstanceConfigRepository().getInstancePolicyConfig()).direct_messages_disabled
-		) {
+		const requesterIsStaff = requesterUser != null && (requesterUser.flags & UserFlags.STAFF) === UserFlags.STAFF;
+		if (!requesterIsStaff && (await getInstanceConfigRepository().getInstancePolicyConfig()).direct_messages_disabled) {
 			throw new DirectMessagesDisabledError();
 		}
 		if (staffForceAccept && requesterIsStaff) {

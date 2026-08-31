@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@fluxer/logger/src/Logger';
 import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {Hono} from 'hono';
-import {afterAll, beforeEach, describe, expect, test} from 'vitest';
+import {afterAll, beforeEach, describe, expect, test, vi} from 'vitest';
 import {z} from 'zod';
 import {Config} from '../../Config';
 import type {HonoEnv} from '../../types/HonoEnv';
@@ -52,10 +53,26 @@ describe('ResponseTypeMiddleware', () => {
 	test('rejects mismatching responses while validation is enabled', async () => {
 		const app = new Hono<HonoEnv>();
 		app.get('/snowflake', ResponseType(SnowflakeResponse), (ctx) => ctx.json({id: 'not-a-snowflake'}));
+		const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
-		const response = await app.request('/snowflake');
+		try {
+			const response = await app.request('/snowflake');
 
-		expect(response.status).toBe(500);
+			expect(response.status).toBe(500);
+			expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
+			expect(errorLoggerSpy).toHaveBeenCalledWith(
+				{
+					body: {id: 'not-a-snowflake'},
+					method: 'GET',
+					path: '/snowflake',
+					status: 200,
+					validationErrors: [{message: 'INVALID_SNOWFLAKE_FORMAT', path: 'id'}],
+				},
+				'Response validation failed',
+			);
+		} finally {
+			errorLoggerSpy.mockRestore();
+		}
 	});
 
 	test('passes the response through untouched while validation is disabled', async () => {

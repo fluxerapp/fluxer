@@ -1946,17 +1946,6 @@ static inline float fluxer_pq_oetf(float l) {
     return powf(num / den, m2);
 }
 
-static inline float fluxer_hlg_oetf_display(float dl) {
-    if (dl <= 0.0f) return 0.0f;
-    if (dl >= 1.0f) dl = 1.0f;
-    float scene = powf(dl, 1.0f / 1.2f);
-    if (scene <= 1.0f / 12.0f) return sqrtf(3.0f * scene);
-    const float a = 0.17883277f;
-    const float b = 0.28466892f;
-    const float c = 0.55991073f;
-    return a * logf(12.0f * scene - b) + c;
-}
-
 static inline float fluxer_srgb_oetf(float e) {
     if (e <= 0.0f) return 0.0f;
     if (e >= 1.0f) return 1.0f;

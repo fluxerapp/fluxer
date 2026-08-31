@@ -23,7 +23,7 @@ init_base_state(GuildState) ->
     Data0 = maps:get(data, TransferSafe, #{}),
     ExistingVoice = maps:get(voice_states, TransferSafe, #{}),
     {VoiceStates, Data1} = extract_voice_states_from_data(Data0, ExistingVoice),
-    NormalizedData = guild_data_index:normalize_data(Data1),
+    NormalizedData = guild_data_index:normalize_map(Data1),
     MemberTab = ets:new(guild_members_data, [set, public, {read_concurrency, true}]),
     populate_member_ets(MemberTab, NormalizedData),
     BaseState = TransferSafe#{
@@ -122,7 +122,7 @@ handle_reload(NewData, State) ->
     {ReloadVoiceStates, ReloadData} = extract_voice_states_from_data(
         NewData, ExistingVoiceStates
     ),
-    NormalizedNewData = guild_data_index:normalize_data(ReloadData),
+    NormalizedNewData = guild_data_index:normalize_map(ReloadData),
     NewState0 = State#{voice_states => ReloadVoiceStates, data => NormalizedNewData},
     NewState1 = guild_availability:handle_unavailability_transition(State, NewState0),
     NewState2 = guild_sessions:refresh_all_viewable_channels(NewState1),

@@ -4,9 +4,11 @@ use crate::config::ServiceConfig;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::{Client, Manager, Pool, Runtime, Transaction};
-use rustls::RootCertStore;
+use rustls::{
+    RootCertStore,
+    pki_types::{CertificateDer, pem::PemObject},
+};
 use serde_json::{Map, Number, Value};
-use std::io::Cursor;
 use std::str::FromStr;
 use tokio_postgres::{Config as PgConfig, Row, Statement, config::SslMode, types::ToSql};
 use tokio_postgres_rustls::MakeRustlsConnect;
@@ -99,9 +101,8 @@ fn build_tls_connector(ca_pem: Option<&str>) -> anyhow::Result<MakeRustlsConnect
     let _ = rustls::crypto::ring::default_provider().install_default();
     if let Some(ca_pem) = ca_pem.filter(|value| !value.trim().is_empty()) {
         let normalized = ca_pem.replace("\\n", "\n");
-        let mut reader = Cursor::new(normalized.as_bytes());
         let mut roots = RootCertStore::empty();
-        for cert in rustls_pemfile::certs(&mut reader) {
+        for cert in CertificateDer::pem_slice_iter(normalized.as_bytes()) {
             roots.add(cert.context("failed to parse FLUXER_POSTGRES_SSL_CA certificate")?)?;
         }
         if roots.is_empty() {

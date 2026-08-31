@@ -7,11 +7,12 @@ use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(text) = std::str::from_utf8(data) {
-        let path = external_path::build_external_media_proxy_path(text);
-        let _ = external_path::reconstruct_original_url(&path);
-        let sig = signing::create_signature(&path, b"fuzz-secret");
-        let _ = signing::verify_signature(&path, &sig, b"fuzz-secret");
-        let _ = signing::verify_signature(text, &sig, b"other-secret");
+        if let Ok(path) = external_path::build_external_media_proxy_path(text) {
+            let _ = external_path::reconstruct_original_url(&path);
+            let sig = signing::create_signature(&path, b"fuzz-secret");
+            let _ = signing::verify_signature(&path, &sig, b"fuzz-secret");
+            let _ = signing::verify_signature(text, &sig, b"other-secret");
+        }
         let _ = external_path::reconstruct_original_url(text);
         let _ = external_path::percent_decode(text, true);
         let _ = external_path::percent_decode(text, false);

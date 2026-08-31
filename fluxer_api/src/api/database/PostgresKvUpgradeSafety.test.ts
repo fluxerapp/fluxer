@@ -210,9 +210,9 @@ suite('postgres kv upgrade safety', () => {
 				if (pages > 200) throw new Error('runaway paging loop');
 			}
 		} catch (error) {
-			return {keys, error: (error as Error).message, pages};
+			return {keys, error: (error as Error).message};
 		}
-		return {keys, error: null, pages};
+		return {keys, error: null};
 	}
 
 	it('pages consistently with only the old image running', async () => {
@@ -232,27 +232,18 @@ suite('postgres kv upgrade safety', () => {
 	it('ROLLING RESTART: an old replica consumes a token minted by the new one', async () => {
 		const first = await next.executePagedQuery(usersScan(), {pageSize: 7, pageState: null});
 		expect(first.pageState).toBeTruthy();
-		const token = JSON.parse(Buffer.from(first.pageState!, 'base64url').toString('utf8'));
-		let failure: string | null = null;
-		let rows = 0;
-		try {
-			const second = await legacy.executePagedQuery(usersScan(), {pageSize: 7, pageState: first.pageState});
-			rows = second.rows.length;
-		} catch (error) {
-			failure = (error as Error).message;
-		}
-		console.log(`NEW->OLD token=${JSON.stringify(token)} legacy=${failure ?? `${rows} rows`}`);
-		expect(failure).toBeNull();
+		const second = await legacy.executePagedQuery(usersScan(), {pageSize: 7, pageState: first.pageState});
+		expect(second.rows).toHaveLength(7);
 	});
 
 	it('ROLLING RESTART: alternating old and new replicas drain the scan', async () => {
 		const a = await drain(['next', 'legacy'], 7);
 		const b = await drain(['legacy', 'next'], 7);
-		console.log(`new-first  err=${a.error} pages=${a.pages} total=${a.keys.length} unique=${new Set(a.keys).size}`);
-		console.log(`old-first  err=${b.error} pages=${b.pages} total=${b.keys.length} unique=${new Set(b.keys).size}`);
 		expect(a.error).toBeNull();
+		expect(a.keys).toHaveLength(40);
 		expect(new Set(a.keys).size).toBe(40);
 		expect(b.error).toBeNull();
+		expect(b.keys).toHaveLength(40);
 		expect(new Set(b.keys).size).toBe(40);
 	});
 
@@ -262,9 +253,9 @@ suite('postgres kv upgrade safety', () => {
 		const dual = Buffer.from(JSON.stringify({offset: first.rows.length, after: cursor.after})).toString('base64url');
 		const viaOld = await legacy.executePagedQuery(usersScan(), {pageSize: 7, pageState: dual});
 		const viaNew = await next.executePagedQuery(usersScan(), {pageSize: 7, pageState: dual});
-		console.log(`dual token -> old replica: ${viaOld.rows.length} rows, new replica: ${viaNew.rows.length} rows`);
-		expect(viaOld.rows.length).toBe(7);
-		expect(viaNew.rows.length).toBe(7);
+		expect(viaOld.rows).toHaveLength(7);
+		expect(viaNew.rows).toHaveLength(7);
+		expect(fp(viaNew.rows)).toBe(fp(viaOld.rows));
 	});
 
 	it('deletes exactly the same rows as the old image', async () => {
@@ -282,8 +273,7 @@ suite('postgres kv upgrade safety', () => {
 		const left = await raw.query<{row_key: string}>(
 			`SELECT row_key FROM ${KV} WHERE table_name = 'read_states' AND row_key LIKE '%400%' ORDER BY row_key`,
 		);
-		console.log(`rows left after legacy delete + new delete: ${left.rows.length}`);
-		expect(left.rows.length).toBe(0);
+		expect(left.rows).toHaveLength(0);
 	});
 
 	it('writes byte-identical row_key and partition_key to the old image', async () => {
@@ -333,8 +323,6 @@ suite('postgres kv upgrade safety', () => {
 		const cIndexes = await raw.query<{tablename: string}>(
 			`SELECT tablename FROM pg_indexes WHERE indexname IN ('${OLD}_row_key_c_idx', '${NEW}_row_key_c_idx')`,
 		);
-		console.log(`key diffs=${diff.rows[0]!.n} index-definition diffs=${schemaDiff.rows[0]!.n}`);
-		console.log(collations.rows.map((r) => `${r.tablename}.${r.attname}=${r.collname}`).join(' '));
 		expect(Number(diff.rows[0]!.n)).toBe(0);
 		expect(Number(schemaDiff.rows[0]!.n)).toBe(0);
 		expect(collations.rows.filter((r) => r.tablename === OLD).map((r) => r.collname)).toEqual(['default', 'default']);
@@ -358,7 +346,6 @@ suite('postgres kv upgrade safety', () => {
 		const indexes = await raw.query<{indexname: string}>(
 			`SELECT indexname FROM pg_indexes WHERE tablename = '${OLD}' ORDER BY indexname`,
 		);
-		console.log(`after boot on a legacy table: ${indexes.rows.map((r) => r.indexname).join(', ')}`);
 		expect(collations.rows.map((r) => r.collname)).toEqual(['default', 'default']);
 		expect(indexes.rows.map((r) => r.indexname)).toContain(`${OLD}_row_key_c_idx`);
 	});
@@ -371,10 +358,11 @@ suite('postgres kv upgrade safety', () => {
 			ensurePostgresKvSchema(new TableClient(raw, BOOT)),
 			ensurePostgresKvSchema(new TableClient(raw, BOOT)),
 		]);
-		const failures = results.filter((r) => r.status === 'rejected');
-		console.log(`concurrent boots rejected: ${failures.length}`);
-		for (const f of failures) console.log(`  ${(f as PromiseRejectedResult).reason}`);
-		expect(failures.length).toBe(0);
+		expect(results).toEqual([
+			{status: 'fulfilled', value: undefined},
+			{status: 'fulfilled', value: undefined},
+			{status: 'fulfilled', value: undefined},
+		]);
 	}, 120_000);
 
 	it('backfills the messages partition key once and never scans for it again', async () => {
@@ -416,7 +404,6 @@ suite('postgres kv upgrade safety', () => {
 		await insertLegacy('m2');
 		await ensurePostgresKvSchema(backfillClient);
 		const skipped = await partitionOf('m2');
-		console.log(`second boot left the new legacy row alone: partition_key=${skipped === legacyKey('m2')}`);
 		expect(skipped).toBe(legacyKey('m2'));
 		expect(await partitionOf('m1')).toBe(`"c"${SEP}"b"`);
 		await raw.query(`DROP TABLE IF EXISTS ${BACKFILL}`);
@@ -432,7 +419,6 @@ suite('postgres kv upgrade safety', () => {
 		);
 		const after = await next.executeQuery(q);
 		await raw.query(`UPDATE pg_index SET indisvalid = true WHERE indexrelid = '${KV}_row_key_c_idx'::regclass`);
-		console.log(`index valid after boot: ${check.rows[0]?.indisvalid}`);
 		expect(String(after.map((r) => Object.values(r).map(String).join(',')))).toBe(
 			String(before.map((r) => Object.values(r).map(String).join(','))),
 		);
@@ -441,7 +427,6 @@ suite('postgres kv upgrade safety', () => {
 
 	describe('multi-range plan shape on a populated upgraded database', () => {
 		const PERF = 'kv_ranges_perf';
-		const SEP = String.fromCharCode(31);
 		const BASE = 1456074443984486400n;
 		let perf: IPostgresClient;
 
@@ -481,6 +466,7 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 				`SELECT kv.row_key, kv.row_data FROM ${PERF} kv WHERE kv.table_name = $1 AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 				['push_subscriptions'],
 			);
+			expect(Number.isFinite(scan.ms)).toBe(true);
 			const deltas: Array<string> = [];
 			for (const size of [5, 10, 25, 50, 100]) {
 				const params = {user_ids: Array.from({length: size}, (_, i) => BASE + BigInt(i * 3))};
@@ -494,9 +480,10 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 					`SELECT kv.row_key, kv.row_data FROM ${PERF} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 					['push_subscriptions', ...fragments.params],
 				);
-				const verdict = `n=${size} pushdown=${pushed.ms.toFixed(2)}ms scan=${scan.ms.toFixed(2)}ms`;
-				console.log(verdict);
-				if (pushed.ms > scan.ms) deltas.push(`${verdict}\n${pushed.plan}`);
+				expect(Number.isFinite(pushed.ms)).toBe(true);
+				if (pushed.ms > scan.ms) {
+					deltas.push(`n=${size} pushdown=${pushed.ms.toFixed(2)}ms scan=${scan.ms.toFixed(2)}ms\n${pushed.plan}`);
+				}
 			}
 			expect(deltas.join('\n')).toBe('');
 			const overCap = buildCandidatePlan(meta, {
@@ -506,17 +493,13 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 			expect(overCap.exact).toBe(true);
 			const overCapGroups = planFragmentGroups(overCap.candidates);
 			expect(overCapGroups.map((group) => group.params.length)).toEqual([512, 512, 376]);
-			let chunkedMs = 0;
 			for (const fragments of overCapGroups) {
 				const pushed = await explain(
 					`SELECT kv.row_key, kv.row_data FROM ${PERF} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 					['push_subscriptions', ...fragments.params],
 				);
 				expect(pushed.plan).not.toContain('Seq Scan');
-				chunkedMs += pushed.ms;
 			}
-			console.log(`n=700 chunked=${chunkedMs.toFixed(2)}ms scan=${scan.ms.toFixed(2)}ms`);
-			expect(SEP).toBe('\u001f');
 		}, 300_000);
 	});
 });
@@ -547,8 +530,11 @@ describe('candidate plan shapes reached by real queries', () => {
 					: plan.candidates.kind === 'rowKeys'
 						? plan.candidates.rowKeys.length
 						: 0;
-			console.log(`${c.name} -> kind=${plan.candidates.kind} n=${size} exact=${plan.exact}`);
+			expect({kind: plan.candidates.kind, size, exact: plan.exact}, c.name).toEqual({
+				kind: 'ranges',
+				size: 100,
+				exact: true,
+			});
 		}
-		expect(true).toBe(true);
 	});
 });

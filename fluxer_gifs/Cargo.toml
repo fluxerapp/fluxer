@@ -5,10 +5,11 @@ name = "fluxer-gifs"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+publish = false
 
 [dependencies]
 fluxer_common = { path = "../fluxer_common" }
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 base64 = "0.22.1"
 fluxer-svc = { path = "../fluxer_svc", default-features = false }
 hmac = "0.13.0"

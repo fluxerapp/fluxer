@@ -188,15 +188,23 @@ describe('applyMiddlewareStack', () => {
 		expect(response.headers.get('Cache-Control')).toBeNull();
 	});
 	test('skips errorHandler when skipErrorHandler is true', async () => {
+		const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const error = new Error('Test error');
 		const app = new Hono();
 		applyMiddlewareStack(app, {
 			skipErrorHandler: true,
 		});
 		app.get('/test', () => {
-			throw new Error('Test error');
+			throw error;
 		});
-		const response = await app.request('/test');
-		expect(response.status).toBe(500);
+		try {
+			const response = await app.request('/test');
+			expect(response.status).toBe(500);
+			expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+			expect(consoleErrorSpy).toHaveBeenCalledWith(error);
+		} finally {
+			consoleErrorSpy.mockRestore();
+		}
 	});
 	test('applies custom middleware', async () => {
 		const customMiddleware = vi.fn().mockImplementation(async (_c, next) => {

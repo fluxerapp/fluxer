@@ -3,11 +3,12 @@ name = "fluxer-unfurl"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+publish = false
 
 [dependencies]
 fluxer_common = { path = "../fluxer_common" }
-ammonia = "4.1.2"
-anyhow = "1.0.102"
+ammonia = "4.1.4"
+anyhow = "1.0.104"
 base64 = "0.22.1"
 chrono = { version = "0.4.45", default-features = false, features = ["std"] }
 encoding_rs = "0.8.35"

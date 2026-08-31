@@ -28,7 +28,38 @@ AppStorage.subscribe(
 	{key: 'VoiceSettings'},
 );
 
-const {default: VoiceSettings} = await import('./VoiceSettings');
+async function loadVoiceSettings() {
+	const [{Logger}, persistenceModule] = await Promise.all([
+		import('@app/features/platform/utils/AppLogger'),
+		import('@app/features/platform/utils/MobXPersistence'),
+	]);
+	const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+	try {
+		const [{default: VoiceSettings}, {default: MediaPermission}] = await Promise.all([
+			import('./VoiceSettings'),
+			import('@app/features/permissions/system/state/MediaPermission'),
+		]);
+		await Promise.all([
+			persistenceModule.awaitHydration('MacPermissions'),
+			persistenceModule.awaitHydration('VoiceSettings'),
+			vi.waitFor(() => expect(MediaPermission.isInitialized()).toBe(true)),
+		]);
+		expect(debug).toHaveBeenCalledTimes(3);
+		expect(debug).toHaveBeenCalledWith('Store MacPermissions hydrated from AppStorage and is now persisting.');
+		expect(debug).toHaveBeenCalledWith('Initial permission state', {
+			microphone: 'granted',
+			camera: 'granted',
+			micDenied: false,
+			cameraDenied: false,
+		});
+		expect(debug).toHaveBeenCalledWith('Store VoiceSettings hydrated from AppStorage and is now persisting.');
+		return VoiceSettings;
+	} finally {
+		debug.mockRestore();
+	}
+}
+
+const VoiceSettings = await loadVoiceSettings();
 
 describe('AV1/HEVC screen-share opt-in', () => {
 	it('rewrites a stored AV1 screen-share preference back to automatic on first launch', () => {

@@ -30,12 +30,6 @@ pub struct NSErrorBlock {
     pub user_invoke: NsErrorUserInvoke,
 }
 
-pub unsafe extern "C" fn ns_error_trampoline(block: *mut NSErrorBlock, err: *mut c_void) {
-    if let Some(block) = unsafe { block.as_mut() } {
-        unsafe { (block.user_invoke)(block.ctx, err) };
-    }
-}
-
 pub type ContentErrorUserInvoke =
     unsafe extern "C" fn(ctx: *mut c_void, content: *mut c_void, err: *mut c_void);
 pub type ContentErrorInvoke =
@@ -50,16 +44,6 @@ pub struct ContentErrorBlock {
     pub descriptor: *const BlockDescriptorSig,
     pub ctx: *mut c_void,
     pub user_invoke: ContentErrorUserInvoke,
-}
-
-pub unsafe extern "C" fn content_error_trampoline(
-    block: *mut ContentErrorBlock,
-    content: *mut c_void,
-    err: *mut c_void,
-) {
-    if let Some(block) = unsafe { block.as_mut() } {
-        unsafe { (block.user_invoke)(block.ctx, content, err) };
-    }
 }
 
 pub const NS_ERROR_BLOCK_DESCRIPTOR: BlockDescriptorSig = BlockDescriptorSig {
@@ -77,6 +61,22 @@ pub const CONTENT_ERROR_BLOCK_DESCRIPTOR: BlockDescriptorSig = BlockDescriptorSi
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    unsafe extern "C" fn ns_error_trampoline(block: *mut NSErrorBlock, err: *mut c_void) {
+        if let Some(block) = unsafe { block.as_mut() } {
+            unsafe { (block.user_invoke)(block.ctx, err) };
+        }
+    }
+
+    unsafe extern "C" fn content_error_trampoline(
+        block: *mut ContentErrorBlock,
+        content: *mut c_void,
+        err: *mut c_void,
+    ) {
+        if let Some(block) = unsafe { block.as_mut() } {
+            unsafe { (block.user_invoke)(block.ctx, content, err) };
+        }
+    }
 
     #[repr(C)]
     struct RoundTripCtx {

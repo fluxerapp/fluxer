@@ -2,10 +2,44 @@
 
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {HttpError} from '@app/features/platform/types/EndpointError';
-import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
-import Slowmode from '@app/features/slowmode/state/Slowmode';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import type {PendingMessageSend} from '@app/features/slowmode/commands/SlowmodeCommands';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+
+interface SlowmodeStore {
+	clearChannel(channelId: string): void;
+	getLastSendTimestamp(channelId: string): number | null;
+	getSlowmodeRemaining(channelId: string, rateLimitPerUser: number): number;
+}
+
+interface SlowmodeCommandModule {
+	clampSlowmodeRetryAfterMs(retryAfterMs: number | null): number;
+	confirmMessageSend(channelId: string, sentAt: string, pending?: PendingMessageSend): void;
+	discardPendingMessageSend(channelId: string, pending: PendingMessageSend): void;
+	recordPendingMessageSend(channelId: string): PendingMessageSend;
+	updateSlowmodeRemaining(channelId: string, retryAfterMs: number): void;
+}
+
+let Slowmode: SlowmodeStore;
+let SlowmodeCommands: SlowmodeCommandModule;
+
+beforeAll(async () => {
+	const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+	try {
+		const [slowmodeModule, commandModule, persistenceModule] = await Promise.all([
+			import('@app/features/slowmode/state/Slowmode'),
+			import('@app/features/slowmode/commands/SlowmodeCommands'),
+			import('@app/features/platform/utils/MobXPersistence'),
+		]);
+		Slowmode = slowmodeModule.default;
+		SlowmodeCommands = commandModule;
+		await persistenceModule.awaitHydration('Slowmode');
+		expect(debug).toHaveBeenCalledExactlyOnceWith('Store Slowmode hydrated from AppStorage and is now persisting.');
+	} finally {
+		debug.mockRestore();
+	}
+});
 
 const CHANNEL_ID = '1234567890123456789';
 const RATE_LIMIT_PER_USER = 5;

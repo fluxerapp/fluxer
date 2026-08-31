@@ -9,8 +9,7 @@ export function channelRequiresAgeVerification(
 	channelsById: ReadonlyMap<string, Channel>,
 	guildNsfw: boolean,
 ): boolean {
-	const parentCategory =
-		channel.parentId != null ? (channelsById.get(channel.parentId.toString()) ?? null) : null;
+	const parentCategory = channel.parentId != null ? (channelsById.get(channel.parentId.toString()) ?? null) : null;
 	return computeEffectiveChannelNsfw(
 		channelToContentWarningView(channel),
 		parentCategory ? channelToContentWarningView(parentCategory) : null,

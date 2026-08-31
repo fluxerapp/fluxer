@@ -104,16 +104,20 @@ resolve_notification_group(Data, MessageTag) ->
         Group when is_binary(Group), byte_size(Group) > 0 ->
             Group;
         _ ->
-            case
-                push_utils:normalize_binary(
-                    maps:get(<<"channel_id">>, Data, undefined), undefined
-                )
-            of
-                ChannelId when is_binary(ChannelId), byte_size(ChannelId) > 0 ->
-                    <<"channel:", ChannelId/binary>>;
-                _ ->
-                    derive_channel_tag_from_message_tag(MessageTag)
-            end
+            resolve_channel_notification_group(Data, MessageTag)
+    end.
+
+-spec resolve_channel_notification_group(map(), binary()) -> binary().
+resolve_channel_notification_group(Data, MessageTag) ->
+    case
+        push_utils:normalize_binary(
+            maps:get(<<"channel_id">>, Data, undefined), undefined
+        )
+    of
+        ChannelId when is_binary(ChannelId), byte_size(ChannelId) > 0 ->
+            <<"channel:", ChannelId/binary>>;
+        _ ->
+            derive_channel_tag_from_message_tag(MessageTag)
     end.
 
 -spec derive_channel_tag_from_message_tag(binary()) -> binary().

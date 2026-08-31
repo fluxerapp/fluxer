@@ -1,13 +1,9 @@
 # cargo-deny configuration for the Fluxer workspace.
 #
-# Applies to the root workspace (Cargo.toml at the repo root) AND to every
-# per-addon crate under fluxer_desktop/native/* (each addon has its own
-# [workspace], so we invoke cargo-deny with --config pointing here).
-#
-# Used by the native desktop security gate in CI.
+# Applies to the root workspace (Cargo.toml at the repo root).
 
 [graph]
-all-features = false
+all-features = true
 no-default-features = false
 
 [output]
@@ -44,13 +40,11 @@ allow = [
     "BSD-3-Clause",
     "ISC",
     "MPL-2.0",
-    "Unicode-DFS-2016",
     "Unicode-3.0",
     "Zlib",
     "CC0-1.0",
     "AGPL-3.0-or-later",
     "BSL-1.0",
-    "OpenSSL",
     "CDLA-Permissive-2.0",
 ]
 # Explicitly deny GPL-only / strong-copyleft licenses that don't compose with
@@ -72,21 +66,48 @@ license-files = [
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
-# Per-addon crates path-depend on ../rust (the shared `fluxer_desktop_native`
-# crate) without a version. cargo-deny flags that as a wildcard; we allow it
-# because path deps can't realistically pin a SemVer range, and this only
-# affects intra-repo workspace links (registry wildcards remain denied).
+# Internal workspace crates use path dependencies without registry versions.
+# Registry wildcards remain denied.
 allow-wildcard-paths = true
 highlight = "all"
 workspace-default-features = "allow"
 external-default-features = "allow"
-# Keep desktop packaging and native addons away from the obsolete libfuse2 stack.
+# Keep workspace artifacts away from the obsolete libfuse2 stack.
 # AppImage packaging must use the static electron-builder runtime instead.
 deny = [
     { crate = "fuse", reason = "libfuse2-based Rust wrapper; use a maintained FUSE3-native crate only if Fluxer ever needs FUSE directly" },
     { crate = "fuse-sys", reason = "libfuse2 FFI crate; Fluxer AppImages must not reintroduce libfuse2 through native Rust dependencies" },
 ]
-skip = []
+skip = [
+    { crate = "block-buffer@0.10.4", reason = "transitive dependency requires the older digest API" },
+    { crate = "const-oid@0.9.6", reason = "transitive dependency requires the older digest API" },
+    { crate = "cpufeatures@0.2.17", reason = "transitive dependency requires the older crypto API" },
+    { crate = "crypto-common@0.1.7", reason = "transitive dependency requires the older digest API" },
+    { crate = "digest@0.10.7", reason = "transitive dependency requires the older digest API" },
+    { crate = "foldhash@0.1.5", reason = "transitive dependency requires the older hashbrown API" },
+    { crate = "getrandom@0.2.17", reason = "transitive dependency requires the older randomness API" },
+    { crate = "getrandom@0.3.4", reason = "transitive dependency requires the prior randomness API" },
+    { crate = "hashbrown@0.14.5", reason = "transitive dependency requires the older hashbrown API" },
+    { crate = "hashbrown@0.15.5", reason = "transitive dependency requires the older hashbrown API" },
+    { crate = "hashbrown@0.16.1", reason = "transitive dependency requires the prior hashbrown API" },
+    { crate = "hmac@0.12.1", reason = "transitive dependency requires the older digest API" },
+    { crate = "http@0.2.12", reason = "transitive dependency requires the older HTTP API" },
+    { crate = "http-body@0.4.6", reason = "transitive dependency requires the older HTTP body API" },
+    { crate = "r-efi@5.3.0", reason = "transitive dependency requires the older WASI API" },
+    { crate = "rand@0.8.6", reason = "transitive dependency requires the older randomness API" },
+    { crate = "rand@0.9.4", reason = "transitive dependency requires the prior randomness API" },
+    { crate = "rand_chacha@0.3.1", reason = "transitive dependency requires the older randomness API" },
+    { crate = "rand_chacha@0.9.0", reason = "transitive dependency requires the prior randomness API" },
+    { crate = "rand_core@0.6.4", reason = "transitive dependency requires the older randomness API" },
+    { crate = "rand_core@0.9.5", reason = "transitive dependency requires the prior randomness API" },
+    { crate = "sha1@0.10.6", reason = "transitive dependency requires the older digest API" },
+    { crate = "sha2@0.10.9", reason = "transitive dependency requires the older digest API" },
+    { crate = "socket2@0.5.10", reason = "transitive dependency requires the older socket API" },
+    { crate = "wasi@0.11.1+wasi-snapshot-preview1", reason = "transitive dependency requires the legacy WASI API" },
+    { crate = "windows-sys@0.52.0", reason = "transitive dependency requires the older Windows API" },
+    { crate = "windows-sys@0.59.0", reason = "transitive dependency requires the prior Windows API" },
+    { crate = "wit-bindgen@0.51.0", reason = "transitive dependency requires the older WASI binding API" },
+]
 skip-tree = []
 
 # ---------------------------------------------------------------------------

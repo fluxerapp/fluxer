@@ -1,6 +1,6 @@
 [graph]
 targets = ["x86_64-unknown-linux-gnu"]
-all-features = false
+all-features = true
 no-default-features = false
 
 [advisories]
@@ -28,12 +28,19 @@ registries = []
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+allow-wildcard-paths = true
 highlight = "simplest-path"
 workspace-default-features = "allow"
 external-default-features = "allow"
 allow = []
 deny = []
-skip = []
+skip = [
+    { crate = "getrandom@0.3.4", reason = "transitive dependency requires the prior randomness API" },
+    { crate = "http@0.2.12", reason = "transitive dependency requires the older HTTP API" },
+    { crate = "http-body@0.4.6", reason = "transitive dependency requires the older HTTP body API" },
+    { crate = "rand_core@0.9.5", reason = "transitive dependency requires the prior randomness API" },
+    { crate = "socket2@0.5.10", reason = "transitive dependency requires the older socket API" },
+]
 skip-tree = []
 
 [sources]

@@ -49,6 +49,20 @@ describe('Stripe Webhook Refund', () => {
 			.body(payload)
 			.execute();
 	}
+	function useRefundListHandler(chargeId: string): void {
+		server.use(
+			http.get(
+				({request}) => request.url === `https://api.stripe.com/v1/refunds?charge=${chargeId}&limit=100`,
+				() =>
+					HttpResponse.json({
+						object: 'list',
+						data: [],
+						has_more: false,
+						url: '/v1/refunds',
+					}),
+			),
+		);
+	}
 	describe('charge.refunded', () => {
 		test('revokes premium and records first refund', async () => {
 			const account = await createTestAccount(harness);
@@ -73,6 +87,7 @@ describe('Stripe Webhook Refund', () => {
 				payment_intent_id: paymentIntentId,
 				completed_at: new Date(),
 			});
+			useRefundListHandler('ch_test_refund_123');
 			await sendWebhook({
 				type: 'charge.refunded',
 				data: {
@@ -121,6 +136,7 @@ describe('Stripe Webhook Refund', () => {
 				payment_intent_id: paymentIntentId,
 				completed_at: new Date(),
 			});
+			useRefundListHandler('ch_test_refund_456');
 			await sendWebhook({
 				type: 'charge.refunded',
 				data: {
@@ -150,6 +166,7 @@ describe('Stripe Webhook Refund', () => {
 				{stripe_customer_id: stripeCustomerId},
 				(await userRepository.findUnique(userId))!.toRow(),
 			);
+			useRefundListHandler('ch_test_refund_sub_789');
 			await sendWebhook({
 				type: 'charge.refunded',
 				data: {
@@ -182,6 +199,7 @@ describe('Stripe Webhook Refund', () => {
 				subscriptionCurrentPeriodEnd: null,
 				subscriptionCancelAt: null,
 			});
+			useRefundListHandler('ch_test_refund_donation_101');
 			const result = await sendWebhook({
 				type: 'charge.refunded',
 				data: {
@@ -234,6 +252,7 @@ describe('Stripe Webhook Refund', () => {
 					premium_until: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
 				})
 				.execute();
+			useRefundListHandler('ch_test_refund_gift_multi_123');
 			await sendWebhook({
 				type: 'charge.refunded',
 				data: {
@@ -287,6 +306,7 @@ describe('Stripe Webhook Refund', () => {
 				.get('/users/@me')
 				.execute();
 			expect(redeemerBefore.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+			useRefundListHandler('ch_test_refund_stripe_cus_only');
 			await sendWebhook({
 				type: 'charge.refunded',
 				data: {
@@ -325,6 +345,7 @@ describe('Stripe Webhook Refund', () => {
 					premium_type: UserPremiumTypes.LIFETIME,
 				})
 				.execute();
+			useRefundListHandler('ch_test_refund_gift_override_123');
 			await sendWebhook({
 				type: 'charge.refunded',
 				data: {

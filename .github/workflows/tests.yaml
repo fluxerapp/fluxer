@@ -153,7 +153,7 @@ jobs:
 
   rust:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -178,20 +178,40 @@ jobs:
         with:
           workspaces: |
             . -> target
-            fluxer_desktop/native/rust -> target
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --version 0.19.6 --locked
+
+      - name: Check Rust dependencies
+        run: cargo deny --locked check -D warnings
+
+      - name: Check desktop native dependencies
+        run: tools/ci/check-desktop-native-workspaces.sh dependencies
 
       - name: Install native dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            pkg-config \
             build-essential \
-            libcurl4-openssl-dev \
-            libvips-dev \
+            binutils \
+            clang \
+            cmake \
             libavfilter-dev \
+            libclang-dev \
+            libcurl4-openssl-dev \
+            libfido2-dev \
             libheif-dev \
-            libwebp-dev
+            libpipewire-0.3-dev \
+            libspa-0.2-dev \
+            libssl-dev \
+            libudev-dev \
+            libvips-dev \
+            libwebp-dev \
+            meson \
+            ninja-build \
+            pkg-config \
+            zlib1g-dev
 
       - name: Install Node.js dependencies
         run: pnpm --filter fluxer_admin install
@@ -199,17 +219,20 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-      - name: Check formatting (desktop native)
-        run: cargo fmt --manifest-path fluxer_desktop/native/rust/Cargo.toml --all -- --check
+      - name: Check formatting (desktop native workspaces)
+        run: tools/ci/check-desktop-native-workspaces.sh fmt
 
       - name: Clippy (warnings as errors)
-        run: cargo clippy --workspace -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+      - name: Clippy (desktop native workspaces on Linux, warnings as errors)
+        run: tools/ci/check-desktop-native-workspaces.sh clippy
 
       - name: Run tests
-        run: cargo test --workspace
+        run: cargo test --workspace --all-features --locked
 
-      - name: Run desktop native tests
-        run: cargo test --manifest-path fluxer_desktop/native/rust/Cargo.toml
+      - name: Run desktop native workspace tests on Linux
+        run: tools/ci/check-desktop-native-workspaces.sh test
 
   gateway:
     runs-on: ubuntu-24.04

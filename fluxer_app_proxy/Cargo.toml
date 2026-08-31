@@ -3,9 +3,10 @@ name = "fluxer_app_proxy"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+publish = false
 
 [dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 axum = { version = "0.8.9", features = ["macros"] }
 base64 = "0.22"
 fluxer_common = { path = "../fluxer_common" }

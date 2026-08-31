@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 clap = { version = "4.6.1", features = ["derive"] }
 regex = "1.12"
 reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "json", "rustls"] }

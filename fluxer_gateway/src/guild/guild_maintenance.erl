@@ -457,8 +457,8 @@ permission_cache_rebuilds_on_member_role_change_test() ->
     {ok, Snapshot} = permission_cache_refresh(
         guild_member_update, EventData, OldState, NewState
     ),
-    Member = guild_permissions:find_member_by_user_id(UserId, Snapshot),
-    ?assertEqual([10, 11], maps:get(<<"roles">>, Member)).
+    #{<<"roles">> := Roles} = guild_permissions:find_member_by_user_id(UserId, Snapshot),
+    ?assertEqual([10, 11], Roles).
 
 permission_cache_rebuilds_on_member_timeout_change_test() ->
     UserId = 4242,
@@ -473,8 +473,9 @@ permission_cache_rebuilds_on_member_timeout_change_test() ->
     {ok, Snapshot} = permission_cache_refresh(
         guild_member_update, EventData, OldState, NewState
     ),
-    Member = guild_permissions:find_member_by_user_id(UserId, Snapshot),
-    ?assertEqual(Until, maps:get(<<"communication_disabled_until">>, Member)).
+    #{<<"communication_disabled_until">> := MemberUntil} =
+        guild_permissions:find_member_by_user_id(UserId, Snapshot),
+    ?assertEqual(Until, MemberUntil).
 
 permission_cache_rebuilds_for_other_mutating_events_test() ->
     State = permission_cache_state(7710004, permission_cache_member(4242, [10], <<"old">>)),
@@ -497,7 +498,7 @@ permission_cache_refresh(Event, EventData, OldState, NewState) ->
 permission_cache_state(GuildId, Member) ->
     #{
         id => GuildId,
-        data => guild_data_index:normalize_data(#{
+        data => guild_data_index:normalize_map(#{
             <<"guild">> => #{<<"owner_id">> => <<"999">>},
             <<"roles">> => [prune_role(10, 0), prune_role(11, 0)],
             <<"members">> => [Member],

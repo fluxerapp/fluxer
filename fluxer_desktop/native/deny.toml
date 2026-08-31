@@ -1,0 +1,107 @@
+[graph]
+all-features = true
+no-default-features = false
+
+[output]
+feature-depth = 1
+
+[advisories]
+version = 2
+yanked = "deny"
+unmaintained = "all"
+ignore = []
+
+[licenses]
+version = 2
+confidence-threshold = 0.93
+unused-allowed-license = "allow"
+allow = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+    "NCSA",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+    "AGPL-3.0-or-later",
+    "BSL-1.0",
+    "CDLA-Permissive-2.0",
+]
+exceptions = []
+
+[licenses.private]
+ignore = true
+registries = []
+
+[[licenses.clarify]]
+crate = "ring"
+expression = "ISC AND MIT AND OpenSSL"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 },
+]
+
+[[licenses.clarify]]
+crate = "webrtc-audio-processing@2.1.0"
+expression = "BSD-3-Clause"
+license-files = [
+    { path = "COPYING", hash = 0x3d3ea952 },
+]
+
+[[licenses.clarify]]
+crate = "webrtc-audio-processing-config@2.1.0"
+expression = "BSD-3-Clause"
+license-files = [
+    { path = "COPYING", hash = 0x7e861f0d },
+]
+
+[[licenses.clarify]]
+crate = "webrtc-audio-processing-sys@2.1.0"
+expression = "BSD-3-Clause"
+license-files = [
+    { path = "COPYING", hash = 0x7e861f0d },
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+deny = [
+    { crate = "fuse", reason = "libfuse2-based Rust wrapper; use a maintained FUSE3-native crate only if Fluxer ever needs FUSE directly" },
+    { crate = "fuse-sys", reason = "libfuse2 FFI crate; Fluxer AppImages must not reintroduce libfuse2 through native Rust dependencies" },
+]
+skip = [
+    { crate = "bitflags@1.3.2", reason = "hunspell bindgen requires the legacy bitflags API" },
+    { crate = "foldhash@0.1.5", reason = "transitive dependencies require the prior hash table API" },
+    { crate = "hashbrown@0.15.5", reason = "transitive dependencies require the older hash table API" },
+    { crate = "hashbrown@0.16.1", reason = "transitive dependencies require the prior hash table API" },
+    { crate = "hermit-abi@0.3.9", reason = "udev requires the prior Hermit ABI" },
+    { crate = "itertools@0.13.0", reason = "bindgen and criterion require the prior iterator API" },
+    { crate = "libloading@0.8.9", reason = "bindgen requires the prior dynamic loading API" },
+    { crate = "nix@0.29.0", reason = "evdev requires the prior Unix API" },
+    { crate = "nom@7.1.3", reason = "bindgen requires the prior parser API" },
+    { crate = "rustc-hash@1.1.0", reason = "hunspell bindgen requires the legacy hash API" },
+    { crate = "shlex@1.3.0", reason = "bindgen requires the prior shell parsing API" },
+    { crate = "syn@1.0.109", reason = "hunspell bindgen requires the legacy macro API" },
+    { crate = "syn@2.0.119", reason = "napi derive requires the prior macro API" },
+    { crate = "windows-sys@0.48.0", reason = "udev requires the legacy Windows API" },
+    { crate = "windows-sys@0.59.0", reason = "hunspell build tooling requires the prior Windows API" },
+    { crate = "wit-bindgen@0.51.0", reason = "the WASI preview 3 compatibility layer requires the prior binding API" },
+]
+skip-tree = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+
+[sources.allow-org]
+github = []

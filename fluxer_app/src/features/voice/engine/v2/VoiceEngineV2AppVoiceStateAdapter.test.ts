@@ -2,8 +2,9 @@
 
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {autorun} from 'mobx';
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 import {VoiceEngineV2AppVoiceStateAdapter} from './VoiceEngineV2AppVoiceStateAdapter';
 
 function voiceState(overrides: Partial<VoiceState> = {}): VoiceState {
@@ -59,16 +60,27 @@ describe('VoiceEngineV2AppVoiceStateAdapter', () => {
 	});
 
 	it('does not reinsert locally removed stale connections', () => {
-		const adapter = new VoiceEngineV2AppVoiceStateAdapter();
-		adapter.handleGatewayVoiceStateUpdate('guild-1', voiceState({connection_id: 'stale-connection'}));
-		expect(adapter.getVoiceStateByConnectionId('stale-connection')).toBeDefined();
+		const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+		try {
+			const adapter = new VoiceEngineV2AppVoiceStateAdapter();
+			adapter.handleGatewayVoiceStateUpdate('guild-1', voiceState({connection_id: 'stale-connection'}));
+			expect(adapter.getVoiceStateByConnectionId('stale-connection')).toBeDefined();
 
-		adapter.removeVoiceStateConnection('stale-connection');
-		adapter.handleGatewayVoiceStateUpdate('guild-1', voiceState({connection_id: 'stale-connection'}));
+			adapter.removeVoiceStateConnection('stale-connection');
+			adapter.handleGatewayVoiceStateUpdate('guild-1', voiceState({connection_id: 'stale-connection'}));
 
-		expect(adapter.isConnectionIgnored('stale-connection')).toBe(true);
-		expect(adapter.getVoiceStateByConnectionId('stale-connection')).toBeNull();
-		expect(adapter.getAllVoiceStatesInChannel('guild-1', 'channel-1')['stale-connection']).toBeUndefined();
+			expect(adapter.isConnectionIgnored('stale-connection')).toBe(true);
+			expect(adapter.getVoiceStateByConnectionId('stale-connection')).toBeNull();
+			expect(adapter.getAllVoiceStatesInChannel('guild-1', 'channel-1')['stale-connection']).toBeUndefined();
+			expect(debug).toHaveBeenCalledExactlyOnceWith('Ignored voice state update for locally removed connection', {
+				guildId: 'guild-1',
+				channelId: 'channel-1',
+				userId: 'user-1',
+				connectionId: 'stale-connection',
+			});
+		} finally {
+			debug.mockRestore();
+		}
 	});
 
 	it('publishes self-video true-to-false changes through MobX observation', () => {

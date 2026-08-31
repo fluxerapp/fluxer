@@ -28,6 +28,7 @@
 	},
 	"workspaces": {
 		".": {
+			"ignoreDependencies": ["vite"],
 			"project": ["scripts/**/*.mjs"]
 		},
 		"fluxer_api": {
@@ -62,7 +63,7 @@
 				"native/*/test/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
-			"ignoreDependencies": ["electron-builder"]
+			"ignoreDependencies": ["electron-builder", "electron-builder-squirrel-windows"]
 		},
 		"packages/openapi": {
 			"entry": ["src/GenerateOpenAPISpec.ts"],

@@ -7,7 +7,7 @@ import {
 	extractKVClientConfig,
 	extractRateLimit,
 } from '@fluxer/config/src/ServiceConfigSlices';
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 
 function createMasterStub(overrides: Partial<MasterConfig> = {}): MasterConfig {
 	return {
@@ -55,12 +55,23 @@ describe('extractKVClientConfig', () => {
 });
 
 describe('extractBuildInfoConfig', () => {
-	test('returns releaseChannel and buildVersion', () => {
-		const result = extractBuildInfoConfig();
-		expect(result).toHaveProperty('releaseChannel');
-		expect(result).toHaveProperty('buildVersion');
-		expect(typeof result.releaseChannel).toBe('string');
-		expect(typeof result.buildVersion).toBe('string');
+	test('returns fallback build metadata and reports the missing environment variables', () => {
+		vi.stubEnv('BUILD_VERSION', undefined);
+		vi.stubEnv('RELEASE_CHANNEL', undefined);
+		const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+		try {
+			const result = extractBuildInfoConfig();
+			expect(result).toEqual({
+				releaseChannel: 'stable',
+				buildVersion: 'dev',
+			});
+			expect(stdout).toHaveBeenCalledExactlyOnceWith(
+				'[build-metadata] Using fallback values for: BUILD_VERSION, RELEASE_CHANNEL. This indicates missing env vars in CI/production.\n',
+			);
+		} finally {
+			stdout.mockRestore();
+			vi.unstubAllEnvs();
+		}
 	});
 });
 

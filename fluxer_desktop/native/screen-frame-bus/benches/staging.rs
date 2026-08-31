@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use std::hint::black_box;
+
+use criterion::{Criterion, criterion_group, criterion_main};
 use fluxer_screen_frame_bus::{CpuStagingBackend, StagingSurfacePair};
 
 const BENCH_WIDTH: usize = 1920;

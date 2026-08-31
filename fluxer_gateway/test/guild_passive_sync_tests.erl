@@ -85,7 +85,7 @@ send_passive_updates_uses_current_channel_index_and_message_only_payload_test() 
     ChannelId = 1497639278555484216,
     OldMessageId = 1500000000000000000,
     NewMessageId = 1500000000000000001,
-    Data0 = guild_data_index:normalize_data(#{
+    Data0 = guild_data_index:normalize_map(#{
         <<"guild">> => #{<<"id">> => GuildId, <<"owner_id">> => UserId},
         <<"channels">> => [#{<<"id">> => ChannelId, <<"last_message_id">> => OldMessageId}],
         <<"members">> => [#{<<"user">> => #{<<"id">> => UserId}, <<"roles">> => []}],

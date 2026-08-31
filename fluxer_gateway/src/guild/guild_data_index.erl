@@ -5,6 +5,7 @@
 
 -export([
     normalize_data/1,
+    normalize_map/1,
     member_map/1,
     member_values/1,
     member_list/1,
@@ -36,6 +37,12 @@
 
 -spec normalize_data(term()) -> term().
 normalize_data(Data) when is_map(Data) ->
+    normalize_map(Data);
+normalize_data(Data) ->
+    Data.
+
+-spec normalize_map(map()) -> guild_data().
+normalize_map(Data) ->
     Data0 =
         case guild_data_normalize:guild_data(Data) of
             Normalized when is_map(Normalized) -> Normalized;
@@ -60,9 +67,7 @@ normalize_data(Data) when is_map(Data) ->
             guild_data_index_roles:build_role_perms_cache(Roles),
         overwrite_perms_cache =>
             guild_data_index_channels:build_overwrite_perms_cache(Channels)
-    };
-normalize_data(Data) ->
-    Data.
+    }.
 
 -spec member_map(term()) -> map().
 member_map(Data) -> guild_data_index_members:member_map(Data).
@@ -104,7 +109,8 @@ role_list(Data) -> guild_data_index_roles:role_list(Data).
 role_index(Data) -> guild_data_index_roles:role_index(Data).
 
 -spec put_roles(term(), guild_data()) -> guild_data().
-put_roles(Roles, Data) -> guild_data_index_roles:put_roles(Roles, Data).
+put_roles(Roles, Data) ->
+    ensure_guild_data(guild_data_index_roles:put_roles(Roles, Data)).
 
 -spec channel_list(term()) -> [map()].
 channel_list(Data) -> guild_data_index_channels:channel_list(Data).
@@ -113,7 +119,8 @@ channel_list(Data) -> guild_data_index_channels:channel_list(Data).
 channel_index(Data) -> guild_data_index_channels:channel_index(Data).
 
 -spec put_channels(term(), guild_data()) -> guild_data().
-put_channels(Channels, Data) -> guild_data_index_channels:put_channels(Channels, Data).
+put_channels(Channels, Data) ->
+    ensure_guild_data(guild_data_index_channels:put_channels(Channels, Data)).
 
 -spec build_role_perms_cache([map()]) -> map().
 build_role_perms_cache(Roles) -> guild_data_index_roles:build_role_perms_cache(Roles).
@@ -150,6 +157,10 @@ extract_integer_list(Value) ->
 ensure_data_map(State) ->
     map_utils:ensure_map(map_utils:get_safe(State, data, #{})).
 
+-spec ensure_guild_data(term()) -> guild_data().
+ensure_guild_data(Data) when is_map(Data) ->
+    Data.
+
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
@@ -159,13 +170,13 @@ normalize_data_builds_indexes_test() ->
         <<"roles">> => [#{<<"id">> => <<"100">>}],
         <<"channels">> => [#{<<"id">> => <<"200">>}]
     },
-    Normalized = normalize_data(Data),
+    Normalized = normalize_map(Data),
     ?assert(is_map(maps:get(<<"members">>, Normalized))),
     ?assertMatch(#{100 := _}, role_index(Normalized)),
     ?assertMatch(#{200 := _}, channel_index(Normalized)).
 
 normalize_data_empty_lists_test() ->
-    Normalized = normalize_data(#{<<"members">> => [], <<"roles">> => [], <<"channels">> => []}),
+    Normalized = normalize_map(#{<<"members">> => [], <<"roles">> => [], <<"channels">> => []}),
     ?assertEqual(#{}, maps:get(<<"members">>, Normalized)),
     ?assertEqual([], maps:get(<<"roles">>, Normalized)),
     ?assertEqual([], maps:get(<<"channels">>, Normalized)).
@@ -175,7 +186,7 @@ normalize_data_non_map_input_test() ->
     ?assertEqual(42, normalize_data(42)).
 
 normalize_data_missing_keys_defaults_test() ->
-    Normalized = normalize_data(#{}),
+    Normalized = normalize_map(#{}),
     ?assertEqual(#{}, maps:get(<<"members">>, Normalized)),
     ?assertEqual([], maps:get(<<"roles">>, Normalized)),
     ?assertEqual([], maps:get(<<"channels">>, Normalized)).
