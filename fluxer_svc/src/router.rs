@@ -886,6 +886,7 @@ mod tests {
             postgres_ssl_ca: None,
             postgres_max_connections: 1,
             postgres_kv_table: "fluxer_kv".to_owned(),
+            postgres_prepared_statements: true,
         }
     }
 }

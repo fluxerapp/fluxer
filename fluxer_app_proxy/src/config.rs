@@ -56,6 +56,7 @@ pub struct AppProxyConfig {
     pub postgres_ssl_ca: Option<String>,
     pub postgres_max_connections: usize,
     pub postgres_kv_table: String,
+    pub postgres_prepared_statements: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -250,6 +251,10 @@ impl AppProxyConfig {
             postgres_ssl_ca: cfg::non_empty_env("FLUXER_POSTGRES_SSL_CA"),
             postgres_max_connections,
             postgres_kv_table: cfg::read_env("FLUXER_POSTGRES_KV_TABLE", "fluxer_kv"),
+            postgres_prepared_statements: cfg::read_bool_env(
+                &["FLUXER_POSTGRES_PREPARED_STATEMENTS"],
+                true,
+            ),
         }
     }
 }

@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
                     let postgres_config =
                         fluxer_svc::postgres::PostgresConfig::from_service_config(&config);
                     let pool = fluxer_svc::postgres::connect(&postgres_config).await?;
-                    let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config.kv_table)?;
+                    let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config)?;
                     UsersShard::new_postgres(
                         kv,
                         transport.clone(),

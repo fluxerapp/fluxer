@@ -35,6 +35,7 @@ pub struct ServiceConfig {
     pub postgres_ssl_ca: Option<String>,
     pub postgres_max_connections: usize,
     pub postgres_kv_table: String,
+    pub postgres_prepared_statements: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -144,6 +145,11 @@ impl ServiceConfig {
             .transpose()?
             .unwrap_or(20)
             .max(1);
+        let postgres_prepared_statements =
+            optional_from(&get, "FLUXER_POSTGRES_PREPARED_STATEMENTS")
+                .map(|v| parse_bool(&v))
+                .transpose()?
+                .unwrap_or(true);
 
         let max_concurrent_requests = optional_from(&get, "FLUXER_SVC_MAX_CONCURRENT_REQUESTS")
             .map(|v| v.parse::<usize>())
@@ -186,6 +192,7 @@ impl ServiceConfig {
             postgres_max_connections,
             postgres_kv_table: optional_from(&get, "FLUXER_POSTGRES_KV_TABLE")
                 .unwrap_or_else(|| "fluxer_kv".to_owned()),
+            postgres_prepared_statements,
         })
     }
 }
@@ -344,6 +351,7 @@ mod tests {
         assert_eq!(None, cfg.postgres_ssl_ca);
         assert_eq!(20, cfg.postgres_max_connections);
         assert_eq!("fluxer_kv", cfg.postgres_kv_table);
+        assert!(cfg.postgres_prepared_statements);
     }
 
     #[test]
@@ -360,6 +368,7 @@ mod tests {
             ("FLUXER_POSTGRES_SSL_CA", "ca-pem"),
             ("FLUXER_POSTGRES_MAX_CONNECTIONS", "7"),
             ("FLUXER_POSTGRES_KV_TABLE", "fluxer_kv_dev"),
+            ("FLUXER_POSTGRES_PREPARED_STATEMENTS", "false"),
         ]);
 
         assert_eq!(DatabaseBackend::Postgres, cfg.database_backend);
@@ -376,6 +385,16 @@ mod tests {
         assert_eq!(Some("ca-pem".to_owned()), cfg.postgres_ssl_ca);
         assert_eq!(7, cfg.postgres_max_connections);
         assert_eq!("fluxer_kv_dev", cfg.postgres_kv_table);
+        assert!(!cfg.postgres_prepared_statements);
+    }
+
+    #[test]
+    fn rejects_a_non_boolean_prepared_statements_value() {
+        let result = ServiceConfig::from_env_reader(|name| {
+            (name == "FLUXER_POSTGRES_PREPARED_STATEMENTS").then(|| "maybe".to_owned())
+        });
+
+        assert!(result.is_err());
     }
 
     #[test]
