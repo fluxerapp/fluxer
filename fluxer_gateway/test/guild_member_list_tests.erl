@@ -96,6 +96,18 @@ unsubscribe_last_session_drops_channel_store_test() ->
     ?assertNot(maps:is_key(<<"500">>, Engines)),
     ?assertEqual(undefined, ets:info(Ref, name)).
 
+empty_ranges_subscribe_drops_channel_engine_test() ->
+    Ref = guild_member_list_engine:new(),
+    State = (base_state(make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}])))#{
+        channel_member_list_engines => #{<<"500">> => Ref}
+    },
+    {NewState, _ShouldSync, _Ranges} = guild_member_list:subscribe_ranges(
+        <<"s1">>, <<"500">>, [], State
+    ),
+    Engines = maps:get(channel_member_list_engines, NewState, #{}),
+    ?assertNot(maps:is_key(<<"500">>, Engines)),
+    ?assertEqual(undefined, ets:info(Ref, name)).
+
 broadcast_channel_list_dispatches_sync_immediately_test() ->
     with_sync_dispatch_mock(fun run_broadcast_channel_list_dispatches_sync_immediately/0).
 
