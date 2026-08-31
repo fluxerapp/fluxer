@@ -29,7 +29,7 @@ export async function processExpiredAttachments(now = new Date()): Promise<void>
 			for (const row of expired) {
 				const metadata = await repo.fetchById(row.attachment_id);
 				if (!metadata) {
-					await repo.deleteRecords({
+					await repo.deleteExpiryRecord({
 						expiry_bucket: row.expiry_bucket,
 						expires_at: row.expires_at,
 						attachment_id: row.attachment_id,
@@ -38,7 +38,7 @@ export async function processExpiredAttachments(now = new Date()): Promise<void>
 					continue;
 				}
 				if (metadata.expires_at > row.expires_at) {
-					await repo.deleteRecords({
+					await repo.deleteExpiryRecord({
 						expiry_bucket: row.expiry_bucket,
 						expires_at: row.expires_at,
 						attachment_id: row.attachment_id,
