@@ -151,17 +151,16 @@ create_session_user_counts_table() ->
 -spec create_rate_table(atom()) -> created | exists.
 create_rate_table(Table) ->
     try
-        _ = ets:new(Table, [
-            named_table,
-            public,
-            set,
-            {write_concurrency, true},
-            {read_concurrency, true}
-        ]),
+        _ = ets:new(Table, rate_table_options()),
         created
     catch
         error:badarg -> exists
     end.
+
+-spec rate_table_options() -> list().
+rate_table_options() ->
+    [named_table, public, set, {write_concurrency, true}, {read_concurrency, true}] ++
+        guild_ets_utils:heir_options().
 
 -spec ensure_identify_table() -> ok.
 ensure_identify_table() ->
@@ -312,6 +311,38 @@ prune_old_identify_entries_keeps_recent_buckets_test() ->
     prune_old_identify_entries(?IDENTIFY_TABLE),
     ?assertNotEqual([], ets:lookup(?IDENTIFY_TABLE, RecentKey)),
     ets:delete(?IDENTIFY_TABLE, RecentKey).
+
+identify_bucket_survives_creating_process_death_test() ->
+    drop_identify_table(),
+    {ok, _} = guild_ets_owner:start_link(),
+    try
+        assert_identify_bucket_outlives_creator()
+    after
+        gen_server:stop(guild_ets_owner)
+    end.
+
+assert_identify_bucket_outlives_creator() ->
+    IP = <<"192.0.2.220">>,
+    stop_table_owner(start_identify_bucket_creator(IP)),
+    ?assertNotEqual(undefined, ets:whereis(?IDENTIFY_TABLE)),
+    Key = {IP, erlang:system_time(second) div ?IDENTIFY_WINDOW_SECS},
+    ?assertEqual([{Key, 1}], ets:lookup(?IDENTIFY_TABLE, Key)).
+
+start_identify_bucket_creator(IP) ->
+    Parent = self(),
+    Pid = spawn(fun() -> create_identify_bucket(Parent, IP) end),
+    receive
+        {owner_ready, Pid} -> Pid
+    after 1000 -> error(owner_start_timeout)
+    end.
+
+create_identify_bucket(Parent, IP) ->
+    ok = check_identify_rate(IP),
+    Parent ! {owner_ready, self()},
+    receive
+        stop -> ok
+    after 30000 -> ok
+    end.
 
 identify_cleanup_loops_do_not_outlive_their_table_test() ->
     meck:new(gateway_retry_timer, [passthrough]),

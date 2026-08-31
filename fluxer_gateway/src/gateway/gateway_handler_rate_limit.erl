@@ -320,17 +320,16 @@ create_counter_table(Table) ->
 -spec create_table(atom()) -> created | exists.
 create_table(Table) ->
     try
-        _ = ets:new(Table, [
-            named_table,
-            public,
-            set,
-            {write_concurrency, true},
-            {read_concurrency, true}
-        ]),
+        _ = ets:new(Table, rate_table_options()),
         created
     catch
         error:badarg -> exists
     end.
+
+-spec rate_table_options() -> list().
+rate_table_options() ->
+    [named_table, public, set, {write_concurrency, true}, {read_concurrency, true}] ++
+        guild_ets_utils:heir_options().
 
 -spec rate_limits_disabled() -> boolean().
 rate_limits_disabled() ->
@@ -500,6 +499,41 @@ await_table_size(Table, Max, Attempts) ->
         false ->
             timer:sleep(10),
             await_table_size(Table, Max, Attempts - 1)
+    end.
+
+shared_ip_bucket_survives_creating_process_death_test() ->
+    with_rate_limits_enabled(fun assert_shared_ip_bucket_survives_creator/0).
+
+assert_shared_ip_bucket_survives_creator() ->
+    drop_table(?SHARED_IP_RATE_TABLE),
+    {ok, _} = guild_ets_owner:start_link(),
+    try
+        assert_shared_ip_bucket_outlives_creator()
+    after
+        gen_server:stop(guild_ets_owner)
+    end.
+
+assert_shared_ip_bucket_outlives_creator() ->
+    IP = <<"198.51.100.70">>,
+    stop_table_owner(start_shared_ip_bucket_creator(IP)),
+    ?assertNotEqual(undefined, ets:whereis(?SHARED_IP_RATE_TABLE)),
+    Key = {IP, erlang:system_time(millisecond) div ?SHARED_IP_RATE_WINDOW_MS},
+    ?assertEqual([{Key, 1}], ets:lookup(?SHARED_IP_RATE_TABLE, Key)).
+
+start_shared_ip_bucket_creator(IP) ->
+    Parent = self(),
+    Pid = spawn(fun() -> create_shared_ip_bucket(Parent, IP) end),
+    receive
+        {owner_ready, Pid} -> Pid
+    after 1000 -> error(owner_start_timeout)
+    end.
+
+create_shared_ip_bucket(Parent, IP) ->
+    ok = check_shared_ip_rate(IP),
+    Parent ! {owner_ready, self()},
+    receive
+        stop -> ok
+    after 30000 -> ok
     end.
 
 window_cleanup_loops_do_not_outlive_their_table_test() ->
