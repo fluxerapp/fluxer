@@ -41,9 +41,6 @@ pub const BAN_AVATAR_HASH_REMOVE: &str = "ban:avatar_hash:remove";
 pub const BAN_PROFILE_SUBSTRING_ADD: &str = "ban:profile_substring:add";
 pub const BAN_PROFILE_SUBSTRING_CHECK: &str = "ban:profile_substring:check";
 pub const BAN_PROFILE_SUBSTRING_REMOVE: &str = "ban:profile_substring:remove";
-pub const BILLING_MANAGE_SUBSCRIPTION: &str = "billing:manage_subscription";
-pub const BILLING_REFUND: &str = "billing:refund";
-pub const BILLING_VIEW: &str = "billing:view";
 pub const BULK_ADD_GUILD_MEMBERS: &str = "bulk:add:guild_members";
 pub const BULK_DELETE_USERS: &str = "bulk:delete:users";
 pub const BULK_UPDATE_GUILD_FEATURES: &str = "bulk:update:guild_features";
@@ -155,9 +152,6 @@ pub const ALL_ACLS: &[&str] = &[
     BAN_PROFILE_SUBSTRING_ADD,
     BAN_PROFILE_SUBSTRING_CHECK,
     BAN_PROFILE_SUBSTRING_REMOVE,
-    BILLING_MANAGE_SUBSCRIPTION,
-    BILLING_REFUND,
-    BILLING_VIEW,
     BULK_ADD_GUILD_MEMBERS,
     BULK_DELETE_USERS,
     BULK_UPDATE_GUILD_FEATURES,

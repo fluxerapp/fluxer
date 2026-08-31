@@ -7,7 +7,6 @@ import {ArchiveAdminController} from './ArchiveAdminController';
 import {AssetAdminController} from './AssetAdminController';
 import {AuditLogAdminController} from './AuditLogAdminController';
 import {BanAdminController} from './BanAdminController';
-import {BillingAdminController} from './BillingAdminController';
 import {BulkAdminController} from './BulkAdminController';
 import {CodesAdminController} from './CodesAdminController';
 import {DiscoveryAdminController} from './DiscoveryAdminController';
@@ -39,7 +38,6 @@ export function registerAdminControllers(app: HonoApp) {
 	AuditLogAdminController(app);
 	ArchiveAdminController(app);
 	ReportAdminController(app);
-	BillingAdminController(app);
 	VoiceAdminController(app);
 	GatewayAdminController(app);
 	SearchAdminController(app);

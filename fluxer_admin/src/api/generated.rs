@@ -32,10 +32,6 @@ pub(crate) fn nonzero_u32(value: u32, field: &str) -> Result<std::num::NonZeroU3
     std::num::NonZeroU32::new(value).ok_or_else(|| format!("{field} must be greater than zero"))
 }
 
-pub(crate) fn nonzero_u64(value: u64, field: &str) -> Result<std::num::NonZeroU64, String> {
-    std::num::NonZeroU64::new(value).ok_or_else(|| format!("{field} must be greater than zero"))
-}
-
 #[cfg(test)]
 mod tests {
     use super::{number_to_u64, types::*};

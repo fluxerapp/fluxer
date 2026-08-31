@@ -399,55 +399,6 @@ pub async fn dispatch(
             "Bulk message deletion cancelled successfully",
             "Failed to cancel bulk message deletion",
         ),
-        "refund_payment" => {
-            let Some(pi) = form.clean("payment_intent_id") else {
-                return DispatchOutcome::error("Payment intent ID is required");
-            };
-            let amt = form.parse_u64("amount_cents");
-            let reason = get("reason");
-            DispatchOutcome::from_result(
-                client
-                    .issue_refund(user_id, &pi, amt, reason.as_deref())
-                    .await,
-                "Refund issued successfully",
-                "Failed to issue refund",
-            )
-        }
-        "refund_policy_cancel_now" => {
-            let reason = get("reason");
-            DispatchOutcome::from_result(
-                client
-                    .refund_policy_cancel_now(user_id, reason.as_deref())
-                    .await,
-                "Refund policy cancellation completed successfully",
-                "Failed to apply refund policy cancellation",
-            )
-        }
-        "cancel_subscription" => DispatchOutcome::from_result(
-            client.cancel_subscription(user_id).await,
-            "Subscription cancelled successfully",
-            "Failed to cancel subscription",
-        ),
-        "cancel_subscription_now" => {
-            let reason = get("reason");
-            DispatchOutcome::from_result(
-                client
-                    .cancel_subscription_immediately(user_id, reason.as_deref())
-                    .await,
-                "Subscription cancelled immediately",
-                "Failed to cancel subscription immediately",
-            )
-        }
-        "reactivate_subscription" => DispatchOutcome::from_result(
-            client.reactivate_subscription(user_id).await,
-            "Subscription reactivated successfully",
-            "Failed to reactivate subscription",
-        ),
-        "end_premium_grace_period" => DispatchOutcome::from_result(
-            client.end_premium_grace_period(user_id).await,
-            "Premium grace period ended successfully",
-            "Failed to end premium grace period",
-        ),
         "message_shred" => {
             let csv = form.first("csv_data").unwrap_or_default();
             match parse_message_shred_csv(csv) {

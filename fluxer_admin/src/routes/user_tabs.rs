@@ -155,44 +155,6 @@ pub async fn render(
                 csrf_token,
             ))
         }
-        "billing" => {
-            if config.self_hosted
-                || !acl::has_any_permission(
-                    admin_acls,
-                    &[
-                        acl::BILLING_VIEW,
-                        acl::BILLING_REFUND,
-                        acl::BILLING_MANAGE_SUBSCRIPTION,
-                    ],
-                )
-            {
-                return None;
-            }
-            let can_view_billing = acl::has_permission(admin_acls, acl::BILLING_VIEW);
-            let b = if can_view_billing {
-                client
-                    .get_billing_overview(user_id)
-                    .await
-                    .log_error("load user billing overview")
-            } else {
-                None
-            };
-            let invoices = if can_view_billing {
-                client
-                    .get_user_invoices(user_id, 25, None)
-                    .await
-                    .log_error("load user invoices")
-            } else {
-                None
-            };
-            Some(tabs::billing::billing_tab(
-                config,
-                user_id,
-                b.as_ref().map(|v| &v.data),
-                invoices.as_ref().map(|v| &v.data),
-                csrf_token,
-            ))
-        }
         "guilds" => {
             let g = client
                 .get_user_guilds(user_id, Some(200), None, None, Some(true))

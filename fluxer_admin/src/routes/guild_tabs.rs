@@ -150,22 +150,6 @@ pub async fn render(
                 },
             ))
         }
-        "billing" => {
-            if config.self_hosted || !acl::has_permission(admin_acls, acl::BILLING_VIEW) {
-                return None;
-            }
-            let billing = client
-                .get_billing_overview(guild_id)
-                .await
-                .log_error("load guild billing overview")
-                .map(|b| b.data);
-            Some(tabs::billing::billing_tab(
-                config,
-                guild_id,
-                billing.as_ref(),
-                csrf_token,
-            ))
-        }
         "applications" => {
             if !acl::has_any_permission(
                 admin_acls,
