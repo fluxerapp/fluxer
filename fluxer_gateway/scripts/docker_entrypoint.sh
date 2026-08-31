@@ -37,12 +37,27 @@ available_cpu_count() {
 	fi
 }
 
+clamp_int() {
+	value="$1"
+	min="$2"
+	max="$3"
+	if [ "$value" -lt "$min" ]; then
+		value="$min"
+	fi
+	if [ "$value" -gt "$max" ]; then
+		value="$max"
+	fi
+	echo "$value"
+}
+
+: "${FLUXER_ERLANG_SCHEDULERS_MIN:=2}"
+: "${FLUXER_ERLANG_SCHEDULERS_MAX:=16}"
 : "${FLUXER_ERLANG_NODE_NAME:=fluxer_gateway@127.0.0.1}"
 : "${FLUXER_ERLANG_COOKIE:=fluxer_gateway_dev_cookie}"
 : "${FLUXER_ERLANG_DIST_PORT:=8081}"
 
 if ! is_positive_int "${FLUXER_ERLANG_SCHEDULERS:-}"; then
-	FLUXER_ERLANG_SCHEDULERS="$(available_cpu_count)"
+	FLUXER_ERLANG_SCHEDULERS="$(clamp_int "$(available_cpu_count)" "$FLUXER_ERLANG_SCHEDULERS_MIN" "$FLUXER_ERLANG_SCHEDULERS_MAX")"
 fi
 
 if ! is_positive_int "${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-}"; then
