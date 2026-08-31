@@ -9,6 +9,11 @@ interface CacheMSetEntry<T> {
 	ttlSeconds?: number;
 }
 
+interface CacheProduceTracking {
+	generation: number;
+	produces: number;
+}
+
 export type CacheLookupResult<T> = {hit: true; value: T} | {hit: false};
 
 type CacheTtlSeconds<T> = number | ((value: T) => number);
@@ -17,7 +22,7 @@ type CacheJoinResult<T> = {joined: true; value: T} | {joined: false; error: unkn
 
 export abstract class ICacheService {
 	private readonly inflightValues = new Map<string, Promise<unknown>>();
-	private readonly produceInvalidations = new Map<string, number>();
+	private readonly produceInvalidations = new Map<string, CacheProduceTracking>();
 
 	abstract getEntry<T>(key: string): Promise<CacheLookupResult<T>>;
 
@@ -26,9 +31,9 @@ export abstract class ICacheService {
 	protected abstract deleteEntry(key: string): Promise<void>;
 
 	async delete(key: string): Promise<void> {
-		const pending = this.produceInvalidations.get(key);
-		if (pending !== undefined) {
-			this.produceInvalidations.set(key, pending + 1);
+		const tracked = this.produceInvalidations.get(key);
+		if (tracked) {
+			tracked.generation += 1;
 		}
 		await this.deleteEntry(key);
 	}
@@ -89,21 +94,34 @@ export abstract class ICacheService {
 				if (attempt >= CACHE_INFLIGHT_JOIN_RETRIES) {
 					throw joined.error;
 				}
-				generation = this.trackProduce(key);
+				generation = this.currentGeneration(key);
 			}
 		} finally {
-			this.releaseProduce(key, generation);
+			this.releaseProduce(key);
 		}
 	}
 
 	private trackProduce(key: string): number {
-		const generation = this.produceInvalidations.get(key) ?? 0;
-		this.produceInvalidations.set(key, generation);
-		return generation;
+		const tracked = this.produceInvalidations.get(key);
+		if (tracked) {
+			tracked.produces += 1;
+			return tracked.generation;
+		}
+		this.produceInvalidations.set(key, {generation: 0, produces: 1});
+		return 0;
 	}
 
-	private releaseProduce(key: string, generation: number): void {
-		if ((this.produceInvalidations.get(key) ?? 0) === generation) {
+	private currentGeneration(key: string): number {
+		return this.produceInvalidations.get(key)?.generation ?? 0;
+	}
+
+	private releaseProduce(key: string): void {
+		const tracked = this.produceInvalidations.get(key);
+		if (!tracked) {
+			return;
+		}
+		tracked.produces -= 1;
+		if (tracked.produces <= 0) {
 			this.produceInvalidations.delete(key);
 		}
 	}
@@ -139,7 +157,7 @@ export abstract class ICacheService {
 		generation: number,
 	): Promise<T> {
 		const value = await valueFactory();
-		if ((this.produceInvalidations.get(key) ?? 0) === generation) {
+		if (this.currentGeneration(key) === generation) {
 			await this.set(key, value, typeof ttlSeconds === 'function' ? ttlSeconds(value) : ttlSeconds);
 		}
 		return value;
