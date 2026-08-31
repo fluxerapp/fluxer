@@ -32,13 +32,13 @@ class FakeConnectionManager implements INatsConnectionManager {
 				this.payloads.push(payload);
 				this.timeouts.push(options?.timeout);
 				if (payload.op === 'BuildResponses') {
-					const messages = (payload.messages as Array<{message_id: string}>).filter(
+					const messages = (payload.messages as Array<{message_id: string; channel_id: string}>).filter(
 						(message) => !this.orphanedMessageIds.has(message.message_id),
 					);
 					return {
 						data: encoder.encode(
 							JSON.stringify({
-								FoundApiMany: messages.map((message) => fakeMessageResponse(message.message_id)),
+								FoundApiMany: messages.map((message) => fakeMessageResponse(message.message_id, message.channel_id)),
 							}),
 						),
 					};
@@ -51,10 +51,10 @@ class FakeConnectionManager implements INatsConnectionManager {
 	}
 }
 
-function fakeMessageResponse(messageId: string): Record<string, unknown> {
+function fakeMessageResponse(messageId: string, channelId: string = '1'): Record<string, unknown> {
 	return {
 		id: messageId,
-		channel_id: '1',
+		channel_id: channelId,
 		author: {id: '3', username: 'author', discriminator: '0001', avatar: null, flags: 0},
 		type: MessageTypes.DEFAULT,
 		flags: 0,
@@ -114,8 +114,8 @@ async function measureSerializedMessageBytes(): Promise<number> {
 	return Buffer.byteLength(JSON.stringify(messages[0]));
 }
 
-function makeSizedMessage(index: number, totalBytes: number, baseBytes: number): Message {
-	return makeMessage(BASE_MESSAGE_ID + BigInt(index), 'a'.repeat(totalBytes - baseBytes));
+function makeSizedMessage(index: number, totalBytes: number, baseBytes: number, channelId: bigint = 1n): Message {
+	return makeMessage(BASE_MESSAGE_ID + BigInt(index), 'a'.repeat(totalBytes - baseBytes), channelId);
 }
 
 function messageId(index: number): string {
@@ -265,6 +265,32 @@ describe('MessageResponseDataService', () => {
 
 		expect(batchSizes(connectionManager)).toEqual([2, 2]);
 		expect(responses.map((response) => response.id)).toEqual([messageId(0), messageId(1), messageId(3)]);
+	});
+
+	it('keeps other guilds aligned when an earlier batch drops a message', async () => {
+		const baseBytes = await measureSerializedMessageBytes();
+		const connectionManager = new FakeConnectionManager();
+		connectionManager.orphanedMessageIds.add(messageId(0));
+		const service = new MessageResponseDataService(connectionManager);
+		const messages = [
+			makeSizedMessage(0, MESSAGE_BUILD_BATCH_MAX_BYTES / 2, baseBytes, 10n),
+			makeMessage(BASE_MESSAGE_ID + 1n, '', 20n),
+			makeSizedMessage(2, MESSAGE_BUILD_BATCH_MAX_BYTES / 2 + 1, baseBytes, 10n),
+			makeSizedMessage(3, baseBytes, baseBytes, 10n),
+		];
+
+		const responses = await service.buildMessagesForChannels({
+			userId: VIEWER_ID,
+			messages,
+			channelById: new Map([
+				['10', {guildId: createGuildID(100n)}],
+				['20', {guildId: createGuildID(200n)}],
+			]),
+		});
+
+		expect(batchSizes(connectionManager).sort()).toEqual([1, 1, 2]);
+		expect(responses.map((response) => response.id)).toEqual([messageId(1), messageId(2), messageId(3)]);
+		expect(responses.map((response) => response.channel_id)).toEqual(['20', '10', '10']);
 	});
 
 	it('keeps a full page of ordinary pins in a single request', async () => {
