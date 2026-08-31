@@ -28,10 +28,12 @@
 -define(SHARED_USER_RATE_WINDOW_MS, 60000).
 -define(SHARED_USER_RATE_MAX_EVENTS, 600).
 -define(MAX_CONNECTIONS_PER_IP, 256).
+-define(SHARED_RATE_CLEANUP_INTERVAL_MS, ?SHARED_IP_RATE_WINDOW_MS * 2).
 
 -type state() :: gateway_handler:state().
 
 -ifdef(TEST).
+-export([prune_old_window_entries/2]).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
@@ -138,7 +140,7 @@ check_shared_ip_rate(PeerIP) when is_binary(PeerIP), PeerIP =/= <<"unknown">> ->
         true ->
             ok;
         false ->
-            ensure_window_table(?SHARED_IP_RATE_TABLE),
+            ensure_window_table(?SHARED_IP_RATE_TABLE, ?SHARED_IP_RATE_WINDOW_MS),
             check_shared_ip_window(PeerIP)
     end;
 check_shared_ip_rate(_) ->
@@ -165,7 +167,7 @@ check_shared_user_rate(UserKey) when UserKey =/= undefined ->
         true ->
             ok;
         false ->
-            ensure_window_table(?SHARED_USER_RATE_TABLE),
+            ensure_window_table(?SHARED_USER_RATE_TABLE, ?SHARED_USER_RATE_WINDOW_MS),
             check_shared_user_window(UserKey)
     end;
 check_shared_user_rate(_) ->
@@ -256,22 +258,58 @@ update_connection_count(PeerIP) ->
 note_disconnect(State) ->
     release_connection(maps:get(peer_ip, State, undefined)).
 
--spec ensure_window_table(atom()) -> ok.
-ensure_window_table(Table) ->
-    ensure_table(Table).
-
--spec ensure_counter_table(atom()) -> ok.
-ensure_counter_table(Table) ->
-    ensure_table(Table).
-
--spec ensure_table(atom()) -> ok.
-ensure_table(Table) ->
+-spec ensure_window_table(atom(), pos_integer()) -> ok.
+ensure_window_table(Table, WindowMs) ->
     case ets:whereis(Table) of
-        undefined -> create_table(Table);
+        undefined -> create_window_table(Table, WindowMs);
         _ -> ok
     end.
 
--spec create_table(atom()) -> ok.
+-spec create_window_table(atom(), pos_integer()) -> ok.
+create_window_table(Table, WindowMs) ->
+    case create_table(Table) of
+        created -> schedule_window_cleanup(Table, WindowMs);
+        exists -> ok
+    end.
+
+-spec schedule_window_cleanup(atom(), pos_integer()) -> ok.
+schedule_window_cleanup(Table, WindowMs) ->
+    _ = spawn(fun() -> window_cleanup_loop(Table, WindowMs) end),
+    ok.
+
+-spec window_cleanup_loop(atom(), pos_integer()) -> no_return().
+window_cleanup_loop(Table, WindowMs) ->
+    ok = gateway_retry_timer:wait(?SHARED_RATE_CLEANUP_INTERVAL_MS),
+    prune_old_window_entries(Table, WindowMs),
+    window_cleanup_loop(Table, WindowMs).
+
+-spec prune_old_window_entries(atom(), pos_integer()) -> ok.
+prune_old_window_entries(Table, WindowMs) ->
+    Now = erlang:system_time(millisecond),
+    Cutoff = Now div WindowMs - 1,
+    try
+        _ = ets:select_delete(Table, [
+            {{{'$1', '$2'}, '_'}, [{'<', '$2', Cutoff}], [true]}
+        ]),
+        ok
+    catch
+        error:badarg -> ok
+    end,
+    ok.
+
+-spec ensure_counter_table(atom()) -> ok.
+ensure_counter_table(Table) ->
+    case ets:whereis(Table) of
+        undefined -> create_counter_table(Table);
+        _ -> ok
+    end.
+
+-spec create_counter_table(atom()) -> ok.
+create_counter_table(Table) ->
+    _ = create_table(Table),
+    ok.
+
+-spec create_table(atom()) -> created | exists.
 create_table(Table) ->
     try
         _ = ets:new(Table, [
@@ -281,9 +319,9 @@ create_table(Table) ->
             {write_concurrency, true},
             {read_concurrency, true}
         ]),
-        ok
+        created
     catch
-        error:badarg -> ok
+        error:badarg -> exists
     end.
 
 -spec rate_limits_disabled() -> boolean().
@@ -384,6 +422,76 @@ reset_shared_ip(IP) ->
             Bucket = Now div ?SHARED_IP_RATE_WINDOW_MS,
             ets:delete(?SHARED_IP_RATE_TABLE, {IP, Bucket}),
             ok
+    end.
+
+prune_old_window_entries_removes_old_buckets_test() ->
+    with_rate_limits_enabled(fun() ->
+        ok = check_shared_ip_rate(<<"198.51.100.50">>),
+        CurrentBucket = erlang:system_time(millisecond) div ?SHARED_IP_RATE_WINDOW_MS,
+        OldKey = {<<"198.51.100.51">>, CurrentBucket - 5},
+        CurrentKey = {<<"198.51.100.52">>, CurrentBucket},
+        ets:insert(?SHARED_IP_RATE_TABLE, [{OldKey, 3}, {CurrentKey, 7}]),
+        prune_old_window_entries(?SHARED_IP_RATE_TABLE, ?SHARED_IP_RATE_WINDOW_MS),
+        ?assertEqual([], ets:lookup(?SHARED_IP_RATE_TABLE, OldKey)),
+        ?assertEqual([{CurrentKey, 7}], ets:lookup(?SHARED_IP_RATE_TABLE, CurrentKey)),
+        ets:delete(?SHARED_IP_RATE_TABLE, CurrentKey)
+    end).
+
+prune_old_window_entries_keeps_recent_buckets_test() ->
+    with_rate_limits_enabled(fun() ->
+        ok = check_shared_user_rate(<<"user-900100">>),
+        CurrentBucket = erlang:system_time(millisecond) div ?SHARED_USER_RATE_WINDOW_MS,
+        RecentKey = {<<"user-900101">>, CurrentBucket - 1},
+        ets:insert(?SHARED_USER_RATE_TABLE, {RecentKey, 5}),
+        prune_old_window_entries(?SHARED_USER_RATE_TABLE, ?SHARED_USER_RATE_WINDOW_MS),
+        ?assertNotEqual([], ets:lookup(?SHARED_USER_RATE_TABLE, RecentKey)),
+        ets:delete(?SHARED_USER_RATE_TABLE, RecentKey)
+    end).
+
+shared_ip_rate_table_sweeps_stale_buckets_test() ->
+    with_rate_limits_enabled(fun() -> with_fast_cleanup_timer(fun sweep_stale_ip_buckets/0) end).
+
+with_fast_cleanup_timer(Fun) ->
+    meck:new(gateway_retry_timer, [passthrough]),
+    meck:expect(gateway_retry_timer, wait, fun(_) -> timer:sleep(5) end),
+    try
+        Fun()
+    after
+        meck:unload(gateway_retry_timer)
+    end.
+
+sweep_stale_ip_buckets() ->
+    drop_table(?SHARED_IP_RATE_TABLE),
+    IP = <<"198.51.100.40">>,
+    ?assertEqual(ok, check_shared_ip_rate(IP)),
+    Bucket = erlang:system_time(millisecond) div ?SHARED_IP_RATE_WINDOW_MS,
+    fill_stale_buckets(?SHARED_IP_RATE_TABLE, IP, Bucket, 200),
+    ?assert(await_table_size(?SHARED_IP_RATE_TABLE, 2, 150)).
+
+drop_table(Table) ->
+    case ets:whereis(Table) of
+        undefined ->
+            ok;
+        _ ->
+            ets:delete(Table),
+            ok
+    end.
+
+fill_stale_buckets(Table, Key, Bucket, Count) ->
+    lists:foreach(
+        fun(N) -> ets:insert(Table, {{Key, Bucket - N - 1}, 1}) end,
+        lists:seq(1, Count)
+    ).
+
+await_table_size(Table, Max, 0) ->
+    ets:info(Table, size) =< Max;
+await_table_size(Table, Max, Attempts) ->
+    case ets:info(Table, size) =< Max of
+        true ->
+            true;
+        false ->
+            timer:sleep(10),
+            await_table_size(Table, Max, Attempts - 1)
     end.
 
 reset_connections(IP) ->
