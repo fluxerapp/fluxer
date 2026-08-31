@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const CACHE_INFLIGHT_MAX_ENTRIES = 10000;
+const CACHE_INFLIGHT_JOIN_RETRIES = 1;
 
 interface CacheMSetEntry<T> {
 	key: string;
@@ -11,6 +12,8 @@ interface CacheMSetEntry<T> {
 export type CacheLookupResult<T> = {hit: true; value: T} | {hit: false};
 
 type CacheTtlSeconds<T> = number | ((value: T) => number);
+
+type CacheJoinResult<T> = {joined: true; value: T} | {joined: false; error: unknown};
 
 export abstract class ICacheService {
 	private readonly inflightValues = new Map<string, Promise<unknown>>();
@@ -68,9 +71,26 @@ export abstract class ICacheService {
 	}
 
 	async getOrSet<T>(key: string, valueFactory: () => Promise<T>, ttlSeconds?: CacheTtlSeconds<T>): Promise<T> {
-		const generation = this.trackProduce(key);
+		let generation = this.trackProduce(key);
 		try {
-			return await this.getOrSetTracked(key, valueFactory, ttlSeconds, generation);
+			for (let attempt = 0; ; attempt++) {
+				const existing = await this.getEntry<T>(key);
+				if (existing.hit) {
+					return existing.value;
+				}
+				const inflight = this.inflightValues.get(key);
+				if (!inflight) {
+					return await this.produceSingleFlight(key, valueFactory, ttlSeconds, generation);
+				}
+				const joined = await this.joinInflight<T>(inflight);
+				if (joined.joined) {
+					return joined.value;
+				}
+				if (attempt >= CACHE_INFLIGHT_JOIN_RETRIES) {
+					throw joined.error;
+				}
+				generation = this.trackProduce(key);
+			}
 		} finally {
 			this.releaseProduce(key, generation);
 		}
@@ -88,20 +108,20 @@ export abstract class ICacheService {
 		}
 	}
 
-	private async getOrSetTracked<T>(
+	private async joinInflight<T>(inflight: Promise<unknown>): Promise<CacheJoinResult<T>> {
+		try {
+			return {joined: true, value: (await inflight) as T};
+		} catch (error) {
+			return {joined: false, error};
+		}
+	}
+
+	private async produceSingleFlight<T>(
 		key: string,
 		valueFactory: () => Promise<T>,
 		ttlSeconds: CacheTtlSeconds<T> | undefined,
 		generation: number,
 	): Promise<T> {
-		const existing = await this.getEntry<T>(key);
-		if (existing.hit) {
-			return existing.value;
-		}
-		const inflight = this.inflightValues.get(key);
-		if (inflight) {
-			return (await inflight) as T;
-		}
 		if (this.inflightValues.size >= CACHE_INFLIGHT_MAX_ENTRIES) {
 			return await this.produceAndStore(key, valueFactory, ttlSeconds, generation);
 		}
