@@ -166,6 +166,20 @@ init({worker, Index}) ->
     {ok, #{role => worker, index => Index, delivered => 0}}.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
+handle_call(
+    {deliver, SessionPid, Event, Payload},
+    _From,
+    #{role := worker, delivered := Delivered} = State
+) ->
+    dispatch_direct(SessionPid, Event, Payload),
+    {reply, ok, State#{delivered := Delivered + 1}};
+handle_call(
+    {deliver_many, SessionPids, Event, Payload},
+    _From,
+    #{role := worker, delivered := Delivered} = State
+) when is_list(SessionPids) ->
+    deliver_many_direct(SessionPids, Event, Payload),
+    {reply, ok, State#{delivered := Delivered + length(SessionPids)}};
 handle_call(diagnostic_info, _From, State) ->
     {reply, diagnostic_info(), State};
 handle_call(_Request, _From, State) ->
@@ -182,11 +196,14 @@ handle_cast(
     {deliver_many, SessionPids, Event, Payload},
     #{role := worker, delivered := Delivered} = State
 ) when is_list(SessionPids) ->
-    Grouped = group_by_node(SessionPids),
-    dispatch_grouped(Grouped, Event, Payload, fun dispatch_direct/3),
+    deliver_many_direct(SessionPids, Event, Payload),
     {noreply, State#{delivered := Delivered + length(SessionPids)}};
 handle_cast(_Msg, State) ->
     {noreply, State}.
+
+-spec deliver_many_direct([pid()], term(), term()) -> ok.
+deliver_many_direct(SessionPids, Event, Payload) ->
+    dispatch_grouped(group_by_node(SessionPids), Event, Payload, fun dispatch_direct/3).
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'EXIT', Pid, Reason}, #{role := coordinator, workers := Workers} = State) when

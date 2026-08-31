@@ -38,7 +38,7 @@ ordered_delivery(Worker, SendFun) ->
     SessionPid = spawn_link(fun() -> session_loop(Parent, Ref) end),
     MaxQueue = gateway_rollout_config:gateway_dispatch_relay_max_queue(),
     ok = sys:suspend(Worker),
-    fill_queue(Worker, MaxQueue - 1),
+    fill_queue(Worker, MaxQueue - ?EVENT_COUNT),
     lists:foreach(fun(N) -> ok = SendFun(SessionPid, N) end, lists:seq(1, ?EVENT_COUNT)),
     ?assert(gateway_dispatch_relay_batch:message_queue_len(Worker) >= MaxQueue),
     ok = sys:resume(Worker),

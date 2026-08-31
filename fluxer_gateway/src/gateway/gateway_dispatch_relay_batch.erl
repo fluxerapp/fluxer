@@ -18,6 +18,7 @@
 ]).
 
 -define(STATE_KEY, {gateway_dispatch_relay, state}).
+-define(SYNC_TIMEOUT_MS, 5000).
 
 -spec relay_or_direct_many([pid()], atom(), term()) -> ok.
 relay_or_direct_many(SessionPids, Event, Payload) ->
@@ -68,7 +69,7 @@ deliver_shard_buckets(Index, Count, Buckets, Event, Payload, Workers) ->
 
 -spec deliver_shard(pos_integer(), [pid()], atom(), term(), tuple()) -> ok.
 deliver_shard(Index, Pids, Event, Payload, Workers) ->
-    gen_server:cast(element(Index, Workers), {deliver_many, Pids, Event, Payload}).
+    enqueue(element(Index, Workers), {deliver_many, Pids, Event, Payload}).
 
 -spec relay_or_direct(pid(), atom(), term()) -> ok.
 relay_or_direct(SessionPid, Event, Payload) ->
@@ -76,8 +77,32 @@ relay_or_direct(SessionPid, Event, Payload) ->
         undefined ->
             gateway_dispatch_relay:dispatch_direct(SessionPid, Event, Payload);
         Worker ->
-            gen_server:cast(Worker, {deliver, SessionPid, Event, Payload})
+            enqueue(Worker, {deliver, SessionPid, Event, Payload})
     end.
+
+-spec enqueue(pid(), term()) -> ok.
+enqueue(Worker, Msg) ->
+    case is_over_max_queue(Worker) of
+        true -> enqueue_sync(Worker, Msg);
+        false -> gen_server:cast(Worker, Msg)
+    end.
+
+-spec enqueue_sync(pid(), term()) -> ok.
+enqueue_sync(Worker, Msg) ->
+    try gen_server:call(Worker, Msg, ?SYNC_TIMEOUT_MS) of
+        _ -> ok
+    catch
+        exit:_Reason -> ok
+    end.
+
+-spec is_over_max_queue(pid()) -> boolean().
+is_over_max_queue(Worker) ->
+    MaxQueue = max_queue(),
+    MaxQueue > 0 andalso message_queue_len(Worker) >= MaxQueue.
+
+-spec max_queue() -> non_neg_integer().
+max_queue() ->
+    gateway_rollout_config:gateway_dispatch_relay_max_queue().
 
 -spec current_workers() -> [pid()].
 current_workers() ->
