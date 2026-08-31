@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {createUserID} from '../../BrandedTypes';
 import {Logger} from '../../Logger';
-import {resolvePendingDeletionReasonCode} from '../../user/services/PendingDeletionCoordinator';
+import {
+	isPendingDeletionBlocked,
+	resolvePendingDeletionReasonCode,
+} from '../../user/services/PendingDeletionCoordinator';
 import {getWorkerDependencies} from '../WorkerContext';
 
 const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers) => {
@@ -42,12 +44,9 @@ const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers)
 					await deletionQueueService.removeFromQueue(userId);
 					continue;
 				}
-				if (user.isBot) {
-					Logger.info({userId}, 'User is a bot, skipping deletion');
-					continue;
-				}
-				if (user.flags & UserFlags.APP_STORE_REVIEWER) {
-					Logger.info({userId}, 'User is an app store reviewer, skipping deletion');
+				if (isPendingDeletionBlocked(user)) {
+					Logger.info({userId}, 'User is not eligible for automated deletion, removing from KV');
+					await deletionQueueService.removeFromQueue(userId);
 					continue;
 				}
 				const deletionReasonCode = resolvePendingDeletionReasonCode(user, deletion.deletionReasonCode);

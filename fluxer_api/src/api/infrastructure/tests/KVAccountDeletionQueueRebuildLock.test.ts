@@ -16,6 +16,8 @@ function createPendingUser(index: number): User {
 		id: createUserID(BigInt(7000 + index)),
 		pendingDeletionAt: new Date('2026-06-01T00:00:00.000Z'),
 		deletionReasonCode: 0,
+		isBot: false,
+		flags: 0n,
 	} as unknown as User;
 }
 

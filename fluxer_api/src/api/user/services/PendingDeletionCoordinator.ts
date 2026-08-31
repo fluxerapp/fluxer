@@ -35,6 +35,11 @@ interface PendingDeletionReasonUserLike {
 	flags: bigint;
 }
 
+interface PendingDeletionEligibilityUserLike {
+	isBot: boolean;
+	flags: bigint;
+}
+
 export async function reschedulePendingDeletion({
 	userId,
 	currentPendingDeletionAt,
@@ -82,4 +87,11 @@ export function resolvePendingDeletionReasonCode(
 		return DeletionReasons.OTHER;
 	}
 	return 0;
+}
+
+export function isPendingDeletionBlocked(user: PendingDeletionEligibilityUserLike): boolean {
+	if (user.isBot) {
+		return true;
+	}
+	return (user.flags & UserFlags.APP_STORE_REVIEWER) !== 0n;
 }

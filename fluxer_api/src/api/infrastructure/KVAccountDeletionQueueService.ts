@@ -6,7 +6,7 @@ import {ms, seconds} from 'itty-time';
 import type {UserID} from '../BrandedTypes';
 import {Logger} from '../Logger';
 import type {UserRepository} from '../user/repositories/UserRepository';
-import {resolvePendingDeletionReasonCode} from '../user/services/PendingDeletionCoordinator';
+import {isPendingDeletionBlocked, resolvePendingDeletionReasonCode} from '../user/services/PendingDeletionCoordinator';
 
 interface QueuedDeletion {
 	userId: bigint;
@@ -76,7 +76,7 @@ export class KVAccountDeletionQueueService {
 				}
 				let batchQueued = 0;
 				for (const user of users) {
-					if (user.pendingDeletionAt) {
+					if (user.pendingDeletionAt && !isPendingDeletionBlocked(user)) {
 						const queueItem: QueuedDeletion = {
 							userId: user.id,
 							deletionReasonCode: resolvePendingDeletionReasonCode(user, 0),
