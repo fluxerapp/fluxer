@@ -28,9 +28,9 @@ const processScheduledJobQueue: WorkerTaskHandler = async (_payload, helpers) =>
 	let claimedElsewhereCount = 0;
 	let droppedCount = 0;
 	let failedCount = 0;
-	for (const job of readyJobs) {
+	for (const {job, member} of readyJobs) {
 		try {
-			const claimed = await scheduledJobQueueService.claimJob(job.jobIdentity);
+			const claimed = await scheduledJobQueueService.claimJob(job.jobIdentity, member);
 			if (!claimed) {
 				claimedElsewhereCount += 1;
 				continue;

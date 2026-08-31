@@ -167,13 +167,14 @@ describe('Scheduled job due queue', () => {
 		expect(await scheduledJobQueue.getReadyJobs(Date.now(), 10)).toHaveLength(0);
 		const due = await scheduledJobQueue.getReadyJobs(runAt.getTime() - LANE_ACK_WAIT_MS, 10);
 		expect(due).toHaveLength(1);
-		expect(due[0]).toEqual({
+		expect(due[0]!.job).toEqual({
 			jobIdentity: '4242',
 			taskType: TASK_TYPE,
 			payload: {scheduledMessageId: '77'},
 			runAtMs: runAt.getTime(),
 			ledgerJobId: '4242',
 		});
+		expect(due[0]!.member).toContain('"jobIdentity":"4242"');
 	});
 
 	it('releases a parked job exactly once when its due time arrives', async () => {
@@ -275,5 +276,68 @@ describe('Scheduled job due queue', () => {
 
 		expect(workerService.jobs).toHaveLength(0);
 		expect(await scheduledJobQueue.getQueueSize()).toBe(0);
+	});
+});
+
+describe('Parked job claim survives secondary key loss', () => {
+	it('claims by member when the secondary key was evicted', async () => {
+		const kv = new MockKVProvider();
+		const service = new KVScheduledJobQueueService(kv);
+		const runAtMs = Date.now() + 86_400_000;
+		const job = {
+			jobIdentity: 'job-evicted',
+			taskType: TASK_TYPE,
+			payload: {message_id: '1'} as WorkerJobPayload,
+			runAtMs,
+			ledgerJobId: null,
+		};
+
+		await service.parkJob(job, new Date(Date.now() - 1000));
+		expect(await service.getQueueSize()).toBe(1);
+
+		await kv.del('scheduled_job_queue:job-evicted');
+
+		const ready = await service.getReadyJobs(Date.now(), 10);
+		expect(ready).toHaveLength(1);
+
+		expect(await service.claimJob(ready[0]!.job.jobIdentity, ready[0]!.member)).toBe(true);
+		expect(await service.getQueueSize()).toBe(0);
+	});
+
+	it('leaves the entry wedged when claiming without the member', async () => {
+		const kv = new MockKVProvider();
+		const service = new KVScheduledJobQueueService(kv);
+		const job = {
+			jobIdentity: 'job-wedged',
+			taskType: TASK_TYPE,
+			payload: {message_id: '2'} as WorkerJobPayload,
+			runAtMs: Date.now() + 86_400_000,
+			ledgerJobId: null,
+		};
+
+		await service.parkJob(job, new Date(Date.now() - 1000));
+		await kv.del('scheduled_job_queue:job-wedged');
+
+		expect(await service.claimJob('job-wedged')).toBe(false);
+		expect(await service.getQueueSize()).toBe(1);
+	});
+
+	it('still reports a second claim of the same member as already claimed', async () => {
+		const kv = new MockKVProvider();
+		const service = new KVScheduledJobQueueService(kv);
+		const job = {
+			jobIdentity: 'job-twice',
+			taskType: TASK_TYPE,
+			payload: {message_id: '3'} as WorkerJobPayload,
+			runAtMs: Date.now() + 86_400_000,
+			ledgerJobId: null,
+		};
+
+		await service.parkJob(job, new Date(Date.now() - 1000));
+		const ready = await service.getReadyJobs(Date.now(), 10);
+		const member = ready[0]!.member;
+
+		expect(await service.claimJob('job-twice', member)).toBe(true);
+		expect(await service.claimJob('job-twice', member)).toBe(false);
 	});
 });

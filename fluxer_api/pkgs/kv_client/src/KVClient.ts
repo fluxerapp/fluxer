@@ -224,6 +224,11 @@ redis.call('SET', bucketKey, cjson.encode({tokens = tokens, lastRefill = lastRef
 return cjson.encode({urls = urls, tokens = #urls})
 `;
 const REMOVE_BULK_DELETION_SCRIPT = `
+local member = ARGV[1]
+if member ~= '' and redis.call('ZREM', KEYS[1], member) == 1 then
+	redis.call('DEL', KEYS[2])
+	return 1
+end
 local value = redis.call('GET', KEYS[2])
 if not value then
 	return 0
@@ -608,13 +613,14 @@ export class KVClient implements IKVProvider {
 		);
 	}
 
-	async removeBulkDeletion(queueKey: string, secondaryKey: string): Promise<boolean> {
+	async removeBulkDeletion(queueKey: string, secondaryKey: string, member = ''): Promise<boolean> {
 		const result = await this.executeScript(
 			'removeBulkDeletion',
 			REMOVE_BULK_DELETION_SCRIPT,
 			2,
 			queueKey,
 			secondaryKey,
+			member,
 		);
 		return Number(result) === 1;
 	}

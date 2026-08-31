@@ -667,9 +667,13 @@ export class MockKVProvider implements IKVProvider {
 		this.expiries.delete(secondaryKey);
 	}
 
-	async removeBulkDeletion(queueKey: string, secondaryKey: string): Promise<boolean> {
-		this.removeBulkDeletionSpy(queueKey, secondaryKey);
+	async removeBulkDeletion(queueKey: string, secondaryKey: string, member = ''): Promise<boolean> {
+		this.removeBulkDeletionSpy(queueKey, secondaryKey, member);
 		this.evictIfExpired(secondaryKey);
+		if (member !== '' && (await this.zrem(queueKey, member)) === 1) {
+			this.deleteKey(secondaryKey);
+			return true;
+		}
 		const value = this.stringStore.get(secondaryKey);
 		if (value === undefined) {
 			return false;

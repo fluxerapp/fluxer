@@ -13,6 +13,11 @@ export interface ParkedScheduledJob {
 	ledgerJobId: string | null;
 }
 
+export interface ReadyScheduledJob {
+	job: ParkedScheduledJob;
+	member: string;
+}
+
 const QUEUE_KEY = 'scheduled_job_queue';
 const SECONDARY_KEY_PREFIX = 'scheduled_job_queue:';
 
@@ -75,22 +80,22 @@ export class KVScheduledJobQueueService {
 		}
 	}
 
-	async claimJob(jobIdentity: string): Promise<boolean> {
+	async claimJob(jobIdentity: string, member = ''): Promise<boolean> {
 		try {
-			return await this.kvClient.removeBulkDeletion(QUEUE_KEY, this.getSecondaryKey(jobIdentity));
+			return await this.kvClient.removeBulkDeletion(QUEUE_KEY, this.getSecondaryKey(jobIdentity), member);
 		} catch (error) {
 			Logger.error({error, jobIdentity}, 'Failed to claim parked scheduled job');
 			throw error;
 		}
 	}
 
-	async getReadyJobs(nowMs: number, limit: number): Promise<Array<ParkedScheduledJob>> {
+	async getReadyJobs(nowMs: number, limit: number): Promise<Array<ReadyScheduledJob>> {
 		try {
 			const results = await this.kvClient.zrangebyscore(QUEUE_KEY, '-inf', nowMs, 'LIMIT', 0, limit);
-			const jobs: Array<ParkedScheduledJob> = [];
+			const jobs: Array<ReadyScheduledJob> = [];
 			for (const result of results) {
 				try {
-					jobs.push(this.deserializeQueueItem(result));
+					jobs.push({job: this.deserializeQueueItem(result), member: result});
 				} catch (error) {
 					Logger.error({error, result}, 'Failed to parse parked scheduled job entry');
 				}
