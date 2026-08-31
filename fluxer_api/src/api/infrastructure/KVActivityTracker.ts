@@ -74,6 +74,10 @@ export class KVActivityTracker {
 		return age > STATE_VERSION_TTL_SECONDS;
 	}
 
+	private async writeActivityBatch(batch: ReadonlyArray<{key: string; value: string}>): Promise<void> {
+		await Promise.all(batch.map(async (entry) => this.kvClient.setex(entry.key, TTL_SECONDS, entry.value)));
+	}
+
 	async rebuildActivities(): Promise<void> {
 		Logger.info('Starting activity tracker rebuild from Cassandra');
 		const userRepository = new UserRepository();
@@ -81,8 +85,7 @@ export class KVActivityTracker {
 			const kvBatchSize = 1000;
 			let processedCount = 0;
 			let usersWithActivity = 0;
-			let pipeline = this.kvClient.pipeline();
-			let pipelineCount = 0;
+			let batch: Array<{key: string; value: string}> = [];
 			let pageState: string | null = null;
 			let iterationCount = 0;
 			while (!this.isShuttingDown) {
@@ -93,15 +96,11 @@ export class KVActivityTracker {
 				}
 				for (const user of users) {
 					if (user.lastActiveAt) {
-						const key = this.getActivityKey(user.id);
-						const value = user.lastActiveAt.getTime().toString();
-						pipeline.setex(key, TTL_SECONDS, value);
-						pipelineCount++;
+						batch.push({key: this.getActivityKey(user.id), value: user.lastActiveAt.getTime().toString()});
 						usersWithActivity++;
-						if (pipelineCount >= kvBatchSize) {
-							await pipeline.exec();
-							pipeline = this.kvClient.pipeline();
-							pipelineCount = 0;
+						if (batch.length >= kvBatchSize) {
+							await this.writeActivityBatch(batch);
+							batch = [];
 						}
 					}
 					processedCount++;
@@ -122,8 +121,8 @@ export class KVActivityTracker {
 				Logger.warn({processedCount, usersWithActivity}, 'Activity tracker rebuild interrupted by shutdown');
 				return;
 			}
-			if (pipelineCount > 0) {
-				await pipeline.exec();
+			if (batch.length > 0) {
+				await this.writeActivityBatch(batch);
 			}
 			await this.kvClient.setex(STATE_VERSION_KEY, STATE_VERSION_TTL_SECONDS, Date.now().toString());
 			Logger.info({processedCount, usersWithActivity}, 'Activity tracker rebuild completed');

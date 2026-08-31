@@ -355,7 +355,10 @@ export class KVClient implements IKVProvider {
 	}
 
 	async mget(...keys: Array<string>): Promise<Array<string | null>> {
-		return await this.execute('mget', async () => this.client.mget(...keys));
+		if (keys.length === 0) {
+			return [];
+		}
+		return await this.execute('mget', async () => await Promise.all(keys.map(async (key) => this.client.get(key))));
 	}
 
 	async mset(...args: Array<string>): Promise<void> {
@@ -363,9 +366,8 @@ export class KVClient implements IKVProvider {
 		if (entries.length === 0) {
 			return;
 		}
-		const pairs = entries.flatMap((entry) => [entry.key, entry.value]);
 		await this.execute('mset', async () => {
-			await this.client.mset(...pairs);
+			await Promise.all(entries.map(async (entry) => this.client.set(entry.key, entry.value)));
 		});
 	}
 
@@ -373,7 +375,10 @@ export class KVClient implements IKVProvider {
 		if (keys.length === 0) {
 			return 0;
 		}
-		return await this.execute('del', async () => this.client.del(...keys));
+		return await this.execute('del', async () => {
+			const deleted = await Promise.all(keys.map(async (key) => this.client.del(key)));
+			return deleted.reduce((total, count) => total + count, 0);
+		});
 	}
 
 	async exists(key: string): Promise<number> {

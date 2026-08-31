@@ -137,37 +137,16 @@ export class KVCacheProvider extends ICacheService {
 		}>,
 	): Promise<void> {
 		if (entries.length === 0) return;
-		const withoutTtl: Array<{
-			key: string;
-			value: T;
-		}> = [];
-		const withTtl: Array<{
-			key: string;
-			value: T;
-			ttlSeconds: number;
-		}> = [];
-		for (const entry of entries) {
-			if (entry.ttlSeconds) {
-				withTtl.push({
-					key: entry.key,
-					value: entry.value,
-					ttlSeconds: entry.ttlSeconds,
-				});
-			} else {
-				withoutTtl.push({
-					key: entry.key,
-					value: entry.value,
-				});
-			}
-		}
-		const pipeline = this.client.pipeline();
-		for (const entry of withoutTtl) {
-			pipeline.set(entry.key, serializeValue(entry.value));
-		}
-		for (const entry of withTtl) {
-			pipeline.setex(entry.key, entry.ttlSeconds, serializeValue(entry.value));
-		}
-		await pipeline.exec();
+		await Promise.all(
+			entries.map(async (entry) => {
+				const serialized = serializeValue(entry.value);
+				if (entry.ttlSeconds) {
+					await this.client.setex(entry.key, entry.ttlSeconds, serialized);
+					return;
+				}
+				await this.client.set(entry.key, serialized);
+			}),
+		);
 	}
 
 	async deletePattern(pattern: string): Promise<number> {
