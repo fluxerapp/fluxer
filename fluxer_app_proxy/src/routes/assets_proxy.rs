@@ -380,6 +380,7 @@ mod tests {
     use fluxer_common::config::GeoipSourceConfig;
     use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use tower::ServiceExt;
 
     async fn spawn_upstream(status: StatusCode, cache_control: &'static str) -> String {
@@ -629,11 +630,11 @@ mod tests {
 
     impl LocalAssetDir {
         fn with_asset(name: &str, bytes: &[u8]) -> Self {
-            let unique = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let root = std::env::temp_dir().join(format!("fluxer-local-asset-{unique}-{name}"));
+            static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
+            let unique = NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed);
+            let pid = std::process::id();
+            let root =
+                std::env::temp_dir().join(format!("fluxer-local-asset-{pid}-{unique}-{name}"));
             std::fs::create_dir_all(root.join("assets")).unwrap();
             std::fs::write(root.join("assets").join(name), bytes).unwrap();
             Self { root }
