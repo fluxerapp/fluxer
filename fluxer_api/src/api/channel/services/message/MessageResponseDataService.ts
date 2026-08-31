@@ -260,7 +260,7 @@ export class MessageResponseDataService {
 		channelById: ReadonlyMap<string, Pick<Channel, 'guildId'>>;
 		includeReactions?: boolean;
 	}): Promise<Array<MessageResponse>> {
-		const responses = new Array<MessageResponse>(params.messages.length);
+		const responses = new Array<MessageResponse | undefined>(params.messages.length);
 		const groups = new Map<
 			string,
 			{
@@ -290,12 +290,13 @@ export class MessageResponseDataService {
 					access: group.access,
 					includeReactions: params.includeReactions,
 				});
-				for (const [mappedIndex, entry] of group.entries.entries()) {
-					responses[entry.index] = mapped[mappedIndex];
+				const mappedByMessageId = new Map(mapped.map((response) => [response.id, response] as const));
+				for (const entry of group.entries) {
+					responses[entry.index] = mappedByMessageId.get(entry.message.id.toString());
 				}
 			}),
 		);
-		return responses;
+		return responses.filter((response): response is MessageResponse => response !== undefined);
 	}
 
 	private async request(payload: Record<string, unknown>): Promise<MessageServiceResponse> {
