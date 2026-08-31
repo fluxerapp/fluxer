@@ -69,7 +69,7 @@ function resolveValidateResponses(master: MasterConfig): boolean {
 	if (isBoolean(master.dev.validate_responses)) {
 		return master.dev.validate_responses;
 	}
-	return master.env !== 'production' || master.instance.self_hosted;
+	return master.env !== 'production';
 }
 
 function resolveTrustClientIpHeader(proxyConfig: object): boolean {
