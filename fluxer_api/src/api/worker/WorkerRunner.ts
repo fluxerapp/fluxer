@@ -11,6 +11,7 @@ import {isJsonRecord, parseJsonRecord} from '../utils/JsonBoundaryUtils';
 
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
 const MIN_ACK_HEARTBEAT_MS = 1000;
+const RESUBSCRIBE_DELAY_MS = 5000;
 
 interface WorkerRunnerJetStreamClient {
 	consumers: {
@@ -89,16 +90,8 @@ export class WorkerRunner {
 		}
 		this.running = true;
 		Logger.info({workerId: this.workerId, lane: this.laneName, concurrency: this.concurrency}, 'Worker starting');
-		const js = this.queue.getConnectionManager().getJetStreamClient();
-		const consumer = await js.consumers.get(this.queue.getStreamName(), this.consumerName);
-		const prefetch = Math.max(this.concurrency * 2, 16);
-		this.consumerMessages = await consumer.consume({
-			max_messages: prefetch,
-			idle_heartbeat: 5000,
-		});
-		this.processingLoop = this.processMessages().catch((error) => {
-			Logger.error({workerId: this.workerId, err: error}, 'Worker message processing failed unexpectedly');
-		});
+		this.consumerMessages = await this.openConsumerMessages();
+		this.processingLoop = this.consumeUntilStopped(this.consumerMessages);
 	}
 
 	async stop(): Promise<void> {
@@ -117,11 +110,54 @@ export class WorkerRunner {
 		Logger.info({workerId: this.workerId}, 'Worker stopped');
 	}
 
-	private async processMessages(): Promise<void> {
-		if (this.consumerMessages === null) {
-			return;
+	private async openConsumerMessages(): Promise<ConsumerMessages> {
+		const js = this.queue.getConnectionManager().getJetStreamClient();
+		const consumer = await js.consumers.get(this.queue.getStreamName(), this.consumerName);
+		const prefetch = Math.max(this.concurrency * 2, 16);
+		return await consumer.consume({
+			max_messages: prefetch,
+			idle_heartbeat: 5000,
+		});
+	}
+
+	private async consumeUntilStopped(initialMessages: ConsumerMessages): Promise<void> {
+		let messages: ConsumerMessages | null = initialMessages;
+		while (this.running) {
+			if (messages === null) {
+				await new Promise((resolve) => setTimeout(resolve, RESUBSCRIBE_DELAY_MS));
+				if (!this.running) {
+					break;
+				}
+				try {
+					messages = await this.openConsumerMessages();
+					this.consumerMessages = messages;
+				} catch (error) {
+					Logger.error(
+						{workerId: this.workerId, lane: this.laneName, err: error},
+						'Failed to resubscribe the worker consumer',
+					);
+				}
+				continue;
+			}
+			try {
+				await this.processMessages(messages);
+			} catch (error) {
+				Logger.error({workerId: this.workerId, err: error}, 'Worker message processing failed unexpectedly');
+			}
+			messages = null;
+			this.consumerMessages = null;
+			if (this.running) {
+				Logger.error(
+					{workerId: this.workerId, lane: this.laneName},
+					'Worker message stream ended while running, resubscribing',
+				);
+			}
 		}
-		for await (const msg of this.consumerMessages) {
+		Logger.info({workerId: this.workerId}, 'Worker message iterator ended');
+	}
+
+	private async processMessages(consumerMessages: ConsumerMessages): Promise<void> {
+		for await (const msg of consumerMessages) {
 			if (!this.running) {
 				break;
 			}
@@ -159,7 +195,6 @@ export class WorkerRunner {
 			this.inFlightJobs.add(jobPromise);
 		}
 		await Promise.allSettled(this.inFlightJobs);
-		Logger.info({workerId: this.workerId}, 'Worker message iterator ended');
 	}
 
 	protected async processJob(taskType: string, msg: JsMsg): Promise<boolean> {
