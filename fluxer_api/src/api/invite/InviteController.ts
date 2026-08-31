@@ -8,6 +8,10 @@ import {
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	ChannelInviteCreateRequest,
+	GuildInviteBundleAcceptRequest,
+	GuildInviteBundleCreateRequest,
+	GuildInviteBundleMetadataResponse,
+	GuildInviteBundleResponse,
 	InviteMetadataResponseSchema,
 	InviteResponseSchema,
 	PackInviteCreateRequest,
@@ -223,6 +227,67 @@ export function InviteController(app: HonoApp) {
 					packId,
 					requestCache,
 					data: ctx.req.valid('json'),
+				}),
+			);
+		},
+	);
+	app.post(
+		'/guild-bundles',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_INVITE_BUNDLE_CREATE),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', GuildInviteBundleCreateRequest),
+		OpenAPI({
+			operationId: 'create_guild_invite_bundle',
+			summary: 'Create guild invite bundle',
+			description:
+				'Creates a new invite bundle for the specified guild channels, with expiration and maximum uses parameters. The authenticated user must have permission to create invites for all of the guild channels and must be a default (non-bot) user. Returns the created invite metadata including the code.',
+			responseSchema: GuildInviteBundleMetadataResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Invites'],
+		}),
+		async (ctx) => {
+			const userId = ctx.get('user').id;
+			const inviteRequestService = ctx.get('inviteRequestService');
+			const requestCache = ctx.get('requestCache');
+			return ctx.json(
+				await inviteRequestService.createGuildInviteBundle({
+					inviterId: userId,
+					data: ctx.req.valid('json'),
+					requestCache,
+				}),
+			);
+		},
+	);
+	app.post(
+		'/guild-bundles/:invite_code',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_INVITE_BUNDLE_ACCEPT),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', GuildInviteBundleAcceptRequest),
+		Validator('param', InviteCodeParam),
+		OpenAPI({
+			operationId: 'accept_guild_invite_bundle',
+			summary: 'Aceppt guild invite bundle',
+			description:
+				'Accepts a guild invite bundle using its code, adding the authenticated user to the guilds specified in the request. The usage count for the invite bundle as well as all invites linked to this invite bundle for which the guild ID was specified in the request is increased. If the usage count for the bundle or child invites reaches the maximum usage limit or expiration, those invites are automatically revoked.',
+			responseSchema: GuildInviteBundleResponse,
+			statusCode: 200,
+			security: ['sessionToken'],
+			tags: ['Invites'],
+		}),
+		async (ctx) => {
+			const userId = ctx.get('user').id;
+			const inviteCode = createInviteCode(ctx.req.valid('param').invite_code);
+			const inviteRequestService = ctx.get('inviteRequestService');
+			const requestCache = ctx.get('requestCache');
+			return ctx.json(
+				await inviteRequestService.acceptGuildInviteBundle({
+					userId,
+					inviteCode,
+					guildIds: ctx.req.valid('json').guild_ids.map((guildId) => createGuildID(BigInt(guildId))),
+					requestCache,
 				}),
 			);
 		},

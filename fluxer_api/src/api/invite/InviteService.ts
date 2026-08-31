@@ -17,11 +17,13 @@ import {UnknownPackError} from '@fluxer/errors/src/domains/pack/UnknownPackError
 import type {
 	GroupDmInviteMetadataResponse,
 	GuildInviteMetadataResponse,
+	GuildInviteBundleMetadataResponse,
 	PackInviteMetadataResponse,
+	GuildInviteBundleCreateRequest,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import type {ApiContext} from '../ApiContext';
 import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
-import {createInviteCode, vanityCodeToInviteCode} from '../BrandedTypes';
+import {createChannelID, createInviteCode, vanityCodeToInviteCode} from '../BrandedTypes';
 import type {ChannelService} from '../channel/services/ChannelService';
 import type {GuildAuditLogService} from '../guild/GuildAuditLogService';
 import type {GuildService} from '../guild/services/GuildService';
@@ -36,6 +38,11 @@ import type {PackRepository, PackType} from '../pack/PackRepository';
 import type {PackService} from '../pack/PackService';
 import * as RandomUtils from '../utils/RandomUtils';
 import type {IInviteRepository} from './IInviteRepository';
+import {BadRequestError} from '@fluxer/errors/src/HttpErrors';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import type {GuildPartialResponse, GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import type {GuildInviteBundle} from '../models/GuildInviteBundle';
 
 interface GetChannelInvitesParams {
 	userId: UserID;
@@ -379,6 +386,52 @@ export class InviteService {
 		return this.incrementInviteUses(invite, {deleteWhenExhausted: !isVanityInvite});
 	}
 
+	async acceptGuildInviteBundle(
+		userId: UserID,
+		inviteCode: InviteCode,
+		guildIds: Array<GuildID>,
+		requestCache: RequestCache,
+	): Promise<{
+		bundle: GuildInviteBundle;
+		num_expired: number;
+		invitesDisabledOrFeatureTemporarilyDisabled: Array<GuildID>;
+	}> {
+		const bundle = await this.getGuildInviteBundle(inviteCode);
+		let num_expired = 0;
+		const invitesDisabledOrFeatureTemporarilyDisabled: Array<GuildID> = [];
+		const invitesData: Array<{guildId: GuildID; code: InviteCode}> = [];
+		for (const guildId of guildIds) {
+			const inviteData = bundle.invites.find(({guild_id}) => guild_id === guildId);
+			if (!inviteData) {
+				throw new BadRequestError();
+			}
+			invitesData.push({guildId, code: inviteData.code});
+		}
+		for (const {code, guildId} of invitesData) {
+			try {
+				await this.acceptInvite({
+					userId,
+					inviteCode: code,
+					requestCache,
+				});
+			} catch (error) {
+				if (error instanceof UnknownInviteError) {
+					num_expired++;
+				} else if (error instanceof InvitesDisabledError || error instanceof FeatureTemporarilyDisabledError) {
+					invitesDisabledOrFeatureTemporarilyDisabled.push(guildId);
+				} else {
+					throw error;
+				}
+			}
+		}
+		// TODO: decrement
+		return {
+			bundle,
+			num_expired,
+			invitesDisabledOrFeatureTemporarilyDisabled,
+		};
+	}
+
 	private createRandomInviteCode(): InviteCode {
 		return createInviteCode(RandomUtils.randomString(8));
 	}
@@ -414,6 +467,18 @@ export class InviteService {
 			return null;
 		}
 		return this.inviteRepository.findUnique(lowercaseInviteCode);
+	}
+
+	private async findGuildInviteBundleWithLowercaseFallback(inviteCode: InviteCode): Promise<GuildInviteBundle | null> {
+		const invite = await this.inviteRepository.findUniqueGuildBundle(inviteCode);
+		if (invite) {
+			return invite;
+		}
+		const lowercaseInviteCode = createInviteCode(inviteCode.toLowerCase());
+		if (lowercaseInviteCode === inviteCode) {
+			return null;
+		}
+		return this.inviteRepository.findUniqueGuildBundle(lowercaseInviteCode);
 	}
 
 	private cloneInviteWithUses(invite: Invite, uses: number): Invite {
@@ -561,6 +626,117 @@ export class InviteService {
 				}
 			}
 		}
+	}
+
+	async createInviteBundle(
+		inviterId: UserID,
+		data: GuildInviteBundleCreateRequest,
+	): Promise<{bundle: GuildInviteBundleMetadataResponse; invites: Array<Invite>}> {
+		const channelsAndGuilds: Map<GuildID, [Channel, GuildResponse]> = new Map();
+		for (const channelIdString of data.channel_ids) {
+			const channelId = createChannelID(BigInt(channelIdString));
+			const channel = await this.channelService.channelData.operations.getChannel({userId: inviterId, channelId});
+			if (!channel.guildId) {
+				throw new BadRequestError({
+					code: APIErrorCodes.INVALID_CHANNEL_TYPE,
+					message: 'Channel must be a guild channel',
+				});
+			}
+			const hasPermission = await this.apiContext.services.gateway.checkPermission({
+				guildId: channel.guildId,
+				userId: inviterId,
+				permission: Permissions.CREATE_INSTANT_INVITE,
+				channelId: channel.id,
+			});
+			if (!hasPermission) {
+				throw new MissingPermissionsError();
+			}
+			const {guildData} = await this.guildService.getGuildAuthenticated({
+				userId: inviterId,
+				guildId: channel.guildId,
+			});
+			const existingInvites = await this.inviteRepository.listGuildInvites(channel.guildId);
+			const inviteLimit = this.resolveInviteLimit(guildData.features);
+			if (existingInvites.length >= inviteLimit) {
+				throw new MaxGuildInvitesError(inviteLimit);
+			}
+			if (channelsAndGuilds.has(channel.guildId)) {
+				throw new BadRequestError();
+			}
+			channelsAndGuilds.set(channel.guildId, [channel, guildData]);
+		}
+		const invites: Array<{
+			invite: Invite;
+			guildId: GuildID;
+			channelId: ChannelID;
+		}> = [];
+		for (const [guildId, [channel, _guild]] of channelsAndGuilds) {
+			const invite = await this.inviteRepository.create({
+				code: this.createRandomInviteCode(),
+				type: InviteTypes.GUILD,
+				guild_id: guildId,
+				channel_id: channel.id,
+				inviter_id: inviterId,
+				uses: 0,
+				max_uses: data.max_uses ?? 0,
+				max_age: data.max_age ?? 0,
+				temporary: false,
+			});
+			await this.logGuildInviteAction({
+				invite,
+				userId: inviterId,
+				action: 'create',
+			});
+			invites.push({invite, guildId, channelId: channel.id});
+		}
+		const inviteBundle = await this.inviteRepository.createGuildBundle({
+			code: this.createRandomInviteCode(),
+			max_uses: data.max_uses ?? 0,
+			max_age: data.max_age ?? 0,
+			uses: 0,
+			invites: invites.map(({invite, guildId, channelId}) => {
+				return {
+					guild_id: guildId,
+					channel_id: channelId,
+					code: invite.code,
+				};
+			}),
+			inviter_id: inviterId,
+		});
+		return {
+			bundle: {
+				max_uses: inviteBundle.maxUses,
+				max_age: inviteBundle.maxAge,
+				code: inviteBundle.code,
+				guilds: channelsAndGuilds
+					.values()
+					.map(([channel, guild]) => {
+						return {
+							guild: {
+								id: guild.id,
+								name: guild.name,
+								icon: guild.icon,
+							} as GuildPartialResponse,
+							channel: {
+								id: channel.id.toString(),
+								name: channel.name,
+								type: channel.type,
+							} as ChannelPartialResponse,
+						};
+					})
+					.toArray(),
+				no_invite_available_count: 0,
+			},
+			invites: invites.map(({invite}) => invite),
+		};
+	}
+
+	async getGuildInviteBundle(inviteCode: InviteCode): Promise<GuildInviteBundle> {
+		const invite = await this.findGuildInviteBundleWithLowercaseFallback(inviteCode);
+		if (invite) {
+			return invite;
+		}
+		throw new UnknownInviteError();
 	}
 
 	private async logGuildInviteAction(params: {

@@ -5,8 +5,10 @@ import {createInviteCode} from '../BrandedTypes';
 import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
 import {Db} from '../database/CassandraTypes';
 import type {InviteRow} from '../database/types/ChannelTypes';
+import type {GuildInviteBundleRow} from '../database/types/InviteBundleTypes';
+import {GuildInviteBundle} from '../models/GuildInviteBundle';
 import {Invite} from '../models/Invite';
-import {Invites, InvitesByChannel, InvitesByGuild} from '../Tables';
+import {GuildInviteBundles, Invites, InvitesByChannel, InvitesByGuild} from '../Tables';
 import {IInviteRepository} from './IInviteRepository';
 
 const FETCH_INVITE_BY_CODE_CQL = Invites.selectCql({
@@ -207,5 +209,40 @@ export class InviteRepository extends IInviteRepository {
 			batch.addPrepared(InvitesByChannel.deleteByPk({channel_id: invite.channelId, code}));
 		}
 		await batch.execute();
+	}
+
+	override async createGuildBundle(data: {
+		code: InviteCode;
+		max_uses: number;
+		max_age: number;
+		uses: number;
+		invites: Array<{guild_id: GuildID; channel_id: ChannelID; code: InviteCode}>;
+		inviter_id: UserID;
+	}): Promise<GuildInviteBundle> {
+		const guildInviteBundleRow: GuildInviteBundleRow = {
+			code: data.code,
+			max_uses: data.max_uses,
+			max_age: data.max_age,
+			uses: data.uses,
+			invites: data.invites,
+			inviter_id: data.inviter_id,
+			created_at: new Date(),
+		};
+
+		const batch = new BatchBuilder();
+		const hasExpiry = guildInviteBundleRow.max_age > 0;
+		if (hasExpiry) {
+			batch.addPrepared(GuildInviteBundles.insertWithTtlParam(guildInviteBundleRow, 'max_age'));
+		} else {
+			batch.addPrepared(GuildInviteBundles.insert(guildInviteBundleRow));
+		}
+		await batch.execute();
+		if (hasExpiry) {
+			await upsertOne(GuildInviteBundles.upsertAllWithTtl(guildInviteBundleRow, guildInviteBundleRow.max_age));
+		} else {
+			await upsertOne(GuildInviteBundles.upsertAll(guildInviteBundleRow));
+		}
+
+		return new GuildInviteBundle(guildInviteBundleRow);
 	}
 }

@@ -617,6 +617,23 @@
 					"type": "bigint"
 				}
 			]
+		},
+		{
+			"name": "invite_bundle_invite_item",
+			"fields": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "code",
+					"type": "text"
+				}
+			]
 		}
 	],
 	"tables": [
@@ -6008,6 +6025,41 @@
 				}
 			],
 			"primary_key": "(key)",
+			"options": ""
+		},
+		{
+			"name": "invite_bundles",
+			"columns": [
+				{
+					"name": "code",
+					"type": "text"
+				},
+				{
+					"name": "invites",
+					"type": "set<frozen<invite_bundle_invite_item>>"
+				},
+				{
+					"name": "inviter_id",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "uses",
+					"type": "int"
+				},
+				{
+					"name": "max_uses",
+					"type": "int"
+				},
+				{
+					"name": "max_age",
+					"type": "int"
+				}
+			],
+			"primary_key": "((code))",
 			"options": ""
 		},
 		{

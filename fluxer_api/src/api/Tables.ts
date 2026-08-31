@@ -186,6 +186,7 @@ import {
 	type GuildStickerRow,
 } from './database/types/GuildTypes';
 import {INSTANCE_CONFIGURATION_COLUMNS, type InstanceConfigurationRow} from './database/types/InstanceConfigTypes';
+import { GUILD_INVITE_BUNDLE_COLUMNS, type GuildInviteBundleRow } from './database/types/InviteBundleTypes';
 import {
 	JOB_ACTIVE_COLUMNS,
 	JOB_BY_DAY_BUCKET_COLUMNS,
@@ -1057,6 +1058,11 @@ export const InvitesByGuild = defineTable<InvitesByGuildRow, 'guild_id' | 'code'
 	name: 'invites_by_guild_id',
 	columns: INVITES_BY_GUILD_COLUMNS,
 	primaryKey: ['guild_id', 'code'],
+});
+export const GuildInviteBundles = defineTable<GuildInviteBundleRow, 'code'>({
+	name: 'guild_invite_bundles',
+	columns: GUILD_INVITE_BUNDLE_COLUMNS,
+	primaryKey: ['code'],
 });
 const APPLICATIONS_BY_OWNER_COLUMNS = ['owner_user_id', 'application_id'] as const satisfies ReadonlyArray<
 	keyof ApplicationByOwnerRow

@@ -209,3 +209,88 @@ export interface PackInvite extends InviteBase {
 }
 
 export type Invite = GuildInvite | GroupDmInvite | PackInvite;
+
+export const GuildInviteBundleCreateRequest = z.object({
+	max_uses: z
+		.number()
+		.int()
+		.min(0)
+		.max(MAX_INVITE_USES)
+		.nullish()
+		.default(0)
+		.describe(
+			'Maximum number of times this invite bundle can be used (0 for unlimited). Also applies to the invites which are created for each guild',
+		),
+	max_age: z
+		.number()
+		.int()
+		.min(0)
+		.max(MAX_INVITE_AGE_SECONDS)
+		.nullish()
+		.default(0)
+		.describe(
+			'Duration in seconds before the invite bundle expires (0 for never). Also applies to the invites which are created for each guild',
+		),
+	channel_ids: z
+		.array(SnowflakeStringType)
+		.min(2)
+		.max(15)
+		.describe(
+			'The list of guild channel IDs which this bundle should invite to. The user must be a member of the guild and have permission to create invites',
+		),
+});
+
+export type GuildInviteBundleCreateRequest = z.infer<typeof GuildInviteBundleCreateRequest>;
+
+export const GuildInviteBundleResponse = z.object({
+	code: z.string().describe('The unique invite code'),
+	guilds: z
+		.array(
+			z.object({
+				guild: GuildPartialResponse,
+				channel: ChannelPartialResponse.nullish().describe(
+					'The channel which this invite invites to. Might not be present if the channel no longer exists',
+				),
+			}),
+		)
+		.min(2)
+		.max(15)
+		.describe('The list of guild IDs and channel IDs which this bundle invites to'),
+	no_invite_available_count: z
+		.number()
+		.describe('The number of guilds in this bundle for which the linked invite already expired or has been deleted'),
+	invites_disabled: z
+		.array(GuildPartialResponse)
+		.describe('List of guilds and channels where invites are disabled or the feature is temporarily disabled'),
+});
+
+export type GuildInviteBundleResponse = z.infer<typeof GuildInviteBundleResponse>;
+
+export const GuildInviteBundleMetadataResponse = z
+	.object({
+		max_uses: z
+			.number()
+			.int()
+			.min(0)
+			.max(MAX_INVITE_USES)
+			.nullish()
+			.default(0)
+			.describe('Maximum number of times this invite bundle can be used (0 for unlimited)'),
+		max_age: z
+			.number()
+			.int()
+			.min(0)
+			.max(MAX_INVITE_AGE_SECONDS)
+			.nullish()
+			.default(0)
+			.describe('Duration in seconds before the invite bundle expires (0 for never)'),
+	})
+	.extend(GuildInviteBundleResponse.shape);
+
+export type GuildInviteBundleMetadataResponse = z.infer<typeof GuildInviteBundleMetadataResponse>;
+
+export const GuildInviteBundleAcceptRequest = z.object({
+	guild_ids: z.array(SnowflakeStringType).describe('The guilds which the user should be added to'),
+});
+
+export type GuildInviteBundleAcceptRequest = z.infer<typeof GuildInviteBundleAcceptRequest>;
