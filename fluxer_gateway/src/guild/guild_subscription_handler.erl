@@ -88,10 +88,23 @@ merge_lazy_subscribe_request(_ExistingRequest, Request) ->
     [guild_member_list:range()], [guild_member_list:range()]
 ) -> [guild_member_list:range()].
 merge_lazy_subscribe_ranges(ExistingRanges, Ranges) ->
-    lists:sublist(
-        guild_member_list:normalize_ranges(ExistingRanges ++ Ranges),
-        ?MAX_BUFFERED_LAZY_SUBSCRIBE_RANGES
+    limit_lazy_subscribe_ranges(
+        guild_member_list:normalize_ranges(ExistingRanges ++ Ranges), Ranges
     ).
+
+-spec limit_lazy_subscribe_ranges(
+    [guild_member_list:range()], [guild_member_list:range()]
+) -> [guild_member_list:range()].
+limit_lazy_subscribe_ranges(MergedRanges, Ranges) ->
+    case length(MergedRanges) > ?MAX_BUFFERED_LAZY_SUBSCRIBE_RANGES of
+        true ->
+            lists:sublist(
+                guild_member_list:normalize_ranges(Ranges),
+                ?MAX_BUFFERED_LAZY_SUBSCRIBE_RANGES
+            );
+        false ->
+            MergedRanges
+    end.
 
 -spec flush_lazy_subscribe_buffer(guild_state()) -> guild_state().
 flush_lazy_subscribe_buffer(State) ->
@@ -452,6 +465,29 @@ buffer_lazy_subscribe_moves_replaced_key_to_tail_test() ->
         [{<<"s1">>, 600}, {<<"s1">>, 500}],
         ordered_lazy_subscribe_keys(State3, maps:get(lazy_subscribe_buffer, State3))
     ).
+
+buffer_lazy_subscribe_keeps_newest_ranges_over_limit_test() ->
+    Existing = [{Start * 200, Start * 200 + 99} || Start <- lists:seq(0, 9)],
+    Request1 = #{session_id => <<"s1">>, channel_id => 500, ranges => Existing},
+    State1 = buffer_lazy_subscribe(Request1, #{}),
+    Request2 = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}, {5000, 5099}]},
+    State2 = buffer_lazy_subscribe(Request2, State1),
+    Buffer = maps:get(lazy_subscribe_buffer, State2),
+    ?assertEqual(
+        Request2#{ranges := [{0, 99}, {5000, 5099}]}, maps:get({<<"s1">>, 500}, Buffer)
+    ).
+
+buffer_lazy_subscribe_caps_merged_ranges_test() ->
+    Existing = [{Start * 200, Start * 200 + 99} || Start <- lists:seq(0, 9)],
+    Request1 = #{session_id => <<"s1">>, channel_id => 500, ranges => Existing},
+    State1 = buffer_lazy_subscribe(Request1, #{}),
+    Ranges2 = [{Start * 200, Start * 200 + 99} || Start <- lists:seq(20, 30)],
+    Request2 = #{session_id => <<"s1">>, channel_id => 500, ranges => Ranges2},
+    State2 = buffer_lazy_subscribe(Request2, State1),
+    Buffer = maps:get(lazy_subscribe_buffer, State2),
+    #{ranges := Merged} = maps:get({<<"s1">>, 500}, Buffer),
+    ?assertEqual(?MAX_BUFFERED_LAZY_SUBSCRIBE_RANGES, length(Merged)),
+    ?assertEqual(lists:sublist(Ranges2, ?MAX_BUFFERED_LAZY_SUBSCRIBE_RANGES), Merged).
 
 flush_lazy_subscribe_buffer_clears_state_test() ->
     Buffer = #{{<<"s1">>, 500} => #{session_id => <<"s1">>, channel_id => 500, ranges => []}},
