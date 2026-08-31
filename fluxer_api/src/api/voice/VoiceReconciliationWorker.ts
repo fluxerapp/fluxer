@@ -131,6 +131,8 @@ export class VoiceReconciliationWorker {
 	private intervalHandle: NodeJS.Timeout | null = null;
 	private reconciling = false;
 	private reconciliationLockLost = false;
+	private activeReconciliation: Promise<void> | null = null;
+	private stopping = false;
 
 	constructor(options: VoiceReconciliationWorkerOptions) {
 		this.gatewayService = options.gatewayService;
@@ -161,18 +163,24 @@ export class VoiceReconciliationWorker {
 			},
 			'Starting VoiceReconciliationWorker',
 		);
+		this.stopping = false;
 		void this.runReconciliation();
 		this.intervalHandle = setInterval(() => {
 			void this.runReconciliation();
 		}, this.intervalMs);
 	}
 
-	stop(): void {
+	async stop(): Promise<void> {
+		this.stopping = true;
 		if (this.intervalHandle) {
 			clearInterval(this.intervalHandle);
 			this.intervalHandle = null;
-			this.logger.info('Stopped VoiceReconciliationWorker');
 		}
+		const activeReconciliation = this.activeReconciliation;
+		if (activeReconciliation !== null) {
+			await activeReconciliation;
+		}
+		this.logger.info('Stopped VoiceReconciliationWorker');
 	}
 
 	async reconcile(): Promise<void> {
@@ -203,6 +211,10 @@ export class VoiceReconciliationWorker {
 		let totalErrors = 0;
 		let totalTransientSkips = 0;
 		for (const room of discovery.rooms) {
+			if (this.stopping) {
+				this.logger.info('Stopping reconciliation sweep because the worker is shutting down');
+				break;
+			}
 			if (this.reconciliationLockLost) {
 				this.logger.warn('Stopping reconciliation sweep because the cluster lock was lost');
 				break;
@@ -261,6 +273,17 @@ export class VoiceReconciliationWorker {
 			return;
 		}
 		this.reconciling = true;
+		const sweep = this.runReconciliationSweep();
+		this.activeReconciliation = sweep;
+		try {
+			await sweep;
+		} finally {
+			this.activeReconciliation = null;
+			this.reconciling = false;
+		}
+	}
+
+	private async runReconciliationSweep(): Promise<void> {
 		let lockToken: string | null = null;
 		let lockRenewalHandle: NodeJS.Timeout | null = null;
 		try {
@@ -287,7 +310,6 @@ export class VoiceReconciliationWorker {
 				await this.releaseReconciliationLock(lockToken);
 			}
 			this.reconciliationLockLost = false;
-			this.reconciling = false;
 		}
 	}
 

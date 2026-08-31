@@ -352,7 +352,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 export async function shutdownWorkerDependencies(deps: WorkerDependencies): Promise<void> {
 	Logger.info('Shutting down worker dependencies...');
 	if (deps.voiceReconciliationWorker !== null) {
-		deps.voiceReconciliationWorker.stop();
+		await deps.voiceReconciliationWorker.stop();
 	}
 	Logger.info('Worker dependencies shut down successfully');
 }
