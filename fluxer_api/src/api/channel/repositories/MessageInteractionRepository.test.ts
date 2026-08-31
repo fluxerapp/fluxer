@@ -73,23 +73,25 @@ describe('MessageInteractionRepository has_reaction writes', () => {
 		expect(executor.countHasReactionWrites()).toBe(1);
 		expect(await loadHasReaction(channelId, messageId)).toBe(true);
 	});
-	it('skips the flag write when the message is already known to be flagged', async () => {
+	it('flags the message on every reaction add', async () => {
 		const channelId = createChannelID(10n);
 		const messageId = createMessageID(100n);
 		const repository = createRepository();
 		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥');
-		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥', undefined, false, true);
-		expect(executor.countHasReactionWrites()).toBe(1);
+		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥');
+		expect(executor.countHasReactionWrites()).toBe(2);
 		expect(await repository.listMessageReactions(channelId, messageId)).toHaveLength(2);
 		expect(await loadHasReaction(channelId, messageId)).toBe(true);
 	});
-	it('flags the message when the loaded flag is not already true', async () => {
+	it('restores the flag when it was cleared after the message was read', async () => {
 		const channelId = createChannelID(10n);
 		const messageId = createMessageID(100n);
 		const repository = createRepository();
-		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥', undefined, false, null);
-		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥', undefined, false, false);
-		expect(executor.countHasReactionWrites()).toBe(2);
+		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥');
+		await repository.setHasReaction(channelId, messageId, false);
+		expect(await loadHasReaction(channelId, messageId)).toBe(false);
+		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥');
 		expect(await loadHasReaction(channelId, messageId)).toBe(true);
+		expect(await repository.listMessageReactions(channelId, messageId)).toHaveLength(2);
 	});
 });
