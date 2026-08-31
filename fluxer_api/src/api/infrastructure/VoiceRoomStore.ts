@@ -106,7 +106,7 @@ export class VoiceRoomStore {
 		const member = this.buildOccupancyMember(guildId, channelId);
 		const regionKey = `${VOICE_OCCUPANCY_REGION_KEY_PREFIX}:${regionId}`;
 		const serverKey = `${VOICE_OCCUPANCY_SERVER_KEY_PREFIX}:${regionId}:${serverId}`;
-		await this.kvClient.multi().sadd(regionKey, member).sadd(serverKey, member).exec();
+		await Promise.all([this.kvClient.sadd(regionKey, member), this.kvClient.sadd(serverKey, member)]);
 	}
 
 	private async removeOccupancy(
@@ -118,7 +118,7 @@ export class VoiceRoomStore {
 		const member = this.buildOccupancyMember(guildId, channelId);
 		const regionKey = `${VOICE_OCCUPANCY_REGION_KEY_PREFIX}:${regionId}`;
 		const serverKey = `${VOICE_OCCUPANCY_SERVER_KEY_PREFIX}:${regionId}:${serverId}`;
-		await this.kvClient.multi().srem(regionKey, member).srem(serverKey, member).exec();
+		await Promise.all([this.kvClient.srem(regionKey, member), this.kvClient.srem(serverKey, member)]);
 	}
 
 	private buildOccupancyMember(guildId: bigint | undefined, channelId: bigint): string {
