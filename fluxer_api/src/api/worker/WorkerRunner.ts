@@ -66,6 +66,7 @@ export class WorkerRunner {
 	private readonly ledger: IJobLedgerRepository;
 	private running = false;
 	private consumerMessages: ConsumerMessages | null = null;
+	private processingLoop: Promise<void> | null = null;
 	private readonly inFlightJobs = new Set<Promise<void>>();
 
 	constructor(options: WorkerRunnerOptions) {
@@ -95,7 +96,7 @@ export class WorkerRunner {
 			max_messages: prefetch,
 			idle_heartbeat: 5000,
 		});
-		this.processMessages().catch((error) => {
+		this.processingLoop = this.processMessages().catch((error) => {
 			Logger.error({workerId: this.workerId, err: error}, 'Worker message processing failed unexpectedly');
 		});
 	}
@@ -108,6 +109,10 @@ export class WorkerRunner {
 		if (this.consumerMessages !== null) {
 			await this.consumerMessages.close();
 			this.consumerMessages = null;
+		}
+		if (this.processingLoop !== null) {
+			await this.processingLoop;
+			this.processingLoop = null;
 		}
 		Logger.info({workerId: this.workerId}, 'Worker stopped');
 	}
