@@ -64,7 +64,11 @@ const workspacePlugin = {
 rmSync(OUT_DIR, {recursive: true, force: true});
 
 await build({
-	entryPoints: [join(API_ROOT, 'src/AppEntrypoint.ts'), join(API_ROOT, 'src/WorkerEntrypoint.ts')],
+	entryPoints: [
+		join(API_ROOT, 'src/AppEntrypoint.ts'),
+		join(API_ROOT, 'src/WorkerEntrypoint.ts'),
+		join(API_ROOT, 'src/ExpressionPackResidueEntrypoint.ts'),
+	],
 	outdir: OUT_DIR,
 	bundle: true,
 	platform: 'node',
