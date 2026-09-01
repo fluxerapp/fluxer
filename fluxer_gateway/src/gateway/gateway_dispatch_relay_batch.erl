@@ -12,6 +12,7 @@
     current_workers_tuple_normalized/0,
     normalize_workers_tuple/1,
     message_queue_len/1,
+    max_queue/0,
     start_workers/1,
     start_worker/1,
     worker_index/3
@@ -19,6 +20,7 @@
 
 -define(STATE_KEY, {gateway_dispatch_relay, state}).
 -define(SYNC_TIMEOUT_MS, 5000).
+-define(SLOT_KEY(Worker), {?MODULE, Worker}).
 
 -spec relay_or_direct_many([pid()], atom(), term()) -> ok.
 relay_or_direct_many(SessionPids, Event, Payload) ->
@@ -39,7 +41,8 @@ relay_or_direct_many(SessionPids, Event, Payload) ->
 -spec relay_many_to_shards([pid()], atom(), term(), tuple(), pos_integer()) -> ok.
 relay_many_to_shards(SessionPids, Event, Payload, Workers, Count) ->
     ShardBuckets = build_shard_buckets(SessionPids, Count),
-    deliver_shard_buckets(1, Count, ShardBuckets, Event, Payload, Workers).
+    Deferred = deliver_shard_buckets(1, Count, ShardBuckets, Event, Payload, Workers, []),
+    deliver_deferred_shards(Deferred, Event, Payload).
 
 -spec build_shard_buckets([pid()], pos_integer()) -> tuple().
 build_shard_buckets(SessionPids, Count) ->
@@ -56,20 +59,35 @@ build_shard_buckets(SessionPids, Count) ->
     ).
 
 -spec deliver_shard_buckets(
-    pos_integer(), pos_integer(), tuple(), atom(), term(), tuple()
-) -> ok.
-deliver_shard_buckets(Index, Count, _Buckets, _Event, _Payload, _Workers) when Index > Count ->
-    ok;
-deliver_shard_buckets(Index, Count, Buckets, Event, Payload, Workers) ->
-    case element(Index, Buckets) of
-        [] -> ok;
-        Pids -> deliver_shard(Index, Pids, Event, Payload, Workers)
-    end,
-    deliver_shard_buckets(Index + 1, Count, Buckets, Event, Payload, Workers).
+    pos_integer(), pos_integer(), tuple(), atom(), term(), tuple(), [{pid(), [pid()]}]
+) -> [{pid(), [pid()]}].
+deliver_shard_buckets(Index, Count, _Buckets, _Event, _Payload, _Workers, Deferred) when
+    Index > Count
+->
+    Deferred;
+deliver_shard_buckets(Index, Count, Buckets, Event, Payload, Workers, Deferred) ->
+    Next =
+        case element(Index, Buckets) of
+            [] -> Deferred;
+            Pids -> deliver_shard(Index, Pids, Event, Payload, Workers, Deferred)
+        end,
+    deliver_shard_buckets(Index + 1, Count, Buckets, Event, Payload, Workers, Next).
 
--spec deliver_shard(pos_integer(), [pid()], atom(), term(), tuple()) -> ok.
-deliver_shard(Index, Pids, Event, Payload, Workers) ->
-    enqueue(element(Index, Workers), {deliver_many, Pids, Event, Payload}).
+-spec deliver_shard(pos_integer(), [pid()], atom(), term(), tuple(), [{pid(), [pid()]}]) ->
+    [{pid(), [pid()]}].
+deliver_shard(Index, Pids, Event, Payload, Workers, Deferred) ->
+    Worker = element(Index, Workers),
+    case enqueue_async(Worker, {deliver_many, Pids, Event, Payload}) of
+        ok -> Deferred;
+        full -> [{Worker, Pids} | Deferred]
+    end.
+
+-spec deliver_deferred_shards([{pid(), [pid()]}], atom(), term()) -> ok.
+deliver_deferred_shards([], _Event, _Payload) ->
+    ok;
+deliver_deferred_shards([{Worker, Pids} | Rest], Event, Payload) ->
+    enqueue_sync(Worker, {deliver_many, Pids, Event, Payload}),
+    deliver_deferred_shards(Rest, Event, Payload).
 
 -spec relay_or_direct(pid(), atom(), term()) -> ok.
 relay_or_direct(SessionPid, Event, Payload) ->
@@ -82,9 +100,37 @@ relay_or_direct(SessionPid, Event, Payload) ->
 
 -spec enqueue(pid(), term()) -> ok.
 enqueue(Worker, Msg) ->
-    case is_over_max_queue(Worker) of
-        true -> enqueue_sync(Worker, Msg);
-        false -> gen_server:cast(Worker, Msg)
+    case enqueue_async(Worker, Msg) of
+        ok -> ok;
+        full -> enqueue_sync(Worker, Msg)
+    end.
+
+-spec enqueue_async(pid(), term()) -> ok | full.
+enqueue_async(Worker, Msg) ->
+    case claim_queue_slot(Worker, max_queue()) of
+        ok -> gen_server:cast(Worker, Msg);
+        full -> full
+    end.
+
+-spec claim_queue_slot(pid(), pos_integer()) -> ok | full.
+claim_queue_slot(Worker, MaxQueue) ->
+    case erlang:get(?SLOT_KEY(Worker)) of
+        Claimed when is_integer(Claimed), Claimed < MaxQueue ->
+            _ = erlang:put(?SLOT_KEY(Worker), Claimed + 1),
+            ok;
+        _ ->
+            sample_queue_slot(Worker, MaxQueue)
+    end.
+
+-spec sample_queue_slot(pid(), pos_integer()) -> ok | full.
+sample_queue_slot(Worker, MaxQueue) ->
+    case message_queue_len(Worker) of
+        Sampled when Sampled < MaxQueue ->
+            _ = erlang:put(?SLOT_KEY(Worker), Sampled + 1),
+            ok;
+        _ ->
+            _ = erlang:erase(?SLOT_KEY(Worker)),
+            full
     end.
 
 -spec enqueue_sync(pid(), term()) -> ok.
@@ -95,14 +141,13 @@ enqueue_sync(Worker, Msg) ->
         exit:_Reason -> ok
     end.
 
--spec is_over_max_queue(pid()) -> boolean().
-is_over_max_queue(Worker) ->
-    MaxQueue = max_queue(),
-    MaxQueue > 0 andalso message_queue_len(Worker) >= MaxQueue.
-
--spec max_queue() -> non_neg_integer().
+-spec max_queue() -> pos_integer().
 max_queue() ->
-    gateway_rollout_config:gateway_dispatch_relay_max_queue().
+    Ceiling = process_health_watchdog:kill_threshold(),
+    case gateway_rollout_config:gateway_dispatch_relay_max_queue() of
+        Configured when is_integer(Configured), Configured > 0 -> min(Configured, Ceiling);
+        _ -> Ceiling
+    end.
 
 -spec current_workers() -> [pid()].
 current_workers() ->

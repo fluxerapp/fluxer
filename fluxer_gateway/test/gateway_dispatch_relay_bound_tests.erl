@@ -10,6 +10,11 @@
 -define(BOUND, 8).
 -define(FILL, 6).
 -define(EVENT_COUNT, 6).
+-define(PROBE_BOUND, 1000).
+-define(PROBE_EVENT_COUNT, 200).
+-define(PROBE_BUDGET, 2).
+-define(SHARD_COUNT, 2).
+-define(FAST_SHARD_TIMEOUT_MS, 1500).
 
 dispatch_is_bounded_and_stays_ordered_test_() ->
     {timeout, 30, fun dispatch_is_bounded_and_stays_ordered/0}.
@@ -20,8 +25,17 @@ dispatch_many_is_bounded_and_stays_ordered_test_() ->
 max_queue_config_governs_the_bound_test_() ->
     {timeout, 30, fun max_queue_config_governs_the_bound/0}.
 
-max_queue_zero_disables_the_bound_test_() ->
-    {timeout, 30, fun max_queue_zero_disables_the_bound/0}.
+max_queue_zero_keeps_the_bound_test_() ->
+    {timeout, 60, fun max_queue_zero_keeps_the_bound/0}.
+
+max_queue_is_capped_by_the_watchdog_kill_threshold_test_() ->
+    {timeout, 30, fun max_queue_is_capped_by_the_watchdog_kill_threshold/0}.
+
+dispatch_does_not_probe_the_worker_per_event_test_() ->
+    {timeout, 30, fun dispatch_does_not_probe_the_worker_per_event/0}.
+
+saturated_shard_does_not_delay_other_shards_test_() ->
+    {timeout, 60, fun saturated_shard_does_not_delay_other_shards/0}.
 
 dispatch_is_bounded_and_stays_ordered() ->
     assert_bounded_and_ordered(fun send_dispatch/2).
@@ -39,8 +53,57 @@ max_queue_config_governs_the_bound() ->
     ?assertEqual(blocked, producer_status_with_bound(?BOUND, ?BOUND)),
     ?assertEqual(finished, producer_status_with_bound(?BOUND * 8, ?BOUND)).
 
-max_queue_zero_disables_the_bound() ->
-    ?assertEqual(finished, producer_status_with_bound(0, ?BOUND)).
+max_queue_zero_keeps_the_bound() ->
+    Ceiling = process_health_watchdog:kill_threshold(),
+    with_max_queue(0, fun() ->
+        ?assertEqual(Ceiling, gateway_dispatch_relay_batch:max_queue())
+    end),
+    ?assertEqual(blocked, producer_status_with_bound(0, Ceiling)).
+
+max_queue_is_capped_by_the_watchdog_kill_threshold() ->
+    Ceiling = process_health_watchdog:kill_threshold(),
+    with_max_queue(Ceiling * 4, fun() ->
+        ?assertEqual(Ceiling, gateway_dispatch_relay_batch:max_queue())
+    end),
+    with_max_queue(Ceiling - 1, fun() ->
+        ?assertEqual(Ceiling - 1, gateway_dispatch_relay_batch:max_queue())
+    end).
+
+dispatch_does_not_probe_the_worker_per_event() ->
+    with_max_queue(?PROBE_BOUND, fun() ->
+        with_worker(fun(Worker) ->
+            Ref = make_ref(),
+            Session = spawn_session(self(), Ref),
+            Producer = spawn_gated_producer(Session, ?PROBE_EVENT_COUNT),
+            Probes = count_probes(Worker, Producer),
+            ?assertEqual(
+                lists:seq(1, ?PROBE_EVENT_COUNT),
+                collect_observed(Ref, ?PROBE_EVENT_COUNT, [])
+            ),
+            Session ! stop,
+            ?assert(Probes =< ?PROBE_BUDGET)
+        end)
+    end).
+
+saturated_shard_does_not_delay_other_shards() ->
+    with_max_queue(?BOUND, fun() ->
+        with_workers(?SHARD_COUNT, fun([Blocked, _Free]) ->
+            SlowRef = make_ref(),
+            FastRef = make_ref(),
+            Slow = session_for_shard(1, self(), SlowRef),
+            Fast = session_for_shard(2, self(), FastRef),
+            ok = sys:suspend(Blocked),
+            fill_queue(Blocked, ?BOUND),
+            Producer = spawn_fanout_producer([Slow, Fast]),
+            ?assertEqual([1], collect_within(FastRef, ?FAST_SHARD_TIMEOUT_MS)),
+            ?assertEqual(blocked, producer_status(Producer, 100)),
+            ok = sys:resume(Blocked),
+            ?assertEqual([1], collect_observed(SlowRef, 1, [])),
+            ?assertEqual(finished, producer_status(Producer, 20000)),
+            Slow ! stop,
+            Fast ! stop
+        end)
+    end).
 
 assert_bounded_and_ordered(SendFun) ->
     {Status, QueueLen, Observed} = run_over_bound(SendFun),
@@ -90,6 +153,58 @@ spawn_producer(SendFun, Session) ->
         Parent ! {producer_finished, self()}
     end).
 
+spawn_gated_producer(Session, Count) ->
+    Parent = self(),
+    spawn_link(fun() ->
+        receive
+            start -> ok
+        end,
+        lists:foreach(fun(N) -> ok = send_dispatch(Session, N) end, lists:seq(1, Count)),
+        Parent ! {producer_finished, self()}
+    end).
+
+spawn_fanout_producer(Sessions) ->
+    Parent = self(),
+    spawn_link(fun() ->
+        ok = gateway_dispatch_relay:dispatch_many(Sessions, relay_bound_event, #{<<"n">> => 1}),
+        Parent ! {producer_finished, self()}
+    end).
+
+session_for_shard(Index, Parent, Ref) ->
+    Session = spawn_session(Parent, Ref),
+    case erlang:phash2(Session, ?SHARD_COUNT) + 1 of
+        Index -> Session;
+        _ -> session_for_shard(Index, Parent, Ref)
+    end.
+
+count_probes(Worker, Producer) ->
+    1 = erlang:trace(Producer, true, [call]),
+    _ = erlang:trace_pattern({erlang, process_info, 2}, true, [global]),
+    Producer ! start,
+    try
+        drain_probes(Worker, Producer, 0)
+    after
+        _ = erlang:trace_pattern({erlang, process_info, 2}, false, [global]),
+        untrace(Producer)
+    end.
+
+untrace(Producer) ->
+    try erlang:trace(Producer, false, [call]) of
+        _ -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+drain_probes(Worker, Producer, Count) ->
+    receive
+        {trace, Producer, call, {erlang, process_info, [Worker, message_queue_len]}} ->
+            drain_probes(Worker, Producer, Count + 1);
+        {producer_finished, Producer} ->
+            Count
+    after 20000 ->
+        ?assert(false, {probe_count_timeout, Count})
+    end.
+
 await_producer(_Producer, finished) ->
     ok;
 await_producer(Producer, blocked) ->
@@ -123,6 +238,13 @@ session_loop(Parent, Ref) ->
         ok
     end.
 
+collect_within(Ref, Timeout) ->
+    receive
+        {relay_bound_received, Ref, N} -> [N]
+    after Timeout ->
+        []
+    end.
+
 collect_observed(_Ref, 0, Acc) ->
     lists:reverse(Acc);
 collect_observed(Ref, Remaining, Acc) ->
@@ -133,11 +255,17 @@ collect_observed(Ref, Remaining, Acc) ->
     end.
 
 with_worker(Fun) ->
-    Worker = gateway_dispatch_relay_batch:start_worker(0),
+    with_workers(1, fun([Worker]) -> Fun(Worker) end).
+
+with_workers(Count, Fun) ->
+    Workers = [
+        gateway_dispatch_relay_batch:start_worker(Index)
+     || Index <- lists:seq(0, Count - 1)
+    ],
     try
-        with_relay_workers([Worker], fun() -> Fun(Worker) end)
+        with_relay_workers(Workers, fun() -> Fun(Workers) end)
     after
-        stop_worker(Worker)
+        lists:foreach(fun stop_worker/1, Workers)
     end.
 
 with_relay_workers(Workers, Fun) ->
