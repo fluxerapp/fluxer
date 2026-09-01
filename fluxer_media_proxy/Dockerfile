@@ -80,7 +80,7 @@ WORKDIR /var/lib/fluxer
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD ["sh", "-c", "exec 3<>/dev/tcp/127.0.0.1/${FLUXER_MEDIA_PROXY_PORT:-8080} && printf 'GET /_health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q '200' <&3"]
+    CMD ["/usr/local/bin/fluxer-media-proxy", "healthcheck"]
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/usr/local/bin/fluxer-media-proxy"]
