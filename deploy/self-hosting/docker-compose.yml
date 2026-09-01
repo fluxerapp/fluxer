@@ -345,6 +345,13 @@ services:
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
       FLUXER_API_WORKER_ENABLE_VOICE_RECONCILIATION: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
+    healthcheck:
+      test: ["CMD", "node", "-e", "const age=Date.now()-require('node:fs').statSync('/tmp/fluxer-worker-heartbeat').mtimeMs;if(age>30000){console.error('worker heartbeat is '+Math.round(age)+'ms old');process.exit(1)}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+      start_interval: 1s
     depends_on:
       postgres: {condition: service_healthy}
       valkey: {condition: service_healthy}

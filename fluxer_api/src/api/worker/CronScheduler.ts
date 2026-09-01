@@ -3,6 +3,7 @@
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
+import {WORKER_CRON_STALE_AFTER_MS, type WorkerHeartbeat, type WorkerHeartbeatSignal} from './WorkerHeartbeat';
 import type {WorkerTaskName} from './WorkerLaneConfig';
 import type {WorkerService} from './WorkerService';
 
@@ -92,14 +93,22 @@ export class CronScheduler {
 	private readonly workerService: WorkerService;
 	private readonly logger: LoggerInterface;
 	private readonly kvClient: IKVProvider | null;
+	private readonly heartbeat: WorkerHeartbeat | null;
 	private readonly definitions: Map<string, CronDefinition> = new Map();
 	private intervalId: NodeJS.Timeout | null = null;
 	private lastTickSecond: number | null = null;
+	private heartbeatSignal: WorkerHeartbeatSignal | null = null;
 
-	constructor(workerService: WorkerService, logger: LoggerInterface, kvClient: IKVProvider | null = null) {
+	constructor(
+		workerService: WorkerService,
+		logger: LoggerInterface,
+		kvClient: IKVProvider | null = null,
+		heartbeat: WorkerHeartbeat | null = null,
+	) {
 		this.workerService = workerService;
 		this.logger = logger;
 		this.kvClient = kvClient;
+		this.heartbeat = heartbeat;
 	}
 
 	upsert(
@@ -123,6 +132,7 @@ export class CronScheduler {
 		if (this.intervalId !== null) {
 			return;
 		}
+		this.heartbeatSignal = this.heartbeat?.register('cron', WORKER_CRON_STALE_AFTER_MS) ?? null;
 		this.intervalId = setInterval(() => {
 			this.tick().catch((error) => {
 				this.logger.error({err: error}, 'Cron scheduler tick failed');
@@ -136,10 +146,20 @@ export class CronScheduler {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
+		this.heartbeatSignal?.release();
+		this.heartbeatSignal = null;
 		this.lastTickSecond = null;
 	}
 
 	private async tick(): Promise<void> {
+		try {
+			await this.runDueDefinitions();
+		} finally {
+			this.heartbeatSignal?.report();
+		}
+	}
+
+	private async runDueDefinitions(): Promise<void> {
 		const nowSeconds = Math.floor(Date.now() / 1000);
 		const previousTickSecond = this.lastTickSecond;
 		this.lastTickSecond = nowSeconds;

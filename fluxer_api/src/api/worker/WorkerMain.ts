@@ -23,12 +23,14 @@ import {CronScheduler} from './CronScheduler';
 import {JetStreamWorkerQueue} from './JetStreamWorkerQueue';
 import {clearWorkerDependencies, setWorkerDependencies} from './WorkerContext';
 import {initializeWorkerDependencies, shutdownWorkerDependencies, type WorkerDependencies} from './WorkerDependencies';
+import {WorkerHeartbeat} from './WorkerHeartbeat';
 import {
 	resolveCronSchedulerEnabled,
 	resolveWorkerLanes,
 	validateLaneCompleteness,
 	type WorkerLaneDefinition,
 } from './WorkerLaneConfig';
+import {createWorkerProcessErrorHandler} from './WorkerProcessErrorHandler';
 import {WorkerQueueOverflowError} from './WorkerQueueOverflowError';
 import {WorkerRunner} from './WorkerRunner';
 import {WorkerService} from './WorkerService';
@@ -88,6 +90,7 @@ export async function startWorkerMain(): Promise<void> {
 	let snowflakeService: ISnowflakeService | null = null;
 	let dependencies: WorkerDependencies | null = null;
 	let cron: CronScheduler | null = null;
+	const heartbeat = new WorkerHeartbeat({logger: Logger});
 	const runners: Array<WorkerRunner> = [];
 	let searchInitialized = false;
 	let shuttingDown = false;
@@ -106,6 +109,7 @@ export async function startWorkerMain(): Promise<void> {
 		}
 		shuttingDown = true;
 		Logger.info('Shutting down worker backend...');
+		await cleanupStep('heartbeat', () => heartbeat.stop());
 		await cleanupStep('cron', () => cron?.stop());
 		await cleanupStep('runners', async () => {
 			await Promise.all(runners.map((runner) => runner.stop()));
@@ -228,7 +232,7 @@ export async function startWorkerMain(): Promise<void> {
 				}
 			}
 		}
-		cron = new CronScheduler(workerService, Logger, dependencies.kvClient);
+		cron = new CronScheduler(workerService, Logger, dependencies.kvClient, heartbeat);
 		registerCronJobs(cron);
 		for (const lane of activeWorkerLanes) {
 			const laneTasks: Record<string, WorkerTaskHandler> = {};
@@ -248,6 +252,7 @@ export async function startWorkerMain(): Promise<void> {
 				concurrency: lane.concurrency,
 				maxDeliver: lane.maxDeliver,
 				ackWaitMs: lane.ackWaitMs,
+				heartbeat,
 			});
 			runners.push(runner);
 		}
@@ -278,18 +283,20 @@ export async function startWorkerMain(): Promise<void> {
 			{lanes: activeWorkerLanes.map((l) => `${l.name}(${l.concurrency})`).join(', ')},
 			'Worker runners started',
 		);
+		heartbeat.start();
 		setupGracefulShutdown(shutdown, {logger: Logger, timeoutMs: 30000});
-		process.on('uncaughtException', async (error) => {
-			Logger.error({err: error}, 'Uncaught Exception');
-			setTimeout(() => process.exit(1), ms('5 seconds')).unref();
-			await shutdown();
-			process.exit(1);
+		const handleProcessError = createWorkerProcessErrorHandler({
+			logger: Logger,
+			shutdown,
+			exit: (code) => {
+				process.exit(code);
+			},
 		});
-		process.on('unhandledRejection', async (reason: unknown) => {
-			Logger.error({err: reason}, 'Unhandled Rejection at Promise');
-			setTimeout(() => process.exit(1), ms('5 seconds')).unref();
-			await shutdown();
-			process.exit(1);
+		process.on('uncaughtException', (error) => {
+			void handleProcessError('uncaughtException', error);
+		});
+		process.on('unhandledRejection', (reason: unknown) => {
+			void handleProcessError('unhandledRejection', reason);
 		});
 	} catch (error: unknown) {
 		Logger.error({err: error}, 'Failed to start worker backend');

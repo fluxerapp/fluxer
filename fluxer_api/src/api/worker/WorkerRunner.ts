@@ -8,6 +8,12 @@ import type {IJobLedgerRepository} from '../jobs/IJobLedgerRepository';
 import {Logger} from '../Logger';
 import {getWorkerService} from '../middleware/ServiceRegistry';
 import {isJsonRecord, parseJsonRecord} from '../utils/JsonBoundaryUtils';
+import {
+	WORKER_LANE_HEARTBEAT_INTERVAL_MS,
+	WORKER_LANE_STALE_AFTER_MS,
+	type WorkerHeartbeat,
+	type WorkerHeartbeatSignal,
+} from './WorkerHeartbeat';
 
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
 const MIN_ACK_HEARTBEAT_MS = 1000;
@@ -54,6 +60,7 @@ interface WorkerRunnerOptions {
 	concurrency?: number;
 	maxDeliver?: number;
 	ackWaitMs?: number;
+	heartbeat?: WorkerHeartbeat;
 }
 
 export class WorkerRunner {
@@ -68,6 +75,9 @@ export class WorkerRunner {
 	private readonly ackWaitMs: number;
 	private readonly workerService: IWorkerService;
 	private readonly ledger: IJobLedgerRepository;
+	private readonly heartbeat: WorkerHeartbeat | null;
+	private heartbeatSignal: WorkerHeartbeatSignal | null = null;
+	private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 	private running = false;
 	private consumerMessages: ConsumerMessages | null = null;
 	private processingLoop: Promise<void> | null = null;
@@ -85,6 +95,7 @@ export class WorkerRunner {
 		this.ackWaitMs = options.ackWaitMs ?? 60000;
 		this.workerService = getWorkerService();
 		this.ledger = options.ledger;
+		this.heartbeat = options.heartbeat ?? null;
 	}
 
 	async start(): Promise<void> {
@@ -94,8 +105,11 @@ export class WorkerRunner {
 		}
 		this.running = true;
 		Logger.info({workerId: this.workerId, lane: this.laneName, concurrency: this.concurrency}, 'Worker starting');
+		this.startHeartbeat();
 		this.consumerMessages = await this.openConsumerMessages();
-		this.processingLoop = this.consumeUntilStopped(this.consumerMessages);
+		this.processingLoop = this.consumeUntilStopped(this.consumerMessages).finally(() => {
+			this.stopHeartbeatTicker();
+		});
 	}
 
 	async stop(): Promise<void> {
@@ -111,7 +125,27 @@ export class WorkerRunner {
 			await this.processingLoop;
 			this.processingLoop = null;
 		}
+		this.stopHeartbeatTicker();
+		this.heartbeatSignal?.release();
+		this.heartbeatSignal = null;
 		Logger.info({workerId: this.workerId}, 'Worker stopped');
+	}
+
+	private startHeartbeat(): void {
+		if (this.heartbeat === null) {
+			return;
+		}
+		this.heartbeatSignal = this.heartbeat.register(`lane:${this.laneName}`, WORKER_LANE_STALE_AFTER_MS);
+		this.heartbeatTimer = setInterval(() => {
+			this.heartbeatSignal?.report();
+		}, WORKER_LANE_HEARTBEAT_INTERVAL_MS);
+	}
+
+	private stopHeartbeatTicker(): void {
+		if (this.heartbeatTimer !== null) {
+			clearInterval(this.heartbeatTimer);
+			this.heartbeatTimer = null;
+		}
 	}
 
 	private async openConsumerMessages(): Promise<ConsumerMessages> {
