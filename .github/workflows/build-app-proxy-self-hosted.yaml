@@ -231,10 +231,11 @@ jobs:
 
       - name: Advance moving image tags
         env:
-          IMAGE: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted
           VERSION: ${{ needs.meta.outputs.build_version }}
         run: >-
-          docker buildx imagetools create
-          -t "${IMAGE}:v1"
-          -t "${IMAGE}:latest"
-          "${IMAGE}:${VERSION}"
+          tools/ci/run.sh image-set
+          promote
+          --component fluxer-app-proxy-self-hosted
+          --build-version "${VERSION}"
+          --registry "ghcr.io/${{ env.GHCR_OWNER }}"
+          --moving-tags v1,latest

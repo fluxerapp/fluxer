@@ -1,0 +1,142 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: release image set
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-version:
+        description: "Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation"
+        type: string
+        required: false
+        default: ""
+      from-tag:
+        description: "Image tag every component is read from (v1 snapshots today's moving tags, a CalVer pins a coordinated build)"
+        type: string
+        required: false
+        default: "v1"
+      component-versions:
+        description: "Per-component overrides, one <image>=<version> entry per line (for example fluxer-api=2026.830.191141)"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  actions: read
+  contents: write
+  packages: read
+
+concurrency:
+  group: release-image-set
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GHCR_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  approve:
+    name: approve image set release
+    permissions: {}
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 5
+    steps:
+      - name: approved
+        run: echo "Image set release approved."
+
+  manifest:
+    name: resolve and publish the image set
+    needs: approve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-contents: write
+          permission-packages: read
+
+      - name: set variables
+        id: vars
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          FLUXER_BUILD_VERSION: ${{ inputs['build-version'] }}
+        run: >-
+          tools/ci/run.sh resolve-calver
+          --github-output
+
+      - name: resolve release image set
+        id: resolve
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          VERSION: ${{ steps.vars.outputs.build_version }}
+          FROM_TAG: ${{ inputs['from-tag'] }}
+          COMPONENT_VERSIONS: ${{ inputs['component-versions'] }}
+        run: |
+          set -euo pipefail
+          args=(
+            image-set resolve
+            --version "${VERSION}"
+            --registry "ghcr.io/${GHCR_OWNER}"
+            --from-tag "${FROM_TAG}"
+            --out-dir release-out
+            --github-output
+          )
+          while IFS= read -r entry; do
+            entry="$(echo "$entry" | xargs)"
+            if [ -n "$entry" ]; then
+              args+=( --component-version "$entry" )
+            fi
+          done <<< "${COMPONENT_VERSIONS}"
+          tools/ci/run.sh "${args[@]}"
+
+      - name: verify release image set
+        env:
+          VERSION: ${{ steps.vars.outputs.build_version }}
+        run: >-
+          tools/ci/run.sh image-set verify
+          --manifest "release-out/fluxer-release-${VERSION}.json"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          VERSION: ${{ steps.vars.outputs.build_version }}
+          BUNDLE_COMMIT: ${{ steps.resolve.outputs.bundle_commit }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BUNDLE_COMMIT}" ]; then
+            echo "image-set resolve reported no bundle commit" >&2
+            exit 1
+          fi
+          gh release create "fluxer-release@${VERSION}" \
+            --repo fluxerapp/fluxer \
+            --target "${BUNDLE_COMMIT}" \
+            --title "fluxer-release ${VERSION}" \
+            --latest=true \
+            --notes "Immutable image set for ${VERSION}. Every image in the set contains ${BUNDLE_COMMIT}, the commit this tag points at, so the bundle here is never newer than the images. Pin with: docker compose -f docker-compose.yml -f fluxer-release-${VERSION}.yml up -d" \
+            "release-out/fluxer-release-${VERSION}.json" \
+            "release-out/fluxer-release-${VERSION}.yml"

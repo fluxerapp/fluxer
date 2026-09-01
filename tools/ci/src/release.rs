@@ -11,7 +11,7 @@ use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
+pub(crate) const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
 pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 1;
 pub(crate) const DESKTOP_RELEASE_ROUTE_COUNT: usize = 28;
@@ -502,7 +502,7 @@ fn validate_component(component: &str) -> Result<()> {
     Ok(())
 }
 
-fn validate_full_sha(label: &str, value: &str) -> Result<String> {
+pub(crate) fn validate_full_sha(label: &str, value: &str) -> Result<String> {
     let value = value.trim();
     ensure!(
         value.len() == 40 && value.bytes().all(|byte| byte.is_ascii_hexdigit()),
@@ -559,7 +559,7 @@ fn qualified_releases(
     Ok(qualified)
 }
 
-fn resolve_commit_sha(reference: &str) -> Result<String> {
+pub(crate) fn resolve_commit_sha(reference: &str) -> Result<String> {
     let sha = output_text(
         CommandSpec::new("gh")
             .arg("api")
@@ -991,7 +991,7 @@ fn verify_release_assets(
     Ok(())
 }
 
-fn release_tag(component: &str, version: &str) -> String {
+pub(crate) fn release_tag(component: &str, version: &str) -> String {
     format!("{component}@{version}")
 }
 

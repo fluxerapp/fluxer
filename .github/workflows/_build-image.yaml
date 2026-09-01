@@ -190,17 +190,12 @@ jobs:
 
       - name: Advance moving image tags
         env:
-          IMAGE: ghcr.io/${{ env.GHCR_OWNER }}/${{ inputs.image }}
-          VERSION: ${{ needs.meta.outputs.build_version }}
           MOVING_TAGS: ${{ inputs.moving-tags }}
-        run: |
-          set -euo pipefail
-          tag_args=()
-          IFS=',' read -ra moving <<< "${MOVING_TAGS}"
-          for raw in "${moving[@]}"; do
-            tag="$(echo "$raw" | xargs)"
-            [ -n "$tag" ] && tag_args+=( "-t" "${IMAGE}:${tag}" )
-          done
-          if (( ${#tag_args[@]} > 0 )); then
-            docker buildx imagetools create "${tag_args[@]}" "${IMAGE}:${VERSION}"
-          fi
+          VERSION: ${{ needs.meta.outputs.build_version }}
+        run: >-
+          tools/ci/run.sh image-set
+          promote
+          --component "${{ inputs.image }}"
+          --build-version "${VERSION}"
+          --registry "ghcr.io/${{ env.GHCR_OWNER }}"
+          --moving-tags "${MOVING_TAGS}"
