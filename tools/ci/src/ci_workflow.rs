@@ -43,7 +43,6 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                 .current_dir(root),
         ),
         CiStep::Typecheck => {
-            ensure_desktop_build_channel_file(&root)?;
             run_generators(&root, true)?;
             run_app_test_artifact_generators(&root, AppWasm::Build)?;
             run_command(
@@ -155,8 +154,9 @@ fn generator_commands(for_typecheck: bool) -> Vec<CommandSpec> {
             "@fluxer/i18n",
             "generate:types",
         ]));
+    } else {
+        commands.push(CommandSpec::new("pnpm").args(["--filter", "fluxer_app", "i18n:compile"]));
     }
-    commands.push(CommandSpec::new("pnpm").args(["--filter", "fluxer_app", "i18n:compile"]));
     commands
 }
 
@@ -226,7 +226,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn generator_commands_include_i18n_types_only_for_typecheck() {
+    fn generator_commands_split_i18n_types_and_compile_by_step() {
         let typecheck = generator_commands(true)
             .into_iter()
             .map(|command| command.args)
@@ -245,6 +245,16 @@ mod tests {
             OsString::from("--filter"),
             OsString::from("@fluxer/i18n"),
             OsString::from("generate:types"),
+        ]));
+        assert!(!typecheck.contains(&vec![
+            OsString::from("--filter"),
+            OsString::from("fluxer_app"),
+            OsString::from("i18n:compile"),
+        ]));
+        assert!(test.contains(&vec![
+            OsString::from("--filter"),
+            OsString::from("fluxer_app"),
+            OsString::from("i18n:compile"),
         ]));
     }
 

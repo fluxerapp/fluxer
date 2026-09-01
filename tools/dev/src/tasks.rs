@@ -45,7 +45,7 @@ fn run_generators(for_typecheck: bool) -> Result<()> {
     task_run(&["pnpm", "--filter", "@fluxer/config", "generate"])?;
     task_run(&["pnpm", "--filter", "@fluxer/schema", "generate"])?;
     if for_typecheck {
-        task_run(&["pnpm", "--filter", "@fluxer/i18n", "generate:types"])?;
+        return task_run(&["pnpm", "--filter", "@fluxer/i18n", "generate:types"]);
     }
     task_run(&["pnpm", "--filter", "fluxer_app", "i18n:compile"])
 }

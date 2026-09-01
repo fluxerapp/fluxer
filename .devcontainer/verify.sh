@@ -70,6 +70,7 @@ stage "app: typecheck" pnpm --filter fluxer_app typecheck
 stage "app: unit tests" pnpm --filter fluxer_app exec vitest run
 
 if [ "$QUICK" -eq 0 ]; then
+	stage "desktop: typecheck" pnpm --filter fluxer_desktop typecheck
 	stage "app: production build" pnpm --filter fluxer_app build
 fi
 
