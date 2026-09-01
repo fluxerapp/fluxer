@@ -200,9 +200,7 @@ impl AppProxyConfig {
                 env!("CARGO_PKG_VERSION"),
             ),
             bootstrap_api_endpoint: cfg::read_env("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api"),
-            bootstrap_api_public_endpoint: cfg::non_empty_env(
-                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
-            ),
+            bootstrap_api_public_endpoint: resolve_bootstrap_api_public_endpoint_from_env(),
             csp: CspConfig::from_env(),
             geoip_source,
             geoip_s3_config,
@@ -273,6 +271,27 @@ fn resolve_time_freeze_enabled_from_env() -> bool {
 
 fn resolve_postgres_prepared_statements_from_env() -> bool {
     resolve_postgres_prepared_statements(|name| env::var(name).ok())
+}
+
+fn resolve_bootstrap_api_public_endpoint_from_env() -> Option<String> {
+    resolve_bootstrap_api_public_endpoint(|name| env::var(name).ok())
+}
+
+fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> Option<String>
+where
+    F: FnMut(&str) -> Option<String>,
+{
+    let endpoint = read_var("PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT")
+        .map(|value| value.trim().to_owned())
+        .filter(|value| !value.is_empty())?;
+    let base_domain = read_var("FLUXER_BASE_DOMAIN").unwrap_or_default();
+    let public_port = read_var("FLUXER_PUBLIC_PORT").and_then(|port| port.trim().parse().ok());
+
+    Some(cfg::normalize_public_endpoint(
+        &endpoint,
+        &base_domain,
+        public_port,
+    ))
 }
 
 fn resolve_time_freeze_enabled<F>(mut read_var: F) -> bool
@@ -371,6 +390,68 @@ mod tests {
     fn resolve_prepared_statements_from_pairs(pairs: &[(&str, &str)]) -> bool {
         let env: HashMap<&str, &str> = pairs.iter().copied().collect();
         resolve_postgres_prepared_statements(|name| env.get(name).map(|value| value.to_string()))
+    }
+
+    fn resolve_bootstrap_endpoint_from_pairs(pairs: &[(&str, &str)]) -> Option<String> {
+        let env: HashMap<&str, &str> = pairs.iter().copied().collect();
+        resolve_bootstrap_api_public_endpoint(|name| env.get(name).map(|value| value.to_string()))
+    }
+
+    #[test]
+    fn a_non_default_public_port_reaches_the_boot_html_api_endpoint() {
+        assert_eq!(
+            resolve_bootstrap_endpoint_from_pairs(&[
+                (
+                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                    "http://fluxer.example/api",
+                ),
+                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+                ("FLUXER_PUBLIC_PORT", "19080"),
+            ]),
+            Some("http://fluxer.example:19080/api".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_default_public_port_leaves_the_boot_html_api_endpoint_alone() {
+        assert_eq!(
+            resolve_bootstrap_endpoint_from_pairs(&[
+                (
+                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                    "https://fluxer.example/api",
+                ),
+                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+                ("FLUXER_PUBLIC_PORT", "443"),
+            ]),
+            Some("https://fluxer.example/api".to_owned())
+        );
+    }
+
+    #[test]
+    fn the_boot_html_api_endpoint_keeps_a_port_it_already_carries() {
+        assert_eq!(
+            resolve_bootstrap_endpoint_from_pairs(&[
+                (
+                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                    "http://fluxer.example:19080/api",
+                ),
+                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+                ("FLUXER_PUBLIC_PORT", "19080"),
+            ]),
+            Some("http://fluxer.example:19080/api".to_owned())
+        );
+    }
+
+    #[test]
+    fn the_boot_html_api_endpoint_is_untouched_without_a_base_domain_and_port() {
+        assert_eq!(
+            resolve_bootstrap_endpoint_from_pairs(&[(
+                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                "http://fluxer.example/api",
+            )]),
+            Some("http://fluxer.example/api".to_owned())
+        );
+        assert_eq!(resolve_bootstrap_endpoint_from_pairs(&[]), None);
     }
 
     #[test]

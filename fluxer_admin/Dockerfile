@@ -24,6 +24,7 @@ RUN TAILWIND_OXIDE_VERSION="4.2.1" \
 
 COPY Cargo.lock Cargo.lock
 COPY fluxer_admin fluxer_admin
+COPY fluxer_common fluxer_common
 COPY packages/fonts/manifest.json packages/fonts/manifest.json
 COPY packages/fonts/NOTICE.md packages/fonts/NOTICE.md
 COPY packages/fonts/LICENSE-IBM-PLEX.txt packages/fonts/LICENSE-IBM-PLEX.txt
@@ -31,7 +32,7 @@ COPY packages/fonts/files/FluxerSans packages/fonts/files/FluxerSans
 COPY packages/fonts/files/FluxerMono packages/fonts/files/FluxerMono
 RUN printf '%s\n' \
 	'[workspace]' \
-	'members = ["fluxer_admin"]' \
+	'members = ["fluxer_admin", "fluxer_common"]' \
 	'resolver = "2"' \
 	'' \
 	'[workspace.package]' \

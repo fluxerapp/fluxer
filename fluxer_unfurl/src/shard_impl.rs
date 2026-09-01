@@ -40,10 +40,13 @@ impl UnfurlShard {
             .filter(|v| !v.is_empty());
         let media_proxy_public_endpoint = std::env::var("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
             .ok()
-            .filter(|v| !v.is_empty());
-        let static_cdn_endpoint = std::env::var("FLUXER_UNFURL_STATIC_CDN_ENDPOINT")
-            .or_else(|_| std::env::var("FLUXER_STATIC_CDN_ENDPOINT"))
-            .unwrap_or_default();
+            .filter(|v| !v.is_empty())
+            .map(|v| fluxer_common::config::normalize_public_endpoint_from_env(&v));
+        let static_cdn_endpoint = fluxer_common::config::normalize_public_endpoint_from_env(
+            &std::env::var("FLUXER_UNFURL_STATIC_CDN_ENDPOINT")
+                .or_else(|_| std::env::var("FLUXER_STATIC_CDN_ENDPOINT"))
+                .unwrap_or_default(),
+        );
         let (media_proxy_endpoint, media_proxy_secret) = match (
             media_proxy_endpoint,
             media_proxy_secret,
@@ -301,8 +304,84 @@ impl ShardService for UnfurlShard {
 mod tests {
     use super::*;
     use crate::types::MessageEmbed;
+    use std::sync::Mutex;
 
     const BLOCKED_URL: &str = "http://127.0.0.1/unreachable";
+
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    const PUBLIC_ENDPOINT_ENV: [&str; 7] = [
+        "FLUXER_MEDIA_PROXY_ENDPOINT",
+        "FLUXER_MEDIA_PROXY_SECRET_KEY",
+        "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
+        "FLUXER_UNFURL_STATIC_CDN_ENDPOINT",
+        "FLUXER_STATIC_CDN_ENDPOINT",
+        "FLUXER_BASE_DOMAIN",
+        "FLUXER_PUBLIC_PORT",
+    ];
+
+    fn shard_from_env(vars: &[(&str, &str)]) -> UnfurlShard {
+        let _guard = ENV_LOCK.lock().unwrap();
+        for name in PUBLIC_ENDPOINT_ENV {
+            unsafe { std::env::remove_var(name) };
+        }
+        for (name, value) in vars {
+            unsafe { std::env::set_var(name, value) };
+        }
+        let shard = UnfurlShard::new(long_lifetime());
+        for (name, _) in vars {
+            unsafe { std::env::remove_var(name) };
+        }
+        shard
+    }
+
+    #[test]
+    fn a_non_default_public_port_reaches_the_public_media_and_static_endpoints() {
+        let shard = shard_from_env(&[
+            ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
+            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+            (
+                "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
+                "http://fluxer.example/media",
+            ),
+            ("FLUXER_STATIC_CDN_ENDPOINT", "http://fluxer.example"),
+            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+            ("FLUXER_PUBLIC_PORT", "19080"),
+        ]);
+
+        assert_eq!(shard.static_cdn_endpoint, "http://fluxer.example:19080");
+        assert!(
+            shard
+                .media_proxy
+                .external_proxy_url("https://img.example.net/a.png")
+                .expect("proxy url")
+                .starts_with("http://fluxer.example:19080/media/external/")
+        );
+    }
+
+    #[test]
+    fn a_default_public_port_leaves_the_public_media_and_static_endpoints_alone() {
+        let shard = shard_from_env(&[
+            ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
+            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+            (
+                "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
+                "https://fluxer.example/media",
+            ),
+            ("FLUXER_STATIC_CDN_ENDPOINT", "https://fluxer.example"),
+            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+            ("FLUXER_PUBLIC_PORT", "443"),
+        ]);
+
+        assert_eq!(shard.static_cdn_endpoint, "https://fluxer.example");
+        assert!(
+            shard
+                .media_proxy
+                .external_proxy_url("https://img.example.net/a.png")
+                .expect("proxy url")
+                .starts_with("https://fluxer.example/media/external/")
+        );
+    }
 
     fn unfurl(url: &str, youtube_api_key: Option<&str>) -> UnfurlRequest {
         UnfurlRequest::Unfurl {

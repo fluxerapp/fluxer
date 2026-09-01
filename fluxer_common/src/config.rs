@@ -196,6 +196,62 @@ pub fn trim_trailing_slash(value: &str) -> String {
     value.trim_end_matches('/').to_owned()
 }
 
+fn is_default_port(scheme: &str, port: u16) -> bool {
+    matches!(
+        (scheme, port),
+        ("http", 80) | ("https", 443) | ("ws", 80) | ("wss", 443)
+    )
+}
+
+fn strip_trailing_dot(host: &str) -> &str {
+    host.strip_suffix('.').unwrap_or(host)
+}
+
+pub fn normalize_public_endpoint(url: &str, base_domain: &str, public_port: Option<u16>) -> String {
+    let domain = base_domain.trim().to_lowercase();
+    let domain = strip_trailing_dot(&domain);
+    let Some(port) = public_port.filter(|port| *port != 0) else {
+        return url.to_owned();
+    };
+    if domain.is_empty() {
+        return url.to_owned();
+    }
+    let Ok(parsed) = reqwest::Url::parse(url) else {
+        return url.to_owned();
+    };
+    let host = parsed.host_str().unwrap_or_default().to_lowercase();
+    if strip_trailing_dot(&host) != domain {
+        return url.to_owned();
+    }
+    if is_default_port(parsed.scheme(), port) {
+        return url.to_owned();
+    }
+    let Some(scheme_end) = url.find("://") else {
+        return url.to_owned();
+    };
+    let authority_start = scheme_end + 3;
+    if url[authority_start..].starts_with('/') {
+        return url.to_owned();
+    }
+    let authority_end = url[authority_start..]
+        .find(['/', '\\', '?', '#'])
+        .map_or(url.len(), |index| authority_start + index);
+    let authority = &url[authority_start..authority_end];
+    let host = authority.rsplit('@').next().unwrap_or_default();
+    if host[host.rfind(']').map_or(0, |index| index + 1)..].contains(':') {
+        return url.to_owned();
+    }
+    format!("{}:{port}{}", &url[..authority_end], &url[authority_end..])
+}
+
+pub fn normalize_public_endpoint_from_env(url: &str) -> String {
+    normalize_public_endpoint(
+        url,
+        &read_env("FLUXER_BASE_DOMAIN", ""),
+        non_empty_env("FLUXER_PUBLIC_PORT").and_then(|port| port.parse().ok()),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -282,6 +338,248 @@ mod tests {
         assert_eq!(normalize_base_path("foo"), "/foo");
         assert_eq!(normalize_base_path(""), "");
         assert_eq!(normalize_base_path("/"), "");
+    }
+
+    #[test]
+    fn default_https_install_is_untouched() {
+        for url in [
+            "https://fluxer.example",
+            "https://fluxer.example/media",
+            "https://fluxer.example/admin/oauth2_callback",
+            "wss://fluxer.example/gateway",
+        ] {
+            assert_eq!(
+                url,
+                normalize_public_endpoint(url, "fluxer.example", Some(443))
+            );
+        }
+    }
+
+    #[test]
+    fn default_http_install_is_untouched() {
+        for url in [
+            "http://fluxer.example",
+            "http://fluxer.example/media",
+            "ws://fluxer.example/gateway",
+        ] {
+            assert_eq!(
+                url,
+                normalize_public_endpoint(url, "fluxer.example", Some(80))
+            );
+        }
+    }
+
+    #[test]
+    fn inserts_a_non_default_port_for_the_base_domain() {
+        assert_eq!(
+            "http://fluxer.example:19080/media",
+            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(19080))
+        );
+        assert_eq!(
+            "http://fluxer.example:19080",
+            normalize_public_endpoint("http://fluxer.example", "fluxer.example", Some(19080))
+        );
+        assert_eq!(
+            "https://fluxer.example:8443/admin/oauth2_callback",
+            normalize_public_endpoint(
+                "https://fluxer.example/admin/oauth2_callback",
+                "fluxer.example",
+                Some(8443)
+            )
+        );
+    }
+
+    #[test]
+    fn a_default_port_for_the_urls_own_scheme_is_never_inserted() {
+        assert_eq!(
+            "ws://fluxer.example/gateway",
+            normalize_public_endpoint("ws://fluxer.example/gateway", "fluxer.example", Some(80))
+        );
+        assert_eq!(
+            "wss://fluxer.example/gateway",
+            normalize_public_endpoint("wss://fluxer.example/gateway", "fluxer.example", Some(443))
+        );
+        assert_eq!(
+            "http://fluxer.example:443/media",
+            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(443))
+        );
+        assert_eq!(
+            "https://fluxer.example:80/media",
+            normalize_public_endpoint("https://fluxer.example/media", "fluxer.example", Some(80))
+        );
+    }
+
+    #[test]
+    fn another_host_is_never_touched() {
+        for url in [
+            "https://cdn.example.net/assets",
+            "https://media.example.net",
+            "http://api:8080",
+            "http://media-proxy:8080",
+        ] {
+            assert_eq!(
+                url,
+                normalize_public_endpoint(url, "fluxer.example", Some(19080))
+            );
+        }
+        assert_eq!(
+            "https://sub.fluxer.example/media",
+            normalize_public_endpoint(
+                "https://sub.fluxer.example/media",
+                "fluxer.example",
+                Some(19080)
+            )
+        );
+    }
+
+    #[test]
+    fn an_explicit_port_is_never_touched() {
+        for url in [
+            "http://fluxer.example:19080/media",
+            "http://fluxer.example:8080/media",
+            "https://fluxer.example:443/media",
+            "http://fluxer.example:80/media",
+            "http://user:pass@fluxer.example:19080/media",
+        ] {
+            assert_eq!(
+                url,
+                normalize_public_endpoint(url, "fluxer.example", Some(19080))
+            );
+        }
+    }
+
+    #[test]
+    fn is_idempotent() {
+        let once =
+            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(19080));
+        let twice = normalize_public_endpoint(&once, "fluxer.example", Some(19080));
+        assert_eq!("http://fluxer.example:19080/media", once);
+        assert_eq!(once, twice);
+    }
+
+    #[test]
+    fn an_unset_port_leaves_every_url_alone() {
+        assert_eq!(
+            "http://fluxer.example/media",
+            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", None)
+        );
+        assert_eq!(
+            "http://fluxer.example/media",
+            normalize_public_endpoint("http://fluxer.example/media", "fluxer.example", Some(0))
+        );
+    }
+
+    #[test]
+    fn an_empty_base_domain_leaves_every_url_alone() {
+        assert_eq!(
+            "http://fluxer.example/media",
+            normalize_public_endpoint("http://fluxer.example/media", "", Some(19080))
+        );
+        assert_eq!(
+            "http://fluxer.example/media",
+            normalize_public_endpoint("http://fluxer.example/media", "   ", Some(19080))
+        );
+    }
+
+    #[test]
+    fn a_url_that_does_not_parse_is_returned_unchanged() {
+        for url in ["", "/api", "fluxer.example/media", "not a url", "://x"] {
+            assert_eq!(
+                url,
+                normalize_public_endpoint(url, "fluxer.example", Some(19080))
+            );
+        }
+    }
+
+    #[test]
+    fn matches_the_host_case_insensitively_and_ignores_a_trailing_dot() {
+        assert_eq!(
+            "http://FLUXER.example:19080/Media",
+            normalize_public_endpoint("http://FLUXER.example/Media", "Fluxer.Example", Some(19080))
+        );
+        assert_eq!(
+            "http://fluxer.example.:19080/media",
+            normalize_public_endpoint(
+                "http://fluxer.example./media",
+                "fluxer.example",
+                Some(19080)
+            )
+        );
+        assert_eq!(
+            "http://fluxer.example:19080/media",
+            normalize_public_endpoint(
+                "http://fluxer.example/media",
+                "fluxer.example.",
+                Some(19080)
+            )
+        );
+    }
+
+    #[test]
+    fn preserves_path_query_fragment_and_trailing_slash() {
+        assert_eq!(
+            "http://fluxer.example:19080/",
+            normalize_public_endpoint("http://fluxer.example/", "fluxer.example", Some(19080))
+        );
+        assert_eq!(
+            "http://fluxer.example:19080?a=1",
+            normalize_public_endpoint("http://fluxer.example?a=1", "fluxer.example", Some(19080))
+        );
+        assert_eq!(
+            "http://fluxer.example:19080#top",
+            normalize_public_endpoint("http://fluxer.example#top", "fluxer.example", Some(19080))
+        );
+        assert_eq!(
+            "http://fluxer.example:19080/media/x.png?v=1#frag",
+            normalize_public_endpoint(
+                "http://fluxer.example/media/x.png?v=1#frag",
+                "fluxer.example",
+                Some(19080)
+            )
+        );
+    }
+
+    #[test]
+    fn keeps_credentials_and_ipv6_literals_intact() {
+        assert_eq!(
+            "http://user:pass@fluxer.example:19080/media",
+            normalize_public_endpoint(
+                "http://user:pass@fluxer.example/media",
+                "fluxer.example",
+                Some(19080)
+            )
+        );
+        assert_eq!(
+            "http://[::1]:19080/media",
+            normalize_public_endpoint("http://[::1]/media", "[::1]", Some(19080))
+        );
+        assert_eq!(
+            "http://[::1]:8080/media",
+            normalize_public_endpoint("http://[::1]:8080/media", "[::1]", Some(19080))
+        );
+    }
+
+    #[test]
+    fn matches_the_typescript_normalizer_on_the_shared_vectors() {
+        let raw = include_str!("testdata/public_endpoint_vectors.json");
+        let vectors: serde_json::Value = serde_json::from_str(raw).expect("vectors parse as json");
+        let vectors = vectors.as_array().expect("vectors are an array");
+        assert!(!vectors.is_empty());
+        for vector in vectors {
+            let url = vector["url"].as_str().expect("vector carries a url");
+            let base_domain = vector["base_domain"]
+                .as_str()
+                .expect("vector carries a base domain");
+            let public_port = vector["public_port"].as_u64().map(|port| port as u16);
+            let expected = vector["normalized"]
+                .as_str()
+                .expect("vector carries a normalized url");
+            assert_eq!(
+                expected,
+                normalize_public_endpoint(url, base_domain, public_port),
+                "vector {url} @ {base_domain} port {public_port:?}"
+            );
+        }
     }
 
     #[test]

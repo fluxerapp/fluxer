@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {buildNamedFluxerEnvOverrides} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
-import {deriveEndpointsFromDomain} from '@fluxer/config/src/EndpointDerivation';
+import {
+	type DerivedEndpoints,
+	deriveEndpointsFromDomain,
+	normalizePublicEndpoint,
+} from '@fluxer/config/src/EndpointDerivation';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 
 type ConfigObject = Record<string, unknown>;
@@ -433,6 +437,36 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	return config;
 }
 
+function applyPublicPort(config: MasterConfig, endpoints: DerivedEndpoints): MasterConfig {
+	const {base_domain, public_port} = config.domain;
+	const normalize = (url: string) => normalizePublicEndpoint(url, base_domain, public_port);
+	const normalizedEndpoints = {...endpoints};
+	for (const key of Object.keys(normalizedEndpoints) as Array<keyof DerivedEndpoints>) {
+		normalizedEndpoints[key] = normalize(normalizedEndpoints[key]);
+	}
+	return {
+		...config,
+		endpoints: normalizedEndpoints,
+		services: {
+			...config.services,
+			media_proxy: {
+				...config.services.media_proxy,
+				upload_relay: {
+					...config.services.media_proxy.upload_relay,
+					endpoint: normalize(config.services.media_proxy.upload_relay.endpoint),
+				},
+			},
+		},
+		auth: {
+			...config.auth,
+			passkeys: {
+				...config.auth.passkeys,
+				additional_allowed_origins: config.auth.passkeys.additional_allowed_origins.map(normalize),
+			},
+		},
+	};
+}
+
 export async function loadConfig(): Promise<MasterConfig> {
 	if (cachedConfig) {
 		return cachedConfig;
@@ -441,7 +475,7 @@ export async function loadConfig(): Promise<MasterConfig> {
 	const normalized = normalizeConfig(merged);
 	const derived = deriveEndpointsFromDomain(normalized.domain);
 	const endpoints = {...derived, ...(normalized.endpoint_overrides ?? {})};
-	cachedConfig = {...normalized, endpoints};
+	cachedConfig = applyPublicPort(normalized, endpoints);
 	return cachedConfig;
 }
 

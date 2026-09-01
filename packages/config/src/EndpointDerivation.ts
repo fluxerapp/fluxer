@@ -24,15 +24,54 @@ export interface DerivedEndpoints {
 	gift: string;
 }
 
-export function buildUrl(scheme: string, domain: string, port?: number, path?: string): string {
-	const isStandardPort =
+function isStandardPort(scheme: string, port: number): boolean {
+	return (
 		(scheme === 'http' && port === 80) ||
 		(scheme === 'https' && port === 443) ||
 		(scheme === 'ws' && port === 80) ||
-		(scheme === 'wss' && port === 443);
-	const portPart = port && !isStandardPort ? `:${port}` : '';
+		(scheme === 'wss' && port === 443)
+	);
+}
+
+function stripTrailingDot(host: string): string {
+	return host.endsWith('.') ? host.slice(0, -1) : host;
+}
+
+export function buildUrl(scheme: string, domain: string, port?: number, path?: string): string {
+	const portPart = port && !isStandardPort(scheme, port) ? `:${port}` : '';
 	const pathPart = path || '';
 	return `${scheme}://${domain}${portPart}${pathPart}`;
+}
+
+export function normalizePublicEndpoint(url: string, baseDomain: string, publicPort?: number): string {
+	const domain = stripTrailingDot(baseDomain.trim().toLowerCase());
+	if (domain.length === 0 || !publicPort) {
+		return url;
+	}
+	let parsed: URL;
+	try {
+		parsed = new URL(url);
+	} catch {
+		return url;
+	}
+	if (stripTrailingDot(parsed.hostname.toLowerCase()) !== domain) {
+		return url;
+	}
+	if (isStandardPort(parsed.protocol.slice(0, -1), publicPort)) {
+		return url;
+	}
+	const schemeEnd = url.indexOf('://');
+	if (schemeEnd === -1 || url.startsWith('/', schemeEnd + 3)) {
+		return url;
+	}
+	const authorityStart = schemeEnd + 3;
+	const relativeEnd = url.slice(authorityStart).search(/[/\\?#]/);
+	const authorityEnd = relativeEnd === -1 ? url.length : authorityStart + relativeEnd;
+	const host = url.slice(authorityStart, authorityEnd).split('@').pop() ?? '';
+	if (host.slice(host.lastIndexOf(']') + 1).includes(':')) {
+		return url;
+	}
+	return `${url.slice(0, authorityEnd)}:${publicPort}${url.slice(authorityEnd)}`;
 }
 
 export function deriveDomain(

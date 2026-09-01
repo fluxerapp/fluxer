@@ -5,6 +5,7 @@ import {
 	type DomainConfig,
 	deriveDomain,
 	deriveEndpointsFromDomain,
+	normalizePublicEndpoint,
 } from '@fluxer/config/src/EndpointDerivation';
 import {describe, expect, test} from 'vitest';
 
@@ -299,5 +300,97 @@ describe('deriveEndpointsFromDomain', () => {
 			const endpoints = deriveEndpointsFromDomain(config);
 			expect(endpoints.api).toBe('http://127.0.0.1:8088/api');
 		});
+	});
+});
+
+describe('normalizePublicEndpoint', () => {
+	test('leaves a default https install untouched', () => {
+		expect(normalizePublicEndpoint('https://fluxer.dev', 'fluxer.dev', 443)).toBe('https://fluxer.dev');
+		expect(normalizePublicEndpoint('https://fluxer.dev/media', 'fluxer.dev', 443)).toBe('https://fluxer.dev/media');
+		expect(normalizePublicEndpoint('wss://fluxer.dev/gateway', 'fluxer.dev', 443)).toBe('wss://fluxer.dev/gateway');
+	});
+	test('leaves a default http install untouched', () => {
+		expect(normalizePublicEndpoint('http://fluxer.dev', 'fluxer.dev', 80)).toBe('http://fluxer.dev');
+		expect(normalizePublicEndpoint('http://fluxer.dev/media', 'fluxer.dev', 80)).toBe('http://fluxer.dev/media');
+		expect(normalizePublicEndpoint('ws://fluxer.dev/gateway', 'fluxer.dev', 80)).toBe('ws://fluxer.dev/gateway');
+	});
+	test('inserts a non-standard port', () => {
+		expect(normalizePublicEndpoint('https://fluxer.dev', 'fluxer.dev', 8443)).toBe('https://fluxer.dev:8443');
+		expect(normalizePublicEndpoint('https://fluxer.dev/media', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev:8443/media',
+		);
+		expect(normalizePublicEndpoint('wss://fluxer.dev/gateway', 'fluxer.dev', 8443)).toBe(
+			'wss://fluxer.dev:8443/gateway',
+		);
+	});
+	test('judges standard ports against the url scheme, not the public scheme', () => {
+		expect(normalizePublicEndpoint('http://fluxer.dev/media', 'fluxer.dev', 443)).toBe('http://fluxer.dev:443/media');
+		expect(normalizePublicEndpoint('https://fluxer.dev/media', 'fluxer.dev', 80)).toBe('https://fluxer.dev:80/media');
+	});
+	test('leaves a foreign host untouched', () => {
+		expect(normalizePublicEndpoint('https://cdn.example.net/media', 'fluxer.dev', 8443)).toBe(
+			'https://cdn.example.net/media',
+		);
+		expect(normalizePublicEndpoint('https://sub.fluxer.dev', 'fluxer.dev', 8443)).toBe('https://sub.fluxer.dev');
+	});
+	test('leaves an already ported url untouched', () => {
+		expect(normalizePublicEndpoint('https://fluxer.dev:8443/media', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev:8443/media',
+		);
+		expect(normalizePublicEndpoint('https://fluxer.dev:9000/media', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev:9000/media',
+		);
+		expect(normalizePublicEndpoint('https://fluxer.dev:443/media', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev:443/media',
+		);
+	});
+	test('is idempotent', () => {
+		const once = normalizePublicEndpoint('https://fluxer.dev/media', 'fluxer.dev', 8443);
+		expect(normalizePublicEndpoint(once, 'fluxer.dev', 8443)).toBe(once);
+	});
+	test('preserves path, query, fragment, trailing slash, and case', () => {
+		expect(normalizePublicEndpoint('https://fluxer.dev/Media/', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev:8443/Media/',
+		);
+		expect(normalizePublicEndpoint('https://fluxer.dev/media?a=B#Frag', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev:8443/media?a=B#Frag',
+		);
+		expect(normalizePublicEndpoint('https://fluxer.dev?a=B', 'fluxer.dev', 8443)).toBe('https://fluxer.dev:8443?a=B');
+		expect(normalizePublicEndpoint('https://fluxer.dev#Frag', 'fluxer.dev', 8443)).toBe('https://fluxer.dev:8443#Frag');
+		expect(normalizePublicEndpoint('https://user:pw@fluxer.dev/media', 'fluxer.dev', 8443)).toBe(
+			'https://user:pw@fluxer.dev:8443/media',
+		);
+	});
+	test('matches the host case-insensitively and ignores a trailing dot', () => {
+		expect(normalizePublicEndpoint('https://FLUXER.dev/media', 'fluxer.dev', 8443)).toBe(
+			'https://FLUXER.dev:8443/media',
+		);
+		expect(normalizePublicEndpoint('https://fluxer.dev./media', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev.:8443/media',
+		);
+		expect(normalizePublicEndpoint('https://fluxer.dev/media', 'FLUXER.dev.', 8443)).toBe(
+			'https://fluxer.dev:8443/media',
+		);
+	});
+	test('leaves unparseable and non-http values untouched', () => {
+		expect(normalizePublicEndpoint('not a url', 'fluxer.dev', 8443)).toBe('not a url');
+		expect(normalizePublicEndpoint('', 'fluxer.dev', 8443)).toBe('');
+		expect(normalizePublicEndpoint('android:apk-key-hash:abc', 'fluxer.dev', 8443)).toBe('android:apk-key-hash:abc');
+		expect(normalizePublicEndpoint('https://fluxer.dev:/media', 'fluxer.dev', 8443)).toBe('https://fluxer.dev:/media');
+	});
+	test('leaves malformed authorities untouched', () => {
+		expect(normalizePublicEndpoint('https:fluxer.dev/media', 'fluxer.dev', 8443)).toBe('https:fluxer.dev/media');
+		expect(normalizePublicEndpoint('https:/fluxer.dev/media', 'fluxer.dev', 8443)).toBe('https:/fluxer.dev/media');
+		expect(normalizePublicEndpoint('https:////fluxer.dev/media', 'fluxer.dev', 8443)).toBe(
+			'https:////fluxer.dev/media',
+		);
+		expect(normalizePublicEndpoint('https://fluxer.dev\\media', 'fluxer.dev', 8443)).toBe(
+			'https://fluxer.dev:8443\\media',
+		);
+	});
+	test('leaves everything untouched without a usable port or base domain', () => {
+		expect(normalizePublicEndpoint('https://fluxer.dev/media', 'fluxer.dev')).toBe('https://fluxer.dev/media');
+		expect(normalizePublicEndpoint('https://fluxer.dev/media', '', 8443)).toBe('https://fluxer.dev/media');
+		expect(normalizePublicEndpoint('https://fluxer.dev/media', '   ', 8443)).toBe('https://fluxer.dev/media');
 	});
 });

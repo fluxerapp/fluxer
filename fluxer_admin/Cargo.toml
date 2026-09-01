@@ -11,6 +11,7 @@ axum = { version = "0.8.9", features = ["macros"] }
 base64 = "0.22.1"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 cookie = "0.18.1"
+fluxer_common = { path = "../fluxer_common" }
 hmac = "0.13.0"
 maud = { version = "0.27.0", features = ["axum"] }
 rand = "0.10"

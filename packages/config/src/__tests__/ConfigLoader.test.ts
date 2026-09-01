@@ -102,6 +102,105 @@ describe('ConfigLoader', () => {
 		expect(config.endpoints.app).toBe('http://localhost:8088');
 	});
 
+	test('inserts the public port into portless endpoints on a non-standard port', async () => {
+		stubMinimalEnv({
+			FLUXER_MARKETING_ENDPOINT: 'http://localhost',
+			FLUXER_MEDIA_ENDPOINT: 'http://localhost/media',
+			FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: 'http://localhost/media',
+			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: 'http://localhost',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.endpoints.marketing).toBe('http://localhost:8088');
+		expect(config.endpoints.media).toBe('http://localhost:8088/media');
+		expect(config.services.media_proxy.upload_relay.endpoint).toBe('http://localhost:8088/media');
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual(['http://localhost:8088']);
+	});
+
+	test('leaves a default https install untouched', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '443',
+			FLUXER_MARKETING_ENDPOINT: 'https://chat.example',
+			FLUXER_MEDIA_ENDPOINT: 'https://chat.example/media',
+			FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: 'https://chat.example/media',
+			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: 'https://chat.example',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.endpoints.marketing).toBe('https://chat.example');
+		expect(config.endpoints.media).toBe('https://chat.example/media');
+		expect(config.endpoints.api).toBe('https://chat.example/api');
+		expect(config.endpoints.gateway).toBe('wss://chat.example/gateway');
+		expect(config.services.media_proxy.upload_relay.endpoint).toBe('https://chat.example/media');
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual(['https://chat.example']);
+	});
+
+	test('leaves a default http install untouched', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example',
+			FLUXER_PUBLIC_SCHEME: 'http',
+			FLUXER_PUBLIC_PORT: '80',
+			FLUXER_MARKETING_ENDPOINT: 'http://chat.example',
+			FLUXER_MEDIA_ENDPOINT: 'http://chat.example/media',
+			FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: 'http://chat.example/media',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.endpoints.marketing).toBe('http://chat.example');
+		expect(config.endpoints.media).toBe('http://chat.example/media');
+		expect(config.endpoints.gateway).toBe('ws://chat.example/gateway');
+		expect(config.services.media_proxy.upload_relay.endpoint).toBe('http://chat.example/media');
+	});
+
+	test('leaves foreign hosts and already ported endpoints untouched', async () => {
+		stubMinimalEnv({
+			FLUXER_STATIC_CDN_ENDPOINT: 'https://cdn.example.net',
+			FLUXER_MEDIA_ENDPOINT: 'https://media.example.net/media',
+			FLUXER_MARKETING_ENDPOINT: 'http://localhost:9999',
+			FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: 'http://localhost:8088/media',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.endpoints.static_cdn).toBe('https://cdn.example.net');
+		expect(config.endpoints.media).toBe('https://media.example.net/media');
+		expect(config.endpoints.marketing).toBe('http://localhost:9999');
+		expect(config.services.media_proxy.upload_relay.endpoint).toBe('http://localhost:8088/media');
+	});
+
+	test('normalizes each passkey origin independently', async () => {
+		stubMinimalEnv({
+			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS:
+				'http://localhost,http://localhost:3000,https://desktop.example.net,android:apk-key-hash:abc',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual([
+			'http://localhost:8088',
+			'http://localhost:3000',
+			'https://desktop.example.net',
+			'android:apk-key-hash:abc',
+		]);
+	});
+
+	test('leaves the default passkey origins untouched', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual([
+			'https://fluxer.app',
+			'https://web.fluxer.app',
+			'https://web.canary.fluxer.app',
+			'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
+			'android:apk-key-hash:zRmCKDKo3uCX2GDZISjJx8Rzo3J-Y3Gbp7s7mAaUH28',
+		]);
+	});
+
 	test('parses typed named environment variables', async () => {
 		stubMinimalEnv({
 			FLUXER_API_PORT: '9090',
