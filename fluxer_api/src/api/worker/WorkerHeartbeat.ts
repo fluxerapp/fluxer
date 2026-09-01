@@ -3,9 +3,8 @@
 import {writeFileSync} from 'node:fs';
 import type {ILogger} from '../ILogger';
 
-export const WORKER_HEARTBEAT_PATH = '/tmp/fluxer-worker-heartbeat';
+const WORKER_HEARTBEAT_PATH = '/tmp/fluxer-worker-heartbeat';
 export const WORKER_HEARTBEAT_WRITE_INTERVAL_MS = 5000;
-export const WORKER_HEARTBEAT_MAX_AGE_MS = 30000;
 export const WORKER_LANE_HEARTBEAT_INTERVAL_MS = 5000;
 export const WORKER_LANE_STALE_AFTER_MS = 30000;
 export const WORKER_CRON_STALE_AFTER_MS = 90000;

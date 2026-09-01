@@ -6,7 +6,7 @@ import type {ILogger} from '../ILogger';
 
 export type WorkerProcessErrorSource = 'uncaughtException' | 'unhandledRejection';
 
-export type WorkerProcessErrorHandler = (source: WorkerProcessErrorSource, error: unknown) => Promise<void>;
+type WorkerProcessErrorHandler = (source: WorkerProcessErrorSource, error: unknown) => Promise<void>;
 
 interface WorkerProcessErrorHandlerOptions {
 	logger: Pick<ILogger, 'error' | 'warn'>;
