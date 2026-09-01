@@ -15,6 +15,13 @@ permissions:
   contents: write
   packages: write
 
+concurrency:
+  group: publish-fluxer-app-proxy-self-hosted
+  cancel-in-progress: false
+
+env:
+  GHCR_OWNER: ${{ github.repository_owner }}
+
 jobs:
   approve:
     name: approve build release
@@ -26,13 +33,208 @@ jobs:
       - name: approved
         run: echo "Build release approved."
 
-  build:
+  meta:
+    name: resolve metadata
     needs: approve
-    uses: ./.github/workflows/_build-image.yaml
-    secrets: inherit
-    with:
-      image: fluxer-app-proxy-self-hosted
-      dockerfile: fluxer_app_proxy/Dockerfile
-      build-version: ${{ inputs['build-version'] }}
-      extra-build-args: |
-        FLUXER_APP_PROXY_TIME_FREEZE_ENABLED=false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      build_version: ${{ steps.vars.outputs.build_version }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: set variables
+        id: vars
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step set_metadata
+          --build-version "${{ inputs['build-version'] }}"
+
+  dist:
+    name: build the canonical asset tree
+    needs: meta
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    env:
+      IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/fluxer-app-proxy-self-hosted
+      BUILD_VERSION: ${{ needs.meta.outputs.build_version }}
+      PUBLIC_ASSET_BASE_URL: ""
+      BUNDLE_LOCAL_ASSETS: "true"
+      FLUXER_APP_PROXY_TIME_FREEZE_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: prepare docker config
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step prepare_docker_config
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - name: configure ghcr auth
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step configure_ghcr_auth
+
+      - name: build the dist once and publish it as the canonical asset image
+        env:
+          CACHE_FROM: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:buildcache-dist
+          CACHE_TO: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:buildcache-dist,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step build_dist
+
+      - name: generate asset manifest
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step generate_asset_manifest
+
+      - name: verify every manifest asset ships in the image
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step verify_published_assets
+
+  build:
+    name: build ${{ matrix.platform }}
+    needs: [meta, dist]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 75
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: amd64
+            runner: ubuntu-24.04
+          - platform: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: resolve source date
+        id: source
+        run: echo "date=$(TZ=UTC git log -1 --no-show-signature --pretty=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
+        with:
+          context: .
+          file: fluxer_app_proxy/Dockerfile
+          push: true
+          provenance: false
+          platforms: linux/${{ matrix.platform }}
+          tags: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:${{ needs.meta.outputs.build_version }}-${{ matrix.platform }}
+          build-args: |
+            BUILD_VERSION=${{ needs.meta.outputs.build_version }}
+            SOURCE_SHA=${{ github.sha }}
+            SOURCE_DATE=${{ steps.source.outputs.date }}
+            FLUXER_APP_PROXY_TIME_FREEZE_ENABLED=false
+            APP_ASSETS_REF=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:${{ needs.meta.outputs.build_version }}-assets
+            APP_ASSETS_PLATFORM=linux/amd64
+          cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:buildcache-${{ matrix.platform }}
+          cache-to: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:buildcache-${{ matrix.platform }},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+  merge:
+    name: merge multi-arch manifest
+    needs: [meta, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: verify cross-architecture asset parity
+        env:
+          APP_PROXY_ASSETS_REF: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:${{ needs.meta.outputs.build_version }}-assets
+          APP_PROXY_AMD64_REF: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:${{ needs.meta.outputs.build_version }}-amd64
+          APP_PROXY_ARM64_REF: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:${{ needs.meta.outputs.build_version }}-arm64
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step verify_asset_parity
+
+      - name: create and push multi-arch manifest
+        env:
+          IMAGE: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted
+          VERSION: ${{ needs.meta.outputs.build_version }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create -t "${IMAGE}:${VERSION}" \
+            "${IMAGE}:${VERSION}-amd64" \
+            "${IMAGE}:${VERSION}-arm64"
+          docker buildx imagetools inspect "${IMAGE}:${VERSION}"
+
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-contents: write
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          VERSION: ${{ needs.meta.outputs.build_version }}
+          RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}
+        run: >-
+          tools/ci/run.sh release
+          publish
+          --component fluxer-app-proxy-self-hosted
+          --build-version "${VERSION}"
+          --source-sha "${SOURCE_SHA}"
+          --previous-sha "${RELEASE_BASELINE_SHA}"
+
+      - name: Advance moving image tags
+        env:
+          IMAGE: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted
+          VERSION: ${{ needs.meta.outputs.build_version }}
+        run: >-
+          docker buildx imagetools create
+          -t "${IMAGE}:v1"
+          -t "${IMAGE}:latest"
+          "${IMAGE}:${VERSION}"

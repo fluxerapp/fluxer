@@ -57,11 +57,11 @@ jobs:
           --step set_metadata
           --build-version "${{ inputs['build-version'] }}"
 
-  build:
-    name: build app-proxy (amd64)
+  dist:
+    name: build and publish the canonical asset tree
     needs: meta
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     permissions:
       actions: read
       contents: read
@@ -87,17 +87,17 @@ jobs:
           tools/ci/run.sh build-app-proxy
           --step configure_ghcr_auth
 
-      - name: build and push image + extract assets
+      - name: build the dist once and publish it as the canonical asset image
         env:
           BUILD_VERSION: ${{ needs.meta.outputs.build_version }}
           PUBLIC_ASSET_BASE_URL: https://fluxerstatic.com
-          CACHE_FROM: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-amd64
-          CACHE_TO: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-amd64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
+          CACHE_FROM: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-dist
+          CACHE_TO: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-dist,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         run: >-
           tools/ci/run.sh build-app-proxy
-          --step build_and_extract
+          --step build_dist
 
       - name: generate asset manifest
         run: >-
@@ -114,9 +114,63 @@ jobs:
           tools/ci/run.sh build-app-proxy
           --step upload_assets
 
+      - name: verify every uploaded asset is readable
+        env:
+          PUBLIC_ASSET_BASE_URL: https://fluxerstatic.com
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step verify_published_assets
+
+  build:
+    name: build app-proxy (amd64)
+    needs: [meta, dist]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: resolve source date
+        id: source
+        run: echo "date=$(TZ=UTC git log -1 --no-show-signature --pretty=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      - name: prepare docker config
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step prepare_docker_config
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - name: configure ghcr auth
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step configure_ghcr_auth
+
+      - name: build and push image
+        env:
+          BUILD_VERSION: ${{ needs.meta.outputs.build_version }}
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_DATE: ${{ steps.source.outputs.date }}
+          PUBLIC_ASSET_BASE_URL: https://fluxerstatic.com
+          CACHE_FROM: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-amd64
+          CACHE_TO: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-amd64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step build_image
+
   build-arm64:
     name: build app-proxy (arm64)
-    needs: meta
+    needs: [meta, dist]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
     permissions:
@@ -127,6 +181,9 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         env:
           GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: resolve source date
+        id: source
+        run: echo "date=$(TZ=UTC git log -1 --no-show-signature --pretty=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
       - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
         with:
@@ -143,8 +200,10 @@ jobs:
           tags: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}-arm64
           build-args: |
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
-            PUBLIC_ASSET_BASE_URL=https://fluxerstatic.com
-            BUNDLE_LOCAL_ASSETS=false
+            SOURCE_SHA=${{ github.sha }}
+            SOURCE_DATE=${{ steps.source.outputs.date }}
+            APP_ASSETS_REF=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}-assets
+            APP_ASSETS_PLATFORM=linux/amd64
           cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-arm64
           cache-to: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:buildcache-arm64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
         env:
@@ -155,7 +214,7 @@ jobs:
     name: merge multi-arch manifest
     needs: [meta, build, build-arm64]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       contents: write
       packages: write
@@ -173,6 +232,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: verify cross-architecture asset parity
+        env:
+          APP_PROXY_ASSETS_REF: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}-assets
+          APP_PROXY_AMD64_REF: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}
+          APP_PROXY_ARM64_REF: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}-arm64
+        run: >-
+          tools/ci/run.sh build-app-proxy
+          --step verify_asset_parity
+
       - name: fuse amd64 + arm64 into a multi-arch manifest
         env:
           IMAGE: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy
