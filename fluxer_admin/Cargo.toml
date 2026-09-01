@@ -3,6 +3,7 @@ name = "fluxer_admin"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+publish = false
 build = "build.rs"
 
 [dependencies]
