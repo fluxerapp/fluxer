@@ -324,4 +324,101 @@ mod tests {
 
         assert_eq!(missing_app_wasm_artifact(root), None);
     }
+
+    #[test]
+    fn image_dockerfiles_carry_the_release_label_block() {
+        const REQUIRED: [&str; 9] = [
+            "LABEL org.opencontainers.image.licenses=\"AGPL-3.0-or-later\"",
+            "LABEL org.opencontainers.image.vendor=\"Fluxer\"",
+            "LABEL org.opencontainers.image.url=\"https://fluxer.app\"",
+            "LABEL org.opencontainers.image.documentation=\"https://docs.fluxer.app\"",
+            "LABEL org.opencontainers.image.source=\"https://github.com/fluxerapp/fluxer\"",
+            "LABEL org.opencontainers.image.version=\"${BUILD_VERSION}\"",
+            "LABEL org.opencontainers.image.revision=\"${SOURCE_SHA}\"",
+            "LABEL org.opencontainers.image.created=\"${SOURCE_DATE}\"",
+            "LABEL app.fluxer.build-version=\"${BUILD_VERSION}\"",
+        ];
+
+        for (name, title, dockerfile) in [
+            (
+                "fluxer_admin",
+                "fluxer-admin",
+                include_str!("../../../fluxer_admin/Dockerfile"),
+            ),
+            (
+                "fluxer_api",
+                "fluxer-api",
+                include_str!("../../../fluxer_api/Dockerfile"),
+            ),
+            (
+                "fluxer_app_proxy",
+                "fluxer-app-proxy",
+                include_str!("../../../fluxer_app_proxy/Dockerfile"),
+            ),
+            (
+                "fluxer_docs",
+                "fluxer-docs",
+                include_str!("../../../fluxer_docs/Dockerfile"),
+            ),
+            (
+                "fluxer_gateway",
+                "fluxer-gateway",
+                include_str!("../../../fluxer_gateway/Dockerfile"),
+            ),
+            (
+                "fluxer_gifs",
+                "fluxer-gifs",
+                include_str!("../../../fluxer_gifs/Dockerfile"),
+            ),
+            (
+                "fluxer_media_proxy",
+                "fluxer-media-proxy",
+                include_str!("../../../fluxer_media_proxy/Dockerfile"),
+            ),
+            (
+                "fluxer_messages",
+                "fluxer-messages",
+                include_str!("../../../fluxer_messages/Dockerfile"),
+            ),
+            (
+                "fluxer_snowflakes",
+                "fluxer-snowflakes",
+                include_str!("../../../fluxer_snowflakes/Dockerfile"),
+            ),
+            (
+                "fluxer_static",
+                "fluxer-static",
+                include_str!("../../../fluxer_static/Dockerfile"),
+            ),
+            (
+                "fluxer_unfurl",
+                "fluxer-unfurl",
+                include_str!("../../../fluxer_unfurl/Dockerfile"),
+            ),
+            (
+                "fluxer_users",
+                "fluxer-users",
+                include_str!("../../../fluxer_users/Dockerfile"),
+            ),
+        ] {
+            assert!(
+                dockerfile.contains("ARG SOURCE_SHA"),
+                "{name}/Dockerfile must declare ARG SOURCE_SHA"
+            );
+            assert!(
+                dockerfile.contains("ARG SOURCE_DATE"),
+                "{name}/Dockerfile must declare ARG SOURCE_DATE"
+            );
+            assert!(
+                dockerfile.contains(&format!("LABEL org.opencontainers.image.title=\"{title}\"")),
+                "{name}/Dockerfile must declare the title {title}"
+            );
+            for label in REQUIRED {
+                assert!(
+                    dockerfile.contains(label),
+                    "{name}/Dockerfile must declare {label}"
+                );
+            }
+        }
+    }
 }

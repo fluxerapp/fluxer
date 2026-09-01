@@ -29,6 +29,20 @@ RUN pnpm deploy --legacy --filter=fluxer_api --prod --config.allowUnusedPatches=
 FROM node:24-bookworm-slim
 
 ARG BUILD_VERSION
+ARG SOURCE_SHA
+ARG SOURCE_DATE
+
+LABEL org.opencontainers.image.title="fluxer-api"
+LABEL org.opencontainers.image.description="Fluxer HTTP API and background workers"
+LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
+LABEL org.opencontainers.image.vendor="Fluxer"
+LABEL org.opencontainers.image.url="https://fluxer.app"
+LABEL org.opencontainers.image.documentation="https://docs.fluxer.app"
+LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer"
+LABEL org.opencontainers.image.version="${BUILD_VERSION}"
+LABEL org.opencontainers.image.revision="${SOURCE_SHA}"
+LABEL org.opencontainers.image.created="${SOURCE_DATE}"
+LABEL app.fluxer.build-version="${BUILD_VERSION}"
 
 WORKDIR /usr/src/app/fluxer_api
 

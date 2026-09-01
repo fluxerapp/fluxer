@@ -4,12 +4,19 @@
 FROM caddy:2.10-alpine
 
 ARG BUILD_VERSION=""
+ARG SOURCE_SHA=""
+ARG SOURCE_DATE=""
 
 LABEL org.opencontainers.image.title="fluxer-static"
 LABEL org.opencontainers.image.description="Self-hostable static asset bundle for Fluxer"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
-LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer/tree/main/fluxer_static"
+LABEL org.opencontainers.image.vendor="Fluxer"
+LABEL org.opencontainers.image.url="https://fluxer.app"
+LABEL org.opencontainers.image.documentation="https://docs.fluxer.app"
+LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer"
 LABEL org.opencontainers.image.version="${BUILD_VERSION}"
+LABEL org.opencontainers.image.revision="${SOURCE_SHA}"
+LABEL org.opencontainers.image.created="${SOURCE_DATE}"
 LABEL app.fluxer.build-version="${BUILD_VERSION}"
 
 COPY fluxer_static/Caddyfile /etc/caddy/Caddyfile
