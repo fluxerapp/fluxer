@@ -73,6 +73,9 @@ const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT = '120s';
 const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT = '30min';
 export const POSTGRES_KV_MIGRATION_TABLE = '__fluxer_schema_migrations';
 const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION = 'messages_partition_key_v1';
+const POSTGRES_KV_SCHEMA_ATTEMPTS = 3;
+const POSTGRES_KV_SCHEMA_RETRY_DELAY_MS = 250;
+const POSTGRES_KV_CONCURRENT_DDL_CODES = new Set(['23505', '42P07', '42710']);
 const NUMERIC_ROW_KEY_BIGINT_PATTERN = '^\\{"__fluxer_type":"bigint","value":"(-?[0-9]+)"\\}$';
 const NUMERIC_ROW_KEY_NUMBER_PATTERN = '^(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][-+]?[0-9]+)?)$';
 const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()';
@@ -816,7 +819,7 @@ WHERE att.attrelid = to_regclass($1)
 	return result.rows[0]?.c_collated === true;
 }
 
-export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<void> {
+async function ensurePostgresKvSchemaOnce(client: IPostgresClient): Promise<void> {
 	const kvTable = client.kvTable();
 	const table = quoteIdentifier(kvTable);
 	await client.transaction(async (db) => {
@@ -883,6 +886,28 @@ ON CONFLICT (table_name, row_key) DO NOTHING`,
 		}
 		await db.query(`DROP INDEX IF EXISTS ${quoteIdentifier(`${kvTable}_partition_idx`)}`);
 	});
+}
+
+function isConcurrentDdlConflict(error: unknown): boolean {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		POSTGRES_KV_CONCURRENT_DDL_CODES.has(String((error as {code: unknown}).code))
+	);
+}
+
+export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<void> {
+	for (let attempt = 1; attempt <= POSTGRES_KV_SCHEMA_ATTEMPTS; attempt += 1) {
+		try {
+			await ensurePostgresKvSchemaOnce(client);
+			return;
+		} catch (error) {
+			if (attempt === POSTGRES_KV_SCHEMA_ATTEMPTS || !isConcurrentDdlConflict(error)) throw error;
+			logWarn({table: client.kvTable(), attempt}, 'Postgres KV schema hit a concurrent DDL conflict, retrying');
+			await new Promise((resolve) => setTimeout(resolve, POSTGRES_KV_SCHEMA_RETRY_DELAY_MS));
+		}
+	}
 }
 
 export async function pruneExpiredPostgresKvRows(client: IPostgresClient, batchSize = 5000): Promise<number> {

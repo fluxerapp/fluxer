@@ -367,6 +367,37 @@ suite('postgres kv upgrade safety', () => {
 		]);
 	}, 120_000);
 
+	it('survives a peer that creates the table without the schema lock', async () => {
+		const RACE = `${KV}_race`;
+		await raw.query(`DROP TABLE IF EXISTS ${RACE}`);
+		let release = () => {};
+		const gate = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const peer = raw.transaction(async (db) => {
+			await db.query(`
+CREATE TABLE IF NOT EXISTS ${RACE} (
+	table_name text NOT NULL,
+	partition_key text COLLATE "C" NOT NULL,
+	row_key text COLLATE "C" NOT NULL,
+	row_data jsonb NOT NULL,
+	expires_at timestamptz,
+	updated_at timestamptz NOT NULL DEFAULT now(),
+	PRIMARY KEY (table_name, row_key)
+)`);
+			await gate;
+		});
+		const booting = ensurePostgresKvSchema(new TableClient(raw, RACE)).then(
+			() => 'ok',
+			(error: Error) => `failed: ${error.message}`,
+		);
+		await sleep(500);
+		release();
+		await peer;
+		expect(await booting).toBe('ok');
+		await raw.query(`DROP TABLE IF EXISTS ${RACE}`);
+	}, 120_000);
+
 	it('backfills the messages partition key once and never scans for it again', async () => {
 		const BACKFILL = 'kv_backfill';
 		const SEP = String.fromCharCode(31);

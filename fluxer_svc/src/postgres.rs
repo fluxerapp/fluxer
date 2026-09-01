@@ -10,15 +10,22 @@ use rustls::{
 };
 use serde_json::{Map, Number, Value};
 use std::str::FromStr;
+use std::time::Duration;
 use tokio_postgres::{
     Config as PgConfig, Row,
     config::SslMode,
+    error::SqlState,
     types::{ToSql, Type},
 };
 use tokio_postgres_rustls::MakeRustlsConnect;
 
 const POSTGRES_KV_SCHEMA_LOCK_NAMESPACE: i32 = 0x4658_4b56;
 const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT: &str = "120s";
+const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT: &str = "30min";
+const POSTGRES_KV_MIGRATION_TABLE: &str = "__fluxer_schema_migrations";
+const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION: &str = "messages_partition_key_v1";
+const POSTGRES_KV_SCHEMA_ATTEMPTS: u32 = 3;
+const POSTGRES_KV_SCHEMA_RETRY_DELAY: Duration = Duration::from_millis(250);
 const CACHED_JSON_FIELDS: &[&str] = &["message_id"];
 
 #[derive(Clone, Debug)]
@@ -156,7 +163,41 @@ WHERE att.attrelid = to_regclass($1)
     Ok(row.and_then(|row| row.get::<_, Option<bool>>("c_collated")) == Some(true))
 }
 
+fn is_concurrent_ddl_conflict(error: &anyhow::Error) -> bool {
+    error
+        .chain()
+        .filter_map(|cause| cause.downcast_ref::<tokio_postgres::Error>())
+        .filter_map(tokio_postgres::Error::code)
+        .any(|code| {
+            *code == SqlState::UNIQUE_VIOLATION
+                || *code == SqlState::DUPLICATE_TABLE
+                || *code == SqlState::DUPLICATE_OBJECT
+        })
+}
+
 pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()> {
+    let mut attempt = 1;
+    loop {
+        match ensure_kv_schema_once(pool, kv_table).await {
+            Ok(()) => return Ok(()),
+            Err(err) => {
+                if attempt >= POSTGRES_KV_SCHEMA_ATTEMPTS || !is_concurrent_ddl_conflict(&err) {
+                    return Err(err);
+                }
+                tracing::warn!(
+                    error = ?err,
+                    kv_table,
+                    attempt,
+                    "retrying Postgres KV schema after a concurrent DDL conflict"
+                );
+                attempt += 1;
+                tokio::time::sleep(POSTGRES_KV_SCHEMA_RETRY_DELAY).await;
+            }
+        }
+    }
+}
+
+async fn ensure_kv_schema_once(pool: &Pool, kv_table: &str) -> anyhow::Result<()> {
     let table = quote_identifier(kv_table)?;
     let old_partition_index = quote_identifier(&format!("{kv_table}_partition_idx"))?;
     let partition_row_index = quote_identifier(&format!("{kv_table}_partition_row_idx"))?;
@@ -185,9 +226,12 @@ pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()>
         .await
         .context("failed to acquire Postgres KV schema lock")?;
     transaction
-        .query_one("SELECT set_config('statement_timeout', '0', true)", &[])
+        .query_one(
+            "SELECT set_config('statement_timeout', $1, true)",
+            &[&POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT],
+        )
         .await
-        .context("failed to clear Postgres KV schema lock timeout")?;
+        .context("failed to configure Postgres KV schema migration timeout")?;
     transaction
         .batch_execute(&format!(
             r#"
@@ -219,14 +263,67 @@ CREATE INDEX IF NOT EXISTS {partition_row_index} ON {table} (table_name, partiti
 CREATE INDEX IF NOT EXISTS {expires_index} ON {table} (expires_at) WHERE expires_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS {messages_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages';
 CREATE INDEX IF NOT EXISTS {message_reactions_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions';
+"#
+        ))
+        .await
+        .context("failed to ensure Postgres KV schema")?;
+    let migrated = transaction
+        .query_typed_opt(
+            &format!("SELECT 1 FROM {table} WHERE table_name = $1 AND row_key = $2 LIMIT 1"),
+            &[
+                (&POSTGRES_KV_MIGRATION_TABLE, Type::TEXT),
+                (&POSTGRES_KV_MESSAGES_PARTITION_MIGRATION, Type::TEXT),
+            ],
+        )
+        .await
+        .context("failed to read the Postgres KV migration marker")?;
+    if migrated.is_none() {
+        let pending = transaction
+            .query_typed_opt(
+                &format!(
+                    r#"
+SELECT 1
+FROM {table}
+WHERE table_name = 'messages'
+    AND partition_key = row_key
+    AND split_part(row_key, chr(31), 3) <> ''
+LIMIT 1"#
+                ),
+                &[],
+            )
+            .await
+            .context("failed to probe the Postgres KV messages partition backfill")?;
+        if pending.is_some() {
+            transaction
+                .batch_execute(&format!(
+                    r#"
 UPDATE {table}
 SET partition_key = split_part(row_key, chr(31), 1) || chr(31) || split_part(row_key, chr(31), 2)
 WHERE table_name = 'messages'
     AND partition_key = row_key
     AND split_part(row_key, chr(31), 3) <> '';
-DROP INDEX IF EXISTS {old_partition_index};
 "#
-        ))
+                ))
+                .await
+                .context("failed to backfill Postgres KV message partition keys")?;
+        }
+        transaction
+            .execute_typed(
+                &format!(
+                    r#"INSERT INTO {table} (table_name, partition_key, row_key, row_data)
+VALUES ($1, $2, $2, jsonb_build_object('applied_at', now()))
+ON CONFLICT (table_name, row_key) DO NOTHING"#
+                ),
+                &[
+                    (&POSTGRES_KV_MIGRATION_TABLE, Type::TEXT),
+                    (&POSTGRES_KV_MESSAGES_PARTITION_MIGRATION, Type::TEXT),
+                ],
+            )
+            .await
+            .context("failed to record the Postgres KV migration marker")?;
+    }
+    transaction
+        .batch_execute(&format!("DROP INDEX IF EXISTS {old_partition_index};"))
         .await
         .context("failed to ensure Postgres KV schema")?;
     transaction
