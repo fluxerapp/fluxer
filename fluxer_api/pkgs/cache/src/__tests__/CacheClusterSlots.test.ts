@@ -2,26 +2,8 @@
 
 import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
 import type {IKVPipeline, IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
 import {describe, expect, it} from 'vitest';
-
-function hashSlot(key: string): number {
-	let hashed = key;
-	const start = key.indexOf('{');
-	if (start !== -1) {
-		const end = key.indexOf('}', start + 1);
-		if (end > start + 1) {
-			hashed = key.slice(start + 1, end);
-		}
-	}
-	let crc = 0;
-	for (let index = 0; index < hashed.length; index += 1) {
-		crc ^= (hashed.charCodeAt(index) & 0xff) << 8;
-		for (let bit = 0; bit < 8; bit += 1) {
-			crc = (crc & 0x8000) === 0 ? (crc << 1) & 0xffff : ((crc << 1) ^ 0x1021) & 0xffff;
-		}
-	}
-	return crc % 16384;
-}
 
 function createRecordingProvider(): {
 	client: IKVProvider;
@@ -36,6 +18,7 @@ function createRecordingProvider(): {
 		setex: async (key: string) => {
 			commands.push([key]);
 		},
+		isClustered: () => true,
 		pipeline: () => {
 			const keys: Array<string> = [];
 			commands.push(keys);
@@ -61,7 +44,7 @@ describe('KVCacheProvider cluster hash slots', () => {
 		const {client, commands} = createRecordingProvider();
 		const provider = new KVCacheProvider({client});
 
-		expect(hashSlot('cache:alpha')).not.toBe(hashSlot('cache:beta'));
+		expect(computeHashSlot('cache:alpha')).not.toBe(computeHashSlot('cache:beta'));
 
 		await provider.mset([
 			{key: 'cache:alpha', value: 1, ttlSeconds: 60},
@@ -69,6 +52,6 @@ describe('KVCacheProvider cluster hash slots', () => {
 		]);
 
 		expect(commands.flat().sort()).toEqual(['cache:alpha', 'cache:beta']);
-		expect(commands.filter((keys) => new Set(keys.map(hashSlot)).size > 1)).toEqual([]);
+		expect(commands.filter((keys) => new Set(keys.map(computeHashSlot)).size > 1)).toEqual([]);
 	});
 });

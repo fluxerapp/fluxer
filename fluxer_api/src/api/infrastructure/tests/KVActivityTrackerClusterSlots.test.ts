@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {createUserID} from '../../BrandedTypes';
 import type {User} from '../../models/User';
-import {BatchRecordingKVProvider, hashSlot} from '../../test/mocks/BatchRecordingKVProvider';
+import {BatchRecordingKVProvider} from '../../test/mocks/BatchRecordingKVProvider';
 import {UserRepository} from '../../user/repositories/UserRepository';
 import {KVActivityTracker} from '../KVActivityTracker';
 
@@ -22,7 +23,7 @@ describe('KVActivityTracker cluster hash slots', () => {
 		const users = [createUser(1234n, lastActiveAt), createUser(5678n, lastActiveAt)];
 		vi.spyOn(UserRepository.prototype, 'scanAllUsersPage').mockResolvedValue({users, pageState: null});
 
-		expect(hashSlot('user_activity:1234')).not.toBe(hashSlot('user_activity:5678'));
+		expect(computeHashSlot('user_activity:1234')).not.toBe(computeHashSlot('user_activity:5678'));
 
 		await new KVActivityTracker(kvClient).rebuildActivities();
 

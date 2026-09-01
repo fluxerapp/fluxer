@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {IKVPipeline} from '@pkgs/kv_client/src/IKVProvider';
+import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
 import {MockKVProvider} from './MockKVProvider';
 
 type BatchMode = 'multi' | 'pipeline';
@@ -8,25 +9,6 @@ type BatchMode = 'multi' | 'pipeline';
 interface RecordedBatch {
 	mode: BatchMode;
 	keys: Array<string>;
-}
-
-export function hashSlot(key: string): number {
-	let hashed = key;
-	const start = key.indexOf('{');
-	if (start !== -1) {
-		const end = key.indexOf('}', start + 1);
-		if (end > start + 1) {
-			hashed = key.slice(start + 1, end);
-		}
-	}
-	let crc = 0;
-	for (let index = 0; index < hashed.length; index += 1) {
-		crc ^= (hashed.charCodeAt(index) & 0xff) << 8;
-		for (let bit = 0; bit < 8; bit += 1) {
-			crc = (crc & 0x8000) === 0 ? (crc << 1) & 0xffff : ((crc << 1) ^ 0x1021) & 0xffff;
-		}
-	}
-	return crc % 16384;
 }
 
 export class BatchRecordingKVProvider extends MockKVProvider {
@@ -41,7 +23,7 @@ export class BatchRecordingKVProvider extends MockKVProvider {
 	}
 
 	crossSlotBatches(): Array<RecordedBatch> {
-		return this.batches.filter((batch) => new Set(batch.keys.map(hashSlot)).size > 1);
+		return this.batches.filter((batch) => new Set(batch.keys.map(computeHashSlot)).size > 1);
 	}
 
 	private recordBatch(mode: BatchMode, inner: IKVPipeline): IKVPipeline {

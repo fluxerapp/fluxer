@@ -111,6 +111,7 @@ export class MockKVProvider implements IKVProvider {
 		key: string;
 		values: Array<string>;
 	}> = [];
+	clustered = true;
 	private subscription: MockKVSubscription;
 	private readonly stringStore = new Map<string, string>();
 	private readonly setStore = new Map<string, Set<string>>();
@@ -780,6 +781,10 @@ export class MockKVProvider implements IKVProvider {
 
 	multi(): IKVPipeline {
 		return this.createPipeline();
+	}
+
+	isClustered(): boolean {
+		return this.clustered;
 	}
 
 	async health(): Promise<boolean> {

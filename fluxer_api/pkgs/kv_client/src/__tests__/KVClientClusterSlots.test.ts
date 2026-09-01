@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {KVClient} from '@pkgs/kv_client/src/KVClient';
+import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const {commands, store} = vi.hoisted(() => ({
@@ -44,31 +45,16 @@ vi.mock('ioredis', () => {
 	return {default: MockRedis, Cluster: MockRedis};
 });
 
-function hashSlot(key: string): number {
-	let hashed = key;
-	const start = key.indexOf('{');
-	if (start !== -1) {
-		const end = key.indexOf('}', start + 1);
-		if (end > start + 1) {
-			hashed = key.slice(start + 1, end);
-		}
-	}
-	let crc = 0;
-	for (let index = 0; index < hashed.length; index += 1) {
-		crc ^= (hashed.charCodeAt(index) & 0xff) << 8;
-		for (let bit = 0; bit < 8; bit += 1) {
-			crc = (crc & 0x8000) === 0 ? (crc << 1) & 0xffff : ((crc << 1) ^ 0x1021) & 0xffff;
-		}
-	}
-	return crc % 16384;
-}
-
 function crossSlotCommands(): Array<{name: string; keys: Array<string>}> {
-	return commands.filter((command) => new Set(command.keys.map(hashSlot)).size > 1);
+	return commands.filter((command) => new Set(command.keys.map(computeHashSlot)).size > 1);
 }
 
-function createClient(): KVClient {
-	return new KVClient('redis://127.0.0.1:6379');
+function createClusteredClient(): KVClient {
+	return new KVClient({url: 'redis://127.0.0.1:6379', mode: 'cluster'});
+}
+
+function createStandaloneClient(): KVClient {
+	return new KVClient({url: 'redis://127.0.0.1:6379', mode: 'standalone'});
 }
 
 describe('KVClient cluster hash slots', () => {
@@ -78,8 +64,8 @@ describe('KVClient cluster hash slots', () => {
 	});
 
 	it('reads several keys without a command spanning hash slots', async () => {
-		expect(hashSlot('slot:alpha')).not.toBe(hashSlot('slot:beta'));
-		const client = createClient();
+		expect(computeHashSlot('slot:alpha')).not.toBe(computeHashSlot('slot:beta'));
+		const client = createClusteredClient();
 		await client.set('slot:alpha', 'one');
 
 		await expect(client.mget('slot:alpha', 'slot:beta')).resolves.toEqual(['one', null]);
@@ -87,8 +73,8 @@ describe('KVClient cluster hash slots', () => {
 	});
 
 	it('writes several keys without a command spanning hash slots', async () => {
-		expect(hashSlot('slot:alpha')).not.toBe(hashSlot('slot:beta'));
-		const client = createClient();
+		expect(computeHashSlot('slot:alpha')).not.toBe(computeHashSlot('slot:beta'));
+		const client = createClusteredClient();
 
 		await client.mset('slot:alpha', 'one', 'slot:beta', 'two');
 
@@ -98,13 +84,27 @@ describe('KVClient cluster hash slots', () => {
 	});
 
 	it('deletes several keys without a command spanning hash slots', async () => {
-		expect(hashSlot('slot:alpha')).not.toBe(hashSlot('slot:beta'));
-		const client = createClient();
+		expect(computeHashSlot('slot:alpha')).not.toBe(computeHashSlot('slot:beta'));
+		const client = createClusteredClient();
 		await client.set('slot:alpha', 'one');
 		await client.set('slot:beta', 'two');
 
 		await expect(client.del('slot:alpha', 'slot:beta', 'slot:gamma')).resolves.toBe(2);
 		expect(store.size).toBe(0);
 		expect(crossSlotCommands()).toEqual([]);
+	});
+
+	it('keeps multi key commands whole outside cluster mode', async () => {
+		const client = createStandaloneClient();
+
+		await client.mset('slot:alpha', 'one', 'slot:beta', 'two');
+		await expect(client.mget('slot:alpha', 'slot:beta')).resolves.toEqual(['one', 'two']);
+		await expect(client.del('slot:alpha', 'slot:beta')).resolves.toBe(2);
+
+		expect(commands).toEqual([
+			{name: 'mset', keys: ['slot:alpha', 'slot:beta']},
+			{name: 'mget', keys: ['slot:alpha', 'slot:beta']},
+			{name: 'del', keys: ['slot:alpha', 'slot:beta']},
+		]);
 	});
 });

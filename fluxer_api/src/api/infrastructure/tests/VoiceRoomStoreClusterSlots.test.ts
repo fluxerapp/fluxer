@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
 import {describe, expect, it} from 'vitest';
 import {createChannelID, createGuildID} from '../../BrandedTypes';
-import {BatchRecordingKVProvider, hashSlot} from '../../test/mocks/BatchRecordingKVProvider';
+import {BatchRecordingKVProvider} from '../../test/mocks/BatchRecordingKVProvider';
 import {VOICE_OCCUPANCY_REGION_KEY_PREFIX, VOICE_OCCUPANCY_SERVER_KEY_PREFIX} from '../../voice/VoiceConstants';
 import {VoiceRoomStore} from '../VoiceRoomStore';
 
@@ -16,7 +17,7 @@ describe('VoiceRoomStore cluster hash slots', () => {
 		const serverKey = `${VOICE_OCCUPANCY_SERVER_KEY_PREFIX}:us-east:voice-1`;
 		const member = 'guild:1234:channel:5678';
 
-		expect(hashSlot(regionKey)).not.toBe(hashSlot(serverKey));
+		expect(computeHashSlot(regionKey)).not.toBe(computeHashSlot(serverKey));
 
 		await store.pinRoomServer(guildId, channelId, 'us-east', 'voice-1', 'wss://voice-1.example');
 		expect(await kvClient.smembers(regionKey)).toEqual([member]);

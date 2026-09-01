@@ -104,5 +104,6 @@ export interface IKVProvider {
 	}>;
 	pipeline(): IKVPipeline;
 	multi(): IKVPipeline;
+	isClustered(): boolean;
 	health(): Promise<boolean>;
 }

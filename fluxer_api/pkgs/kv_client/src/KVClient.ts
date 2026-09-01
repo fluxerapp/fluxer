@@ -16,6 +16,7 @@ import {
 	parseRangeByScoreArguments,
 	parseSetArguments,
 } from '@pkgs/kv_client/src/KVCommandArguments';
+import {runSlotBatches, splitIntoSlotBatches} from '@pkgs/kv_client/src/KVHashSlots';
 import {KVPipeline} from '@pkgs/kv_client/src/KVPipeline';
 import {KVSubscription} from '@pkgs/kv_client/src/KVSubscription';
 import Redis, {Cluster} from 'ioredis';
@@ -358,7 +359,20 @@ export class KVClient implements IKVProvider {
 		if (keys.length === 0) {
 			return [];
 		}
-		return await this.execute('mget', async () => await Promise.all(keys.map(async (key) => this.client.get(key))));
+		return await this.execute('mget', async () => {
+			const values = new Array<string | null>(keys.length).fill(null);
+			const batches = this.splitBySlot(
+				keys.map((key, index) => ({key, index})),
+				(entry) => entry.key,
+			);
+			await runSlotBatches(batches, async (batch) => {
+				const batchValues = await this.client.mget(...batch.map((entry) => entry.key));
+				for (const [position, entry] of batch.entries()) {
+					values[entry.index] = batchValues[position] ?? null;
+				}
+			});
+			return values;
+		});
 	}
 
 	async mset(...args: Array<string>): Promise<void> {
@@ -367,7 +381,10 @@ export class KVClient implements IKVProvider {
 			return;
 		}
 		await this.execute('mset', async () => {
-			await Promise.all(entries.map(async (entry) => this.client.set(entry.key, entry.value)));
+			const batches = this.splitBySlot(entries, (entry) => entry.key);
+			await runSlotBatches(batches, async (batch) => {
+				await this.client.mset(...batch.flatMap((entry) => [entry.key, entry.value]));
+			});
 		});
 	}
 
@@ -376,7 +393,11 @@ export class KVClient implements IKVProvider {
 			return 0;
 		}
 		return await this.execute('del', async () => {
-			const deleted = await Promise.all(keys.map(async (key) => this.client.del(key)));
+			const deleted: Array<number> = [];
+			const batches = this.splitBySlot(keys, (key) => key);
+			await runSlotBatches(batches, async (batch) => {
+				deleted.push(await this.client.del(...batch));
+			});
 			return deleted.reduce((total, count) => total + count, 0);
 		});
 	}
@@ -705,6 +726,14 @@ export class KVClient implements IKVProvider {
 			} while (cursor !== '0');
 			return keys.slice(0, limit);
 		});
+	}
+
+	isClustered(): boolean {
+		return this.config.mode === 'cluster';
+	}
+
+	private splitBySlot<T>(items: ReadonlyArray<T>, keyOf: (item: T) => string): Array<Array<T>> {
+		return splitIntoSlotBatches(items, keyOf, this.isClustered());
 	}
 
 	pipeline(): IKVPipeline {

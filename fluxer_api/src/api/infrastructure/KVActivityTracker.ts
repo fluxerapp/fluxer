@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import {runSlotBatches, splitIntoSlotBatches} from '@pkgs/kv_client/src/KVHashSlots';
 import {seconds} from 'itty-time';
 import type {UserID} from '../BrandedTypes';
 import {Logger} from '../Logger';
@@ -74,8 +75,19 @@ export class KVActivityTracker {
 		return age > STATE_VERSION_TTL_SECONDS;
 	}
 
-	private async writeActivityBatch(batch: ReadonlyArray<{key: string; value: string}>): Promise<void> {
-		await Promise.all(batch.map(async (entry) => this.kvClient.setex(entry.key, TTL_SECONDS, entry.value)));
+	private async writeActivityBatch(entries: ReadonlyArray<{key: string; value: string}>): Promise<void> {
+		const batches = splitIntoSlotBatches(entries, (entry) => entry.key, this.kvClient.isClustered());
+		await runSlotBatches(batches, async (batch) => {
+			const pipeline = this.kvClient.pipeline();
+			for (const entry of batch) {
+				pipeline.setex(entry.key, TTL_SECONDS, entry.value);
+			}
+			for (const [error] of await pipeline.exec()) {
+				if (error) {
+					throw error;
+				}
+			}
+		});
 	}
 
 	async rebuildActivities(): Promise<void> {
