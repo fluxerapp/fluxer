@@ -4,6 +4,7 @@ import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectio
 import {DiscardPolicy, NatsError, RetentionPolicy, StorageType, type StreamConfig} from 'nats';
 import {describe, expect, it} from 'vitest';
 import {JetStreamWorkerQueue} from '../JetStreamWorkerQueue';
+import {WORKER_LANES} from '../WorkerLaneConfig';
 import {WorkerQueueOverflowError} from '../WorkerQueueOverflowError';
 
 const EXPECTED_LIMITS = {
@@ -25,6 +26,11 @@ const LEGACY_CONFIG = {
 	discard: DiscardPolicy.Old,
 	discard_new_per_subject: false,
 } as unknown as StreamConfig;
+
+interface ConsumerAddConfig {
+	durable_name: string;
+	filter_subjects: Array<string>;
+}
 
 function streamLimitError(description: string): NatsError {
 	const error = new NatsError('503', '503');
@@ -50,12 +56,26 @@ function createQueue(params: {
 	existing?: StreamConfig | null;
 	updateError?: Error;
 	publish?: (subject: string) => {seq: number};
-}): {queue: JetStreamWorkerQueue; added: Array<Partial<StreamConfig>>; updated: Array<Partial<StreamConfig>>} {
+}): {
+	queue: JetStreamWorkerQueue;
+	added: Array<Partial<StreamConfig>>;
+	updated: Array<Partial<StreamConfig>>;
+	consumerAdds: Array<ConsumerAddConfig>;
+} {
 	const added: Array<Partial<StreamConfig>> = [];
 	const updated: Array<Partial<StreamConfig>> = [];
+	const consumerAdds: Array<ConsumerAddConfig> = [];
 	const connectionManager = {
 		getJetStreamManager: () =>
 			Promise.resolve({
+				consumers: {
+					add: (_stream: string, config: ConsumerAddConfig) => {
+						consumerAdds.push(config);
+						return Promise.resolve({});
+					},
+					delete: () => Promise.resolve(true),
+					info: () => Promise.reject(new Error('consumer not found')),
+				},
 				streams: {
 					info: () => {
 						if (!params.existing) {
@@ -83,7 +103,7 @@ function createQueue(params: {
 			},
 		}),
 	} as unknown as JetStreamConnectionManager;
-	return {queue: new JetStreamWorkerQueue(connectionManager), added, updated};
+	return {queue: new JetStreamWorkerQueue(connectionManager), added, updated, consumerAdds};
 }
 
 describe('jobs stream limits', () => {
@@ -141,5 +161,29 @@ describe('jobs stream enqueue shedding', () => {
 			},
 		});
 		await expect(queue.enqueue('extractEmbeds', {})).rejects.toBe(failure);
+	});
+});
+
+describe('lane consumer filters', () => {
+	it('keeps consuming retired subjects so legacy jobs are drained instead of orphaned', async () => {
+		const {queue, consumerAdds} = createQueue({existing: LEGACY_CONFIG});
+		await queue.ensureConsumers(WORKER_LANES);
+		const lifecycle = consumerAdds.find((config) => config.durable_name === 'workers_lifecycle');
+		expect(lifecycle?.filter_subjects).toContain('jobs.sendSystemDm');
+		expect(lifecycle?.filter_subjects).toContain('jobs.sendScheduledMessage');
+	});
+
+	it('leaves lanes without retired tasks filtering only their own subjects', async () => {
+		const {queue, consumerAdds} = createQueue({existing: LEGACY_CONFIG});
+		await queue.ensureConsumers(WORKER_LANES);
+		const unfurl = consumerAdds.find((config) => config.durable_name === 'workers_unfurl');
+		expect(unfurl?.filter_subjects).toEqual(['jobs.extractEmbeds']);
+	});
+
+	it('never claims the same subject from two lane consumers', async () => {
+		const {queue, consumerAdds} = createQueue({existing: LEGACY_CONFIG});
+		await queue.ensureConsumers(WORKER_LANES);
+		const allSubjects = consumerAdds.flatMap((config) => config.filter_subjects);
+		expect(new Set(allSubjects).size).toBe(allSubjects.length);
 	});
 });

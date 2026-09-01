@@ -131,7 +131,7 @@ export class JetStreamWorkerQueue {
 		}
 		const jsm = await this.connectionManager.getJetStreamManager();
 		for (const lane of lanes) {
-			const filterSubjects = lane.taskTypes.map((t) => `${SUBJECT_PREFIX}${t}`);
+			const filterSubjects = [...lane.taskTypes, ...lane.retiredTaskTypes].map((t) => `${SUBJECT_PREFIX}${t}`);
 			const config = {
 				durable_name: lane.consumerName,
 				ack_policy: AckPolicy.Explicit,

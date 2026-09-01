@@ -240,6 +240,7 @@ export async function startWorkerMain(): Promise<void> {
 			}
 			const runner = new WorkerRunner({
 				tasks: laneTasks,
+				retiredTaskTypes: lane.retiredTaskTypes,
 				queue,
 				consumerName: lane.consumerName,
 				laneName: lane.name,

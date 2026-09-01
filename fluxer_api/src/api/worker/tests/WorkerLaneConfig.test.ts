@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {describe, expect, it} from 'vitest';
-import {resolveCronSchedulerEnabled, resolveWorkerLanes, WORKER_LANES} from '../WorkerLaneConfig';
+import {
+	resolveCronSchedulerEnabled,
+	resolveWorkerLanes,
+	validateLaneCompleteness,
+	WORKER_LANES,
+} from '../WorkerLaneConfig';
 
 describe('WorkerLaneConfig', () => {
 	it('returns all lanes in all_lanes mode', () => {
@@ -55,6 +60,33 @@ describe('WorkerLaneConfig', () => {
 		expect(embedLane).toHaveLength(1);
 		expect(embedLane[0]!.name).toBe('unfurl');
 		expect(embedLane[0]!.taskTypes).toEqual(['extractEmbeds']);
+	});
+	it('keeps the retired scheduled message subject on the lifecycle lane only', () => {
+		const lanes = resolveWorkerLanes({
+			mode: 'all_lanes',
+			laneConcurrencyOverrides: {},
+		});
+		const lifecycleLane = lanes.find((lane) => lane.name === 'lifecycle');
+		expect(lifecycleLane?.retiredTaskTypes).toEqual(['sendScheduledMessage']);
+		expect(lifecycleLane?.taskTypes).not.toContain('sendScheduledMessage');
+		for (const lane of lanes.filter((lane) => lane.name !== 'lifecycle')) {
+			expect(lane.retiredTaskTypes).toEqual([]);
+		}
+	});
+	it('never claims a retired subject from a single_task lane', () => {
+		const lanes = resolveWorkerLanes({
+			mode: 'single_task',
+			taskName: 'processStripeWebhook',
+			laneConcurrencyOverrides: {},
+		});
+		expect(lanes[0]!.retiredTaskTypes).toEqual([]);
+	});
+	it('rejects a registry that brings a retired task name back', () => {
+		const registry = Object.fromEntries(WORKER_LANES.flatMap((lane) => lane.taskTypes).map((task) => [task, () => {}]));
+		expect(() => validateLaneCompleteness(registry)).not.toThrow();
+		expect(() => validateLaneCompleteness({...registry, sendScheduledMessage: () => {}})).toThrow(
+			/Retired tasks registered again: sendScheduledMessage/,
+		);
 	});
 	it('throws when single_lane mode has no lane configured', () => {
 		expect(() =>

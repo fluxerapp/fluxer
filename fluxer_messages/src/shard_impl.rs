@@ -3101,7 +3101,7 @@ impl From<MessageDbRow> for Message {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fluxer_svc::transport::InMemoryTransport;
+    use fluxer_svc::transport::{InMemoryTransport, TransportSubscriber, reply_message};
     use serde_json::json;
 
     #[test]
@@ -3581,8 +3581,68 @@ mod tests {
         .unwrap()
     }
 
+    fn authored_message(message_id: i64) -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": message_id.to_string()},
+            "author_id": {"__fluxer_type": "bigint", "value": "1472426752046002208"},
+            "content": "kept"
+        }))
+        .unwrap()
+    }
+
+    fn legacy_string_author_message(message_id: i64) -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": message_id.to_string()},
+            "author_id": "1472426752046002208",
+            "content": "kept"
+        }))
+        .unwrap()
+    }
+
+    async fn stub_user_service(transport: &InMemoryTransport) -> tokio::task::JoinHandle<()> {
+        let mut subscriber = transport.subscribe("svc.users").await.unwrap();
+        let transport = transport.clone();
+        tokio::spawn(async move {
+            while let Some(message) = subscriber.next().await {
+                let _ = reply_message(&message, &transport, b"\"NotFound\"").await;
+            }
+        })
+    }
+
     fn recorded_deletions(deleted: &DeletedMessageKeys) -> Vec<(i64, i32, i64)> {
         deleted.lock().unwrap().clone()
+    }
+
+    #[tokio::test]
+    async fn build_path_keeps_authored_rows_from_older_releases() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let users = stub_user_service(&shard.transport).await;
+        let wrapped_id = 1_509_197_195_776_110_592;
+        let legacy_id = 1_509_197_195_776_110_593;
+
+        let responses = shard
+            .build_api_responses_from_messages(
+                vec![
+                    authored_message(wrapped_id),
+                    legacy_string_author_message(legacy_id),
+                ],
+                build_options(),
+            )
+            .await
+            .unwrap();
+        users.abort();
+
+        assert_eq!(responses.len(), 2);
+        assert_eq!(responses[0].id, wrapped_id.to_string());
+        assert_eq!(responses[1].id, legacy_id.to_string());
+        assert_eq!(responses[0].author.id, "1472426752046002208");
+        assert_eq!(responses[1].author.id, "1472426752046002208");
+        assert!(recorded_deletions(&deleted).is_empty());
     }
 
     #[tokio::test]

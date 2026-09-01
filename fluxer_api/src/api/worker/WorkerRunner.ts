@@ -12,6 +12,7 @@ import {isJsonRecord, parseJsonRecord} from '../utils/JsonBoundaryUtils';
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
 const MIN_ACK_HEARTBEAT_MS = 1000;
 const RESUBSCRIBE_DELAY_MS = 5000;
+const RETIRED_TASK_REASON = 'task type retired';
 
 interface WorkerRunnerJetStreamClient {
 	consumers: {
@@ -44,6 +45,7 @@ interface WorkerRunnerQueue {
 
 interface WorkerRunnerOptions {
 	tasks: Record<string, WorkerTaskHandler>;
+	retiredTaskTypes?: ReadonlyArray<string>;
 	queue: WorkerRunnerQueue;
 	consumerName: string;
 	laneName: string;
@@ -56,6 +58,7 @@ interface WorkerRunnerOptions {
 
 export class WorkerRunner {
 	private readonly tasks: Record<string, WorkerTaskHandler>;
+	private readonly retiredTaskTypes: Set<string>;
 	private readonly queue: WorkerRunnerQueue;
 	private readonly consumerName: string;
 	private readonly laneName: string;
@@ -72,6 +75,7 @@ export class WorkerRunner {
 
 	constructor(options: WorkerRunnerOptions) {
 		this.tasks = options.tasks;
+		this.retiredTaskTypes = new Set(options.retiredTaskTypes ?? []);
 		this.queue = options.queue;
 		this.consumerName = options.consumerName;
 		this.laneName = options.laneName;
@@ -198,6 +202,10 @@ export class WorkerRunner {
 	}
 
 	protected async processJob(taskType: string, msg: JsMsg): Promise<boolean> {
+		if (this.retiredTaskTypes.has(taskType)) {
+			await this.retireJob(taskType, msg);
+			return false;
+		}
 		const task = this.tasks[taskType];
 		if (!task) {
 			Logger.error({taskType, seq: msg.seq}, 'Unknown task type, terminating message');
@@ -362,6 +370,47 @@ export class WorkerRunner {
 		} finally {
 			clearInterval(ackHeartbeat);
 		}
+	}
+
+	private async retireJob(taskType: string, msg: JsMsg): Promise<void> {
+		const decoded = parseJsonRecord(new TextDecoder().decode(msg.data));
+		const jobPayload = decoded && isJsonRecord(decoded.payload) ? decoded.payload : {};
+		const runAt = decoded && typeof decoded.run_at === 'string' ? decoded.run_at : undefined;
+		let ledgerJobId: bigint | null = null;
+		const embedded = jobPayload['__jobId'];
+		if (typeof embedded === 'string') {
+			try {
+				ledgerJobId = BigInt(embedded);
+			} catch {
+				ledgerJobId = null;
+			}
+			delete jobPayload['__jobId'];
+		}
+		Logger.warn(
+			{taskType, seq: msg.seq, jobId: ledgerJobId?.toString()},
+			'Retired task type from an older release, moving to dead-letter queue',
+		);
+		try {
+			await this.queue.publishToDlq(taskType, jobPayload, {
+				originalSeq: msg.seq,
+				errorMessage: RETIRED_TASK_REASON,
+				deliveryCount: msg.info.deliveryCount,
+				lane: this.laneName,
+				runAt,
+			});
+		} catch (error) {
+			Logger.error({taskType, seq: msg.seq, err: error}, 'Failed to dead-letter a retired job');
+			msg.nak(5000);
+			return;
+		}
+		if (ledgerJobId !== null) {
+			try {
+				await this.ledger.markDeadletter(ledgerJobId, RETIRED_TASK_REASON);
+			} catch (err) {
+				Logger.warn({err, jobId: ledgerJobId.toString()}, 'Ledger markDeadletter failed');
+			}
+		}
+		msg.term(RETIRED_TASK_REASON);
 	}
 
 	private startAckHeartbeat(taskType: string, msg: JsMsg): ReturnType<typeof setInterval> {
