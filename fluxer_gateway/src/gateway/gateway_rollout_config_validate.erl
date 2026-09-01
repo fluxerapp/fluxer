@@ -8,7 +8,7 @@
 -type field_kind() ::
     percentage
     | positive_integer
-    | non_negative_integer
+    | relay_max_queue
     | rpc_timeout
     | reconcile_interval
     | concurrency
@@ -59,8 +59,8 @@ valid_config_field(Key, Value) ->
             valid_percentage_value(Value);
         positive_integer ->
             is_integer(Value) andalso Value > 0;
-        non_negative_integer ->
-            is_integer(Value) andalso Value >= 0;
+        relay_max_queue ->
+            valid_relay_max_queue_value(Value);
         rpc_timeout ->
             is_integer(Value) andalso Value >= 1000 andalso Value =< 60000;
         reconcile_interval ->
@@ -81,7 +81,7 @@ config_field_kind(<<"session_rollout_percentage">>) -> percentage;
 config_field_kind(<<"guild_rollout_percentage">>) -> percentage;
 config_field_kind(<<"voice_reconciliation_v3_percentage">>) -> percentage;
 config_field_kind(<<"gateway_dispatch_relay_shards">>) -> positive_integer;
-config_field_kind(<<"gateway_dispatch_relay_max_queue">>) -> non_negative_integer;
+config_field_kind(<<"gateway_dispatch_relay_max_queue">>) -> relay_max_queue;
 config_field_kind(<<"rpc_request_timeout_ms">>) -> rpc_timeout;
 config_field_kind(<<"voice_reconciliation_v3_interval_ms">>) -> reconcile_interval;
 config_field_kind(<<"max_concurrent_session_starts">>) -> concurrency;
@@ -93,3 +93,8 @@ config_field_kind(_) -> invalid.
 -spec valid_percentage_value(term()) -> boolean().
 valid_percentage_value(Value) ->
     is_number(Value) andalso Value >= 0 andalso Value =< 100.
+
+-spec valid_relay_max_queue_value(term()) -> boolean().
+valid_relay_max_queue_value(Value) ->
+    is_integer(Value) andalso Value >= 1 andalso
+        Value =< process_health_watchdog:kill_threshold().

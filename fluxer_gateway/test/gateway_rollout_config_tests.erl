@@ -251,3 +251,39 @@ validate_config_rejects_voice_reconciliation_v3_percentage_above_maximum_test() 
             default_config()
         )
     ).
+
+validate_config_rejects_relay_max_queue_zero_test() ->
+    ?assertMatch(
+        {error, {invalid_field, <<"gateway_dispatch_relay_max_queue">>, 0}},
+        gateway_rollout_config_validate:validate(
+            #{<<"gateway_dispatch_relay_max_queue">> => 0},
+            default_config()
+        )
+    ).
+
+validate_config_rejects_relay_max_queue_above_kill_threshold_test() ->
+    Above = process_health_watchdog:kill_threshold() + 1,
+    ?assertMatch(
+        {error, {invalid_field, <<"gateway_dispatch_relay_max_queue">>, Above}},
+        gateway_rollout_config_validate:validate(
+            #{<<"gateway_dispatch_relay_max_queue">> => Above},
+            default_config()
+        )
+    ).
+
+validate_config_accepts_relay_max_queue_range_bounds_test() ->
+    Ceiling = process_health_watchdog:kill_threshold(),
+    ?assertMatch(
+        {ok, #{<<"gateway_dispatch_relay_max_queue">> := 1}},
+        gateway_rollout_config_validate:validate(
+            #{<<"gateway_dispatch_relay_max_queue">> => 1},
+            default_config()
+        )
+    ),
+    ?assertMatch(
+        {ok, #{<<"gateway_dispatch_relay_max_queue">> := Ceiling}},
+        gateway_rollout_config_validate:validate(
+            #{<<"gateway_dispatch_relay_max_queue">> => Ceiling},
+            default_config()
+        )
+    ).

@@ -21,9 +21,13 @@
 -define(STATE_KEY, {gateway_dispatch_relay, state}).
 -define(WORKER_KEY(Index), {gateway_dispatch_relay_worker, Index}).
 
--type state() ::
-    coordinator_state()
-    | #{role := worker, index := non_neg_integer(), delivered := non_neg_integer()}.
+-type state() :: coordinator_state() | worker_state().
+-type worker_state() :: #{
+    role := worker,
+    index := non_neg_integer(),
+    inflight := atomics:atomics_ref() | undefined,
+    delivered := non_neg_integer()
+}.
 -type coordinator_state() :: #{
     role := coordinator,
     workers := tuple(),
@@ -163,23 +167,14 @@ init(coordinator) ->
 init({worker, Index}) ->
     erlang:process_flag(fullsweep_after, 50),
     persistent_term:put(?WORKER_KEY(Index), self()),
-    {ok, #{role => worker, index => Index, delivered => 0}}.
+    {ok, #{
+        role => worker,
+        index => Index,
+        inflight => gateway_dispatch_relay_batch:inflight_ref(Index),
+        delivered => 0
+    }}.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
-handle_call(
-    {deliver, SessionPid, Event, Payload},
-    _From,
-    #{role := worker, delivered := Delivered} = State
-) ->
-    dispatch_direct(SessionPid, Event, Payload),
-    {reply, ok, State#{delivered := Delivered + 1}};
-handle_call(
-    {deliver_many, SessionPids, Event, Payload},
-    _From,
-    #{role := worker, delivered := Delivered} = State
-) when is_list(SessionPids) ->
-    deliver_many_direct(SessionPids, Event, Payload),
-    {reply, ok, State#{delivered := Delivered + length(SessionPids)}};
 handle_call(diagnostic_info, _From, State) ->
     {reply, diagnostic_info(), State};
 handle_call(_Request, _From, State) ->
@@ -188,14 +183,16 @@ handle_call(_Request, _From, State) ->
 -spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast(
     {deliver, SessionPid, Event, Payload},
-    #{role := worker, delivered := Delivered} = State
+    #{role := worker, inflight := Inflight, delivered := Delivered} = State
 ) ->
+    ok = gateway_dispatch_relay_batch:release_queue_slot(Inflight),
     dispatch_direct(SessionPid, Event, Payload),
     {noreply, State#{delivered := Delivered + 1}};
 handle_cast(
     {deliver_many, SessionPids, Event, Payload},
-    #{role := worker, delivered := Delivered} = State
+    #{role := worker, inflight := Inflight, delivered := Delivered} = State
 ) when is_list(SessionPids) ->
+    ok = gateway_dispatch_relay_batch:release_queue_slot(Inflight),
     deliver_many_direct(SessionPids, Event, Payload),
     {noreply, State#{delivered := Delivered + length(SessionPids)}};
 handle_cast(_Msg, State) ->

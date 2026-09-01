@@ -13,14 +13,19 @@
     normalize_workers_tuple/1,
     message_queue_len/1,
     max_queue/0,
+    inflight_ref/1,
+    release_queue_slot/1,
     start_workers/1,
     start_worker/1,
     worker_index/3
 ]).
 
 -define(STATE_KEY, {gateway_dispatch_relay, state}).
--define(SYNC_TIMEOUT_MS, 5000).
--define(SLOT_KEY(Worker), {?MODULE, Worker}).
+-define(INFLIGHT_KEY(Slot), {?MODULE, inflight, Slot}).
+-define(INFLIGHT_INDEX, 1).
+-define(INFLIGHT_UNSAMPLED, -1).
+-define(CLAIM_DEADLINE_MS, 5000).
+-define(CLAIM_BACKOFF_MS, 1).
 
 -spec relay_or_direct_many([pid()], atom(), term()) -> ok.
 relay_or_direct_many(SessionPids, Event, Payload) ->
@@ -42,7 +47,7 @@ relay_or_direct_many(SessionPids, Event, Payload) ->
 relay_many_to_shards(SessionPids, Event, Payload, Workers, Count) ->
     ShardBuckets = build_shard_buckets(SessionPids, Count),
     Deferred = deliver_shard_buckets(1, Count, ShardBuckets, Event, Payload, Workers, []),
-    deliver_deferred_shards(Deferred, Event, Payload).
+    deliver_deferred_shards(Deferred, Event, Payload, Workers).
 
 -spec build_shard_buckets([pid()], pos_integer()) -> tuple().
 build_shard_buckets(SessionPids, Count) ->
@@ -59,8 +64,8 @@ build_shard_buckets(SessionPids, Count) ->
     ).
 
 -spec deliver_shard_buckets(
-    pos_integer(), pos_integer(), tuple(), atom(), term(), tuple(), [{pid(), [pid()]}]
-) -> [{pid(), [pid()]}].
+    pos_integer(), pos_integer(), tuple(), atom(), term(), tuple(), [{pos_integer(), [pid()]}]
+) -> [{pos_integer(), [pid()]}].
 deliver_shard_buckets(Index, Count, _Buckets, _Event, _Payload, _Workers, Deferred) when
     Index > Count
 ->
@@ -73,73 +78,121 @@ deliver_shard_buckets(Index, Count, Buckets, Event, Payload, Workers, Deferred) 
         end,
     deliver_shard_buckets(Index + 1, Count, Buckets, Event, Payload, Workers, Next).
 
--spec deliver_shard(pos_integer(), [pid()], atom(), term(), tuple(), [{pid(), [pid()]}]) ->
-    [{pid(), [pid()]}].
+-spec deliver_shard(
+    pos_integer(), [pid()], atom(), term(), tuple(), [{pos_integer(), [pid()]}]
+) -> [{pos_integer(), [pid()]}].
 deliver_shard(Index, Pids, Event, Payload, Workers, Deferred) ->
-    Worker = element(Index, Workers),
-    case enqueue_async(Worker, {deliver_many, Pids, Event, Payload}) of
+    Msg = {deliver_many, Pids, Event, Payload},
+    case enqueue_async(Index - 1, element(Index, Workers), Msg) of
         ok -> Deferred;
-        full -> [{Worker, Pids} | Deferred]
+        full -> [{Index, Pids} | Deferred]
     end.
 
--spec deliver_deferred_shards([{pid(), [pid()]}], atom(), term()) -> ok.
-deliver_deferred_shards([], _Event, _Payload) ->
+-spec deliver_deferred_shards([{pos_integer(), [pid()]}], atom(), term(), tuple()) -> ok.
+deliver_deferred_shards([], _Event, _Payload, _Workers) ->
     ok;
-deliver_deferred_shards([{Worker, Pids} | Rest], Event, Payload) ->
-    enqueue_sync(Worker, {deliver_many, Pids, Event, Payload}),
-    deliver_deferred_shards(Rest, Event, Payload).
+deliver_deferred_shards([{Index, Pids} | Rest], Event, Payload, Workers) ->
+    enqueue(Index - 1, element(Index, Workers), {deliver_many, Pids, Event, Payload}),
+    deliver_deferred_shards(Rest, Event, Payload, Workers).
 
 -spec relay_or_direct(pid(), atom(), term()) -> ok.
 relay_or_direct(SessionPid, Event, Payload) ->
-    case select_worker(SessionPid) of
+    case select_worker_slot(SessionPid) of
         undefined ->
             gateway_dispatch_relay:dispatch_direct(SessionPid, Event, Payload);
-        Worker ->
-            enqueue(Worker, {deliver, SessionPid, Event, Payload})
+        {Slot, Worker} ->
+            enqueue(Slot, Worker, {deliver, SessionPid, Event, Payload})
     end.
 
--spec enqueue(pid(), term()) -> ok.
-enqueue(Worker, Msg) ->
-    case enqueue_async(Worker, Msg) of
+-spec enqueue(non_neg_integer(), pid(), term()) -> ok.
+enqueue(Slot, Worker, Msg) ->
+    case enqueue_async(Slot, Worker, Msg) of
         ok -> ok;
-        full -> enqueue_sync(Worker, Msg)
+        full -> enqueue_blocking(Slot, Worker, Msg, claim_deadline())
     end.
 
--spec enqueue_async(pid(), term()) -> ok | full.
-enqueue_async(Worker, Msg) ->
-    case claim_queue_slot(Worker, max_queue()) of
+-spec enqueue_blocking(non_neg_integer(), pid(), term(), integer()) -> ok.
+enqueue_blocking(Slot, Worker, Msg, Deadline) ->
+    case gateway_retry_timer:wait_until(?CLAIM_BACKOFF_MS, Deadline) of
+        ok -> enqueue_retry(Slot, Worker, Msg, Deadline);
+        _ -> enqueue_forced(Slot, Worker, Msg)
+    end.
+
+-spec enqueue_retry(non_neg_integer(), pid(), term(), integer()) -> ok.
+enqueue_retry(Slot, Worker, Msg, Deadline) ->
+    case enqueue_async(Slot, Worker, Msg) of
+        ok -> ok;
+        full -> enqueue_blocking(Slot, Worker, Msg, Deadline)
+    end.
+
+-spec enqueue_forced(non_neg_integer(), pid(), term()) -> ok.
+enqueue_forced(Slot, Worker, Msg) ->
+    ok = reserve_queue_slot(Slot),
+    gen_server:cast(Worker, Msg).
+
+-spec claim_deadline() -> integer().
+claim_deadline() ->
+    erlang:monotonic_time(millisecond) + ?CLAIM_DEADLINE_MS.
+
+-spec enqueue_async(non_neg_integer(), pid(), term()) -> ok | full.
+enqueue_async(Slot, Worker, Msg) ->
+    case claim_queue_slot(Slot, Worker, max_queue()) of
         ok -> gen_server:cast(Worker, Msg);
         full -> full
     end.
 
--spec claim_queue_slot(pid(), pos_integer()) -> ok | full.
-claim_queue_slot(Worker, MaxQueue) ->
-    case erlang:get(?SLOT_KEY(Worker)) of
-        Claimed when is_integer(Claimed), Claimed < MaxQueue ->
-            _ = erlang:put(?SLOT_KEY(Worker), Claimed + 1),
-            ok;
-        _ ->
-            sample_queue_slot(Worker, MaxQueue)
+-spec claim_queue_slot(non_neg_integer(), pid(), pos_integer()) -> ok | full.
+claim_queue_slot(Slot, Worker, MaxQueue) ->
+    case inflight_ref(Slot) of
+        undefined -> sample_queue_slot(Worker, MaxQueue);
+        Ref -> claim_inflight_slot(Ref, Worker, MaxQueue)
+    end.
+
+-spec claim_inflight_slot(atomics:atomics_ref(), pid(), pos_integer()) -> ok | full.
+claim_inflight_slot(Ref, Worker, MaxQueue) ->
+    case atomics:add_get(Ref, ?INFLIGHT_INDEX, 1) of
+        Claimed when Claimed > 0, Claimed =< MaxQueue -> ok;
+        _ -> resample_inflight_slot(Ref, Worker, MaxQueue)
+    end.
+
+-spec resample_inflight_slot(atomics:atomics_ref(), pid(), pos_integer()) -> ok | full.
+resample_inflight_slot(Ref, Worker, MaxQueue) ->
+    Current = atomics:sub_get(Ref, ?INFLIGHT_INDEX, 1),
+    case message_queue_len(Worker) of
+        Sampled when Sampled < MaxQueue -> exchange_inflight_slot(Ref, Current, Sampled + 1);
+        _ -> full
+    end.
+
+-spec exchange_inflight_slot(atomics:atomics_ref(), integer(), pos_integer()) -> ok | full.
+exchange_inflight_slot(Ref, Current, Desired) ->
+    case atomics:compare_exchange(Ref, ?INFLIGHT_INDEX, Current, Desired) of
+        ok -> ok;
+        _ -> full
     end.
 
 -spec sample_queue_slot(pid(), pos_integer()) -> ok | full.
 sample_queue_slot(Worker, MaxQueue) ->
-    case message_queue_len(Worker) of
-        Sampled when Sampled < MaxQueue ->
-            _ = erlang:put(?SLOT_KEY(Worker), Sampled + 1),
-            ok;
-        _ ->
-            _ = erlang:erase(?SLOT_KEY(Worker)),
-            full
+    case message_queue_len(Worker) < MaxQueue of
+        true -> ok;
+        false -> full
     end.
 
--spec enqueue_sync(pid(), term()) -> ok.
-enqueue_sync(Worker, Msg) ->
-    try gen_server:call(Worker, Msg, ?SYNC_TIMEOUT_MS) of
-        _ -> ok
-    catch
-        exit:_Reason -> ok
+-spec reserve_queue_slot(non_neg_integer()) -> ok.
+reserve_queue_slot(Slot) ->
+    case inflight_ref(Slot) of
+        undefined -> ok;
+        Ref -> atomics:add(Ref, ?INFLIGHT_INDEX, 1)
     end.
+
+-spec release_queue_slot(atomics:atomics_ref() | undefined) -> ok.
+release_queue_slot(undefined) ->
+    ok;
+release_queue_slot(Ref) ->
+    atomics:sub(Ref, ?INFLIGHT_INDEX, 1).
+
+-spec inflight_ref(non_neg_integer()) -> atomics:atomics_ref() | undefined.
+inflight_ref(Slot) ->
+    persistent_term:get(?INFLIGHT_KEY(Slot), undefined).
 
 -spec max_queue() -> pos_integer().
 max_queue() ->
@@ -172,13 +225,20 @@ current_workers_tuple_normalized() ->
 
 -spec select_worker(pid()) -> pid() | undefined.
 select_worker(SessionPid) ->
+    case select_worker_slot(SessionPid) of
+        undefined -> undefined;
+        {_Slot, Worker} -> Worker
+    end.
+
+-spec select_worker_slot(pid()) -> {non_neg_integer(), pid()} | undefined.
+select_worker_slot(SessionPid) ->
     Workers = current_workers_tuple_normalized(),
     case tuple_size(Workers) of
         0 ->
             undefined;
         Count ->
             Index = erlang:phash2(SessionPid, Count) + 1,
-            element(Index, Workers)
+            {Index - 1, element(Index, Workers)}
     end.
 
 -spec message_queue_len(pid()) -> non_neg_integer().
@@ -194,12 +254,26 @@ start_workers(Count) ->
 
 -spec start_worker(non_neg_integer()) -> pid().
 start_worker(Index) ->
+    ok = reset_inflight(Index),
     {ok, Pid} = gen_server:start_link(
         gateway_dispatch_relay,
         {worker, Index},
         [{spawn_opt, [{message_queue_data, off_heap}]}]
     ),
     Pid.
+
+-spec reset_inflight(non_neg_integer()) -> ok.
+reset_inflight(Index) ->
+    case inflight_ref(Index) of
+        undefined -> persistent_term:put(?INFLIGHT_KEY(Index), new_inflight());
+        Ref -> atomics:put(Ref, ?INFLIGHT_INDEX, ?INFLIGHT_UNSAMPLED)
+    end.
+
+-spec new_inflight() -> atomics:atomics_ref().
+new_inflight() ->
+    Ref = atomics:new(1, []),
+    atomics:put(Ref, ?INFLIGHT_INDEX, ?INFLIGHT_UNSAMPLED),
+    Ref.
 
 -spec worker_index(pid(), tuple(), non_neg_integer()) -> non_neg_integer() | undefined.
 worker_index(Pid, Workers, Index) ->
