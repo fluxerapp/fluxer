@@ -222,7 +222,7 @@ async fn resolve_invite_meta(
     runtime_csp_sources: &RuntimeCspSources,
 ) -> Option<InvitePageMeta> {
     let code = invite_code_from_path(request_path)?;
-    let resolver = state.invite_meta.as_ref()?;
+    let resolver = state.invite_meta.get()?;
     let endpoints = InviteMetaEndpoints {
         media_endpoint: runtime_csp_sources.media_endpoint.clone(),
         static_cdn_endpoint: runtime_csp_sources.static_cdn_endpoint.clone(),
@@ -539,7 +539,7 @@ mod tests {
     use axum::body::Body;
     use fluxer_common::config::GeoipSourceConfig;
     use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
-    use std::sync::Arc;
+    use std::sync::{Arc, OnceLock};
 
     #[test]
     fn dev_asset_cache_buster_rewrites_script_and_link_assets() {
@@ -861,7 +861,7 @@ mod tests {
                 trust_client_ip_header: false,
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
-            invite_meta: None,
+            invite_meta: Arc::new(OnceLock::new()),
             index_html: cached_shell.map(Arc::from),
         }
     }

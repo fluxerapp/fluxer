@@ -4,12 +4,11 @@ use anyhow::Context;
 use fluxer_app_proxy::{
     config::AppProxyConfig,
     discovery_cache::DiscoveryCache,
-    geoip,
-    invite_meta::InviteMetaResolver,
+    geoip, invite_meta,
     routes::build_router,
     state::{AppState, build_http_client},
 };
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use tokio::{net::TcpListener, runtime::Builder};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -21,7 +20,7 @@ fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let config = AppProxyConfig::from_env();
+    let config = Arc::new(AppProxyConfig::from_env());
     let addr = format!("{}:{}", config.host, config.port);
 
     let geoip = Arc::new(geoip::resolver_from_app_config(&config));
@@ -49,17 +48,10 @@ fn main() -> anyhow::Result<()> {
             config.discovery_refresh_interval_ms,
         );
 
-        let invite_meta = if config.invite_meta_enabled {
-            match InviteMetaResolver::connect(&config).await {
-                Ok(resolver) => Some(Arc::new(resolver)),
-                Err(err) => {
-                    tracing::warn!(%err, "invite metadata resolver disabled; failed to connect to database");
-                    None
-                }
-            }
-        } else {
-            None
-        };
+        let invite_meta = Arc::new(OnceLock::new());
+        let invite_meta_connect = config
+            .invite_meta_enabled
+            .then(|| invite_meta::start_background_connect(&invite_meta, Arc::clone(&config)));
 
         let index_html = if config.index_upstream_url.is_none() {
             let index_path = std::path::Path::new(&config.static_dir).join("index.html");
@@ -75,7 +67,7 @@ fn main() -> anyhow::Result<()> {
         };
 
         let state = AppState {
-            config: Arc::new(config),
+            config,
             http_client,
             discovery_cache,
             geoip,
@@ -95,6 +87,9 @@ fn main() -> anyhow::Result<()> {
             .context("app proxy server exited unexpectedly")?;
 
         cancel.abort();
+        if let Some(handle) = invite_meta_connect {
+            handle.abort();
+        }
         Ok(())
     })
 }

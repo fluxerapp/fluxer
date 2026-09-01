@@ -34,6 +34,7 @@ const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(self), ch-dpr=
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/_health", get(health::health))
+        .route("/_ready", get(health::ready))
         .route(
             "/.well-known/apple-app-site-association",
             get(apple_association::apple_app_site_association),
