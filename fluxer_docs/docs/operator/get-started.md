@@ -41,10 +41,11 @@ Create a working directory and download the stack files:
 mkdir fluxer
 cd fluxer
 
-base=https://raw.githubusercontent.com/fluxerapp/fluxer/3b1eb56713d59181823df284b9646c890d2a3cba/deploy/self-hosting
+base=https://raw.githubusercontent.com/fluxerapp/fluxer/961fa1f007b5d7ecd49739463c6aa3185e2eab7a/deploy/self-hosting
 curl -fsSLO "$base/docker-compose.yml"
 curl -fsSLO "$base/Caddyfile"
 curl -fsSLO "$base/livekit.yaml"
+curl -fsSLO "$base/tunnel.compose.yml"
 curl -fsSL "$base/.env.example" -o .env
 ```
 
@@ -54,6 +55,7 @@ You should now have:
 Caddyfile
 docker-compose.yml
 livekit.yaml
+tunnel.compose.yml
 .env
 ```
 
@@ -131,7 +133,7 @@ Keep these defaults unless you know you need to change them:
 
     Use this when the server should not expose public web ports.
 
-    1. Set `FLUXER_CADDY_SITE_ADDRESS=:80`.
+    1. Set `FLUXER_CADDY_SITE_ADDRESS=:80` and `COMPOSE_FILE=docker-compose.yml:tunnel.compose.yml`. Without the second value Caddy still publishes 80, 443 and 443/udp on every interface, which is what `tunnel.compose.yml` narrows to a single loopback publish on 80. It needs Compose 2.24.4 or newer.
     2. In Cloudflare, create a Tunnel public hostname for your Fluxer domain.
     3. If `cloudflared` runs inside the Compose project, point the public hostname service to `http://caddy:80`.
     4. If `cloudflared` runs directly on the host, point the public hostname service to `http://127.0.0.1:80`.
