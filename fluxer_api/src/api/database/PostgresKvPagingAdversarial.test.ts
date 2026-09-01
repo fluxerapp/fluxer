@@ -68,6 +68,7 @@ class PlainClient implements IPostgresClient {
 
 class CountingClient implements IPostgresClient {
 	rowsRead = 0;
+	readonly selects: Array<{text: string; values: Array<unknown>}> = [];
 
 	constructor(
 		private readonly inner: IPostgresClient,
@@ -75,7 +76,10 @@ class CountingClient implements IPostgresClient {
 	) {}
 	async query<T extends Record<string, unknown>>(text: string, values: Array<unknown> = [], name?: string) {
 		const result = await this.inner.query(text, values, name);
-		if (/^\s*SELECT\s+(kv\.)?row_key/iu.test(text) && text.includes(this.table)) this.rowsRead += result.rows.length;
+		if (/^\s*SELECT\s+(kv\.)?row_key/iu.test(text) && text.includes(this.table)) {
+			this.rowsRead += result.rows.length;
+			this.selects.push({text, values});
+		}
 		return result as unknown as Awaited<ReturnType<IPostgresClient['query']>> & {rows: Array<T>};
 	}
 	async connect(): Promise<void> {
@@ -572,6 +576,69 @@ describe.skipIf(!dockerAvailable)('postgres kv paging adversarial', () => {
 		expect(datedNextOrder.slice().sort(), 'date-keyed row set').toEqual(datedLegacyOrder.slice().sort());
 		expect(numericNextOrder.slice().sort(), 'bigint-keyed row set').toEqual(numericLegacyOrder.slice().sort());
 		expect(deltas, `paged order deltas:\n${deltas.join('\n')}`).toEqual([]);
+	}, 300_000);
+
+	it('reads a page instead of the whole table for every page after the first', async () => {
+		await wipe(KV);
+		const rowCount = 40;
+		const pageSize = 4;
+		for (let i = 0; i < rowCount; i += 1) {
+			await upsert(next, FlatTable, {k: 999_999_999_999_999_980n + BigInt(i), v: `v${i}`});
+		}
+		const drain = async (build: (client: IPostgresClient) => AnyExec) => {
+			const counter = new CountingClient(raw, KV);
+			const exec = build(counter);
+			const reads: Array<number> = [];
+			let pageState: string | null = null;
+			let seen = 0;
+			for (let guard = 0; guard < 100; guard += 1) {
+				const before = counter.rowsRead;
+				const page: {rows: Array<Row>; pageState: string | null} = await exec.executePagedQuery<Row>(
+					{cql: '__reads__', params: {}, kvMeta: selectMeta(FlatTable)},
+					{pageSize, pageState},
+				);
+				reads.push(counter.rowsRead - before);
+				seen += page.rows.length;
+				pageState = page.pageState;
+				if (pageState === null) break;
+			}
+			return {reads, seen};
+		};
+		const legacyDrain = await drain((client) => new LegacyPostgresKvQueryExecutor(client));
+		const nextDrain = await drain((client) => new PostgresKvQueryExecutor(client));
+		const total = (reads: Array<number>) => reads.reduce((sum, count) => sum + count, 0);
+		expect(legacyDrain.seen).toBe(rowCount);
+		expect(nextDrain.seen).toBe(rowCount);
+		expect(nextDrain.reads.length).toBe(rowCount / pageSize);
+		expect(Math.min(...legacyDrain.reads), 'offset paging re-reads the whole table for every page').toBe(rowCount);
+		expect(
+			Math.max(...nextDrain.reads.slice(1)),
+			`rows read per page: ${nextDrain.reads.join(',')}`,
+		).toBeLessThanOrEqual(pageSize + 1);
+		expect(total(nextDrain.reads), `next=${total(nextDrain.reads)} legacy=${total(legacyDrain.reads)}`).toBeLessThan(
+			total(legacyDrain.reads) / 2,
+		);
+	}, 300_000);
+
+	it('serves every page after the first from an index instead of sorting the table', async () => {
+		await wipe(KV);
+		for (let i = 0; i < 2000; i += 1) {
+			await upsert(next, FlatTable, {k: 999_999_999_999_999_000n + BigInt(i), v: `v${i}`});
+		}
+		await raw.query(`ANALYZE ${KV}`);
+		const counter = new CountingClient(raw, KV);
+		const exec = new PostgresKvQueryExecutor(counter);
+		const query = {cql: '__plan__', params: {}, kvMeta: selectMeta(FlatTable)};
+		const first = await exec.executePagedQuery<Row>(query, {pageSize: 4});
+		expect(first.pageState).not.toBeNull();
+		counter.selects.length = 0;
+		await exec.executePagedQuery<Row>(query, {pageSize: 4, pageState: first.pageState});
+		const paged = counter.selects[counter.selects.length - 1];
+		expect(paged, 'no paged select was issued').toBeDefined();
+		const explained = await raw.query<Record<string, string>>(`EXPLAIN ${paged!.text}`, paged!.values);
+		const plan = explained.rows.map((row) => Object.values(row)[0]).join('\n');
+		expect(plan, plan).toContain(`${KV}_row_key_numeric_idx`);
+		expect(plan, plan).not.toContain('Seq Scan');
 	}, 300_000);
 
 	it('pages a bigint scan at the same cost on both sides of a digit count boundary', async () => {

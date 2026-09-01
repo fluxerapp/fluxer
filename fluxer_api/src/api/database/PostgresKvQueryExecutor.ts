@@ -19,6 +19,7 @@ interface StoredRow {
 interface PageState {
 	offset: number;
 	after?: string;
+	keyed?: boolean;
 }
 
 interface PageEntry {
@@ -72,9 +73,17 @@ const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT = '120s';
 const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT = '30min';
 export const POSTGRES_KV_MIGRATION_TABLE = '__fluxer_schema_migrations';
 const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION = 'messages_partition_key_v1';
+const NUMERIC_ROW_KEY_BIGINT_PATTERN = '^\\{"__fluxer_type":"bigint","value":"(-?[0-9]+)"\\}$';
+const NUMERIC_ROW_KEY_NUMBER_PATTERN = '^(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][-+]?[0-9]+)?)$';
 const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()';
 const MERGED_ROW_DATA = `CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE kv.row_data || EXCLUDED.row_data END`;
 const KEPT_EXPIRES_AT = `CASE WHEN ${EXPIRED_STORED_ROW} THEN NULL ELSE kv.expires_at END`;
+
+function numericRowKeyExpr(column: string): string {
+	return `(COALESCE(substring(${column} from '${NUMERIC_ROW_KEY_BIGINT_PATTERN}'), substring(${column} from '${NUMERIC_ROW_KEY_NUMBER_PATTERN}'))::numeric)`;
+}
+
+const NUMERIC_ROW_KEY = numericRowKeyExpr('kv.row_key');
 
 function planStatementName(prefix: string, plan: CandidatePlan): string | undefined {
 	switch (plan.kind) {
@@ -669,7 +678,7 @@ function decodePageState(pageState: string | null | undefined): PageState {
 		throw new Error('Invalid Postgres KV page state');
 	}
 	if (typeof decoded.after !== 'string') return {offset: decoded.offset};
-	return {offset: decoded.offset, after: decoded.after};
+	return {offset: decoded.offset, after: decoded.after, keyed: decoded.keyed === true};
 }
 
 function pageableSelect(meta: KvQueryMeta, pageSize: number): boolean {
@@ -680,6 +689,30 @@ function pageableSelect(meta: KvQueryMeta, pageSize: number): boolean {
 		Number.isInteger(pageSize) &&
 		pageSize > 0
 	);
+}
+
+function numericKeyValue(value: unknown): string | null {
+	if (typeof value === 'bigint') return value.toString();
+	if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+	return null;
+}
+
+function numericScanPlan(meta: KvQueryMeta, plan: QueryPlan): boolean {
+	return plan.exact && plan.candidates.kind === 'scan' && (meta.table.primaryKey as ReadonlyArray<string>).length === 1;
+}
+
+function numericScanKeyed(meta: KvQueryMeta, plan: QueryPlan, entries: ReadonlyArray<PageEntry>): boolean {
+	if (!numericScanPlan(meta, plan)) return false;
+	const column = (meta.table.primaryKey as ReadonlyArray<string>)[0]!;
+	return entries.every((entry) => numericKeyValue(entry.row[column]) !== null);
+}
+
+function numericScanCursor(state: PageState): {rowKey: string; value: string} | null {
+	if (state.keyed !== true || state.after === undefined) return null;
+	const values = decodeRowKey(state.after, 1);
+	if (values === null) return null;
+	const value = numericKeyValue(values[0]);
+	return value === null ? null : {rowKey: state.after, value};
 }
 
 function pageStart(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>, state: PageState): number {
@@ -809,6 +842,9 @@ CREATE TABLE IF NOT EXISTS ${table} (
 			);
 		}
 		await db.query(
+			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_row_key_numeric_idx`)} ON ${table} (table_name, ${numericRowKeyExpr('row_key')}) WHERE ${numericRowKeyExpr('row_key')} IS NOT NULL`,
+		);
+		await db.query(
 			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_expires_idx`)} ON ${table} (expires_at) WHERE expires_at IS NOT NULL`,
 		);
 		await db.query(
@@ -916,7 +952,10 @@ export class PostgresKvQueryExecutor {
 		const meta = this.meta(query);
 		if (pageableSelect(meta, options.pageSize) && (state.after !== undefined || state.offset === 0)) {
 			const plan = buildCandidatePlan(meta, query.params);
-			const page = await this.sortedPage(meta, query.params, plan, state, options.pageSize);
+			const cursor = numericScanPlan(meta, plan) ? numericScanCursor(state) : null;
+			const page = cursor
+				? await this.numericScanPage(meta, query.params, cursor, state.offset, options.pageSize)
+				: await this.sortedPage(meta, query.params, plan, state, options.pageSize);
 			return {rows: page.rows as Array<T>, pageState: page.pageState};
 		}
 		const rows = await this.executeQuery<T, P>(query);
@@ -925,6 +964,29 @@ export class PostgresKvQueryExecutor {
 		return {
 			rows: pageRows,
 			pageState: nextOffset < rows.length ? encodePageState({offset: nextOffset}) : null,
+		};
+	}
+
+	private async numericScanPage(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		cursor: {rowKey: string; value: string},
+		offset: number,
+		pageSize: number,
+	): Promise<{rows: Array<Row>; pageState: string | null}> {
+		logFullScan(meta);
+		const result = await this.client.query<StoredRow>(
+			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1 AND ${NUMERIC_ROW_KEY} IS NOT NULL AND (${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C") > ($2::numeric, $3) AND (kv.expires_at IS NULL OR kv.expires_at > now()) ORDER BY ${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C" LIMIT $4`,
+			[meta.table.name, cursor.value, cursor.rowKey, pageSize + 1],
+		);
+		const entries = this.matchingEntries(meta, result.rows.slice(0, pageSize), params);
+		const last = entries[entries.length - 1];
+		return {
+			rows: this.projected(meta, entries),
+			pageState:
+				result.rows.length > pageSize && last
+					? encodePageState({offset: offset + entries.length, after: last.key, keyed: true})
+					: null,
 		};
 	}
 
@@ -942,10 +1004,18 @@ export class PostgresKvQueryExecutor {
 		const page = entries.slice(start, start + pageSize);
 		const last = page[page.length - 1];
 		const nextOffset = start + page.length;
+		if (nextOffset >= entries.length || !last) return {rows: this.projected(meta, page), pageState: null};
+		const keyed = numericScanKeyed(meta, plan, entries);
 		return {
-			rows: page.map((entry) => projectRow(entry.row, meta.columns as ReadonlyArray<string> | undefined)),
-			pageState: nextOffset < entries.length && last ? encodePageState({offset: nextOffset, after: last.key}) : null,
+			rows: this.projected(meta, page),
+			pageState: encodePageState(
+				keyed ? {offset: nextOffset, after: last.key, keyed: true} : {offset: nextOffset, after: last.key},
+			),
 		};
+	}
+
+	private projected(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>): Array<Row> {
+		return entries.map((entry) => projectRow(entry.row, meta.columns as ReadonlyArray<string> | undefined));
 	}
 
 	async executeBatch(
