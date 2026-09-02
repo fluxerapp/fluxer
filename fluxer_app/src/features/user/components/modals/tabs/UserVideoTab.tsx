@@ -8,8 +8,6 @@ import {
 	PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
@@ -32,6 +30,7 @@ import {
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {buildSettingsDeviceOptions} from '@app/features/voice/utils/SettingsDeviceOptions';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -59,7 +58,6 @@ const SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR = msg({
 	message: 'This instance currently allows screen share up to 720p at 30 FPS.',
 	comment: 'Neutral video settings note shown when higher screen share quality is disabled by instance limits.',
 });
-const VERY_LOW_240P_LABEL = '240p';
 const STANDARD_720P_LABEL = '720p';
 const HIGH_DEFINITION_1080P_LABEL = '1080p';
 const QUAD_HD_1440P_LABEL = '1440p';
@@ -102,15 +100,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 	({voiceSettings, hasPremium: _hasPremium, autoRequestPermission = false}) => {
 		const {i18n} = useLingui();
 		const {videoDeviceId, cameraResolution, mirrorCamera, screenshareResolution, videoFrameRate} = voiceSettings;
-		const hasHigherQuality = isLimitToggleEnabled(
-			{
-				feature_higher_video_quality: LimitResolver.resolve({
-					key: 'feature_higher_video_quality',
-					fallback: 0,
-				}),
-			},
-			'feature_higher_video_quality',
-		);
+		const hasHigherQuality = hasHigherVideoQuality();
 		const isSelfHosted = RuntimeConfig.isSelfHosted();
 		const {
 			devices,
@@ -139,7 +129,6 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 				: []),
 		];
 		const screenshareResolutionOptions: ReadonlyArray<ComboboxOption<ScreenshareResolution>> = [
-			{value: 'low_240p', label: VERY_LOW_240P_LABEL},
 			{value: 'low_480p', label: LOW_480P_LABEL},
 			{
 				value: 'medium',

@@ -179,6 +179,24 @@ describe('buildScreenShareOptions', () => {
 			frameRate: 30,
 		});
 	});
+	it('starts the free-tier screenshare preset at 720p 30 fps', () => {
+		expect(resolveStreamingModeSettings('screenshare', 'medium', 15, false)).toEqual({
+			resolution: 'medium',
+			frameRate: 30,
+		});
+	});
+	it('lifts a retired free-tier 240p custom choice back to 720p', () => {
+		expect(resolveStreamingModeSettings('custom', 'low_240p', 30, false)).toEqual({
+			resolution: 'medium',
+			frameRate: 30,
+		});
+	});
+	it('keeps 480p as the lowest free-tier rung', () => {
+		expect(resolveStreamingModeSettings('custom', 'low_480p', 30, false)).toEqual({
+			resolution: 'low_480p',
+			frameRate: 30,
+		});
+	});
 	it('offers the browser picker system audio for every surface when audio is requested', () => {
 		const {captureOptions} = buildScreenShareOptions({
 			resolution: 'medium',

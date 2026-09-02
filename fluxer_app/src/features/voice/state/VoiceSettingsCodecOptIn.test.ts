@@ -20,7 +20,12 @@ const AppStorage = (await import('@app/features/platform/state/PersistentStorage
 
 AppStorage.setItem(
 	'VoiceSettings',
-	JSON.stringify({preferredScreenShareCodec: 'av1', screenShareContentHintPrefV2: 'auto'}),
+	JSON.stringify({
+		preferredScreenShareCodec: 'av1',
+		screenShareContentHintPrefV2: 'auto',
+		screenshareResolution: 'low_240p',
+		__mps__: {version: 1},
+	}),
 );
 
 const storageWrites: Array<string> = [];
@@ -149,5 +154,44 @@ describe('screen share content hint default', () => {
 		VoiceSettings.updateSettings({screenShareContentHint: 'auto'});
 		expect(VoiceSettings.getScreenShareContentHint()).toBe('auto');
 		expect(VoiceSettings.getScreenShareContentHintOverride()).toBeUndefined();
+	});
+});
+
+describe('stored video quality preferences', () => {
+	it('retires a stored 240p screen share preference to 480p on first launch', () => {
+		const migrated = JSON.parse(storageWrites[0]);
+		expect(migrated.screenshareResolution).toBe('low_480p');
+		expect(VoiceSettings.screenshareResolution).toBe('low_480p');
+	});
+
+	it('upgrades a retired 240p patch to 480p', () => {
+		VoiceSettings.updateSettings({screenshareResolution: 'low_240p'});
+		expect(VoiceSettings.screenshareResolution).toBe('low_480p');
+	});
+
+	it('keeps premium video quality choices stored while the entitlement is missing', () => {
+		VoiceSettings.updateSettings({screenshareResolution: 'ultra', cameraResolution: 'high', videoFrameRate: 60});
+		VoiceSettings.updateSettings({outputDeviceId: 'default'});
+		expect(VoiceSettings.screenshareResolution).toBe('ultra');
+		expect(VoiceSettings.cameraResolution).toBe('high');
+		expect(VoiceSettings.videoFrameRate).toBe(60);
+	});
+
+	it('still hands out free-tier video quality while the entitlement is missing', () => {
+		VoiceSettings.updateSettings({screenshareResolution: 'ultra', cameraResolution: 'high', videoFrameRate: 60});
+		expect(VoiceSettings.getScreenshareResolution()).toBe('medium');
+		expect(VoiceSettings.getCameraResolution()).toBe('medium');
+		expect(VoiceSettings.getVideoFrameRate()).toBe(30);
+	});
+
+	it('keeps every stored background image while the entitlement is missing', () => {
+		const images = [1, 2, 3, 4, 5].map((index) => ({id: `background-${index}`, createdAt: index}));
+		runInAction(() => {
+			VoiceSettings.backgroundImages = images;
+		});
+		VoiceSettings.updateSettings({outputDeviceId: 'default'});
+		expect(VoiceSettings.backgroundImages).toHaveLength(5);
+		VoiceSettings.updateSettings({backgroundImages: images.slice(0, 4)});
+		expect(VoiceSettings.backgroundImages).toHaveLength(4);
 	});
 });

@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI, supportsDesktopScreenShareAudioCapture} from '@app/features/ui/utils/NativeUtils';
-import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
@@ -49,6 +46,7 @@ import {
 	ScreenSharePortalUnavailableError,
 } from '@app/features/voice/utils/ScreenSharePortalUnavailableError';
 import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import type {NativeAudioStartOptions, VirtmicNode} from '@app/types/electron.d';
 import type {ScreenShareCaptureOptions, VideoCodec} from 'livekit-client';
 
@@ -152,18 +150,6 @@ export async function stopActiveLinuxScreenShareAudioLink(): Promise<boolean> {
 	return true;
 }
 
-function hasHigherVideoQuality(): boolean {
-	return isLimitToggleEnabled(
-		{
-			feature_higher_video_quality: LimitResolver.resolve({
-				key: 'feature_higher_video_quality',
-				fallback: 0,
-			}),
-		},
-		'feature_higher_video_quality',
-	);
-}
-
 function didScreenShareStart(): boolean {
 	return Boolean(MediaEngine.room?.localParticipant?.isScreenShareEnabled || LocalVoiceState.getSelfStream());
 }
@@ -175,25 +161,6 @@ function getScreenShareContentSource(
 	if (shareContext === 'device') return 'device';
 	if (preferredDisplaySurface === 'window') return 'app';
 	return 'display';
-}
-
-export function normaliseDeviceScreenShareSettings(): void {
-	const nextStreamingMode = normaliseStreamingModeForContext(VoiceSettings.getStreamingMode(), 'device');
-	const nextResolution = normaliseResolutionForContext(
-		VoiceSettings.getScreenshareResolution(),
-		'device',
-		hasHigherVideoQuality(),
-	);
-	if (
-		nextStreamingMode === VoiceSettings.getStreamingMode() &&
-		nextResolution === VoiceSettings.getScreenshareResolution()
-	) {
-		return;
-	}
-	VoiceSettingsCommands.update({
-		streamingMode: nextStreamingMode,
-		screenshareResolution: nextResolution,
-	});
 }
 
 function shouldIncludeAudioForShare(
@@ -695,7 +662,6 @@ export async function switchConfiguredDisplayScreenShare(
 
 export async function startConfiguredDeviceScreenShare(videoDeviceId: string): Promise<boolean> {
 	return scheduleConfiguredScreenShareMutation(async () => {
-		normaliseDeviceScreenShareSettings();
 		const {captureOptions, publishOptions, includeAudio, audioDeviceId} = getConfiguredScreenShareOptions(
 			'device',
 			'desktop-custom',
@@ -723,7 +689,6 @@ export async function startConfiguredDeviceScreenShare(videoDeviceId: string): P
 
 export async function switchConfiguredDeviceScreenShare(videoDeviceId: string): Promise<boolean> {
 	return scheduleConfiguredScreenShareMutation(async () => {
-		normaliseDeviceScreenShareSettings();
 		const {captureOptions, publishOptions, includeAudio, audioDeviceId} = getConfiguredScreenShareOptions(
 			'device',
 			'desktop-custom',

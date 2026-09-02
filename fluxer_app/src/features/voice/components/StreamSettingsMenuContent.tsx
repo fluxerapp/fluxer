@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
@@ -52,6 +50,7 @@ import {
 	type StreamSettingsShareContext,
 	shouldReconfigureLinuxAudioForActiveStreamSettings,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {hasHigherVideoQuality as resolveHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {formatVoiceAudioDeviceLabel} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
@@ -83,8 +82,8 @@ const RAZOR_SHARP_TEXT_AT_NATIVE_SOURCE_15_FPS_DESCRIPTOR = msg({
 	comment:
 		'Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.',
 });
-const SHARPER_TEXT_AT_720P_15_FPS_DESCRIPTOR = msg({
-	message: 'Sharper text at 720p, 15 FPS',
+const SHARPER_TEXT_AT_720P_30_FPS_DESCRIPTOR = msg({
+	message: 'Sharper text at 720p, 30 FPS',
 	comment:
 		'Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.',
 });
@@ -187,19 +186,7 @@ const PremiumBadge = () => (
 );
 
 export function useHasHigherVideoQuality(): boolean {
-	return useMemo(
-		() =>
-			isLimitToggleEnabled(
-				{
-					feature_higher_video_quality: LimitResolver.resolve({
-						key: 'feature_higher_video_quality',
-						fallback: 0,
-					}),
-				},
-				'feature_higher_video_quality',
-			),
-		[],
-	);
+	return resolveHigherVideoQuality();
 }
 
 function supportsStreamAudioCapture(shareContext: StreamSettingsShareContext): boolean {
@@ -437,7 +424,7 @@ export const StreamSettingsMenuContent = observer(
 					label: i18n._(SCREENSHARE_DESCRIPTOR),
 					description: hasHigherVideoQuality
 						? i18n._(RAZOR_SHARP_TEXT_AT_NATIVE_SOURCE_15_FPS_DESCRIPTOR)
-						: i18n._(SHARPER_TEXT_AT_720P_15_FPS_DESCRIPTOR),
+						: i18n._(SHARPER_TEXT_AT_720P_30_FPS_DESCRIPTOR),
 					isPremium: false,
 				});
 			}
@@ -451,7 +438,6 @@ export const StreamSettingsMenuContent = observer(
 		}, [isDeviceShare, hasHigherVideoQuality, i18n.locale]);
 		const resolutionOptions: Array<Option<ScreenshareResolution>> = useMemo(() => {
 			const options: Array<Option<ScreenshareResolution>> = [
-				{value: 'low_240p', label: '240p', isPremium: false},
 				{value: 'low_480p', label: '480p', isPremium: false},
 				{value: 'medium', label: '720p', isPremium: false},
 			];
@@ -575,6 +561,10 @@ export const StreamSettingsMenuContent = observer(
 			? formatVoiceAudioDeviceLabel(i18n, selectedAudioDevice, i18n._(UNNAMED_INPUT_DESCRIPTOR))
 			: i18n._(SYSTEM_DEFAULT_DESCRIPTOR);
 		if (variant === 'compactLive') {
+			const presetQuality =
+				currentMode === 'custom'
+					? null
+					: resolveStreamingModeSettings(effectiveMode, currentResolution, currentFrameRate, true);
 			const selectCompactResolution = (option: Option<ScreenshareResolution>) => {
 				if (option.isPremium && !hasHigherVideoQuality) {
 					if (showPremiumFeatures) PremiumModalCommands.open();
@@ -584,7 +574,7 @@ export const StreamSettingsMenuContent = observer(
 				VoiceSettingsCommands.update({
 					streamingMode: 'custom',
 					screenshareResolution: option.value,
-					videoFrameRate: effectiveQuality.frameRate,
+					...(presetQuality ? {videoFrameRate: presetQuality.frameRate} : {}),
 				});
 				runApply();
 			};
@@ -596,7 +586,7 @@ export const StreamSettingsMenuContent = observer(
 				if (currentMode === 'custom' && effectiveQuality.frameRate === option.value) return;
 				VoiceSettingsCommands.update({
 					streamingMode: 'custom',
-					screenshareResolution: effectiveQuality.resolution,
+					...(presetQuality ? {screenshareResolution: presetQuality.resolution} : {}),
 					videoFrameRate: option.value,
 				});
 				runApply();

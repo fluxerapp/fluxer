@@ -1119,7 +1119,7 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} 需要存取您的麥克風。請在作業系統的隱私設定中允許麥克風存取，然後重新啟動應用程式。"
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:46
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:45
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} 需要相機存取權限才能列出您的裝置。"
 
@@ -1698,7 +1698,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:103
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1779,7 +1779,7 @@ msgid "3 months"
 msgstr "3 個月"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:107
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1844,7 +1844,7 @@ msgid "6-digit code"
 msgstr "6 位數驗證碼"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:111
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2315,7 +2315,7 @@ msgid "Actual size"
 msgstr "實際尺寸"
 
 #. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:143
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
 msgid "Adaptive quality"
 msgstr "自動調整畫質"
 
@@ -2775,7 +2775,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "調整應用程式的整體縮放等級。使用 {zoomIn} / {zoomOut} 可快速調整。"
 
 #. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
 msgid "Adjusted to {resolution} {frameRate} FPS"
 msgstr "已調整為 {resolution} {frameRate} FPS"
 
@@ -2800,7 +2800,7 @@ msgid "Advanced"
 msgstr "進階"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:84
 msgid "Advanced video settings"
 msgstr "進階影片設定"
 
@@ -2998,7 +2998,7 @@ msgstr "允許"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "允許 {everyoneMention} 和 {hereMention}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:216
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:205
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "在「{MACOS_SYSTEM_SETTINGS_NAME}」→「{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME}」→「{MACOS_CAMERA_PERMISSION_NAME}」中允許 {PRODUCT_NAME} 存取您的相機。"
 
@@ -3045,7 +3045,7 @@ msgstr "允許機器人傳送私人訊息"
 msgid "Allow bots to send you direct messages?"
 msgstr "允許機器人傳送私人訊息給您？"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:225
 msgid "Allow camera"
 msgstr "允許使用相機"
 
@@ -3704,7 +3704,7 @@ msgid "App state"
 msgstr "應用程式狀態"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
 msgid "App window"
 msgstr "應用程式視窗"
 
@@ -3797,7 +3797,7 @@ msgstr "應用程式已成功更新"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
 msgid "Applications"
 msgstr "應用程式"
 
@@ -4118,7 +4118,7 @@ msgid "Audio boost"
 msgstr "語音增強"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:127
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
 msgid "Audio device"
 msgstr "音訊裝置"
 
@@ -4138,7 +4138,7 @@ msgid "Audio level"
 msgstr "音量"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
 msgid "Audio muted"
 msgstr "音訊已靜音"
 
@@ -4213,7 +4213,7 @@ msgid "Audio send:"
 msgstr "音訊傳送："
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:139
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
 msgid "Audio settings"
 msgstr "語音設定"
 
@@ -5571,7 +5571,7 @@ msgstr "通話"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:719
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:157
 #: src/features/voice/utils/SettingsDeviceOptions.ts:23
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:10
@@ -5579,12 +5579,12 @@ msgid "Camera"
 msgstr "相機"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
 msgid "Camera access is needed for device previews"
 msgstr "需要相機權限才能預覽裝置"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "相機權限未獲授權。請更新相機權限後再試一次。"
 
@@ -5649,7 +5649,7 @@ msgstr "相機預覽"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:197
 msgid "Camera quality"
 msgstr "相機畫質"
@@ -5845,15 +5845,15 @@ msgstr "驗證碼驗證失敗。請再試一次。"
 msgid "Capture"
 msgstr "擷取"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:407
 msgid "Capture app audio"
 msgstr "擷取應用程式音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:408
 msgid "Capture desktop audio"
 msgstr "擷取桌面音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:406
 msgid "Capture device audio"
 msgstr "擷取裝置音訊"
 
@@ -6119,7 +6119,7 @@ msgid "Change stream"
 msgstr "變更串流"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
 msgid "Change stream source"
 msgstr "變更直播來源"
 
@@ -6758,7 +6758,7 @@ msgid "Choose payment method"
 msgstr "選擇付款方式"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Choose something to share"
 msgstr "選擇要分享的內容"
 
@@ -7160,7 +7160,7 @@ msgid "Cleared the topic."
 msgstr "已清除話題。"
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
 msgid "Clearer text"
 msgstr "清晰文字"
 
@@ -8137,7 +8137,7 @@ msgstr "社群語音加入時的確認或雙擊動作"
 msgid "Conflicts with {conflictLabel}"
 msgstr "與 {conflictLabel} 衝突"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:210
 msgid "Connect a camera and try again."
 msgstr "請連接相機後再試一次。"
 
@@ -8146,7 +8146,7 @@ msgstr "請連接相機後再試一次。"
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "請連接相機或虛擬擷取裝置，然後再試一次。"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
 msgid "Connect a display, then try again."
 msgstr "請連接顯示器後再試一次。"
 
@@ -9823,8 +9823,8 @@ msgstr "目前：{mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:91
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
 msgid "Custom"
 msgstr "自訂"
 
@@ -10372,7 +10372,7 @@ msgid "Default"
 msgstr "預設"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:148
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
 msgid "Default camera"
 msgstr "預設相機"
 
@@ -11065,7 +11065,7 @@ msgstr "裝置詳細資訊"
 msgid "Device revoked"
 msgstr "裝置已撤銷"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1044
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1030
 msgid "Device selection"
 msgstr "選擇裝置"
 
@@ -11089,12 +11089,12 @@ msgstr "裝置："
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
 msgid "Devices"
 msgstr "裝置"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:95
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
 msgid "Dial in your own numbers"
 msgstr "撥打您自己的號碼"
 
@@ -11197,7 +11197,7 @@ msgstr "直接上傳已啟用"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:269
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Disable"
 msgstr "停用"
 
@@ -11396,7 +11396,7 @@ msgid "Disabled value"
 msgstr "已停用值"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:317
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:316
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "停用預覽功能會停止後續的預覽圖片上傳。已上傳的預覽圖片可能會繼續顯示，直到直播結束或預覽重新整理為止。"
 
@@ -11540,7 +11540,7 @@ msgstr "關閉提及"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:12
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:12
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
 msgid "Display"
 msgstr "顯示"
 
@@ -12716,7 +12716,7 @@ msgid "Enable browser notifications"
 msgstr "啟用瀏覽器通知"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "啟用相機權限，以便在選擇要串流的相機和擷取裝置前預覽它們。"
 
@@ -12827,7 +12827,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "啟用或停用內建翻譯工具。啟用後，當您選取文字時，翻譯工具會顯示在訊息的內容選單中。"
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
 msgid "Enable previews"
 msgstr "啟用預覽"
 
@@ -13287,7 +13287,7 @@ msgid "Entertainment"
 msgstr "娛樂"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
 msgid "Entire screen"
 msgstr "整個畫面"
 
@@ -13900,7 +13900,7 @@ msgid "Failed to load invites. Try again."
 msgstr "載入邀請失敗。請再試一次。"
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:117
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Failed to load shareable sources."
 msgstr "無法載入可分享的來源。"
 
@@ -14453,12 +14453,12 @@ msgid "Flexible text channel names"
 msgstr "彈性的文字頻道名稱"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:68
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "1440p 60 FPS 流暢動作"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:73
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "720p 30 FPS 流暢動作"
 
@@ -14545,7 +14545,7 @@ msgstr "資料夾設定"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "在 {blueskyProviderName} 上追蹤我們"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:839
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:825
 msgid "Follow voice input"
 msgstr "跟隨語音輸入"
 
@@ -14815,14 +14815,14 @@ msgstr "外框"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
 msgid "Frame rate"
 msgstr "影格率"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "高於 30 FPS 的影格速率需要 {premiumProductName}"
 
@@ -15063,8 +15063,8 @@ msgstr "遊戲控制器"
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
 msgid "Gaming"
 msgstr "遊戲"
 
@@ -15564,7 +15564,7 @@ msgstr "已授予 {0}。"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "授予所有權限並繞過頻道限制。高度敏感。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1031
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1017
 msgid "Granular selection"
 msgstr "精細選取"
 
@@ -16128,7 +16128,7 @@ msgstr "隱藏密碼"
 msgid "Hide picture-in-picture popout?"
 msgstr "要隱藏子母畫面嗎？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
 msgid "Hide preview thumbnail"
 msgstr "隱藏預覽縮圖"
 
@@ -16573,11 +16573,11 @@ msgstr "忽略"
 msgid "Ignore friend request"
 msgstr "忽略好友邀請"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1021
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Ignore hardware devices"
 msgstr "忽略硬體裝置"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
 msgid "Ignore input media"
 msgstr "忽略輸入媒體"
 
@@ -16603,7 +16603,7 @@ msgstr "忽略垃圾訊息標記"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "要忽略來自 {displayName} 的交友邀請嗎？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1008
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Ignore virtual"
 msgstr "忽略虛擬裝置"
 
@@ -18147,7 +18147,7 @@ msgid "Layering for AV1 and VP9 when available."
 msgstr "適用於 AV1 和 VP9 的分層處理（如果可用）。"
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:273
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Learn about screen share previews"
 msgstr "了解螢幕分享預覽功能"
 
@@ -20009,7 +20009,7 @@ msgstr "需要麥克風權限"
 msgid "Microphone test"
 msgstr "麥克風測試"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:952
 msgid "Microphone workaround"
 msgstr "麥克風問題排除"
 
@@ -20073,7 +20073,7 @@ msgstr "未成年人風險、不當的成人內容或不必要的行為。"
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:76
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
 #: src/features/voice/components/VoiceSettingsMenus.tsx:112
 msgid "Mirror camera"
@@ -21206,7 +21206,7 @@ msgstr "找不到進階設定"
 msgid "No AFK channel"
 msgstr "沒有閒置頻道"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "No application windows found"
 msgstr "找不到應用程式視窗"
 
@@ -21265,7 +21265,7 @@ msgstr "沒有書籤"
 msgid "No bot banner"
 msgstr "沒有機器人橫幅"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:212
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:201
 msgid "No camera found"
 msgstr "找不到相機"
 
@@ -21355,7 +21355,7 @@ msgstr "沒有說明。"
 msgid "No desktop update is available."
 msgstr "沒有可用的桌面版更新。"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:126
 msgid "No displays found"
 msgstr "找不到顯示器"
 
@@ -22146,7 +22146,7 @@ msgstr "僅適用於寬螢幕。"
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "僅接受信用卡。簽帳金融卡和預付卡無法用於成人內容驗證。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:972
 msgid "Only default speakers"
 msgstr "僅限預設揚聲器"
 
@@ -22194,7 +22194,7 @@ msgstr "請僅在您完全了解其作用時，才在此處執行程式碼。"
 msgid "Only show message previews for DMs with unread messages"
 msgstr "只顯示有未讀訊息的私訊預覽"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:976
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:962
 msgid "Only speakers"
 msgstr "只有發言人"
 
@@ -22299,11 +22299,11 @@ msgid "Open @{displayName}"
 msgstr "開啟 @{displayName}"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:88
 msgid "Open advanced media settings"
 msgstr "開啟進階媒體設定"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:123
 msgid "Open an application window, then try again."
 msgstr "開啟應用程式視窗後，請再試一次。"
 
@@ -22366,7 +22366,7 @@ msgid "Open browser"
 msgstr "開啟瀏覽器"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
 msgid "Open browser picker"
 msgstr "開啟瀏覽器選取器"
 
@@ -22634,7 +22634,7 @@ msgid "Open system DM"
 msgstr "開啟系統私訊"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
 msgid "Open system picker"
 msgstr "開啟系統選取器"
 
@@ -24031,17 +24031,17 @@ msgid "Preview hidden"
 msgstr "預覽已隱藏"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:311
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:310
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "預覽圖片會由 {productName} 暫時儲存，以便傳送，且不會進行端對端加密。如果您不希望上傳螢幕分享畫面以產生縮圖，請停用預覽功能。"
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:305
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:304
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "預覽圖片會由 {productName} 暫時儲存，以便傳送，且不會進行端對端加密。此群組聊天中的成員不需要主動觀看您的畫面串流，即可看到縮圖。"
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:299
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:298
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "預覽圖片會由 {productName} 暫時儲存，以便傳送，且不會進行端對端加密。人們仍然需要獲得權限才能連線，但他們不需要主動觀看您的直播。"
 
@@ -24756,7 +24756,7 @@ msgid "Raw embed JSON"
 msgstr "原始嵌入 JSON"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:81
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "原始畫質的清晰文字，15 FPS"
 
@@ -26364,7 +26364,7 @@ msgstr "視窗大小調整、最大化和視窗貼齊功能取決於合成器。
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:119
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
 msgid "Resolution"
 msgstr "解析度"
 
@@ -27061,7 +27061,7 @@ msgstr "需要螢幕錄影權限"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:77
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
 msgid "Screen share"
 msgstr "分享螢幕"
 
@@ -27076,7 +27076,7 @@ msgid "Screen share audio boost"
 msgstr "螢幕分享音訊增強"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
 msgid "Screen share audio couldn't start"
 msgstr "無法啟動螢幕共用音訊"
 
@@ -27117,17 +27117,17 @@ msgid "Screen share preview behavior"
 msgstr "螢幕分享預覽行為"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:277
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Screen share previews"
 msgstr "螢幕分享預覽"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:265
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
 msgid "Screen share previews are disabled."
 msgstr "螢幕分享預覽已停用。"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:261
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
 msgid "Screen share previews are enabled."
 msgstr "螢幕分享預覽已啟用。"
 
@@ -27138,7 +27138,7 @@ msgstr "螢幕畫面分享隱私設定"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:80
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:209
 msgid "Screen share quality"
 msgstr "螢幕分享畫質"
@@ -27208,7 +27208,7 @@ msgid "Screen sharing quality"
 msgstr "螢幕分享畫質"
 
 #. Footer summary label for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
 msgid "Screenshare"
 msgstr "螢幕分享"
 
@@ -27680,7 +27680,7 @@ msgstr "預覽"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:196
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
 msgid "Select"
 msgstr "選擇"
 
@@ -28530,7 +28530,7 @@ msgid "Share gift"
 msgstr "分享禮物"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
 msgid "Share screen"
 msgstr "分享螢幕"
 
@@ -28540,7 +28540,7 @@ msgid "Share screens and windows."
 msgstr "分享螢幕和視窗。"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
 msgid "Share stream audio"
 msgstr "分享直播音訊"
 
@@ -28576,7 +28576,7 @@ msgstr "分享給社群版主."
 msgid "Share your screen"
 msgstr "分享你的螢幕"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:294
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "以高畫質 (1080p)、Quad HD (1440p) 或原始解析度分享你的螢幕，幀率最高可達 60 FPS。"
 
@@ -28610,9 +28610,9 @@ msgid "Sharing personal information"
 msgstr "分享個人資訊"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:86
-msgid "Sharper text at 720p, 15 FPS"
-msgstr "720p、15 FPS 讓文字更清晰"
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+msgid "Sharper text at 720p, 30 FPS"
+msgstr "720p、30 FPS 時文字更清晰"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:189
@@ -29633,7 +29633,7 @@ msgid "Smooth scrolling"
 msgstr "平滑捲動"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:237
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
 msgid "Smoother video"
 msgstr "更流暢的影片"
 
@@ -29904,9 +29904,9 @@ msgstr "音效"
 #. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:66
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:99
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
 msgid "Source"
 msgstr "來源"
 
@@ -30270,7 +30270,7 @@ msgstr "要開始語音通話嗎？"
 msgid "Start call"
 msgstr "開始通話"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:255
 msgid "Start camera test and configure effects"
 msgstr "開始相機測試並設定效果"
 
@@ -30618,7 +30618,7 @@ msgstr "避免喇叭的聲音回傳到你的麥克風。"
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:235
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
 msgid "Stream"
 msgstr "直播"
 
@@ -30647,12 +30647,12 @@ msgid "Stream preview"
 msgstr "直播預覽"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
 msgid "Stream quality"
 msgstr "直播畫質"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:221
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
 msgid "Stream settings"
 msgstr "直播設定"
 
@@ -30673,7 +30673,7 @@ msgid "Streaming"
 msgstr "直播中"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:115
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
 msgid "Streaming mode"
 msgstr "直播模式"
 
@@ -31126,8 +31126,8 @@ msgstr "來自 {productName} 團隊的系統公告。您無法在此回覆。"
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:253
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:131
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
 msgid "System default"
 msgstr "系統預設"
 
@@ -31578,7 +31578,7 @@ msgid "The bot has been added."
 msgstr "已新增機器人。"
 
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "相機預覽仍在停止中。請稍後再試一次串流。"
 
@@ -32197,7 +32197,7 @@ msgid "This install is managed by your system. Update {productName} from your so
 msgstr "這個安裝是由您的系統管理。請從您的軟體中心或套件管理器更新 {productName}。"
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:58
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:57
 msgid "This instance currently allows screen share up to 720p at 30 FPS."
 msgstr "此伺服器目前支援最高 720p、30 FPS 的螢幕分享。"
 
@@ -32414,7 +32414,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "此電話號碼已被使用。請嘗試其他號碼或聯絡客服。"
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:132
 msgid "This picker is only available in the desktop app."
 msgstr "此選擇器僅適用於電腦版應用程式。"
 
@@ -33359,7 +33359,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "關閉您不希望開啟的項目。部分功能可能會停止運作。"
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "關閉此來源的音訊分享，或稍後再試。"
 
@@ -34012,7 +34012,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "使用 {premiumProductName} 在私訊中解鎖自訂表情符號"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:50
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:49
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "使用 {premiumProductName} 解鎖高畫質螢幕分享"
 
@@ -34145,8 +34145,8 @@ msgstr "未命名群組"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:257
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:135
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
 msgid "Unnamed input"
 msgstr "未命名的輸入"
 
@@ -34612,7 +34612,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "上傳新的表情符號和貼圖，並管理你自己的創作。"
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:323
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:322
 msgid "Upload preview frames for screen shares."
 msgstr "上傳螢幕分享的預覽畫面。"
 
@@ -36907,17 +36907,17 @@ msgid "When posted as links to chat"
 msgstr "當以連結形式發佈到聊天室時"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:287
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "啟用預覽時，{productName} 會不定期上傳您螢幕分享的 JPEG 格式畫面，以便此群組聊天中的其他人可以在觀看之前看到縮圖。"
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:281
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "啟用預覽時，{productName} 會不定期上傳您螢幕分享的 JPEG 格式畫面，讓擁有權限連接到此語音頻道的使用者可以在觀看之前看到縮圖。"
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:293
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:292
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "啟用預覽時，{productName} 會不定期上傳您螢幕分享的 JPEG 格式畫面，讓此一對一聊天中的對方在觀看之前可以看到縮圖。"
 

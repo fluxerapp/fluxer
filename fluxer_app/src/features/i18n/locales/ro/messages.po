@@ -1119,7 +1119,7 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} are nevoie de acces la microfonul tău. Permite accesul la microfon în setările de confidențialitate ale sistemului de operare și repornește aplicația."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:46
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:45
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} are nevoie de acces la cameră pentru a-ți afișa dispozitivele."
 
@@ -1698,7 +1698,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:103
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1779,7 +1779,7 @@ msgid "3 months"
 msgstr "3 luni"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:107
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1844,7 +1844,7 @@ msgid "6-digit code"
 msgstr "Cod din 6 cifre"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:111
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2315,7 +2315,7 @@ msgid "Actual size"
 msgstr "Dimensiune reală"
 
 #. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:143
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
 msgid "Adaptive quality"
 msgstr "Calitate adaptivă"
 
@@ -2775,7 +2775,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "Ajustează nivelul general de zoom al aplicației. Folosește {zoomIn} / {zoomOut} pentru a ajusta rapid."
 
 #. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
 msgid "Adjusted to {resolution} {frameRate} FPS"
 msgstr "Ajustat la {resolution} {frameRate} FPS"
 
@@ -2800,7 +2800,7 @@ msgid "Advanced"
 msgstr "Avansat"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:84
 msgid "Advanced video settings"
 msgstr "Setări video avansate"
 
@@ -2998,7 +2998,7 @@ msgstr "Permite"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Permite {everyoneMention} și {hereMention}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:216
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:205
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Permiteți aplicației {PRODUCT_NAME} să vă acceseze camera în {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
@@ -3045,7 +3045,7 @@ msgstr "Permite mesaje directe de la boți"
 msgid "Allow bots to send you direct messages?"
 msgstr "Permiți roboților să-ți trimită mesaje directe?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:225
 msgid "Allow camera"
 msgstr "Permite accesul la cameră"
 
@@ -3704,7 +3704,7 @@ msgid "App state"
 msgstr "Stare aplicație"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
 msgid "App window"
 msgstr "Fereastră aplicație"
 
@@ -3797,7 +3797,7 @@ msgstr "Aplicație actualizată cu succes"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
 msgid "Applications"
 msgstr "Aplicații"
 
@@ -4118,7 +4118,7 @@ msgid "Audio boost"
 msgstr "Amplificare audio"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:127
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
 msgid "Audio device"
 msgstr "Dispozitiv audio"
 
@@ -4138,7 +4138,7 @@ msgid "Audio level"
 msgstr "Nivel audio"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
 msgid "Audio muted"
 msgstr "Audio dezactivat"
 
@@ -4213,7 +4213,7 @@ msgid "Audio send:"
 msgstr "Trimitere audio:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:139
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
 msgid "Audio settings"
 msgstr "Setări audio"
 
@@ -5571,7 +5571,7 @@ msgstr "Apeluri"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:719
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:157
 #: src/features/voice/utils/SettingsDeviceOptions.ts:23
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:10
@@ -5579,12 +5579,12 @@ msgid "Camera"
 msgstr "Cameră"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
 msgid "Camera access is needed for device previews"
 msgstr "Este necesar accesul la cameră pentru previzualizări de dispozitive"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "Accesul la cameră nu a fost acordat. Actualizează permisiunile camerei și încearcă din nou."
 
@@ -5649,7 +5649,7 @@ msgstr "Previzualizare cameră"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:197
 msgid "Camera quality"
 msgstr "Calitatea camerei"
@@ -5845,15 +5845,15 @@ msgstr "Verificarea Captcha a eșuat. Încearcă din nou."
 msgid "Capture"
 msgstr "Captură"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:407
 msgid "Capture app audio"
 msgstr "Capturați sunetul aplicației"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:408
 msgid "Capture desktop audio"
 msgstr "Capturați sunetul de pe desktop"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:406
 msgid "Capture device audio"
 msgstr "Capturați sunetul dispozitivului"
 
@@ -6119,7 +6119,7 @@ msgid "Change stream"
 msgstr "Schimbă fluxul"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
 msgid "Change stream source"
 msgstr "Schimbă sursa fluxului"
 
@@ -6758,7 +6758,7 @@ msgid "Choose payment method"
 msgstr "Alege metoda de plată"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Choose something to share"
 msgstr "Alege ce să partajezi"
 
@@ -7160,7 +7160,7 @@ msgid "Cleared the topic."
 msgstr "A șters subiectul."
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
 msgid "Clearer text"
 msgstr "Text mai clar"
 
@@ -8137,7 +8137,7 @@ msgstr "Confirmare sau dublu clic pentru a te alătura unui canal vocal."
 msgid "Conflicts with {conflictLabel}"
 msgstr "Intră în conflict cu {conflictLabel}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:210
 msgid "Connect a camera and try again."
 msgstr "Conectează o cameră și încearcă din nou."
 
@@ -8146,7 +8146,7 @@ msgstr "Conectează o cameră și încearcă din nou."
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "Conectează o cameră sau un dispozitiv de captură virtual, apoi încearcă din nou."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
 msgid "Connect a display, then try again."
 msgstr "Conectează un ecran, apoi încearcă din nou."
 
@@ -9823,8 +9823,8 @@ msgstr "Momentan: {mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:91
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
 msgid "Custom"
 msgstr "Personalizat"
 
@@ -10372,7 +10372,7 @@ msgid "Default"
 msgstr "Implicit"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:148
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
 msgid "Default camera"
 msgstr "Cameră implicită"
 
@@ -11065,7 +11065,7 @@ msgstr "Detalii dispozitiv"
 msgid "Device revoked"
 msgstr "Dispozitiv revocat"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1044
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1030
 msgid "Device selection"
 msgstr "Selectare dispozitiv"
 
@@ -11089,12 +11089,12 @@ msgstr "Dispozitiv:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
 msgid "Devices"
 msgstr "Dispozitive"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:95
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
 msgid "Dial in your own numbers"
 msgstr "Apelați propriile numere"
 
@@ -11197,7 +11197,7 @@ msgstr "Încărcare directă activă"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:269
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Disable"
 msgstr "Dezactivează"
 
@@ -11396,7 +11396,7 @@ msgid "Disabled value"
 msgstr "Valoare dezactivată"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:317
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:316
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "Dezactivarea previzualizărilor oprește încărcările viitoare de previzualizări. Imaginile de previzualizare existente pot rămâne vizibile până la încheierea transmiterii sau până la actualizarea previzualizării."
 
@@ -11540,7 +11540,7 @@ msgstr "Ignoră mențiunea"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:12
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:12
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
 msgid "Display"
 msgstr "Afișare"
 
@@ -12716,7 +12716,7 @@ msgid "Enable browser notifications"
 msgstr "Activează notificările în browser"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "Activează accesul la cameră pentru a previzualiza camerele și dispozitivele de captură înainte de a alege unul pentru a-l transmite."
 
@@ -12827,7 +12827,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "Activează sau dezactivează traductoarele încorporate. Traductoarele activate apar în meniul contextual al mesajului când este selectat text."
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
 msgid "Enable previews"
 msgstr "Activare previzualizări"
 
@@ -13287,7 +13287,7 @@ msgid "Entertainment"
 msgstr "Divertisment"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
 msgid "Entire screen"
 msgstr "Întregul ecran"
 
@@ -13900,7 +13900,7 @@ msgid "Failed to load invites. Try again."
 msgstr "Nu s-au putut încărca invitațiile. Încearcă din nou."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:117
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Failed to load shareable sources."
 msgstr "Nu s-au putut încărca sursele partajabile."
 
@@ -14453,12 +14453,12 @@ msgid "Flexible text channel names"
 msgstr "Nume flexibile pentru canalele text"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:68
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "Mișcare fluidă la 1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:73
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "Mișcare fluidă la 720p 30 FPS"
 
@@ -14545,7 +14545,7 @@ msgstr "Setări dosar"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Urmărește-ne pe {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:839
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:825
 msgid "Follow voice input"
 msgstr "Urmărește intrarea vocală"
 
@@ -14815,14 +14815,14 @@ msgstr "Ramă"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
 msgid "Frame rate"
 msgstr "Frecvență cadre"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Ratele de cadre peste 30 FPS necesită {premiumProductName}"
 
@@ -15063,8 +15063,8 @@ msgstr "Controler de joc"
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
 msgid "Gaming"
 msgstr "Jocuri"
 
@@ -15564,7 +15564,7 @@ msgstr "S-a acordat {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Acordă toate permisiunile și ocolește restricțiile canalului. Foarte sensibil."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1031
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1017
 msgid "Granular selection"
 msgstr "Selecție granulară"
 
@@ -16128,7 +16128,7 @@ msgstr "Ascunde parola"
 msgid "Hide picture-in-picture popout?"
 msgstr "Ascunzi fereastra pop-out imagine-în-imagine?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
 msgid "Hide preview thumbnail"
 msgstr "Ascunde miniatura de previzualizare"
 
@@ -16573,11 +16573,11 @@ msgstr "Ignoră"
 msgid "Ignore friend request"
 msgstr "Ignoră cererea de prietenie"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1021
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Ignore hardware devices"
 msgstr "Ignoră dispozitivele hardware"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
 msgid "Ignore input media"
 msgstr "Ignoră media de intrare"
 
@@ -16603,7 +16603,7 @@ msgstr "Ignoră semnalarea ca spam"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Ignori cererea de prietenie de la {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1008
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Ignore virtual"
 msgstr "Ignoră virtualul"
 
@@ -18147,7 +18147,7 @@ msgid "Layering for AV1 and VP9 when available."
 msgstr "Stratificare pentru AV1 și VP9, dacă sunt disponibile."
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:273
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Learn about screen share previews"
 msgstr "Află mai multe despre previzualizarea partajării ecranului"
 
@@ -20009,7 +20009,7 @@ msgstr "Este necesară permisiunea pentru microfon"
 msgid "Microphone test"
 msgstr "Test microfon"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:952
 msgid "Microphone workaround"
 msgstr "Soluție microfon"
 
@@ -20073,7 +20073,7 @@ msgstr "Minori în pericol, conținut matur în locuri nepotrivite sau comportam
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:76
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
 #: src/features/voice/components/VoiceSettingsMenus.tsx:112
 msgid "Mirror camera"
@@ -21206,7 +21206,7 @@ msgstr "Nu au fost găsite setări avansate"
 msgid "No AFK channel"
 msgstr "Fără canal AFK"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "No application windows found"
 msgstr "Nu au fost găsite ferestre de aplicații"
 
@@ -21265,7 +21265,7 @@ msgstr "Fără marcaje"
 msgid "No bot banner"
 msgstr "Fără banner bot"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:212
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:201
 msgid "No camera found"
 msgstr "Nicio cameră găsită"
 
@@ -21355,7 +21355,7 @@ msgstr "Fără descriere."
 msgid "No desktop update is available."
 msgstr "Nicio actualizare pentru desktop nu este disponibilă."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:126
 msgid "No displays found"
 msgstr "Niciun afișaj găsit"
 
@@ -22146,7 +22146,7 @@ msgstr "Se aplică doar pe ecrane late."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Sunt acceptate doar cardurile de credit. Cardurile de debit și preplătite nu pot fi utilizate pentru verificarea conținutului matur."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:972
 msgid "Only default speakers"
 msgstr "Doar difuzoare implicite"
 
@@ -22194,7 +22194,7 @@ msgstr "Rulează cod aici doar dacă înțelegi exact ce face."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Afișează previzualizările mesajelor doar pentru DM-urile cu mesaje necitite"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:976
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:962
 msgid "Only speakers"
 msgstr "Doar vorbitori"
 
@@ -22299,11 +22299,11 @@ msgid "Open @{displayName}"
 msgstr "Deschide @{displayName}"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:88
 msgid "Open advanced media settings"
 msgstr "Deschide setările avansate pentru media"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:123
 msgid "Open an application window, then try again."
 msgstr "Deschide o fereastră de aplicație, apoi încearcă din nou."
 
@@ -22366,7 +22366,7 @@ msgid "Open browser"
 msgstr "Deschide browserul"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
 msgid "Open browser picker"
 msgstr "Deschide selectorul de browser"
 
@@ -22634,7 +22634,7 @@ msgid "Open system DM"
 msgstr "Deschide mesajul direct de sistem"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
 msgid "Open system picker"
 msgstr "Deschide selectorul de sistem"
 
@@ -24031,17 +24031,17 @@ msgid "Preview hidden"
 msgstr "Previzualizare ascunsă"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:311
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:310
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "Imaginile de previzualizare sunt stocate temporar de către {productName} pentru a fi afișate și nu sunt criptate cap la cap. Dezactivează previzualizările dacă nu dorești ca imaginile din timpul partajării ecranului să fie încărcate pentru generarea miniaturilor."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:305
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:304
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "Imaginile de previzualizare sunt stocate temporar de către {productName} pentru a fi afișate și nu sunt criptate cap la cap. Persoanele din acest grup DM nu trebuie să urmărească activ fluxul video pentru a vedea imaginea de previzualizare."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:299
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:298
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "Imaginile de previzualizare sunt stocate temporar de către {productName} pentru a fi afișate și nu sunt criptate cap la cap. Persoanele au nevoie totuși de permisiune pentru a se conecta, dar nu trebuie să urmărească activ fluxul video."
 
@@ -24756,7 +24756,7 @@ msgid "Raw embed JSON"
 msgstr "JSON brut pentru încorporare"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:81
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "Text clar la rezoluția sursă, 15 FPS"
 
@@ -26364,7 +26364,7 @@ msgstr "Redimensionarea, maximizarea și fixarea ferestrei depind de compozitor.
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:119
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
 msgid "Resolution"
 msgstr "Rezoluție"
 
@@ -27061,7 +27061,7 @@ msgstr "Este necesară permisiunea de înregistrare a ecranului"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:77
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
 msgid "Screen share"
 msgstr "Partajare ecran"
 
@@ -27076,7 +27076,7 @@ msgid "Screen share audio boost"
 msgstr "Amplificare audio partajare ecran"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
 msgid "Screen share audio couldn't start"
 msgstr "Audio partajare ecran nu a putut porni"
 
@@ -27117,17 +27117,17 @@ msgid "Screen share preview behavior"
 msgstr "Previzualizare comportament partajare ecran"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:277
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Screen share previews"
 msgstr "Previzualizări pentru partajarea ecranului"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:265
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
 msgid "Screen share previews are disabled."
 msgstr "Previzualizările pentru partajarea ecranului sunt dezactivate."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:261
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
 msgid "Screen share previews are enabled."
 msgstr "Previzualizările pentru partajarea ecranului sunt activate."
 
@@ -27138,7 +27138,7 @@ msgstr "Confidențialitate partajare ecran"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:80
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:209
 msgid "Screen share quality"
 msgstr "Calitatea partajării ecranului"
@@ -27208,7 +27208,7 @@ msgid "Screen sharing quality"
 msgstr "Calitatea partajării ecranului"
 
 #. Footer summary label for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
 msgid "Screenshare"
 msgstr "Partajare ecran"
 
@@ -27680,7 +27680,7 @@ msgstr "Previzualizare"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:196
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
 msgid "Select"
 msgstr "Selectează"
 
@@ -28530,7 +28530,7 @@ msgid "Share gift"
 msgstr "Trimite cadou"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
 msgid "Share screen"
 msgstr "Partajează ecranul"
 
@@ -28540,7 +28540,7 @@ msgid "Share screens and windows."
 msgstr "Partajează ecrane și ferestre."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
 msgid "Share stream audio"
 msgstr "Partajează audio flux"
 
@@ -28576,7 +28576,7 @@ msgstr "Trimite moderatorilor comunității."
 msgid "Share your screen"
 msgstr "Partajează-ți ecranul"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:294
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Partajează-ți ecranul la rezoluție înaltă (1080p), Quad HD (1440p) sau rezoluția sursă nativă, la până la 60 FPS."
 
@@ -28610,9 +28610,9 @@ msgid "Sharing personal information"
 msgstr "Partajarea informațiilor personale"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:86
-msgid "Sharper text at 720p, 15 FPS"
-msgstr "Text mai clar la 720p, 15 FPS"
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+msgid "Sharper text at 720p, 30 FPS"
+msgstr "Text mai clar la 720p, 30 FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:189
@@ -29633,7 +29633,7 @@ msgid "Smooth scrolling"
 msgstr "Derulare lină"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:237
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
 msgid "Smoother video"
 msgstr "Video mai fluid"
 
@@ -29904,9 +29904,9 @@ msgstr "Sunete"
 #. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:66
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:99
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
 msgid "Source"
 msgstr "Sursă"
 
@@ -30270,7 +30270,7 @@ msgstr "Începi un apel vocal?"
 msgid "Start call"
 msgstr "Inițiază apelul"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:255
 msgid "Start camera test and configure effects"
 msgstr "Porniți testul camerei și configurați efectele"
 
@@ -30618,7 +30618,7 @@ msgstr "Oprește sunetul din difuzoare să nu se mai audă în microfon."
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:235
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
 msgid "Stream"
 msgstr "Flux live"
 
@@ -30647,12 +30647,12 @@ msgid "Stream preview"
 msgstr "Previzualizare stream"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
 msgid "Stream quality"
 msgstr "Calitatea fluxului"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:221
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
 msgid "Stream settings"
 msgstr "Setări stream"
 
@@ -30673,7 +30673,7 @@ msgid "Streaming"
 msgstr "Streaming"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:115
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
 msgid "Streaming mode"
 msgstr "Mod de streaming"
 
@@ -31126,8 +31126,8 @@ msgstr "Anunțuri de sistem de la personalul {productName}. Nu poți răspunde a
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:253
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:131
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
 msgid "System default"
 msgstr "Implicit sistem"
 
@@ -31578,7 +31578,7 @@ msgid "The bot has been added."
 msgstr "Robotul a fost adăugat."
 
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "Previzualizarea camerei încă se oprește. Încearcă din nou să transmiti în câteva momente."
 
@@ -32197,7 +32197,7 @@ msgid "This install is managed by your system. Update {productName} from your so
 msgstr "Această instalare este gestionată de sistemul tău. Actualizează {productName} din centrul de software sau prin intermediul managerului de pachete."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:58
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:57
 msgid "This instance currently allows screen share up to 720p at 30 FPS."
 msgstr "Instanța curentă permite partajarea ecranului până la 720p la 30 FPS."
 
@@ -32414,7 +32414,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "Acest număr de telefon a fost deja utilizat. Încearcă un alt număr sau contactează asistența."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:132
 msgid "This picker is only available in the desktop app."
 msgstr "Acest selector este disponibil doar în aplicația desktop."
 
@@ -33359,7 +33359,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Dezactivează tot ce nu-ți convine. Este posibil ca unele funcții să nu mai funcționeze."
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Dezactivează partajarea audio pentru această sursă sau încearcă din nou peste o clipă."
 
@@ -34012,7 +34012,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Deblocați emojiurile personalizate în mesaje directe cu {premiumProductName}"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:50
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:49
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Deblochează partajarea ecranului HD cu {premiumProductName}"
 
@@ -34145,8 +34145,8 @@ msgstr "Grup fără nume"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:257
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:135
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
 msgid "Unnamed input"
 msgstr "Intrare fără nume"
 
@@ -34612,7 +34612,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "Încarcă emoji și stickere noi și gestionează-ți propriile creații."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:323
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:322
 msgid "Upload preview frames for screen shares."
 msgstr "Încarcă cadrele de previzualizare pentru partajarea ecranului."
 
@@ -36907,17 +36907,17 @@ msgid "When posted as links to chat"
 msgstr "Când sunt postate ca linkuri în chat"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:287
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "Când previzualizările sunt activate, {productName} încarcă ocazional cadre JPEG din partajarea ecranului tău, astfel încât ceilalți participanți din acest chat de grup să poată vedea o miniatură înainte de a viziona."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:281
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "Când previzualizările sunt activate, {productName} încarcă ocazional cadre JPEG din partajarea ecranului tău, astfel încât persoanele care au permisiunea de a se conecta la acest canal vocal să poată vedea o miniatură înainte de a viziona."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:293
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:292
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "Când previzualizările sunt activate, {productName} încarcă ocazional cadre JPEG din partajarea ecranului tău, astfel încât cealaltă persoană din acest chat privat să poată vedea o miniatură înainte de a viziona."
 

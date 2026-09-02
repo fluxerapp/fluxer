@@ -136,7 +136,7 @@ const FREE_STREAMING_MODE_PRESETS: Record<
 	}
 > = {
 	gaming: {resolution: 'medium', frameRate: 30},
-	screenshare: {resolution: 'medium', frameRate: 15},
+	screenshare: {resolution: 'medium', frameRate: 30},
 };
 
 export interface BuiltScreenShareOptions {
@@ -222,7 +222,7 @@ export function buildScreenShareOptions(
 }
 
 const FREE_TIER_FALLBACK_RESOLUTION: ScreenshareResolution = 'medium';
-const FREE_TIER_RESOLUTIONS: ReadonlyArray<ScreenshareResolution> = ['low_240p', 'low_480p', 'medium'];
+const FREE_TIER_RESOLUTIONS: ReadonlyArray<ScreenshareResolution> = ['low_480p', 'medium'];
 const FREE_TIER_MAX_FRAME_RATE: SupportedScreenShareFrameRate = 30;
 
 function isFreeTierResolution(resolution: ScreenshareResolution): boolean {
@@ -248,7 +248,7 @@ export function resolveStreamingModeSettings(
 	mode: StreamingMode,
 	customResolution: ScreenshareResolution,
 	customFrameRate: number,
-	hasHigherQuality: boolean = true,
+	hasHigherQuality: boolean,
 ): {
 	resolution: ScreenshareResolution;
 	frameRate: SupportedScreenShareFrameRate;

@@ -1119,7 +1119,7 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} cần truy cập micrô của bạn. Hãy cho phép truy cập micrô trong cài đặt quyền riêng tư của hệ điều hành và khởi động lại ứng dụng."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:46
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:45
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} cần quyền truy cập camera để liệt kê thiết bị của bạn."
 
@@ -1698,7 +1698,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:103
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1779,7 +1779,7 @@ msgid "3 months"
 msgstr "3 tháng"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:107
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1844,7 +1844,7 @@ msgid "6-digit code"
 msgstr "Mã gồm 6 chữ số"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:111
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2315,7 +2315,7 @@ msgid "Actual size"
 msgstr "Kích thước thật"
 
 #. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:143
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
 msgid "Adaptive quality"
 msgstr "Chất lượng thích ứng"
 
@@ -2775,7 +2775,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "Điều chỉnh mức thu phóng tổng thể của ứng dụng. Dùng {zoomIn} / {zoomOut} để điều chỉnh nhanh."
 
 #. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
 msgid "Adjusted to {resolution} {frameRate} FPS"
 msgstr "Đã điều chỉnh thành {resolution} {frameRate} FPS"
 
@@ -2800,7 +2800,7 @@ msgid "Advanced"
 msgstr "Nâng cao"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:84
 msgid "Advanced video settings"
 msgstr "Cài đặt video nâng cao"
 
@@ -2998,7 +2998,7 @@ msgstr "Cho phép"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Cho phép {everyoneMention} và {hereMention}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:216
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:205
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Cho phép {PRODUCT_NAME} truy cập camera của bạn trong {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
@@ -3045,7 +3045,7 @@ msgstr "Cho phép bot nhắn tin trực tiếp"
 msgid "Allow bots to send you direct messages?"
 msgstr "Cho phép bot gửi tin nhắn trực tiếp cho bạn?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:225
 msgid "Allow camera"
 msgstr "Cho phép truy cập camera"
 
@@ -3704,7 +3704,7 @@ msgid "App state"
 msgstr "Trạng thái ứng dụng"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
 msgid "App window"
 msgstr "Cửa sổ ứng dụng"
 
@@ -3797,7 +3797,7 @@ msgstr "Đã cập nhật ứng dụng thành công"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
 msgid "Applications"
 msgstr "Ứng dụng"
 
@@ -4118,7 +4118,7 @@ msgid "Audio boost"
 msgstr "Tăng âm lượng"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:127
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
 msgid "Audio device"
 msgstr "Thiết bị âm thanh"
 
@@ -4138,7 +4138,7 @@ msgid "Audio level"
 msgstr "Mức âm thanh"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
 msgid "Audio muted"
 msgstr "Âm thanh bị tắt tiếng"
 
@@ -4213,7 +4213,7 @@ msgid "Audio send:"
 msgstr "Gửi âm thanh:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:139
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
 msgid "Audio settings"
 msgstr "Cài đặt âm thanh"
 
@@ -5571,7 +5571,7 @@ msgstr "Cuộc gọi"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:719
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:157
 #: src/features/voice/utils/SettingsDeviceOptions.ts:23
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:10
@@ -5579,12 +5579,12 @@ msgid "Camera"
 msgstr "Camera"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
 msgid "Camera access is needed for device previews"
 msgstr "Cần quyền truy cập máy ảnh để xem trước thiết bị"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "Không cấp quyền truy cập máy ảnh. Hãy cập nhật quyền máy ảnh rồi thử lại."
 
@@ -5649,7 +5649,7 @@ msgstr "Xem trước camera"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:197
 msgid "Camera quality"
 msgstr "Chất lượng camera"
@@ -5845,15 +5845,15 @@ msgstr "Xác minh mã bảo mật không thành công. Vui lòng thử lại."
 msgid "Capture"
 msgstr "Ghi âm"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:407
 msgid "Capture app audio"
 msgstr "Thu âm thanh ứng dụng"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:408
 msgid "Capture desktop audio"
 msgstr "Thu âm thanh từ máy tính"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:406
 msgid "Capture device audio"
 msgstr "Thu âm thanh thiết bị"
 
@@ -6119,7 +6119,7 @@ msgid "Change stream"
 msgstr "Thay đổi luồng"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
 msgid "Change stream source"
 msgstr "Đổi nguồn phát trực tiếp"
 
@@ -6758,7 +6758,7 @@ msgid "Choose payment method"
 msgstr "Chọn phương thức thanh toán"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Choose something to share"
 msgstr "Chọn nội dung để chia sẻ"
 
@@ -7160,7 +7160,7 @@ msgid "Cleared the topic."
 msgstr "Đã xoá chủ đề."
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
 msgid "Clearer text"
 msgstr "Văn bản rõ ràng hơn"
 
@@ -8137,7 +8137,7 @@ msgstr "Xác nhận hoặc nhấp đúp để tham gia kênh thoại cộng đ�
 msgid "Conflicts with {conflictLabel}"
 msgstr "Xung đột với {conflictLabel}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:210
 msgid "Connect a camera and try again."
 msgstr "Kết nối máy ảnh và thử lại."
 
@@ -8146,7 +8146,7 @@ msgstr "Kết nối máy ảnh và thử lại."
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "Kết nối camera hoặc thiết bị ghi hình ảo, rồi thử lại."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
 msgid "Connect a display, then try again."
 msgstr "Kết nối một màn hình, rồi thử lại."
 
@@ -9823,8 +9823,8 @@ msgstr "Hiện tại: {mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:91
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
 msgid "Custom"
 msgstr "Tùy chỉnh"
 
@@ -10372,7 +10372,7 @@ msgid "Default"
 msgstr "Mặc định"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:148
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
 msgid "Default camera"
 msgstr "Camera mặc định"
 
@@ -11065,7 +11065,7 @@ msgstr "Chi tiết thiết bị"
 msgid "Device revoked"
 msgstr "Thiết bị đã bị thu hồi"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1044
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1030
 msgid "Device selection"
 msgstr "Chọn thiết bị"
 
@@ -11089,12 +11089,12 @@ msgstr "Thiết bị:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
 msgid "Devices"
 msgstr "Thiết bị"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:95
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
 msgid "Dial in your own numbers"
 msgstr "Quay số đến số của bạn"
 
@@ -11197,7 +11197,7 @@ msgstr "Đang tải lên trực tiếp"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:269
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Disable"
 msgstr "Tắt"
 
@@ -11396,7 +11396,7 @@ msgid "Disabled value"
 msgstr "Giá trị bị tắt"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:317
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:316
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "Việc tắt tính năng xem trước sẽ ngăn chặn việc tải lên các bản xem trước trong tương lai. Các hình ảnh xem trước hiện có có thể vẫn hiển thị cho đến khi luồng kết thúc hoặc bản xem trước được làm mới."
 
@@ -11540,7 +11540,7 @@ msgstr "Bỏ qua nhắc đến"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:12
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:12
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
 msgid "Display"
 msgstr "Hiển thị"
 
@@ -12716,7 +12716,7 @@ msgid "Enable browser notifications"
 msgstr "Bật thông báo trên trình duyệt"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "Cho phép truy cập máy ảnh để xem trước máy ảnh và thiết bị ghi trước khi chọn một thiết bị để truyền phát."
 
@@ -12827,7 +12827,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "Bật hoặc tắt trình dịch tích hợp. Trình dịch đã bật sẽ xuất hiện trong menu ngữ cảnh tin nhắn khi bạn chọn văn bản."
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
 msgid "Enable previews"
 msgstr "Bật xem trước"
 
@@ -13287,7 +13287,7 @@ msgid "Entertainment"
 msgstr "Giải trí"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
 msgid "Entire screen"
 msgstr "Toàn bộ màn hình"
 
@@ -13900,7 +13900,7 @@ msgid "Failed to load invites. Try again."
 msgstr "Không tải được lời mời. Vui lòng thử lại."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:117
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Failed to load shareable sources."
 msgstr "Không thể tải nguồn có thể chia sẻ."
 
@@ -14453,12 +14453,12 @@ msgid "Flexible text channel names"
 msgstr "Tên kênh văn bản linh hoạt"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:68
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "Chuyển động mượt mà ở 1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:73
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "Chuyển động mượt mà ở 720p 30 FPS"
 
@@ -14545,7 +14545,7 @@ msgstr "Cài đặt thư mục"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Theo dõi chúng tôi trên {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:839
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:825
 msgid "Follow voice input"
 msgstr "Theo dõi giọng nói"
 
@@ -14815,14 +14815,14 @@ msgstr "Khung"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
 msgid "Frame rate"
 msgstr "Tốc độ khung hình"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Tốc độ khung hình trên 30 FPS yêu cầu {premiumProductName}"
 
@@ -15063,8 +15063,8 @@ msgstr "Tay cầm chơi game"
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
 msgid "Gaming"
 msgstr "Trò chơi"
 
@@ -15564,7 +15564,7 @@ msgstr "Đã cấp {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Cấp tất cả quyền và bỏ qua các hạn chế kênh. Rất nhạy cảm."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1031
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1017
 msgid "Granular selection"
 msgstr "Chọn chi tiết"
 
@@ -16128,7 +16128,7 @@ msgstr "Ẩn mật khẩu"
 msgid "Hide picture-in-picture popout?"
 msgstr "Ẩn cửa sổ hình trong hình?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
 msgid "Hide preview thumbnail"
 msgstr "Ẩn hình thu nhỏ xem trước"
 
@@ -16573,11 +16573,11 @@ msgstr "Bỏ qua"
 msgid "Ignore friend request"
 msgstr "Bỏ qua lời mời kết bạn"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1021
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Ignore hardware devices"
 msgstr "Bỏ qua thiết bị phần cứng"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
 msgid "Ignore input media"
 msgstr "Bỏ qua phương tiện đầu vào"
 
@@ -16603,7 +16603,7 @@ msgstr "Bỏ qua báo cáo spam"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Bỏ qua lời mời kết bạn từ {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1008
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Ignore virtual"
 msgstr "Bỏ qua thiết bị ảo"
 
@@ -18147,7 +18147,7 @@ msgid "Layering for AV1 and VP9 when available."
 msgstr "Áp dụng nhiều lớp cho AV1 và VP9 khi có sẵn."
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:273
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Learn about screen share previews"
 msgstr "Tìm hiểu thêm về bản xem trước khi chia sẻ màn hình"
 
@@ -20009,7 +20009,7 @@ msgstr "Cần quyền truy cập micrô"
 msgid "Microphone test"
 msgstr "Kiểm tra micrô"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:952
 msgid "Microphone workaround"
 msgstr "Khắc phục sự cố micrô"
 
@@ -20073,7 +20073,7 @@ msgstr "Trẻ vị thành niên gặp rủi ro, nội dung người lớn không
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:76
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
 #: src/features/voice/components/VoiceSettingsMenus.tsx:112
 msgid "Mirror camera"
@@ -21206,7 +21206,7 @@ msgstr "Không tìm thấy cài đặt nâng cao nào"
 msgid "No AFK channel"
 msgstr "Không có kênh AFK"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "No application windows found"
 msgstr "Không tìm thấy cửa sổ ứng dụng nào"
 
@@ -21265,7 +21265,7 @@ msgstr "Không có tin nhắn đã lưu"
 msgid "No bot banner"
 msgstr "Không có ảnh bìa bot"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:212
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:201
 msgid "No camera found"
 msgstr "Không tìm thấy camera"
 
@@ -21355,7 +21355,7 @@ msgstr "Không có mô tả."
 msgid "No desktop update is available."
 msgstr "Không có bản cập nhật máy tính để bàn nào."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:126
 msgid "No displays found"
 msgstr "Không tìm thấy màn hình nào"
 
@@ -22146,7 +22146,7 @@ msgstr "Chỉ áp dụng trên màn hình rộng."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Chỉ chấp nhận thẻ tín dụng. Không thể dùng thẻ ghi nợ và thẻ trả trước để kiểm tra nội dung người lớn."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:972
 msgid "Only default speakers"
 msgstr "Chỉ loa mặc định"
 
@@ -22194,7 +22194,7 @@ msgstr "Chỉ chạy mã ở đây nếu bạn hiểu chính xác mã đó làm 
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Chỉ hiện bản xem trước tin nhắn cho các tin nhắn trực tiếp chưa đọc"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:976
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:962
 msgid "Only speakers"
 msgstr "Chỉ người nói"
 
@@ -22299,11 +22299,11 @@ msgid "Open @{displayName}"
 msgstr "Mở @{displayName}"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:88
 msgid "Open advanced media settings"
 msgstr "Mở cài đặt phương tiện nâng cao"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:123
 msgid "Open an application window, then try again."
 msgstr "Mở một cửa sổ ứng dụng, rồi thử lại."
 
@@ -22366,7 +22366,7 @@ msgid "Open browser"
 msgstr "Mở trình duyệt"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
 msgid "Open browser picker"
 msgstr "Mở trình chọn trình duyệt"
 
@@ -22634,7 +22634,7 @@ msgid "Open system DM"
 msgstr "Mở tin nhắn trực tiếp của hệ thống"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
 msgid "Open system picker"
 msgstr "Mở trình chọn của hệ thống"
 
@@ -24031,17 +24031,17 @@ msgid "Preview hidden"
 msgstr "Bản xem trước bị ẩn"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:311
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:310
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "Hình ảnh xem trước được lưu trữ tạm thời bởi {productName} để hiển thị và không được mã hóa đầu cuối. Tắt tính năng xem trước nếu bạn không muốn các khung hình chia sẻ màn hình được tải lên để tạo hình thu nhỏ."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:305
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:304
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "Hình ảnh xem trước được lưu trữ tạm thời bởi {productName} để hiển thị và không được mã hóa đầu cuối. Những người trong nhóm trò chuyện này không cần phải đang xem luồng của bạn để thấy hình thu nhỏ."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:299
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:298
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "Hình ảnh xem trước được lưu trữ tạm thời bởi {productName} để hiển thị và không được mã hóa hoàn toàn. Mọi người vẫn cần quyền để kết nối, nhưng họ không cần phải chủ động xem luồng của bạn."
 
@@ -24756,7 +24756,7 @@ msgid "Raw embed JSON"
 msgstr "JSON thô cho trình gỡ lỗi nhúng"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:81
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "Văn bản sắc nét ở độ phân giải gốc, 15 FPS"
 
@@ -26364,7 +26364,7 @@ msgstr "Thay đổi kích thước, phóng to và gắn cửa sổ phụ thuộc
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:119
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
 msgid "Resolution"
 msgstr "Độ phân giải"
 
@@ -27061,7 +27061,7 @@ msgstr "Cần quyền ghi màn hình"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:77
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
 msgid "Screen share"
 msgstr "Chia sẻ màn hình"
 
@@ -27076,7 +27076,7 @@ msgid "Screen share audio boost"
 msgstr "Tăng âm lượng chia sẻ màn hình"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
 msgid "Screen share audio couldn't start"
 msgstr "Âm thanh chia sẻ màn hình không thể bắt đầu"
 
@@ -27117,17 +27117,17 @@ msgid "Screen share preview behavior"
 msgstr "Hành vi xem trước khi chia sẻ màn hình"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:277
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Screen share previews"
 msgstr "Xem trước tính năng chia sẻ màn hình"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:265
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
 msgid "Screen share previews are disabled."
 msgstr "Việc chia sẻ bản xem trước màn hình đã bị tắt."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:261
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
 msgid "Screen share previews are enabled."
 msgstr "Các bản xem trước khi chia sẻ màn hình đã được bật."
 
@@ -27138,7 +27138,7 @@ msgstr "Quyền riêng tư chia sẻ màn hình"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:80
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:209
 msgid "Screen share quality"
 msgstr "Chất lượng chia sẻ màn hình"
@@ -27208,7 +27208,7 @@ msgid "Screen sharing quality"
 msgstr "Chất lượng chia sẻ màn hình"
 
 #. Footer summary label for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
 msgid "Screenshare"
 msgstr "Chia sẻ màn hình"
 
@@ -27680,7 +27680,7 @@ msgstr "Xem trước"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:196
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
 msgid "Select"
 msgstr "Chọn"
 
@@ -28530,7 +28530,7 @@ msgid "Share gift"
 msgstr "Chia sẻ quà"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
 msgid "Share screen"
 msgstr "Chia sẻ màn hình"
 
@@ -28540,7 +28540,7 @@ msgid "Share screens and windows."
 msgstr "Chia sẻ màn hình và cửa sổ."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
 msgid "Share stream audio"
 msgstr "Chia sẻ âm thanh luồng"
 
@@ -28576,7 +28576,7 @@ msgstr "Chia sẻ với người kiểm duyệt cộng đồng."
 msgid "Share your screen"
 msgstr "Chia sẻ màn hình của bạn"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:294
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Chia sẻ màn hình của bạn ở độ nét cao (1080p), Quad HD (1440p) hoặc độ phân giải nguồn gốc, với tốc độ lên đến 60 FPS."
 
@@ -28610,9 +28610,9 @@ msgid "Sharing personal information"
 msgstr "Chia sẻ thông tin cá nhân"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:86
-msgid "Sharper text at 720p, 15 FPS"
-msgstr "Văn bản sắc nét hơn ở 720p, 15 FPS"
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+msgid "Sharper text at 720p, 30 FPS"
+msgstr "Chữ sắc nét hơn ở 720p, 30 FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:189
@@ -29633,7 +29633,7 @@ msgid "Smooth scrolling"
 msgstr "Cuộn mượt"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:237
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
 msgid "Smoother video"
 msgstr "Video mượt hơn"
 
@@ -29904,9 +29904,9 @@ msgstr "Âm thanh"
 #. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:66
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:99
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
 msgid "Source"
 msgstr "Nguồn"
 
@@ -30270,7 +30270,7 @@ msgstr "Bắt đầu cuộc gọi thoại?"
 msgid "Start call"
 msgstr "Bắt đầu cuộc gọi"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:255
 msgid "Start camera test and configure effects"
 msgstr "Bắt đầu kiểm tra camera và định cấu hình hiệu ứng"
 
@@ -30618,7 +30618,7 @@ msgstr "Ngăn loa của bạn lặp lại vào micrô."
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:235
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
 msgid "Stream"
 msgstr "Phát trực tiếp"
 
@@ -30647,12 +30647,12 @@ msgid "Stream preview"
 msgstr "Xem trước luồng"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
 msgid "Stream quality"
 msgstr "Chất lượng luồng"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:221
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
 msgid "Stream settings"
 msgstr "Cài đặt truyền phát"
 
@@ -30673,7 +30673,7 @@ msgid "Streaming"
 msgstr "Đang phát trực tiếp"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:115
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
 msgid "Streaming mode"
 msgstr "Chế độ phát trực tiếp"
 
@@ -31126,8 +31126,8 @@ msgstr "Thông báo hệ thống từ đội ngũ {productName}. Bạn không th
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:253
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:131
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
 msgid "System default"
 msgstr "Mặc định hệ thống"
 
@@ -31578,7 +31578,7 @@ msgid "The bot has been added."
 msgstr "Bot đã được thêm."
 
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "Xem trước camera vẫn đang dừng. Vui lòng thử truyền phát lại sau."
 
@@ -32197,7 +32197,7 @@ msgid "This install is managed by your system. Update {productName} from your so
 msgstr "Phiên bản này được quản lý bởi hệ thống của bạn. Hãy cập nhật {productName} từ trung tâm phần mềm hoặc trình quản lý gói của bạn."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:58
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:57
 msgid "This instance currently allows screen share up to 720p at 30 FPS."
 msgstr "Phiên bản này hiện cho phép chia sẻ màn hình lên tới 720p ở 30 FPS."
 
@@ -32414,7 +32414,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "Số điện thoại này đã được sử dụng. Hãy thử số khác hoặc liên hệ bộ phận hỗ trợ."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:132
 msgid "This picker is only available in the desktop app."
 msgstr "Trình chọn này chỉ có trên ứng dụng máy tính."
 
@@ -33359,7 +33359,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Tắt bất kỳ tính năng nào bạn không muốn. Một số tính năng có thể ngừng hoạt động."
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Tắt chia sẻ âm thanh cho nguồn này hoặc thử lại sau."
 
@@ -34012,7 +34012,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Mở khóa biểu tượng cảm xúc tùy chỉnh trong tin nhắn trực tiếp với {premiumProductName}"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:50
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:49
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Mở khóa chia sẻ màn hình HD với {premiumProductName}"
 
@@ -34145,8 +34145,8 @@ msgstr "Nhóm chưa đặt tên"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:257
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:135
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
 msgid "Unnamed input"
 msgstr "Đầu vào không tên"
 
@@ -34612,7 +34612,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "Tải lên biểu tượng cảm xúc và nhãn dán mới, đồng thời quản lý các nội dung bạn đã tạo."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:323
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:322
 msgid "Upload preview frames for screen shares."
 msgstr "Tải lên các khung hình xem trước cho tính năng chia sẻ màn hình."
 
@@ -36907,17 +36907,17 @@ msgid "When posted as links to chat"
 msgstr "Khi đăng dưới dạng liên kết vào cuộc trò chuyện"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:287
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "Khi bật tính năng xem trước, {productName} sẽ tải lên định kỳ các khung hình JPEG từ nội dung bạn đang chia sẻ để những người khác trong cuộc trò chuyện nhóm này có thể xem ảnh thu nhỏ trước khi xem."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:281
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "Khi bật tính năng xem trước, {productName} sẽ tải lên định kỳ các khung hình JPEG từ nội dung bạn chia sẻ để những người có quyền truy cập vào kênh thoại này có thể xem ảnh thu nhỏ trước khi xem."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:293
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:292
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "Khi bật tính năng xem trước, {productName} sẽ tải lên định kỳ các khung hình JPEG từ nội dung bạn chia sẻ để người kia trong cuộc trò chuyện riêng này có thể xem ảnh thu nhỏ trước khi xem."
 

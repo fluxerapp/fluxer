@@ -1119,7 +1119,7 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} reikia prieigos prie jūsų mikrofono. Leiskite prieigą prie mikrofono operacinės sistemos privatumo nustatymuose ir iš naujo paleiskite programą."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:46
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:45
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} reikia prieigos prie kameros, kad būtų galima parodyti jūsų įrenginius."
 
@@ -1698,7 +1698,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:103
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
 msgid "15 FPS"
 msgstr "15 kadrų per sekundę"
 
@@ -1779,7 +1779,7 @@ msgid "3 months"
 msgstr "3 mėnesiai"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:107
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
 msgid "30 FPS"
 msgstr "30 kadrų per sekundę"
 
@@ -1844,7 +1844,7 @@ msgid "6-digit code"
 msgstr "6 skaitmenų kodas"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:111
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2315,7 +2315,7 @@ msgid "Actual size"
 msgstr "Tikrasis dydis"
 
 #. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:143
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
 msgid "Adaptive quality"
 msgstr "Adaptyvioji kokybė"
 
@@ -2775,7 +2775,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "Koreguokite bendrą programėlės mastelio lygį. Norėdami greitai koreguoti, naudokite {zoomIn} / {zoomOut}."
 
 #. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
 msgid "Adjusted to {resolution} {frameRate} FPS"
 msgstr "Pritaikyta prie {resolution} {frameRate} FPS"
 
@@ -2800,7 +2800,7 @@ msgid "Advanced"
 msgstr "Išplėstiniai"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:84
 msgid "Advanced video settings"
 msgstr "Išplėstinės vaizdo įrašo nustatymai"
 
@@ -2998,7 +2998,7 @@ msgstr "Leisti"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Leisti {everyoneMention} ir {hereMention}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:216
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:205
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Leiskite \"{PRODUCT_NAME}\" pasiekti jūsų kamerą skiltyje \"{MACOS_SYSTEM_SETTINGS_NAME}\" → \"{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME}\" → \"{MACOS_CAMERA_PERMISSION_NAME}\"."
 
@@ -3045,7 +3045,7 @@ msgstr "Leisti tiesiogines roboto žinutes"
 msgid "Allow bots to send you direct messages?"
 msgstr "Leisti robotams siųsti jums tiesiogines žinutes?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:225
 msgid "Allow camera"
 msgstr "Leisti naudoti kamerą"
 
@@ -3704,7 +3704,7 @@ msgid "App state"
 msgstr "Programos būsena"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
 msgid "App window"
 msgstr "Programos langas"
 
@@ -3797,7 +3797,7 @@ msgstr "Programa sėkmingai atnaujinta"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
 msgid "Applications"
 msgstr "Programos"
 
@@ -4118,7 +4118,7 @@ msgid "Audio boost"
 msgstr "Garso stiprinimas"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:127
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
 msgid "Audio device"
 msgstr "Garso įrenginys"
 
@@ -4138,7 +4138,7 @@ msgid "Audio level"
 msgstr "Garso lygis"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
 msgid "Audio muted"
 msgstr "Garso garsas išjungtas"
 
@@ -4213,7 +4213,7 @@ msgid "Audio send:"
 msgstr "Garso siuntimas:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:139
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
 msgid "Audio settings"
 msgstr "Garso nustatymai"
 
@@ -5571,7 +5571,7 @@ msgstr "Skambučiai"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:719
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:157
 #: src/features/voice/utils/SettingsDeviceOptions.ts:23
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:10
@@ -5579,12 +5579,12 @@ msgid "Camera"
 msgstr "Kamera"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
 msgid "Camera access is needed for device previews"
 msgstr "Reikalinga prieiga prie kameros, kad būtų galima peržiūrėti įrenginius"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "Kameros prieiga nesuteikta. Atnaujinkite kameros leidimus ir bandykite dar kartą."
 
@@ -5649,7 +5649,7 @@ msgstr "Kameros peržiūra"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:197
 msgid "Camera quality"
 msgstr "Kameros kokybė"
@@ -5845,15 +5845,15 @@ msgstr "Nepavyko patvirtinti \"Captcha\". Bandykite dar kartą."
 msgid "Capture"
 msgstr "Įrašyti"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:407
 msgid "Capture app audio"
 msgstr "Įrašyti programos garsą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:408
 msgid "Capture desktop audio"
 msgstr "Įrašyti darbalaukio garsą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:406
 msgid "Capture device audio"
 msgstr "Įrašyti įrenginio garsą"
 
@@ -6119,7 +6119,7 @@ msgid "Change stream"
 msgstr "Pakeisti srautą"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
 msgid "Change stream source"
 msgstr "Keisti srauto šaltinį"
 
@@ -6758,7 +6758,7 @@ msgid "Choose payment method"
 msgstr "Pasirinkite mokėjimo būdą"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Choose something to share"
 msgstr "Pasirinkite, ką bendrinti"
 
@@ -7160,7 +7160,7 @@ msgid "Cleared the topic."
 msgstr "Išvalė temą."
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
 msgid "Clearer text"
 msgstr "Skaidresnis tekstas"
 
@@ -8137,7 +8137,7 @@ msgstr "Patvirtinimas arba dvigubas paspaudimas, norint prisijungti prie bendruo
 msgid "Conflicts with {conflictLabel}"
 msgstr "Kertasi su \"{conflictLabel}\""
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:210
 msgid "Connect a camera and try again."
 msgstr "Prijunkite kamerą ir bandykite dar kartą."
 
@@ -8146,7 +8146,7 @@ msgstr "Prijunkite kamerą ir bandykite dar kartą."
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "Prijunkite kamerą arba virtualų fiksavimo įrenginį ir bandykite dar kartą."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
 msgid "Connect a display, then try again."
 msgstr "Prijunkite ekraną ir bandykite dar kartą."
 
@@ -9823,8 +9823,8 @@ msgstr "Šiuo metu: {mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:91
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
 msgid "Custom"
 msgstr "Pasirinktinis"
 
@@ -10372,7 +10372,7 @@ msgid "Default"
 msgstr "Numatytasis"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:148
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
 msgid "Default camera"
 msgstr "Numatytoji kamera"
 
@@ -11065,7 +11065,7 @@ msgstr "Įrenginio informacija"
 msgid "Device revoked"
 msgstr "Įrenginys atšauktas"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1044
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1030
 msgid "Device selection"
 msgstr "Įrenginio pasirinkimas"
 
@@ -11089,12 +11089,12 @@ msgstr "Įrenginys:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
 msgid "Devices"
 msgstr "Įrenginiai"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:95
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
 msgid "Dial in your own numbers"
 msgstr "Įveskite savo numerius"
 
@@ -11197,7 +11197,7 @@ msgstr "Tiesioginis įkėlimas aktyvus"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:269
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Disable"
 msgstr "Išjungti"
 
@@ -11396,7 +11396,7 @@ msgid "Disabled value"
 msgstr "Išjungta reikšmė"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:317
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:316
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "Išjungus peržiūras, ateityje nebus įkeliamos naujos peržiūros. Esami peržiūros vaizdai gali likti matomi iki srauto pabaigos arba kol bus atnaujinta peržiūra."
 
@@ -11540,7 +11540,7 @@ msgstr "Atmesti paminėjimą"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:12
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:12
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
 msgid "Display"
 msgstr "Rodymas"
 
@@ -12716,7 +12716,7 @@ msgid "Enable browser notifications"
 msgstr "Įjungti naršyklės pranešimus"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "Įjunkite kameros prieigą, kad galėtumėte peržiūrėti kameras ir įrašymo įrenginius prieš pasirinkdami vieną transliacijai."
 
@@ -12827,7 +12827,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "Įjungti arba išjungti integruotus vertėjus. Įjungti vertėjai rodomi pranešimo kontekstiniame meniu, kai pasirenkamas tekstas."
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
 msgid "Enable previews"
 msgstr "Įjungti peržiūras"
 
@@ -13287,7 +13287,7 @@ msgid "Entertainment"
 msgstr "Pramogos"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
 msgid "Entire screen"
 msgstr "Visas ekranas"
 
@@ -13900,7 +13900,7 @@ msgid "Failed to load invites. Try again."
 msgstr "Nepavyko įkelti kvietimų. Bandykite dar kartą."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:117
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Failed to load shareable sources."
 msgstr "Nepavyko įkelti bendrinamų šaltinių."
 
@@ -14453,12 +14453,12 @@ msgid "Flexible text channel names"
 msgstr "Lankstūs teksto kanalo pavadinimai"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:68
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "Sklandus judesys 1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:73
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "Sklandus judesys 720p 30 FPS"
 
@@ -14545,7 +14545,7 @@ msgstr "Aplanko nustatymai"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Sekite mus \"{blueskyProviderName}\" tinkle"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:839
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:825
 msgid "Follow voice input"
 msgstr "Sekti balso įvestį"
 
@@ -14815,14 +14815,14 @@ msgstr "Rėmelis"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
 msgid "Frame rate"
 msgstr "Kadrų dažnis"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Didesniam nei 30 FPS kadrų dažniui reikalingas „{premiumProductName}\""
 
@@ -15063,8 +15063,8 @@ msgstr "Žaidimų pultelis"
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
 msgid "Gaming"
 msgstr "Žaidimai"
 
@@ -15564,7 +15564,7 @@ msgstr "Suteikta {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Suteikia visus leidimus ir apeina kanalo apribojimus. Labai jautru."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1031
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1017
 msgid "Granular selection"
 msgstr "Detalizuotas pasirinkimas"
 
@@ -16128,7 +16128,7 @@ msgstr "Slėpti slaptažodį"
 msgid "Hide picture-in-picture popout?"
 msgstr "Slėpti paveikslėlį paveikslėlyje iššokantįjį langą?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
 msgid "Hide preview thumbnail"
 msgstr "Slėpti peržiūros miniatiūrą"
 
@@ -16573,11 +16573,11 @@ msgstr "Ignoruoti"
 msgid "Ignore friend request"
 msgstr "Nepriimti draugo užklausos"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1021
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
 msgid "Ignore hardware devices"
 msgstr "Ignoruoti aparatinę įrangą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
 msgid "Ignore input media"
 msgstr "Ignoruoti įvesties mediją"
 
@@ -16603,7 +16603,7 @@ msgstr "Nepaisyti šlamšto žymės"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Nepaisyti {displayName} draugo užklausos?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1008
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
 msgid "Ignore virtual"
 msgstr "Ignoruoti virtualų"
 
@@ -18147,7 +18147,7 @@ msgid "Layering for AV1 and VP9 when available."
 msgstr "Sluoksnių kūrimas AV1 ir VP9 kodekams, kai jie yra pasiekiami."
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:273
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Learn about screen share previews"
 msgstr "Sužinokite daugiau apie ekrano dalijimosi peržiūras"
 
@@ -20009,7 +20009,7 @@ msgstr "Reikalingas mikrofono leidimas"
 msgid "Microphone test"
 msgstr "Mikrofono testas"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:952
 msgid "Microphone workaround"
 msgstr "Mikrofono apėjimas"
 
@@ -20073,7 +20073,7 @@ msgstr "Nepilnamečiai pavojuje, netinkamoje vietoje esantis suaugusiesiems skir
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:76
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
 #: src/features/voice/components/VoiceSettingsMenus.tsx:112
 msgid "Mirror camera"
@@ -21206,7 +21206,7 @@ msgstr "Nėra rasta jokių papildomų nustatymų"
 msgid "No AFK channel"
 msgstr "Nėra AFK kanalo"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "No application windows found"
 msgstr "Nėra rastų programų langų"
 
@@ -21265,7 +21265,7 @@ msgstr "Nėra žymių"
 msgid "No bot banner"
 msgstr "Nėra roboto reklamjuostės"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:212
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:201
 msgid "No camera found"
 msgstr "Kamera nerasta"
 
@@ -21355,7 +21355,7 @@ msgstr "Aprašo nėra."
 msgid "No desktop update is available."
 msgstr "Nėra galimų darbalaukio naujinimų."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:126
 msgid "No displays found"
 msgstr "Nėra rastų ekranų"
 
@@ -22146,7 +22146,7 @@ msgstr "Taikoma tik plačiaekraniams."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Priimamos tik kredito kortelės. Debeto ir išankstinio mokėjimo kortelės negali būti naudojamos turinio suaugusiesiems patikrai."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:972
 msgid "Only default speakers"
 msgstr "Tik numatytieji garsiakalbiai"
 
@@ -22194,7 +22194,7 @@ msgstr "Vykdykite kodą tik tuo atveju, jei tiksliai suprantate, ką jis daro."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Rodyti pranešimų peržiūras tik DM su neskaitytais pranešimais"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:976
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:962
 msgid "Only speakers"
 msgstr "Tik kalbėtojai"
 
@@ -22299,11 +22299,11 @@ msgid "Open @{displayName}"
 msgstr "Atidaryti @{displayName}"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:88
 msgid "Open advanced media settings"
 msgstr "Atidaryti papildomus medijos nustatymus"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:123
 msgid "Open an application window, then try again."
 msgstr "Atidarykite programos langą ir bandykite dar kartą."
 
@@ -22366,7 +22366,7 @@ msgid "Open browser"
 msgstr "Atidaryti naršyklę"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
 msgid "Open browser picker"
 msgstr "Atidaryti naršyklės parinkiklį"
 
@@ -22634,7 +22634,7 @@ msgid "Open system DM"
 msgstr "Atidaryti sistemos DM"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
 msgid "Open system picker"
 msgstr "Atidaryti sistemos parinkiklį"
 
@@ -24031,17 +24031,17 @@ msgid "Preview hidden"
 msgstr "Peržiūra paslėpta"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:311
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:310
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "Ekrano dalijimosi peržiūros vaizdai yra laikinai sauomi „{productName}“, kad juos būtų galima pateikti, ir jie nėra visiškai užšifruoti. Jei nenorite, kad ekrano dalijimosi kadrų nuotraukoms būtų įkelti, išjunkite peržiūras."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:305
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:304
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "Peržiūros vaizdai yra laikinai sauomi „{productName}“, kad būtų galima juos perduoti, ir jie nėra užšifruoti iš galo į galą. Grupės tiesioginės žinutės dalyviams nereikia aktyviai stebėti jūsų srauto, kad pamatytų miniatiūrą."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:299
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:298
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "Peržiūros vaizdai yra laikinai sauomi „{productName}“ ir naudojami jų perdavimui, jie nėra užšifruoti iš galo į galą. Žmonėms vis tiek reikia leidimo prisijungti, tačiau jiems nereikia aktyviai stebėti jūsų srautą."
 
@@ -24756,7 +24756,7 @@ msgid "Raw embed JSON"
 msgstr "Žalia įterptų objektų JSON išvestis"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:81
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "Itin ryškus tekstas, 15 FPS"
 
@@ -26364,7 +26364,7 @@ msgstr "Langų dydžio keitimas, maksimalus išplėtimas ir prilipdymas priklaus
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:119
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
 msgid "Resolution"
 msgstr "Raiška"
 
@@ -27061,7 +27061,7 @@ msgstr "Reikalingas ekrano įrašymo leidimas"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:77
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
 msgid "Screen share"
 msgstr "Ekrano bendrinimas"
 
@@ -27076,7 +27076,7 @@ msgid "Screen share audio boost"
 msgstr "Ekrano bendrinimo garso stiprinimas"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
 msgid "Screen share audio couldn't start"
 msgstr "Nepavyko pradėti ekrano bendrinimo garso"
 
@@ -27117,17 +27117,17 @@ msgid "Screen share preview behavior"
 msgstr "Ekrano dalijimosi peržiūros elgsena"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:277
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Screen share previews"
 msgstr "Ekrano dalijimosi peržiūros"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:265
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
 msgid "Screen share previews are disabled."
 msgstr "Ekrano dalijimosi peržiūros yra išjungtos."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:261
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
 msgid "Screen share previews are enabled."
 msgstr "Ekrano dalijimosi peržiūros yra įjungtos."
 
@@ -27138,7 +27138,7 @@ msgstr "Privatumo nustatymai ekrano bendrinimui"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:80
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:209
 msgid "Screen share quality"
 msgstr "Ekrano bendrinimo kokybė"
@@ -27208,7 +27208,7 @@ msgid "Screen sharing quality"
 msgstr "Ekrano bendrinimo kokybė"
 
 #. Footer summary label for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
 msgid "Screenshare"
 msgstr "Ekrano bendrinimas"
 
@@ -27680,7 +27680,7 @@ msgstr "Peržiūrėti"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:196
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
 msgid "Select"
 msgstr "Pasirinkti"
 
@@ -28530,7 +28530,7 @@ msgid "Share gift"
 msgstr "Bendrinti dovaną"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
 msgid "Share screen"
 msgstr "Bendrinti ekraną"
 
@@ -28540,7 +28540,7 @@ msgid "Share screens and windows."
 msgstr "Bendrinkite ekranus ir langus."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
 msgid "Share stream audio"
 msgstr "Bendrinti srauto garsą"
 
@@ -28576,7 +28576,7 @@ msgstr "Bendrinti su bendruomenės moderatoriais."
 msgid "Share your screen"
 msgstr "Bendrinti ekraną"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:294
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Bendrinkite ekraną didelės raiškos (1080p), keturių HD (1440p) arba natūralios šaltinio raiškos, iki 60 kadrų per sekundę."
 
@@ -28610,9 +28610,9 @@ msgid "Sharing personal information"
 msgstr "Asmeninės informacijos bendrinimas"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:86
-msgid "Sharper text at 720p, 15 FPS"
-msgstr "Ryškesnis tekstas, 720p, 15 FPS"
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+msgid "Sharper text at 720p, 30 FPS"
+msgstr "Aiškesnis tekstas 720p, 30 FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:189
@@ -29633,7 +29633,7 @@ msgid "Smooth scrolling"
 msgstr "Sklandus slinkimas"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:237
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
 msgid "Smoother video"
 msgstr "Sklandesnis vaizdo įrašas"
 
@@ -29904,9 +29904,9 @@ msgstr "Garsai"
 #. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:66
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:99
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
 msgid "Source"
 msgstr "Šaltinis"
 
@@ -30270,7 +30270,7 @@ msgstr "Pradėti balso skambutį?"
 msgid "Start call"
 msgstr "Pradėti skambutį"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:255
 msgid "Start camera test and configure effects"
 msgstr "Pradėti kameros testą ir konfigūruoti efektus"
 
@@ -30618,7 +30618,7 @@ msgstr "Neleidžia garsiakalbiams atkartoti garso į mikrofoną."
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:235
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
 msgid "Stream"
 msgstr "Transliacija"
 
@@ -30647,12 +30647,12 @@ msgid "Stream preview"
 msgstr "Tiesioginės transliacijos peržiūra"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
 msgid "Stream quality"
 msgstr "Srauto kokybė"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:221
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
 msgid "Stream settings"
 msgstr "Srauto nustatymai"
 
@@ -30673,7 +30673,7 @@ msgid "Streaming"
 msgstr "Transliuojama"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:115
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
 msgid "Streaming mode"
 msgstr "Srautinio perdavimo režimas"
 
@@ -31126,8 +31126,8 @@ msgstr "Sistemos pranešimai iš „{productName}\" darbuotojų. Čia negalite a
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:253
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:131
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
 msgid "System default"
 msgstr "Numatytasis sistemos"
 
@@ -31578,7 +31578,7 @@ msgid "The bot has been added."
 msgstr "Botas pridėtas."
 
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "Kameros peržiūra vis dar sustabdoma. Pabandykite dar kartą transliuoti po akimirkos."
 
@@ -32197,7 +32197,7 @@ msgid "This install is managed by your system. Update {productName} from your so
 msgstr "Šią programą valdo jūsų sistema. Atnaujinkite „{productName}“ naudodami programų centrą arba paketų tvarkyklę."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:58
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:57
 msgid "This instance currently allows screen share up to 720p at 30 FPS."
 msgstr "Šis serveris šiuo metu leidžia bendrinti ekraną iki 720p raiška ir 30 kadrų per sekundę."
 
@@ -32414,7 +32414,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "Šis telefono numeris jau buvo naudotas. Bandykite kitą numerį arba susisiekite su palaikymo komanda."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:132
 msgid "This picker is only available in the desktop app."
 msgstr "Ši parinktis pasiekiama tik darbalaukio programoje."
 
@@ -33359,7 +33359,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Išjunkite viską, kas jums nepatogu. Kai kurios funkcijos gali nustoti veikti."
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Išjunkite šio šaltinio garso bendrinimą arba pabandykite dar kartą po akimirkos."
 
@@ -34012,7 +34012,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Atrakinkite pasirinktinius jaustukus tiesioginiuose pranešimuose su \"{premiumProductName}\""
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:50
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:49
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Atrakinkite HD ekrano bendrinimą su „{premiumProductName}\""
 
@@ -34145,8 +34145,8 @@ msgstr "Nepažymėta grupė"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:257
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:135
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
 msgid "Unnamed input"
 msgstr "Neįvardytas įvesties įrenginys"
 
@@ -34612,7 +34612,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "Įkelkite naujų jaustukų ir lipdukų bei tvarkykite savo kūrinius."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:323
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:322
 msgid "Upload preview frames for screen shares."
 msgstr "Įkelkite ekrano dalijimosi peržiūros kadrus."
 
@@ -36907,17 +36907,17 @@ msgid "When posted as links to chat"
 msgstr "Kai paskelbta kaip nuorodos į pokalbį"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:287
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "Įjungus peržiūras, „{productName}“ kartkartėmis įkelia atsitiktinius JPEG formato kadrus iš jūsų bendrinamo ekrano, kad kiti šios grupės pokalbio dalyviai galėtų pamatyti miniatiūrą prieš žiūrėdami."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:281
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "Kai įjungtos peržiūros, „{productName}“ kartkartėmis įkelia atsitiktinius JPEG formato kadrus iš jūsų bendrinamo ekrano, kad žmonės, turintys leidimą prisijungti prie šio balso kanalo, galėtų pamatyti miniatiūrą prieš žiūrėdami."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:293
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:292
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "Įjungus peržiūras, „{productName}“ kartkartėmis įkelia atsitiktinius JPEG formato kadrus iš jūsų ekrano dalijimosi sesijos, kad kitas asmuo šioje tiesioginėje žinutėje galėtų pamatyti miniatiūrą prieš žiūrėdamas."
 

@@ -87,7 +87,6 @@ import {
 	resolveStreamingModeSettings,
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {
-	normaliseDeviceScreenShareSettings,
 	startConfiguredDeviceScreenShare,
 	startConfiguredDisplayScreenShare,
 	switchConfiguredDeviceScreenShare,
@@ -1268,12 +1267,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 			if (deviceCards.some((card) => card.id === selectedDeviceId)) return;
 			setSelectedDeviceId(null);
 		}, [deviceCards, selectedDeviceId]);
-		useEffect(() => {
-			if (activeTab !== 'devices') {
-				return;
-			}
-			normaliseDeviceScreenShareSettings();
-		}, [activeTab]);
 		const handleStartSelection = useCallback(
 			async (cardId: string) => {
 				if (pendingSelectionIdRef.current) return;

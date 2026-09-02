@@ -20,6 +20,7 @@ import {
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {classifyVideoEncoderAcceleration} from '@app/features/voice/utils/VideoAccelerationClassification';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	BackupCodecPolicy,
 	type LocalParticipant,
@@ -199,6 +200,7 @@ export function getEffectiveScreenShareEncoding(publishOptions?: TrackPublishOpt
 			VoiceSettings.getStreamingMode(),
 			VoiceSettings.getScreenshareResolution(),
 			VoiceSettings.getVideoFrameRate(),
+			hasHigherVideoQuality(),
 		);
 		screenShareEncoding = getScreenShareEncoding(settings.resolution, settings.frameRate);
 	}

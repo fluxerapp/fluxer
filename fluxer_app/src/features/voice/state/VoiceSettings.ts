@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
@@ -13,6 +11,7 @@ import type {
 	ScreenShareScalabilityModePreference,
 	ScreenShareSoftwareQuality,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
 import {
 	DEFAULT_VOICE_PROCESSING_MODE,
@@ -53,6 +52,7 @@ const VIDEO_FRAME_RATE_DEFAULT = 30;
 const DEFAULT_BROWSER_NOISE_SUPPRESSION = true;
 const DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION = false;
 const FREE_VIDEO_FRAME_RATE_MAX = 30;
+const RETIRED_SCREENSHARE_RESOLUTION_REPLACEMENT: ScreenshareResolution = 'low_480p';
 const PREMIUM_SCREENSHARE_RESOLUTIONS: ReadonlySet<ScreenshareResolution> = new Set(['high', 'ultra', 'source']);
 export const CAMERA_EFFECT_STRENGTH_MIN = 0;
 export const CAMERA_EFFECT_STRENGTH_MAX = 100;
@@ -293,6 +293,32 @@ function applyScreenShareHevcOptOutMigrationV1(parsed: Record<string, unknown>):
 	return true;
 }
 
+function applyVideoQualityNormalisationMigration(parsed: Record<string, unknown>): boolean {
+	let changed = false;
+	if (parsed.screenshareResolution !== undefined) {
+		const resolution = validateScreenshareResolution(parsed.screenshareResolution);
+		if (resolution !== parsed.screenshareResolution) {
+			parsed.screenshareResolution = resolution;
+			changed = true;
+		}
+	}
+	if (parsed.cameraResolution !== undefined) {
+		const resolution = validateCameraResolution(parsed.cameraResolution);
+		if (resolution !== parsed.cameraResolution) {
+			parsed.cameraResolution = resolution;
+			changed = true;
+		}
+	}
+	if (parsed.videoFrameRate !== undefined) {
+		const frameRate = clampVideoFrameRate(parsed.videoFrameRate);
+		if (frameRate !== parsed.videoFrameRate) {
+			parsed.videoFrameRate = frameRate;
+			changed = true;
+		}
+	}
+	return changed;
+}
+
 function applyNoiseSuppressionStandardDefaultMigrationV1(parsed: Record<string, unknown>): boolean {
 	if (parsed.noiseSuppressionStandardDefaultMigratedV1 === true) {
 		return false;
@@ -398,11 +424,10 @@ class VoiceSettings {
 	private listeners = new Set<() => void>();
 
 	constructor() {
-		makeAutoObservable<this, 'hasHigherVideoQuality' | 'listeners' | 'notifyListeners'>(
+		makeAutoObservable<this, 'listeners' | 'notifyListeners'>(
 			this,
 			{
 				listeners: false,
-				hasHigherVideoQuality: false,
 				getInputDeviceId: false,
 				getOutputDeviceId: false,
 				getVideoDeviceId: false,
@@ -494,6 +519,7 @@ class VoiceSettings {
 			changed = applyScreenShareContentHintDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
 			changed = applyNoiseSuppressionStandardDefaultMigrationV1(parsed) || changed;
+			changed = applyVideoQualityNormalisationMigration(parsed) || changed;
 			changed = applyScreenShareAv1OptOutMigrationV1(parsed) || changed;
 			changed = applyScreenShareHevcOptOutMigrationV1(parsed) || changed;
 			if (changed) {
@@ -664,19 +690,6 @@ class VoiceSettings {
 		this.adaptiveScreenShareQualityPrefV2 = value;
 	}
 
-	private hasHigherVideoQuality(): boolean {
-		const featureFlag = isLimitToggleEnabled(
-			{
-				feature_higher_video_quality: LimitResolver.resolve({
-					key: 'feature_higher_video_quality',
-					fallback: 0,
-				}),
-			},
-			'feature_higher_video_quality',
-		);
-		return featureFlag;
-	}
-
 	getInputDeviceId(): string {
 		return this.inputDeviceId;
 	}
@@ -757,7 +770,7 @@ class VoiceSettings {
 	}
 
 	getCameraResolution(): CameraResolution {
-		if (this.cameraResolution === 'high' && !this.hasHigherVideoQuality()) {
+		if (this.cameraResolution === 'high' && !hasHigherVideoQuality()) {
 			return 'medium';
 		}
 		return this.cameraResolution;
@@ -768,14 +781,14 @@ class VoiceSettings {
 	}
 
 	getScreenshareResolution(): ScreenshareResolution {
-		if (PREMIUM_SCREENSHARE_RESOLUTIONS.has(this.screenshareResolution) && !this.hasHigherVideoQuality()) {
+		if (PREMIUM_SCREENSHARE_RESOLUTIONS.has(this.screenshareResolution) && !hasHigherVideoQuality()) {
 			return 'medium';
 		}
 		return this.screenshareResolution;
 	}
 
 	getVideoFrameRate(): number {
-		if (this.videoFrameRate > FREE_VIDEO_FRAME_RATE_MAX && !this.hasHigherVideoQuality()) {
+		if (this.videoFrameRate > FREE_VIDEO_FRAME_RATE_MAX && !hasHigherVideoQuality()) {
 			return FREE_VIDEO_FRAME_RATE_MAX;
 		}
 		return this.videoFrameRate;
@@ -1126,11 +1139,13 @@ class VoiceSettings {
 		if (!validVoiceProcessingModes.includes(voiceProcessingMode)) {
 			voiceProcessingMode = DEFAULT_VOICE_PROCESSING_MODE;
 		}
-		let cameraResolution = data.cameraResolution ?? this.cameraResolution;
-		let screenshareResolution = data.screenshareResolution ?? this.screenshareResolution;
-		let videoFrameRate = clampVideoFrameRate(data.videoFrameRate ?? this.videoFrameRate);
+		const cameraResolution =
+			data.cameraResolution === undefined ? undefined : validateCameraResolution(data.cameraResolution);
+		const screenshareResolution =
+			data.screenshareResolution === undefined ? undefined : validateScreenshareResolution(data.screenshareResolution);
+		const videoFrameRate = data.videoFrameRate === undefined ? undefined : clampVideoFrameRate(data.videoFrameRate);
 		const streamingMode = validateStreamingMode(data.streamingMode ?? this.streamingMode);
-		let backgroundImages = validateBackgroundImages(data.backgroundImages ?? this.backgroundImages);
+		const backgroundImages = validateBackgroundImages(data.backgroundImages ?? this.backgroundImages);
 		let backgroundImageId = data.backgroundImageId ?? this.backgroundImageId;
 		const screenShareEncoderMode = validateScreenShareEncoderMode(
 			data.screenShareEncoderMode ?? this.screenShareEncoderMode,
@@ -1146,34 +1161,6 @@ class VoiceSettings {
 		);
 		const screenShareAv1OptIn = data.screenShareAv1OptIn ?? this.screenShareAv1OptIn;
 		const screenShareHevcOptIn = data.screenShareHevcOptIn ?? this.screenShareHevcOptIn;
-		const validCameraResolutions: Array<CameraResolution> = ['low', 'medium', 'high'];
-		if (!validCameraResolutions.includes(cameraResolution)) {
-			cameraResolution = 'medium';
-		}
-		const hasHigherQuality = this.hasHigherVideoQuality();
-		const validScreenshareResolutions: Array<ScreenshareResolution> = [
-			'low_240p',
-			'low_480p',
-			'medium',
-			'high',
-			'ultra',
-			'source',
-		];
-		if (!validScreenshareResolutions.includes(screenshareResolution)) {
-			screenshareResolution = 'medium';
-		}
-		if (!hasHigherQuality) {
-			if (screenshareResolution === 'high' || screenshareResolution === 'ultra' || screenshareResolution === 'source') {
-				screenshareResolution = 'medium';
-			}
-			if (cameraResolution === 'high') {
-				cameraResolution = 'medium';
-			}
-			videoFrameRate = Math.min(30, videoFrameRate);
-			if (backgroundImages.length > 3) {
-				backgroundImages = backgroundImages.slice(0, 3);
-			}
-		}
 		if (backgroundImageId !== NONE_BACKGROUND_ID && backgroundImageId !== BLUR_BACKGROUND_ID) {
 			const imageExists = backgroundImages.some((img: BackgroundImage) => img.id === backgroundImageId);
 			if (!imageExists) {
@@ -1198,7 +1185,7 @@ class VoiceSettings {
 			cameraResolution,
 			mirrorCamera: data.mirrorCamera ?? this.mirrorCamera,
 			screenshareResolution,
-			videoFrameRate: clampVideoFrameRate(videoFrameRate),
+			videoFrameRate,
 			streamingMode,
 			hideStreamPreview: data.hideStreamPreview ?? this.hideStreamPreview,
 			muteStreamAudio: data.muteStreamAudio ?? this.muteStreamAudio,
@@ -1319,6 +1306,17 @@ function validateScreenShareContentHint(hint: unknown): ScreenShareContentHint {
 	return hint === 'detail' || hint === 'motion' || hint === 'text' || hint === 'auto'
 		? hint
 		: DEFAULT_SCREEN_SHARE_CONTENT_HINT;
+}
+
+function validateCameraResolution(value: unknown): CameraResolution {
+	return value === 'low' || value === 'medium' || value === 'high' ? value : 'medium';
+}
+
+function validateScreenshareResolution(value: unknown): ScreenshareResolution {
+	if (value === 'low_240p') return RETIRED_SCREENSHARE_RESOLUTION_REPLACEMENT;
+	return value === 'low_480p' || value === 'medium' || value === 'high' || value === 'ultra' || value === 'source'
+		? value
+		: 'medium';
 }
 
 function validateStreamingMode(mode: unknown): StreamingMode {
