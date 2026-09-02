@@ -12,7 +12,8 @@
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
-		"@fluxer/constants": "workspace:*"
+		"@fluxer/constants": "workspace:*",
+		"undici": "^7.29.0"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

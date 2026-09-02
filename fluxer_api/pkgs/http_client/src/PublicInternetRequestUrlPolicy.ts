@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import dns from 'node:dns';
+import type {LookupFunction} from 'node:net';
 import {BlockList, isIP} from 'node:net';
 import type {RequestUrlPolicy, RequestUrlValidationContext} from '@pkgs/http_client/src/HttpClientTypes';
 import {HttpError} from '@pkgs/http_client/src/HttpError';
+import {Agent} from 'undici';
 
 const DEFAULT_DNS_CACHE_TTL_MS = 60000;
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
@@ -185,6 +187,20 @@ function isBlockedIpAddress(address: string): boolean {
 	return true;
 }
 
+export function isPubliclyRoutableUrlShape(url: URL): boolean {
+	if (!ALLOWED_PROTOCOLS.has(url.protocol)) {
+		return false;
+	}
+	const normalizedHostname = normalizeHostname(url.hostname);
+	if (!normalizedHostname) {
+		return false;
+	}
+	if (isIP(normalizedHostname)) {
+		return !isBlockedIpAddress(normalizedHostname);
+	}
+	return isFqdnHostname(normalizedHostname);
+}
+
 function getPolicyErrorContext(context: RequestUrlValidationContext): string {
 	if (context.phase === 'redirect') {
 		const previous = context.previousUrl ?? 'unknown';
@@ -216,9 +232,43 @@ function deduplicateAddresses(addresses: Array<string>): Array<string> {
 	return deduplicated;
 }
 
+function createBlocklistDispatcher(allowPrivateAddresses: boolean): NonNullable<RequestInit['dispatcher']> {
+	const lookup: LookupFunction = (hostname, options, callback) => {
+		dns.lookup(hostname, {...options, all: true, verbatim: true}, (error, addresses) => {
+			if (error) {
+				callback(error, []);
+				return;
+			}
+			if (!allowPrivateAddresses && addresses.some((entry) => isBlockedIpAddress(entry.address))) {
+				callback(new Error(`Hostname ${hostname} resolved to a disallowed address`), []);
+				return;
+			}
+			if (options.all) {
+				callback(null, addresses);
+				return;
+			}
+			const [primary] = addresses;
+			if (!primary) {
+				callback(new Error(`Hostname ${hostname} resolved to no IP addresses`), []);
+				return;
+			}
+			callback(null, primary.address, primary.family);
+		});
+	};
+	return new Agent({
+		connect: {
+			lookup,
+		},
+	}) as unknown as NonNullable<RequestInit['dispatcher']>;
+}
+
+interface PublicInternetRequestUrlPolicy extends RequestUrlPolicy {
+	dispatcher: NonNullable<RequestInit['dispatcher']>;
+}
+
 export function createPublicInternetRequestUrlPolicy(
 	options?: PublicInternetRequestUrlPolicyOptions,
-): RequestUrlPolicy {
+): PublicInternetRequestUrlPolicy {
 	const dnsCacheTtlMs =
 		typeof options?.dnsCacheTtlMs === 'number' && options.dnsCacheTtlMs > 0
 			? options.dnsCacheTtlMs
@@ -269,5 +319,6 @@ export function createPublicInternetRequestUrlPolicy(
 			}
 		}
 	}
-	return {validate};
+	const dispatcher = createBlocklistDispatcher(allowPrivateAddresses);
+	return {validate, dispatcher};
 }

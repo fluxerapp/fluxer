@@ -83,6 +83,7 @@ function createFetchInit(
 	headers: Record<string, string>,
 	body: string | undefined,
 	signal: AbortSignal,
+	dispatcher: NonNullable<RequestInit['dispatcher']> | undefined,
 ): RequestInit {
 	return {
 		method,
@@ -90,7 +91,14 @@ function createFetchInit(
 		body,
 		signal,
 		redirect: 'manual',
+		...(dispatcher ? {dispatcher} : {}),
 	};
+}
+
+function resolveRequestUrlPolicyDispatcher(
+	requestUrlPolicy: RequestUrlPolicy | undefined,
+): NonNullable<RequestInit['dispatcher']> | undefined {
+	return (requestUrlPolicy as {dispatcher?: NonNullable<RequestInit['dispatcher']>} | undefined)?.dispatcher;
 }
 
 function isRedirectStatus(status: number): boolean {
@@ -142,11 +150,15 @@ async function fetchWithRedirects(
 	let currentMethod: HttpMethod = method;
 	let currentBody = body;
 	let currentHeaders = {...headers};
+	const dispatcher = resolveRequestUrlPolicyDispatcher(requestUrlPolicy);
 	await validateRequestUrlPolicy(requestUrlPolicy, currentUrl, {
 		phase: 'initial',
 		redirectCount: 0,
 	});
-	let response = await fetch(currentUrl.href, createFetchInit(currentMethod, currentHeaders, currentBody, signal));
+	let response = await fetch(
+		currentUrl.href,
+		createFetchInit(currentMethod, currentHeaders, currentBody, signal, dispatcher),
+	);
 	let redirectCount = 0;
 	while (isRedirectStatus(response.status)) {
 		if (redirectCount >= maxRedirects) {
@@ -174,7 +186,10 @@ async function fetchWithRedirects(
 			previousUrl: previousUrl.href,
 		});
 		currentUrl = nextUrl;
-		response = await fetch(currentUrl.href, createFetchInit(currentMethod, currentHeaders, currentBody, signal));
+		response = await fetch(
+			currentUrl.href,
+			createFetchInit(currentMethod, currentHeaders, currentBody, signal, dispatcher),
+		);
 		redirectCount = nextRedirectCount;
 	}
 	return response;
