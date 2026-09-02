@@ -46,6 +46,12 @@ export class ReadStateService {
 				mentionCount: readState.mentionCount,
 				manual,
 				version: readState.version,
+			}).catch((error) => {
+				Logger.error(
+					{userId: userId.toString(), channelId: channelId.toString(), error},
+					'Failed to dispatch MESSAGE_ACK',
+				);
+				return null;
 			});
 		}
 		return readState;
