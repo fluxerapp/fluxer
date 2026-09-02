@@ -450,7 +450,7 @@ msgstr "{count, plural, one {Uitvouwen (# regel)} other {Uitvouwen (# regels)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Toon (# rij)} other {Toon (# rijen)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:304
+#: src/features/voice/components/VoiceParticipantTile.tsx:306
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Vouw # ander apparaat uit} other {Vouw # andere apparaten uit}}"
 
@@ -471,7 +471,7 @@ msgstr "{count, plural, one {In gesprek} other {# in gesprek}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Deelnemen aan videogesprek (# deelnemer)} other {Deelnemen aan videogesprek (# deelnemers)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:621
+#: src/features/voice/components/VoiceParticipantTile.tsx:623
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Blijf # stream bekijken en voeg deze toe} other {Blijf # streams bekijken en voeg deze toe}}"
 
@@ -6031,7 +6031,7 @@ msgstr "Vriend bijnaam wijzigen"
 #. Group DM action that opens the change-nickname modal for the selected user.
 #. Group DM action that opens the change-nickname modal for the selected user.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:97
-#: src/features/ui/action_menu/UserContextMenu.tsx:96
+#: src/features/ui/action_menu/UserContextMenu.tsx:113
 msgid "Change group nickname"
 msgstr "Groepsbijnaam wijzigen"
 
@@ -6088,7 +6088,7 @@ msgid "Change own nickname"
 msgstr "Eigen bijnaam wijzigen"
 
 #. Action that transfers ownership of the selected group or community.
-#: src/features/ui/action_menu/UserContextMenu.tsx:84
+#: src/features/ui/action_menu/UserContextMenu.tsx:101
 msgid "Change owner"
 msgstr "Eigenaar wijzigen"
 
@@ -7381,7 +7381,7 @@ msgid "Close your current DM with {dmDisplayName}. This does not block the user,
 msgstr "Sluit je huidige DM met {dmDisplayName}. Dit blokkeert de gebruiker niet en je kunt de DM later opnieuw openen."
 
 #. Confirm dialog body before closing a DM channel.
-#: src/features/ui/action_menu/UserContextMenu.tsx:92
+#: src/features/ui/action_menu/UserContextMenu.tsx:109
 msgid "Close your DM with {displayName}? You can reopen it anytime."
 msgstr "Je DM met {displayName} sluiten? Je kunt deze op elk moment opnieuw openen."
 
@@ -7524,7 +7524,7 @@ msgstr "Kanaalonderwerp inklappen"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
-#: src/features/voice/components/VoiceParticipantTile.tsx:166
+#: src/features/voice/components/VoiceParticipantTile.tsx:168
 msgid "Collapse devices"
 msgstr "Apparaten samenvouwen"
 
@@ -18854,7 +18854,7 @@ msgstr "Wil je {userName} de groepseigenaar maken? Je verliest dan je eigenaarsr
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:93
-#: src/features/ui/action_menu/UserContextMenu.tsx:100
+#: src/features/ui/action_menu/UserContextMenu.tsx:117
 msgid "Make group owner"
 msgstr "Groepseigenaar maken"
 
@@ -25290,7 +25290,7 @@ msgstr "Venstergrootte en -positie onthouden"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:142
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:271
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
-#: src/features/ui/action_menu/UserContextMenu.tsx:80
+#: src/features/ui/action_menu/UserContextMenu.tsx:97
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
@@ -25323,7 +25323,7 @@ msgstr "{engineName} verwijderen"
 #. Confirm dialog body before removing a member from a group DM.
 #. Confirm dialog body before removing a member from a group DM.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:69
-#: src/features/ui/action_menu/UserContextMenu.tsx:76
+#: src/features/ui/action_menu/UserContextMenu.tsx:93
 msgid "Remove {userName} from the group?"
 msgstr "{userName} uit de groep verwijderen?"
 
@@ -25414,7 +25414,7 @@ msgstr "Verwijderen uit favorieten"
 #. Group DM action that removes the selected member from the group.
 #. Group DM action that removes the selected member from the group.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:65
-#: src/features/ui/action_menu/UserContextMenu.tsx:72
+#: src/features/ui/action_menu/UserContextMenu.tsx:89
 msgid "Remove from group"
 msgstr "Uit groep verwijderen"
 
@@ -33059,7 +33059,7 @@ msgid "Transfer community ownership"
 msgstr "Community-eigendom overdragen"
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/UserContextMenu.tsx:88
+#: src/features/ui/action_menu/UserContextMenu.tsx:105
 msgid "Transfer group ownership to {userName}?"
 msgstr "Groepseigendom overdragen aan {userName}?"
 
@@ -33965,7 +33965,7 @@ msgstr "onbekende gebruiker"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:162
+#: src/features/voice/components/VoiceParticipantTile.tsx:164
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Onbekende gebruiker"

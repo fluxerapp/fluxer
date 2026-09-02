@@ -450,7 +450,7 @@ msgstr "{count, plural, one {펼치기 (#줄)} other {펼치기 (#줄)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {# 행 확장} other {# 행 확장}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:304
+#: src/features/voice/components/VoiceParticipantTile.tsx:306
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {#개의 다른 기기 확장} other {#개의 다른 기기 확장}}"
 
@@ -471,7 +471,7 @@ msgstr "{count, plural, one {통화 중} other {#명 통화 중}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {영상 통화 참여 (참여자 #명)} other {영상 통화 참여 (참여자 #명)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:621
+#: src/features/voice/components/VoiceParticipantTile.tsx:623
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {#개의 스트림을 계속 시청하고 이 스트림을 추가합니다} other {#개의 스트림을 계속 시청하고 이 스트림을 추가합니다}}"
 
@@ -6031,7 +6031,7 @@ msgstr "친구 닉네임 변경"
 #. Group DM action that opens the change-nickname modal for the selected user.
 #. Group DM action that opens the change-nickname modal for the selected user.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:97
-#: src/features/ui/action_menu/UserContextMenu.tsx:96
+#: src/features/ui/action_menu/UserContextMenu.tsx:113
 msgid "Change group nickname"
 msgstr "그룹 닉네임 변경"
 
@@ -6088,7 +6088,7 @@ msgid "Change own nickname"
 msgstr "내 닉네임 변경"
 
 #. Action that transfers ownership of the selected group or community.
-#: src/features/ui/action_menu/UserContextMenu.tsx:84
+#: src/features/ui/action_menu/UserContextMenu.tsx:101
 msgid "Change owner"
 msgstr "소유자 변경"
 
@@ -7381,7 +7381,7 @@ msgid "Close your current DM with {dmDisplayName}. This does not block the user,
 msgstr "{dmDisplayName}님과의 현재 DM을 닫습니다. 이 작업은 사용자를 차단하지 않으며, 나중에 DM을 다시 열 수 있습니다."
 
 #. Confirm dialog body before closing a DM channel.
-#: src/features/ui/action_menu/UserContextMenu.tsx:92
+#: src/features/ui/action_menu/UserContextMenu.tsx:109
 msgid "Close your DM with {displayName}? You can reopen it anytime."
 msgstr "{displayName}님과의 DM을 닫으시겠어요? 언제든지 다시 열 수 있습니다."
 
@@ -7524,7 +7524,7 @@ msgstr "채널 주제 접기"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
-#: src/features/voice/components/VoiceParticipantTile.tsx:166
+#: src/features/voice/components/VoiceParticipantTile.tsx:168
 msgid "Collapse devices"
 msgstr "기기 접기"
 
@@ -18854,7 +18854,7 @@ msgstr "{userName}님을 그룹 소유자로 지정하시겠어요? 소유자 �
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:93
-#: src/features/ui/action_menu/UserContextMenu.tsx:100
+#: src/features/ui/action_menu/UserContextMenu.tsx:117
 msgid "Make group owner"
 msgstr "그룹 소유자로 지정"
 
@@ -25290,7 +25290,7 @@ msgstr "창 크기 및 위치 기억"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:142
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:271
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
-#: src/features/ui/action_menu/UserContextMenu.tsx:80
+#: src/features/ui/action_menu/UserContextMenu.tsx:97
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
@@ -25323,7 +25323,7 @@ msgstr "{engineName} 제거"
 #. Confirm dialog body before removing a member from a group DM.
 #. Confirm dialog body before removing a member from a group DM.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:69
-#: src/features/ui/action_menu/UserContextMenu.tsx:76
+#: src/features/ui/action_menu/UserContextMenu.tsx:93
 msgid "Remove {userName} from the group?"
 msgstr "{userName}님을 그룹에서 내보낼까요?"
 
@@ -25414,7 +25414,7 @@ msgstr "즐겨찾기에서 삭제"
 #. Group DM action that removes the selected member from the group.
 #. Group DM action that removes the selected member from the group.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:65
-#: src/features/ui/action_menu/UserContextMenu.tsx:72
+#: src/features/ui/action_menu/UserContextMenu.tsx:89
 msgid "Remove from group"
 msgstr "그룹에서 내보내기"
 
@@ -33059,7 +33059,7 @@ msgid "Transfer community ownership"
 msgstr "커뮤니티 소유권 이전"
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/UserContextMenu.tsx:88
+#: src/features/ui/action_menu/UserContextMenu.tsx:105
 msgid "Transfer group ownership to {userName}?"
 msgstr "{userName}님에게 그룹 소유권을 이전하시겠어요?"
 
@@ -33965,7 +33965,7 @@ msgstr "알 수 없는 사용자"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:162
+#: src/features/voice/components/VoiceParticipantTile.tsx:164
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "알 수 없는 사용자"

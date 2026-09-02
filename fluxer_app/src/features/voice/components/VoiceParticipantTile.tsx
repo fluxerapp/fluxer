@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {LongPressable} from '@app/features/app/components/LongPressable';
+import Channels from '@app/features/channel/state/Channels';
 import {WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {dimColor} from '@app/features/theme/utils/ColorUtils';
 import type {VoiceParticipantMenuSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
+import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
 import {VoiceParticipantContextMenu} from '@app/features/ui/action_menu/VoiceParticipantContextMenu';
 import {Button} from '@app/features/ui/button/Button';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -662,35 +664,56 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		stopWatching,
 		streamKey,
 	]);
+	const privateCallChannel = channelId ? Channels.getChannel(channelId) : null;
+	const usePrivateCallCameraMenu = participantMenuSource.kind === 'camera' && Boolean(privateCallChannel?.isPrivate());
+	const isGroupedParticipantItem =
+		isCurrentUser && participantUser !== undefined && hasMultipleConnectionsForCurrentUser(guildId, participantUser.id);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent | MouseEvent) => {
 			if (!participantUser) return;
-			const isGroupedItem = isCurrentUser && hasMultipleConnectionsForCurrentUser(guildId, participantUser.id);
-			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-				<VoiceParticipantContextMenu
-					user={participantUser}
-					participantName={participantDisplayName}
-					onClose={onClose}
-					guildId={guildId}
-					connectionId={connectionId}
-					surface="call-tile"
-					source={participantMenuSource}
-					isGroupedItem={isGroupedItem}
-					hiddenConnectionCount={groupHiddenCount}
-					deviceConnectionCount={groupDeviceConnectionCount}
-					isDeviceGroupExpanded={tileGroup?.isExpanded ?? false}
-					onToggleDeviceGroup={tileGroup?.onExpand}
-					data-flx="voice.voice-participant-tile.handle-context-menu.voice-participant-context-menu"
-				/>
-			));
+			ContextMenuCommands.openFromEvent(event, ({onClose}) =>
+				usePrivateCallCameraMenu && channelId ? (
+					<UserContextMenu
+						user={participantUser}
+						onClose={onClose}
+						channelId={channelId}
+						isCallContext
+						privateCallContext={{
+							connectionId,
+							isConnected: true,
+							participantName: participantDisplayName,
+							visualSource: 'camera',
+						}}
+						data-flx="voice.voice-participant-tile.handle-context-menu.user-context-menu"
+					/>
+				) : (
+					<VoiceParticipantContextMenu
+						user={participantUser}
+						participantName={participantDisplayName}
+						onClose={onClose}
+						guildId={guildId}
+						connectionId={connectionId}
+						surface="call-tile"
+						source={participantMenuSource}
+						isGroupedItem={isGroupedParticipantItem}
+						hiddenConnectionCount={groupHiddenCount}
+						deviceConnectionCount={groupDeviceConnectionCount}
+						isDeviceGroupExpanded={tileGroup?.isExpanded ?? false}
+						onToggleDeviceGroup={tileGroup?.onExpand}
+						data-flx="voice.voice-participant-tile.handle-context-menu.voice-participant-context-menu"
+					/>
+				),
+			);
 		},
 		[
 			participantUser,
 			participantDisplayName,
 			guildId,
 			connectionId,
-			isCurrentUser,
+			isGroupedParticipantItem,
 			participantMenuSource,
+			usePrivateCallCameraMenu,
+			channelId,
 			groupHiddenCount,
 			groupDeviceConnectionCount,
 			tileGroup,
@@ -1426,7 +1449,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 					connectionId={connectionId}
 					surface="call-tile"
 					source={participantMenuSource}
-					isConnectionItem
+					isConnectionItem={isGroupedParticipantItem}
 					data-flx="voice.voice-participant-tile.voice-participant-tile-inner.voice-participant-bottom-sheet"
 				/>
 			)}
