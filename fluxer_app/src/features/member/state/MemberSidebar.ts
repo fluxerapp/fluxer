@@ -342,6 +342,50 @@ class MemberSidebar {
 		}
 	}
 
+	handleGuildStorageIdentityChange(guildId: string): void {
+		const subscribedChannels = this.listSubscribedChannelIds[guildId];
+		if (subscribedChannels == null) {
+			return;
+		}
+		const existingGuildLists = this.lists[guildId] ?? {};
+		const nextSubscribedChannels: Record<string, string> = {};
+		const changedStorageKeys = new Set<string>();
+		const rekeyedRequestedRanges = new Map<string, NormalizedMemberListRanges>();
+		for (const [previousStorageKey, channelId] of Object.entries(subscribedChannels)) {
+			const storageKey = this.resolveStorageKey(guildId, channelId);
+			nextSubscribedChannels[storageKey] = channelId;
+			if (storageKey === previousStorageKey) {
+				continue;
+			}
+			changedStorageKeys.add(previousStorageKey);
+			changedStorageKeys.add(storageKey);
+			rekeyedRequestedRanges.set(
+				storageKey,
+				existingGuildLists[previousStorageKey]?.requestedRanges ?? EMPTY_MEMBER_LIST_RANGES,
+			);
+		}
+		if (changedStorageKeys.size === 0) {
+			return;
+		}
+		for (const storageKey of changedStorageKeys) {
+			this.clearPendingListUpdateBatch(guildId, storageKey);
+		}
+		const guildLists: Record<string, MemberListState> = {...existingGuildLists};
+		for (const storageKey of changedStorageKeys) {
+			delete guildLists[storageKey];
+		}
+		for (const [storageKey, requestedRanges] of rekeyedRequestedRanges) {
+			guildLists[storageKey] = this.createEmptyListState(requestedRanges);
+		}
+		this.lists = {...this.lists, [guildId]: guildLists};
+		this.listSubscribedChannelIds = {...this.listSubscribedChannelIds, [guildId]: nextSubscribedChannels};
+		this.syncedMemberListGuildIds.delete(guildId);
+		if (this.sentMemberListGuildId === guildId) {
+			this.clearSentMemberListSubscription();
+		}
+		this.memberListSubscriptionGeneration += 1;
+	}
+
 	handleListUpdate(params: MemberListUpdateParams): void {
 		const {guildId} = params;
 		if (this.isMemberListUpdatesDisabled(guildId)) {
