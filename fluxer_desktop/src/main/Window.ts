@@ -106,7 +106,7 @@ function getOrigin(url?: string): string | null {
 	}
 }
 
-function isTrustedOrigin(url?: string): boolean {
+export function isTrustedOrigin(url?: string): boolean {
 	const origin = getOrigin(url);
 	if (!origin) return false;
 	if (trustedWebOrigins.has(origin)) return true;

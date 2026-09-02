@@ -150,6 +150,9 @@ function loadNativeScreenCapture({platform = 'linux', addon, tccStatus = 'not-de
 				normalizeScreenCaptureDimension: (value) => value,
 			};
 		}
+		if (specifier === './PrivilegedRendererDocuments') {
+			return {requirePrivilegedRendererDocumentSender: () => {}};
+		}
 		throw new Error(`Unexpected import: ${specifier}`);
 	}
 

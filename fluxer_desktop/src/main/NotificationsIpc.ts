@@ -7,6 +7,7 @@ import type {NotificationOptions} from '@electron/common/Types';
 import {getNativeNotificationsMode} from '@electron/main/LaunchOptions';
 import {resolveNotificationIcon} from '@electron/main/NotificationIcon';
 import {shouldPlayNotificationSound} from '@electron/main/NotificationState';
+import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
 import {type BrowserWindow, ipcMain, Notification, nativeImage} from 'electron';
 
 const logger = createChildLogger('Notifications');
@@ -319,11 +320,12 @@ export function registerNotificationIpcHandlers(getMainWindow: () => BrowserWind
 	ipcMain.handle(
 		'show-notification',
 		async (
-			_event,
+			event,
 			options: NotificationOptions,
 		): Promise<{
 			id: string;
 		}> => {
+			requirePrivilegedRendererDocumentSender(event, 'show-notification');
 			const id = getNotificationId(options);
 			if (process.platform === 'linux') {
 				await showLinuxNativeNotification(id, options, getMainWindow);
