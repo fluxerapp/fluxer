@@ -382,16 +382,14 @@ const VoiceCallViewInner = observer(
 			void toggleVoiceCallAppFullscreen();
 		}, [toggleVoiceCallAppFullscreen]);
 		const handlePopOutCall = useCallback(() => {
-			void (async () => {
-				if (isVoiceCallAppFullscreen) {
-					await exitVoiceCallAppFullscreen();
-				}
-				PopoutWindowManager.openCallPopout({
-					channelId: channel.id,
-					guildId: channel.guildId ?? null,
-					title: channel.name ?? i18n._(VOICE_CALL_DESCRIPTOR),
-				});
-			})();
+			const didOpen = PopoutWindowManager.openCallPopout({
+				channelId: channel.id,
+				guildId: channel.guildId ?? null,
+				title: channel.name ?? i18n._(VOICE_CALL_DESCRIPTOR),
+			});
+			if (didOpen && isVoiceCallAppFullscreen) {
+				void exitVoiceCallAppFullscreen();
+			}
 		}, [channel.guildId, channel.id, channel.name, exitVoiceCallAppFullscreen, i18n, isVoiceCallAppFullscreen]);
 		const fullscreenButtonLabel = isVoiceCallAppFullscreen
 			? i18n._(EXIT_FULLSCREEN_DESCRIPTOR)

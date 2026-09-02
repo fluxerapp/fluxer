@@ -404,7 +404,7 @@ msgstr "{count, plural, one {#つの共通コミュニティ} other {#つの共�
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {#人} other {#人}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:497
+#: src/features/voice/components/VoiceCallView.tsx:495
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {#人が通話中} other {#人が通話中}}"
 

@@ -404,7 +404,7 @@ msgstr "{count, plural, one {# společná komunita} other {# společné komunity
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# další} few {# další} many {# dalších} other {# dalších}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:497
+#: src/features/voice/components/VoiceCallView.tsx:495
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# účastník hovoru} few {# účastníci hovoru} many {# účastníka hovoru} other {# účastníků hovoru}}"
 

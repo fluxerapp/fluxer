@@ -26,21 +26,23 @@ const logger = new Logger('PopoutWindow');
 
 interface PopoutWindowProps {
 	windowKey: string;
+	windowGeneration: number;
 	title: string;
 	showTitlebarTitle?: boolean;
 	width: number;
 	height: number;
 	isAlwaysOnTop: boolean;
-	onToggleAlwaysOnTop: () => void;
+	onToggleAlwaysOnTop?: () => void;
 	onRestore: () => void;
-	onClosed: () => void;
-	onWindowOpened?: (childWindow: Window) => void;
+	onClosed: (windowGeneration: number) => void;
+	onWindowOpened?: (childWindow: Window, windowGeneration: number) => void;
 	children: React.ReactNode;
 }
 
 interface PopoutChildState {
 	childWindow: Window;
 	container: HTMLElement;
+	windowGeneration: number;
 }
 
 interface PopoutWindowOverlayTreeProps {
@@ -70,6 +72,7 @@ function prepareChildDocument(childWindow: Window, title: string): HTMLElement {
 
 export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 	windowKey,
+	windowGeneration,
 	title,
 	showTitlebarTitle = true,
 	width,
@@ -93,7 +96,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 		const childWindow = window.open('about:blank', windowKey, features);
 		if (!childWindow) {
 			logger.warn('Failed to open popout window', {windowKey});
-			onClosedRef.current();
+			onClosedRef.current(windowGeneration);
 			return;
 		}
 		const container = prepareChildDocument(childWindow, initialTitleRef.current);
@@ -103,12 +106,12 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 		const handlePageHide = (): void => {
 			if (closed) return;
 			closed = true;
-			onClosedRef.current();
+			onClosedRef.current(windowGeneration);
 		};
 		childWindow.addEventListener('pagehide', handlePageHide);
 		childWindow.focus();
-		onWindowOpenedRef.current?.(childWindow);
-		setChildState({childWindow, container});
+		onWindowOpenedRef.current?.(childWindow, windowGeneration);
+		setChildState({childWindow, container, windowGeneration});
 		return () => {
 			disconnectThemeObserver();
 			disconnectStylesheetObserver();
@@ -118,7 +121,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 				childWindow.close();
 			}
 		};
-	}, [windowKey]);
+	}, [windowGeneration, windowKey]);
 	useEffect(() => {
 		if (!childState || childState.childWindow.closed) return;
 		childState.childWindow.document.title = title;
@@ -163,11 +166,11 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 	}, [childState]);
 	const handleCloseClick = useCallback(() => {
 		if (!childState || childState.childWindow.closed) {
-			onClosedRef.current();
+			onClosedRef.current(childState?.windowGeneration ?? windowGeneration);
 			return;
 		}
 		childState.childWindow.close();
-	}, [childState]);
+	}, [childState, windowGeneration]);
 	if (!childState) {
 		return null;
 	}

@@ -404,7 +404,7 @@ msgstr "{count, plural, one {# közös közösség} other {# közös közösség
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# másik} other {# többiek}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:497
+#: src/features/voice/components/VoiceCallView.tsx:495
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# résztvevő a hívásban} other {# résztvevő a hívásban}}"
 
