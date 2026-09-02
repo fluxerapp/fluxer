@@ -2,6 +2,34 @@
 
 import type {Readable} from 'node:stream';
 
+export class StorageObjectRangeNotSatisfiableError extends Error {
+	readonly bucket: string;
+	readonly key: string;
+	readonly range: string;
+
+	constructor(bucket: string, key: string, range: string) {
+		super(`Requested range ${range} is not satisfiable for ${bucket}/${key}`);
+		this.name = 'StorageObjectRangeNotSatisfiableError';
+		this.bucket = bucket;
+		this.key = key;
+		this.range = range;
+	}
+}
+
+export class StorageObjectListingOverflowError extends Error {
+	readonly bucket: string;
+	readonly prefix: string;
+	readonly maxObjects: number;
+
+	constructor(bucket: string, prefix: string, maxObjects: number) {
+		super(`Object listing exceeds maximum of ${maxObjects} objects for ${bucket}/${prefix}`);
+		this.name = 'StorageObjectListingOverflowError';
+		this.bucket = bucket;
+		this.prefix = prefix;
+		this.maxObjects = maxObjects;
+	}
+}
+
 export interface ProcessedStorageObjectMetadata {
 	contentType: string;
 	contentLength: number;
@@ -97,7 +125,7 @@ export interface IStorageService {
 	purgeBucket(bucket: string): Promise<void>;
 	uploadAvatar(params: {prefix: string; key: string; body: Uint8Array}): Promise<void>;
 	deleteAvatar(params: {prefix: string; key: string}): Promise<void>;
-	listObjects(params: {bucket: string; prefix: string}): Promise<
+	listObjects(params: {bucket: string; prefix: string; maxObjects?: number}): Promise<
 		ReadonlyArray<{
 			key: string;
 			lastModified?: Date;

@@ -217,9 +217,9 @@ export const MessageSearchRequest = z.object({
 		.number()
 		.int()
 		.min(1)
-		.max(Number.MAX_SAFE_INTEGER)
+		.max(400)
 		.default(1)
-		.describe('Page number for pagination (ignored when cursor is provided)'),
+		.describe('Page number for pagination (ignored when cursor is provided). Use cursor to page beyond this.'),
 	cursor: z
 		.array(z.string())
 		.optional()
