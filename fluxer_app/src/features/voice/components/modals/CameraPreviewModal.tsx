@@ -631,8 +631,8 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 		VoiceSettings.videoDeviceId,
 		VoiceSettings.backgroundImageId,
 		VoiceSettings.mirrorCamera,
-		VoiceSettings.cameraResolution,
-		VoiceSettings.videoFrameRate,
+		VoiceSettings.getCameraResolution(),
+		VoiceSettings.getVideoFrameRate(),
 		voiceBackgroundsAvailable,
 	]);
 	const voiceSettings = VoiceSettings;

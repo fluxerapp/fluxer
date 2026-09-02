@@ -19,7 +19,6 @@ import {
 	type VoiceProcessingMode,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
 import {clampVoiceVolumePercent} from '@app/features/voice/utils/VoiceVolumeUtils';
-import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {makeAutoObservable} from 'mobx';
 
 export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
@@ -53,6 +52,8 @@ const VIDEO_FRAME_RATE_MAX = 120;
 const VIDEO_FRAME_RATE_DEFAULT = 30;
 const DEFAULT_BROWSER_NOISE_SUPPRESSION = true;
 const DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION = false;
+const FREE_VIDEO_FRAME_RATE_MAX = 30;
+const PREMIUM_SCREENSHARE_RESOLUTIONS: ReadonlySet<ScreenshareResolution> = new Set(['high', 'ultra', 'source']);
 export const CAMERA_EFFECT_STRENGTH_MIN = 0;
 export const CAMERA_EFFECT_STRENGTH_MAX = 100;
 export const CAMERA_EFFECT_STRENGTH_DEFAULT = 50;
@@ -388,10 +389,11 @@ class VoiceSettings {
 	private listeners = new Set<() => void>();
 
 	constructor() {
-		makeAutoObservable<this, 'listeners' | 'notifyListeners'>(
+		makeAutoObservable<this, 'hasHigherVideoQuality' | 'listeners' | 'notifyListeners'>(
 			this,
 			{
 				listeners: false,
+				hasHigherVideoQuality: false,
 				getInputDeviceId: false,
 				getOutputDeviceId: false,
 				getVideoDeviceId: false,
@@ -572,7 +574,6 @@ class VoiceSettings {
 			'lastScreenShareSource',
 			'prioritizeSpeakingParticipants',
 		]);
-		this.updateSettings({});
 	}
 
 	get showVoiceConnectionId(): boolean {
@@ -661,47 +662,6 @@ class VoiceSettings {
 
 	set adaptiveScreenShareQuality(value: boolean) {
 		this.adaptiveScreenShareQualityPrefV2 = value;
-	}
-
-	handleGatewayReady(user: UserPrivate): void {
-		if (this.isUserPremium(user.premium_type)) {
-			return;
-		}
-		if (!this.hasHigherVideoQuality()) {
-			this.sanitizePremiumSettings();
-		}
-	}
-
-	handleUserUpdate(user: Partial<UserPrivate>): void {
-		if (user.premium_type === undefined) {
-			return;
-		}
-		if (this.isUserPremium(user.premium_type)) {
-			return;
-		}
-		if (!this.hasHigherVideoQuality()) {
-			this.sanitizePremiumSettings();
-		}
-	}
-
-	private isUserPremium(premiumType: number | null | undefined): boolean {
-		return premiumType != null && premiumType > 0;
-	}
-
-	private sanitizePremiumSettings(): void {
-		if (
-			this.screenshareResolution === 'high' ||
-			this.screenshareResolution === 'ultra' ||
-			this.screenshareResolution === 'source'
-		) {
-			this.screenshareResolution = 'medium';
-		}
-		if (this.cameraResolution === 'high') {
-			this.cameraResolution = 'medium';
-		}
-		if (this.videoFrameRate > 30) {
-			this.videoFrameRate = 30;
-		}
 	}
 
 	private hasHigherVideoQuality(): boolean {
@@ -797,6 +757,9 @@ class VoiceSettings {
 	}
 
 	getCameraResolution(): CameraResolution {
+		if (this.cameraResolution === 'high' && !this.hasHigherVideoQuality()) {
+			return 'medium';
+		}
 		return this.cameraResolution;
 	}
 
@@ -805,10 +768,16 @@ class VoiceSettings {
 	}
 
 	getScreenshareResolution(): ScreenshareResolution {
+		if (PREMIUM_SCREENSHARE_RESOLUTIONS.has(this.screenshareResolution) && !this.hasHigherVideoQuality()) {
+			return 'medium';
+		}
 		return this.screenshareResolution;
 	}
 
 	getVideoFrameRate(): number {
+		if (this.videoFrameRate > FREE_VIDEO_FRAME_RATE_MAX && !this.hasHigherVideoQuality()) {
+			return FREE_VIDEO_FRAME_RATE_MAX;
+		}
 		return this.videoFrameRate;
 	}
 
