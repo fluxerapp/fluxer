@@ -3,6 +3,7 @@
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
+import {observeResize} from '@app/features/platform/utils/SharedResizeObserver';
 import ContextMenu from '@app/features/ui/state/ContextMenu';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import {parseStreamKey} from '@app/features/voice/components/StreamKeys';
@@ -21,6 +22,7 @@ import {
 	type StreamPreviewUploadUrlCacheEntryLike,
 } from '@app/features/voice/components/voice_participant_tile/StreamPreviewUploadPolicy';
 import {logger} from '@app/features/voice/components/voice_participant_tile/shared';
+import {resolveDevicePixelRatio} from '@app/features/voice/DevicePixelRatio';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {useStoreVersion} from '@app/features/voice/engine/Store';
@@ -37,7 +39,13 @@ import {
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {
+	applyScreenShareViewerDemand,
+	isWithinScreenShareViewerDemandDeadBand,
+	measureScreenShareViewerDemand,
+	releaseScreenShareViewerDemand,
+	SCREEN_SHARE_VIEWER_DEMAND_DEBOUNCE_MS,
 	type ScreenSharePublicationOperation,
+	type ScreenShareViewerDemandDimensions,
 	syncScreenSharePublication,
 	syncWatchedScreenSharePublications,
 } from '@app/features/voice/utils/ScreenShareSubscriptionPolicy';
@@ -358,6 +366,66 @@ export function useScreenShareAudioPublication(
 		};
 	}, [participant, enabled]);
 	return {publication, hasTrack};
+}
+
+let nextScreenShareViewerDemandKey = 0;
+
+export function useScreenShareViewerDemand({
+	enabled,
+	publication,
+	videoRef,
+	onError,
+}: {
+	enabled: boolean;
+	publication: RemoteTrackPublication | null | undefined;
+	videoRef: React.RefObject<HTMLVideoElement | null>;
+	onError?: (operation: ScreenSharePublicationOperation, label: string, error: unknown) => void;
+}): void {
+	const viewerKeyRef = useRef<string | null>(null);
+	if (viewerKeyRef.current === null) {
+		nextScreenShareViewerDemandKey += 1;
+		viewerKeyRef.current = `screen-share-viewer-${nextScreenShareViewerDemandKey}`;
+	}
+	const viewerKey = viewerKeyRef.current;
+	const trackSid = publication?.trackSid ?? null;
+	const onErrorRef = useRef(onError);
+	onErrorRef.current = onError;
+	useEffect(() => {
+		if (!enabled || !publication || !trackSid) return;
+		const element = videoRef.current;
+		if (!element) return;
+		const label = 'screen share video publication';
+		const handleError = (operation: ScreenSharePublicationOperation, errorLabel: string, error: unknown) => {
+			logger.error(`${operation} failed for ${errorLabel}`, error);
+			onErrorRef.current?.(operation, errorLabel, error);
+		};
+		let applied: ScreenShareViewerDemandDimensions | null = null;
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
+		const apply = () => {
+			timeoutId = null;
+			const target = videoRef.current;
+			const next = measureScreenShareViewerDemand(
+				target,
+				resolveDevicePixelRatio(target?.ownerDocument.defaultView ?? null),
+			);
+			if (!next || isWithinScreenShareViewerDemandDeadBand(applied, next)) return;
+			applied = next;
+			applyScreenShareViewerDemand({publication, label, viewerKey, dimensions: next, onError: handleError});
+		};
+		const schedule = () => {
+			if (timeoutId !== null) return;
+			timeoutId = setTimeout(apply, SCREEN_SHARE_VIEWER_DEMAND_DEBOUNCE_MS);
+		};
+		schedule();
+		const stopObserving = typeof ResizeObserver === 'undefined' ? null : observeResize(element, schedule);
+		return () => {
+			if (timeoutId !== null) {
+				clearTimeout(timeoutId);
+			}
+			stopObserving?.();
+			releaseScreenShareViewerDemand({publication, label, trackSid, viewerKey, onError: handleError});
+		};
+	}, [enabled, publication, trackSid, videoRef, viewerKey]);
 }
 
 export function useScreenshareWatchSubscription(opts: {

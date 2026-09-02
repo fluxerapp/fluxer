@@ -66,6 +66,7 @@ import {
 	useEffectiveTrackRef,
 	useIntersection,
 	useScreenShareAudioPublication,
+	useScreenShareViewerDemand,
 	useScreensharePreviewUploader,
 	useScreenshareWatchSubscription,
 	useTileContextMenuActive,
@@ -458,6 +459,12 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		streamKey,
 		onVideoSubscriptionError: reportVideoSubscriptionError,
 		getGraphSnapshot: getVoiceMediaGraphSnapshotForTile,
+	});
+	useScreenShareViewerDemand({
+		enabled: isInteractiveScreenShareTile && !isOwnScreenShare && isWatching && hasSubscribedScreenShareVideo,
+		publication,
+		videoRef,
+		onError: reportVideoSubscriptionError,
 	});
 	useEffect(() => {
 		if (!isScreenShare || isOwnScreenShare || isFocusedPlaceholderTile) return;

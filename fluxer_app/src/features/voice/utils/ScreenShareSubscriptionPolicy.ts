@@ -2,17 +2,30 @@
 
 import {VideoQuality} from 'livekit-client';
 
+export interface ScreenShareViewerDemandDimensions {
+	width: number;
+	height: number;
+}
+
 export interface ScreenSharePublicationTarget {
+	trackSid?: string | null;
 	isEnabled?: boolean;
 	isDesired?: boolean;
 	isSubscribed?: boolean;
+	videoQuality?: VideoQuality;
 	setEnabled?: (enabled: boolean) => void;
 	setSubscribed?: (subscribed: boolean) => void;
 	setVideoQuality?: (quality: VideoQuality) => void;
+	setVideoDimensions?: (dimensions: ScreenShareViewerDemandDimensions) => void;
 	emitTrackUpdate?: () => void;
 }
 
-export type ScreenSharePublicationOperation = 'setEnabled' | 'setSubscribed' | 'setVideoQuality' | 'emitTrackUpdate';
+export type ScreenSharePublicationOperation =
+	| 'setEnabled'
+	| 'setSubscribed'
+	| 'setVideoQuality'
+	| 'setVideoDimensions'
+	| 'emitTrackUpdate';
 export type ScreenSharePublicationErrorHandler = (
 	operation: ScreenSharePublicationOperation,
 	label: string,
@@ -24,7 +37,6 @@ export interface SyncScreenSharePublicationOptions {
 	label: string;
 	shouldSubscribe: boolean;
 	shouldEnable?: boolean;
-	videoQuality?: VideoQuality;
 	onError?: ScreenSharePublicationErrorHandler;
 }
 
@@ -37,6 +49,180 @@ export interface SyncWatchedScreenSharePublicationsOptions {
 	videoPublication?: ScreenSharePublicationTarget | null;
 	audioPublication?: ScreenSharePublicationTarget | null;
 	onError?: ScreenSharePublicationErrorHandler;
+}
+
+const SCREEN_SHARE_VIEWER_DEMAND_DEAD_BAND_RATIO = 0.05;
+export const SCREEN_SHARE_VIEWER_DEMAND_DEBOUNCE_MS = 500;
+const SCREEN_SHARE_VIEWER_DEMAND_MAX_QUALITY = VideoQuality.HIGH;
+
+const viewerDemandByTrackSid = new Map<string, Map<string, ScreenShareViewerDemandDimensions>>();
+
+function resolveScreenShareViewerDemandPixelDensity(devicePixelRatio: number): number {
+	if (!Number.isFinite(devicePixelRatio) || devicePixelRatio <= 0) return 1;
+	return devicePixelRatio > 2 ? 2 : 1;
+}
+
+export function measureScreenShareViewerDemand(
+	element: {clientWidth: number; clientHeight: number} | null | undefined,
+	devicePixelRatio: number,
+): ScreenShareViewerDemandDimensions | null {
+	if (!element) return null;
+	const density = resolveScreenShareViewerDemandPixelDensity(devicePixelRatio);
+	const width = Math.ceil(element.clientWidth * density);
+	const height = Math.ceil(element.clientHeight * density);
+	if (width <= 0 || height <= 0) return null;
+	return {width, height};
+}
+
+export function isWithinScreenShareViewerDemandDeadBand(
+	applied: ScreenShareViewerDemandDimensions | null,
+	next: ScreenShareViewerDemandDimensions,
+	ratio: number = SCREEN_SHARE_VIEWER_DEMAND_DEAD_BAND_RATIO,
+): boolean {
+	if (!applied) return false;
+	return (
+		Math.abs(next.width - applied.width) <= applied.width * ratio &&
+		Math.abs(next.height - applied.height) <= applied.height * ratio
+	);
+}
+
+function allowsScreenShareViewerDemand(videoQuality: VideoQuality | undefined): boolean {
+	return (videoQuality ?? SCREEN_SHARE_VIEWER_DEMAND_MAX_QUALITY) === SCREEN_SHARE_VIEWER_DEMAND_MAX_QUALITY;
+}
+
+function hasScreenShareViewerDemandTrack(publication: ScreenSharePublicationTarget): boolean {
+	return publication.isSubscribed ?? true;
+}
+
+export function clearScreenShareViewerDemand(): void {
+	viewerDemandByTrackSid.clear();
+}
+
+function selectLargestScreenShareViewerDemand(
+	demands: Iterable<ScreenShareViewerDemandDimensions>,
+): ScreenShareViewerDemandDimensions | null {
+	let largest: ScreenShareViewerDemandDimensions | null = null;
+	for (const demand of demands) {
+		largest =
+			largest === null
+				? demand
+				: {width: Math.max(largest.width, demand.width), height: Math.max(largest.height, demand.height)};
+	}
+	return largest;
+}
+
+function getScreenShareViewerDemand(trackSid: string | null | undefined): ScreenShareViewerDemandDimensions | null {
+	if (!trackSid) return null;
+	const demands = viewerDemandByTrackSid.get(trackSid);
+	if (!demands) return null;
+	return selectLargestScreenShareViewerDemand(demands.values());
+}
+
+function setPublicationVideoDimensions(
+	publication: ScreenSharePublicationTarget,
+	label: string,
+	dimensions: ScreenShareViewerDemandDimensions,
+	onError?: ScreenSharePublicationErrorHandler,
+): void {
+	if (typeof publication.setVideoDimensions !== 'function') return;
+	try {
+		publication.setVideoDimensions(dimensions);
+	} catch (error) {
+		onError?.('setVideoDimensions', label, error);
+	}
+}
+
+function applyPublicationViewerDemand(
+	publication: ScreenSharePublicationTarget,
+	label: string,
+	onError?: ScreenSharePublicationErrorHandler,
+): void {
+	if (!hasScreenShareViewerDemandTrack(publication) || !allowsScreenShareViewerDemand(publication.videoQuality)) return;
+	const demand = getScreenShareViewerDemand(publication.trackSid);
+	if (!demand) return;
+	setPublicationVideoDimensions(publication, label, demand, onError);
+}
+
+function restorePublicationVideoQuality(
+	publication: ScreenSharePublicationTarget,
+	label: string,
+	onError?: ScreenSharePublicationErrorHandler,
+): void {
+	if (typeof publication.setVideoQuality !== 'function') return;
+	if (publication.isDesired === false || !allowsScreenShareViewerDemand(publication.videoQuality)) return;
+	try {
+		publication.setVideoQuality(SCREEN_SHARE_VIEWER_DEMAND_MAX_QUALITY);
+	} catch (error) {
+		onError?.('setVideoQuality', label, error);
+	}
+}
+
+export function applyScreenShareViewerDemand({
+	publication,
+	label,
+	viewerKey,
+	dimensions,
+	onError,
+}: {
+	publication: ScreenSharePublicationTarget | null | undefined;
+	label: string;
+	viewerKey: string;
+	dimensions: ScreenShareViewerDemandDimensions;
+	onError?: ScreenSharePublicationErrorHandler;
+}): void {
+	const trackSid = publication?.trackSid;
+	if (!publication || !trackSid) return;
+	let demands = viewerDemandByTrackSid.get(trackSid);
+	if (!demands) {
+		demands = new Map();
+		viewerDemandByTrackSid.set(trackSid, demands);
+	}
+	demands.set(viewerKey, dimensions);
+	applyPublicationViewerDemand(publication, label, onError);
+}
+
+export function releaseScreenShareViewerDemand({
+	publication,
+	label,
+	trackSid,
+	viewerKey,
+	onError,
+}: {
+	publication: ScreenSharePublicationTarget | null | undefined;
+	label: string;
+	trackSid: string | null | undefined;
+	viewerKey: string;
+	onError?: ScreenSharePublicationErrorHandler;
+}): void {
+	if (!trackSid) return;
+	const demands = viewerDemandByTrackSid.get(trackSid);
+	if (!demands) return;
+	demands.delete(viewerKey);
+	if (demands.size === 0) {
+		viewerDemandByTrackSid.delete(trackSid);
+	}
+	if (!publication || publication.trackSid !== trackSid) return;
+	if (demands.size === 0) {
+		restorePublicationVideoQuality(publication, label, onError);
+		return;
+	}
+	applyPublicationViewerDemand(publication, label, onError);
+}
+
+export type ScreenSharePublicationVideoRequest =
+	| {operation: 'setVideoQuality'; quality: VideoQuality}
+	| {operation: 'setVideoDimensions'; quality: VideoQuality; dimensions: ScreenShareViewerDemandDimensions};
+
+export function resolveScreenSharePublicationVideoRequest(
+	publication: ScreenSharePublicationTarget,
+	videoQuality: VideoQuality,
+): ScreenSharePublicationVideoRequest {
+	if (!hasScreenShareViewerDemandTrack(publication) || !allowsScreenShareViewerDemand(videoQuality)) {
+		return {operation: 'setVideoQuality', quality: videoQuality};
+	}
+	const dimensions = getScreenShareViewerDemand(publication.trackSid);
+	if (!dimensions) return {operation: 'setVideoQuality', quality: videoQuality};
+	return {operation: 'setVideoDimensions', quality: SCREEN_SHARE_VIEWER_DEMAND_MAX_QUALITY, dimensions};
 }
 
 function setPublicationEnabled(
@@ -90,26 +276,11 @@ function setPublicationSubscribed(
 	}
 }
 
-function setPublicationVideoQuality(
-	publication: ScreenSharePublicationTarget,
-	label: string,
-	videoQuality: VideoQuality | undefined,
-	onError?: ScreenSharePublicationErrorHandler,
-): void {
-	if (videoQuality === undefined || typeof publication.setVideoQuality !== 'function') return;
-	try {
-		publication.setVideoQuality(videoQuality);
-	} catch (error) {
-		onError?.('setVideoQuality', label, error);
-	}
-}
-
 export function syncScreenSharePublication({
 	publication,
 	label,
 	shouldSubscribe,
 	shouldEnable = shouldSubscribe,
-	videoQuality,
 	onError,
 }: SyncScreenSharePublicationOptions): void {
 	if (!publication) return;
@@ -138,39 +309,35 @@ export function syncScreenSharePublication({
 	}
 	const forceTrackSettingsUpdate = didSubscribe && !shouldEnable && publication.isEnabled === shouldEnable;
 	setPublicationEnabled(publication, label, shouldEnable, forceTrackSettingsUpdate, onError);
-	setPublicationVideoQuality(publication, label, videoQuality, onError);
+	applyPublicationViewerDemand(publication, label, onError);
 }
 
 export function refreshScreenSharePublicationSubscription({
 	publication,
 	label,
 	shouldEnable = true,
-	videoQuality = VideoQuality.HIGH,
 	onError,
 }: {
 	publication: ScreenSharePublicationTarget | null | undefined;
 	label: string;
 	shouldEnable?: boolean;
-	videoQuality?: VideoQuality;
 	onError?: ScreenSharePublicationErrorHandler;
 }): void {
 	if (!publication) return;
 	setPublicationSubscribed(publication, label, true, onError);
 	setPublicationEnabled(publication, label, shouldEnable, true, onError);
-	setPublicationVideoQuality(publication, label, videoQuality, onError);
+	applyPublicationViewerDemand(publication, label, onError);
 }
 
 export function resubscribeScreenSharePublication({
 	publication,
 	label,
 	shouldEnable = true,
-	videoQuality = VideoQuality.HIGH,
 	onError,
 }: {
 	publication: ScreenSharePublicationTarget | null | undefined;
 	label: string;
 	shouldEnable?: boolean;
-	videoQuality?: VideoQuality;
 	onError?: ScreenSharePublicationErrorHandler;
 }): void {
 	if (!publication) return;
@@ -185,7 +352,7 @@ export function resubscribeScreenSharePublication({
 	setPublicationSubscribed(publication, label, false, onError);
 	setPublicationSubscribed(publication, label, true, onError);
 	setPublicationEnabled(publication, label, shouldEnable, true, onError);
-	setPublicationVideoQuality(publication, label, videoQuality, onError);
+	applyPublicationViewerDemand(publication, label, onError);
 }
 
 export function syncWatchedScreenSharePublications({
@@ -206,7 +373,6 @@ export function syncWatchedScreenSharePublications({
 		label: 'screen share video publication',
 		shouldSubscribe: shouldSubscribeVideo,
 		shouldEnable: shouldSubscribeVideo,
-		videoQuality: shouldSubscribeVideo ? VideoQuality.HIGH : undefined,
 		onError,
 	});
 	syncScreenSharePublication({
