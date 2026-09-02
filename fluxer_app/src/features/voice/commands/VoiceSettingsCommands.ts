@@ -106,7 +106,7 @@ const CAMERA_BACKGROUND_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'backgroundBlurStrength',
 	'mirrorCamera',
 ];
-const CAMERA_CAPTURE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = ['cameraResolution'];
+const CAMERA_CAPTURE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = ['cameraResolution', 'videoDeviceId'];
 const SCREEN_SHARE_CODEC_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'preferredScreenShareCodec',
 	'screenShareAv1OptIn',
@@ -138,8 +138,19 @@ function shouldRefreshCameraBackground(settings: VoiceSettingsPatch): boolean {
 	return CAMERA_BACKGROUND_REFRESH_KEYS.some((key) => settings[key] !== undefined);
 }
 
-function shouldRefreshCameraCapture(settings: VoiceSettingsPatch): boolean {
-	return CAMERA_CAPTURE_REFRESH_KEYS.some((key) => settings[key] !== undefined);
+function readCameraCaptureRefreshValues(): VoiceSettingsPatch {
+	return {
+		cameraResolution: VoiceSettings.cameraResolution,
+		videoDeviceId: VoiceSettings.videoDeviceId,
+	};
+}
+
+function shouldRefreshCameraCapture(
+	settings: VoiceSettingsPatch,
+	before: VoiceSettingsPatch,
+	after: VoiceSettingsPatch,
+): boolean {
+	return CAMERA_CAPTURE_REFRESH_KEYS.some((key) => settings[key] !== undefined && before[key] !== after[key]);
 }
 
 function shouldRefreshScreenShareCodecNegotiation(settings: VoiceSettingsPatch): boolean {
@@ -155,6 +166,7 @@ function applyUpdatedVoiceSettings(
 	refreshInput: boolean,
 	options: VoiceSettingsUpdateOptions = {},
 ): void {
+	const cameraCaptureBefore = readCameraCaptureRefreshValues();
 	VoiceSettings.updateSettings(settings);
 	if (settings.muteStreamAudio !== undefined) {
 		MediaEngine.setScreenShareAudioMuted(settings.muteStreamAudio);
@@ -180,7 +192,7 @@ function applyUpdatedVoiceSettings(
 	if (options.refreshCameraBackground !== false && shouldRefreshCameraBackground(settings)) {
 		refreshCameraBackground();
 	}
-	if (shouldRefreshCameraCapture(settings)) {
+	if (shouldRefreshCameraCapture(settings, cameraCaptureBefore, readCameraCaptureRefreshValues())) {
 		refreshCameraCapture();
 	}
 	if (shouldRefreshScreenShareCodecNegotiation(settings)) {
