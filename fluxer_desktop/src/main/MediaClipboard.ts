@@ -284,6 +284,6 @@ export async function copyRemoteFileToClipboard(options: ClipboardWriteFileOptio
 	} catch (error) {
 		await fs.rm(itemDir, {recursive: true, force: true}).catch(() => undefined);
 		logger.warn('Failed to copy remote file to clipboard', {error});
-		return {success: false, error: error instanceof Error ? error.message : 'Unknown error'};
+		return {success: false, error: 'Failed to copy file to clipboard'};
 	}
 }
