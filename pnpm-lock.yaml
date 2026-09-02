@@ -267,9 +267,6 @@ catalogs:
     nodemailer:
       specifier: 9.0.6
       version: 9.0.6
-    onnxruntime-common:
-      specifier: 1.27.0
-      version: 1.27.0
     onnxruntime-web:
       specifier: 1.27.0
       version: 1.27.0
@@ -1535,9 +1532,6 @@ importers:
       motion:
         specifier: 'catalog:'
         version: 12.34.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      onnxruntime-common:
-        specifier: 'catalog:'
-        version: 1.27.0
       onnxruntime-web:
         specifier: 'catalog:'
         version: 1.27.0

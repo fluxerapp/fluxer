@@ -374,6 +374,10 @@ suite('postgres kv upgrade safety', () => {
 		const gate = new Promise<void>((resolve) => {
 			release = resolve;
 		});
+		let created = () => {};
+		const tableCreated = new Promise<void>((resolve) => {
+			created = resolve;
+		});
 		const peer = raw.transaction(async (db) => {
 			await db.query(`
 CREATE TABLE IF NOT EXISTS ${RACE} (
@@ -385,13 +389,22 @@ CREATE TABLE IF NOT EXISTS ${RACE} (
 	updated_at timestamptz NOT NULL DEFAULT now(),
 	PRIMARY KEY (table_name, row_key)
 )`);
+			created();
 			await gate;
 		});
+		await Promise.race([tableCreated, peer]);
 		const booting = ensurePostgresKvSchema(new TableClient(raw, RACE)).then(
 			() => 'ok',
 			(error: Error) => `failed: ${error.message}`,
 		);
-		await sleep(500);
+		for (let attempt = 0; attempt < 200; attempt += 1) {
+			const blocked = await raw.query(
+				`SELECT 1 FROM pg_stat_activity WHERE pid <> pg_backend_pid() AND wait_event_type = 'Lock' AND query LIKE $1`,
+				[`%${RACE}%`],
+			);
+			if (blocked.rows.length > 0) break;
+			await sleep(50);
+		}
 		release();
 		await peer;
 		expect(await booting).toBe('ok');

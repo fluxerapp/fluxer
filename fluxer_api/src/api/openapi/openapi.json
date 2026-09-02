@@ -486,7 +486,11 @@
 				"description": "Cancel an ongoing handoff session. The handoff code will no longer be valid for authentication.",
 				"parameters": [
 					{"name": "code", "in": "path", "required": true, "schema": {"type": "string"}, "description": "The code"}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffCancelRequest"}}}
+				}
 			}
 		},
 		"/auth/handoff/{code}/info": {
@@ -609,6 +613,69 @@
 				"parameters": [
 					{"name": "code", "in": "path", "required": true, "schema": {"type": "string"}, "description": "The code"}
 				]
+			},
+			"post": {
+				"operationId": "get_handoff_status_with_secret",
+				"summary": "Get handoff status with secret",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffStatusResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Get handoff status with secret"}},
+				"description": "Check the status of a handoff session using the poll secret from initiation. Returns the authentication token once the handoff is complete and the presented secret matches.",
+				"parameters": [
+					{"name": "code", "in": "path", "required": true, "schema": {"type": "string"}, "description": "The code"}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffStatusRequest"}}}
+				}
 			}
 		},
 		"/auth/ip-authorization/poll": {
@@ -23871,9 +23938,20 @@
 						"type": "string",
 						"format": "date-time",
 						"description": "ISO 8601 timestamp when the handoff code expires"
+					},
+					"poll_secret": {
+						"type": "string",
+						"description": "Secret the initiating device must present to retrieve the token"
 					}
 				},
 				"required": ["code", "expires_at"]
+			},
+			"HandoffCancelRequest": {
+				"type": "object",
+				"properties": {
+					"poll_secret": {"type": "string", "description": "The poll secret issued when the handoff was initiated"}
+				},
+				"required": ["poll_secret"]
 			},
 			"HandoffInfoResponse": {
 				"type": "object",
@@ -23980,6 +24058,13 @@
 					}
 				},
 				"required": ["id", "username", "discriminator", "global_name", "avatar", "avatar_color", "flags"]
+			},
+			"HandoffStatusRequest": {
+				"type": "object",
+				"properties": {
+					"poll_secret": {"type": "string", "description": "The poll secret issued when the handoff was initiated"}
+				},
+				"required": ["poll_secret"]
 			},
 			"IpAuthorizationPollResponse": {
 				"type": "object",
@@ -31264,9 +31349,9 @@
 					"page": {
 						"type": "integer",
 						"minimum": 1,
-						"maximum": 9007199254740991,
-						"format": "int53",
-						"description": "Page number for pagination (ignored when cursor is provided)"
+						"maximum": 400,
+						"format": "int32",
+						"description": "Page number for pagination (ignored when cursor is provided). Use cursor to page beyond this."
 					},
 					"cursor": {
 						"type": "array",
@@ -32178,12 +32263,7 @@
 				"type": "object",
 				"properties": {
 					"type": {"type": "string", "enum": ["bsky", "domain"], "description": "The type of connection to create"},
-					"identifier": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 253,
-						"description": "The connection identifier (handle or domain)"
-					},
+					"identifier": {"type": "string", "description": "The connection identifier (handle or domain)"},
 					"visibility_flags": {"$ref": "#/components/schemas/Int32Type"}
 				},
 				"required": ["type", "identifier"]

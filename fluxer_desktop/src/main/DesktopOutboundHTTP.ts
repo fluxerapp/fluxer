@@ -48,7 +48,7 @@ interface PinnedAddress {
 	readonly family: 4 | 6;
 }
 
-export interface DesktopOutboundGETRequest {
+interface DesktopOutboundGETRequest {
 	readonly context: string;
 	readonly timeoutMs: number;
 	readonly url: URL;
@@ -69,42 +69,42 @@ interface BoundedMessageRead {
 	readonly message: Readable;
 }
 
-export class DesktopOutboundHTTPBlockedError extends Error {
+class DesktopOutboundHTTPBlockedError extends Error {
 	public constructor() {
 		super(DESKTOP_OUTBOUND_HTTP_BLOCKED_MESSAGE);
 		this.name = 'DesktopOutboundHTTPBlockedError';
 	}
 }
 
-export class DesktopOutboundHTTPTransportError extends Error {
+class DesktopOutboundHTTPTransportError extends Error {
 	public constructor() {
 		super(DESKTOP_OUTBOUND_HTTP_TRANSPORT_MESSAGE);
 		this.name = 'DesktopOutboundHTTPTransportError';
 	}
 }
 
-export class DesktopOutboundHTTPTimeoutError extends Error {
+class DesktopOutboundHTTPTimeoutError extends Error {
 	public constructor() {
 		super(DESKTOP_OUTBOUND_HTTP_TIMEOUT_MESSAGE);
 		this.name = 'DesktopOutboundHTTPTimeoutError';
 	}
 }
 
-export class DesktopOutboundHTTPCapacityError extends Error {
+class DesktopOutboundHTTPCapacityError extends Error {
 	public constructor() {
 		super(DESKTOP_OUTBOUND_HTTP_CAPACITY_MESSAGE);
 		this.name = 'DesktopOutboundHTTPCapacityError';
 	}
 }
 
-export class BoundedMessageByteLimitError extends RangeError {
+class BoundedMessageByteLimitError extends RangeError {
 	public constructor(description: string, maxBytes: number) {
 		super(`${description} exceeds ${maxBytes} bytes`);
 		this.name = 'BoundedMessageByteLimitError';
 	}
 }
 
-export class BoundedMessageChunkLimitError extends RangeError {
+class BoundedMessageChunkLimitError extends RangeError {
 	public constructor(description: string, maxChunks: number) {
 		super(`${description} exceeds ${maxChunks} response chunks`);
 		this.name = 'BoundedMessageChunkLimitError';
@@ -269,7 +269,7 @@ function isPublicIPv6Address(address: string): boolean {
 	return !(first === 0x2001 && second === 0x0db8);
 }
 
-export function isPublicPinnedAddress(pinned: PinnedAddress): boolean {
+function isPublicPinnedAddress(pinned: PinnedAddress): boolean {
 	return pinned.family === 4 ? isPublicIPv4Address(pinned.address) : isPublicIPv6Address(pinned.address);
 }
 
@@ -396,7 +396,7 @@ async function lookupAllAddresses(hostname: string): Promise<ReadonlyArray<strin
 	return records.map((record) => record.address);
 }
 
-export class DesktopOutboundHTTP {
+class DesktopOutboundHTTP {
 	private readonly httpAgent = new http.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS});
 	private readonly httpsAgent = new https.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS});
 	private addressRequirementOperation: Promise<DesktopAddressRequirement> | null = null;

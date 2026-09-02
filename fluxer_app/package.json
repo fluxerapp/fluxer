@@ -229,7 +229,6 @@
 		"mobx-persist-store": "catalog:",
 		"mobx-react-lite": "catalog:",
 		"motion": "catalog:",
-		"onnxruntime-common": "catalog:",
 		"onnxruntime-web": "catalog:",
 		"qrcode": "catalog:",
 		"react": "catalog:",

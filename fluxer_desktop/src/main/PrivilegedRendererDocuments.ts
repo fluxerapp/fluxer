@@ -3,7 +3,7 @@
 import {isTrustedOrigin} from '@electron/main/Window';
 import type {IpcMainInvokeEvent} from 'electron';
 
-export class UntrustedRendererDocumentSenderError extends Error {
+class UntrustedRendererDocumentSenderError extends Error {
 	public constructor(channel: string) {
 		super(`${channel} is only reachable from a trusted top-level renderer document`);
 		this.name = 'UntrustedRendererDocumentSenderError';

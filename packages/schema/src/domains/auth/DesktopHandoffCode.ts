@@ -11,14 +11,14 @@ function normalizeDesktopHandoffCode(value: string): string {
 	return value.replace(DESKTOP_HANDOFF_CODE_SEPARATOR_PATTERN, '').toUpperCase();
 }
 
-export function isDesktopHandoffCode(value: string): boolean {
+function isDesktopHandoffCode(value: string): boolean {
 	if (value.length !== DESKTOP_HANDOFF_CODE_LENGTH) {
 		return false;
 	}
 	return Array.from(value).every((character) => DESKTOP_HANDOFF_CODE_ALPHABET.includes(character));
 }
 
-export function parseDesktopHandoffCodeInput(value: string): string {
+function parseDesktopHandoffCodeInput(value: string): string {
 	return normalizeDesktopHandoffCode(value).slice(0, DESKTOP_HANDOFF_CODE_LENGTH);
 }
 
