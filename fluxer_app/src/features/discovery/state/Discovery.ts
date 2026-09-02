@@ -81,6 +81,7 @@ class Discovery {
 					this.guilds = [...this.guilds, ...result.guilds];
 				}
 				this.total = result.total;
+				this.categoryCounts = result.categoryCounts;
 				this.loading = false;
 			});
 		} catch {
