@@ -5683,7 +5683,7 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "เปิดตัวเลือกแบนเนอร์"
 msgid "Open bookmarks"
 msgstr "เปิดบุ๊กมาร์ก"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "เปิดเบราว์เซอร์"
 
@@ -22680,7 +22680,7 @@ msgstr "เปิดลิงก์วิดีโอ"
 msgid "Open voice"
 msgstr "เปิดเสียง"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "เปิดเบราว์เซอร์ของคุณ ลงชื่อเข้าใช้ แล้วป้อนรหัสข้างล่างเพื่อเชื่อมโยงบัญชีของคุณ"
 
@@ -36514,7 +36514,7 @@ msgstr "เราได้ปรับขนาดและบีบอัดส
 msgid "We sent a code to {email}."
 msgstr "เราได้ส่งรหัสไปยัง {email} แล้ว"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "เราจะกรอก {prefillEmail} ให้โดยอัตโนมัติเมื่อเปิดหน้าลงชื่อเข้าใช้ในเบราว์เซอร์"
 

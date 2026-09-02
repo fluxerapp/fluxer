@@ -72,6 +72,7 @@ describe('Auth desktop handoff negative paths', () => {
 	it('handles cancel for unknown handoff code gracefully', async () => {
 		await createBuilderWithoutAuth(harness)
 			.delete('/auth/handoff/unknown-code')
+			.body({poll_secret: 'not-the-secret'})
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_HANDOFF_CODE)
 			.execute();
 	});

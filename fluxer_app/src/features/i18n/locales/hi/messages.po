@@ -5683,7 +5683,7 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "बैनर विकल्प खोलें"
 msgid "Open bookmarks"
 msgstr "बुकमार्क खोलें"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "ब्राउज़र खोलें"
 
@@ -22680,7 +22680,7 @@ msgstr "वीडियो लिंक खोलें"
 msgid "Open voice"
 msgstr "वॉइस खोलें"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "अपना ब्राउज़र खोलें, साइन इन करें, फिर अपना अकाउंट लिंक करने के लिए नीचे दिया गया कोड डालें।"
 
@@ -36514,7 +36514,7 @@ msgstr "हमने इस स्टिकर का आकार बदलक�
 msgid "We sent a code to {email}."
 msgstr "हमने {email} पर एक कोड भेजा है।"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "ब्राउज़र साइन-इन खुलने पर हम {prefillEmail} पहले से भर देंगे।"
 

@@ -5683,7 +5683,7 @@ msgstr "无法在此上传文件"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "打开横幅选项"
 msgid "Open bookmarks"
 msgstr "打开书签"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "打开浏览器"
 
@@ -22680,7 +22680,7 @@ msgstr "打开视频链接"
 msgid "Open voice"
 msgstr "开启语音"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "打开浏览器，登录后输入以下代码以关联你的帐户。"
 
@@ -36514,7 +36514,7 @@ msgstr "我们已将此贴纸调整并压缩到 320x320 像素，但它仍然是
 msgid "We sent a code to {email}."
 msgstr "验证码已发送至 {email}。"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "浏览器登录页面打开后，我们将预填 {prefillEmail}。"
 

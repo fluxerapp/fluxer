@@ -5683,7 +5683,7 @@ msgstr "No se pueden subir archivos aquí"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "Abrir opciones del banner"
 msgid "Open bookmarks"
 msgstr "Abrir marcadores"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "Abrir navegador"
 
@@ -22680,7 +22680,7 @@ msgstr "Abrir enlace de video"
 msgid "Open voice"
 msgstr "Abrir chat de voz"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Abre tu navegador, inicia sesión y luego ingresa el código a continuación para vincular tu cuenta."
 
@@ -36514,7 +36514,7 @@ msgstr "Redimensionamos y comprimimos este sticker a 320x320 píxeles, pero sigu
 msgid "We sent a code to {email}."
 msgstr "Enviamos un código a {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Vamos a rellenar automáticamente {prefillEmail} cuando se abra el inicio de sesión en el navegador."
 

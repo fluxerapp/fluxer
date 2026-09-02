@@ -227,6 +227,7 @@ export type UsernameSuggestionsResponse = z.infer<typeof UsernameSuggestionsResp
 export const HandoffInitiateResponse = z.object({
 	code: z.string().describe('Handoff code to share with the receiving device'),
 	expires_at: z.iso.datetime().describe('ISO 8601 timestamp when the handoff code expires'),
+	poll_secret: z.string().optional().describe('Secret the initiating device must present to retrieve the token'),
 });
 
 export type HandoffInitiateResponse = z.infer<typeof HandoffInitiateResponse>;
@@ -330,6 +331,18 @@ export const HandoffCodeParam = z.object({
 });
 
 export type HandoffCodeParam = z.infer<typeof HandoffCodeParam>;
+
+export const HandoffStatusRequest = z.object({
+	poll_secret: createStringType().describe('The poll secret issued when the handoff was initiated'),
+});
+
+export type HandoffStatusRequest = z.infer<typeof HandoffStatusRequest>;
+
+export const HandoffCancelRequest = z.object({
+	poll_secret: createStringType().describe('The poll secret issued when the handoff was initiated'),
+});
+
+export type HandoffCancelRequest = z.infer<typeof HandoffCancelRequest>;
 
 export const EnableMfaTotpRequest = z
 	.object({

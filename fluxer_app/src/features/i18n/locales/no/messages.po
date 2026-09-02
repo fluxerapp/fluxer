@@ -5683,7 +5683,7 @@ msgstr "Kan ikke laste opp filer her"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "Åpne bannerinnstillinger"
 msgid "Open bookmarks"
 msgstr "Åpne bokmerker"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "Åpne nettleser"
 
@@ -22680,7 +22680,7 @@ msgstr "Åpne videolenke"
 msgid "Open voice"
 msgstr "Åpne talechat"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Åpne nettleseren din, logg på, og skriv inn koden nedenfor for å koble til kontoen din."
 
@@ -36514,7 +36514,7 @@ msgstr "Vi endret størrelsen og komprimerte dette klistremerket til 320x320 pik
 msgid "We sent a code to {email}."
 msgstr "Vi sendte en kode til {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Vi fyller ut {prefillEmail} automatisk når nettleserpåloggingen åpnes."
 

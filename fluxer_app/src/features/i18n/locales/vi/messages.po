@@ -5683,7 +5683,7 @@ msgstr "Không thể tải tệp lên đây"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "Mở tùy chọn biểu ngữ"
 msgid "Open bookmarks"
 msgstr "Mở dấu trang"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "Mở trình duyệt"
 
@@ -22680,7 +22680,7 @@ msgstr "Mở liên kết video"
 msgid "Open voice"
 msgstr "Mở trò chuyện thoại"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Mở trình duyệt, đăng nhập, sau đó nhập mã bên dưới để liên kết tài khoản của bạn."
 
@@ -36514,7 +36514,7 @@ msgstr "Chúng tôi đã đổi kích thước và nén nhãn dán này thành 3
 msgid "We sent a code to {email}."
 msgstr "Chúng tôi đã gửi mã đến {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Chúng tôi sẽ điền trước {prefillEmail} sau khi trình duyệt đăng nhập mở."
 

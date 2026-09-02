@@ -5683,7 +5683,7 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "開啟橫幅選項"
 msgid "Open bookmarks"
 msgstr "開啟書籤"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "開啟瀏覽器"
 
@@ -22680,7 +22680,7 @@ msgstr "開啟影片連結"
 msgid "Open voice"
 msgstr "開啟語音"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "開啟您的瀏覽器，登入後輸入以下代碼，即可連結您的帳號。"
 
@@ -36514,7 +36514,7 @@ msgstr "我們已將此貼圖調整大小並壓縮至 320x320 像素，但它仍
 msgid "We sent a code to {email}."
 msgstr "我們已將驗證碼傳送至 {email}。"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "瀏覽器登入開啟後，我們會預填 {prefillEmail}。"
 

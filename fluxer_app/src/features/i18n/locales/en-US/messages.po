@@ -5684,7 +5684,7 @@ msgstr "Can't upload files here"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22337,7 +22337,7 @@ msgstr "Open banner options"
 msgid "Open bookmarks"
 msgstr "Open bookmarks"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "Open browser"
 
@@ -22681,7 +22681,7 @@ msgstr "Open video link"
 msgid "Open voice"
 msgstr "Open voice"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Open your browser, sign in, then enter the code below to link your account."
 
@@ -36515,7 +36515,7 @@ msgstr "We resized and compressed this sticker to 320x320 pixels, but it is stil
 msgid "We sent a code to {email}."
 msgstr "We sent a code to {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "We will prefill {prefillEmail} once browser sign-in opens."
 

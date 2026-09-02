@@ -1,60 +1,84 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomBytes} from 'node:crypto';
+import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
 import {HandoffCodeExpiredError} from '@fluxer/errors/src/domains/auth/HandoffCodeExpiredError';
 import {InvalidHandoffCodeError} from '@fluxer/errors/src/domains/auth/InvalidHandoffCodeError';
+import {
+	DESKTOP_HANDOFF_CODE_ALPHABET,
+	DESKTOP_HANDOFF_CODE_LENGTH,
+	formatDesktopHandoffCode,
+	parseDesktopHandoffCode,
+} from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
 import {ms, seconds} from 'itty-time';
 import type {ApiContext} from '../../ApiContext';
 import type {SessionOrigin} from '../AuthSession';
 
 const HANDOFF_CODE_PREFIX = 'desktop-handoff-v2:';
 const HANDOFF_TOKEN_PREFIX = 'desktop-handoff-token:';
-const CODE_CHARACTERS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const CODE_LENGTH = 12;
-const NORMALIZED_CODE_REGEX = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{12}$/;
 const HANDOFF_ATTEMPT_PREFIX = 'desktop-handoff-attempts:';
 const HANDOFF_APPROVER_PREFIX = 'desktop-handoff-approver:';
 const MAX_FAILED_ATTEMPTS = 5;
 const ATTEMPT_TTL_SECONDS = 900;
 const MAX_INFO_LOOKUPS = 3;
+const POLL_SECRET_BYTES = 32;
 
 interface HandoffData {
 	createdAt: number;
 	origin: SessionOrigin;
 	infoLookupCount: number;
+	pollSecretHash: string;
 }
 
 interface HandoffTokenData {
 	token: string;
 	userId: string;
+	pollSecretHash: string;
 }
 
 interface HandoffApproverData {
 	approvedAt: number;
 }
 
-function generateHandoffCode(): string {
-	const maxUnbiased = 256 - (256 % CODE_CHARACTERS.length);
+function generateNormalizedHandoffCode(): string {
+	const maxUnbiased = 256 - (256 % DESKTOP_HANDOFF_CODE_ALPHABET.length);
 	let code = '';
-	while (code.length < CODE_LENGTH) {
-		const bytes = randomBytes(CODE_LENGTH - code.length);
-		for (let i = 0; i < bytes.length && code.length < CODE_LENGTH; i++) {
+	while (code.length < DESKTOP_HANDOFF_CODE_LENGTH) {
+		const bytes = randomBytes(DESKTOP_HANDOFF_CODE_LENGTH - code.length);
+		for (let i = 0; i < bytes.length && code.length < DESKTOP_HANDOFF_CODE_LENGTH; i++) {
 			if (bytes[i] < maxUnbiased) {
-				code += CODE_CHARACTERS[bytes[i] % CODE_CHARACTERS.length];
+				code += DESKTOP_HANDOFF_CODE_ALPHABET[bytes[i] % DESKTOP_HANDOFF_CODE_ALPHABET.length];
 			}
 		}
 	}
-	return `${code.slice(0, 6)}-${code.slice(6, 12)}`;
+	return code;
 }
 
-function normalizeHandoffCode(code: string): string {
-	return code.replace(/[-\s]/g, '').toUpperCase();
-}
-
-function assertValidHandoffCode(code: string): void {
-	if (!NORMALIZED_CODE_REGEX.test(code)) {
+function requireNormalizedHandoffCode(code: string): string {
+	const normalized = parseDesktopHandoffCode(code);
+	if (normalized == null) {
 		throw new InvalidHandoffCodeError();
 	}
+	return normalized;
+}
+
+function generatePollSecret(): string {
+	return randomBytes(POLL_SECRET_BYTES).toString('base64url');
+}
+
+function hashPollSecret(secret: string): string {
+	return createHash('sha256').update(secret).digest('hex');
+}
+
+function pollSecretMatches(presented: string | undefined, storedHash: string | undefined): boolean {
+	if (!presented || !storedHash) {
+		return false;
+	}
+	const presentedHash = Buffer.from(hashPollSecret(presented), 'hex');
+	const stored = Buffer.from(storedHash, 'hex');
+	if (presentedHash.length !== stored.length) {
+		return false;
+	}
+	return timingSafeEqual(presentedHash, stored);
 }
 
 export class DesktopHandoffService {
@@ -63,19 +87,21 @@ export class DesktopHandoffService {
 	async initiateHandoff(args: {origin: SessionOrigin}): Promise<{
 		code: string;
 		expiresAt: Date;
+		pollSecret: string;
 	}> {
 		const {cache} = this.apiContext.services;
-		const code = generateHandoffCode();
-		const normalizedCode = normalizeHandoffCode(code);
+		const normalizedCode = generateNormalizedHandoffCode();
+		const pollSecret = generatePollSecret();
 		const handoffData: HandoffData = {
 			createdAt: Date.now(),
 			origin: args.origin,
 			infoLookupCount: 0,
+			pollSecretHash: hashPollSecret(pollSecret),
 		};
 		const expirySeconds = seconds('5 minutes');
 		await cache.set(`${HANDOFF_CODE_PREFIX}${normalizedCode}`, handoffData, expirySeconds);
 		const expiresAt = new Date(Date.now() + ms('5 minutes'));
-		return {code, expiresAt};
+		return {code: formatDesktopHandoffCode(normalizedCode), expiresAt, pollSecret};
 	}
 
 	async completeHandoff(
@@ -84,8 +110,7 @@ export class DesktopHandoffService {
 		approverIp: string,
 	): Promise<void> {
 		const {cache} = this.apiContext.services;
-		const normalizedCode = normalizeHandoffCode(code);
-		assertValidHandoffCode(normalizedCode);
+		const normalizedCode = requireNormalizedHandoffCode(code);
 		await this.checkAttemptLimit(approverIp);
 		const storedApprover = await cache.get<HandoffApproverData>(`${HANDOFF_APPROVER_PREFIX}${normalizedCode}`);
 		if (!storedApprover) {
@@ -108,6 +133,7 @@ export class DesktopHandoffService {
 		const tokenData: HandoffTokenData = {
 			token,
 			userId,
+			pollSecretHash: handoffData.pollSecretHash,
 		};
 		await cache.set(`${HANDOFF_TOKEN_PREFIX}${normalizedCode}`, tokenData, remainingSeconds);
 		await cache.delete(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
@@ -122,8 +148,7 @@ export class DesktopHandoffService {
 		origin?: SessionOrigin;
 	}> {
 		const {cache} = this.apiContext.services;
-		const normalizedCode = normalizeHandoffCode(code);
-		assertValidHandoffCode(normalizedCode);
+		const normalizedCode = requireNormalizedHandoffCode(code);
 		await this.checkAttemptLimit(approverIp);
 		const codeKey = `${HANDOFF_CODE_PREFIX}${normalizedCode}`;
 		const handoffData = await cache.get<HandoffData>(codeKey);
@@ -149,18 +174,23 @@ export class DesktopHandoffService {
 
 	async getHandoffStatus(
 		code: string,
-		_pollerIp: string,
+		pollerIp: string,
+		pollSecret: string | undefined,
 	): Promise<{
 		status: 'pending' | 'completed' | 'expired';
 		token?: string;
 		userId?: string;
 	}> {
 		const {cache} = this.apiContext.services;
-		const normalizedCode = normalizeHandoffCode(code);
-		assertValidHandoffCode(normalizedCode);
+		const normalizedCode = requireNormalizedHandoffCode(code);
+		await this.checkAttemptLimit(pollerIp);
 		const tokenKey = `${HANDOFF_TOKEN_PREFIX}${normalizedCode}`;
 		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
 		if (tokenData) {
+			if (!pollSecretMatches(pollSecret, tokenData.pollSecretHash)) {
+				await this.recordFailedAttempt(pollerIp);
+				return {status: 'pending'};
+			}
 			await cache.delete(tokenKey);
 			return {
 				status: 'completed',
@@ -175,12 +205,19 @@ export class DesktopHandoffService {
 		return {status: 'expired'};
 	}
 
-	async cancelHandoff(code: string): Promise<void> {
+	async cancelHandoff(code: string, pollSecret: string): Promise<void> {
 		const {cache} = this.apiContext.services;
-		const normalizedCode = normalizeHandoffCode(code);
-		assertValidHandoffCode(normalizedCode);
-		await cache.delete(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
-		await cache.delete(`${HANDOFF_TOKEN_PREFIX}${normalizedCode}`);
+		const normalizedCode = requireNormalizedHandoffCode(code);
+		const codeKey = `${HANDOFF_CODE_PREFIX}${normalizedCode}`;
+		const tokenKey = `${HANDOFF_TOKEN_PREFIX}${normalizedCode}`;
+		const handoffData = await cache.get<HandoffData>(codeKey);
+		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
+		const storedHash = handoffData?.pollSecretHash ?? tokenData?.pollSecretHash;
+		if (!pollSecretMatches(pollSecret, storedHash)) {
+			throw new InvalidHandoffCodeError();
+		}
+		await cache.delete(codeKey);
+		await cache.delete(tokenKey);
 		await cache.delete(`${HANDOFF_APPROVER_PREFIX}${normalizedCode}`);
 	}
 

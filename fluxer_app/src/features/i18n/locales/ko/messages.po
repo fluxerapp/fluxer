@@ -5683,7 +5683,7 @@ msgstr "여기에 파일을 올릴 수 없어요"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "배너 옵션 열기"
 msgid "Open bookmarks"
 msgstr "북마크 열기"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "브라우저 열기"
 
@@ -22680,7 +22680,7 @@ msgstr "동영상 링크 열기"
 msgid "Open voice"
 msgstr "음성 채팅 시작"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "브라우저를 열고 로그인한 다음 아래 코드를 입력하여 계정을 연결하세요."
 
@@ -36514,7 +36514,7 @@ msgstr "스티커 크기를 320x320픽셀로 조정하고 압축했지만, 여�
 msgid "We sent a code to {email}."
 msgstr "{email}으로 코드를 전송했습니다."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "브라우저 로그인 창이 열리면 {prefillEmail}이(가) 자동으로 입력됩니다."
 

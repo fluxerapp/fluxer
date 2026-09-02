@@ -5683,7 +5683,7 @@ msgstr "Čia negalima įkelti failų"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:263
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:138
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:173
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -22336,7 +22336,7 @@ msgstr "Atidaryti reklamjuostės parinktis"
 msgid "Open bookmarks"
 msgstr "Atidaryti žymes"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:151
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
 msgid "Open browser"
 msgstr "Atidaryti naršyklę"
 
@@ -22680,7 +22680,7 @@ msgstr "Atidaryti vaizdo įrašo nuorodą"
 msgid "Open voice"
 msgstr "Atidaryti balso pokalbį"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:111
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Atidarykite naršyklę, prisijunkite, tada įveskite toliau pateiktą kodą, kad susietumėte paskyrą."
 
@@ -36514,7 +36514,7 @@ msgstr "Šį lipduką pakeitėme ir suglaudinome iki 320x320 pikselių, bet jo d
 msgid "We sent a code to {email}."
 msgstr "Išsiuntėme kodą į {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:126
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Atidarius prisijungimo naršyklėje langą, iš anksto užpildysime {prefillEmail}."
 

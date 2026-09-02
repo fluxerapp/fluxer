@@ -113,6 +113,7 @@ export type ResetPasswordResponse = AuthTokenResponse | MfaLoginResponse;
 interface DesktopHandoffInitiateResponse {
 	code: string;
 	expires_at: string;
+	poll_secret?: string;
 }
 
 interface DesktopHandoffStatusResponse {
@@ -537,9 +538,19 @@ export async function initiateDesktopHandoff(): Promise<DesktopHandoffInitiateRe
 	return response.body;
 }
 
-export async function pollDesktopHandoffStatus(code: string): Promise<DesktopHandoffStatusResponse> {
-	const response = await http.get<DesktopHandoffStatusResponse>(Endpoints.AUTH_HANDOFF_STATUS(code), {
+export async function pollDesktopHandoffStatus(
+	code: string,
+	pollSecret?: string | null,
+): Promise<DesktopHandoffStatusResponse> {
+	if (pollSecret == null || pollSecret.length === 0) {
+		const response = await http.get<DesktopHandoffStatusResponse>(Endpoints.AUTH_HANDOFF_STATUS(code), {
+			auth: 'none',
+		});
+		return response.body;
+	}
+	const response = await http.post<DesktopHandoffStatusResponse>(Endpoints.AUTH_HANDOFF_STATUS(code), {
 		auth: 'none',
+		body: {poll_secret: pollSecret},
 	});
 	return response.body;
 }
