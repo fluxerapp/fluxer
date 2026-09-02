@@ -156,6 +156,32 @@ describe('buildScreenShareOptions', () => {
 			frameRate: 30,
 		});
 	});
+	it('offers the browser picker system audio for every surface when audio is requested', () => {
+		const {captureOptions} = buildScreenShareOptions({
+			resolution: 'medium',
+			frameRate: 30,
+			includeAudio: true,
+			useBrowserAudioPicker: true,
+		});
+		expect(captureOptions).toMatchObject({
+			audio: true,
+			systemAudio: 'include',
+			windowAudio: 'system',
+		});
+	});
+	it('keeps the browser picker audio hints excluded when audio is not requested', () => {
+		const {captureOptions} = buildScreenShareOptions({
+			resolution: 'medium',
+			frameRate: 30,
+			includeAudio: false,
+			useBrowserAudioPicker: true,
+		});
+		expect(captureOptions).toMatchObject({
+			audio: false,
+			systemAudio: 'exclude',
+			windowAudio: 'exclude',
+		});
+	});
 });
 
 describe('forced screen share bitrate', () => {

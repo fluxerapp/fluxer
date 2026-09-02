@@ -202,6 +202,9 @@ function shouldIncludeAudioForShare(
 	if (shareContext === 'device') {
 		return VoiceSettings.getShareDeviceAudio();
 	}
+	if (displayShareEnvironment === 'web') {
+		return supportsDesktopScreenShareAudioCapture();
+	}
 	if (sourceId?.startsWith('window:')) {
 		return supportsDesktopScreenShareAudioCapture() && VoiceSettings.getShareAppAudio();
 	}
@@ -307,6 +310,7 @@ function getConfiguredScreenShareOptions(
 		contentHint,
 		sourceDimensions,
 		preferredDisplaySurface,
+		useBrowserAudioPicker: displayShareEnvironment === 'web',
 	});
 	publishOptions.videoCodec = preferredVideoCodec;
 	return {

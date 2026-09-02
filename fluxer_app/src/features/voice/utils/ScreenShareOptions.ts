@@ -92,6 +92,7 @@ export interface ScreenShareBuildConfig {
 		height: number;
 	};
 	preferredDisplaySurface?: 'window' | 'monitor';
+	useBrowserAudioPicker?: boolean;
 }
 
 type ScreenShareVideoOptions = NonNullable<Exclude<ScreenShareCaptureOptions['video'], true>> & {
@@ -150,8 +151,8 @@ export function buildScreenShareOptions(
 			...(config.includeAudio ? {restrictOwnAudio: true} : {}),
 			selfBrowserSurface: 'include',
 			monitorTypeSurfaces: config.preferredDisplaySurface === 'window' ? 'exclude' : 'include',
-			systemAudio: 'exclude',
-			windowAudio: config.includeAudio ? 'window' : 'exclude',
+			systemAudio: config.includeAudio && config.useBrowserAudioPicker ? 'include' : 'exclude',
+			windowAudio: config.includeAudio ? (config.useBrowserAudioPicker ? 'system' : 'window') : 'exclude',
 			resolution: {width, height, frameRate: resolvedFrameRate},
 			video,
 		},
