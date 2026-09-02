@@ -29,11 +29,6 @@ msgstr "(muokattu)"
 msgid "(failed to load)"
 msgstr "(ei voitu ladata)"
 
-#. Placeholder content text shown for scheduled messages with neither text nor attachments. Keep the parentheses.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:38
-msgid "(no content)"
-msgstr "(ei sisältöä)"
-
 #: src/features/app/components/pages/YouPage.tsx:189
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:899
 msgid "(only visible to you)"
@@ -455,7 +450,7 @@ msgstr "{count, plural, one {Laajenna (1 rivi)} other {Laajenna (# riviä)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Näytä lisää (# rivi)} other {Näytä lisää (# riviä)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:303
+#: src/features/voice/components/VoiceParticipantTile.tsx:304
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Laajenna # muu laite} other {Laajenna # muuta laitetta}}"
 
@@ -463,8 +458,8 @@ msgstr "{count, plural, one {Laajenna # muu laite} other {Laajenna # muuta laite
 msgid "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
 msgstr "{count, plural, one {Ryhmä-DM · # jäsen} other {Ryhmä-DM · # jäsentä}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:252
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:273
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:274
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:295
 msgid "{count, plural, one {Hide # device} other {Hide # devices}}"
 msgstr "{count, plural, one {Piilota # laite} other {Piilota # laitetta}}"
 
@@ -476,7 +471,7 @@ msgstr "{count, plural, one {Puhelussa} other {# puhelussa}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Liity videopuheluun (1 osallistuja)} other {Liity videopuheluun (# osallistujaa)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:620
+#: src/features/voice/components/VoiceParticipantTile.tsx:621
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "Jatka # {count, plural, one {striimin} other {striimien}} katsomista ja lisää tämä"
 
@@ -492,8 +487,8 @@ msgstr "{count, plural, one {Poista # sovellus} other {Poista # sovellusta}}"
 msgid "{count, plural, one {sent # attachment} other {sent # attachments}}"
 msgstr "{count, plural, one {lähetti # liitteen} other {lähetti # liitettä}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:259
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:280
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:281
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:302
 msgid "{count, plural, one {Show # device} other {Show # devices}}"
 msgstr "{count, plural, one {Näytä # laite} other {Näytä # laitetta}}"
 
@@ -534,22 +529,6 @@ msgstr "{count, plural, one {Käytät jo yhtä sallittua yhteyttä tälle ääni
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:62
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {Olet tallennettujen mediatiedostojen enimmäismäärässä. Poista yksi lisätäksesi toisen.} other {Olet tallennettujen mediatiedostojen enimmäismäärässä. Poista yksi lisätäksesi toisen.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:401
-msgid "{count, plural, one {You're at the limit of # emoji pack. Delete one to create another.} other {You're at the limit of # emoji packs. Delete one to create another.}}"
-msgstr "{count, plural, one {Olet saavuttanut yhden emojipaketin rajan. Poista yksi luodaksesi uuden.} other {Olet saavuttanut emojipakettien rajan. Poista yksi luodaksesi uuden.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:387
-msgid "{count, plural, one {You're at the limit of # installed emoji pack. Remove one to add another.} other {You're at the limit of # installed emoji packs. Remove one to add another.}}"
-msgstr "{count, plural, one {Olet asentanut suurimman sallitun määrän emojipaketteja. Poista yksi lisätäksesi toisen.} other {Olet asentanut suurimman sallitun määrän emojipaketteja. Poista yksi lisätäksesi toisen.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:419
-msgid "{count, plural, one {You're at the limit of # installed sticker pack. Remove one to add another.} other {You're at the limit of # installed sticker packs. Remove one to add another.}}"
-msgstr "{count, plural, one {Olet asentanut enimmäismäärän tarrapaketteja (#). Poista yksi lisätäksesi uuden.} other {Olet asentanut enimmäismäärän tarrapaketteja (#). Poista yksi lisätäksesi uuden.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:433
-msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
-msgstr "{count, plural, one {Olet saavuttanut yhden tarrasetin rajan. Poista yksi luodaksesi uuden.} other {Olet saavuttanut tarrasettien rajan. Poista yksi luodaksesi uuden.}}"
 
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx:24
 msgid "{count, plural, one {You've reached the maximum number of communities you can join (# community). Leave a community before joining another one.} other {You've reached the maximum number of communities you can join (# communities). Leave a community before joining another one.}}"
@@ -750,14 +729,14 @@ msgstr "{formats}. Enintään {maxSize}. Suositus: {recommendedSize}"
 msgid "{formats}. Max {maxSize}. Recommended: {recommendedSize}. {note}"
 msgstr "{formats}. Enintään {maxSize}. Suositus: {recommendedSize}. {note}"
 
-#: src/features/auth/flow/InviteHeader.tsx:117
-#: src/features/auth/flow/InviteHeader.tsx:162
-#: src/features/auth/flow/InviteHeader.tsx:335
+#: src/features/auth/flow/InviteHeader.tsx:90
+#: src/features/auth/flow/InviteHeader.tsx:135
+#: src/features/auth/flow/InviteHeader.tsx:249
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{formattedMemberCount} {memberCount, plural, one {jäsen} other {jäsentä}}"
 
-#: src/features/auth/flow/InviteHeader.tsx:111
-#: src/features/auth/flow/InviteHeader.tsx:320
+#: src/features/auth/flow/InviteHeader.tsx:84
+#: src/features/auth/flow/InviteHeader.tsx:234
 msgid "{formattedPresenceCount} online"
 msgstr "{formattedPresenceCount} paikalla"
 
@@ -776,7 +755,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "Kanavat kohteessa {guildName}"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:673
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {Laajenna # muu laite} other {Laajenna # muuta laitetta}}"
 
@@ -874,7 +853,7 @@ msgstr "{length, plural, one {# katsoja} other {# katsojaa}}"
 msgid "{lineCount, plural, one {# line} other {# lines}}"
 msgstr "{lineCount, plural, one {# rivi} other {# riviä}}"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:145
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:143
 msgid "{matchCount, plural, one {# match} other {# matches}}"
 msgstr "{matchCount, plural, one {# osuma} other {# osumaa}}"
 
@@ -889,7 +868,7 @@ msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName
 msgstr "{mbWayPaymentMethod} on {paymentProviderName}-maksupalvelun kertaluonteinen maksutapa, joten sitä ei voi käyttää toistuviin tilauksiin."
 
 #. Screen share bitrate option label. Mbps means megabits per second.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:167
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
 msgid "{megabits} Mbps"
 msgstr "{megabits} Mbps"
 
@@ -1105,7 +1084,7 @@ msgid "{productName} detected a potential raid in this community. Invites are pa
 msgstr "{productName} havaitsi mahdollisen hyökkäyksen tässä yhteisössä. Kutsut on keskeytetty, joten uudet käyttäjät eivät voi liittyä juuri nyt."
 
 #. Anti-raid status message on a community invite embed. productName is the product brand name placeholder.
-#: src/features/channel/components/InviteEmbed.tsx:117
+#: src/features/channel/components/InviteEmbed.tsx:88
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} havaitsi mahdollisen hyökkäyksen, joten uudet käyttäjät eivät voi liittyä juuri nyt."
 
@@ -1225,14 +1204,14 @@ msgstr "{remaining} merkkiä jäljellä. Hanki {premiumProductName}, niin voit k
 msgid "{remainingSlotCount} remaining"
 msgstr "{remainingSlotCount} jäljellä"
 
-#: src/features/channel/components/InviteEmbed.tsx:282
-#: src/features/channel/components/InviteEmbed.tsx:455
-#: src/features/channel/components/InviteEmbed.tsx:724
+#: src/features/channel/components/InviteEmbed.tsx:248
+#: src/features/channel/components/InviteEmbed.tsx:356
+#: src/features/channel/components/InviteEmbed.tsx:625
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {jäsen} other {jäsentä}}"
 
 #. Presence summary on a community invite embed. renderedPresenceCount is a formatted count of online members.
-#: src/features/channel/components/InviteEmbed.tsx:112
+#: src/features/channel/components/InviteEmbed.tsx:83
 msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} paikalla"
 
@@ -1630,9 +1609,7 @@ msgstr "1 lukematon"
 msgid "1 unread DM"
 msgstr "1 lukematon yksityisviesti"
 
-#. Invite link use-limit option meaning the invite can be used once.
 #. Invite max-uses dropdown option for exactly one use.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:33
 #: src/features/invite/components/modals/InviteModal.tsx:60
 msgid "1 use"
 msgstr "1 käyttö"
@@ -1668,16 +1645,12 @@ msgstr "1 vuoden lahja"
 msgid "10 minutes"
 msgstr "10 minuuttia"
 
-#. Invite link use-limit option meaning the invite can be used ten times.
 #. Invite max-uses dropdown option for ten uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:41
 #: src/features/invite/components/modals/InviteModal.tsx:68
 msgid "10 uses"
 msgstr "10 käyttökertaa"
 
-#. Invite link use-limit option meaning the invite can be used 100 times.
 #. Invite max-uses dropdown option for 100 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:53
 #: src/features/invite/components/modals/InviteModal.tsx:80
 msgid "100 uses"
 msgstr "100 käyttökertaa"
@@ -1763,9 +1736,7 @@ msgctxt "adaptive-screen-share"
 msgid "240p"
 msgstr "240p"
 
-#. Invite link use-limit option meaning the invite can be used 25 times.
 #. Invite max-uses dropdown option for 25 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:45
 #: src/features/invite/components/modals/InviteModal.tsx:72
 msgid "25 uses"
 msgstr "25 käyttökertaa"
@@ -1840,16 +1811,12 @@ msgstr "5 päivää"
 msgid "5 minutes"
 msgstr "5 minuuttia"
 
-#. Invite link use-limit option meaning the invite can be used five times.
 #. Invite max-uses dropdown option for five uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:37
 #: src/features/invite/components/modals/InviteModal.tsx:64
 msgid "5 uses"
 msgstr "5 käyttökertaa"
 
-#. Invite link use-limit option meaning the invite can be used 50 times.
 #. Invite max-uses dropdown option for 50 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:49
 #: src/features/invite/components/modals/InviteModal.tsx:76
 msgid "50 uses"
 msgstr "50 käyttökertaa"
@@ -2083,13 +2050,6 @@ msgstr "Hyväksy kutsu"
 msgid "Accept the friend request from {userName}?"
 msgstr "Hyväksytkö kaveripyynnön käyttäjältä {userName}?"
 
-#. Helper text on a pack invite embed explaining that accepting installs the pack.
-#. Note shown on expression pack invites before accepting.
-#: src/features/channel/components/InviteEmbed.tsx:100
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:81
-msgid "Accepting this invite installs the pack automatically."
-msgstr "Tämän kutsun hyväksyminen asentaa paketin automaattisesti."
-
 #. Short label in the notification utils helper. Keep it concise.
 #: src/features/notification/utils/NotificationUtils.ts:32
 msgid "Access granted"
@@ -2110,7 +2070,7 @@ msgstr "Käytä profiilisi perustietoja (käyttäjänimi, avatari jne.)"
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:93
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:66
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:61
 msgid "Accessibility"
 msgstr "Saavutettavuus"
 
@@ -2124,7 +2084,7 @@ msgstr "Esteetön live-alue"
 #. User settings tab for account login, password, MFA, and security.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:11
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:129
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:95
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:90
 msgid "Account"
 msgstr "Tili"
 
@@ -2180,7 +2140,7 @@ msgstr "Tili on liian uusi"
 #. Required-action modal title shown when an account-level verification step is required to proceed.
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:8
-#: src/features/invite/commands/InviteCommands.tsx:37
+#: src/features/invite/commands/InviteCommands.tsx:35
 msgid "Account verification required"
 msgstr "Tili vaatii vahvistuksen"
 
@@ -2461,7 +2421,7 @@ msgid "Add an account to continue."
 msgstr "Lisää tili jatkaaksesi."
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:42
+#: src/features/invite/commands/InviteCommands.tsx:40
 msgid "Add an email and password to your account first."
 msgstr "Lisää ensin sähköpostiosoite ja salasana tilillesi."
 
@@ -2771,7 +2731,7 @@ msgid "Address"
 msgstr "Osoite"
 
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Lisää H.264-tuen eri laitteille. Käyttää enemmän prosessointitehoa."
 
@@ -2827,11 +2787,9 @@ msgstr "Ylläpitäjät keskeyttivät kutsut – et voi liittyä juuri nyt."
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#. Voice participant context menu submenu label for IDs and diagnostics.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:145
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:140
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
 msgid "Advanced"
 msgstr "Lisäasetukset"
@@ -2842,7 +2800,7 @@ msgid "Advanced video settings"
 msgstr "Edistyneet videoasetukset"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:100
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "Advertise a capped decode codec to force publisher migration"
 msgstr "Mainosta rajoitettua dekoodauskoodekkia julkaisijan siirtymisen pakottamiseksi"
 
@@ -3065,6 +3023,13 @@ msgstr "Salli kenen tahansa nähdä tämä yhteys profiilissasi"
 msgid "Allow anyone who can view your full profile to see your profile local time"
 msgstr "Anna kenen tahansa, joka voi tarkastella koko profiiliasi, nähdä profiilisi paikallisen ajan"
 
+#. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:236
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+msgid "Allow AV1 for screen sharing"
+msgstr "Salli AV1 näytön jakamiseen"
+
 #. Toggle label that allows DMs from bots in this community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:81
 msgid "Allow bot direct messages"
@@ -3111,6 +3076,13 @@ msgstr "Salli joustavat tekstikanavien nimet"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
 msgid "Allow for all communities"
 msgstr "Salli kaikille yhteisöille"
+
+#. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:240
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+msgid "Allow H.265 (HEVC) for screen sharing"
+msgstr "Salli H.265 (HEVC) näytön jakamiseen"
 
 #: src/features/connection/components/modals/EditConnectionModal.tsx:95
 msgid "Allow members from communities you're in to see this connection"
@@ -3218,7 +3190,7 @@ msgid "Already have an account?"
 msgstr "Onko sinulla jo tunnus?"
 
 #. Status label on a group DM invite embed when the current user is already a member.
-#: src/features/channel/components/InviteEmbed.tsx:76
+#: src/features/channel/components/InviteEmbed.tsx:67
 msgid "Already joined"
 msgstr "Liitytty jo"
 
@@ -3426,7 +3398,7 @@ msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "Animaatioilla varustetut avatarit ({animatedAvatarFormats}) edellyttävät {premiumProductName}."
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
 msgid "Animated avatars & profile banners"
 msgstr "Animoidut avatarit ja profiilibannerit"
 
@@ -3712,7 +3684,7 @@ msgstr "Sovelluksen kuvakkeen ilmoituspiste"
 msgid "App language: {format}"
 msgstr "Sovelluksen kieli: {format}"
 
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:209
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:204
 msgid "App settings"
 msgstr "Sovelluksen asetukset"
 
@@ -3739,7 +3711,7 @@ msgstr "Sovelluksen zoomaustaso"
 #. Advanced settings category tag.
 #. User settings tab for app appearance and layout options.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:13
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:116
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:111
 msgid "Appearance"
 msgstr "Ulkoasu"
 
@@ -3812,8 +3784,8 @@ msgstr "Sovellus päivitetty"
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:90
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:129
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:74
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:70
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:65
 msgid "Applications"
 msgstr "Sovellukset"
 
@@ -3899,7 +3871,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "Haluatko varmasti poistaa kaikki viestit henkilökohtaisista muistiinpanoistasi? Tämä poistaa pysyvästi kaikki viestit ja niiden liitteet. Toimintoa ei voi kumota."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "Haluatko varmasti poistaa roolin <0>{0}</0>? Roolin omaavilla jäsenillä ei enää ole sitä."
 
@@ -4080,11 +4052,6 @@ msgstr "Liitteen malli"
 msgid "Attachment mocks"
 msgstr "Liitemokkauksia"
 
-#. Placeholder content text shown for scheduled messages that have attachments but no text content.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:34
-msgid "Attachment only message"
-msgstr "Vain liiteviesti"
-
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual attachment preview modal. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx:27
@@ -4112,9 +4079,7 @@ msgstr "Liitteen lähetys ei ole käytettävissä"
 msgid "Attachment: {filename}"
 msgstr "Liite: {filename}"
 
-#. Label in the scheduled message row preview indicating that attachments are included.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:43
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:34
 msgid "Attachments"
 msgstr "Liitteet"
@@ -4238,7 +4203,7 @@ msgid "Audio settings"
 msgstr "Ääniasetukset"
 
 #. Voice control button label for microphone and speaker settings.
-#: src/features/voice/components/VoiceControlBar.tsx:146
+#: src/features/voice/components/VoiceControlBar.tsx:142
 msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "Ääniasetukset"
@@ -4344,7 +4309,7 @@ msgid "Authorized"
 msgstr "Valtuutettu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:22
 msgid "Authorized applications"
 msgstr "Valtuutetut sovellukset"
 
@@ -4358,8 +4323,8 @@ msgstr "Valtuutetut sovellukset"
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:506
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:148
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:107
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:102
 msgid "Authorized apps"
 msgstr "Valtuutetut sovellukset"
 
@@ -4442,7 +4407,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "Automaattinen ehdotus: {label}, {selectedOptionPosition}/{resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -4451,11 +4415,10 @@ msgstr "Automaattinen ehdotus: {label}, {selectedOptionPosition}/{resultCount}"
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:126
@@ -4467,6 +4430,11 @@ msgstr "Automaattinen"
 msgctxt "rtc-region-value"
 msgid "Automatic"
 msgstr "Automaattinen"
+
+#. Option label for the screen-share codec select. codec is the automatically selected codec label.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:222
+msgid "Automatic ({codec})"
+msgstr "Automaattinen ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -4494,96 +4462,6 @@ msgstr "Viestien automaattinen luku"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "Automaattinen käynnistys"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep Firefox as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:8
-msgid "Automatic would use {codecName} because Firefox screen sharing works most reliably with it."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska Firefoxin näytönjako toimii luotettavimmin sen kanssa."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:70
-msgid "Automatic would use {codecName} because no hardware encoder is available and this browser exposes H.265."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska laitteistokooderia ei ole saatavilla ja tämä selain tukee H.265:tä."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:75
-msgid "Automatic would use {codecName} because no hardware encoder is available and your computer exposes H.265."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska laitteistokooderia ei ole saatavilla ja tietokoneesi tukee H.265:tä."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:90
-msgid "Automatic would use {codecName} because no higher-quality encoder is available and H.264 is compatible."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska parempaa kooderia ei ole saatavilla ja H.264 on yhteensopiva."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep OpenH264 and Linux literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:101
-msgid "Automatic would use {codecName} because no video encoder is exposed. On Linux, OpenH264 may need to be installed."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska videokooderia ei ole käytettävissä. Linuxissa OpenH264 on ehkä asennettava."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:60
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes AV1."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska ohjelmistokoodaus on ensisijainen ja tämä selain tukee AV1:tä."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:80
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes VP9."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska ohjelmistopohjainen koodaus on ensisijaista ja tämä selain tukee VP9:ää."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:95
-msgid "Automatic would use {codecName} because software encoding is preferred and VP8 is the safest software fallback."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska ohjelmistopohjainen koodaus on ensisijaista ja VP8 on turvallisin ohjelmistopohjainen vararatkaisu."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:65
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes AV1."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska ohjelmistopohjainen koodaus on ensisijaista ja tietokoneesi tukee AV1:tä."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:85
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes VP9."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska ohjelmistopohjainen koodaus on ensisijainen ja tietokoneesi tukee VP9:ää."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:25
-msgid "Automatic would use {codecName} because this browser does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska tämä selain ei paljasta H.264:ää, joten VP8 on turvallisin vararatkaisu."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:13
-msgid "Automatic would use {codecName} because this browser supports it and it is the best fallback outside Chromium."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska selaimesi tukee sitä ja se on paras varavaihtoehto Chromen ulkopuolella."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:30
-msgid "Automatic would use {codecName} because your computer does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska tietokoneesi ei tue H.264:ää, joten VP8 on turvallisin varavaihtoehto."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:19
-msgid "Automatic would use {codecName} because your computer supports it and it is the best fallback outside Chromium."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska tietokoneesi tukee sitä ja se on paras varavaihtoehto Chromen ulkopuolella."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:54
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it gives strong screen-share quality."
-msgstr "Automaattinen valitsisi {codecName}-koodekin, koska GPU:si voi koodata sen laitteistolla ja se tarjoaa hyvän näytönjaon laadun."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:42
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it is the most compatible screen-share default."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska GPU:si voi koodata sen laitteistossa ja se on yhteensopivin näytönjaon oletusasetus."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:48
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with excellent compression and low CPU usage."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska GPU:si voi koodata sen laitteistolla erinomaisella pakkauksella ja alhaisella suorittimen käytöllä."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:36
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with the best compression for screen sharing."
-msgstr "Automaattinen käyttäisi koodekkia {codecName}, koska GPU:si voi koodata sen laitteistossa parhaalla pakkaussuhteella näytön jakamista varten."
 
 #. Short label in the animation tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:52
@@ -4647,6 +4525,16 @@ msgstr "Lue automaattisesti"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:307
 msgid "Autoscrolling"
 msgstr "Automaattinen vieritys"
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
+msgid "AV1"
+msgstr "AV1"
+
+#. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:226
+msgid "AV1 (requires opt-in)"
+msgstr "AV1 (vaatii valinnan)"
 
 #. Label for the available desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
@@ -4875,7 +4763,7 @@ msgid "Badge"
 msgstr "Merkki"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Balanced"
 msgstr "Tasapainoinen"
 
@@ -4917,7 +4805,7 @@ msgstr "Porttikielto päättyy {0}."
 #: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:118
 msgid "Ban member"
 msgstr "Anna porttikielto jäsenelle"
 
@@ -5046,7 +4934,7 @@ msgstr "1–32 merkkiä pitkä"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:27
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:207
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:202
 msgid "Billing"
 msgstr "Laskutus"
 
@@ -5099,7 +4987,7 @@ msgid "Biometrics"
 msgstr "Biometriikka"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:181
 msgid "Bitrate"
 msgstr "Bittinopeus"
 
@@ -5181,8 +5069,8 @@ msgstr "Estetyt"
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:210
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:6
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:152
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:58
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:18
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:53
 msgid "Blocked users"
 msgstr "Estetyt käyttäjät"
 
@@ -5275,7 +5163,7 @@ msgstr "Lisätty kirjanmerkkeihin."
 #. Tab label in the inbox popout listing the user bookmarks.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:33
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
-#: src/features/messaging/components/popouts/InboxPopout.tsx:36
+#: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
 msgstr "Kirjanmerkit"
 
@@ -5535,10 +5423,6 @@ msgstr "Kihoaminen, toistuva ei-toivottu yhteydenotto, vainoaminen tai kohdennet
 msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
 msgstr "Kiusaaminen, uhkailu, viha, väkivalta, hyökkäykset tai itsensä vahingoittamiseen yllyttävä sisältö."
 
-#: src/features/expressions/components/modals/CreatePackModal.tsx:95
-msgid "Bundle your favorite stickers into a pack you can distribute."
-msgstr "Kokoa suosikkitarrasi paketiksi, jonka voit jakaa."
-
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:45
 msgid "Busy right now"
@@ -5761,7 +5645,7 @@ msgid "Cameras and virtual capture devices are selected here in {productName}, n
 msgstr "Kamerat ja virtuaaliset tallennuslaitteet valitaan täällä {productName}-sovelluksessa, ei Waylandin järjestelmävalitsimessa. Jos mitään ei näy, tarkista käyttöoikeudet tai yhdistä laite."
 
 #. Tooltip in the voice control bar when cameras are disabled because the participant count exceeds the limit. {voiceChannelCameraUserLimit} is the configured threshold.
-#: src/features/voice/components/VoiceControlBar.tsx:136
+#: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Kamerat ovat pois päältä, jos osallistujia on yli {voiceChannelCameraUserLimit}"
 
@@ -5781,7 +5665,6 @@ msgid "Can't upload files here"
 msgstr "Tiedostojen lähetys ei onnistu tähän"
 
 #. Action label for dismissing a mass-mention warning.
-#. Button label on a scheduled message row that cancels (deletes) the scheduled send.
 #. Button label that closes the emoji rename popout without saving.
 #. Button that closes the delete channel confirmation without deleting.
 #. Button that closes the device logout confirmation without changes.
@@ -5810,10 +5693,8 @@ msgstr "Tiedostojen lähetys ei onnistu tähän"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:318
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:111
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
-#: src/features/expressions/components/modals/CreatePackModal.tsx:137
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/expressions/components/modals/EditPackModal.tsx:124
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:98
 #: src/features/input/state/input_keybind/shared.ts:137
@@ -5824,7 +5705,6 @@ msgstr "Tiedostojen lähetys ei onnistu tähän"
 #: src/features/messaging/components/modals/ForwardModal.tsx:635
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
@@ -5849,11 +5729,6 @@ msgstr "Peruuta"
 #: src/features/channel/components/ChannelEditBar.tsx:13
 msgid "Cancel editing message"
 msgstr "Peruuta viestin muokkaus"
-
-#. Button or menu action label in the channel and chat scheduled message edit bar. Keep it concise.
-#: src/features/channel/components/ScheduledMessageEditBar.tsx:18
-msgid "Cancel editing scheduled message"
-msgstr "Peruuta ajoitetun viestin muokkaus"
 
 #. Relationship action label for canceling an outgoing friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:25
@@ -5935,16 +5810,6 @@ msgstr "Ei voi muokata"
 msgid "Cannot delete account"
 msgstr "Tiliä ei voi poistaa"
 
-#. Title of the error modal when installing an emoji pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:83
-msgid "Cannot install emoji pack"
-msgstr "Emopakettia ei voi asentaa"
-
-#. Title of the error modal when installing a sticker pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:87
-msgid "Cannot install sticker pack"
-msgstr "Tarrapakettia ei voi asentaa"
-
 #. Toast error shown when captcha verification fails inside the auth captcha interceptor.
 #: src/features/auth/components/CaptchaInterceptor.tsx:14
 msgid "Captcha verification failed. Try again."
@@ -5955,15 +5820,15 @@ msgstr "Captcha-varmennus epäonnistui. Yritä uudelleen."
 msgid "Capture"
 msgstr "Kaappaa"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture app audio"
 msgstr "Tallenna sovelluksen ääni"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture desktop audio"
 msgstr "Tallenna työpöydän ääni"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
 msgid "Capture device audio"
 msgstr "Tallenna laitteen ääni"
 
@@ -6221,12 +6086,12 @@ msgstr "Vaihda salasana -lomake"
 msgid "Change scheduled"
 msgstr "Muutos ajoitettu"
 
-#. Tooltip / button label in the screen-share status pill. Opens the picker to change what is being shared.
-#. Voice control menu action to choose a different screen-share source.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
-#: src/features/voice/components/VoiceControlBar.tsx:108
-msgid "Change source"
-msgstr "Vaihda lähde"
+#. Action that opens the source picker for the active screen share.
+#. Voice screen share menu action that changes the shared source.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:23
+msgid "Change Stream"
+msgstr "Vaihda striimi"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
@@ -6575,7 +6440,7 @@ msgstr "Merkkirajoitus ylittyy {remaining} merkillä"
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:40
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:15
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:39
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:120
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:115
 msgid "Chat"
 msgstr "Chat"
 
@@ -6976,7 +6841,7 @@ msgid "Choose your profile accent color"
 msgstr "Valitse profiilisi korostusväri"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:108
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7584,7 +7449,7 @@ msgid "Codec"
 msgstr "Koodekki"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Codec negotiation testing"
 msgstr "Koodekin neuvottelun testaus"
 
@@ -7628,8 +7493,8 @@ msgstr "Tiivistä kanavan aihe"
 
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:98
-#: src/features/voice/components/VoiceParticipantTile.tsx:165
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
+#: src/features/voice/components/VoiceParticipantTile.tsx:166
 msgid "Collapse devices"
 msgstr "Tiivistä laitteet"
 
@@ -8104,7 +7969,7 @@ msgstr "Kirjoituskentän kohdistus"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 msgid "Configure"
 msgstr "Määritä"
 
@@ -8127,7 +7992,7 @@ msgid "Configure now"
 msgstr "Määritä nyt"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:69
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
 msgid "Configure or end screen share"
 msgstr "Määritä tai lopeta näytön jakaminen"
 
@@ -8378,12 +8243,12 @@ msgstr "Yhteys: {connectionId}"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:410
 #: src/features/user/components/popouts/UserProfileShared.tsx:610
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
 msgstr "Yhteydet"
 
 #. User settings tab for linked external accounts.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:111
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:106
 msgctxt "user-settings-tab"
 msgid "Connections"
 msgstr "Yhteydet"
@@ -8434,7 +8299,7 @@ msgid "Content filtering"
 msgstr "Sisällön suodatus"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 msgid "Content hint"
 msgstr "Sisältövihje"
 
@@ -9157,16 +9022,6 @@ msgstr "Ystäväpyynnön ohittaminen epäonnistui"
 msgid "Couldn't ignore the friend request. Try again."
 msgstr "Ystäväpyynnön ohittaminen epäonnistui. Yritä uudelleen."
 
-#. Generic body for the error modal when an emoji pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:107
-msgid "Couldn't install this emoji pack. Try again later."
-msgstr "Emme voineet asentaa tätä emojipakettia. Yritä uudelleen myöhemmin."
-
-#. Generic body for the error modal when a sticker pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:111
-msgid "Couldn't install this sticker pack. Try again later."
-msgstr "Tätä tarrapakettia ei voitu asentaa. Yritä myöhemmin uudelleen."
-
 #. Error modal title shown when accepting a community invite fails.
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
 msgid "Couldn't join community"
@@ -9582,11 +9437,6 @@ msgstr "Luo tili ja lunasta lahjasi"
 msgid "Create and manage applications and bots for your account"
 msgstr "Luo ja hallinnoi tilisi sovelluksia ja botteja"
 
-#. Empty-state description for expression packs when the feature requires premium.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:63
-msgid "Create and share custom emoji and sticker packs with {premiumProductFullName}."
-msgstr "Luo ja jaa mukautettuja emojeita ja tarrapaketteja {premiumProductFullName}-tilauksella."
-
 #. Button or menu action label in the application create modal. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationCreateModal.tsx:20
@@ -9627,14 +9477,6 @@ msgstr "Luo yksityisviesti"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:197
 msgid "Create emoji & stickers"
 msgstr "Luo emojeita ja tarroja"
-
-#. Action that opens the create-emoji-pack modal.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:18
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:314
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:31
-msgid "Create emoji pack"
-msgstr "Luo emojipaketti"
 
 #. Accessible label for the create-favorite-category form.
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:16
@@ -9688,14 +9530,6 @@ msgstr "Luo yhteisö tai liity sellaiseen"
 msgid "Create role"
 msgstr "Luo rooli"
 
-#. Action that opens the create-sticker-pack modal.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:22
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:314
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:35
-msgid "Create sticker pack"
-msgstr "Luo tarrapaketti"
-
 #. Setup wizard title prompting the operator to create the first account.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:48
 msgid "Create the administrator account"
@@ -9748,15 +9582,6 @@ msgstr "Luotu"
 msgid "Created {createdAt}"
 msgstr "Luotu {createdAt}"
 
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:334
-msgid "Created {createdCount} / {createdLimit}"
-msgstr "Luotu {createdCount} / {createdLimit}"
-
-#. placeholder {0}: NicknameUtils.getDisplayName(packCreator)
-#: src/features/channel/components/InviteEmbed.tsx:343
-msgid "Created by {0}"
-msgstr "Luonut {0}"
-
 #. placeholder {0}: inviter ? NicknameUtils.getNickname(inviter, undefined, channelId) : invite.inviter ? NicknameUtils.getDisplayName(invite.inviter) : ''
 #. placeholder {1}: formatExpiresAt(invite.expires_at)
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:218
@@ -9767,13 +9592,6 @@ msgstr "Luonut {0}. Vanhenee {1}."
 #: src/features/webhook/components/WebhookListItem.tsx:223
 msgid "Created by {creatorDisplayName} on {createdAt}"
 msgstr "Luonut {creatorDisplayName} {createdAt}"
-
-#. Metadata label for an expression pack invite. userName is the pack creator username.
-#. Short label in the authentication invite header. Preserve {userName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InviteHeader.tsx:29
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:73
-msgid "Created by {userName}"
-msgstr "Luonut {userName}"
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:739
@@ -9786,11 +9604,6 @@ msgstr "Luotu kanavalle {0}."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:267
 msgid "Created on {0}."
 msgstr "Luotu {0}."
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:43
-msgid "Created packs"
-msgstr "Luodut paketit"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
@@ -10119,7 +9932,7 @@ msgid "Custom tags"
 msgstr "Mukautetut tunnisteet"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:87
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
 msgid "Custom themes"
 msgstr "Mukautetut teemat"
 
@@ -10603,7 +10416,6 @@ msgstr "Oletuksena pois päältä mobiililaitteilla akun keston ja datan sääst
 #. Button or menu action label in the channel and chat embed audio. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the channel and chat media container. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the channel and chat mobile memes picker. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
 #. Confirm button label on the destructive delete-saved-media alert.
 #. Danger button label that confirms deleting a custom emoji.
@@ -10626,7 +10438,6 @@ msgstr "Oletuksena pois päältä mobiililaitteilla akun keston ja datan sääst
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:49
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
@@ -10785,11 +10596,6 @@ msgstr "Poista viestini"
 msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Poista muiden jäsenten viestejä. Kiinnitystä hallitaan erikseen."
 
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:40
-msgid "Delete pack"
-msgstr "Poista paketti"
-
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
 msgid "Delete passkey"
@@ -10861,11 +10667,6 @@ msgstr "Poista tämä viesti"
 #: src/features/messaging/commands/MessageCommands.tsx:73
 msgid "Delete this message? Can't be undone."
 msgstr "Poistetaanko tämä viesti? Toimintoa ei voi kumota."
-
-#. Error message in the expression packs tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
-msgid "Delete this pack? Can't be undone."
-msgstr "Poistetaanko tämä paketti? Toimintoa ei voi kumota."
 
 #. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
@@ -11011,7 +10812,7 @@ msgid "Description must be no more than {discoveryDescriptionMaxLength} characte
 msgstr "Kuvauksen enimmäispituus on {discoveryDescriptionMaxLength} merkkiä."
 
 #. Developer settings tab showing UI component examples.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:153
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:148
 msgid "Design system"
 msgstr "Suunnittelujärjestelmä"
 
@@ -11025,8 +10826,8 @@ msgstr "Työpöytä"
 
 #. User settings tab for desktop app integration and platform settings.
 #. User settings tab label shown on desktop builds when the OS could not be identified (fallback for the per-OS labels).
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:86
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:141
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:81
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:136
 msgid "Desktop app"
 msgstr "Työpöytäsovellus"
 
@@ -11113,7 +10914,7 @@ msgstr "Työpöytäversio {version} on saatavilla. Lataa asennusohjelma ja suori
 #. Settings section label for desktop window behavior.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
 msgstr "Työpöytäikkuna"
 
@@ -11139,7 +10940,7 @@ msgid "Detached banner"
 msgstr "Banneri irrotettu"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "Yksityiskohta"
 
@@ -11163,7 +10964,7 @@ msgstr "Tunnista kirjoittaessa"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:20
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:25
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:211
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:206
 msgid "Developer"
 msgstr "Kehittäjä"
 
@@ -11171,7 +10972,7 @@ msgstr "Kehittäjä"
 #. Settings section label for client developer mode.
 #: src/features/user/components/modals/tabs/ClientDeveloperSettingsTab.tsx:17
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:7
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
 msgid "Developer mode"
 msgstr "Kehittäjätila"
 
@@ -11218,11 +11019,6 @@ msgstr "Laite"
 msgid "Device alerts"
 msgstr "Laitteen hälytykset"
 
-#. Voice participant context menu submenu label for actions that affect one or more voice devices.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:182
-msgid "Device controls"
-msgstr "Laitteen säätimet"
-
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "Laitteen tiedot"
@@ -11232,7 +11028,7 @@ msgstr "Laitteen tiedot"
 msgid "Device revoked"
 msgstr "Laite poistettu"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1024
 msgid "Device selection"
 msgstr "Laitteen valinta"
 
@@ -11255,7 +11051,7 @@ msgstr "Laite:"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:62
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:57
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
 msgid "Devices"
 msgstr "Laitteet"
@@ -11437,7 +11233,7 @@ msgid "Disable mobile push notifications"
 msgstr "Poista mobiili-ilmoitukset käytöstä"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Poista kuva kuvassa -ponnahdusikkuna käytöstä näytön jaon yhteydessä"
 
@@ -11478,7 +11274,7 @@ msgstr "Poista kaksivaiheinen todennus käytöstä"
 
 #. Voice menu checkbox label. Hides another participant's video only for the current user.
 #. Voice menu checkbox that hides a participant video on the current device only.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:86
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:110
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:77
 msgid "Disable video locally"
 msgstr "Poista video käytöstä paikallisesti"
@@ -11753,11 +11549,6 @@ msgstr "Näyttönimi"
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx:91
 msgid "Display name (optional)"
 msgstr "Näyttönimi (valinnainen)"
-
-#. Voice participant context menu submenu label for call display and diagnostics preferences.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:186
-msgid "Display options"
-msgstr "Näytön asetukset"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:661
 msgid "Display role members separately."
@@ -12284,12 +12075,8 @@ msgstr "Hollanti"
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "esim. YubiKey, iPhone, työkone"
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:187
-msgid "Each link works once."
-msgstr "Jokainen linkki toimii kerran."
-
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
 msgid "Early access to new features"
 msgstr "Ennakkokäyttöoikeus uusiin ominaisuuksiin"
 
@@ -12315,7 +12102,6 @@ msgstr "Kaiunvaimennus"
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
 #: src/features/platform/utils/DesktopLocaleBridge.ts:42
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:123
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
 msgid "Edit"
 msgstr "Muokkaa"
@@ -12395,11 +12181,6 @@ msgstr "Muokkaa yhteisön profiilia"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:19
 msgid "Edit connection"
 msgstr "Muokkaa yhteyttä"
-
-#. Action that opens the edit-emoji-pack modal.
-#: src/features/expressions/components/modals/EditPackModal.tsx:19
-msgid "Edit emoji pack"
-msgstr "Muokkaa emojipakettia"
 
 #. Permission description in the role/permission editor for the Manage Community permission. Refers to top-level community settings, not per-channel.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:23
@@ -12512,11 +12293,6 @@ msgstr "Muokkaa tarraa"
 msgid "Edit sticker {stickerName}"
 msgstr "Muokkaa tarraa {stickerName}"
 
-#. Action that opens the edit-sticker-pack modal.
-#: src/features/expressions/components/modals/EditPackModal.tsx:23
-msgid "Edit sticker pack"
-msgstr "Muokkaa tarrapakettia"
-
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:88
 msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
@@ -12554,11 +12330,6 @@ msgstr "Muokkaus ei ole tilapäisesti käytettävissä. Yritä myöhemmin uudell
 #: src/features/channel/components/ChannelEditBar.tsx:40
 msgid "Editing message"
 msgstr "Muokataan viestiä"
-
-#. Button or menu action label in the channel and chat scheduled message edit bar. Keep it concise.
-#: src/features/channel/components/ScheduledMessageEditBar.tsx:14
-msgid "Editing scheduled message"
-msgstr "Ajastetun viestin muokkaus"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
@@ -12674,7 +12445,7 @@ msgstr "Upotus"
 #. Developer settings tab for testing URL unfurls and rendered embeds.
 #. Settings search entry label for the developer embed debugger.
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:7
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:149
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:144
 msgid "Embed debugger"
 msgstr "Upotusten virheenkorjaus"
 
@@ -12726,10 +12497,8 @@ msgstr "Upotukset näkyvissä"
 #. Audit log target-type filter label. Filters entries that target a custom emoji.
 #. Column header for the custom emoji image or glyph.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:172
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
 msgid "Emoji"
 msgstr "Emoji"
@@ -12744,11 +12513,6 @@ msgstr "Emojit"
 #: src/features/voice/utils/TtsTextFormatter.ts:37
 msgid "emoji {emojiName}"
 msgstr "emoji {emojiName}"
-
-#. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
-msgid "Emoji & sticker packs"
-msgstr "Emoji- ja tarrapaketit"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
@@ -12794,45 +12558,6 @@ msgstr "Emojin nimen pituus saa olla enintään 32 merkkiä"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:97
 msgid "Emoji names need at least 2 characters and can use letters, numbers, and underscores. Emojis must be under {maxSize}. Static images are resized to 128x128 pixels and compressed automatically. Animated emojis and SVGs must already fit the limit."
 msgstr "Emoji-nimien tulee olla vähintään 2 merkkiä pitkiä, ja niissä voidaan käyttää kirjaimia, numeroita ja alaviivoja. Emojien koko saa olla enintään {maxSize}. Staattiset kuvat muokataan automaattisesti kokoon 128x128 pikseliä ja pakataan. Animoitujen emojien ja SVG-kuvien on oltava valmiiksi määritellyn koon mukaisia."
-
-#. Kind label on an emoji pack invite embed.
-#. Short label in the authentication invite header. Keep the tone plain and specific.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/auth/flow/InviteHeader.tsx:21
-#: src/features/channel/components/InviteEmbed.tsx:84
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:57
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:105
-msgid "Emoji pack"
-msgstr "Emojipaketti"
-
-#. placeholder {0}: invite.pack.name
-#: src/features/invite/commands/InviteCommands.tsx:144
-msgid "Emoji pack {0} has been installed."
-msgstr "Emojipaketti {0} on asennettu."
-
-#. Title of the error modal when creating a new emoji pack is rejected because the user is at the creation limit.
-#: src/features/invite/commands/InviteCommands.tsx:56
-msgid "Emoji pack creation limit reached"
-msgstr "Emojipakettien luontiraja saavutettu"
-
-#. Modal title for the emoji pack invite share flow.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:57
-msgid "Emoji pack invite"
-msgstr "Emojipakkauksen kutsu"
-
-#. Title of the error modal when installing an emoji pack via invite is rejected because the user is at the install limit.
-#: src/features/invite/commands/InviteCommands.tsx:47
-msgid "Emoji pack limit reached"
-msgstr "Emojipakettien enimmäismäärä saavutettu"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings section label for emoji expression packs.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:80
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:23
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:18
-msgid "Emoji packs"
-msgstr "Emojipaketit"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:126
@@ -12882,8 +12607,8 @@ msgstr "Ei suosikkeja"
 
 #. Label for an advanced select that caps the best video codec this client advertises it can decode.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "Emulate decode codec (testing)"
 msgstr "Jäljittele dekoodauskoodekkia (testaus)"
 
@@ -13177,18 +12902,18 @@ msgstr "Salli aikuisille tarkoitettu sisältö."
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "Encoder path"
 msgstr "Kooderin polku"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Encoder preference for new screen shares."
 msgstr "Ensisijainen enkooderi uusille näytönjakamistoiminnoille."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:185
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "Enkooderin, SVC:n, varavirtauksen ja bittinopeuden esiasetukset."
 
@@ -13220,10 +12945,8 @@ msgstr "Lopeta armonaika"
 msgid "End grace period now?"
 msgstr "Päätetäänkö armonaika nyt?"
 
-#. Button label that stops the current screen share.
 #. Voice control menu action to stop sharing the screen.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:52
-#: src/features/voice/components/VoiceControlBar.tsx:112
+#: src/features/voice/components/VoiceControlBar.tsx:108
 msgid "End screen share"
 msgstr "Lopeta näytön jakaminen"
 
@@ -13540,7 +13263,9 @@ msgstr "Koko järjestelmän ääni"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
+#. Voice menu submenu label for per-user entrance sound controls.
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
@@ -13568,6 +13293,8 @@ msgid "Entrance sound saved"
 msgstr "Sisääntuloääni tallennettu"
 
 #. Voice menu slider label adjusting playback volume of this user's entrance sound, locally only.
+#. Voice menu slider label for a user's entrance sound playback volume.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:187
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:318
 msgid "Entrance sound volume"
 msgstr "Tuloäänen voimakkuus"
@@ -13803,10 +13530,6 @@ msgstr "Kokeellinen"
 msgid "EXPERIMENTAL"
 msgstr "EXPERIMENTAL"
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:152
-msgid "Expiration"
-msgstr "Vanhenee"
-
 #. Label above the expiration duration dropdown in the invite link settings.
 #: src/features/invite/components/modals/InviteModal.tsx:102
 msgid "Expire after"
@@ -13941,13 +13664,8 @@ msgstr "Vie tietoni"
 msgid "Export themes"
 msgstr "Vie teemat"
 
-#. Developer / debug surface — keep terse and technical. Tooltip / description for the Expression packs settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
-msgid "Expose the staff-only Expression packs page in user settings."
-msgstr "Näytä käyttäjäasetuksissa sivusto, jossa on vain henkilökunnan käytettävissä olevia ilmaisupaketteja."
-
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:138
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
 msgid "Expose the staff-only timezone section in profile settings."
 msgstr "Näytä henkilökunnalle tarkoitettu aikavyöhykeosio profiiliasetuksissa."
 
@@ -13957,23 +13675,6 @@ msgstr "Näytä henkilökunnalle tarkoitettu aikavyöhykeosio profiiliasetuksiss
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:158
 msgid "Expression autocomplete"
 msgstr "Ilmaisuautomaattinen täydennys"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#. User settings tab for purchased or owned emoji/sticker expression packs.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:166
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:7
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:54
-msgid "Expression packs"
-msgstr "Ilmaisupaketit"
-
-#. Empty-state title for expression packs when the feature requires premium.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:59
-msgid "Expression packs are a {premiumProductName} feature"
-msgstr "Ilmaisupaketit ovat {premiumProductName}-ominaisuus"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:168
-msgid "Expression packs are not enabled on this instance. Contact your instance administrator for more information."
-msgstr "Ilmepaketit eivät ole käytössä tällä instanssilla. Ota yhteyttä instanssin ylläpitäjään saadaksesi lisätietoja."
 
 #. Aria label for the expression picker category nav.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:751
@@ -13987,9 +13688,7 @@ msgstr "Lausekkeiden poisto"
 
 #. Community settings sidebar category grouping the emoji and stickers tabs.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:249
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:19
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:134
 msgid "Expressions"
 msgstr "Ilmaisut"
@@ -14457,7 +14156,7 @@ msgstr "Suosikit"
 msgid "Favorites"
 msgstr "Suosikit"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:182
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:177
 msgid "Feature"
 msgstr "Ominaisuus"
 
@@ -14753,14 +14452,14 @@ msgstr "Siirrä kohdistus tekstikenttään"
 
 #. Voice call layout action that pins one of several active devices of the same participant.
 #. Voice layout menu action that focuses one device/session for a participant.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:37
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:101
 msgid "Focus this device"
 msgstr "Tarkenna tähän laitteeseen"
 
 #. Voice call layout action that pins the selected participant in the focused view.
 #. Voice layout menu action that focuses one participant in the call view.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:105
 msgid "Focus this person"
 msgstr "Kohdista tähän henkilöön"
@@ -14807,7 +14506,7 @@ msgstr "Kansion asetukset"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Seuraa meitä palvelussa {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:826
 msgid "Follow voice input"
 msgstr "Seuraa puhesyötettä"
 
@@ -15061,7 +14760,7 @@ msgstr "Välitti viestin"
 msgid "Forwarded from"
 msgstr "Välitetty lähettäjältä"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:269
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:267
 msgid "Found {resultCount} results in {categoryCount} categories"
 msgstr "Löytyi {resultCount} tulosta {categoryCount} kategoriasta"
 
@@ -15096,7 +14795,7 @@ msgstr "Kuvataajuus"
 msgid "France"
 msgstr "Ranska"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:187
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:182
 msgid "Free"
 msgstr "Ilmainen"
 
@@ -15354,10 +15053,6 @@ msgstr "Yleiset"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:332
 msgid "Generate a shareable link or copy your combined custom CSS."
 msgstr "Luo jaettava linkki tai kopioi yhdistetty mukautettu CSS-koodisi."
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:213
-msgid "Generate invite"
-msgstr "Luo kutsu"
 
 #. Short label in the add friends to group modal. Keep it concise.
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:23
@@ -15639,7 +15334,7 @@ msgstr "Lahjoitettu <0/> asti <1>{giftEndDate}</1>. Ei uusiudu automaattisesti. 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for gift inventory and redemption codes.
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:37
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:99
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:94
 msgid "Gifts"
 msgstr "Lahjat"
 
@@ -15664,7 +15359,7 @@ msgid "Glad you're here, {username}!"
 msgstr "Tervetuloa, {username}!"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
 msgid "Global emoji & sticker access"
 msgstr "Globaali emoji- ja tarrasaatavuus"
 
@@ -15703,8 +15398,8 @@ msgstr "Siirry kohtaan {premiumProductName}"
 
 #. Button label on a community invite embed when the current user is already a member.
 #. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:108
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:53
+#: src/features/channel/components/InviteEmbed.tsx:79
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:45
 msgid "Go to community"
 msgstr "Siirry yhteisöön"
 
@@ -15831,7 +15526,7 @@ msgstr "Myönnetty {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Myöntää kaikki oikeudet ja ohittaa kanavarajoitukset. Erittäin arkaluontoinen."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1011
 msgid "Granular selection"
 msgstr "Tarkka valinta"
 
@@ -15867,7 +15562,7 @@ msgstr "Kreikka"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:784
+#: src/features/voice/components/VoiceSettingsMenus.tsx:785
 msgid "Grid view"
 msgstr "Ruudukkonäkymä"
 
@@ -15948,7 +15643,7 @@ msgstr "Ryhmäkutsut"
 #. Audit log channel type label for group DM channels.
 #. Fallback display name for an unnamed group DM in quick switcher results.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:57
-#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:44
+#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:43
 msgid "Group message"
 msgstr "Ryhmäviesti"
 
@@ -16010,19 +15705,24 @@ msgid "Grouping"
 msgstr "Ryhmittely"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:104
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "H.264 backup stream"
 msgstr "H.264-varavirta"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
 msgid "H.264 simulcast backup"
 msgstr "H.264-simulcast-varmuuskopio"
+
+#. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:231
+msgid "H.265 (requires opt-in)"
+msgstr "H.265 (vaatii valinnan)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -16075,12 +15775,8 @@ msgstr "Laitteistokiihdytys"
 msgid "Hardware acceleration can cause rendering glitches with transparent windows. Try --disable-gpu if you see flicker or smearing."
 msgstr "Laitteistokiihdytys voi aiheuttaa renderöintivirheitä läpinäkyvien ikkunoiden kanssa. Kokeile --disable-gpu, jos näet välkkymistä tai sumentumista."
 
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:132
-msgid "Hardware acceleration is off, so codecs will encode on your CPU. <0>Turn it back on in {advancedSettingsLabel}</0>."
-msgstr "Laitteistokiihdytys on pois päältä, joten koodekit käyttävät prosessoria koodaukseen. <0>Ota se takaisin käyttöön kohdassa {advancedSettingsLabel}</0>."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Hardware encoder"
 msgstr "Laitteistopohjainen enkooderi"
 
@@ -16215,9 +15911,14 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "Auta kääntämään {PRODUCT_NAME} kielellesi osoitteessa <0>{I18N_WEBLATE_DOMAIN}</0>."
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "Auttaa selainta valitsemaan liikkeen, yksityiskohdat tai tekstin käsittelyn."
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
+msgid "HEVC"
+msgstr "HEVC"
 
 #. Codec description in the screen share codec policy menu. HEVC is a codec name; keep WebRTC literal.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:28
@@ -16370,7 +16071,7 @@ msgid "Hide muted channels by default?"
 msgstr "Piilotetaanko mykistetyt kanavat oletuksena?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
 msgid "Hide my stream preview thumbnail"
 msgstr "Piilota striimin esikatselukuva"
 
@@ -16389,7 +16090,7 @@ msgstr "Piilota salasana"
 msgid "Hide picture-in-picture popout?"
 msgstr "Piilotetaanko kuva kuvassa -ikkuna?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:860
 msgid "Hide preview thumbnail"
 msgstr "Piilota esikatselukuva"
 
@@ -16451,7 +16152,7 @@ msgid "High dynamic range display mode"
 msgstr "HDR-näyttötila"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Higher quality can cost more CPU and latency."
 msgstr "Korkeampi laatu voi kuluttaa enemmän prosessointitehoa ja aiheuttaa viivettä."
 
@@ -16474,7 +16175,7 @@ msgstr "Vinkit"
 msgid "Hoist order"
 msgstr "Näytä erillään -järjestys"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:522
 msgid "Hoist order reset to default"
 msgstr "Nostojärjestys palautettu oletukseksi"
 
@@ -16503,7 +16204,7 @@ msgstr "Pidä painettuna nauhoittaaksesi. Lukitse vetämällä ylös tai lähet�
 
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
-#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:48
+#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:47
 msgid "Home"
 msgstr "Koti"
 
@@ -16834,11 +16535,11 @@ msgstr "Ohita"
 msgid "Ignore friend request"
 msgstr "Ohita kaveripyyntö"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1001
 msgid "Ignore hardware devices"
 msgstr "Ohita laitteistolaitteet"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Ignore input media"
 msgstr "Ohita syötetyn median ääni"
 
@@ -16864,7 +16565,7 @@ msgstr "Ohita roskapostimerkintä"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Ohita kaveripyyntö käyttäjältä {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:988
 msgid "Ignore virtual"
 msgstr "Ohita virtuaalinen"
 
@@ -17198,7 +16899,7 @@ msgid "Inbox preview"
 msgstr "Saapuneet-kansion esikatselu"
 
 #. Accessible label for the inbox popout tablist.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:44
+#: src/features/messaging/components/popouts/InboxPopout.tsx:38
 msgid "Inbox tabs"
 msgstr "Saapuneet-välilehdet"
 
@@ -17446,37 +17147,10 @@ msgstr "Lisää emoji"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Asenna {productName}, niin saat käyttöösi täyden lähdevalitsimen ja sujuvammat näytönjaon hallintatoiminnot."
 
-#. Button label on an emoji pack invite embed that installs the pack.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:92
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:65
-msgid "Install emoji pack"
-msgstr "Asenna emojipaketti"
-
-#. Button label on a sticker pack invite embed that installs the pack.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:96
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:69
-msgid "Install sticker pack"
-msgstr "Asenna tarrapaketti"
-
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
 msgstr "Asennettu"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:303
-msgid "Installed {installedCount} / {installedLimit}"
-msgstr "Asennettu {installedCount} / {installedLimit}"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:113
-msgid "Installed on {installedAt}"
-msgstr "Asennettu: {installedAt}"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:39
-msgid "Installed packs"
-msgstr "Asennetut paketit"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:45
@@ -17527,7 +17201,7 @@ msgstr "Käyttöliittymä"
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:79
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "Käyttöliittymän kieli"
 
@@ -17535,11 +17209,6 @@ msgstr "Käyttöliittymän kieli"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:202
 msgid "Interface size"
 msgstr "Käyttöliittymän koko"
-
-#. Status pill on a scheduled message row when the schedule is in the past or otherwise invalid.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:26
-msgid "Invalid"
-msgstr "Virheellinen"
 
 #. Error message in the use entrance sound.
 #. Error message in the use sound settings.
@@ -17631,7 +17300,6 @@ msgstr "Näkymätön"
 #: src/features/app/config/AuditLogConstants.ts:180
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:43
 #: src/features/invite/components/modals/InviteModal.tsx:97
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:120
 msgid "Invite"
 msgstr "Kutsu"
 
@@ -17704,7 +17372,7 @@ msgid "Invite link settings"
 msgstr "Kutsu-linkin asetukset"
 
 #. Title shown on an invite embed while streaming privacy is active.
-#: src/features/channel/components/InviteEmbed.tsx:137
+#: src/features/channel/components/InviteEmbed.tsx:108
 msgid "Invite masked"
 msgstr "Kutsu piilotettu"
 
@@ -17786,7 +17454,7 @@ msgid "Invite to community"
 msgstr "Kutsu yhteisöön"
 
 #. Title shown on an invite embed when the invite cannot be resolved due to a non-permanent failure.
-#: src/features/channel/components/InviteEmbed.tsx:133
+#: src/features/channel/components/InviteEmbed.tsx:104
 msgid "Invite unavailable"
 msgstr "Kutsu ei saatavilla"
 
@@ -17804,17 +17472,6 @@ msgstr "Kutsunut"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:248
 msgid "Invited by {0}."
 msgstr "Kutsunut {0}."
-
-#. Short label in the authentication invite header. Preserve {inviterTag}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InviteHeader.tsx:34
-#: src/features/channel/components/InviteEmbed.tsx:347
-msgid "Invited by {inviterTag}"
-msgstr "Kutsujana {inviterTag}"
-
-#. Metadata label for an expression pack invite. userTag is the inviter username and discriminator.
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:77
-msgid "Invited by {userTag}"
-msgstr "Kutsujana {userTag}"
 
 #: src/features/invite/components/InviteListItem.tsx:67
 msgid "Inviter"
@@ -17860,7 +17517,7 @@ msgstr "Kutsut on keskeytetty, koska {productName} havaitsi mahdollisen hyökkä
 
 #. Invite settings notice shown after admins pause invite links for a community.
 #. Status message on a community invite embed when invites are paused by community admins.
-#: src/features/channel/components/InviteEmbed.tsx:121
+#: src/features/channel/components/InviteEmbed.tsx:92
 #: src/features/invite/components/DisableInvitesButton.tsx:48
 msgid "Invites are paused for this community."
 msgstr "Kutsut tähän yhteisöön on keskeytetty."
@@ -17871,7 +17528,7 @@ msgstr "Yhteisön ylläpitäjä on keskeyttänyt kutsut. Vaikka tämän kutsun v
 
 #. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
-#: src/features/channel/components/InviteEmbed.tsx:104
+#: src/features/channel/components/InviteEmbed.tsx:75
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Invites disabled"
 msgstr "Kutsut poissa käytöstä"
@@ -17884,7 +17541,7 @@ msgstr "Kutsut poissa käytöstä -ilmoituspalkki"
 #. Button or menu action label in the invite accept modal. Keep it concise.
 #. Button or menu action label in the invites disabled modal. Keep it concise.
 #: src/features/invite/components/alerts/InvitesDisabledModal.tsx:9
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:49
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:41
 msgid "Invites paused"
 msgstr "Kutsut keskeytetty"
 
@@ -18025,12 +17682,12 @@ msgid "Join community form"
 msgstr "Liity yhteisöön -lomake"
 
 #. Button label on a group DM invite embed that accepts the invite.
-#: src/features/channel/components/InviteEmbed.tsx:80
+#: src/features/channel/components/InviteEmbed.tsx:71
 msgid "Join group"
 msgstr "Liity ryhmään"
 
 #. Button or menu action label in the invite accept modal. Keep it concise.
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:45
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:37
 msgid "Join group DM"
 msgstr "Liity ryhmäkeskusteluun"
 
@@ -18355,12 +18012,12 @@ msgstr "korea"
 #. User settings tab for language, locale, and time display preferences.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:56
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:137
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
 msgstr "Kieli"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
 msgid "Language settings"
 msgstr "Kieliasetukset"
 
@@ -18440,14 +18097,9 @@ msgid "Launch at login"
 msgstr "Käynnistä kirjautuessa"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Kerrostus AV1:lle ja VP9:lle, kun saatavilla."
-
-#. CTA label that opens the premium settings tab from expression packs.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:67
-msgid "Learn about {premiumProductName}"
-msgstr "Lue lisää palvelusta {premiumProductName}"
 
 #. Accessible label for the screen-share picker footer info button.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
@@ -18818,7 +18470,7 @@ msgid "Links"
 msgstr "Linkit"
 
 #. User settings tab label shown on Linux desktop builds.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:78
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:73
 msgid "Linux app"
 msgstr "Linux-sovellus"
 
@@ -19115,7 +18767,7 @@ msgid "macOS"
 msgstr "macOS"
 
 #. User settings tab label shown on macOS desktop builds.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:82
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
 msgstr "macOS-sovellus"
 
@@ -19247,11 +18899,6 @@ msgstr "Hallinnoi yhteisön ominaisuuksia"
 msgid "Manage emoji & stickers"
 msgstr "Hallinnoi emojeita ja tarroja"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:47
-msgid "Manage expression packs"
-msgstr "Hallinnoi ilmaisupaketteja"
-
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:93
 msgid "Manage incoming webhooks that can post messages into this channel."
 msgstr "Hallinnoi saapuvia webhookeja, jotka voivat lähettää viestejä tälle kanavalle."
@@ -19316,7 +18963,7 @@ msgstr "Työpöytäsovelluksen manuaalinen päivitys"
 
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:48
+#: src/features/messaging/components/popouts/InboxPopout.tsx:42
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 msgid "Mark all as read"
 msgstr "Merkitse kaikki luetuiksi"
@@ -19334,7 +18981,7 @@ msgstr "Merkitse kaikki yksityisviestit luetuiksi"
 #. Accessible label and tooltip for the mark-all-as-read button in the inbox popout.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:165
-#: src/features/messaging/components/popouts/InboxPopout.tsx:52
+#: src/features/messaging/components/popouts/InboxPopout.tsx:46
 msgid "Mark all inbox channels as read"
 msgstr "Merkitse kaikki saapuneet-kanavat luetuiksi"
 
@@ -19597,10 +19244,6 @@ msgstr "Käyttökertojen enimmäismäärä"
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "Suurin koko: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:168
-msgid "Max uses"
-msgstr "Max käyttää"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:451
 msgid "Max visible count"
 msgstr "Näkyvien enimmäismäärä"
@@ -19614,13 +19257,6 @@ msgstr "Suurenna ikkuna"
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:67
 msgid "Maximizes visible messages with minimal spacing."
 msgstr "Maksimoi näkyvien viestien määrän minimaalisella välityksellä."
-
-#. Form helper text describing the maximum length of a description field.
-#. Form helper text describing the maximum length of a description field.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:46
-#: src/features/expressions/components/modals/EditPackModal.tsx:43
-msgid "Maximum 256 characters"
-msgstr "Enintään 256 merkkiä"
 
 #. Label for attachment decay maximum eligible size.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:240
@@ -19638,9 +19274,14 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "Paras suoja perheystävällisiin tiloihin"
 
 #. Label for an advanced screen-share bitrate select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Maximum screen share bitrate"
 msgstr "Näytönjaon enimmäisbitrate"
+
+#. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
+msgid "May cause compatibility issues for viewers. We’re working on improving this."
+msgstr "Voi aiheuttaa yhteensopivuusongelmia katsojille. Pyrimme parantamaan tätä."
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
@@ -19690,9 +19331,7 @@ msgid "Media buttons"
 msgstr "Mediatoiminnot"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
-#. Voice participant context menu submenu label for camera, stream, and video actions.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "Median hallinta"
 
@@ -19898,7 +19537,7 @@ msgstr "Jäsenet, valittu"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice participant menu action that inserts a mention of the selected user into the message composer.
 #: src/features/ui/action_menu/items/MentionUserMenuItem.tsx:13
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:67
 msgid "Mention"
 msgstr "Mainitse"
@@ -20004,7 +19643,7 @@ msgstr "viesti"
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -20342,7 +19981,7 @@ msgstr "Mikrofonilupa vaaditaan"
 msgid "Microphone test"
 msgstr "Mikrofonitesti"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
 msgid "Microphone workaround"
 msgstr "Mikrofonin kiertotapa"
 
@@ -20532,9 +20171,7 @@ msgid "Mod"
 msgstr "Moderaattori"
 
 #. Permission category for moderation actions against members or messages.
-#. Voice participant context menu submenu label for member moderation actions.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:194
 msgid "Moderation"
 msgstr "Moderointi"
 
@@ -20667,7 +20304,7 @@ msgstr "Osuvimmat"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -20685,7 +20322,7 @@ msgid "Move"
 msgstr "Siirrä"
 
 #. Submenu label that moves every active device into another voice channel.
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:22
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:37
 msgid "Move all devices to…"
 msgstr "Siirrä kaikki laitteet kohteeseen…"
 
@@ -20702,7 +20339,7 @@ msgstr "Siirry taaksepäin kanavahistoriassa"
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:21
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:18
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:33
 msgid "Move device to…"
 msgstr "Siirrä laite kohteeseen…"
 
@@ -20739,7 +20376,7 @@ msgstr "Siirrä kohteeseen"
 #. Submenu label that moves the selected participant or content into another channel.
 #. Submenu label that moves the selected participant or content into another channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:29
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:26
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:41
 msgid "Move to…"
 msgstr "Siirrä kohteeseen…"
 
@@ -20804,7 +20441,7 @@ msgstr "Musiikki"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:132
 #: src/features/channel/components/embeds/media/EmbedVideo.tsx:72
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:141
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:36
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:73
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:178
@@ -20818,7 +20455,7 @@ msgid "Mute"
 msgstr "Mykistä"
 
 #. Voice control button label to turn the user's microphone off.
-#: src/features/voice/components/VoiceControlBar.tsx:126
+#: src/features/voice/components/VoiceControlBar.tsx:122
 msgctxt "voice-control-action"
 msgid "Mute"
 msgstr "Mykistä"
@@ -20884,7 +20521,7 @@ msgid "Mute conversation"
 msgstr "Mykistä keskustelu"
 
 #. Voice menu toggle that mutes a single device when the current user is connected on multiple devices.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
 msgid "Mute device"
 msgstr "Mykistä laite"
 
@@ -20898,7 +20535,9 @@ msgstr "Mykistä keskustelu"
 msgid "Mute DMs"
 msgstr "Mykistä yksityisviestit"
 
+#. Voice menu checkbox label that locally silences a user's entrance sound.
 #. Voice menu checkbox label. Locally silences this user's custom entrance sound when they join, only for the current user.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:183
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
 msgid "Mute entrance sound"
 msgstr "Mykistä liittymisääni"
@@ -21106,11 +20745,6 @@ msgstr "Oma kuvahaku"
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:88
 msgid "My search engine"
 msgstr "Oma hakukone"
-
-#. Form placeholder example for a pack name input.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:42
-msgid "My super pack"
-msgstr "Oma superpaketti"
 
 #. Short label in the add custom search engine modal. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:84
@@ -21757,10 +21391,6 @@ msgstr "Ei lahjoja vielä"
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "Ei erillisiä rooleja. Ota käyttöön \"Näytä tämä rooli erillään\" roolissa nähdäksesi sen täällä."
 
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:320
-msgid "No installed packs yet."
-msgstr "Ei asennettuja paketteja vielä."
-
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:154
 msgid "No invite background"
 msgstr "Ei kutsun taustakuvaa"
@@ -21954,11 +21584,6 @@ msgstr "Ei tallennettuja medioita"
 msgid "No saved payment methods."
 msgstr "Ei tallennettuja maksutapoja."
 
-#. Empty state title in the scheduled messages popout when the user has none scheduled.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:18
-msgid "No scheduled messages"
-msgstr "Ei ajoitettuja viestejä"
-
 #. Body of the screen-share-unsupported modal shown when xdg-desktop-portal returns no capturable sources.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:18
 msgid "No screens or windows were returned by the Linux screen sharing portal. Try again after checking that your desktop environment allows screen capture."
@@ -21969,7 +21594,7 @@ msgstr "Linuxin näytönjakamisportaali ei palauttanut yhtään näyttöä tai i
 msgid "No search results"
 msgstr "Ei hakutuloksia"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:251
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
 msgid "No settings found"
 msgstr "Asetuksia ei löytynyt"
@@ -22096,7 +21721,7 @@ msgid "No webhooks"
 msgstr "Ei webhookeja"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:143
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
 msgid "No-op in-app reports"
 msgstr "Ei-toimivat sovelluksen sisäiset ilmoitukset"
 
@@ -22303,7 +21928,7 @@ msgid "Notifications"
 msgstr "Ilmoitukset"
 
 #. User settings tab for notification and alert sound controls.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:132
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:127
 msgctxt "user-settings-tab"
 msgid "Notifications"
 msgstr "Ilmoitukset"
@@ -22366,7 +21991,7 @@ msgstr "Esineet"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:59
 msgid "Off"
 msgstr "Pois päältä"
@@ -22500,7 +22125,7 @@ msgstr "Näkyy vain leveillä näytöillä."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Vain luottokortit hyväksytään. Pankki- ja prepaid-kortteja ei voi käyttää aikuisille tarkoitetun sisällön tarkistukseen."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
 msgid "Only default speakers"
 msgstr "Vain oletuskaiuttimet"
 
@@ -22548,7 +22173,7 @@ msgstr "Suorita koodia täällä vain, jos ymmärrät tarkalleen, mitä se tekee
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Näytä viestiesikatselut vain lukemattomista kahdenkeskisistä keskusteluista"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
 msgid "Only speakers"
 msgstr "Vain puhujat"
 
@@ -22820,7 +22445,7 @@ msgstr "Avaa emoji selaimessa"
 msgid "Open emoji picker"
 msgstr "Avaa emojivalitsin"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:877
+#: src/features/voice/components/VoiceSettingsMenus.tsx:859
 msgid "Open event sink"
 msgstr "Avaa tapahtumasinkki"
 
@@ -22938,13 +22563,13 @@ msgstr "Avaa käyttäjän {directMessageName} profiili"
 
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:47
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:48
 #: src/features/ui/avatars/AvatarStack.tsx:21
 msgid "Open profile for {displayName}"
 msgstr "Avaa käyttäjän {displayName} profiili"
 
 #. Short label in the app layout grouped voice participant. Preserve {nickname}; it is inserted by code.
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:35
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:36
 msgid "Open profile for {nickname}"
 msgstr "Avaa käyttäjän {nickname} profiili"
 
@@ -23079,17 +22704,17 @@ msgid "Open your settings"
 msgstr "Avaa asetukset"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:112
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "OpenH264 software codec on Linux"
 msgstr "OpenH264-ohjelmistokoodekki Linuxissa"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
 msgid "OpenH264 video codec"
 msgstr "Avaa H264-videokoodekki"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "OpenH264-videokoodekin tarjoaa Cisco Systems, Inc."
 
@@ -23336,45 +22961,12 @@ msgstr "Omistajuutta ei voitu siirtää käyttäjälle <0>{username}</0> tällä
 msgid "Ownership transferred"
 msgstr "Omistajuus siirretty"
 
-#. Form field label for the name of an expression pack.
-#. Form field label for the name of an expression pack.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:26
-#: src/features/expressions/components/modals/EditPackModal.tsx:27
-msgid "Pack name"
-msgstr "Paketin nimi"
-
-#. Form validation error shown when the pack name field is empty.
-#. Form validation error shown when the pack name field is empty.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:30
-#: src/features/expressions/components/modals/EditPackModal.tsx:31
-msgid "Pack name is required"
-msgstr "Paketin nimi tarvitaan"
-
-#. Form validation error for a pack name that is too short.
-#. Form validation error for a pack name that is too short.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:34
-#: src/features/expressions/components/modals/EditPackModal.tsx:35
-msgid "Pack name must be at least 2 characters"
-msgstr "Pakkauksen nimen on oltava vähintään 2 merkkiä pitkä"
-
-#. Form validation error for a pack name that is too long.
-#. Form validation error for a pack name that is too long.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:38
-#: src/features/expressions/components/modals/EditPackModal.tsx:39
-msgid "Pack name must be at most 64 characters"
-msgstr "Paketin nimen pituus saa olla enintään 64 merkkiä"
-
 #. Voice stats field label (mobile lobby). Shows packet loss percentage.
 #. Voice stats field label (mobile voice lobby). Shows packet loss percentage.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:124
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:92
 msgid "Packet loss"
 msgstr "Pakettihäviö"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:15
-msgid "Packs"
-msgstr "Paketit"
 
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:718
 msgid "Page {currentPage} of {totalPages}"
@@ -23566,7 +23158,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Keskeytetäänkö kutsut? Uudet käyttäjät eivät voi liittyä kutsulinkkien kautta, ennen kuin otat ne uudelleen käyttöön. Olemassa oleviin jäseniin tämä ei vaikuta."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Pause my screen share preview in the background"
 msgstr "Keskeytä näytön jakamisen esikatselu taustalla"
 
@@ -23574,6 +23166,11 @@ msgstr "Keskeytä näytön jakamisen esikatselu taustalla"
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:39
 msgid "Pause notifications"
 msgstr "Keskeytä ilmoitukset"
+
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
+msgid "Pause Preview When Fluxer Isn’t Focused"
+msgstr "Keskeytä esikatselu, kun Fluxer ei ole aktiivinen"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23908,7 +23505,7 @@ msgid "Picture"
 msgstr "Kuva"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:124
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Picture in picture"
 msgstr "Kuva kuvassa"
 
@@ -24028,7 +23625,7 @@ msgid "Pins popout"
 msgstr "Kiinnitysten ponnahdusikkuna"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:128
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "PiP"
 msgstr "Kuva kuvassa"
 
@@ -24167,15 +23764,20 @@ msgstr "Palauta takaisin"
 msgid "Pop out call"
 msgstr "Siirrä puhelu erilliseen ikkunaan"
 
-#. Voice menu action on desktop that opens the participant camera feed in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:29
-msgid "Pop out camera"
-msgstr "Siirrä kamera erilliseen ikkunaan"
-
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:33
-msgid "Pop out stream"
-msgstr "Siirrä jaettu näyttö erilliseen ikkunaan"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+msgid "Pop Out Stream"
+msgstr "Avaa striimi erilliseen ikkunaan"
+
+#. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+msgid "Pop Out User"
+msgstr "Avaa käyttäjä"
+
+#. Voice menu action on desktop that opens the active participant camera feed in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+msgid "Pop Out Video"
+msgstr "Avaa video"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:19
@@ -24225,7 +23827,7 @@ msgid "Prefer @mention"
 msgstr "Ensisijainen @maininta"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "Prefer hardware"
 msgstr "Suosi laitteistoa"
 
@@ -24237,7 +23839,7 @@ msgid "Prefer no @mention"
 msgstr "Ei mainintoja"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Prefer software"
 msgstr "Suosi ohjelmistopohjaista"
 
@@ -24255,6 +23857,11 @@ msgstr "Asetukset"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:20
 msgid "Preferences..."
 msgstr "Asetukset..."
+
+#. Accessible label for the advanced screen-share codec preference select.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:218
+msgid "Preferred screen share codec"
+msgstr "Valitse näytön jakamisen koodekki"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -24391,6 +23998,11 @@ msgstr "Esikatselupainike"
 msgid "Preview camera"
 msgstr "Esikatsele kameraa"
 
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+msgid "Preview Camera"
+msgstr "Esikatsele kameraa"
+
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
 msgid "Preview hidden"
@@ -24424,7 +24036,7 @@ msgid "Preview sound"
 msgstr "Esikatsele ääntä"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:136
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "Esikatselu-, ponnahdusikkuna- ja suoratoisto-kuvakaappakäyttäytyminen"
 
@@ -24523,7 +24135,7 @@ msgid "Primary navigation"
 msgstr "Päänavigointi"
 
 #. Voice display preference checkbox that moves active speakers toward the front of the call grid when enabled.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:105
 msgid "Prioritize speakers"
 msgstr "Priorisoi puhujat"
 
@@ -24537,7 +24149,7 @@ msgstr "Prioriteettipuhuja"
 #. User settings tab for privacy and safety controls.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:12
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:60
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:103
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:98
 msgid "Privacy"
 msgstr "Tietosuoja"
 
@@ -24613,7 +24225,7 @@ msgid "Product name"
 msgstr "Tuotteen nimi"
 
 #. User settings tab for editing the current user profile.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:91
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:86
 msgid "Profile"
 msgstr "Profiili"
 
@@ -24977,7 +24589,7 @@ msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custo
 msgstr "Push-to-talk ohitetaan suorassa syötteessä. Käytä sitä vaihtamalla kohdennettuun ääneen tai mukautettuun tilaan."
 
 #. Tooltip on the mic button in the voice control bar when push-to-talk is enabled. {pushToTalkHint} is the formatted shortcut key combo.
-#: src/features/voice/components/VoiceControlBar.tsx:116
+#: src/features/voice/components/VoiceControlBar.tsx:112
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Push-to-talk on käytössä. Pidä painettuna {pushToTalkHint} puhuaksesi."
 
@@ -24997,7 +24609,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Paina ja puhu -toiminto ei poista käytöstä mikrofonin mykistystä, kun olet itse mykistänyt sen. Poista itsesi mykistyksestä voidaksesi puhua."
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Quality"
 msgstr "Laatu"
 
@@ -25212,7 +24824,7 @@ msgid "Ready to upgrade?"
 msgstr "Valmiina päivitykseen?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Realtime"
 msgstr "Reaaliaikainen"
 
@@ -25287,11 +24899,9 @@ msgstr "Tarkista uudelleen"
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "Vastaanottajat ohjataan osoitteeseen {0} <0>{1}</0>"
 
-#. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
 msgstr "Suositeltu"
@@ -25556,11 +25166,6 @@ msgstr "Hylkää"
 msgid "Rejected"
 msgstr "Hylätty"
 
-#. Voice participant context menu submenu label for friend and block actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:198
-msgid "Relationship"
-msgstr "Suhteen hallinta"
-
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:129
 msgid "Relative"
@@ -25641,7 +25246,6 @@ msgstr "Muista ikkunan koko ja sijainti"
 #. Action label for removing the selected item from a list or relationship.
 #. Button label for removing the current webhook avatar image.
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the linked accounts tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the search engines tab. Keep it concise. Keep the tone plain and specific.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -25660,8 +25264,6 @@ msgstr "Muista ikkunan koko ja sijainti"
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
 #: src/features/ui/action_menu/UserContextMenu.tsx:80
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:75
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:133
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
@@ -25833,11 +25435,6 @@ msgstr "Vapauta tilaa kohteesta {targetName} ja yritä sitten uudelleen."
 msgid "Remove override"
 msgstr "Poista ohitus"
 
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:54
-msgid "Remove pack"
-msgstr "Poista paketti"
-
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the message reactions modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/MessageReactionsSheet.tsx:33
@@ -25966,11 +25563,6 @@ msgstr "Rooli {oldLabel} poistettu."
 msgid "Removed roles."
 msgstr "Roolit poistettu."
 
-#. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:57
-msgid "Removed scheduled message"
-msgstr "Ajastettu viesti poistettu"
-
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:419
 msgid "Removed the channel from its category."
 msgstr "Kanava poistettiin kategoriasta."
@@ -26002,11 +25594,6 @@ msgstr "Poistaa kaikki muuttujakohtaiset ohitukset, mutta säilyttää kirjastos
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthPermissionsStep.tsx:112
 msgid "Removing permissions could limit the bot's features."
 msgstr "Oikeuksien poistaminen voi rajoittaa botin ominaisuuksia."
-
-#. Description text in the expression packs tab.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:71
-msgid "Removing the pack will uninstall it from your account."
-msgstr "Pakkauksen poistaminen asentaa sen pois tililtäsi."
 
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:55
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
@@ -26654,42 +26241,42 @@ msgid "Resize floating panel"
 msgstr "Muuta kelluvan paneelin kokoa"
 
 #. Accessible label for the bottom-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:80
+#: src/features/messaging/components/popouts/InboxPopout.tsx:74
 msgid "Resize inbox from bottom left"
 msgstr "Muuta saapuneiden kokovalintaa vasemmasta alakulmasta"
 
 #. Accessible label for the bottom-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:84
+#: src/features/messaging/components/popouts/InboxPopout.tsx:78
 msgid "Resize inbox from bottom right"
 msgstr "Muuta saapuneiden kokovalikkoa oikeasta alakulmasta"
 
 #. Accessible label for the bottom resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:60
+#: src/features/messaging/components/popouts/InboxPopout.tsx:54
 msgid "Resize inbox from the bottom edge"
 msgstr "Muuta saapuneiden kokonaisleveyttä alareunasta"
 
 #. Accessible label for the left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:64
+#: src/features/messaging/components/popouts/InboxPopout.tsx:58
 msgid "Resize inbox from the left edge"
 msgstr "Muuta saapuneiden kokoon vasemmasta reunasta"
 
 #. Accessible label for the right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:68
+#: src/features/messaging/components/popouts/InboxPopout.tsx:62
 msgid "Resize inbox from the right edge"
 msgstr "Muuta saapuneiden kokousikkunan kokoa oikeasta reunasta"
 
 #. Accessible label for the top resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:56
+#: src/features/messaging/components/popouts/InboxPopout.tsx:50
 msgid "Resize inbox from the top edge"
 msgstr "Muuta saapuneiden kokua yläreunasta"
 
 #. Accessible label for the top-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:72
+#: src/features/messaging/components/popouts/InboxPopout.tsx:66
 msgid "Resize inbox from top left"
 msgstr "Muuta saapuneiden kokovalikkoa vasemmasta yläkulmasta"
 
 #. Accessible label for the top-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:76
+#: src/features/messaging/components/popouts/InboxPopout.tsx:70
 msgid "Resize inbox from top right"
 msgstr "Muuta postilaatikon kokoa oikeasta yläkulmasta"
 
@@ -27071,11 +26658,6 @@ msgstr "Oikea työkaluvihje"
 msgid "Right-click here to open the context menu"
 msgstr "Avaa pikavalikko napsauttamalla hiiren kakkospainikkeella"
 
-#. Empty state hint in the scheduled messages popout explaining how to schedule a new message.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:22
-msgid "Right-click the send button to schedule a message."
-msgstr "Ajoita viesti napsauttamalla lähetyspainiketta hiiren kakkospainikkeella."
-
 #. Action that rings the selected participant in a voice call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -27110,8 +26692,8 @@ msgstr "Roolin väri"
 msgid "Role created"
 msgstr "Rooli luotu"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:352
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:402
 msgid "Role created successfully"
 msgstr "Rooli luotu"
 
@@ -27120,8 +26702,8 @@ msgstr "Rooli luotu"
 msgid "Role deleted"
 msgstr "Rooli poistettu"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:440
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:469
 msgid "Role deleted successfully"
 msgstr "Rooli poistettu"
 
@@ -27161,7 +26743,7 @@ msgstr "Roolit"
 msgid "Roles and members"
 msgstr "Roolit ja jäsenet"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:296
 msgid "Roles updated successfully"
 msgstr "Roolit päivitetty"
 
@@ -27269,7 +26851,6 @@ msgstr "tallenna"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/expressions/components/modals/EditPackModal.tsx:127
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:624
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:90
@@ -27350,7 +26931,7 @@ msgstr "Tallennettu"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:63
 msgid "Saved media"
 msgstr "Tallennettu media"
@@ -27403,22 +26984,10 @@ msgstr "Ajoita"
 msgid "Schedule message"
 msgstr "Ajoita viesti"
 
-#. Status pill on a scheduled message row indicating it will send at the chosen time.
-#. Tab label in the inbox popout listing the user scheduled messages.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:40
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:30
-msgid "Scheduled"
-msgstr "Ajastetut"
-
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.
 #: src/features/devtools/components/NagbarControls.ts:22
 msgid "Scheduled maintenance nagbar"
 msgstr "Huoltokatkoilmoituksen hallinta"
-
-#. Label in the messaging commands. {scheduledTimeLabel} is the localized scheduled date and time.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:49
-msgid "Scheduled message for {scheduledTimeLabel}"
-msgstr "Ajastettu viesti ({scheduledTimeLabel})"
 
 #. Inline validation message in the schedule-message modal when the picked time is more than 30 days away. Keep tone plain.
 #: src/features/messaging/components/modals/ScheduleMessageModal.tsx:31
@@ -27490,7 +27059,7 @@ msgid "Screen share codec"
 msgstr "Näytönjaon koodekki"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:140
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Screen share encoder controls"
 msgstr "Näytönjakamisen kooderin asetukset"
 
@@ -27511,12 +27080,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "Näytönjako käyttää ohjelmistopohjaista koodausta ({codec}). Kuvanlaatu voi heikentyä ja suorittimen käyttö lisääntyä. Näytönohjaimesi ei ehkä tue laitteistopohjaista koodausta tälle koodekille."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:120
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 msgid "Screen share preview"
 msgstr "Näytön jakamisen esikatselu"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:116
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "Screen share preview behavior"
 msgstr "Näytönjakamisen esikatselukäyttäytyminen"
 
@@ -27534,6 +27103,11 @@ msgstr "Näytönjakamisen esikatselut ovat poissa käytöstä."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
 msgid "Screen share previews are enabled."
 msgstr "Näytönjakamisen esikatselut ovat käytössä."
+
+#. Voice screen share menu action that opens the screen share preview privacy controls.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
+msgid "Screen Share Privacy"
+msgstr "Näytön jakamisen yksityisyys"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
@@ -27561,11 +27135,6 @@ msgstr "Näytön jakamisen aloitus"
 #: src/features/notification/utils/SoundLabels.ts:64
 msgid "Screen share stop"
 msgstr "Näytön jakaminen pysäytetty"
-
-#. Accessible label for the screen-share codec radio group.
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:42
-msgid "Screen share video codec"
-msgstr "Näytönjaon videokoodekki"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -28931,6 +28500,11 @@ msgstr "Jaa näyttöjä ja ikkunoita."
 msgid "Share source"
 msgstr "Jaa sisältöä"
 
+#. Toggle label for sharing audio with an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+msgid "Share Stream Audio"
+msgstr "Jaa striimin ääni"
+
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:40
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
@@ -28939,15 +28513,6 @@ msgstr "Jaa {premiumProductName}-elämys ystäviesi kanssa ostamalla lahjatilauk
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:348
 msgid "Share theme"
 msgstr "Jaa teema"
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:192
-msgid "Share this link"
-msgstr "Jaa tämä linkki"
-
-#. Description shown in the emoji pack invite modal.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:65
-msgid "Share this link — the pack installs when accepted."
-msgstr "Jaa tämä linkki – paketti asentuu, kun kutsu hyväksytään."
 
 #. Privacy > Active now: confirmation modal title when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:33
@@ -28975,11 +28540,6 @@ msgstr "Jaa näyttösi"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Jaa näyttösi teräväpiirtona (1080p), Quad HD:nä (1440p) tai alkuperäisellä lähdetarkkuudella, jopa 60 FPS:n nopeudella."
-
-#. Description shown in the sticker pack invite modal.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:69
-msgid "Share your sticker pack via link."
-msgstr "Jaa tarrapakettisi linkin kautta."
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #: src/features/theme/components/modals/ShareThemeModal.tsx:39
@@ -29081,7 +28641,7 @@ msgstr "Pikakuvakekonfliktit"
 #. User settings tab for keyboard shortcuts and custom bindings.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:18
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:175
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:128
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:123
 msgid "Shortcuts"
 msgstr "Pikakuvakkeet"
 
@@ -29241,11 +28801,6 @@ msgstr "Näytä emoji-painike"
 msgid "Show emoji reactions on messages"
 msgstr "Näytä emojireaktiot viesteissä"
 
-#. Developer option label for exposing the staff-only Expression packs page in user settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
-msgid "Show expression packs settings"
-msgstr "Näytä ilmaisupakettien asetukset (vain henkilökunnalle)"
-
 #. Short label for an advanced media button preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:77
 msgid "Show favorite button"
@@ -29381,16 +28936,16 @@ msgstr "Näytä mykistetyt kanavat"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:814
+#: src/features/voice/components/VoiceSettingsMenus.tsx:815
 msgid "Show my own camera"
 msgstr "Näytä oma kamerani"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-msgid "Show my screen share"
-msgstr "Näytä ruudunjakoni"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
+msgid "Show My Screen Share"
+msgstr "Näytä oma näytön jakoni"
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
@@ -29417,9 +28972,9 @@ msgstr "Näytä uuden laitteen modaali-ikkuna"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether participants without video are shown in the grid.
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:828
+#: src/features/voice/components/VoiceSettingsMenus.tsx:829
 msgid "Show non-video participants"
 msgstr "Näytä osallistujat ilman videota"
 
@@ -29449,7 +29004,7 @@ msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Näytä laitekohtaiset osallistujien äänenvoimakkuuden liukusäätimet äänivalikoissa"
 
 #. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
 msgid "Show profile timezone settings"
 msgstr "Näytä profiilin aikavyöhykeasetukset (vain henkilökunnalle)"
 
@@ -29681,7 +29236,7 @@ msgstr "Kirjautunut sisään"
 
 #. Settings section label for account sessions and devices.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:517
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
 msgid "Signed-in devices"
 msgstr "Kirjautuneet laitteet"
 
@@ -29759,7 +29314,7 @@ msgid "Single community mode"
 msgstr "Yhteisötila"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 msgid "Single layer"
 msgstr "Yksikerroksinen"
 
@@ -29816,7 +29371,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "Ohita ulkoisen linkin varoitus kaikille verkkotunnuksille"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:148
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "Ohita verkkokutsu, kun sovelluksen sisäinen ilmoitus lähetetään. Työnkulku etenee silti onnistumisnäyttöön, jotta voit harjoitella käyttöliittymää, mutta mitään ei todellisuudessa lähetetä turvallisuustiimille."
 
@@ -30063,12 +29618,12 @@ msgid "Social"
 msgstr "Sosiaalinen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Software encoder"
 msgstr "Ohjelmistopohjainen kooderi"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 msgid "Software encoder quality"
 msgstr "Ohjelmistopakkaajan laatu"
 
@@ -30393,7 +29948,7 @@ msgid "Spanish (Spain)"
 msgstr "espanja (Espanja)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Spatial and temporal layers"
 msgstr "Tila- ja aikakerrokset"
 
@@ -30495,7 +30050,7 @@ msgstr "Oikoluku"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:414
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:456
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
 msgid "Spellcheck"
 msgstr "Oikoluku"
 
@@ -30683,10 +30238,6 @@ msgstr "Aloita puhelu"
 msgid "Start camera test and configure effects"
 msgstr "Aloita kameratesti ja määritä tehosteet"
 
-#: src/features/expressions/components/modals/CreatePackModal.tsx:93
-msgid "Start curating a custom emoji pack that you can share and install."
-msgstr "Luo oma emojipaketti, jonka voit jakaa ja asentaa."
-
 #. Label for the start of a date range (inclusive). Leave blank for no lower bound.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:175
 msgid "Start date"
@@ -30696,10 +30247,6 @@ msgstr "Alkamispäivä"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:191
 msgid "Start date must be earlier than end date."
 msgstr "Alkamispäivämäärän on oltava aikaisempi kuin päättymispäivämäärän."
-
-#: src/features/voice/components/VoiceSettingsMenus.tsx:860
-msgid "Start debug logging session"
-msgstr "Aloita virheenkorjausloki-istunto"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:125
@@ -30883,45 +30430,6 @@ msgstr "Tarrojen tiheys"
 msgid "Sticker is too large"
 msgstr "Tarra on liian suuri"
 
-#. Kind label on a sticker pack invite embed.
-#. Short label in the authentication invite header. Keep the tone plain and specific.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/auth/flow/InviteHeader.tsx:25
-#: src/features/channel/components/InviteEmbed.tsx:88
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:61
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:105
-msgid "Sticker pack"
-msgstr "Tarrapaketti"
-
-#. placeholder {0}: invite.pack.name
-#: src/features/invite/commands/InviteCommands.tsx:146
-msgid "Sticker pack {0} has been installed."
-msgstr "Tarrapaketti {0} on asennettu."
-
-#. Title of the error modal when creating a new sticker pack is rejected because the user is at the creation limit.
-#: src/features/invite/commands/InviteCommands.tsx:74
-msgid "Sticker pack creation limit reached"
-msgstr "Tarrapakkausten luontiraja saavutettu"
-
-#. Modal title for the sticker pack invite share flow.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:61
-msgid "Sticker pack invite"
-msgstr "Tarrapaketin kutsu"
-
-#. Title of the error modal when installing a sticker pack via invite is rejected because the user is at the install limit.
-#: src/features/invite/commands/InviteCommands.tsx:65
-msgid "Sticker pack limit reached"
-msgstr "Tarrapakettien enimmäismäärä saavutettu"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings section label for sticker expression packs.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:84
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:27
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:22
-msgid "Sticker packs"
-msgstr "Tarrapaketit"
-
 #: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:283
 msgid "Sticker slots"
 msgstr "Tarratilat"
@@ -31039,6 +30547,13 @@ msgstr "Lopetetaanko puheaktiivisuuden jakaminen kaikille kavereille?"
 msgid "Stop speaking"
 msgstr "Lopeta puhuminen"
 
+#. Danger action that stops the active screen share.
+#. Voice screen share menu action that stops the current user stream.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:19
+msgid "Stop Streaming"
+msgstr "Lopeta striimaus"
+
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31
 msgid "Stop trusting all links?"
@@ -31050,7 +30565,7 @@ msgid "Stop watching"
 msgstr "Lopeta katselu"
 
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
-#: src/features/voice/components/VoiceControlBar.tsx:151
+#: src/features/voice/components/VoiceControlBar.tsx:147
 msgid "Stop watching stream"
 msgstr "Lopeta lähetyksen katselu"
 
@@ -31088,10 +30603,15 @@ msgstr "Striimaus piilotettu"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "Striimin esikatselu"
+
+#. Compact submenu label for changing the resolution and frame rate of an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+msgid "Stream Quality"
+msgstr "Striimin laatu"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
@@ -31302,12 +30822,12 @@ msgid "Suspend"
 msgstr "Keskeytä"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:177
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
 msgid "SVC mode"
 msgstr "SVC-tila"
 
@@ -31757,7 +31277,7 @@ msgid "Template URL"
 msgstr "Mallin URL-osoite"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Temporal layers"
 msgstr "Ajalliset tasot"
 
@@ -31818,7 +31338,7 @@ msgstr "Testaa URL-osoitteiden esikatseluja ja upotettuja sisältöjä"
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
 msgid "Text"
 msgstr "Teksti"
 
@@ -32001,11 +31521,6 @@ msgstr "Viestiä ei löydy tai sinulla ei ole enää pääsyä keskusteluun."
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:42
 msgid "That's all of them."
 msgstr "Siinä kaikki."
-
-#. End-of-list body text in the scheduled messages popout when all scheduled messages are visible.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:56
-msgid "That's everything in the queue."
-msgstr "Tässä kaikki jonossa olevat."
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
@@ -32671,7 +32186,7 @@ msgid "This invite has unlimited uses."
 msgstr "Tällä kutsulla on rajattomasti käyttöjä."
 
 #. Helper text shown on an invite embed while streaming privacy is active.
-#: src/features/channel/components/InviteEmbed.tsx:141
+#: src/features/channel/components/InviteEmbed.tsx:112
 msgid "This invite is hidden while sharing is protected."
 msgstr "Tämä kutsu on piilotettu, kun jakaminen on suojattu."
 
@@ -33167,7 +32682,7 @@ msgstr "Aika"
 #. Settings section label for app time display format.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:374
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "Ajan esitysmuoto"
 
@@ -33393,11 +32908,6 @@ msgstr "Vaihda äänipöydän tilaa"
 #: src/features/input/state/input_keybind/shared.ts:181
 msgid "Toggle the sticker picker"
 msgstr "Avaa/sulje tarratyökalu"
-
-#. Action that toggles whether the pack invite is unique to the recipient.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:73
-msgid "Toggle unique invite"
-msgstr "Vaihda yksilöllinen kutsu"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:305
@@ -33731,7 +33241,7 @@ msgid "Try another search term, or pick a different category or language."
 msgstr "Kokeile toista hakusanaa tai valitse toinen kategoria tai kieli."
 
 #. Helper text on an unknown invite embed suggesting the user request a fresh invite.
-#: src/features/channel/components/InviteEmbed.tsx:129
+#: src/features/channel/components/InviteEmbed.tsx:100
 msgid "Try asking for a new invite."
 msgstr "Pyydä uutta kutsua."
 
@@ -33754,7 +33264,7 @@ msgstr "Yritä muokata viestiäsi uudelleen."
 msgid "TRY gifts are one-time payments. Cards charged in TRY still need to be issued in Türkiye for the purchase to stay eligible."
 msgstr "TRY-lahjat ovat kertamaksuja. Jotta ostos pysyy kelvollisena, TRY-valuutassa veloitettujen korttien on oltava Turkissa myönnettyjä."
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:254
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:252
 msgid "Try searching for something like \"theme\", \"notifications\", or \"privacy\""
 msgstr "Kokeile hakea esimerkiksi sanoilla \"teema\", \"ilmoitukset\" tai \"tietosuoja\""
 
@@ -33804,7 +33314,7 @@ msgstr "Poista käytöstä"
 
 #. Bulk voice action that turns off the camera on every active device of the current user.
 #. Voice menu action that turns off every active device/session's camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:90
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:114
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:93
 msgid "Turn off all device cameras"
 msgstr "Sammuta kaikkien laitteiden kamerat"
@@ -33820,14 +33330,14 @@ msgstr "Sammuta kamera"
 
 #. Voice menu action that turns off the camera on a single device of the current user.
 #. Voice menu action that turns off the camera on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:81
 msgid "Turn off device camera"
 msgstr "Sammuta laitteen kamera"
 
 #. Voice menu action that ends the screen share on a single device of the current user.
 #. Voice menu action that stops screen sharing or streaming on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:85
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:85
 msgid "Turn off device stream"
 msgstr "Sammuta laitteen striimi"
@@ -33839,7 +33349,7 @@ msgstr "Poista yksityisviestit ja kaveripyynnöt koko palvelimelta. Tämän voi 
 
 #. Voice menu action that ends the current user screen share.
 #. Voice menu action that stops the current user's screen share or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:89
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:69
 msgid "Turn off stream"
 msgstr "Sammuta lähetys"
@@ -34019,16 +33529,6 @@ msgstr "Yhdistyneen kuningaskunnan lain mukaan täysi-ikäisyyden tarkistus on p
 msgid "Ukrainian"
 msgstr "ukraina"
 
-#. Generic title for the error modal when an emoji pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:99
-msgid "Unable to install emoji pack"
-msgstr "Emojipakkauksen asennus epäonnistui"
-
-#. Generic title for the error modal when a sticker pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:103
-msgid "Unable to install sticker pack"
-msgstr "Tarrapakettia ei voi asentaa"
-
 #. Error-state title in the activity log tab when fetching log entries failed.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:126
 msgid "Unable to load activity logs"
@@ -34037,11 +33537,6 @@ msgstr "Aktiviteettilokin tietojen lataaminen epäonnistui"
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:95
 msgid "Unable to load applications"
 msgstr "Sovellusten lataaminen epäonnistui"
-
-#. Error message in the expression packs tab.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:36
-msgid "Unable to load pack information."
-msgstr "Paketin tietoja ei voitu ladata."
 
 #. Error message in the channel and chat textual attachment code panel.
 #. Error message in the channel and chat textual attachment code panel.
@@ -34265,7 +33760,7 @@ msgstr "Poista tarra suosikeista"
 
 #. Voice call layout action that removes focus from the currently pinned participant.
 #. Voice layout menu action that removes the focused participant or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:25
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:97
 msgid "Unfocus"
 msgstr "Poista kohdistus"
@@ -34284,7 +33779,7 @@ msgstr "Avaa linkin esikatselu"
 
 #. Settings section label for the embed debugger URL input.
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:70
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Unfurl debugger"
 msgstr "Avaa virheenkorjaus"
 
@@ -34292,10 +33787,6 @@ msgstr "Avaa virheenkorjaus"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:89
 msgid "Unicode emojis"
 msgstr "Unicode-emojit"
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:180
-msgid "Unique invite"
-msgstr "Ainutlaatuinen kutsu"
 
 #. Codec description in the screen share codec policy menu, used for the universal fallback codec.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:20
@@ -34350,7 +33841,7 @@ msgstr "Tuntematon päivämäärä"
 #. Fallback device or operating-system label in the devices tab when session client data is unavailable.
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:43
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:44
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
@@ -34376,7 +33867,7 @@ msgid "Unknown gift"
 msgstr "Tuntematon lahja"
 
 #. Title shown on an invite embed when the invite code resolves to nothing (expired, revoked, or invalid).
-#: src/features/channel/components/InviteEmbed.tsx:125
+#: src/features/channel/components/InviteEmbed.tsx:96
 msgid "Unknown invite"
 msgstr "Tuntematon kutsu"
 
@@ -34428,7 +33919,7 @@ msgstr "tuntematon käyttäjä"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:161
+#: src/features/voice/components/VoiceParticipantTile.tsx:162
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Tuntematon käyttäjä"
@@ -34449,13 +33940,6 @@ msgstr "unknown-mention"
 #: src/features/messaging/utils/markdown/Plaintext.ts:76
 msgid "unknown-role"
 msgstr "unknown-role"
-
-#. Option label representing an unlimited count.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:29
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:32
-msgid "Unlimited"
-msgstr "Rajoittamaton"
 
 #. Audit log community feature label for unlimited custom emoji capacity.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
@@ -34525,7 +34009,7 @@ msgid "Unmute"
 msgstr "Poista mykistys"
 
 #. Voice control button label to turn the user's microphone back on.
-#: src/features/voice/components/VoiceControlBar.tsx:121
+#: src/features/voice/components/VoiceControlBar.tsx:117
 msgctxt "voice-control-action"
 msgid "Unmute"
 msgstr "Poista mykistys"
@@ -34613,7 +34097,7 @@ msgstr "Nimetön kanava"
 #. Fallback display name for a group DM with no name set.
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:72
+#: src/features/channel/components/InviteEmbed.tsx:63
 #: src/features/channel/state/ChannelDisplayName.ts:19
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
@@ -34692,7 +34176,7 @@ msgstr "lukematon"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the inbox popout filtering to channels with unread messages.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:32
+#: src/features/messaging/components/popouts/InboxPopout.tsx:30
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:77
 msgid "Unread"
@@ -34828,7 +34312,7 @@ msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They sho
 msgstr "Enintään {DISCOVERY_MAX_TAGS} avainsanaa auttaa ihmisiä löytämään yhteisösi. Ne näkyvät haussa."
 
 #. Feature comparison table value label. Shown in the restricted or stock column for a text-valued perk. Format includes a resolution token (4K) and a framerate token that should not be translated.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:91
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:87
 msgid "Up to 4K/60fps"
 msgstr "Jopa 4K/60fps"
 
@@ -34903,11 +34387,6 @@ msgstr "Päivitetyt käytännöt"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:23
 msgid "Updated saved media"
 msgstr "Tallennettu media päivitetty"
-
-#. Label in the messaging commands. {scheduledTimeLabel} is the localized scheduled date and time.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:53
-msgid "Updated scheduled message for {scheduledTimeLabel}"
-msgstr "Päivitetty ajoitettu viesti kohteelle {scheduledTimeLabel}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:544
 msgid "Updated the avatar."
@@ -35165,7 +34644,7 @@ msgid "Uploading emojis"
 msgstr "Ladataan emojeita"
 
 #. Description for the maximum screen share bitrate select. Keep WebRTC literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
 msgid "Upper bitrate cap before WebRTC adapts to the network."
 msgstr "Yläraja ennen kuin WebRTC mukautuu verkkoon."
 
@@ -35294,7 +34773,7 @@ msgid "Use an email you can open. We will send a code there."
 msgstr "Käytä sähköpostiosoitetta, jonka voit avata. Lähetämme sinne koodin."
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
 msgid "Use animated emojis"
 msgstr "Käytä animoituja emojeita"
 
@@ -35596,11 +35075,6 @@ msgstr "Käytössä vain tässä yhteisössä."
 msgid "User"
 msgstr "Käyttäjä"
 
-#. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "User actions"
-msgstr "Käyttäjätoiminnot"
-
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:251
 msgid "User appears underage, or is involved in grooming or child exploitation."
@@ -35677,7 +35151,7 @@ msgid "User record"
 msgstr "Käyttäjätiedot"
 
 #. Root label for the current user settings modal and settings search paths.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:352
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:341
 msgid "User settings"
 msgstr "Käyttäjäasetukset"
 
@@ -36215,7 +35689,7 @@ msgid "Video progress"
 msgstr "Videon edistyminen"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
 msgid "Video quality"
 msgstr "Videon laatu"
 
@@ -36604,7 +36078,7 @@ msgstr "Ääni (aikuisille)"
 
 #. User settings tab for microphone, speaker, camera, and call stats.
 #. User settings tab for microphone, speaker, camera, and call stats.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:124
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:119
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:30
 msgid "Voice & video"
 msgstr "Ääni ja video"
@@ -36861,7 +36335,7 @@ msgid "Wait here"
 msgstr "Odota tässä"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:56
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
 msgstr "Odotetaan yhteyttä..."
 
@@ -37362,11 +36836,6 @@ msgstr "Mitä etsitään."
 msgid "What's happening?"
 msgstr "Mitä kuuluu?"
 
-#. Form helper text for an expression pack description input.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:50
-msgid "What's in this pack?"
-msgstr "Mitä tämä paketti sisältää?"
-
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
@@ -37551,7 +37020,7 @@ msgid "Window state"
 msgstr "Ikkunan tila"
 
 #. User settings tab label shown on Windows desktop builds. Refers to the Microsoft Windows OS.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:74
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:69
 msgid "Windows app"
 msgstr "Windows-sovellus"
 
@@ -37873,16 +37342,6 @@ msgstr "Et voi muokata tätä viestiä."
 msgid "You can't grant a permission you don't have in this channel."
 msgstr "Et voi myöntää lupaa, jota sinulla ei ole tällä kanavalla."
 
-#. Body of the error modal when installing an emoji pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:91
-msgid "You can't install this emoji pack."
-msgstr "Et voi asentaa tätä emojipakettia."
-
-#. Body of the error modal when installing a sticker pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:95
-msgid "You can't install this sticker pack."
-msgstr "Et voi asentaa tätä tarrapakettia."
-
 #. Title of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:38
 msgid "You can't join this community"
@@ -37942,8 +37401,8 @@ msgstr "Et voi lähettää viestejä tässä yhteisössä."
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:65
-#: src/features/voice/components/VoiceControlBar.tsx:141
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
+#: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "Et voi jakaa näyttöäsi tällä kanavalla"
 
@@ -37956,8 +37415,8 @@ msgstr "Et voi puhua tällä kanavalla"
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:74
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
-#: src/features/voice/components/VoiceControlBar.tsx:131
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
+#: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "Et voi laittaa kameraa päälle tällä kanavalla"
 
@@ -38119,10 +37578,6 @@ msgstr "Et ole ollut tämän yhteisön jäsen tarpeeksi kauan lähettääksesi v
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:127
 msgid "You haven't blocked anyone yet."
 msgstr "Et ole estänyt vielä ketään."
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:343
-msgid "You haven't created any packs yet."
-msgstr "Et ole luonut vielä yhtään pakettia."
 
 #. Intro copy in the keyboard navigation modal. {productName} is the app name.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:26
@@ -38345,13 +37800,6 @@ msgstr "Olet saavuttanut {bookmarksText}. Poista yksi lisätäksesi uuden."
 msgid "You're at the cap of {freeItemsText} — your instance admin sets this limit."
 msgstr "Olet saavuttanut rajan {freeItemsText} – instanssisi järjestelmänvalvoja asettaa tämän rajoituksen."
 
-#. Fallback body of the emoji pack creation-limit error modal when no exact limit is known.
-#. Fallback body of the sticker pack creation-limit error modal when no exact limit is known.
-#: src/features/invite/commands/InviteCommands.tsx:61
-#: src/features/invite/commands/InviteCommands.tsx:79
-msgid "You're at the creation limit. Delete one to create another."
-msgstr "Olet saavuttanut luontirajan. Poista yksi luodaksesi uuden."
-
 #. Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
 #: src/features/app/components/alerts/MaxBookmarksModal.tsx:30
 msgid "You're at the free cap of {bookmarksText}. {premiumProductName} bumps you up to {premiumBookmarksText} — or remove one to add another."
@@ -38362,13 +37810,6 @@ msgstr "Olet saavuttanut ilmaisen {bookmarksText}-rajan. {premiumProductName} no
 msgid "You're at the free cap of {freeItemsText}. {premiumProductName} bumps you up to {premiumItemsText}."
 msgstr "Olet saavuttanut ilmaisen rajan {freeItemsText}. {premiumProductName} nostaa rajan tasolle {premiumItemsText}."
 
-#. Fallback body of the emoji pack install-limit error modal when no exact limit is known.
-#. Fallback body of the sticker pack install-limit error modal when no exact limit is known.
-#: src/features/invite/commands/InviteCommands.tsx:52
-#: src/features/invite/commands/InviteCommands.tsx:70
-msgid "You're at the install limit. Remove one to add another."
-msgstr "Olet saavuttanut asennusrajan. Poista yksi lisätäksesi toisen."
-
 #. Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:8
 msgid "You're banned"
@@ -38378,11 +37819,6 @@ msgstr "Sinut on porttikielletty"
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx:19
 msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Toimintoa on rajoitettu. Odota {duration} ennen kuin yrität uudelleen."
-
-#. End-of-list title in the scheduled messages popout when all scheduled messages are visible. Tone can be friendly.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:51
-msgid "You're caught up"
-msgstr "Olet ajan tasalla"
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
@@ -38497,16 +37933,12 @@ msgstr "Olet jo käyttänyt itsepalautusta äskettäin. Voit palauttaa uudelleen
 msgid "You've arrived, {username}! Let's get started."
 msgstr "Tervetuloa, {username}! Aloitetaan."
 
-#: src/features/auth/flow/InviteHeader.tsx:200
-msgid "You've been invited to install"
-msgstr "Sinut on kutsuttu asentamaan"
-
-#: src/features/auth/flow/InviteHeader.tsx:96
-#: src/features/auth/flow/InviteHeader.tsx:299
+#: src/features/auth/flow/InviteHeader.tsx:69
+#: src/features/auth/flow/InviteHeader.tsx:213
 msgid "You've been invited to join"
 msgstr "Sinut on kutsuttu liittymään"
 
-#: src/features/auth/flow/InviteHeader.tsx:151
+#: src/features/auth/flow/InviteHeader.tsx:124
 msgid "You've been invited to join a group DM by"
 msgstr "Sinut on kutsunut ryhmäkeskusteluun käyttäjä"
 
@@ -38586,7 +38018,7 @@ msgstr "Tilauksesi ({premiumProductName}) on vanhentunut. Olet menettänyt kaikk
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "{productName}-istuntosi vanheni. Kirjaudu uudelleen sisään jatkaaksesi tämän sovelluksen valtuuttamista."
 
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:205
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:200
 msgid "Your account"
 msgstr "Tilisi"
 

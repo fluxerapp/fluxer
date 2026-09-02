@@ -29,11 +29,6 @@ msgstr "(redaguota)"
 msgid "(failed to load)"
 msgstr "(nepavyko įkelti)"
 
-#. Placeholder content text shown for scheduled messages with neither text nor attachments. Keep the parentheses.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:38
-msgid "(no content)"
-msgstr "(nėra turinio)"
-
 #: src/features/app/components/pages/YouPage.tsx:189
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:899
 msgid "(only visible to you)"
@@ -455,7 +450,7 @@ msgstr "{count, plural, one {Išskleisti (# eilutę)} other {Išskleisti (# eilu
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Rodyti (# eilutę)} other {Rodyti (# eilutes)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:303
+#: src/features/voice/components/VoiceParticipantTile.tsx:304
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Išskleisti # kitą įrenginį} other {Išskleisti # kitus įrenginius}}"
 
@@ -463,8 +458,8 @@ msgstr "{count, plural, one {Išskleisti # kitą įrenginį} other {Išskleisti 
 msgid "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
 msgstr "{count, plural, one {Grupės DM · # narys} other {Grupės DM · # nariai}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:252
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:273
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:274
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:295
 msgid "{count, plural, one {Hide # device} other {Hide # devices}}"
 msgstr "{count, plural, one {Slėpti # įrenginį} other {Slėpti # įrenginius}}"
 
@@ -476,7 +471,7 @@ msgstr "{count, plural, one {skambina} other {# skambina}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Prisijungti prie vaizdo skambučio (# dalyvis)} other {Prisijungti prie vaizdo skambučio (# dalyviai)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:620
+#: src/features/voice/components/VoiceParticipantTile.tsx:621
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Toliau žiūrėti # srautą ir pridėti šį} other {Toliau žiūrėti # srautus ir pridėti šį}}"
 
@@ -492,8 +487,8 @@ msgstr "{count, plural, one {Atšaukti # programą} other {Atšaukti # programas
 msgid "{count, plural, one {sent # attachment} other {sent # attachments}}"
 msgstr "{count, plural, one {išsiuntė # priedą} few {išsiuntė # priedus} many {išsiuntė # priedų} other {išsiuntė # priedo}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:259
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:280
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:281
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:302
 msgid "{count, plural, one {Show # device} other {Show # devices}}"
 msgstr "{count, plural, one {Rodyti # įrenginį} few {Rodyti # įrenginius} other {Rodyti # įrenginių}}"
 
@@ -534,22 +529,6 @@ msgstr "{count, plural, one {Jau naudojate vieną leidžiamą prisijungimą prie
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:62
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {Pasiekėte išsaugotų medijos elementų limito ribą. Pašalinkite vieną, kad pridėtumėte kitą.} other {Pasiekėte išsaugotų medijos elementų limito ribą. Pašalinkite vieną, kad pridėtumėte kitą.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:401
-msgid "{count, plural, one {You're at the limit of # emoji pack. Delete one to create another.} other {You're at the limit of # emoji packs. Delete one to create another.}}"
-msgstr "{count, plural, one {Pasiekėte # jaustukų paketo limitą. Ištrinkite vieną, kad sukurtumėte kitą.} other {Pasiekėte # jaustukų paketų limitą. Ištrinkite vieną, kad sukurtumėte kitą.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:387
-msgid "{count, plural, one {You're at the limit of # installed emoji pack. Remove one to add another.} other {You're at the limit of # installed emoji packs. Remove one to add another.}}"
-msgstr "{count, plural, one {Pasiekėte # įdiegto jaustukų paketo limitą. Pašalinkite vieną, kad pridėtumėte kitą.} other {Pasiekėte # įdiegtų jaustukų paketų limitą. Pašalinkite vieną, kad pridėtumėte kitą.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:419
-msgid "{count, plural, one {You're at the limit of # installed sticker pack. Remove one to add another.} other {You're at the limit of # installed sticker packs. Remove one to add another.}}"
-msgstr "{count, plural, one {Pasiekėte įdiegtų lipdukų paketo limitą. Pašalinkite vieną, kad pridėtumėte kitą.} other {Pasiekėte įdiegtų lipdukų paketų limitą. Pašalinkite vieną, kad pridėtumėte kitą.}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:433
-msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
-msgstr "{count, plural, one {Pasiekėte lipdukų paketo limitą. Ištrinkite vieną, kad sukurtumėte kitą.} other {Pasiekėte lipdukų paketų limitą. Ištrinkite vieną, kad sukurtumėte kitą.}}"
 
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx:24
 msgid "{count, plural, one {You've reached the maximum number of communities you can join (# community). Leave a community before joining another one.} other {You've reached the maximum number of communities you can join (# communities). Leave a community before joining another one.}}"
@@ -750,14 +729,14 @@ msgstr "{formats}. Maksimalus dydis: {maxSize}. Rekomenduojama: {recommendedSize
 msgid "{formats}. Max {maxSize}. Recommended: {recommendedSize}. {note}"
 msgstr "{formats}. Maksimalus dydis: {maxSize}. Rekomenduojama: {recommendedSize}. {note}"
 
-#: src/features/auth/flow/InviteHeader.tsx:117
-#: src/features/auth/flow/InviteHeader.tsx:162
-#: src/features/auth/flow/InviteHeader.tsx:335
+#: src/features/auth/flow/InviteHeader.tsx:90
+#: src/features/auth/flow/InviteHeader.tsx:135
+#: src/features/auth/flow/InviteHeader.tsx:249
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{formattedMemberCount} {memberCount, plural, one {narys} other {nariai}}"
 
-#: src/features/auth/flow/InviteHeader.tsx:111
-#: src/features/auth/flow/InviteHeader.tsx:320
+#: src/features/auth/flow/InviteHeader.tsx:84
+#: src/features/auth/flow/InviteHeader.tsx:234
 msgid "{formattedPresenceCount} online"
 msgstr "{formattedPresenceCount} prisijungę"
 
@@ -776,7 +755,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "{guildName} kanalai"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:673
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {Išskleisti # kitą įrenginį} other {Išskleisti # kitus įrenginius}}"
 
@@ -874,7 +853,7 @@ msgstr "{length} žiūri"
 msgid "{lineCount, plural, one {# line} other {# lines}}"
 msgstr "{lineCount, plural, one {# eilutė} other {# eilutės} few {# eilutės} many {# eilučių}}"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:145
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:143
 msgid "{matchCount, plural, one {# match} other {# matches}}"
 msgstr "{matchCount, plural, one {# atitikmuo} other {# atitikmenys}}"
 
@@ -889,7 +868,7 @@ msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName
 msgstr "{mbWayPaymentMethod} yra vienkartinis mokėjimo būdas {paymentProviderName} atsiskaitymo sistemoje, todėl čia negalima jo naudoti pasikartojančioms prenumeratoms."
 
 #. Screen share bitrate option label. Mbps means megabits per second.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:167
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
 msgid "{megabits} Mbps"
 msgstr "{megabits} Mbps"
 
@@ -1105,7 +1084,7 @@ msgid "{productName} detected a potential raid in this community. Invites are pa
 msgstr "{productName} aptiko galimą ataką šioje bendruomenėje. Kvietimai pristabdyti, todėl nauji vartotojai šiuo metu negali prisijungti."
 
 #. Anti-raid status message on a community invite embed. productName is the product brand name placeholder.
-#: src/features/channel/components/InviteEmbed.tsx:117
+#: src/features/channel/components/InviteEmbed.tsx:88
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} aptiko galimą ataką, todėl nauji vartotojai šiuo metu negali prisijungti."
 
@@ -1225,14 +1204,14 @@ msgstr "Liko {remaining} simbolių. Įsigykite \"{premiumProductName}\" ir galė
 msgid "{remainingSlotCount} remaining"
 msgstr "Liko {remainingSlotCount}"
 
-#: src/features/channel/components/InviteEmbed.tsx:282
-#: src/features/channel/components/InviteEmbed.tsx:455
-#: src/features/channel/components/InviteEmbed.tsx:724
+#: src/features/channel/components/InviteEmbed.tsx:248
+#: src/features/channel/components/InviteEmbed.tsx:356
+#: src/features/channel/components/InviteEmbed.tsx:625
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {narys} other {nariai}}"
 
 #. Presence summary on a community invite embed. renderedPresenceCount is a formatted count of online members.
-#: src/features/channel/components/InviteEmbed.tsx:112
+#: src/features/channel/components/InviteEmbed.tsx:83
 msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} prisijungę"
 
@@ -1630,9 +1609,7 @@ msgstr "1 neperskaitytas"
 msgid "1 unread DM"
 msgstr "1 neperskaityta žinutė"
 
-#. Invite link use-limit option meaning the invite can be used once.
 #. Invite max-uses dropdown option for exactly one use.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:33
 #: src/features/invite/components/modals/InviteModal.tsx:60
 msgid "1 use"
 msgstr "1 naudojimas"
@@ -1668,16 +1645,12 @@ msgstr "1 metų dovana"
 msgid "10 minutes"
 msgstr "10 minučių"
 
-#. Invite link use-limit option meaning the invite can be used ten times.
 #. Invite max-uses dropdown option for ten uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:41
 #: src/features/invite/components/modals/InviteModal.tsx:68
 msgid "10 uses"
 msgstr "10 naudojimų"
 
-#. Invite link use-limit option meaning the invite can be used 100 times.
 #. Invite max-uses dropdown option for 100 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:53
 #: src/features/invite/components/modals/InviteModal.tsx:80
 msgid "100 uses"
 msgstr "100 naudojimų"
@@ -1763,9 +1736,7 @@ msgctxt "adaptive-screen-share"
 msgid "240p"
 msgstr "240p"
 
-#. Invite link use-limit option meaning the invite can be used 25 times.
 #. Invite max-uses dropdown option for 25 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:45
 #: src/features/invite/components/modals/InviteModal.tsx:72
 msgid "25 uses"
 msgstr "25 naudojimų"
@@ -1840,16 +1811,12 @@ msgstr "5 dienos"
 msgid "5 minutes"
 msgstr "5 minutės"
 
-#. Invite link use-limit option meaning the invite can be used five times.
 #. Invite max-uses dropdown option for five uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:37
 #: src/features/invite/components/modals/InviteModal.tsx:64
 msgid "5 uses"
 msgstr "5 naudojimai"
 
-#. Invite link use-limit option meaning the invite can be used 50 times.
 #. Invite max-uses dropdown option for 50 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:49
 #: src/features/invite/components/modals/InviteModal.tsx:76
 msgid "50 uses"
 msgstr "Naudota 50 kartų"
@@ -2083,13 +2050,6 @@ msgstr "Priimti kvietimą"
 msgid "Accept the friend request from {userName}?"
 msgstr "Priimti {userName} draugo užklausą?"
 
-#. Helper text on a pack invite embed explaining that accepting installs the pack.
-#. Note shown on expression pack invites before accepting.
-#: src/features/channel/components/InviteEmbed.tsx:100
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:81
-msgid "Accepting this invite installs the pack automatically."
-msgstr "Priėmus šį kvietimą, paketas įdiegiamas automatiškai."
-
 #. Short label in the notification utils helper. Keep it concise.
 #: src/features/notification/utils/NotificationUtils.ts:32
 msgid "Access granted"
@@ -2110,7 +2070,7 @@ msgstr "Pasiekite pagrindinę profilio informaciją (naudotojo vardą, avatarą 
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:93
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:66
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:61
 msgid "Accessibility"
 msgstr "Pritaikymas neįgaliesiems"
 
@@ -2124,7 +2084,7 @@ msgstr "Prieinama tiesioginė sritis"
 #. User settings tab for account login, password, MFA, and security.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:11
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:129
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:95
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:90
 msgid "Account"
 msgstr "Paskyra"
 
@@ -2180,7 +2140,7 @@ msgstr "Paskyra per nauja"
 #. Required-action modal title shown when an account-level verification step is required to proceed.
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:8
-#: src/features/invite/commands/InviteCommands.tsx:37
+#: src/features/invite/commands/InviteCommands.tsx:35
 msgid "Account verification required"
 msgstr "Reikalingas paskyros patvirtinimas"
 
@@ -2461,7 +2421,7 @@ msgid "Add an account to continue."
 msgstr "Norėdami tęsti, pridėkite paskyrą."
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:42
+#: src/features/invite/commands/InviteCommands.tsx:40
 msgid "Add an email and password to your account first."
 msgstr "Pirmiausia pridėkite prie paskyros el. pašto adresą ir slaptažodį."
 
@@ -2771,7 +2731,7 @@ msgid "Address"
 msgstr "Adresas"
 
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Prideda H.264 mišriems klientams. Naudoja daugiau apdorojimo resursų."
 
@@ -2827,11 +2787,9 @@ msgstr "Administratoriai pristabdė kvietimus – šiuo metu negalite prisijungt
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#. Voice participant context menu submenu label for IDs and diagnostics.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:145
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:140
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
 msgid "Advanced"
 msgstr "Išplėstiniai"
@@ -2842,7 +2800,7 @@ msgid "Advanced video settings"
 msgstr "Išplėstinės vaizdo įrašo nustatymai"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:100
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "Advertise a capped decode codec to force publisher migration"
 msgstr "Reklamuoti apribotą dekodavimo kodeką, kad būtų priversta leisti siuntėjų migraciją"
 
@@ -3065,6 +3023,13 @@ msgstr "Leisti visiems matyti šį ryšį jūsų profilyje"
 msgid "Allow anyone who can view your full profile to see your profile local time"
 msgstr "Leisti visiems, kurie gali matyti visą jūsų profilį, matyti jūsų profilio vietinį laiką"
 
+#. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:236
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+msgid "Allow AV1 for screen sharing"
+msgstr "Leisti AV1 ekrano bendrinimui"
+
 #. Toggle label that allows DMs from bots in this community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:81
 msgid "Allow bot direct messages"
@@ -3111,6 +3076,13 @@ msgstr "Leisti lanksčius teksto kanalo pavadinimus"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
 msgid "Allow for all communities"
 msgstr "Leisti visoms bendruomenėms"
+
+#. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:240
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+msgid "Allow H.265 (HEVC) for screen sharing"
+msgstr "Leisti H.265 (HEVC) ekrano bendrinimui"
 
 #: src/features/connection/components/modals/EditConnectionModal.tsx:95
 msgid "Allow members from communities you're in to see this connection"
@@ -3218,7 +3190,7 @@ msgid "Already have an account?"
 msgstr "Jau turite paskyrą?"
 
 #. Status label on a group DM invite embed when the current user is already a member.
-#: src/features/channel/components/InviteEmbed.tsx:76
+#: src/features/channel/components/InviteEmbed.tsx:67
 msgid "Already joined"
 msgstr "Jau prisijungta"
 
@@ -3426,7 +3398,7 @@ msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "Animuoti avatarai ({animatedAvatarFormats}) reikalauja {premiumProductName}."
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
 msgid "Animated avatars & profile banners"
 msgstr "Animuoti avatarai ir profilio reklamjuostės"
 
@@ -3712,7 +3684,7 @@ msgstr "Programėlės piktogramos ženklelis"
 msgid "App language: {format}"
 msgstr "Programos kalba: {format}"
 
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:209
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:204
 msgid "App settings"
 msgstr "Programos nustatymai"
 
@@ -3739,7 +3711,7 @@ msgstr "Programėlės mastelio lygis"
 #. Advanced settings category tag.
 #. User settings tab for app appearance and layout options.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:13
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:116
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:111
 msgid "Appearance"
 msgstr "Išvaizda"
 
@@ -3812,8 +3784,8 @@ msgstr "Programa sėkmingai atnaujinta"
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:90
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:129
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:74
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:70
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:65
 msgid "Applications"
 msgstr "Programos"
 
@@ -3899,7 +3871,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "Ar tikrai norite ištrinti visus pranešimus iš savo asmeninių užrašų? Tai visam laikui pašalins visus pranešimus ir jų priedus. Šio veiksmo anuliuoti negalima."
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "Ar tikrai norite ištrinti vaidmenį \"<0>{0}</0>\"? Visi nariai, turintys šį vaidmenį, jo nebeturės."
 
@@ -4080,11 +4052,6 @@ msgstr "Priedo maketas"
 msgid "Attachment mocks"
 msgstr "Priedų maketai"
 
-#. Placeholder content text shown for scheduled messages that have attachments but no text content.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:34
-msgid "Attachment only message"
-msgstr "Tik priedas"
-
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual attachment preview modal. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx:27
@@ -4112,9 +4079,7 @@ msgstr "Priedo įkėlimas nepasiekiamas"
 msgid "Attachment: {filename}"
 msgstr "Priedas: {filename}"
 
-#. Label in the scheduled message row preview indicating that attachments are included.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:43
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:34
 msgid "Attachments"
 msgstr "Priedai"
@@ -4238,7 +4203,7 @@ msgid "Audio settings"
 msgstr "Garso nustatymai"
 
 #. Voice control button label for microphone and speaker settings.
-#: src/features/voice/components/VoiceControlBar.tsx:146
+#: src/features/voice/components/VoiceControlBar.tsx:142
 msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "Garso nustatymai"
@@ -4344,7 +4309,7 @@ msgid "Authorized"
 msgstr "Įgaliota"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:22
 msgid "Authorized applications"
 msgstr "Įgaliotosios programos"
 
@@ -4358,8 +4323,8 @@ msgstr "Įgaliotosios programos"
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:506
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:148
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:107
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:102
 msgid "Authorized apps"
 msgstr "Įgaliotosios programos"
 
@@ -4442,7 +4407,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "Automatinio užbaigimo pasiūlymas: {label}, {selectedOptionPosition} iš {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -4451,11 +4415,10 @@ msgstr "Automatinio užbaigimo pasiūlymas: {label}, {selectedOptionPosition} i�
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:126
@@ -4467,6 +4430,11 @@ msgstr "Automatinis"
 msgctxt "rtc-region-value"
 msgid "Automatic"
 msgstr "Automatinis"
+
+#. Option label for the screen-share codec select. codec is the automatically selected codec label.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:222
+msgid "Automatic ({codec})"
+msgstr "Automatinis ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -4494,96 +4462,6 @@ msgstr "Automatinis žinučių skaitymas"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "Automatinis paleidimas"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep Firefox as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:8
-msgid "Automatic would use {codecName} because Firefox screen sharing works most reliably with it."
-msgstr "Automatinis nustatymas naudotų „{codecName}\", nes „Firefox\" ekrano bendrinimas su juo veikia patikimiausiai."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:70
-msgid "Automatic would use {codecName} because no hardware encoder is available and this browser exposes H.265."
-msgstr "Automatinis naudotų {codecName}, nes nėra aparatinės įrangos koduotuvo, o ši naršyklė palaiko H.265."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:75
-msgid "Automatic would use {codecName} because no hardware encoder is available and your computer exposes H.265."
-msgstr "Automatinis naudotų {codecName}, nes nėra aparatinės įrangos koduotuvo, o jūsų kompiuteris palaiko H.265."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:90
-msgid "Automatic would use {codecName} because no higher-quality encoder is available and H.264 is compatible."
-msgstr "Automatinis nustatymas naudotų „{codecName}“, nes nėra geresnės kokybės koduotuvo, o H.264 yra suderinamas."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep OpenH264 and Linux literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:101
-msgid "Automatic would use {codecName} because no video encoder is exposed. On Linux, OpenH264 may need to be installed."
-msgstr "Automatinis nustatymas naudotų „{codecName}“, nes nėra atskleistas joks vaizdo kodavimo įrenginys. „Linux“ sistemoje gali reikėti įdiegti „OpenH264“."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:60
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes AV1."
-msgstr "Automatinis pasirinkimas naudotų „{codecName}“, nes pirmenybė teikiama programiniam kodavimui, o ši naršyklė palaiko AV1."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:80
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes VP9."
-msgstr "Automatinis nustatymas naudotų „{codecName}“, nes programinės įrangos kodavimas yra pageidaujamas ir ši naršyklė palaiko VP9."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:95
-msgid "Automatic would use {codecName} because software encoding is preferred and VP8 is the safest software fallback."
-msgstr "Automatinis nustatymas naudotų „{codecName}“, nes programinės įrangos kodavimas yra pageidaujamas, o VP8 yra saugiausias programinės įrangos atsarginis variantas."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:65
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes AV1."
-msgstr "Automatinis nustatymas naudotų {codecName}, nes pirmenybė teikiama programinės įrangos kodavimui, o jūsų kompiuteris palaiko AV1."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:85
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes VP9."
-msgstr "Automatinis nustatymas naudotų „{codecName}“, nes programinės įrangos kodavimas yra pageidaujamas ir jūsų kompiuteris palaiko VP9."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:25
-msgid "Automatic would use {codecName} because this browser does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automatinis naudotų {codecName}, nes ši naršyklė nepalaiko H.264, todėl VP8 yra saugiausias atsarginis variantas."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:13
-msgid "Automatic would use {codecName} because this browser supports it and it is the best fallback outside Chromium."
-msgstr "Automatinis nustatymas naudotų {codecName}, nes naršyklė jį palaiko ir tai yra geriausias atsarginis variantas už „Chromium\" ribų."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:30
-msgid "Automatic would use {codecName} because your computer does not expose H.264, so VP8 is the safest fallback."
-msgstr "Automatinis naudotų {codecName}, nes jūsų kompiuteris nepalaiko H.264, todėl VP8 yra saugiausias atsarginis variantas."
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:19
-msgid "Automatic would use {codecName} because your computer supports it and it is the best fallback outside Chromium."
-msgstr "Automatinis naudotų {codecName}, nes jūsų kompiuteris jį palaiko ir tai yra geriausias atsarginis variantas už „Chromium“ ribų."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:54
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it gives strong screen-share quality."
-msgstr "Automatinis nustatymas naudotų „{codecName}\", nes jūsų GPU gali jį koduoti aparatinėje įrangoje ir tai užtikrina gerą ekrano bendrinimo kokybę."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:42
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it is the most compatible screen-share default."
-msgstr "Automatinis nustatymas naudotų „{codecName}“, nes jūsų GPU gali jį koduoti aparatinėje įrangoje ir tai yra labiausiai suderinamas ekrano bendrinimo numatytasis nustatymas."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:48
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with excellent compression and low CPU usage."
-msgstr "Automatinis nustatymas naudotų {codecName}, nes jūsų GPU gali jį koduoti aparatinėje įrangoje, užtikrinant puikų suglaudinimą ir mažą procesoriaus naudojimą."
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:36
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with the best compression for screen sharing."
-msgstr "Automatinis nustatymas naudotų {codecName}, nes jūsų GPU gali jį koduoti aparatinėje įrangoje, užtikrindamas geriausią ekrano bendrinimo suglaudinimą."
 
 #. Short label in the animation tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:52
@@ -4647,6 +4525,16 @@ msgstr "Automatinis perskaitymas"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:307
 msgid "Autoscrolling"
 msgstr "Automatinis slinkimas"
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
+msgid "AV1"
+msgstr "AV1"
+
+#. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:226
+msgid "AV1 (requires opt-in)"
+msgstr "AV1 (reikia sutikimo)"
 
 #. Label for the available desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
@@ -4875,7 +4763,7 @@ msgid "Badge"
 msgstr "Ženklelis"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Balanced"
 msgstr "Subalansuota"
 
@@ -4917,7 +4805,7 @@ msgstr "Uždraudimas baigiasi {0}."
 #: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:118
 msgid "Ban member"
 msgstr "Užblokuoti narį"
 
@@ -5046,7 +4934,7 @@ msgstr "Nuo 1 iki 32 simbolių"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:27
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:207
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:202
 msgid "Billing"
 msgstr "Atsiskaitymas"
 
@@ -5099,7 +4987,7 @@ msgid "Biometrics"
 msgstr "Biometriniai duomenys"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:181
 msgid "Bitrate"
 msgstr "„Bitų srautas“"
 
@@ -5181,8 +5069,8 @@ msgstr "Užblokuoti"
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:210
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:6
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:152
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:58
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:18
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:53
 msgid "Blocked users"
 msgstr "Užblokuoti naudotojai"
 
@@ -5275,7 +5163,7 @@ msgstr "Pridėta prie žymelių."
 #. Tab label in the inbox popout listing the user bookmarks.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:33
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
-#: src/features/messaging/components/popouts/InboxPopout.tsx:36
+#: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
 msgstr "Žymės"
 
@@ -5535,10 +5423,6 @@ msgstr "Patinčios patyčios, pasikartojantis nepageidaujamas kontaktas, perseki
 msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
 msgstr "Patyčios, grasinimai, neapykanta, smurtas, reidai ar turinys, skatinantis žaloti save."
 
-#: src/features/expressions/components/modals/CreatePackModal.tsx:95
-msgid "Bundle your favorite stickers into a pack you can distribute."
-msgstr "Sujunkite mėgstamus lipdukus į paketą, kurį galėsite platinti."
-
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:45
 msgid "Busy right now"
@@ -5761,7 +5645,7 @@ msgid "Cameras and virtual capture devices are selected here in {productName}, n
 msgstr "Kameros ir virtualūs fiksavimo įrenginiai pasirenkami čia, \"{productName}\", o ne \"Wayland\" sistemos parinkiklyje. Jei čia nieko nerodoma, patikrinkite leidimus arba prijunkite įrenginį."
 
 #. Tooltip in the voice control bar when cameras are disabled because the participant count exceeds the limit. {voiceChannelCameraUserLimit} is the configured threshold.
-#: src/features/voice/components/VoiceControlBar.tsx:136
+#: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Kameros išjungtos, kai dalyvių skaičius viršija {voiceChannelCameraUserLimit}"
 
@@ -5781,7 +5665,6 @@ msgid "Can't upload files here"
 msgstr "Čia negalima įkelti failų"
 
 #. Action label for dismissing a mass-mention warning.
-#. Button label on a scheduled message row that cancels (deletes) the scheduled send.
 #. Button label that closes the emoji rename popout without saving.
 #. Button that closes the delete channel confirmation without deleting.
 #. Button that closes the device logout confirmation without changes.
@@ -5810,10 +5693,8 @@ msgstr "Čia negalima įkelti failų"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:318
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:111
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
-#: src/features/expressions/components/modals/CreatePackModal.tsx:137
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/expressions/components/modals/EditPackModal.tsx:124
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:98
 #: src/features/input/state/input_keybind/shared.ts:137
@@ -5824,7 +5705,6 @@ msgstr "Čia negalima įkelti failų"
 #: src/features/messaging/components/modals/ForwardModal.tsx:635
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
@@ -5849,11 +5729,6 @@ msgstr "Atšaukti"
 #: src/features/channel/components/ChannelEditBar.tsx:13
 msgid "Cancel editing message"
 msgstr "Atšaukti pranešimo redagavimą"
-
-#. Button or menu action label in the channel and chat scheduled message edit bar. Keep it concise.
-#: src/features/channel/components/ScheduledMessageEditBar.tsx:18
-msgid "Cancel editing scheduled message"
-msgstr "Atšaukti suplanuotos žinutės redagavimą"
 
 #. Relationship action label for canceling an outgoing friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:25
@@ -5935,16 +5810,6 @@ msgstr "Negalima redaguoti"
 msgid "Cannot delete account"
 msgstr "Negalima ištrinti paskyros"
 
-#. Title of the error modal when installing an emoji pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:83
-msgid "Cannot install emoji pack"
-msgstr "Nepavyko įdiegti jaustukų paketo"
-
-#. Title of the error modal when installing a sticker pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:87
-msgid "Cannot install sticker pack"
-msgstr "Nepavyko įdiegti lipdukų paketo"
-
 #. Toast error shown when captcha verification fails inside the auth captcha interceptor.
 #: src/features/auth/components/CaptchaInterceptor.tsx:14
 msgid "Captcha verification failed. Try again."
@@ -5955,15 +5820,15 @@ msgstr "Nepavyko patvirtinti \"Captcha\". Bandykite dar kartą."
 msgid "Capture"
 msgstr "Įrašyti"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture app audio"
 msgstr "Įrašyti programos garsą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture desktop audio"
 msgstr "Įrašyti darbalaukio garsą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
 msgid "Capture device audio"
 msgstr "Įrašyti įrenginio garsą"
 
@@ -6221,12 +6086,12 @@ msgstr "Slaptažodžio keitimo forma"
 msgid "Change scheduled"
 msgstr "Pakeitimas suplanuotas"
 
-#. Tooltip / button label in the screen-share status pill. Opens the picker to change what is being shared.
-#. Voice control menu action to choose a different screen-share source.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
-#: src/features/voice/components/VoiceControlBar.tsx:108
-msgid "Change source"
-msgstr "Keisti šaltinį"
+#. Action that opens the source picker for the active screen share.
+#. Voice screen share menu action that changes the shared source.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:23
+msgid "Change Stream"
+msgstr "Keisti srautą"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
@@ -6575,7 +6440,7 @@ msgstr "Viršytas simbolių limitas: {remaining}"
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:40
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:15
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:39
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:120
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:115
 msgid "Chat"
 msgstr "Pokalbis"
 
@@ -6976,7 +6841,7 @@ msgid "Choose your profile accent color"
 msgstr "Pasirinkite profilio akcento spalvą"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:108
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7584,7 +7449,7 @@ msgid "Codec"
 msgstr "Kodekas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Codec negotiation testing"
 msgstr "Kodeko derybų testavimas"
 
@@ -7628,8 +7493,8 @@ msgstr "Sutraukti kanalo temą"
 
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:98
-#: src/features/voice/components/VoiceParticipantTile.tsx:165
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
+#: src/features/voice/components/VoiceParticipantTile.tsx:166
 msgid "Collapse devices"
 msgstr "Sutraukti įrenginius"
 
@@ -8104,7 +7969,7 @@ msgstr "Komponavimo lauko fokusavimas"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 msgid "Configure"
 msgstr "Konfigūruoti"
 
@@ -8127,7 +7992,7 @@ msgid "Configure now"
 msgstr "Konfigūruoti dabar"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:69
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
 msgid "Configure or end screen share"
 msgstr "Konfigūruoti arba baigti ekrano bendrinimą"
 
@@ -8378,12 +8243,12 @@ msgstr "Ryšys: {connectionId}"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:410
 #: src/features/user/components/popouts/UserProfileShared.tsx:610
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
 msgstr "Ryšiai"
 
 #. User settings tab for linked external accounts.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:111
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:106
 msgctxt "user-settings-tab"
 msgid "Connections"
 msgstr "Paskyros"
@@ -8434,7 +8299,7 @@ msgid "Content filtering"
 msgstr "Turinio filtravimas"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 msgid "Content hint"
 msgstr "Turinio užuomina"
 
@@ -9157,16 +9022,6 @@ msgstr "Nepavyko ignoruoti draugo užklausos"
 msgid "Couldn't ignore the friend request. Try again."
 msgstr "Nepavyko ignoruoti draugo užklausos. Bandykite dar kartą."
 
-#. Generic body for the error modal when an emoji pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:107
-msgid "Couldn't install this emoji pack. Try again later."
-msgstr "Nepavyko įdiegti šio jaustukų paketo. Bandykite dar kartą vėliau."
-
-#. Generic body for the error modal when a sticker pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:111
-msgid "Couldn't install this sticker pack. Try again later."
-msgstr "Nepavyko įdiegti šio lipdukų paketo. Bandykite dar kartą vėliau."
-
 #. Error modal title shown when accepting a community invite fails.
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
 msgid "Couldn't join community"
@@ -9582,11 +9437,6 @@ msgstr "Susikurkite paskyrą ir atsiimkite dovaną"
 msgid "Create and manage applications and bots for your account"
 msgstr "Kurkite ir tvarkykite savo paskyros programas ir robotus"
 
-#. Empty-state description for expression packs when the feature requires premium.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:63
-msgid "Create and share custom emoji and sticker packs with {premiumProductFullName}."
-msgstr "Kurkite ir bendrinkite pasirinktinius jaustukus bei lipdukų paketus su „{premiumProductFullName}\"."
-
 #. Button or menu action label in the application create modal. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationCreateModal.tsx:20
@@ -9627,14 +9477,6 @@ msgstr "Kurti tiesioginį pranešimą"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:197
 msgid "Create emoji & stickers"
 msgstr "Kurti jaustukus ir lipdukus"
-
-#. Action that opens the create-emoji-pack modal.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:18
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:314
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:31
-msgid "Create emoji pack"
-msgstr "Kurti jaustukų paketą"
 
 #. Accessible label for the create-favorite-category form.
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:16
@@ -9688,14 +9530,6 @@ msgstr "Sukurti arba prisijungti prie bendruomenės"
 msgid "Create role"
 msgstr "Kurti vaidmenį"
 
-#. Action that opens the create-sticker-pack modal.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:22
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:314
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:35
-msgid "Create sticker pack"
-msgstr "Kurti lipdukų paketą"
-
 #. Setup wizard title prompting the operator to create the first account.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:48
 msgid "Create the administrator account"
@@ -9748,15 +9582,6 @@ msgstr "Sukurta"
 msgid "Created {createdAt}"
 msgstr "Sukurta {createdAt}"
 
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:334
-msgid "Created {createdCount} / {createdLimit}"
-msgstr "Sukurta: {createdCount} / {createdLimit}"
-
-#. placeholder {0}: NicknameUtils.getDisplayName(packCreator)
-#: src/features/channel/components/InviteEmbed.tsx:343
-msgid "Created by {0}"
-msgstr "Sukūrė {0}"
-
 #. placeholder {0}: inviter ? NicknameUtils.getNickname(inviter, undefined, channelId) : invite.inviter ? NicknameUtils.getDisplayName(invite.inviter) : ''
 #. placeholder {1}: formatExpiresAt(invite.expires_at)
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:218
@@ -9767,13 +9592,6 @@ msgstr "Sukūrė {0}. Baigia galioti po {1}."
 #: src/features/webhook/components/WebhookListItem.tsx:223
 msgid "Created by {creatorDisplayName} on {createdAt}"
 msgstr "Sukūrė \"{creatorDisplayName}\" {createdAt}"
-
-#. Metadata label for an expression pack invite. userName is the pack creator username.
-#. Short label in the authentication invite header. Preserve {userName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InviteHeader.tsx:29
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:73
-msgid "Created by {userName}"
-msgstr "Sukūrė {userName}"
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:739
@@ -9786,11 +9604,6 @@ msgstr "Sukurta kanalui \"{0}\"."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:267
 msgid "Created on {0}."
 msgstr "Sukurta {0}."
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:43
-msgid "Created packs"
-msgstr "Sukurti paketai"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
@@ -10119,7 +9932,7 @@ msgid "Custom tags"
 msgstr "Pasirinktinės žymės"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:87
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
 msgid "Custom themes"
 msgstr "Tinkintos temos"
 
@@ -10603,7 +10416,6 @@ msgstr "Numatytoji reikšmė mobiliajame įrenginyje yra išjungta, siekiant tau
 #. Button or menu action label in the channel and chat embed audio. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the channel and chat media container. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the channel and chat mobile memes picker. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
 #. Confirm button label on the destructive delete-saved-media alert.
 #. Danger button label that confirms deleting a custom emoji.
@@ -10626,7 +10438,6 @@ msgstr "Numatytoji reikšmė mobiliajame įrenginyje yra išjungta, siekiant tau
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:49
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
@@ -10785,11 +10596,6 @@ msgstr "Ištrinti mano žinutes"
 msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Ištrinti kitų narių žinutes. Prisegimas valdomas atskirai."
 
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:40
-msgid "Delete pack"
-msgstr "Ištrinti paketą"
-
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
 msgid "Delete passkey"
@@ -10861,11 +10667,6 @@ msgstr "Ištrinti šį pranešimą"
 #: src/features/messaging/commands/MessageCommands.tsx:73
 msgid "Delete this message? Can't be undone."
 msgstr "Ištrinti šį pranešimą? Veiksmo anuliuoti negalima."
-
-#. Error message in the expression packs tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
-msgid "Delete this pack? Can't be undone."
-msgstr "Ištrinti šį paketą? Veiksmo anuliuoti negalima."
 
 #. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
@@ -11011,7 +10812,7 @@ msgid "Description must be no more than {discoveryDescriptionMaxLength} characte
 msgstr "Aprašas turi būti ne ilgesnis nei {discoveryDescriptionMaxLength} simbolių."
 
 #. Developer settings tab showing UI component examples.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:153
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:148
 msgid "Design system"
 msgstr "Dizaino sistema"
 
@@ -11025,8 +10826,8 @@ msgstr "Darbalaukis"
 
 #. User settings tab for desktop app integration and platform settings.
 #. User settings tab label shown on desktop builds when the OS could not be identified (fallback for the per-OS labels).
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:86
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:141
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:81
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:136
 msgid "Desktop app"
 msgstr "Darbalaukinė programa"
 
@@ -11113,7 +10914,7 @@ msgstr "Darbalaukio versija {version} yra prieinama. Atsisiųskite diegimo progr
 #. Settings section label for desktop window behavior.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
 msgstr "Darbalaukio langas"
 
@@ -11139,7 +10940,7 @@ msgid "Detached banner"
 msgstr "Atskirtas reklamjuostės paveikslėlis"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "Išsamiau"
 
@@ -11163,7 +10964,7 @@ msgstr "Aptikti rašant"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:20
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:25
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:211
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:206
 msgid "Developer"
 msgstr "Kūrėjas"
 
@@ -11171,7 +10972,7 @@ msgstr "Kūrėjas"
 #. Settings section label for client developer mode.
 #: src/features/user/components/modals/tabs/ClientDeveloperSettingsTab.tsx:17
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:7
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
 msgid "Developer mode"
 msgstr "Kūrėjo režimas"
 
@@ -11218,11 +11019,6 @@ msgstr "Įrenginys"
 msgid "Device alerts"
 msgstr "Įrenginio pranešimai"
 
-#. Voice participant context menu submenu label for actions that affect one or more voice devices.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:182
-msgid "Device controls"
-msgstr "Įrenginio valdikliai"
-
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "Įrenginio informacija"
@@ -11232,7 +11028,7 @@ msgstr "Įrenginio informacija"
 msgid "Device revoked"
 msgstr "Įrenginys atšauktas"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1024
 msgid "Device selection"
 msgstr "Įrenginio pasirinkimas"
 
@@ -11255,7 +11051,7 @@ msgstr "Įrenginys:"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:62
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:57
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
 msgid "Devices"
 msgstr "Įrenginiai"
@@ -11437,7 +11233,7 @@ msgid "Disable mobile push notifications"
 msgstr "Išjungti mobiliuosius tiesioginius pranešimus"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Išjungti ekrano bendrinimo paveikslėlį paveikslėlyje iššokančiajame lange"
 
@@ -11478,7 +11274,7 @@ msgstr "Išjungti dviejų veiksnių autentifikavimo formą"
 
 #. Voice menu checkbox label. Hides another participant's video only for the current user.
 #. Voice menu checkbox that hides a participant video on the current device only.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:86
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:110
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:77
 msgid "Disable video locally"
 msgstr "Išjungti vaizdą lokaliai"
@@ -11753,11 +11549,6 @@ msgstr "Rodomasis vardas"
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx:91
 msgid "Display name (optional)"
 msgstr "Rodomasis vardas (pasirinktinai)"
-
-#. Voice participant context menu submenu label for call display and diagnostics preferences.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:186
-msgid "Display options"
-msgstr "Rodymo parinktys"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:661
 msgid "Display role members separately."
@@ -12284,12 +12075,8 @@ msgstr "olandų"
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "pvz., \"YubiKey\", \"iPhone\", darbinis kompiuteris"
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:187
-msgid "Each link works once."
-msgstr "Kiekviena nuoroda veikia vieną kartą."
-
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
 msgid "Early access to new features"
 msgstr "Ankstyvoji prieiga prie naujų funkcijų"
 
@@ -12315,7 +12102,6 @@ msgstr "Aido slopinimas"
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
 #: src/features/platform/utils/DesktopLocaleBridge.ts:42
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:123
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
 msgid "Edit"
 msgstr "Redaguoti"
@@ -12395,11 +12181,6 @@ msgstr "Redaguoti bendruomenės profilį"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:19
 msgid "Edit connection"
 msgstr "Redaguoti ryšį"
-
-#. Action that opens the edit-emoji-pack modal.
-#: src/features/expressions/components/modals/EditPackModal.tsx:19
-msgid "Edit emoji pack"
-msgstr "Redaguoti jaustukų paketą"
 
 #. Permission description in the role/permission editor for the Manage Community permission. Refers to top-level community settings, not per-channel.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:23
@@ -12512,11 +12293,6 @@ msgstr "Redaguoti lipduką"
 msgid "Edit sticker {stickerName}"
 msgstr "Redaguoti lipduką \"{stickerName}\""
 
-#. Action that opens the edit-sticker-pack modal.
-#: src/features/expressions/components/modals/EditPackModal.tsx:23
-msgid "Edit sticker pack"
-msgstr "Redaguoti lipdukų rinkinį"
-
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:88
 msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
@@ -12554,11 +12330,6 @@ msgstr "Redagavimas laikinai nepasiekiamas. Bandykite dar kartą vėliau."
 #: src/features/channel/components/ChannelEditBar.tsx:40
 msgid "Editing message"
 msgstr "Redaguojama žinutė"
-
-#. Button or menu action label in the channel and chat scheduled message edit bar. Keep it concise.
-#: src/features/channel/components/ScheduledMessageEditBar.tsx:14
-msgid "Editing scheduled message"
-msgstr "Redaguojama suplanuota žinutė"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
@@ -12674,7 +12445,7 @@ msgstr "Įterpti"
 #. Developer settings tab for testing URL unfurls and rendered embeds.
 #. Settings search entry label for the developer embed debugger.
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:7
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:149
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:144
 msgid "Embed debugger"
 msgstr "Įterptųjų elementų derintuvas"
 
@@ -12726,10 +12497,8 @@ msgstr "Įterptieji failai nerodomi"
 #. Audit log target-type filter label. Filters entries that target a custom emoji.
 #. Column header for the custom emoji image or glyph.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:172
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
 msgid "Emoji"
 msgstr "Jaustukai"
@@ -12744,11 +12513,6 @@ msgstr "Jaustukai"
 #: src/features/voice/utils/TtsTextFormatter.ts:37
 msgid "emoji {emojiName}"
 msgstr "jaustukas \"{emojiName}\""
-
-#. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
-msgid "Emoji & sticker packs"
-msgstr "Jaustukai ir lipdukų paketai"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
@@ -12794,45 +12558,6 @@ msgstr "Jaustuko pavadinimas turi būti ne ilgesnis nei 32 simboliai"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:97
 msgid "Emoji names need at least 2 characters and can use letters, numbers, and underscores. Emojis must be under {maxSize}. Static images are resized to 128x128 pixels and compressed automatically. Animated emojis and SVGs must already fit the limit."
 msgstr "Emblemos pavadinimai turi būti bent 2 simboliai ir gali naudoti raides, skaičius bei pabraukimus. Emblemos dydis neturi viršyti {maxSize}. Statiniai vaizdai automatiškai keičiami į 128x128 pikselių dydį ir suspaudžiami. Animuoti paveikslėliai ir SVG turi jau atitikti nurodytą dydį."
-
-#. Kind label on an emoji pack invite embed.
-#. Short label in the authentication invite header. Keep the tone plain and specific.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/auth/flow/InviteHeader.tsx:21
-#: src/features/channel/components/InviteEmbed.tsx:84
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:57
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:105
-msgid "Emoji pack"
-msgstr "Jaustukų paketas"
-
-#. placeholder {0}: invite.pack.name
-#: src/features/invite/commands/InviteCommands.tsx:144
-msgid "Emoji pack {0} has been installed."
-msgstr "Jaustukų paketas \"{0}\" įdiegtas."
-
-#. Title of the error modal when creating a new emoji pack is rejected because the user is at the creation limit.
-#: src/features/invite/commands/InviteCommands.tsx:56
-msgid "Emoji pack creation limit reached"
-msgstr "Pasiektas jaustukų paketo kūrimo limitas"
-
-#. Modal title for the emoji pack invite share flow.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:57
-msgid "Emoji pack invite"
-msgstr "Kvietimas į jaustukų paketą"
-
-#. Title of the error modal when installing an emoji pack via invite is rejected because the user is at the install limit.
-#: src/features/invite/commands/InviteCommands.tsx:47
-msgid "Emoji pack limit reached"
-msgstr "Pasiektas jaustukų paketo limitas"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings section label for emoji expression packs.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:80
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:23
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:18
-msgid "Emoji packs"
-msgstr "Jaustukų paketai"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:126
@@ -12882,8 +12607,8 @@ msgstr "Nėra mėgstamiausių"
 
 #. Label for an advanced select that caps the best video codec this client advertises it can decode.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "Emulate decode codec (testing)"
 msgstr "Emuliuoti dekodavimo kodeką (testavimas)"
 
@@ -13177,18 +12902,18 @@ msgstr "Įjungtas brandus turinys."
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "Encoder path"
 msgstr "Koderio kelias"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Encoder preference for new screen shares."
 msgstr "Naujų ekrano dalijimosi sesijų kodavimo nustatymas."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:185
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "Kodavimo priemonė, SVC, atsarginis srautas ir bitų spartos nustatymai."
 
@@ -13220,10 +12945,8 @@ msgstr "Baigti lengvatinį laikotarpį"
 msgid "End grace period now?"
 msgstr "Baigti lengvatinį laikotarpį dabar?"
 
-#. Button label that stops the current screen share.
 #. Voice control menu action to stop sharing the screen.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:52
-#: src/features/voice/components/VoiceControlBar.tsx:112
+#: src/features/voice/components/VoiceControlBar.tsx:108
 msgid "End screen share"
 msgstr "Baigti ekrano bendrinimą"
 
@@ -13540,7 +13263,9 @@ msgstr "Visos sistemos garsas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
+#. Voice menu submenu label for per-user entrance sound controls.
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
@@ -13568,6 +13293,8 @@ msgid "Entrance sound saved"
 msgstr "Įėjimo garsas išsaugotas"
 
 #. Voice menu slider label adjusting playback volume of this user's entrance sound, locally only.
+#. Voice menu slider label for a user's entrance sound playback volume.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:187
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:318
 msgid "Entrance sound volume"
 msgstr "Įėjimo garso garsumas"
@@ -13803,10 +13530,6 @@ msgstr "Eksperimentinis"
 msgid "EXPERIMENTAL"
 msgstr "EXPERIMENTAL"
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:152
-msgid "Expiration"
-msgstr "Galiojimo laikas"
-
 #. Label above the expiration duration dropdown in the invite link settings.
 #: src/features/invite/components/modals/InviteModal.tsx:102
 msgid "Expire after"
@@ -13941,13 +13664,8 @@ msgstr "Eksportuoti mano duomenis"
 msgid "Export themes"
 msgstr "Eksportuoti temas"
 
-#. Developer / debug surface — keep terse and technical. Tooltip / description for the Expression packs settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
-msgid "Expose the staff-only Expression packs page in user settings."
-msgstr "Rodykite naudotojams nustatymuose puslapį su „Expression packs“, kuris skirtas tik darbuotojams."
-
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:138
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
 msgid "Expose the staff-only timezone section in profile settings."
 msgstr "Rodyti personalo skirtą laiko juostos skyrių profilio nustatymuose."
 
@@ -13957,23 +13675,6 @@ msgstr "Rodyti personalo skirtą laiko juostos skyrių profilio nustatymuose."
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:158
 msgid "Expression autocomplete"
 msgstr "Išraiškų automatinis pildymas"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#. User settings tab for purchased or owned emoji/sticker expression packs.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:166
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:7
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:54
-msgid "Expression packs"
-msgstr "Išraiškų paketai"
-
-#. Empty-state title for expression packs when the feature requires premium.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:59
-msgid "Expression packs are a {premiumProductName} feature"
-msgstr "Išraiškų paketai yra „{premiumProductName}\" funkcija"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:168
-msgid "Expression packs are not enabled on this instance. Contact your instance administrator for more information."
-msgstr "Šiame egzemplioriuje išraiškų paketai neįjungti. Norėdami gauti daugiau informacijos, susisiekite su egzemplioriaus administratoriumi."
 
 #. Aria label for the expression picker category nav.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:751
@@ -13987,9 +13688,7 @@ msgstr "Išraiškos išvalymas"
 
 #. Community settings sidebar category grouping the emoji and stickers tabs.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:249
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:19
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:134
 msgid "Expressions"
 msgstr "Išraiškos"
@@ -14457,7 +14156,7 @@ msgstr "Mėgstamiausi"
 msgid "Favorites"
 msgstr "Mėgstamiausi"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:182
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:177
 msgid "Feature"
 msgstr "Funkcija"
 
@@ -14753,14 +14452,14 @@ msgstr "Sutelkti teksto lauką"
 
 #. Voice call layout action that pins one of several active devices of the same participant.
 #. Voice layout menu action that focuses one device/session for a participant.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:37
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:101
 msgid "Focus this device"
 msgstr "Sutelkti šį įrenginį"
 
 #. Voice call layout action that pins the selected participant in the focused view.
 #. Voice layout menu action that focuses one participant in the call view.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:105
 msgid "Focus this person"
 msgstr "Sutelkti dėmesį į šį asmenį"
@@ -14807,7 +14506,7 @@ msgstr "Aplanko nustatymai"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Sekite mus \"{blueskyProviderName}\" tinkle"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:826
 msgid "Follow voice input"
 msgstr "Sekti balso įvestį"
 
@@ -15061,7 +14760,7 @@ msgstr "Persiuntė žinutę"
 msgid "Forwarded from"
 msgstr "Persiųsta iš"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:269
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:267
 msgid "Found {resultCount} results in {categoryCount} categories"
 msgstr "Rasta {resultCount} rezultatų {categoryCount} kategorijose"
 
@@ -15096,7 +14795,7 @@ msgstr "Kadrų dažnis"
 msgid "France"
 msgstr "Prancūzija"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:187
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:182
 msgid "Free"
 msgstr "Nemokama"
 
@@ -15354,10 +15053,6 @@ msgstr "Pagrindiniai"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:332
 msgid "Generate a shareable link or copy your combined custom CSS."
 msgstr "Sugeneruokite bendrinamą nuorodą arba nukopijuokite sujungtą tinkintą CSS."
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:213
-msgid "Generate invite"
-msgstr "Generuoti kvietimą"
 
 #. Short label in the add friends to group modal. Keep it concise.
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:23
@@ -15639,7 +15334,7 @@ msgstr "Dovanota <0/> iki <1>{giftEndDate}</1>. Automatiškai nepratęsiama. Nor
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for gift inventory and redemption codes.
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:37
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:99
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:94
 msgid "Gifts"
 msgstr "Dovanos"
 
@@ -15664,7 +15359,7 @@ msgid "Glad you're here, {username}!"
 msgstr "Džiugu, kad prisijungei, {username}!"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
 msgid "Global emoji & sticker access"
 msgstr "Prieiga prie jaustukų ir lipdukų visame pasaulyje"
 
@@ -15703,8 +15398,8 @@ msgstr "Eiti į „{premiumProductName}\""
 
 #. Button label on a community invite embed when the current user is already a member.
 #. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:108
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:53
+#: src/features/channel/components/InviteEmbed.tsx:79
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:45
 msgid "Go to community"
 msgstr "Eiti į bendruomenę"
 
@@ -15831,7 +15526,7 @@ msgstr "Suteikta {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Suteikia visus leidimus ir apeina kanalo apribojimus. Labai jautru."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1011
 msgid "Granular selection"
 msgstr "Detalizuotas pasirinkimas"
 
@@ -15867,7 +15562,7 @@ msgstr "Graikų"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:784
+#: src/features/voice/components/VoiceSettingsMenus.tsx:785
 msgid "Grid view"
 msgstr "Tinklelio rodinys"
 
@@ -15948,7 +15643,7 @@ msgstr "Grupės kvietimai"
 #. Audit log channel type label for group DM channels.
 #. Fallback display name for an unnamed group DM in quick switcher results.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:57
-#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:44
+#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:43
 msgid "Group message"
 msgstr "Grupės žinutė"
 
@@ -16010,19 +15705,24 @@ msgid "Grouping"
 msgstr "Grupavimas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:104
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "H.264 backup stream"
 msgstr "H.264 atsarginis srautas"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
 msgid "H.264 simulcast backup"
 msgstr "H.264 simulcast atsarginė kopija"
+
+#. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:231
+msgid "H.265 (requires opt-in)"
+msgstr "H.265 (reikia pasirinkti papildomai)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -16075,12 +15775,8 @@ msgstr "Aparatinės įrangos spartinimas"
 msgid "Hardware acceleration can cause rendering glitches with transparent windows. Try --disable-gpu if you see flicker or smearing."
 msgstr "Aparatinės įrangos spartinimas gali sukelti atvaizdavimo trikdžius su permatomais langais. Jei matote mirgėjimą ar išsiliejimą, pabandykite naudoti --disable-gpu."
 
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:132
-msgid "Hardware acceleration is off, so codecs will encode on your CPU. <0>Turn it back on in {advancedSettingsLabel}</0>."
-msgstr "Aparatinė akceleracija yra išjungta, todėl kodekai apdoros vaizdą jūsų procesoriuje. <0>Įjunkite ją vėl nustatymuose: {advancedSettingsLabel}</0>."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Hardware encoder"
 msgstr "Aparatinis kodavimo įrenginys"
 
@@ -16215,9 +15911,14 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "Padėkite versti {PRODUCT_NAME} į jūsų kalbą per <0>{I18N_WEBLATE_DOMAIN}</0>."
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "Padeda naršyklei pasirinkti vaizdo judėjimo, detalių ar teksto apdorojimą."
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
+msgid "HEVC"
+msgstr "HEVC"
 
 #. Codec description in the screen share codec policy menu. HEVC is a codec name; keep WebRTC literal.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:28
@@ -16370,7 +16071,7 @@ msgid "Hide muted channels by default?"
 msgstr "Slėpti nutildytus kanalus pagal numatymą?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
 msgid "Hide my stream preview thumbnail"
 msgstr "Slėpti mano srauto peržiūros miniatiūrą"
 
@@ -16389,7 +16090,7 @@ msgstr "Slėpti slaptažodį"
 msgid "Hide picture-in-picture popout?"
 msgstr "Slėpti paveikslėlį paveikslėlyje iššokantįjį langą?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:860
 msgid "Hide preview thumbnail"
 msgstr "Slėpti peržiūros miniatiūrą"
 
@@ -16451,7 +16152,7 @@ msgid "High dynamic range display mode"
 msgstr "Didelio dinaminio diapazono ekrano režimas"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Higher quality can cost more CPU and latency."
 msgstr "Aukštesnė kokybė gali reikšti didesnę apkrovą procesoriui ir delsą."
 
@@ -16474,7 +16175,7 @@ msgstr "Patarimai"
 msgid "Hoist order"
 msgstr "Rikiavimo tvarka"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:522
 msgid "Hoist order reset to default"
 msgstr "Rikiavimo tvarka atkurta į numatytąją"
 
@@ -16503,7 +16204,7 @@ msgstr "Laikykite, kad įrašytumėte. Vilkite aukštyn, kad užrakintumėte, ar
 
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
-#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:48
+#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:47
 msgid "Home"
 msgstr "Pagrindinis"
 
@@ -16834,11 +16535,11 @@ msgstr "Ignoruoti"
 msgid "Ignore friend request"
 msgstr "Nepriimti draugo užklausos"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1001
 msgid "Ignore hardware devices"
 msgstr "Ignoruoti aparatinę įrangą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Ignore input media"
 msgstr "Ignoruoti įvesties mediją"
 
@@ -16864,7 +16565,7 @@ msgstr "Nepaisyti šlamšto žymės"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Nepaisyti {displayName} draugo užklausos?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:988
 msgid "Ignore virtual"
 msgstr "Ignoruoti virtualų"
 
@@ -17198,7 +16899,7 @@ msgid "Inbox preview"
 msgstr "Gautųjų peržiūra"
 
 #. Accessible label for the inbox popout tablist.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:44
+#: src/features/messaging/components/popouts/InboxPopout.tsx:38
 msgid "Inbox tabs"
 msgstr "Gautųjų skirtukai"
 
@@ -17446,37 +17147,10 @@ msgstr "Įterpti jaustuką"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Įdiekite \"{productName}\", kad galėtumėte naudoti visą šaltinio parinkiklį ir sklandesnius ekrano bendrinimo valdiklius."
 
-#. Button label on an emoji pack invite embed that installs the pack.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:92
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:65
-msgid "Install emoji pack"
-msgstr "Įdiegti jaustukų paketą"
-
-#. Button label on a sticker pack invite embed that installs the pack.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:96
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:69
-msgid "Install sticker pack"
-msgstr "Įdiegti lipdukų paketą"
-
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
 msgstr "Įdiegta"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:303
-msgid "Installed {installedCount} / {installedLimit}"
-msgstr "Įdiegta: {installedCount} / {installedLimit}"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:113
-msgid "Installed on {installedAt}"
-msgstr "Įdiegta {installedAt}"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:39
-msgid "Installed packs"
-msgstr "Įdiegti paketai"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:45
@@ -17527,7 +17201,7 @@ msgstr "Sąsaja"
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:79
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "Sąsajos kalba"
 
@@ -17535,11 +17209,6 @@ msgstr "Sąsajos kalba"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:202
 msgid "Interface size"
 msgstr "Sąsajos dydis"
-
-#. Status pill on a scheduled message row when the schedule is in the past or otherwise invalid.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:26
-msgid "Invalid"
-msgstr "Neteisinga"
 
 #. Error message in the use entrance sound.
 #. Error message in the use sound settings.
@@ -17631,7 +17300,6 @@ msgstr "Nematomas"
 #: src/features/app/config/AuditLogConstants.ts:180
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:43
 #: src/features/invite/components/modals/InviteModal.tsx:97
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:120
 msgid "Invite"
 msgstr "Kviesti"
 
@@ -17704,7 +17372,7 @@ msgid "Invite link settings"
 msgstr "Kvietimo nuorodos nustatymai"
 
 #. Title shown on an invite embed while streaming privacy is active.
-#: src/features/channel/components/InviteEmbed.tsx:137
+#: src/features/channel/components/InviteEmbed.tsx:108
 msgid "Invite masked"
 msgstr "Kvietimas paslėptas"
 
@@ -17786,7 +17454,7 @@ msgid "Invite to community"
 msgstr "Kviesti į bendruomenę"
 
 #. Title shown on an invite embed when the invite cannot be resolved due to a non-permanent failure.
-#: src/features/channel/components/InviteEmbed.tsx:133
+#: src/features/channel/components/InviteEmbed.tsx:104
 msgid "Invite unavailable"
 msgstr "Kvietimas nepasiekiamas"
 
@@ -17804,17 +17472,6 @@ msgstr "Pakvietė"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:248
 msgid "Invited by {0}."
 msgstr "Pakvietė {0}."
-
-#. Short label in the authentication invite header. Preserve {inviterTag}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InviteHeader.tsx:34
-#: src/features/channel/components/InviteEmbed.tsx:347
-msgid "Invited by {inviterTag}"
-msgstr "Pakvietė \"{inviterTag}\""
-
-#. Metadata label for an expression pack invite. userTag is the inviter username and discriminator.
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:77
-msgid "Invited by {userTag}"
-msgstr "Pakvietė {userTag}"
 
 #: src/features/invite/components/InviteListItem.tsx:67
 msgid "Inviter"
@@ -17860,7 +17517,7 @@ msgstr "Kvietimai pristabdyti, nes „{productName}\" aptiko galimą ataką. Nau
 
 #. Invite settings notice shown after admins pause invite links for a community.
 #. Status message on a community invite embed when invites are paused by community admins.
-#: src/features/channel/components/InviteEmbed.tsx:121
+#: src/features/channel/components/InviteEmbed.tsx:92
 #: src/features/invite/components/DisableInvitesButton.tsx:48
 msgid "Invites are paused for this community."
 msgstr "Kvietimai šiai bendruomenei pristabdyti."
@@ -17871,7 +17528,7 @@ msgstr "Administratorius pristabdė kvietimus šioje bendruomenėje. Nors šį k
 
 #. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
-#: src/features/channel/components/InviteEmbed.tsx:104
+#: src/features/channel/components/InviteEmbed.tsx:75
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Invites disabled"
 msgstr "Kvietimai išjungti"
@@ -17884,7 +17541,7 @@ msgstr "Kvietimų išjungimo pranešimų juosta"
 #. Button or menu action label in the invite accept modal. Keep it concise.
 #. Button or menu action label in the invites disabled modal. Keep it concise.
 #: src/features/invite/components/alerts/InvitesDisabledModal.tsx:9
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:49
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:41
 msgid "Invites paused"
 msgstr "Kvietimai pristabdyti"
 
@@ -18025,12 +17682,12 @@ msgid "Join community form"
 msgstr "Prisijungimo prie bendruomenės forma"
 
 #. Button label on a group DM invite embed that accepts the invite.
-#: src/features/channel/components/InviteEmbed.tsx:80
+#: src/features/channel/components/InviteEmbed.tsx:71
 msgid "Join group"
 msgstr "Prisijungti prie grupės"
 
 #. Button or menu action label in the invite accept modal. Keep it concise.
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:45
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:37
 msgid "Join group DM"
 msgstr "Prisijungti prie grupės DM"
 
@@ -18355,12 +18012,12 @@ msgstr "korėjiečių"
 #. User settings tab for language, locale, and time display preferences.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:56
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:137
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
 msgstr "Kalba"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
 msgid "Language settings"
 msgstr "Kalbos nustatymai"
 
@@ -18440,14 +18097,9 @@ msgid "Launch at login"
 msgstr "Paleisti prisijungus"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Sluoksnių kūrimas AV1 ir VP9 kodekams, kai jie yra pasiekiami."
-
-#. CTA label that opens the premium settings tab from expression packs.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:67
-msgid "Learn about {premiumProductName}"
-msgstr "Sužinokite apie „{premiumProductName}\""
 
 #. Accessible label for the screen-share picker footer info button.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
@@ -18818,7 +18470,7 @@ msgid "Links"
 msgstr "Nuorodos"
 
 #. User settings tab label shown on Linux desktop builds.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:78
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:73
 msgid "Linux app"
 msgstr "„Linux“ programa"
 
@@ -19115,7 +18767,7 @@ msgid "macOS"
 msgstr "„macOS“"
 
 #. User settings tab label shown on macOS desktop builds.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:82
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
 msgstr "„macOS“ programėlė"
 
@@ -19247,11 +18899,6 @@ msgstr "Tvarkyti bendruomenės funkcijas"
 msgid "Manage emoji & stickers"
 msgstr "Tvarkyti jaustukus ir lipdukus"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:47
-msgid "Manage expression packs"
-msgstr "Tvarkyti išraiškų paketus"
-
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:93
 msgid "Manage incoming webhooks that can post messages into this channel."
 msgstr "Tvarkykite gaunamus \"webhook'us\", kurie gali skelbti pranešimus šiame kanale."
@@ -19316,7 +18963,7 @@ msgstr "Rankinis darbalaukio naujinimas"
 
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:48
+#: src/features/messaging/components/popouts/InboxPopout.tsx:42
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 msgid "Mark all as read"
 msgstr "Pažymėti visus kaip perskaitytus"
@@ -19334,7 +18981,7 @@ msgstr "Pažymėti visus tiesioginius pranešimus kaip perskaitytus"
 #. Accessible label and tooltip for the mark-all-as-read button in the inbox popout.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:165
-#: src/features/messaging/components/popouts/InboxPopout.tsx:52
+#: src/features/messaging/components/popouts/InboxPopout.tsx:46
 msgid "Mark all inbox channels as read"
 msgstr "Pažymėti visus gautuosius kanalus kaip perskaitytus"
 
@@ -19597,10 +19244,6 @@ msgstr "Didžiausias naudojimo skaičius"
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "Maksimalus dydis: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:168
-msgid "Max uses"
-msgstr "Maksimalus naudojimas"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:451
 msgid "Max visible count"
 msgstr "Maks. matomas skaičius"
@@ -19614,13 +19257,6 @@ msgstr "Išskleisti langą"
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:67
 msgid "Maximizes visible messages with minimal spacing."
 msgstr "Padidina matomų pranešimų skaičių su minimaliais tarpais."
-
-#. Form helper text describing the maximum length of a description field.
-#. Form helper text describing the maximum length of a description field.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:46
-#: src/features/expressions/components/modals/EditPackModal.tsx:43
-msgid "Maximum 256 characters"
-msgstr "Daugiausia 256 simboliai"
 
 #. Label for attachment decay maximum eligible size.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:240
@@ -19638,9 +19274,14 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "Didžiausia apsauga šeimai tinkamoms erdvėms"
 
 #. Label for an advanced screen-share bitrate select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Maximum screen share bitrate"
 msgstr "Maksimalus ekrano bendrinimo bitratas"
+
+#. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
+msgid "May cause compatibility issues for viewers. We’re working on improving this."
+msgstr "Gali sukelti suderinamumo problemų žiūrintiems. Mes stengiamės tai pagerinti."
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
@@ -19690,9 +19331,7 @@ msgid "Media buttons"
 msgstr "Medijos mygtukai"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
-#. Voice participant context menu submenu label for camera, stream, and video actions.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "Medijos valdikliai"
 
@@ -19898,7 +19537,7 @@ msgstr "Pasirinkti nariai"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice participant menu action that inserts a mention of the selected user into the message composer.
 #: src/features/ui/action_menu/items/MentionUserMenuItem.tsx:13
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:67
 msgid "Mention"
 msgstr "Paminėti"
@@ -20004,7 +19643,7 @@ msgstr "žinutė"
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -20342,7 +19981,7 @@ msgstr "Reikalingas mikrofono leidimas"
 msgid "Microphone test"
 msgstr "Mikrofono testas"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
 msgid "Microphone workaround"
 msgstr "Mikrofono apėjimas"
 
@@ -20532,9 +20171,7 @@ msgid "Mod"
 msgstr "Modifikavimas"
 
 #. Permission category for moderation actions against members or messages.
-#. Voice participant context menu submenu label for member moderation actions.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:194
 msgid "Moderation"
 msgstr "Moderavimas"
 
@@ -20667,7 +20304,7 @@ msgstr "Tinkamiausi"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -20685,7 +20322,7 @@ msgid "Move"
 msgstr "Perkelti"
 
 #. Submenu label that moves every active device into another voice channel.
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:22
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:37
 msgid "Move all devices to…"
 msgstr "Perkelti visus įrenginius į…"
 
@@ -20702,7 +20339,7 @@ msgstr "Grįžti atgal per peržiūrėtą kanalų istoriją"
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:21
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:18
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:33
 msgid "Move device to…"
 msgstr "Perkelti į…"
 
@@ -20739,7 +20376,7 @@ msgstr "Perkelti į"
 #. Submenu label that moves the selected participant or content into another channel.
 #. Submenu label that moves the selected participant or content into another channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:29
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:26
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:41
 msgid "Move to…"
 msgstr "Perkelti į…"
 
@@ -20804,7 +20441,7 @@ msgstr "Muzikos nata"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:132
 #: src/features/channel/components/embeds/media/EmbedVideo.tsx:72
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:141
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:36
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:73
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:178
@@ -20818,7 +20455,7 @@ msgid "Mute"
 msgstr "Nutildyti"
 
 #. Voice control button label to turn the user's microphone off.
-#: src/features/voice/components/VoiceControlBar.tsx:126
+#: src/features/voice/components/VoiceControlBar.tsx:122
 msgctxt "voice-control-action"
 msgid "Mute"
 msgstr "Nutildyti"
@@ -20884,7 +20521,7 @@ msgid "Mute conversation"
 msgstr "Nutildyti pokalbį"
 
 #. Voice menu toggle that mutes a single device when the current user is connected on multiple devices.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
 msgid "Mute device"
 msgstr "Nutildyti įrenginį"
 
@@ -20898,7 +20535,9 @@ msgstr "Nutildyti asmeninį pokalbį"
 msgid "Mute DMs"
 msgstr "Nutildyti tiesioginius pranešimus"
 
+#. Voice menu checkbox label that locally silences a user's entrance sound.
 #. Voice menu checkbox label. Locally silences this user's custom entrance sound when they join, only for the current user.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:183
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
 msgid "Mute entrance sound"
 msgstr "Nutildyti prisijungimo garsą"
@@ -21106,11 +20745,6 @@ msgstr "Mano atvirkštinė vaizdų paieška"
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:88
 msgid "My search engine"
 msgstr "Mano paieškos variklis"
-
-#. Form placeholder example for a pack name input.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:42
-msgid "My super pack"
-msgstr "Mano superpaketas"
 
 #. Short label in the add custom search engine modal. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:84
@@ -21757,10 +21391,6 @@ msgstr "Dar nėra dovanų"
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "Nėra iškeltų vaidmenų. Įjunkite \"Rodyti šį vaidmenį atskirai\" prie vaidmens, kad jį čia matytumėte."
 
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:320
-msgid "No installed packs yet."
-msgstr "Kol kas nėra įdiegtų rinkinių."
-
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:154
 msgid "No invite background"
 msgstr "Nėra kvietimo fono"
@@ -21954,11 +21584,6 @@ msgstr "Nėra išsaugotos medijos"
 msgid "No saved payment methods."
 msgstr "Nėra išsaugotų mokėjimo metodų."
 
-#. Empty state title in the scheduled messages popout when the user has none scheduled.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:18
-msgid "No scheduled messages"
-msgstr "Nėra suplanuotų žinučių"
-
 #. Body of the screen-share-unsupported modal shown when xdg-desktop-portal returns no capturable sources.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:18
 msgid "No screens or windows were returned by the Linux screen sharing portal. Try again after checking that your desktop environment allows screen capture."
@@ -21969,7 +21594,7 @@ msgstr "Linux ekrano dalijimosi portalas neparūpino nė vieno ekrano ar lango. 
 msgid "No search results"
 msgstr "Nėra paieškos rezultatų"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:251
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
 msgid "No settings found"
 msgstr "Nustatymų nerasta"
@@ -22096,7 +21721,7 @@ msgid "No webhooks"
 msgstr "Nėra \"webhook\" nuorodų"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:143
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
 msgid "No-op in-app reports"
 msgstr "Ataskaitos programoje be operacijos"
 
@@ -22303,7 +21928,7 @@ msgid "Notifications"
 msgstr "Pranešimai"
 
 #. User settings tab for notification and alert sound controls.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:132
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:127
 msgctxt "user-settings-tab"
 msgid "Notifications"
 msgstr "Pranešimai"
@@ -22366,7 +21991,7 @@ msgstr "Objektai"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:59
 msgid "Off"
 msgstr "Išjungta"
@@ -22500,7 +22125,7 @@ msgstr "Taikoma tik plačiaekraniams."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Priimamos tik kredito kortelės. Debeto ir išankstinio mokėjimo kortelės negali būti naudojamos turinio suaugusiesiems patikrai."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
 msgid "Only default speakers"
 msgstr "Tik numatytieji garsiakalbiai"
 
@@ -22548,7 +22173,7 @@ msgstr "Vykdykite kodą tik tuo atveju, jei tiksliai suprantate, ką jis daro."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Rodyti pranešimų peržiūras tik DM su neskaitytais pranešimais"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
 msgid "Only speakers"
 msgstr "Tik kalbėtojai"
 
@@ -22820,7 +22445,7 @@ msgstr "Atidaryti jaustuką naršyklėje"
 msgid "Open emoji picker"
 msgstr "Atidaryti jaustukų parinkiklį"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:877
+#: src/features/voice/components/VoiceSettingsMenus.tsx:859
 msgid "Open event sink"
 msgstr "Atidarykite įvykių kanalą"
 
@@ -22938,13 +22563,13 @@ msgstr "Atidaryti {directMessageName} profilį"
 
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:47
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:48
 #: src/features/ui/avatars/AvatarStack.tsx:21
 msgid "Open profile for {displayName}"
 msgstr "Atidaryti {displayName} profilį"
 
 #. Short label in the app layout grouped voice participant. Preserve {nickname}; it is inserted by code.
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:35
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:36
 msgid "Open profile for {nickname}"
 msgstr "Atidaryti {nickname} profilį"
 
@@ -23079,17 +22704,17 @@ msgid "Open your settings"
 msgstr "Atidaryti nustatymus"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:112
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "OpenH264 software codec on Linux"
 msgstr "„OpenH264“ programinė kodekė „Linux“ sistemoje"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
 msgid "OpenH264 video codec"
 msgstr "Atidaryti „OpenH264“ vaizdo kodeką"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "„OpenH264“ vaizdo kodekas, kurį teikia „Cisco Systems, Inc.“."
 
@@ -23336,45 +22961,12 @@ msgstr "Šiuo metu nuosavybės nepavyko perkelti naudotojui <0>{username}</0>."
 msgid "Ownership transferred"
 msgstr "Nuosavybė perkelta"
 
-#. Form field label for the name of an expression pack.
-#. Form field label for the name of an expression pack.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:26
-#: src/features/expressions/components/modals/EditPackModal.tsx:27
-msgid "Pack name"
-msgstr "Paketo pavadinimas"
-
-#. Form validation error shown when the pack name field is empty.
-#. Form validation error shown when the pack name field is empty.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:30
-#: src/features/expressions/components/modals/EditPackModal.tsx:31
-msgid "Pack name is required"
-msgstr "Reikalingas paketo pavadinimas"
-
-#. Form validation error for a pack name that is too short.
-#. Form validation error for a pack name that is too short.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:34
-#: src/features/expressions/components/modals/EditPackModal.tsx:35
-msgid "Pack name must be at least 2 characters"
-msgstr "Pakuotės pavadinimas turi būti bent 2 simbolių ilgio"
-
-#. Form validation error for a pack name that is too long.
-#. Form validation error for a pack name that is too long.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:38
-#: src/features/expressions/components/modals/EditPackModal.tsx:39
-msgid "Pack name must be at most 64 characters"
-msgstr "Pakuotės pavadinimas turi būti ne ilgesnis nei 64 simboliai"
-
 #. Voice stats field label (mobile lobby). Shows packet loss percentage.
 #. Voice stats field label (mobile voice lobby). Shows packet loss percentage.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:124
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:92
 msgid "Packet loss"
 msgstr "Paketų praradimas"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:15
-msgid "Packs"
-msgstr "Paketai"
 
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:718
 msgid "Page {currentPage} of {totalPages}"
@@ -23566,7 +23158,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Pristabdyti kvietimus? Nauji naudotojai negalės prisijungti per kvietimo nuorodas, kol vėl jų neįjungsite. Esamiems nariams tai neturės įtakos."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Pause my screen share preview in the background"
 msgstr "Pristabdyti ekrano bendrinimo peržiūrą fone"
 
@@ -23574,6 +23166,11 @@ msgstr "Pristabdyti ekrano bendrinimo peržiūrą fone"
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:39
 msgid "Pause notifications"
 msgstr "Pristabdyti pranešimus"
+
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
+msgid "Pause Preview When Fluxer Isn’t Focused"
+msgstr "Pristabdyti peržiūrą, kai „Fluxer“ nėra aktyvus"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23908,7 +23505,7 @@ msgid "Picture"
 msgstr "Nuotrauka"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:124
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Picture in picture"
 msgstr "Vaizdas vaizde"
 
@@ -24028,7 +23625,7 @@ msgid "Pins popout"
 msgstr "Prisegtų pranešimų iššokantis langas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:128
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "PiP"
 msgstr "Vaizdas vaizde"
 
@@ -24167,15 +23764,20 @@ msgstr "Grįžkite į pagrindinį langą"
 msgid "Pop out call"
 msgstr "Atidaryti pokalbį atskirame lange"
 
-#. Voice menu action on desktop that opens the participant camera feed in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:29
-msgid "Pop out camera"
-msgstr "Atidaryti kameros vaizdą atskirame lange"
-
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:33
-msgid "Pop out stream"
-msgstr "Atidaryti bendrinamą ekraną atskirame lange"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+msgid "Pop Out Stream"
+msgstr "Rodyti srautą atskirame lange"
+
+#. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+msgid "Pop Out User"
+msgstr "Išskleisti vartotoją"
+
+#. Voice menu action on desktop that opens the active participant camera feed in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+msgid "Pop Out Video"
+msgstr "Rodyti vaizdo įrašą atskirame lange"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:19
@@ -24225,7 +23827,7 @@ msgid "Prefer @mention"
 msgstr "Pageidimas \"@paminėti\""
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "Prefer hardware"
 msgstr "Teikti pirmenybę aparatinei įrangai"
 
@@ -24237,7 +23839,7 @@ msgid "Prefer no @mention"
 msgstr "Nenurodyti @paminėjimo"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Prefer software"
 msgstr "Teikti pirmenybę programinei įrangai"
 
@@ -24255,6 +23857,11 @@ msgstr "Nuostatos"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:20
 msgid "Preferences..."
 msgstr "Nuostatos..."
+
+#. Accessible label for the advanced screen-share codec preference select.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:218
+msgid "Preferred screen share codec"
+msgstr "Pageidaujamas ekrano bendrinimo kodekas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -24391,6 +23998,11 @@ msgstr "Peržiūros mygtukas"
 msgid "Preview camera"
 msgstr "Peržiūrėti kamerą"
 
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+msgid "Preview Camera"
+msgstr "Peržiūrėti kamerą"
+
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
 msgid "Preview hidden"
@@ -24424,7 +24036,7 @@ msgid "Preview sound"
 msgstr "Peržiūrėti garsą"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:136
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "Peržiūrėti, atidaryti išskleistame lange ir srauto miniatiūros"
 
@@ -24523,7 +24135,7 @@ msgid "Primary navigation"
 msgstr "Pagrindinė naršyklė"
 
 #. Voice display preference checkbox that moves active speakers toward the front of the call grid when enabled.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:105
 msgid "Prioritize speakers"
 msgstr "Prioritetas kalbantiesiems"
 
@@ -24537,7 +24149,7 @@ msgstr "Prioritetinis kalbėtojas"
 #. User settings tab for privacy and safety controls.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:12
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:60
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:103
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:98
 msgid "Privacy"
 msgstr "Privatumas"
 
@@ -24613,7 +24225,7 @@ msgid "Product name"
 msgstr "Produkto pavadinimas"
 
 #. User settings tab for editing the current user profile.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:91
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:86
 msgid "Profile"
 msgstr "Profilis"
 
@@ -24977,7 +24589,7 @@ msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custo
 msgstr "\"Push-to-talk\" tiesioginėje įvestyje ignoruojamas. Norėdami jį naudoti, perjunkite į fokusuotą balsą arba pasirinktinį."
 
 #. Tooltip on the mic button in the voice control bar when push-to-talk is enabled. {pushToTalkHint} is the formatted shortcut key combo.
-#: src/features/voice/components/VoiceControlBar.tsx:116
+#: src/features/voice/components/VoiceControlBar.tsx:112
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Įjungtas kalbėjimas paspaudus. Laikykite {pushToTalkHint}, kad kalbėtumėte."
 
@@ -24997,7 +24609,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Paspaudus mygtuką, kad galėtumėte kalbėti, mikrofonas neįsijungs, jei esate nustatyję, kad negirdite garso. Norėdami kalbėti, išjunkite funkciją „Negirdėti“."
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Quality"
 msgstr "Kokybė"
 
@@ -25212,7 +24824,7 @@ msgid "Ready to upgrade?"
 msgstr "Pasiruošę atnaujinti?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Realtime"
 msgstr "Realiuoju laiku"
 
@@ -25287,11 +24899,9 @@ msgstr "Patikrinti iš naujo"
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "Gavėjai bus nukreipti į {0} <0>{1}</0>"
 
-#. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
 msgstr "Rekomenduojama"
@@ -25556,11 +25166,6 @@ msgstr "Atmesti"
 msgid "Rejected"
 msgstr "Atmestas"
 
-#. Voice participant context menu submenu label for friend and block actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:198
-msgid "Relationship"
-msgstr "Sąveika"
-
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:129
 msgid "Relative"
@@ -25641,7 +25246,6 @@ msgstr "Prisiminti lango dydį ir padėtį"
 #. Action label for removing the selected item from a list or relationship.
 #. Button label for removing the current webhook avatar image.
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the linked accounts tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the search engines tab. Keep it concise. Keep the tone plain and specific.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -25660,8 +25264,6 @@ msgstr "Prisiminti lango dydį ir padėtį"
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
 #: src/features/ui/action_menu/UserContextMenu.tsx:80
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:75
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:133
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
@@ -25833,11 +25435,6 @@ msgstr "Pašalinkite vieną iš „{targetName}“, kad atsirastų vietos, tada 
 msgid "Remove override"
 msgstr "Pašalinti perrašymą"
 
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:54
-msgid "Remove pack"
-msgstr "Pašalinti paketą"
-
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the message reactions modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/MessageReactionsSheet.tsx:33
@@ -25966,11 +25563,6 @@ msgstr "Pašalinta rolė \"{oldLabel}\"."
 msgid "Removed roles."
 msgstr "Pašalinti vaidmenys."
 
-#. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:57
-msgid "Removed scheduled message"
-msgstr "Suplanuota žinutė pašalinta"
-
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:419
 msgid "Removed the channel from its category."
 msgstr "Pašalino kanalą iš jo kategorijos."
@@ -26002,11 +25594,6 @@ msgstr "Pašalina visus kintamųjų perrašymus, bet palieka jūsų biblioteką 
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthPermissionsStep.tsx:112
 msgid "Removing permissions could limit the bot's features."
 msgstr "Pašalinus leidimus, roboto funkcijos gali būti apribotos."
-
-#. Description text in the expression packs tab.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:71
-msgid "Removing the pack will uninstall it from your account."
-msgstr "Pašalinus paketą, jis bus pašalintas iš jūsų paskyros."
 
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:55
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
@@ -26654,42 +26241,42 @@ msgid "Resize floating panel"
 msgstr "Keisti plaukiojančiojo skydelio dydį"
 
 #. Accessible label for the bottom-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:80
+#: src/features/messaging/components/popouts/InboxPopout.tsx:74
 msgid "Resize inbox from bottom left"
 msgstr "Susi"
 
 #. Accessible label for the bottom-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:84
+#: src/features/messaging/components/popouts/InboxPopout.tsx:78
 msgid "Resize inbox from bottom right"
 msgstr "Susiųsti gautuosius iš apačios dešinėje"
 
 #. Accessible label for the bottom resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:60
+#: src/features/messaging/components/popouts/InboxPopout.tsx:54
 msgid "Resize inbox from the bottom edge"
 msgstr "Sutraukite gautuosius iš apačios"
 
 #. Accessible label for the left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:64
+#: src/features/messaging/components/popouts/InboxPopout.tsx:58
 msgid "Resize inbox from the left edge"
 msgstr "Sutraukite gautuosius iš kairiojo krašto"
 
 #. Accessible label for the right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:68
+#: src/features/messaging/components/popouts/InboxPopout.tsx:62
 msgid "Resize inbox from the right edge"
 msgstr "Sutraukite gautuosius iš dešiniojo krašto"
 
 #. Accessible label for the top resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:56
+#: src/features/messaging/components/popouts/InboxPopout.tsx:50
 msgid "Resize inbox from the top edge"
 msgstr "Sutraukite gautuosius iš viršaus"
 
 #. Accessible label for the top-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:72
+#: src/features/messaging/components/popouts/InboxPopout.tsx:66
 msgid "Resize inbox from top left"
 msgstr "Susiųsti gautuosius iš viršaus kairėje"
 
 #. Accessible label for the top-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:76
+#: src/features/messaging/components/popouts/InboxPopout.tsx:70
 msgid "Resize inbox from top right"
 msgstr "Susiųsti gautuosius iš viršaus dešinėje"
 
@@ -27071,11 +26658,6 @@ msgstr "Dešinysis patarimas"
 msgid "Right-click here to open the context menu"
 msgstr "Dešiniuoju pelės klavišu spustelėkite čia, kad atidarytumėte kontekstinį meniu"
 
-#. Empty state hint in the scheduled messages popout explaining how to schedule a new message.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:22
-msgid "Right-click the send button to schedule a message."
-msgstr "Norėdami suplanuoti žinutę, dešiniuoju pelės mygtuku spustelėkite siuntimo mygtuką."
-
 #. Action that rings the selected participant in a voice call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -27110,8 +26692,8 @@ msgstr "Rolės spalva"
 msgid "Role created"
 msgstr "Sukurtas vaidmuo"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:352
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:402
 msgid "Role created successfully"
 msgstr "Vaidmuo sėkmingai sukurtas"
 
@@ -27120,8 +26702,8 @@ msgstr "Vaidmuo sėkmingai sukurtas"
 msgid "Role deleted"
 msgstr "Rolė ištrinta"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:440
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:469
 msgid "Role deleted successfully"
 msgstr "Vaidmuo sėkmingai ištrintas"
 
@@ -27161,7 +26743,7 @@ msgstr "Vaidmenys"
 msgid "Roles and members"
 msgstr "Vaidmenys ir nariai"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:296
 msgid "Roles updated successfully"
 msgstr "Vaidmenys sėkmingai atnaujinti"
 
@@ -27269,7 +26851,6 @@ msgstr "išsaugoti"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/expressions/components/modals/EditPackModal.tsx:127
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:624
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:90
@@ -27350,7 +26931,7 @@ msgstr "Išsaugota"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:63
 msgid "Saved media"
 msgstr "Išsaugota medija"
@@ -27403,22 +26984,10 @@ msgstr "Suplanuoti"
 msgid "Schedule message"
 msgstr "Suplanuoti žinutę"
 
-#. Status pill on a scheduled message row indicating it will send at the chosen time.
-#. Tab label in the inbox popout listing the user scheduled messages.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:40
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:30
-msgid "Scheduled"
-msgstr "Suplanuota"
-
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.
 #: src/features/devtools/components/NagbarControls.ts:22
 msgid "Scheduled maintenance nagbar"
 msgstr "Suplanuotos priežiūros pranešimų juosta"
-
-#. Label in the messaging commands. {scheduledTimeLabel} is the localized scheduled date and time.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:49
-msgid "Scheduled message for {scheduledTimeLabel}"
-msgstr "Suplanuota žinutė, skirta {scheduledTimeLabel}"
 
 #. Inline validation message in the schedule-message modal when the picked time is more than 30 days away. Keep tone plain.
 #: src/features/messaging/components/modals/ScheduleMessageModal.tsx:31
@@ -27490,7 +27059,7 @@ msgid "Screen share codec"
 msgstr "Ekrano bendrinimo kodekas"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:140
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Screen share encoder controls"
 msgstr "Ekrano dalijimosi įrašymo nustatymų valdikliai"
 
@@ -27511,12 +27080,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "Ekrano bendrinimas naudoja programinės įrangos kodavimą ({codec}). Kokybė gali būti sumažinta, o procesoriaus naudojimas padidintas. Jūsų GPU gali nepalaikyti šio kodeko aparatinio kodavimo."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:120
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 msgid "Screen share preview"
 msgstr "Ekrano bendrinimo peržiūra"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:116
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "Screen share preview behavior"
 msgstr "Ekrano dalijimosi peržiūros elgsena"
 
@@ -27534,6 +27103,11 @@ msgstr "Ekrano dalijimosi peržiūros yra išjungtos."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
 msgid "Screen share previews are enabled."
 msgstr "Ekrano dalijimosi peržiūros yra įjungtos."
+
+#. Voice screen share menu action that opens the screen share preview privacy controls.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
+msgid "Screen Share Privacy"
+msgstr "Privatumo nustatymai bendrinant ekraną"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
@@ -27561,11 +27135,6 @@ msgstr "Ekrano bendrinimo pradžia"
 #: src/features/notification/utils/SoundLabels.ts:64
 msgid "Screen share stop"
 msgstr "Ekrano bendrinimo sustabdymas"
-
-#. Accessible label for the screen-share codec radio group.
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:42
-msgid "Screen share video codec"
-msgstr "Ekrano bendrinimo vaizdo kodekas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -28931,6 +28500,11 @@ msgstr "Bendrinkite ekranus ir langus."
 msgid "Share source"
 msgstr "Bendrinti šaltinį"
 
+#. Toggle label for sharing audio with an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+msgid "Share Stream Audio"
+msgstr "Bendrinti srauto garsą"
+
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:40
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
@@ -28939,15 +28513,6 @@ msgstr "Dovanodami prenumeratą, pasidalykite „{premiumProductName}\" patirtim
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:348
 msgid "Share theme"
 msgstr "Bendrinti temą"
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:192
-msgid "Share this link"
-msgstr "Bendrinti šią nuorodą"
-
-#. Description shown in the emoji pack invite modal.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:65
-msgid "Share this link — the pack installs when accepted."
-msgstr "Bendrinkite šią nuorodą – paketas įdiegiamas, kai priimamas."
 
 #. Privacy > Active now: confirmation modal title when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:33
@@ -28975,11 +28540,6 @@ msgstr "Bendrinti ekraną"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Bendrinkite ekraną didelės raiškos (1080p), keturių HD (1440p) arba natūralios šaltinio raiškos, iki 60 kadrų per sekundę."
-
-#. Description shown in the sticker pack invite modal.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:69
-msgid "Share your sticker pack via link."
-msgstr "Bendrinkite lipdukų paketą naudodami nuorodą."
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #: src/features/theme/components/modals/ShareThemeModal.tsx:39
@@ -29081,7 +28641,7 @@ msgstr "Spartieji klavišai dubliuojasi"
 #. User settings tab for keyboard shortcuts and custom bindings.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:18
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:175
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:128
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:123
 msgid "Shortcuts"
 msgstr "Spartieji klavišai"
 
@@ -29241,11 +28801,6 @@ msgstr "Rodyti jaustukų mygtuką"
 msgid "Show emoji reactions on messages"
 msgstr "Rodyti jaustukų reakcijas prie žinučių"
 
-#. Developer option label for exposing the staff-only Expression packs page in user settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
-msgid "Show expression packs settings"
-msgstr "Rodyti ekspresijos paketų nustatymus"
-
 #. Short label for an advanced media button preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:77
 msgid "Show favorite button"
@@ -29381,15 +28936,15 @@ msgstr "Rodyti nutildytus kanalus"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:814
+#: src/features/voice/components/VoiceSettingsMenus.tsx:815
 msgid "Show my own camera"
 msgstr "Rodyti mano kamerą"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-msgid "Show my screen share"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
+msgid "Show My Screen Share"
 msgstr "Rodyti mano ekrano bendrinimą"
 
 #. Developer option label for showing the current user as typing.
@@ -29417,9 +28972,9 @@ msgstr "Rodyti naujo įrenginio modalinį langą"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether participants without video are shown in the grid.
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:828
+#: src/features/voice/components/VoiceSettingsMenus.tsx:829
 msgid "Show non-video participants"
 msgstr "Rodyti nedalyvaujančius vaizdo pokalbyje"
 
@@ -29449,7 +29004,7 @@ msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Rodyti dalyvių garsumo slankiklius balsiniuose meniu kiekvienam įrenginiui"
 
 #. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
 msgid "Show profile timezone settings"
 msgstr "Rodyti profilio laiko zonos nustatymus"
 
@@ -29681,7 +29236,7 @@ msgstr "Prisijungta"
 
 #. Settings section label for account sessions and devices.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:517
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
 msgid "Signed-in devices"
 msgstr "Prisijungę įrenginiai"
 
@@ -29759,7 +29314,7 @@ msgid "Single community mode"
 msgstr "Režimas vienai bendruomenei"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 msgid "Single layer"
 msgstr "Vienas sluoksnis"
 
@@ -29816,7 +29371,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "Praleisti išorinių nuorodų įspėjimą visiems domenams"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:148
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "Praleisti tinklo iškvietimą, kai pateikiama ataskaita programoje. Srautas vis tiek pereina prie sėkmės ekrano, kad galėtumėte išbandyti vartotojo sąsają, bet nieko iš tikrųjų nesiunčiama saugos komandai."
 
@@ -30063,12 +29618,12 @@ msgid "Social"
 msgstr "Socialiniai tinklai"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Software encoder"
 msgstr "Programinis kodavimo įrenginys"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 msgid "Software encoder quality"
 msgstr "Programinės įrangos koduoklio kokybė"
 
@@ -30393,7 +29948,7 @@ msgid "Spanish (Spain)"
 msgstr "Ispanų (Ispanija)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Spatial and temporal layers"
 msgstr "Erdviniai ir laikiniai sluoksniai"
 
@@ -30495,7 +30050,7 @@ msgstr "Rašybos tikrinimas"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:414
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:456
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
 msgid "Spellcheck"
 msgstr "Rašybos tikrinimas"
 
@@ -30683,10 +30238,6 @@ msgstr "Pradėti skambutį"
 msgid "Start camera test and configure effects"
 msgstr "Pradėti kameros testą ir konfigūruoti efektus"
 
-#: src/features/expressions/components/modals/CreatePackModal.tsx:93
-msgid "Start curating a custom emoji pack that you can share and install."
-msgstr "Pradėkite kurti pasirinktinį jaustukų paketą, kurį galėsite bendrinti ir įdiegti."
-
 #. Label for the start of a date range (inclusive). Leave blank for no lower bound.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:175
 msgid "Start date"
@@ -30696,10 +30247,6 @@ msgstr "Pradžios data"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:191
 msgid "Start date must be earlier than end date."
 msgstr "Pradžios data turi būti ankstesnė už pabaigos datą."
-
-#: src/features/voice/components/VoiceSettingsMenus.tsx:860
-msgid "Start debug logging session"
-msgstr "Pradėti derinimo registravimo seansą"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:125
@@ -30883,45 +30430,6 @@ msgstr "Lipdukų tankis"
 msgid "Sticker is too large"
 msgstr "Lipdukas per didelis"
 
-#. Kind label on a sticker pack invite embed.
-#. Short label in the authentication invite header. Keep the tone plain and specific.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/auth/flow/InviteHeader.tsx:25
-#: src/features/channel/components/InviteEmbed.tsx:88
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:61
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:105
-msgid "Sticker pack"
-msgstr "Lipdukų paketas"
-
-#. placeholder {0}: invite.pack.name
-#: src/features/invite/commands/InviteCommands.tsx:146
-msgid "Sticker pack {0} has been installed."
-msgstr "Lipdukų paketas \"{0}\" įdiegtas."
-
-#. Title of the error modal when creating a new sticker pack is rejected because the user is at the creation limit.
-#: src/features/invite/commands/InviteCommands.tsx:74
-msgid "Sticker pack creation limit reached"
-msgstr "Pasiektas lipdukų paketo kūrimo limitas"
-
-#. Modal title for the sticker pack invite share flow.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:61
-msgid "Sticker pack invite"
-msgstr "Lipdukų paketo kvietimas"
-
-#. Title of the error modal when installing a sticker pack via invite is rejected because the user is at the install limit.
-#: src/features/invite/commands/InviteCommands.tsx:65
-msgid "Sticker pack limit reached"
-msgstr "Pasiektas lipdukų paketo limitas"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings section label for sticker expression packs.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:84
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:27
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:22
-msgid "Sticker packs"
-msgstr "Lipdukų paketai"
-
 #: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:283
 msgid "Sticker slots"
 msgstr "Lipdukų vietos"
@@ -31039,6 +30547,13 @@ msgstr "Nebesidalinti balso aktyvumu su visais draugais?"
 msgid "Stop speaking"
 msgstr "Nebekalbėti"
 
+#. Danger action that stops the active screen share.
+#. Voice screen share menu action that stops the current user stream.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:19
+msgid "Stop Streaming"
+msgstr "Sustabdyti srautą"
+
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31
 msgid "Stop trusting all links?"
@@ -31050,7 +30565,7 @@ msgid "Stop watching"
 msgstr "Stabdyti žiūrėjimą"
 
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
-#: src/features/voice/components/VoiceControlBar.tsx:151
+#: src/features/voice/components/VoiceControlBar.tsx:147
 msgid "Stop watching stream"
 msgstr "Stabdyti srauto žiūrėjimą"
 
@@ -31088,10 +30603,15 @@ msgstr "Srautas paslėptas"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "Tiesioginės transliacijos peržiūra"
+
+#. Compact submenu label for changing the resolution and frame rate of an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+msgid "Stream Quality"
+msgstr "Srauto kokybė"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
@@ -31302,12 +30822,12 @@ msgid "Suspend"
 msgstr "Pristabdyti"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:177
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
 msgid "SVC mode"
 msgstr "SVC režimas"
 
@@ -31757,7 +31277,7 @@ msgid "Template URL"
 msgstr "Šablono URL"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Temporal layers"
 msgstr "Laiko sluoksniai"
 
@@ -31818,7 +31338,7 @@ msgstr "Išbandykite URL išskleidimą ir atvaizduotus įterpimus"
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
 msgid "Text"
 msgstr "Tekstas"
 
@@ -32001,11 +31521,6 @@ msgstr "Šis pranešimas dingo arba praradote prieigą prie pokalbio."
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:42
 msgid "That's all of them."
 msgstr "Tai viskas."
-
-#. End-of-list body text in the scheduled messages popout when all scheduled messages are visible.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:56
-msgid "That's everything in the queue."
-msgstr "Tai viskas, kas yra eilėje."
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
@@ -32671,7 +32186,7 @@ msgid "This invite has unlimited uses."
 msgstr "Šis kvietimas turi neribotą naudojimą."
 
 #. Helper text shown on an invite embed while streaming privacy is active.
-#: src/features/channel/components/InviteEmbed.tsx:141
+#: src/features/channel/components/InviteEmbed.tsx:112
 msgid "This invite is hidden while sharing is protected."
 msgstr "Šis kvietimas paslėptas, kol bendrinimas yra apsaugotas."
 
@@ -33167,7 +32682,7 @@ msgstr "Laikas"
 #. Settings section label for app time display format.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:374
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "Laiko formatas"
 
@@ -33393,11 +32908,6 @@ msgstr "Įjungti / išjungti garso plokštę"
 #: src/features/input/state/input_keybind/shared.ts:181
 msgid "Toggle the sticker picker"
 msgstr "Perjungti lipdukų parinkiklį"
-
-#. Action that toggles whether the pack invite is unique to the recipient.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:73
-msgid "Toggle unique invite"
-msgstr "Perjungti unikalų kvietimą"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:305
@@ -33731,7 +33241,7 @@ msgid "Try another search term, or pick a different category or language."
 msgstr "Pabandykite kitą paieškos žodį arba pasirinkite kitą kategoriją ar kalbą."
 
 #. Helper text on an unknown invite embed suggesting the user request a fresh invite.
-#: src/features/channel/components/InviteEmbed.tsx:129
+#: src/features/channel/components/InviteEmbed.tsx:100
 msgid "Try asking for a new invite."
 msgstr "Pabandykite paprašyti naujo kvietimo."
 
@@ -33754,7 +33264,7 @@ msgstr "Bandyti redaguoti žinutę dar kartą."
 msgid "TRY gifts are one-time payments. Cards charged in TRY still need to be issued in Türkiye for the purchase to stay eligible."
 msgstr "TRY dovanos – tai vienkartiniai mokėjimai. Kortelės, apmokestinamos TRY, vis tiek turi būti išduotos Turkijoje, kad pirkinys išliktų tinkamas."
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:254
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:252
 msgid "Try searching for something like \"theme\", \"notifications\", or \"privacy\""
 msgstr "Pabandykite ieškoti \"tema\", \"pranešimai\" arba \"privatumas\""
 
@@ -33804,7 +33314,7 @@ msgstr "Išjungti"
 
 #. Bulk voice action that turns off the camera on every active device of the current user.
 #. Voice menu action that turns off every active device/session's camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:90
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:114
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:93
 msgid "Turn off all device cameras"
 msgstr "Išjungti visas įrenginio kameras"
@@ -33820,14 +33330,14 @@ msgstr "Išjungti kamerą"
 
 #. Voice menu action that turns off the camera on a single device of the current user.
 #. Voice menu action that turns off the camera on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:81
 msgid "Turn off device camera"
 msgstr "Išjungti įrenginio kamerą"
 
 #. Voice menu action that ends the screen share on a single device of the current user.
 #. Voice menu action that stops screen sharing or streaming on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:85
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:85
 msgid "Turn off device stream"
 msgstr "Išjungti įrenginio srautą"
@@ -33839,7 +33349,7 @@ msgstr "Išjungti privačius pranešimus ir draugų užklausas visame serverio e
 
 #. Voice menu action that ends the current user screen share.
 #. Voice menu action that stops the current user's screen share or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:89
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:69
 msgid "Turn off stream"
 msgstr "Išjungti srautą"
@@ -34019,16 +33529,6 @@ msgstr "Jungtinės Karalystės įstatymai reikalauja patikrinti turinį suaugusi
 msgid "Ukrainian"
 msgstr "ukrainiečių"
 
-#. Generic title for the error modal when an emoji pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:99
-msgid "Unable to install emoji pack"
-msgstr "Nepavyko įdiegti jaustukų paketo"
-
-#. Generic title for the error modal when a sticker pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:103
-msgid "Unable to install sticker pack"
-msgstr "Nepavyko įdiegti lipdukų paketo"
-
 #. Error-state title in the activity log tab when fetching log entries failed.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:126
 msgid "Unable to load activity logs"
@@ -34037,11 +33537,6 @@ msgstr "Nepavyko įkelti įvykių žurnalo"
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:95
 msgid "Unable to load applications"
 msgstr "Nepavyko įkelti programų"
-
-#. Error message in the expression packs tab.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:36
-msgid "Unable to load pack information."
-msgstr "Nepavyko įkelti paketo informacijos."
 
 #. Error message in the channel and chat textual attachment code panel.
 #. Error message in the channel and chat textual attachment code panel.
@@ -34265,7 +33760,7 @@ msgstr "Pašalinti iš mėgstamiausių"
 
 #. Voice call layout action that removes focus from the currently pinned participant.
 #. Voice layout menu action that removes the focused participant or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:25
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:97
 msgid "Unfocus"
 msgstr "Nebefokusuoti"
@@ -34284,7 +33779,7 @@ msgstr "Išskleisti"
 
 #. Settings section label for the embed debugger URL input.
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:70
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Unfurl debugger"
 msgstr "Įterpimo derinimo priemonės URL"
 
@@ -34292,10 +33787,6 @@ msgstr "Įterpimo derinimo priemonės URL"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:89
 msgid "Unicode emojis"
 msgstr "Unikodo jaustukai"
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:180
-msgid "Unique invite"
-msgstr "Unikalus kvietimas"
 
 #. Codec description in the screen share codec policy menu, used for the universal fallback codec.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:20
@@ -34350,7 +33841,7 @@ msgstr "Nežinoma data"
 #. Fallback device or operating-system label in the devices tab when session client data is unavailable.
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:43
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:44
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
@@ -34376,7 +33867,7 @@ msgid "Unknown gift"
 msgstr "Nežinoma dovana"
 
 #. Title shown on an invite embed when the invite code resolves to nothing (expired, revoked, or invalid).
-#: src/features/channel/components/InviteEmbed.tsx:125
+#: src/features/channel/components/InviteEmbed.tsx:96
 msgid "Unknown invite"
 msgstr "Nežinomas kvietimas"
 
@@ -34428,7 +33919,7 @@ msgstr "nežinomas naudotojas"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:161
+#: src/features/voice/components/VoiceParticipantTile.tsx:162
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Nežinomas naudotojas"
@@ -34449,13 +33940,6 @@ msgstr "unknown-mention"
 #: src/features/messaging/utils/markdown/Plaintext.ts:76
 msgid "unknown-role"
 msgstr "unknown-role"
-
-#. Option label representing an unlimited count.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:29
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:32
-msgid "Unlimited"
-msgstr "Neribota"
 
 #. Audit log community feature label for unlimited custom emoji capacity.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
@@ -34525,7 +34009,7 @@ msgid "Unmute"
 msgstr "Įjungti garsą"
 
 #. Voice control button label to turn the user's microphone back on.
-#: src/features/voice/components/VoiceControlBar.tsx:121
+#: src/features/voice/components/VoiceControlBar.tsx:117
 msgctxt "voice-control-action"
 msgid "Unmute"
 msgstr "Įjungti garsą"
@@ -34613,7 +34097,7 @@ msgstr "Nepažymėtas kanalas"
 #. Fallback display name for a group DM with no name set.
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:72
+#: src/features/channel/components/InviteEmbed.tsx:63
 #: src/features/channel/state/ChannelDisplayName.ts:19
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
@@ -34692,7 +34176,7 @@ msgstr "neskaityta"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the inbox popout filtering to channels with unread messages.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:32
+#: src/features/messaging/components/popouts/InboxPopout.tsx:30
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:77
 msgid "Unread"
@@ -34828,7 +34312,7 @@ msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They sho
 msgstr "Iki {DISCOVERY_MAX_TAGS} žymų padeda žmonėms rasti jūsų bendruomenę. Jos rodomos paieškoje."
 
 #. Feature comparison table value label. Shown in the restricted or stock column for a text-valued perk. Format includes a resolution token (4K) and a framerate token that should not be translated.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:91
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:87
 msgid "Up to 4K/60fps"
 msgstr "Iki 4K/60 kadr./s"
 
@@ -34903,11 +34387,6 @@ msgstr "Atnaujintos taisyklės"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:23
 msgid "Updated saved media"
 msgstr "Išsaugota medija atnaujinta"
-
-#. Label in the messaging commands. {scheduledTimeLabel} is the localized scheduled date and time.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:53
-msgid "Updated scheduled message for {scheduledTimeLabel}"
-msgstr "Atnaujintas suplanuotas pranešimas, skirtas {scheduledTimeLabel}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:544
 msgid "Updated the avatar."
@@ -35165,7 +34644,7 @@ msgid "Uploading emojis"
 msgstr "Įkeliami jaustukai"
 
 #. Description for the maximum screen share bitrate select. Keep WebRTC literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
 msgid "Upper bitrate cap before WebRTC adapts to the network."
 msgstr "Maksimalus duomenų srautas prieš pradedant WebRTC prisitaikyti prie tinklo."
 
@@ -35294,7 +34773,7 @@ msgid "Use an email you can open. We will send a code there."
 msgstr "Naudokite el. paštą, kurį galite atidaryti. Ten atsiųsime kodą."
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
 msgid "Use animated emojis"
 msgstr "Naudoti animuotus jaustukus"
 
@@ -35596,11 +35075,6 @@ msgstr "Naudojama tik šioje bendruomenėje."
 msgid "User"
 msgstr "Vartotojas"
 
-#. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "User actions"
-msgstr "Vartotojo veiksmai"
-
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:251
 msgid "User appears underage, or is involved in grooming or child exploitation."
@@ -35677,7 +35151,7 @@ msgid "User record"
 msgstr "Vartotojo įrašas"
 
 #. Root label for the current user settings modal and settings search paths.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:352
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:341
 msgid "User settings"
 msgstr "Naudotojo nustatymai"
 
@@ -36215,7 +35689,7 @@ msgid "Video progress"
 msgstr "Vaizdo įrašo eiga"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
 msgid "Video quality"
 msgstr "Vaizdo kokybė"
 
@@ -36604,7 +36078,7 @@ msgstr "Balso (suaugusiesiems)"
 
 #. User settings tab for microphone, speaker, camera, and call stats.
 #. User settings tab for microphone, speaker, camera, and call stats.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:124
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:119
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:30
 msgid "Voice & video"
 msgstr "Garso ir vaizdo įrašai"
@@ -36861,7 +36335,7 @@ msgid "Wait here"
 msgstr "Palaukite čia"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:56
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
 msgstr "Laukiama prisijungimo..."
 
@@ -37362,11 +36836,6 @@ msgstr "Ko ieškoti."
 msgid "What's happening?"
 msgstr "Kas naujo?"
 
-#. Form helper text for an expression pack description input.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:50
-msgid "What's in this pack?"
-msgstr "Kas yra šiame pakete?"
-
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
@@ -37551,7 +37020,7 @@ msgid "Window state"
 msgstr "Lango būsena"
 
 #. User settings tab label shown on Windows desktop builds. Refers to the Microsoft Windows OS.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:74
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:69
 msgid "Windows app"
 msgstr "Programos nustatymai (Windows)"
 
@@ -37873,16 +37342,6 @@ msgstr "Negalite redaguoti šio pranešimo."
 msgid "You can't grant a permission you don't have in this channel."
 msgstr "Negalite suteikti leidimo, kurio neturite šiame kanale."
 
-#. Body of the error modal when installing an emoji pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:91
-msgid "You can't install this emoji pack."
-msgstr "Negalite įdiegti šio jaustukų paketo."
-
-#. Body of the error modal when installing a sticker pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:95
-msgid "You can't install this sticker pack."
-msgstr "Negalite įdiegti šio lipdukų paketo."
-
 #. Title of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:38
 msgid "You can't join this community"
@@ -37942,8 +37401,8 @@ msgstr "Šioje bendruomenėje negalite siųsti žinučių."
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:65
-#: src/features/voice/components/VoiceControlBar.tsx:141
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
+#: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "Negalite bendrinti ekrano šiame kanale"
 
@@ -37956,8 +37415,8 @@ msgstr "Negalite kalbėti šiame kanale"
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:74
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
-#: src/features/voice/components/VoiceControlBar.tsx:131
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
+#: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "Šiame kanale negalite įjungti kameros"
 
@@ -38119,10 +37578,6 @@ msgstr "Dar nepakankamai ilgai esate šios bendruomenės narys, kad galėtumėte
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:127
 msgid "You haven't blocked anyone yet."
 msgstr "Dar nieko neužblokavote."
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:343
-msgid "You haven't created any packs yet."
-msgstr "Dar nesukūrėte jokių rinkinių."
 
 #. Intro copy in the keyboard navigation modal. {productName} is the app name.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:26
@@ -38345,13 +37800,6 @@ msgstr "Pasiekėte {bookmarksText}. Pašalinkite vieną, kad pridėtumėte kitą
 msgid "You're at the cap of {freeItemsText} — your instance admin sets this limit."
 msgstr "Pasiekėte {freeItemsText} limitą – šį limitą nustato jūsų egzemplioriaus administratorius."
 
-#. Fallback body of the emoji pack creation-limit error modal when no exact limit is known.
-#. Fallback body of the sticker pack creation-limit error modal when no exact limit is known.
-#: src/features/invite/commands/InviteCommands.tsx:61
-#: src/features/invite/commands/InviteCommands.tsx:79
-msgid "You're at the creation limit. Delete one to create another."
-msgstr "Pasiekėte kūrimo limitą. Norėdami sukurti naują, ištrinkite vieną."
-
 #. Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
 #: src/features/app/components/alerts/MaxBookmarksModal.tsx:30
 msgid "You're at the free cap of {bookmarksText}. {premiumProductName} bumps you up to {premiumBookmarksText} — or remove one to add another."
@@ -38362,13 +37810,6 @@ msgstr "Pasiekėte nemokamą {bookmarksText} limitą. Su \"{premiumProductName}\
 msgid "You're at the free cap of {freeItemsText}. {premiumProductName} bumps you up to {premiumItemsText}."
 msgstr "Pasiekėte nemokamą {freeItemsText} limitą. Su \"{premiumProductName}\" limitas padidėja iki {premiumItemsText}."
 
-#. Fallback body of the emoji pack install-limit error modal when no exact limit is known.
-#. Fallback body of the sticker pack install-limit error modal when no exact limit is known.
-#: src/features/invite/commands/InviteCommands.tsx:52
-#: src/features/invite/commands/InviteCommands.tsx:70
-msgid "You're at the install limit. Remove one to add another."
-msgstr "Pasiekėte diegimo limitą. Pašalinkite vieną, kad pridėtumėte kitą."
-
 #. Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:8
 msgid "You're banned"
@@ -38378,11 +37819,6 @@ msgstr "Jūs užblokuotas"
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx:19
 msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Jums taikomas užklausų ribojimas. Palaukite {duration} prieš bandydami dar kartą."
-
-#. End-of-list title in the scheduled messages popout when all scheduled messages are visible. Tone can be friendly.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:51
-msgid "You're caught up"
-msgstr "Viskas peržiūrėta"
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
@@ -38497,16 +37933,12 @@ msgstr "Neseniai jau pasinaudojote savitarnos pinigų grąžinimo funkcija. Pini
 msgid "You've arrived, {username}! Let's get started."
 msgstr "Sveiki atvykę, {username}! Pradėkime."
 
-#: src/features/auth/flow/InviteHeader.tsx:200
-msgid "You've been invited to install"
-msgstr "Jus pakvietė įdiegti"
-
-#: src/features/auth/flow/InviteHeader.tsx:96
-#: src/features/auth/flow/InviteHeader.tsx:299
+#: src/features/auth/flow/InviteHeader.tsx:69
+#: src/features/auth/flow/InviteHeader.tsx:213
 msgid "You've been invited to join"
 msgstr "Jus pakvietė prisijungti"
 
-#: src/features/auth/flow/InviteHeader.tsx:151
+#: src/features/auth/flow/InviteHeader.tsx:124
 msgid "You've been invited to join a group DM by"
 msgstr "Jus pakvietė prisijungti prie grupės pokalbio"
 
@@ -38586,7 +38018,7 @@ msgstr "Jūsų „{premiumProductName}\" prenumerata baigėsi. Praradote visas �
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Jūsų \"{productName}\" seanso laikas baigėsi. Prisijunkite iš naujo, kad tęstumėte šios programos autorizavimą."
 
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:205
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:200
 msgid "Your account"
 msgstr "Jūsų paskyra"
 

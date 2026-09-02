@@ -29,11 +29,6 @@ msgstr "(已編輯)"
 msgid "(failed to load)"
 msgstr "(載入失敗)"
 
-#. Placeholder content text shown for scheduled messages with neither text nor attachments. Keep the parentheses.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:38
-msgid "(no content)"
-msgstr "(無內容)"
-
 #: src/features/app/components/pages/YouPage.tsx:189
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:899
 msgid "(only visible to you)"
@@ -455,7 +450,7 @@ msgstr "{count, plural, one {展開（# 行）} other {展開（# 行）}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {展開 (# 列)} other {展開 (# 列)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:303
+#: src/features/voice/components/VoiceParticipantTile.tsx:304
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {展開其他 {count} 個裝置} other {展開其他 {count} 個裝置}}"
 
@@ -463,8 +458,8 @@ msgstr "{count, plural, one {展開其他 {count} 個裝置} other {展開其他
 msgid "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
 msgstr "{count, plural, one {群組私訊 · # 位成員} other {群組私訊 · # 位成員}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:252
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:273
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:274
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:295
 msgid "{count, plural, one {Hide # device} other {Hide # devices}}"
 msgstr "{count, plural, one {隱藏 # 個裝置} other {隱藏 # 個裝置}}"
 
@@ -476,7 +471,7 @@ msgstr "{count, plural, one {通話中} other {# 人通話中}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {加入視訊通話（#位參與者）} other {加入視訊通話（#位參與者）}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:620
+#: src/features/voice/components/VoiceParticipantTile.tsx:621
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {繼續觀看 # 個直播並新增這個} other {繼續觀看 # 個直播並新增這個}}"
 
@@ -492,8 +487,8 @@ msgstr "{count, plural, one {撤銷 # 個應用程式} other {撤銷 # 個應用
 msgid "{count, plural, one {sent # attachment} other {sent # attachments}}"
 msgstr "{count, plural, one {已傳送 # 個附件} other {已傳送 # 個附件}}"
 
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:259
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:280
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:281
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:302
 msgid "{count, plural, one {Show # device} other {Show # devices}}"
 msgstr "{count, plural, one {顯示 # 個裝置} other {顯示 # 個裝置}}"
 
@@ -534,22 +529,6 @@ msgstr "{count, plural, one {您已在使用此語音頻道允許的一個連線
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:62
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {您已達到儲存媒體項目的上限。請移除一個以新增另一個。} other {您已達到儲存媒體項目的上限。請移除一個以新增另一個。}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:401
-msgid "{count, plural, one {You're at the limit of # emoji pack. Delete one to create another.} other {You're at the limit of # emoji packs. Delete one to create another.}}"
-msgstr "{count, plural, one {您已達到表情符號包的數量上限。請刪除一個以建立新的。} other {您已達到表情符號包的數量上限。請刪除一個以建立新的。}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:387
-msgid "{count, plural, one {You're at the limit of # installed emoji pack. Remove one to add another.} other {You're at the limit of # installed emoji packs. Remove one to add another.}}"
-msgstr "{count, plural, one {您已達到 # 個已安裝表情符號包的上限。請移除一個以新增另一個。} other {您已達到 # 個已安裝表情符號包的上限。請移除一個以新增另一個。}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:419
-msgid "{count, plural, one {You're at the limit of # installed sticker pack. Remove one to add another.} other {You're at the limit of # installed sticker packs. Remove one to add another.}}"
-msgstr "{count, plural, one {您已達到 # 個貼圖包的安裝上限。請移除一個以新增其他貼圖包。} other {您已達到 # 個貼圖包的安裝上限。請移除一個以新增其他貼圖包。}}"
-
-#: src/features/invite/commands/InviteCommands.tsx:433
-msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
-msgstr "{count, plural, one {您已達到貼圖包數量上限。請刪除一個以建立新的。} other {您已達到貼圖包數量上限。請刪除一個以建立新的。}}"
 
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx:24
 msgid "{count, plural, one {You've reached the maximum number of communities you can join (# community). Leave a community before joining another one.} other {You've reached the maximum number of communities you can join (# communities). Leave a community before joining another one.}}"
@@ -750,14 +729,14 @@ msgstr "{formats}。最大 {maxSize}。建議：{recommendedSize}"
 msgid "{formats}. Max {maxSize}. Recommended: {recommendedSize}. {note}"
 msgstr "{formats}。最大 {maxSize}。建議：{recommendedSize}。{note}"
 
-#: src/features/auth/flow/InviteHeader.tsx:117
-#: src/features/auth/flow/InviteHeader.tsx:162
-#: src/features/auth/flow/InviteHeader.tsx:335
+#: src/features/auth/flow/InviteHeader.tsx:90
+#: src/features/auth/flow/InviteHeader.tsx:135
+#: src/features/auth/flow/InviteHeader.tsx:249
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{formattedMemberCount} {memberCount, plural, one {位成員} other {位成員}}"
 
-#: src/features/auth/flow/InviteHeader.tsx:111
-#: src/features/auth/flow/InviteHeader.tsx:320
+#: src/features/auth/flow/InviteHeader.tsx:84
+#: src/features/auth/flow/InviteHeader.tsx:234
 msgid "{formattedPresenceCount} online"
 msgstr "{formattedPresenceCount} 位在線上"
 
@@ -776,7 +755,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "{guildName} 頻道"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:673
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {展開 # 個其他裝置} other {展開 # 個其他裝置}}"
 
@@ -874,7 +853,7 @@ msgstr "{length} 位觀眾"
 msgid "{lineCount, plural, one {# line} other {# lines}}"
 msgstr "{lineCount, plural, one {# 行} other {# 行}}"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:145
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:143
 msgid "{matchCount, plural, one {# match} other {# matches}}"
 msgstr "{matchCount, plural, one {# 個符合項目} other {# 個符合項目}}"
 
@@ -889,7 +868,7 @@ msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName
 msgstr "在 {paymentProviderName} 結帳時，{mbWayPaymentMethod} 是一次性付款方式，因此無法用於定期訂閱。"
 
 #. Screen share bitrate option label. Mbps means megabits per second.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:167
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
 msgid "{megabits} Mbps"
 msgstr "{megabits} Mbps"
 
@@ -1105,7 +1084,7 @@ msgid "{productName} detected a potential raid in this community. Invites are pa
 msgstr "{productName} 在此社群中偵測到潛在的惡意攻擊。邀請功能已暫停，因此新使用者目前無法加入。"
 
 #. Anti-raid status message on a community invite embed. productName is the product brand name placeholder.
-#: src/features/channel/components/InviteEmbed.tsx:117
+#: src/features/channel/components/InviteEmbed.tsx:88
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName}偵測到潛在的惡意攻擊，因此新使用者目前無法加入。"
 
@@ -1225,14 +1204,14 @@ msgstr "還剩下 {remaining} 個字元。取得 {premiumProductName} 即可撰�
 msgid "{remainingSlotCount} remaining"
 msgstr "還剩 {remainingSlotCount} 個"
 
-#: src/features/channel/components/InviteEmbed.tsx:282
-#: src/features/channel/components/InviteEmbed.tsx:455
-#: src/features/channel/components/InviteEmbed.tsx:724
+#: src/features/channel/components/InviteEmbed.tsx:248
+#: src/features/channel/components/InviteEmbed.tsx:356
+#: src/features/channel/components/InviteEmbed.tsx:625
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {位成員} other {位成員}}"
 
 #. Presence summary on a community invite embed. renderedPresenceCount is a formatted count of online members.
-#: src/features/channel/components/InviteEmbed.tsx:112
+#: src/features/channel/components/InviteEmbed.tsx:83
 msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} 位在線上"
 
@@ -1630,9 +1609,7 @@ msgstr "1 則未讀訊息"
 msgid "1 unread DM"
 msgstr "1 則未讀訊息"
 
-#. Invite link use-limit option meaning the invite can be used once.
 #. Invite max-uses dropdown option for exactly one use.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:33
 #: src/features/invite/components/modals/InviteModal.tsx:60
 msgid "1 use"
 msgstr "1 次使用"
@@ -1668,16 +1645,12 @@ msgstr "1 年贈禮"
 msgid "10 minutes"
 msgstr "10 分鐘"
 
-#. Invite link use-limit option meaning the invite can be used ten times.
 #. Invite max-uses dropdown option for ten uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:41
 #: src/features/invite/components/modals/InviteModal.tsx:68
 msgid "10 uses"
 msgstr "10 次使用"
 
-#. Invite link use-limit option meaning the invite can be used 100 times.
 #. Invite max-uses dropdown option for 100 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:53
 #: src/features/invite/components/modals/InviteModal.tsx:80
 msgid "100 uses"
 msgstr "100 次使用"
@@ -1763,9 +1736,7 @@ msgctxt "adaptive-screen-share"
 msgid "240p"
 msgstr "240p"
 
-#. Invite link use-limit option meaning the invite can be used 25 times.
 #. Invite max-uses dropdown option for 25 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:45
 #: src/features/invite/components/modals/InviteModal.tsx:72
 msgid "25 uses"
 msgstr "25 次使用"
@@ -1840,16 +1811,12 @@ msgstr "5 天"
 msgid "5 minutes"
 msgstr "5 分鐘"
 
-#. Invite link use-limit option meaning the invite can be used five times.
 #. Invite max-uses dropdown option for five uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:37
 #: src/features/invite/components/modals/InviteModal.tsx:64
 msgid "5 uses"
 msgstr "5 次使用"
 
-#. Invite link use-limit option meaning the invite can be used 50 times.
 #. Invite max-uses dropdown option for 50 uses.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:49
 #: src/features/invite/components/modals/InviteModal.tsx:76
 msgid "50 uses"
 msgstr "50 次使用"
@@ -2083,13 +2050,6 @@ msgstr "接受邀請"
 msgid "Accept the friend request from {userName}?"
 msgstr "接受來自 {userName} 的好友邀請嗎？"
 
-#. Helper text on a pack invite embed explaining that accepting installs the pack.
-#. Note shown on expression pack invites before accepting.
-#: src/features/channel/components/InviteEmbed.tsx:100
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:81
-msgid "Accepting this invite installs the pack automatically."
-msgstr "接受此邀請將會自動安裝此包。"
-
 #. Short label in the notification utils helper. Keep it concise.
 #: src/features/notification/utils/NotificationUtils.ts:32
 msgid "Access granted"
@@ -2110,7 +2070,7 @@ msgstr "存取您的基本個人檔案資訊（使用者名稱、大頭貼等）
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:93
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:66
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:61
 msgid "Accessibility"
 msgstr "協助工具"
 
@@ -2124,7 +2084,7 @@ msgstr "無障礙即時區域"
 #. User settings tab for account login, password, MFA, and security.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:11
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:129
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:95
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:90
 msgid "Account"
 msgstr "帳號"
 
@@ -2180,7 +2140,7 @@ msgstr "帳號太新"
 #. Required-action modal title shown when an account-level verification step is required to proceed.
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:8
-#: src/features/invite/commands/InviteCommands.tsx:37
+#: src/features/invite/commands/InviteCommands.tsx:35
 msgid "Account verification required"
 msgstr "需要驗證帳號"
 
@@ -2461,7 +2421,7 @@ msgid "Add an account to continue."
 msgstr "新增帳號以繼續。"
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:42
+#: src/features/invite/commands/InviteCommands.tsx:40
 msgid "Add an email and password to your account first."
 msgstr "請先為你的帳號新增電子郵件和密碼。"
 
@@ -2771,7 +2731,7 @@ msgid "Address"
 msgstr "地址"
 
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "新增 H.264 以支援混合型客戶端。會增加更多編碼工作量。"
 
@@ -2827,11 +2787,9 @@ msgstr "管理員已暫停邀請 — 您目前無法加入。"
 #. Collapsed-by-default group at the end of the community overview tab holding less common settings.
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
-#. Voice participant context menu submenu label for IDs and diagnostics.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:145
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:140
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:60
 msgid "Advanced"
 msgstr "進階"
@@ -2842,7 +2800,7 @@ msgid "Advanced video settings"
 msgstr "進階影片設定"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:100
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "Advertise a capped decode codec to force publisher migration"
 msgstr "廣告一個有上限的解碼轉碼器，以強制發佈者遷移"
 
@@ -3065,6 +3023,13 @@ msgstr "允許所有人查看您個人檔案中的此連結"
 msgid "Allow anyone who can view your full profile to see your profile local time"
 msgstr "允許任何可檢視您完整個人檔案的人，查看您個人檔案的當地時間"
 
+#. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:236
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+msgid "Allow AV1 for screen sharing"
+msgstr "允許 AV1 用於螢幕共享"
+
 #. Toggle label that allows DMs from bots in this community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:81
 msgid "Allow bot direct messages"
@@ -3111,6 +3076,13 @@ msgstr "允許彈性的文字頻道名稱"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:56
 msgid "Allow for all communities"
 msgstr "允許所有社群"
+
+#. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:240
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+msgid "Allow H.265 (HEVC) for screen sharing"
+msgstr "允許使用 H.265 (HEVC) 進行螢幕分享"
 
 #: src/features/connection/components/modals/EditConnectionModal.tsx:95
 msgid "Allow members from communities you're in to see this connection"
@@ -3218,7 +3190,7 @@ msgid "Already have an account?"
 msgstr "已經有帳號了？"
 
 #. Status label on a group DM invite embed when the current user is already a member.
-#: src/features/channel/components/InviteEmbed.tsx:76
+#: src/features/channel/components/InviteEmbed.tsx:67
 msgid "Already joined"
 msgstr "已加入"
 
@@ -3426,7 +3398,7 @@ msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "動畫化頭像 ({animatedAvatarFormats}) 需要 {premiumProductName}。"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
 msgid "Animated avatars & profile banners"
 msgstr "動態大頭貼和個人檔案封面"
 
@@ -3712,7 +3684,7 @@ msgstr "App 圖示標記"
 msgid "App language: {format}"
 msgstr "應用程式語言：{format}"
 
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:209
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:204
 msgid "App settings"
 msgstr "應用程式設定"
 
@@ -3739,7 +3711,7 @@ msgstr "App 縮放等級"
 #. Advanced settings category tag.
 #. User settings tab for app appearance and layout options.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:13
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:116
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:111
 msgid "Appearance"
 msgstr "外觀設定"
 
@@ -3812,8 +3784,8 @@ msgstr "應用程式已成功更新"
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:90
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:129
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:74
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:70
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:65
 msgid "Applications"
 msgstr "應用程式"
 
@@ -3899,7 +3871,7 @@ msgid "Are you sure you want to delete every message in your personal notes? Thi
 msgstr "確定要刪除個人記事中的所有訊息嗎？這將永久移除所有訊息和附加檔案，此動作無法復原。"
 
 #. placeholder {0}: selectedRole.name
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:410
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
 msgid "Are you sure you want to delete the <0>{0}</0> role? Any members with this role will no longer have it."
 msgstr "確定要刪除「<0>{0}</0>」身分組嗎？擁有此身分組的成員將不再擁有此身分組。"
 
@@ -4080,11 +4052,6 @@ msgstr "附件模擬"
 msgid "Attachment mocks"
 msgstr "附件模擬"
 
-#. Placeholder content text shown for scheduled messages that have attachments but no text content.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:34
-msgid "Attachment only message"
-msgstr "僅有附加檔案的訊息"
-
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual attachment preview modal. Keep it concise.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet.tsx:27
@@ -4112,9 +4079,7 @@ msgstr "無法上傳附件"
 msgid "Attachment: {filename}"
 msgstr "附件：{filename}"
 
-#. Label in the scheduled message row preview indicating that attachments are included.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:43
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:34
 msgid "Attachments"
 msgstr "附加檔案"
@@ -4238,7 +4203,7 @@ msgid "Audio settings"
 msgstr "語音設定"
 
 #. Voice control button label for microphone and speaker settings.
-#: src/features/voice/components/VoiceControlBar.tsx:146
+#: src/features/voice/components/VoiceControlBar.tsx:142
 msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "語音設定"
@@ -4344,7 +4309,7 @@ msgid "Authorized"
 msgstr "已授權"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:22
 msgid "Authorized applications"
 msgstr "已授權的應用程式"
 
@@ -4358,8 +4323,8 @@ msgstr "已授權的應用程式"
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:506
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:148
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:107
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:102
 msgid "Authorized apps"
 msgstr "已授權的應用程式"
 
@@ -4442,7 +4407,6 @@ msgid "Autocomplete suggestion: {label}, {selectedOptionPosition} of {resultCoun
 msgstr "自動完成建議：{label}，{selectedOptionPosition} / {resultCount}"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#. Label for the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
@@ -4451,11 +4415,10 @@ msgstr "自動完成建議：{label}，{selectedOptionPosition} / {resultCount}"
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:126
@@ -4467,6 +4430,11 @@ msgstr "自動"
 msgctxt "rtc-region-value"
 msgid "Automatic"
 msgstr "自動"
+
+#. Option label for the screen-share codec select. codec is the automatically selected codec label.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:222
+msgid "Automatic ({codec})"
+msgstr "自動 ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -4494,96 +4462,6 @@ msgstr "自動朗讀訊息"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
 msgid "Automatic start"
 msgstr "自動啟動"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep Firefox as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:8
-msgid "Automatic would use {codecName} because Firefox screen sharing works most reliably with it."
-msgstr "自動模式會使用 {codecName}，因為 Firefox 螢幕分享功能使用此編解碼器時最穩定。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:70
-msgid "Automatic would use {codecName} because no hardware encoder is available and this browser exposes H.265."
-msgstr "自動模式會使用 {codecName}，因為沒有可用的硬體編碼器，且此瀏覽器支援 H.265。"
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:75
-msgid "Automatic would use {codecName} because no hardware encoder is available and your computer exposes H.265."
-msgstr "自動模式會使用 {codecName}，因為沒有可用的硬體編碼器，且您的電腦支援 H.265。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:90
-msgid "Automatic would use {codecName} because no higher-quality encoder is available and H.264 is compatible."
-msgstr "自動模式會使用 {codecName}，因為沒有更高品質的編碼器可用，且 H.264 相容。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep OpenH264 and Linux literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:101
-msgid "Automatic would use {codecName} because no video encoder is exposed. On Linux, OpenH264 may need to be installed."
-msgstr "由於沒有可用的視訊編碼器，自動模式會使用 {codecName}。在 Linux 上，可能需要安裝 OpenH264。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:60
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes AV1."
-msgstr "自動模式會使用 {codecName}，因為偏好軟體編碼，且此瀏覽器支援 AV1。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:80
-msgid "Automatic would use {codecName} because software encoding is preferred and this browser exposes VP9."
-msgstr "自動模式會使用 {codecName}，因為偏好軟體編碼，且此瀏覽器支援 VP9。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:95
-msgid "Automatic would use {codecName} because software encoding is preferred and VP8 is the safest software fallback."
-msgstr "自動模式會使用 {codecName}，因為軟體編碼是首選，而 VP8 是最安全的軟體備用方案。"
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:65
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes AV1."
-msgstr "自動模式會使用 {codecName}，因為軟體編碼是首選，而且您的電腦支援 AV1。"
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:85
-msgid "Automatic would use {codecName} because software encoding is preferred and your computer exposes VP9."
-msgstr "自動模式會使用 {codecName}，因為偏好軟體編碼，且您的電腦支援 VP9。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:25
-msgid "Automatic would use {codecName} because this browser does not expose H.264, so VP8 is the safest fallback."
-msgstr "自動選項會使用 {codecName}，因為此瀏覽器未公開 H.264，因此 VP8 是最安全的備用選項。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:13
-msgid "Automatic would use {codecName} because this browser supports it and it is the best fallback outside Chromium."
-msgstr "自動選項會使用 {codecName}，因為此瀏覽器支援此編解碼器，而且這是 Chromium 以外的最佳備用選項。"
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP8 and should not be translated. Keep codec names literal.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:30
-msgid "Automatic would use {codecName} because your computer does not expose H.264, so VP8 is the safest fallback."
-msgstr "自動模式會使用 {codecName}，因為您的電腦未提供 H.264，所以 VP8 是最安全的備用選項。"
-
-#. Desktop-client description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep Chromium as a product name.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:19
-msgid "Automatic would use {codecName} because your computer supports it and it is the best fallback outside Chromium."
-msgstr "自動模式會使用 {codecName}，因為您的電腦支援此編解碼器，而且這是 Chromium 以外的最佳備用選項。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as VP9 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:54
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it gives strong screen-share quality."
-msgstr "自動模式會使用 {codecName}，因為您的 GPU 可以透過硬體編碼，並提供優異的螢幕分享品質。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.264 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:42
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware and it is the most compatible screen-share default."
-msgstr "自動模式會使用 {codecName}，因為您的 GPU 可以透過硬體編碼，而且這是最相容的螢幕分享預設值。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as H.265 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:48
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with excellent compression and low CPU usage."
-msgstr "自動選項會使用 {codecName}，因為您的 GPU 可以透過硬體編碼，提供出色的壓縮和低 CPU 使用率。"
-
-#. Description shown under the Automatic option in the screen-share codec radio group. {codecName} is a codec label such as AV1 and should not be translated. Keep GPU as an acronym.
-#: src/features/user/components/modals/tabs/components/CodecSelectorDescription.ts:36
-msgid "Automatic would use {codecName} because your GPU can encode it in hardware, with the best compression for screen sharing."
-msgstr "自動模式會使用 {codecName}，因為您的 GPU 能以硬體編碼，並提供螢幕分享的最佳壓縮效果。"
 
 #. Short label in the animation tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:52
@@ -4647,6 +4525,16 @@ msgstr "自動已讀"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:307
 msgid "Autoscrolling"
 msgstr "自動捲動"
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
+msgid "AV1"
+msgstr "AV1"
+
+#. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:226
+msgid "AV1 (requires opt-in)"
+msgstr "AV1 (需要選擇加入)"
 
 #. Label for the available desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
@@ -4875,7 +4763,7 @@ msgid "Badge"
 msgstr "徽章"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Balanced"
 msgstr "平衡"
 
@@ -4917,7 +4805,7 @@ msgstr "封鎖將於 {0} 到期。"
 #: src/features/moderation/components/modals/BanMemberModal.tsx:270
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:118
 msgid "Ban member"
 msgstr "停用成員"
 
@@ -5046,7 +4934,7 @@ msgstr "1 到 32 個字元"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:27
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:207
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:202
 msgid "Billing"
 msgstr "帳單"
 
@@ -5099,7 +4987,7 @@ msgid "Biometrics"
 msgstr "生物辨識"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:181
 msgid "Bitrate"
 msgstr "位元率"
 
@@ -5181,8 +5069,8 @@ msgstr "已封鎖"
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:210
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:6
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:152
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:26
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:58
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:18
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:53
 msgid "Blocked users"
 msgstr "已封鎖的用戶"
 
@@ -5275,7 +5163,7 @@ msgstr "已加入書籤。"
 #. Tab label in the inbox popout listing the user bookmarks.
 #: src/features/channel/components/modals/BookmarksBottomSheet.tsx:33
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
-#: src/features/messaging/components/popouts/InboxPopout.tsx:36
+#: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
 msgstr "書籤"
 
@@ -5535,10 +5423,6 @@ msgstr "霸凌、重複騷擾、跟蹤或針對性騷擾。"
 msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
 msgstr "霸凌、威脅、仇恨、暴力、突襲，或助長自殘的內容。"
 
-#: src/features/expressions/components/modals/CreatePackModal.tsx:95
-msgid "Bundle your favorite stickers into a pack you can distribute."
-msgstr "將你最愛的貼圖整理成一個貼圖包，方便分享。"
-
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:45
 msgid "Busy right now"
@@ -5761,7 +5645,7 @@ msgid "Cameras and virtual capture devices are selected here in {productName}, n
 msgstr "攝影機和虛擬擷取裝置是在 {productName} 中選取，而不是在 Wayland 系統選取器中。如果這裡沒有顯示任何內容，請檢查權限或連接裝置。"
 
 #. Tooltip in the voice control bar when cameras are disabled because the participant count exceeds the limit. {voiceChannelCameraUserLimit} is the configured threshold.
-#: src/features/voice/components/VoiceControlBar.tsx:136
+#: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "參與者超過 {voiceChannelCameraUserLimit} 人時，攝影機將會關閉"
 
@@ -5781,7 +5665,6 @@ msgid "Can't upload files here"
 msgstr "無法在這裡上傳檔案"
 
 #. Action label for dismissing a mass-mention warning.
-#. Button label on a scheduled message row that cancels (deletes) the scheduled send.
 #. Button label that closes the emoji rename popout without saving.
 #. Button that closes the delete channel confirmation without deleting.
 #. Button that closes the device logout confirmation without changes.
@@ -5810,10 +5693,8 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:318
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:111
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
-#: src/features/expressions/components/modals/CreatePackModal.tsx:137
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/expressions/components/modals/EditPackModal.tsx:124
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:98
 #: src/features/input/state/input_keybind/shared.ts:137
@@ -5824,7 +5705,6 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/messaging/components/modals/ForwardModal.tsx:635
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:47
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
@@ -5849,11 +5729,6 @@ msgstr "取消"
 #: src/features/channel/components/ChannelEditBar.tsx:13
 msgid "Cancel editing message"
 msgstr "取消編輯訊息"
-
-#. Button or menu action label in the channel and chat scheduled message edit bar. Keep it concise.
-#: src/features/channel/components/ScheduledMessageEditBar.tsx:18
-msgid "Cancel editing scheduled message"
-msgstr "取消編輯預定訊息"
 
 #. Relationship action label for canceling an outgoing friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:25
@@ -5935,16 +5810,6 @@ msgstr "無法編輯"
 msgid "Cannot delete account"
 msgstr "無法刪除帳號"
 
-#. Title of the error modal when installing an emoji pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:83
-msgid "Cannot install emoji pack"
-msgstr "無法安裝表情貼圖包"
-
-#. Title of the error modal when installing a sticker pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:87
-msgid "Cannot install sticker pack"
-msgstr "無法安裝貼圖包"
-
 #. Toast error shown when captcha verification fails inside the auth captcha interceptor.
 #: src/features/auth/components/CaptchaInterceptor.tsx:14
 msgid "Captcha verification failed. Try again."
@@ -5955,15 +5820,15 @@ msgstr "驗證碼驗證失敗。請再試一次。"
 msgid "Capture"
 msgstr "擷取"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:398
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture app audio"
 msgstr "擷取應用程式音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:399
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture desktop audio"
 msgstr "擷取桌面音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:397
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
 msgid "Capture device audio"
 msgstr "擷取裝置音訊"
 
@@ -6221,12 +6086,12 @@ msgstr "變更密碼表單"
 msgid "Change scheduled"
 msgstr "已排定變更"
 
-#. Tooltip / button label in the screen-share status pill. Opens the picker to change what is being shared.
-#. Voice control menu action to choose a different screen-share source.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
-#: src/features/voice/components/VoiceControlBar.tsx:108
-msgid "Change source"
-msgstr "變更來源"
+#. Action that opens the source picker for the active screen share.
+#. Voice screen share menu action that changes the shared source.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:23
+msgid "Change Stream"
+msgstr "變更串流"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
@@ -6575,7 +6440,7 @@ msgstr "超出字元限制 {remaining}"
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:40
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:15
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:39
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:120
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:115
 msgid "Chat"
 msgstr "聊天"
 
@@ -6976,7 +6841,7 @@ msgid "Choose your profile accent color"
 msgstr "選擇您的個人檔案主題顏色"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:108
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Cisco"
 msgstr "思科"
 
@@ -7584,7 +7449,7 @@ msgid "Codec"
 msgstr "編解碼器"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Codec negotiation testing"
 msgstr "轉碼器協商測試"
 
@@ -7628,8 +7493,8 @@ msgstr "收合頻道主題"
 
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:98
-#: src/features/voice/components/VoiceParticipantTile.tsx:165
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
+#: src/features/voice/components/VoiceParticipantTile.tsx:166
 msgid "Collapse devices"
 msgstr "收合裝置"
 
@@ -8104,7 +7969,7 @@ msgstr "輸入框自動對焦"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 msgid "Configure"
 msgstr "設定"
 
@@ -8127,7 +7992,7 @@ msgid "Configure now"
 msgstr "立即設定"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:69
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
 msgid "Configure or end screen share"
 msgstr "設定或結束螢幕分享"
 
@@ -8378,12 +8243,12 @@ msgstr "連線：{connectionId}"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:410
 #: src/features/user/components/popouts/UserProfileShared.tsx:610
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
 msgstr "連結帳號"
 
 #. User settings tab for linked external accounts.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:111
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:106
 msgctxt "user-settings-tab"
 msgid "Connections"
 msgstr "連結"
@@ -8434,7 +8299,7 @@ msgid "Content filtering"
 msgstr "內容篩選"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 msgid "Content hint"
 msgstr "內容提示"
 
@@ -9157,16 +9022,6 @@ msgstr "無法忽略好友邀請"
 msgid "Couldn't ignore the friend request. Try again."
 msgstr "無法忽略好友邀請。請再試一次。"
 
-#. Generic body for the error modal when an emoji pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:107
-msgid "Couldn't install this emoji pack. Try again later."
-msgstr "無法安裝此表情符號包。請稍後再試。"
-
-#. Generic body for the error modal when a sticker pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:111
-msgid "Couldn't install this sticker pack. Try again later."
-msgstr "無法安裝此貼圖包。請稍後再試。"
-
 #. Error modal title shown when accepting a community invite fails.
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
 msgid "Couldn't join community"
@@ -9582,11 +9437,6 @@ msgstr "建立帳號來領取你的禮物"
 msgid "Create and manage applications and bots for your account"
 msgstr "為您的帳號建立及管理應用程式和機器人"
 
-#. Empty-state description for expression packs when the feature requires premium.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:63
-msgid "Create and share custom emoji and sticker packs with {premiumProductFullName}."
-msgstr "使用 {premiumProductFullName} 建立並分享自訂表情符號和貼圖包。"
-
 #. Button or menu action label in the application create modal. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationCreateModal.tsx:20
@@ -9627,14 +9477,6 @@ msgstr "建立私人訊息"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:197
 msgid "Create emoji & stickers"
 msgstr "建立表情符號和貼圖"
-
-#. Action that opens the create-emoji-pack modal.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:18
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:314
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:31
-msgid "Create emoji pack"
-msgstr "建立表情符號包"
 
 #. Accessible label for the create-favorite-category form.
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:16
@@ -9688,14 +9530,6 @@ msgstr "建立或加入社群"
 msgid "Create role"
 msgstr "建立角色"
 
-#. Action that opens the create-sticker-pack modal.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:22
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:314
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:35
-msgid "Create sticker pack"
-msgstr "建立貼圖包"
-
 #. Setup wizard title prompting the operator to create the first account.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:48
 msgid "Create the administrator account"
@@ -9748,15 +9582,6 @@ msgstr "已建立"
 msgid "Created {createdAt}"
 msgstr "建立於 {createdAt}"
 
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:334
-msgid "Created {createdCount} / {createdLimit}"
-msgstr "已建立 {createdCount} / {createdLimit}"
-
-#. placeholder {0}: NicknameUtils.getDisplayName(packCreator)
-#: src/features/channel/components/InviteEmbed.tsx:343
-msgid "Created by {0}"
-msgstr "由 {0} 建立"
-
 #. placeholder {0}: inviter ? NicknameUtils.getNickname(inviter, undefined, channelId) : invite.inviter ? NicknameUtils.getDisplayName(invite.inviter) : ''
 #. placeholder {1}: formatExpiresAt(invite.expires_at)
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:218
@@ -9767,13 +9592,6 @@ msgstr "由 {0} 建立。將於 {1} 到期。"
 #: src/features/webhook/components/WebhookListItem.tsx:223
 msgid "Created by {creatorDisplayName} on {createdAt}"
 msgstr "由 {creatorDisplayName} 建立於 {createdAt}"
-
-#. Metadata label for an expression pack invite. userName is the pack creator username.
-#. Short label in the authentication invite header. Preserve {userName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InviteHeader.tsx:29
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:73
-msgid "Created by {userName}"
-msgstr "由 {userName} 建立"
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:739
@@ -9786,11 +9604,6 @@ msgstr "為頻道「{0}」建立."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:267
 msgid "Created on {0}."
 msgstr "建立於 {0}。"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:43
-msgid "Created packs"
-msgstr "已建立的貼圖包"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
@@ -10119,7 +9932,7 @@ msgid "Custom tags"
 msgstr "自訂標籤"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:87
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
 msgid "Custom themes"
 msgstr "自訂主題"
 
@@ -10603,7 +10416,6 @@ msgstr "為節省電力與數據用量，行動裝置預設為關閉。"
 #. Button or menu action label in the channel and chat embed audio. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the channel and chat media container. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the channel and chat mobile memes picker. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
 #. Confirm button label on the destructive delete-saved-media alert.
 #. Danger button label that confirms deleting a custom emoji.
@@ -10626,7 +10438,6 @@ msgstr "為節省電力與數據用量，行動裝置預設為關閉。"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:49
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
@@ -10785,11 +10596,6 @@ msgstr "刪除我的訊息"
 msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "刪除其他成員的訊息。釘選功能是獨立控制的。"
 
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:40
-msgid "Delete pack"
-msgstr "刪除貼圖包"
-
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
 msgid "Delete passkey"
@@ -10861,11 +10667,6 @@ msgstr "刪除此訊息"
 #: src/features/messaging/commands/MessageCommands.tsx:73
 msgid "Delete this message? Can't be undone."
 msgstr "要刪除這則訊息嗎？此動作無法復原。"
-
-#. Error message in the expression packs tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:45
-msgid "Delete this pack? Can't be undone."
-msgstr "要刪除這個組合包嗎？此動作無法復原。"
 
 #. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx:19
@@ -11011,7 +10812,7 @@ msgid "Description must be no more than {discoveryDescriptionMaxLength} characte
 msgstr "說明不得超過 {discoveryDescriptionMaxLength} 個字元。"
 
 #. Developer settings tab showing UI component examples.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:153
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:148
 msgid "Design system"
 msgstr "設計系統"
 
@@ -11025,8 +10826,8 @@ msgstr "電腦版"
 
 #. User settings tab for desktop app integration and platform settings.
 #. User settings tab label shown on desktop builds when the OS could not be identified (fallback for the per-OS labels).
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:86
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:141
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:81
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:136
 msgid "Desktop app"
 msgstr "桌面應用程式"
 
@@ -11113,7 +10914,7 @@ msgstr "桌面版 {version} 已推出。下載安裝程式，然後執行以更�
 #. Settings section label for desktop window behavior.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
 msgstr "桌面版視窗"
 
@@ -11139,7 +10940,7 @@ msgid "Detached banner"
 msgstr "已卸離的橫幅"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "細節"
 
@@ -11163,7 +10964,7 @@ msgstr "輸入時偵測"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:20
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:25
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:211
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:206
 msgid "Developer"
 msgstr "開發人員"
 
@@ -11171,7 +10972,7 @@ msgstr "開發人員"
 #. Settings section label for client developer mode.
 #: src/features/user/components/modals/tabs/ClientDeveloperSettingsTab.tsx:17
 #: src/features/user/components/settings_utils/search_index/ClientDeveloperSettingsIndex.ts:7
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
 msgid "Developer mode"
 msgstr "開發人員模式"
 
@@ -11218,11 +11019,6 @@ msgstr "裝置"
 msgid "Device alerts"
 msgstr "裝置警示"
 
-#. Voice participant context menu submenu label for actions that affect one or more voice devices.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:182
-msgid "Device controls"
-msgstr "裝置控制選項"
-
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "裝置詳細資訊"
@@ -11232,7 +11028,7 @@ msgstr "裝置詳細資訊"
 msgid "Device revoked"
 msgstr "裝置已撤銷"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:891
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1024
 msgid "Device selection"
 msgstr "選擇裝置"
 
@@ -11255,7 +11051,7 @@ msgstr "裝置："
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:62
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:57
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
 msgid "Devices"
 msgstr "裝置"
@@ -11437,7 +11233,7 @@ msgid "Disable mobile push notifications"
 msgstr "關閉行動裝置推播通知"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:43
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "停用螢幕分享的子母畫面彈出視窗"
 
@@ -11478,7 +11274,7 @@ msgstr "停用雙重驗證表單"
 
 #. Voice menu checkbox label. Hides another participant's video only for the current user.
 #. Voice menu checkbox that hides a participant video on the current device only.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:86
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:110
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:77
 msgid "Disable video locally"
 msgstr "在本機停用視訊"
@@ -11753,11 +11549,6 @@ msgstr "顯示名稱"
 #: src/features/auth/flow/MockMinimalRegisterForm.tsx:91
 msgid "Display name (optional)"
 msgstr "顯示名稱（選填）"
-
-#. Voice participant context menu submenu label for call display and diagnostics preferences.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:186
-msgid "Display options"
-msgstr "顯示選項"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:661
 msgid "Display role members separately."
@@ -12284,12 +12075,8 @@ msgstr "荷蘭文"
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "例如：YubiKey、iPhone、公司電腦"
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:187
-msgid "Each link works once."
-msgstr "每個連結只能使用一次。"
-
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
 msgid "Early access to new features"
 msgstr "搶先體驗新功能"
 
@@ -12315,7 +12102,6 @@ msgstr "消除迴音"
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
 #: src/features/platform/utils/DesktopLocaleBridge.ts:42
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:123
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
 msgid "Edit"
 msgstr "編輯"
@@ -12395,11 +12181,6 @@ msgstr "編輯社群個人檔案"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:19
 msgid "Edit connection"
 msgstr "編輯連結"
-
-#. Action that opens the edit-emoji-pack modal.
-#: src/features/expressions/components/modals/EditPackModal.tsx:19
-msgid "Edit emoji pack"
-msgstr "編輯表情符號包"
 
 #. Permission description in the role/permission editor for the Manage Community permission. Refers to top-level community settings, not per-channel.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:23
@@ -12512,11 +12293,6 @@ msgstr "編輯貼圖"
 msgid "Edit sticker {stickerName}"
 msgstr "編輯貼圖「{stickerName}」"
 
-#. Action that opens the edit-sticker-pack modal.
-#: src/features/expressions/components/modals/EditPackModal.tsx:23
-msgid "Edit sticker pack"
-msgstr "編輯貼圖包"
-
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:88
 msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
@@ -12554,11 +12330,6 @@ msgstr "編輯功能暫時無法使用。請稍後再試。"
 #: src/features/channel/components/ChannelEditBar.tsx:40
 msgid "Editing message"
 msgstr "正在編輯訊息"
-
-#. Button or menu action label in the channel and chat scheduled message edit bar. Keep it concise.
-#: src/features/channel/components/ScheduledMessageEditBar.tsx:14
-msgid "Editing scheduled message"
-msgstr "編輯預定訊息"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
@@ -12674,7 +12445,7 @@ msgstr "嵌入"
 #. Developer settings tab for testing URL unfurls and rendered embeds.
 #. Settings search entry label for the developer embed debugger.
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:7
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:149
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:144
 msgid "Embed debugger"
 msgstr "嵌入偵錯工具"
 
@@ -12726,10 +12497,8 @@ msgstr "嵌入內容未隱藏"
 #. Audit log target-type filter label. Filters entries that target a custom emoji.
 #. Column header for the custom emoji image or glyph.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:172
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
 msgid "Emoji"
 msgstr "表情符號"
@@ -12744,11 +12513,6 @@ msgstr "表情符號"
 #: src/features/voice/utils/TtsTextFormatter.ts:37
 msgid "emoji {emojiName}"
 msgstr "表情符號 {emojiName}"
-
-#. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
-msgid "Emoji & sticker packs"
-msgstr "表情貼圖與貼圖包"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
@@ -12794,45 +12558,6 @@ msgstr "表情符號名稱最多只能有 32 個字元"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:97
 msgid "Emoji names need at least 2 characters and can use letters, numbers, and underscores. Emojis must be under {maxSize}. Static images are resized to 128x128 pixels and compressed automatically. Animated emojis and SVGs must already fit the limit."
 msgstr "表情符號名稱至少需要 2 個字元，並且可以使用字母、數字和底線。表情符號的大小必須小於 {maxSize}。靜態圖片會自動調整大小到 128x128 像素並進行壓縮。動畫表情符號和 SVG 檔案必須已符合限制。"
-
-#. Kind label on an emoji pack invite embed.
-#. Short label in the authentication invite header. Keep the tone plain and specific.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/auth/flow/InviteHeader.tsx:21
-#: src/features/channel/components/InviteEmbed.tsx:84
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:57
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:105
-msgid "Emoji pack"
-msgstr "表情符號包"
-
-#. placeholder {0}: invite.pack.name
-#: src/features/invite/commands/InviteCommands.tsx:144
-msgid "Emoji pack {0} has been installed."
-msgstr "表情貼圖包 {0} 已安裝。"
-
-#. Title of the error modal when creating a new emoji pack is rejected because the user is at the creation limit.
-#: src/features/invite/commands/InviteCommands.tsx:56
-msgid "Emoji pack creation limit reached"
-msgstr "已達表情貼圖包建立上限"
-
-#. Modal title for the emoji pack invite share flow.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:57
-msgid "Emoji pack invite"
-msgstr "貼圖包邀請"
-
-#. Title of the error modal when installing an emoji pack via invite is rejected because the user is at the install limit.
-#: src/features/invite/commands/InviteCommands.tsx:47
-msgid "Emoji pack limit reached"
-msgstr "已達表情貼圖包上限"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings section label for emoji expression packs.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:80
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:23
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:18
-msgid "Emoji packs"
-msgstr "表情貼圖包"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:126
@@ -12882,8 +12607,8 @@ msgstr "沒有最愛項目"
 
 #. Label for an advanced select that caps the best video codec this client advertises it can decode.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "Emulate decode codec (testing)"
 msgstr "模擬解碼轉碼器 (測試中)"
 
@@ -13177,18 +12902,18 @@ msgstr "已啟用成人內容。"
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "Encoder path"
 msgstr "編碼器路徑"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Encoder preference for new screen shares."
 msgstr "新螢幕分享的編碼器偏好設定。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:185
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "編碼器、SVC、備份串流和位元速率預設值"
 
@@ -13220,10 +12945,8 @@ msgstr "結束寬限期"
 msgid "End grace period now?"
 msgstr "要現在結束寬限期嗎？"
 
-#. Button label that stops the current screen share.
 #. Voice control menu action to stop sharing the screen.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:52
-#: src/features/voice/components/VoiceControlBar.tsx:112
+#: src/features/voice/components/VoiceControlBar.tsx:108
 msgid "End screen share"
 msgstr "結束螢幕分享"
 
@@ -13540,7 +13263,9 @@ msgstr "整個系統音訊"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
+#. Voice menu submenu label for per-user entrance sound controls.
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
@@ -13568,6 +13293,8 @@ msgid "Entrance sound saved"
 msgstr "已儲存入場音效"
 
 #. Voice menu slider label adjusting playback volume of this user's entrance sound, locally only.
+#. Voice menu slider label for a user's entrance sound playback volume.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:187
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:318
 msgid "Entrance sound volume"
 msgstr "入場音效音量"
@@ -13803,10 +13530,6 @@ msgstr "實驗性功能"
 msgid "EXPERIMENTAL"
 msgstr "EXPERIMENTAL"
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:152
-msgid "Expiration"
-msgstr "到期日"
-
 #. Label above the expiration duration dropdown in the invite link settings.
 #: src/features/invite/components/modals/InviteModal.tsx:102
 msgid "Expire after"
@@ -13941,13 +13664,8 @@ msgstr "匯出我的資料"
 msgid "Export themes"
 msgstr "匯出主題"
 
-#. Developer / debug surface — keep terse and technical. Tooltip / description for the Expression packs settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
-msgid "Expose the staff-only Expression packs page in user settings."
-msgstr "在使用者設定中顯示僅限工作人員使用的表情符號套件頁面。"
-
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:138
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
 msgid "Expose the staff-only timezone section in profile settings."
 msgstr "在個人資料設定中顯示僅限管理員使用的時區部分。"
 
@@ -13957,23 +13675,6 @@ msgstr "在個人資料設定中顯示僅限管理員使用的時區部分。"
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:158
 msgid "Expression autocomplete"
 msgstr "表情符號自動完成"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#. User settings tab for purchased or owned emoji/sticker expression packs.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:166
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:7
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:54
-msgid "Expression packs"
-msgstr "表情貼圖包"
-
-#. Empty-state title for expression packs when the feature requires premium.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:59
-msgid "Expression packs are a {premiumProductName} feature"
-msgstr "表情包是 {premiumProductName} 功能"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:168
-msgid "Expression packs are not enabled on this instance. Contact your instance administrator for more information."
-msgstr "此例項未啟用表情貼圖包。請聯絡您的例項管理員以取得更多資訊。"
 
 #. Aria label for the expression picker category nav.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:751
@@ -13987,9 +13688,7 @@ msgstr "清除表情符號"
 
 #. Community settings sidebar category grouping the emoji and stickers tabs.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:249
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:19
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:134
 msgid "Expressions"
 msgstr "表情符號"
@@ -14457,7 +14156,7 @@ msgstr "已加到我的最愛"
 msgid "Favorites"
 msgstr "我的最愛"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:182
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:177
 msgid "Feature"
 msgstr "功能"
 
@@ -14753,14 +14452,14 @@ msgstr "聚焦文字輸入區"
 
 #. Voice call layout action that pins one of several active devices of the same participant.
 #. Voice layout menu action that focuses one device/session for a participant.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:37
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:101
 msgid "Focus this device"
 msgstr "將此裝置設為焦點"
 
 #. Voice call layout action that pins the selected participant in the focused view.
 #. Voice layout menu action that focuses one participant in the call view.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:105
 msgid "Focus this person"
 msgstr "聚焦此人"
@@ -14807,7 +14506,7 @@ msgstr "資料夾設定"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "在 {blueskyProviderName} 上追蹤我們"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:693
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:826
 msgid "Follow voice input"
 msgstr "跟隨語音輸入"
 
@@ -15061,7 +14760,7 @@ msgstr "已轉寄訊息"
 msgid "Forwarded from"
 msgstr "轉傳自"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:269
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:267
 msgid "Found {resultCount} results in {categoryCount} categories"
 msgstr "在 {categoryCount} 個類別中找到 {resultCount} 個結果"
 
@@ -15096,7 +14795,7 @@ msgstr "影格率"
 msgid "France"
 msgstr "法國"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:187
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:182
 msgid "Free"
 msgstr "免費"
 
@@ -15354,10 +15053,6 @@ msgstr "一般"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:332
 msgid "Generate a shareable link or copy your combined custom CSS."
 msgstr "產生可分享的連結，或複製您合併的自訂 CSS。"
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:213
-msgid "Generate invite"
-msgstr "產生邀請"
 
 #. Short label in the add friends to group modal. Keep it concise.
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:23
@@ -15639,7 +15334,7 @@ msgstr "贈送 <0/>，直到 <1>{giftEndDate}</1>。不會自動續訂。兌換�
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for gift inventory and redemption codes.
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:37
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:99
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:94
 msgid "Gifts"
 msgstr "贈禮"
 
@@ -15664,7 +15359,7 @@ msgid "Glad you're here, {username}!"
 msgstr "{username}，很高興你在這裡！"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
 msgid "Global emoji & sticker access"
 msgstr "全球表情符號和貼圖存取權"
 
@@ -15703,8 +15398,8 @@ msgstr "前往 {premiumProductName}"
 
 #. Button label on a community invite embed when the current user is already a member.
 #. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:108
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:53
+#: src/features/channel/components/InviteEmbed.tsx:79
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:45
 msgid "Go to community"
 msgstr "前往社群"
 
@@ -15831,7 +15526,7 @@ msgstr "已授予 {0}。"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "授予所有權限並繞過頻道限制。高度敏感。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:878
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1011
 msgid "Granular selection"
 msgstr "精細選取"
 
@@ -15867,7 +15562,7 @@ msgstr "希臘文"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:784
+#: src/features/voice/components/VoiceSettingsMenus.tsx:785
 msgid "Grid view"
 msgstr "格狀顯示"
 
@@ -15948,7 +15643,7 @@ msgstr "群組邀請"
 #. Audit log channel type label for group DM channels.
 #. Fallback display name for an unnamed group DM in quick switcher results.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:57
-#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:44
+#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:43
 msgid "Group message"
 msgstr "群組訊息"
 
@@ -16010,19 +15705,24 @@ msgid "Grouping"
 msgstr "分組"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:104
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "H.264 backup stream"
 msgstr "H.264 備用串流"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
 msgid "H.264 simulcast backup"
 msgstr "H.264 同步串流備份"
+
+#. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:231
+msgid "H.265 (requires opt-in)"
+msgstr "H.265 (需要選擇加入)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -16075,12 +15775,8 @@ msgstr "硬體加速"
 msgid "Hardware acceleration can cause rendering glitches with transparent windows. Try --disable-gpu if you see flicker or smearing."
 msgstr "硬體加速可能會導致透明視窗出現渲染異常。如果看到閃爍或塗抹，請嘗試使用 --disable-gpu。"
 
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:132
-msgid "Hardware acceleration is off, so codecs will encode on your CPU. <0>Turn it back on in {advancedSettingsLabel}</0>."
-msgstr "已停用硬體加速，因此編解碼器將在您的 CPU 上進行編碼。<0>請在{advancedSettingsLabel}</0>中重新啟用它。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Hardware encoder"
 msgstr "硬體編碼器"
 
@@ -16215,9 +15911,14 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "協助將 {PRODUCT_NAME} 翻譯成您的語言，請前往 <0>{I18N_WEBLATE_DOMAIN}</0>。"
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "有助於瀏覽器選擇處理動態、細節或文字。"
+
+#. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
+msgid "HEVC"
+msgstr "HEVC"
 
 #. Codec description in the screen share codec policy menu. HEVC is a codec name; keep WebRTC literal.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:28
@@ -16370,7 +16071,7 @@ msgid "Hide muted channels by default?"
 msgstr "預設隱藏已靜音的頻道？"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
 msgid "Hide my stream preview thumbnail"
 msgstr "隱藏我的直播預覽縮圖"
 
@@ -16389,7 +16090,7 @@ msgstr "隱藏密碼"
 msgid "Hide picture-in-picture popout?"
 msgstr "要隱藏子母畫面嗎？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:727
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:860
 msgid "Hide preview thumbnail"
 msgstr "隱藏預覽縮圖"
 
@@ -16451,7 +16152,7 @@ msgid "High dynamic range display mode"
 msgstr "高動態範圍顯示模式"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Higher quality can cost more CPU and latency."
 msgstr "較高的品質可能會增加 CPU 使用量和延遲。"
 
@@ -16474,7 +16175,7 @@ msgstr "提示"
 msgid "Hoist order"
 msgstr "提升順序"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:507
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:522
 msgid "Hoist order reset to default"
 msgstr "升級順序已重設為預設值"
 
@@ -16503,7 +16204,7 @@ msgstr "按住錄音。向上拖曳可鎖定，放開即可傳送。"
 
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
-#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:48
+#: src/features/search/state/QuickSwitcherCandidateBuilder.ts:47
 msgid "Home"
 msgstr "首頁"
 
@@ -16834,11 +16535,11 @@ msgstr "忽略"
 msgid "Ignore friend request"
 msgstr "忽略好友邀請"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1001
 msgid "Ignore hardware devices"
 msgstr "忽略硬體裝置"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:844
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Ignore input media"
 msgstr "忽略輸入媒體"
 
@@ -16864,7 +16565,7 @@ msgstr "忽略垃圾訊息標記"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "要忽略來自 {displayName} 的交友邀請嗎？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:855
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:988
 msgid "Ignore virtual"
 msgstr "忽略虛擬裝置"
 
@@ -17198,7 +16899,7 @@ msgid "Inbox preview"
 msgstr "收件匣預覽"
 
 #. Accessible label for the inbox popout tablist.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:44
+#: src/features/messaging/components/popouts/InboxPopout.tsx:38
 msgid "Inbox tabs"
 msgstr "收件匣分頁"
 
@@ -17446,37 +17147,10 @@ msgstr "插入表情符號"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "安裝 {productName} 以取得完整的來源選擇器和更流暢的螢幕分享控制項。"
 
-#. Button label on an emoji pack invite embed that installs the pack.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:92
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:65
-msgid "Install emoji pack"
-msgstr "安裝表情符號包"
-
-#. Button label on a sticker pack invite embed that installs the pack.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:96
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:69
-msgid "Install sticker pack"
-msgstr "安裝貼圖包"
-
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
 msgstr "已安裝"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:303
-msgid "Installed {installedCount} / {installedLimit}"
-msgstr "已安裝 {installedCount} / {installedLimit}"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:113
-msgid "Installed on {installedAt}"
-msgstr "已安裝於 {installedAt}"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:39
-msgid "Installed packs"
-msgstr "已安裝的貼圖包"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:45
@@ -17527,7 +17201,7 @@ msgstr "介面"
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:79
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "介面語言"
 
@@ -17535,11 +17209,6 @@ msgstr "介面語言"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:202
 msgid "Interface size"
 msgstr "介面大小"
-
-#. Status pill on a scheduled message row when the schedule is in the past or otherwise invalid.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:26
-msgid "Invalid"
-msgstr "無效"
 
 #. Error message in the use entrance sound.
 #. Error message in the use sound settings.
@@ -17631,7 +17300,6 @@ msgstr "隱身"
 #: src/features/app/config/AuditLogConstants.ts:180
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:43
 #: src/features/invite/components/modals/InviteModal.tsx:97
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:120
 msgid "Invite"
 msgstr "邀請"
 
@@ -17704,7 +17372,7 @@ msgid "Invite link settings"
 msgstr "邀請連結設定"
 
 #. Title shown on an invite embed while streaming privacy is active.
-#: src/features/channel/components/InviteEmbed.tsx:137
+#: src/features/channel/components/InviteEmbed.tsx:108
 msgid "Invite masked"
 msgstr "邀請已遮蔽"
 
@@ -17786,7 +17454,7 @@ msgid "Invite to community"
 msgstr "邀請加入社群"
 
 #. Title shown on an invite embed when the invite cannot be resolved due to a non-permanent failure.
-#: src/features/channel/components/InviteEmbed.tsx:133
+#: src/features/channel/components/InviteEmbed.tsx:104
 msgid "Invite unavailable"
 msgstr "無法邀請"
 
@@ -17804,17 +17472,6 @@ msgstr "邀請人"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:248
 msgid "Invited by {0}."
 msgstr "由 {0} 邀請。"
-
-#. Short label in the authentication invite header. Preserve {inviterTag}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/auth/flow/InviteHeader.tsx:34
-#: src/features/channel/components/InviteEmbed.tsx:347
-msgid "Invited by {inviterTag}"
-msgstr "由 {inviterTag} 邀請"
-
-#. Metadata label for an expression pack invite. userTag is the inviter username and discriminator.
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:77
-msgid "Invited by {userTag}"
-msgstr "由 {userTag} 邀請"
 
 #: src/features/invite/components/InviteListItem.tsx:67
 msgid "Inviter"
@@ -17860,7 +17517,7 @@ msgstr "由於 {productName} 偵測到潛在的惡意攻擊，邀請功能已暫
 
 #. Invite settings notice shown after admins pause invite links for a community.
 #. Status message on a community invite embed when invites are paused by community admins.
-#: src/features/channel/components/InviteEmbed.tsx:121
+#: src/features/channel/components/InviteEmbed.tsx:92
 #: src/features/invite/components/DisableInvitesButton.tsx:48
 msgid "Invites are paused for this community."
 msgstr "此社群的邀請功能已暫停。"
@@ -17871,7 +17528,7 @@ msgstr "此社群的邀請功能已被管理員暫停。雖然仍可建立此邀
 
 #. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
-#: src/features/channel/components/InviteEmbed.tsx:104
+#: src/features/channel/components/InviteEmbed.tsx:75
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Invites disabled"
 msgstr "已停用邀請"
@@ -17884,7 +17541,7 @@ msgstr "已停用邀請通知列"
 #. Button or menu action label in the invite accept modal. Keep it concise.
 #. Button or menu action label in the invites disabled modal. Keep it concise.
 #: src/features/invite/components/alerts/InvitesDisabledModal.tsx:9
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:49
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:41
 msgid "Invites paused"
 msgstr "邀請功能已暫停"
 
@@ -18025,12 +17682,12 @@ msgid "Join community form"
 msgstr "加入社群表單"
 
 #. Button label on a group DM invite embed that accepts the invite.
-#: src/features/channel/components/InviteEmbed.tsx:80
+#: src/features/channel/components/InviteEmbed.tsx:71
 msgid "Join group"
 msgstr "加入群組"
 
 #. Button or menu action label in the invite accept modal. Keep it concise.
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:45
+#: src/features/invite/components/modals/InviteAcceptModal.tsx:37
 msgid "Join group DM"
 msgstr "加入群組聊天"
 
@@ -18355,12 +18012,12 @@ msgstr "韓文"
 #. User settings tab for language, locale, and time display preferences.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:56
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:137
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
 msgstr "語言"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
 msgid "Language settings"
 msgstr "語言設定"
 
@@ -18440,14 +18097,9 @@ msgid "Launch at login"
 msgstr "登入時啟動"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
 msgid "Layering for AV1 and VP9 when available."
 msgstr "適用於 AV1 和 VP9 的分層處理（如果可用）。"
-
-#. CTA label that opens the premium settings tab from expression packs.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:67
-msgid "Learn about {premiumProductName}"
-msgstr "深入瞭解 {premiumProductName}"
 
 #. Accessible label for the screen-share picker footer info button.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
@@ -18818,7 +18470,7 @@ msgid "Links"
 msgstr "連結"
 
 #. User settings tab label shown on Linux desktop builds.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:78
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:73
 msgid "Linux app"
 msgstr "Linux 應用程式"
 
@@ -19115,7 +18767,7 @@ msgid "macOS"
 msgstr "macOS"
 
 #. User settings tab label shown on macOS desktop builds.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:82
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
 msgstr "macOS 應用程式"
 
@@ -19247,11 +18899,6 @@ msgstr "管理社群功能"
 msgid "Manage emoji & stickers"
 msgstr "管理表情符號和貼圖"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:47
-msgid "Manage expression packs"
-msgstr "管理表情貼圖包"
-
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:93
 msgid "Manage incoming webhooks that can post messages into this channel."
 msgstr "管理可將訊息發佈到此頻道的傳入 Webhook。"
@@ -19316,7 +18963,7 @@ msgstr "手動更新桌面版"
 
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:48
+#: src/features/messaging/components/popouts/InboxPopout.tsx:42
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 msgid "Mark all as read"
 msgstr "全部標示為已讀"
@@ -19334,7 +18981,7 @@ msgstr "將所有私訊標示為已讀"
 #. Accessible label and tooltip for the mark-all-as-read button in the inbox popout.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:165
-#: src/features/messaging/components/popouts/InboxPopout.tsx:52
+#: src/features/messaging/components/popouts/InboxPopout.tsx:46
 msgid "Mark all inbox channels as read"
 msgstr "將收件匣中的所有頻道標示為已讀"
 
@@ -19597,10 +19244,6 @@ msgstr "使用次數上限"
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "最大大小：{BACKGROUND_MEDIA_MAX_SIZE_LABEL}。"
 
-#: src/features/expressions/components/modals/PackInviteModal.tsx:168
-msgid "Max uses"
-msgstr "最大使用次數"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:451
 msgid "Max visible count"
 msgstr "最大顯示數量"
@@ -19614,13 +19257,6 @@ msgstr "最大化視窗"
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:67
 msgid "Maximizes visible messages with minimal spacing."
 msgstr "以最小間距顯示最多訊息。"
-
-#. Form helper text describing the maximum length of a description field.
-#. Form helper text describing the maximum length of a description field.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:46
-#: src/features/expressions/components/modals/EditPackModal.tsx:43
-msgid "Maximum 256 characters"
-msgstr "最多 256 個字元"
 
 #. Label for attachment decay maximum eligible size.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:240
@@ -19638,9 +19274,14 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "為闔家適宜的空間提供最高等級的保護"
 
 #. Label for an advanced screen-share bitrate select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Maximum screen share bitrate"
 msgstr "螢幕分享最大位元速率"
+
+#. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
+msgid "May cause compatibility issues for viewers. We’re working on improving this."
+msgstr "可能會導致觀眾出現相容性問題。我們正在努力改善此情況。"
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
@@ -19690,9 +19331,7 @@ msgid "Media buttons"
 msgstr "媒體按鈕"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
-#. Voice participant context menu submenu label for camera, stream, and video actions.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:190
 msgid "Media controls"
 msgstr "媒體控制選項"
 
@@ -19898,7 +19537,7 @@ msgstr "已選取成員"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice participant menu action that inserts a mention of the selected user into the message composer.
 #: src/features/ui/action_menu/items/MentionUserMenuItem.tsx:13
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:67
 msgid "Mention"
 msgstr "提及"
@@ -20004,7 +19643,7 @@ msgstr "訊息"
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -20342,7 +19981,7 @@ msgstr "需要麥克風權限"
 msgid "Microphone test"
 msgstr "麥克風測試"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:813
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
 msgid "Microphone workaround"
 msgstr "麥克風問題排除"
 
@@ -20532,9 +20171,7 @@ msgid "Mod"
 msgstr "管理員"
 
 #. Permission category for moderation actions against members or messages.
-#. Voice participant context menu submenu label for member moderation actions.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:194
 msgid "Moderation"
 msgstr "管理"
 
@@ -20667,7 +20304,7 @@ msgstr "最相關"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -20685,7 +20322,7 @@ msgid "Move"
 msgstr "移動"
 
 #. Submenu label that moves every active device into another voice channel.
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:22
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:37
 msgid "Move all devices to…"
 msgstr "將所有裝置移至…"
 
@@ -20702,7 +20339,7 @@ msgstr "在瀏覽過的頻道記錄中往回移動"
 #. Submenu label that moves a single device into another voice channel.
 #. Submenu label that moves a single device into another voice channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:21
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:18
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:33
 msgid "Move device to…"
 msgstr "移動裝置到…"
 
@@ -20739,7 +20376,7 @@ msgstr "移至"
 #. Submenu label that moves the selected participant or content into another channel.
 #. Submenu label that moves the selected participant or content into another channel.
 #: src/features/ui/action_menu/items/MoveToChannelSubmenu.tsx:29
-#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:26
+#: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx:41
 msgid "Move to…"
 msgstr "移動到…"
 
@@ -20804,7 +20441,7 @@ msgstr "音符"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:132
 #: src/features/channel/components/embeds/media/EmbedVideo.tsx:72
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:141
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:36
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:65
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:73
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:178
@@ -20818,7 +20455,7 @@ msgid "Mute"
 msgstr "靜音"
 
 #. Voice control button label to turn the user's microphone off.
-#: src/features/voice/components/VoiceControlBar.tsx:126
+#: src/features/voice/components/VoiceControlBar.tsx:122
 msgctxt "voice-control-action"
 msgid "Mute"
 msgstr "靜音"
@@ -20884,7 +20521,7 @@ msgid "Mute conversation"
 msgstr "將對話設為靜音"
 
 #. Voice menu toggle that mutes a single device when the current user is connected on multiple devices.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
 msgid "Mute device"
 msgstr "將裝置靜音"
 
@@ -20898,7 +20535,9 @@ msgstr "關閉通知"
 msgid "Mute DMs"
 msgstr "關閉私訊通知"
 
+#. Voice menu checkbox label that locally silences a user's entrance sound.
 #. Voice menu checkbox label. Locally silences this user's custom entrance sound when they join, only for the current user.
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:183
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
 msgid "Mute entrance sound"
 msgstr "將加入音效設為靜音"
@@ -21106,11 +20745,6 @@ msgstr "我的以圖搜圖"
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:88
 msgid "My search engine"
 msgstr "我的搜尋引擎"
-
-#. Form placeholder example for a pack name input.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:42
-msgid "My super pack"
-msgstr "我的超讚貼圖包"
 
 #. Short label in the add custom search engine modal. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:84
@@ -21757,10 +21391,6 @@ msgstr "還沒有任何禮物"
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
 msgstr "沒有置頂身分組。請在身分組上啟用「單獨顯示此身分組」即可在此處查看。"
 
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:320
-msgid "No installed packs yet."
-msgstr "尚未安裝任何表情貼圖包。"
-
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:154
 msgid "No invite background"
 msgstr "沒有邀請背景"
@@ -21954,11 +21584,6 @@ msgstr "沒有儲存的媒體"
 msgid "No saved payment methods."
 msgstr "沒有已儲存的付款方式。"
 
-#. Empty state title in the scheduled messages popout when the user has none scheduled.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:18
-msgid "No scheduled messages"
-msgstr "沒有任何已排程的訊息"
-
 #. Body of the screen-share-unsupported modal shown when xdg-desktop-portal returns no capturable sources.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:18
 msgid "No screens or windows were returned by the Linux screen sharing portal. Try again after checking that your desktop environment allows screen capture."
@@ -21969,7 +21594,7 @@ msgstr "Linux 螢幕共用入口網站未傳回任何螢幕或視窗。請在確
 msgid "No search results"
 msgstr "沒有搜尋結果"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:251
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:249
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:549
 msgid "No settings found"
 msgstr "找不到設定"
@@ -22096,7 +21721,7 @@ msgid "No webhooks"
 msgstr "沒有網路掛鉤"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:143
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
 msgid "No-op in-app reports"
 msgstr "停用應用程式內檢舉"
 
@@ -22303,7 +21928,7 @@ msgid "Notifications"
 msgstr "通知"
 
 #. User settings tab for notification and alert sound controls.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:132
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:127
 msgctxt "user-settings-tab"
 msgid "Notifications"
 msgstr "通知"
@@ -22366,7 +21991,7 @@ msgstr "物品"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:59
 msgid "Off"
 msgstr "關閉"
@@ -22500,7 +22125,7 @@ msgstr "僅適用於寬螢幕。"
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "僅接受信用卡。簽帳金融卡和預付卡無法用於成人內容驗證。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:833
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
 msgid "Only default speakers"
 msgstr "僅限預設揚聲器"
 
@@ -22548,7 +22173,7 @@ msgstr "請僅在您完全了解其作用時，才在此處執行程式碼。"
 msgid "Only show message previews for DMs with unread messages"
 msgstr "只顯示有未讀訊息的私訊預覽"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:823
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
 msgid "Only speakers"
 msgstr "只有發言人"
 
@@ -22820,7 +22445,7 @@ msgstr "在瀏覽器中開啟表情符號"
 msgid "Open emoji picker"
 msgstr "開啟表情符號選取器"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:877
+#: src/features/voice/components/VoiceSettingsMenus.tsx:859
 msgid "Open event sink"
 msgstr "開啟事件接收器"
 
@@ -22938,13 +22563,13 @@ msgstr "開啟 {directMessageName} 的個人檔案"
 
 #. Accessible label for the avatar button that opens a user profile.
 #. Short label in the app layout voice participant item. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:47
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:48
 #: src/features/ui/avatars/AvatarStack.tsx:21
 msgid "Open profile for {displayName}"
 msgstr "開啟 {displayName} 的個人檔案"
 
 #. Short label in the app layout grouped voice participant. Preserve {nickname}; it is inserted by code.
-#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:35
+#: src/features/app/components/layout/GroupedVoiceParticipant.tsx:36
 msgid "Open profile for {nickname}"
 msgstr "開啟 {nickname} 的個人檔案"
 
@@ -23079,17 +22704,17 @@ msgid "Open your settings"
 msgstr "開啟設定"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:112
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "OpenH264 software codec on Linux"
 msgstr "OpenH264 軟體編解碼器（Linux）"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
 msgid "OpenH264 video codec"
 msgstr "開啟 H264 視訊編解碼器"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:34
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "Cisco Systems, Inc. 提供的 OpenH264 視訊編解碼器."
 
@@ -23336,45 +22961,12 @@ msgstr "目前無法將擁有權轉移給 <0>{username}</0>。"
 msgid "Ownership transferred"
 msgstr "已轉移擁有權"
 
-#. Form field label for the name of an expression pack.
-#. Form field label for the name of an expression pack.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:26
-#: src/features/expressions/components/modals/EditPackModal.tsx:27
-msgid "Pack name"
-msgstr "貼圖包名稱"
-
-#. Form validation error shown when the pack name field is empty.
-#. Form validation error shown when the pack name field is empty.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:30
-#: src/features/expressions/components/modals/EditPackModal.tsx:31
-msgid "Pack name is required"
-msgstr "請輸入貼圖包名稱"
-
-#. Form validation error for a pack name that is too short.
-#. Form validation error for a pack name that is too short.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:34
-#: src/features/expressions/components/modals/EditPackModal.tsx:35
-msgid "Pack name must be at least 2 characters"
-msgstr "貼圖包名稱必須至少 2 個字元"
-
-#. Form validation error for a pack name that is too long.
-#. Form validation error for a pack name that is too long.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:38
-#: src/features/expressions/components/modals/EditPackModal.tsx:39
-msgid "Pack name must be at most 64 characters"
-msgstr "貼圖包名稱最多 64 個字元"
-
 #. Voice stats field label (mobile lobby). Shows packet loss percentage.
 #. Voice stats field label (mobile voice lobby). Shows packet loss percentage.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:124
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:92
 msgid "Packet loss"
 msgstr "封包遺失"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:15
-msgid "Packs"
-msgstr "貼圖"
 
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:718
 msgid "Page {currentPage} of {totalPages}"
@@ -23566,7 +23158,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "要暫停邀請嗎？在新功能重新啟用前，新用戶將無法透過邀請連結加入。現有成員不會受到影響。"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Pause my screen share preview in the background"
 msgstr "在背景暫停我的螢幕分享預覽"
 
@@ -23574,6 +23166,11 @@ msgstr "在背景暫停我的螢幕分享預覽"
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:39
 msgid "Pause notifications"
 msgstr "暫停通知"
+
+#. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
+msgid "Pause Preview When Fluxer Isn’t Focused"
+msgstr "暫停預覽，當 Fluxer 未啟用時"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23908,7 +23505,7 @@ msgid "Picture"
 msgstr "圖片"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:124
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Picture in picture"
 msgstr "子母畫面"
 
@@ -24028,7 +23625,7 @@ msgid "Pins popout"
 msgstr "釘選彈出視窗"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:128
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "PiP"
 msgstr "子母畫面"
 
@@ -24167,15 +23764,20 @@ msgstr "彈回"
 msgid "Pop out call"
 msgstr "以獨立視窗開啟通話"
 
-#. Voice menu action on desktop that opens the participant camera feed in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:29
-msgid "Pop out camera"
-msgstr "以獨立視窗開啟攝影機畫面"
-
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:33
-msgid "Pop out stream"
-msgstr "以獨立視窗開啟螢幕分享"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+msgid "Pop Out Stream"
+msgstr "獨立視窗播放"
+
+#. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
+msgid "Pop Out User"
+msgstr "展開使用者"
+
+#. Voice menu action on desktop that opens the active participant camera feed in a separate window.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
+msgid "Pop Out Video"
+msgstr "पॉप आउट वीडियो"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:19
@@ -24225,7 +23827,7 @@ msgid "Prefer @mention"
 msgstr "偏好提及"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "Prefer hardware"
 msgstr "偏好硬體"
 
@@ -24237,7 +23839,7 @@ msgid "Prefer no @mention"
 msgstr "不接收提及通知"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Prefer software"
 msgstr "偏好軟體"
 
@@ -24255,6 +23857,11 @@ msgstr "偏好設定"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:20
 msgid "Preferences..."
 msgstr "偏好設定..."
+
+#. Accessible label for the advanced screen-share codec preference select.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:218
+msgid "Preferred screen share codec"
+msgstr "偏好的螢幕分享轉碼器"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -24391,6 +23998,11 @@ msgstr "預覽按鈕"
 msgid "Preview camera"
 msgstr "預覽相機"
 
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
+msgid "Preview Camera"
+msgstr "預覽相機"
+
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
 msgid "Preview hidden"
@@ -24424,7 +24036,7 @@ msgid "Preview sound"
 msgstr "預覽音效"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:136
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "預覽、彈出和串流縮圖行為"
 
@@ -24523,7 +24135,7 @@ msgid "Primary navigation"
 msgstr "主要導覽"
 
 #. Voice display preference checkbox that moves active speakers toward the front of the call grid when enabled.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:105
 msgid "Prioritize speakers"
 msgstr "優先顯示發言者"
 
@@ -24537,7 +24149,7 @@ msgstr "優先發言者"
 #. User settings tab for privacy and safety controls.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:12
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:60
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:103
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:98
 msgid "Privacy"
 msgstr "隱私"
 
@@ -24613,7 +24225,7 @@ msgid "Product name"
 msgstr "產品名稱"
 
 #. User settings tab for editing the current user profile.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:91
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:86
 msgid "Profile"
 msgstr "個人檔案"
 
@@ -24977,7 +24589,7 @@ msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custo
 msgstr "在直接輸入模式中，按鍵通話會被忽略。請切換到語音焦點或自訂模式以使用此功能。"
 
 #. Tooltip on the mic button in the voice control bar when push-to-talk is enabled. {pushToTalkHint} is the formatted shortcut key combo.
-#: src/features/voice/components/VoiceControlBar.tsx:116
+#: src/features/voice/components/VoiceControlBar.tsx:112
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "已開啟按鍵通話。按住 {pushToTalkHint} 即可說話。"
 
@@ -24997,7 +24609,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "按住「推動說話」鍵時，您的麥克風不會解除靜音，因為您已將自己設為靜音狀態。請先解除靜音，才能開始說話。"
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Quality"
 msgstr "畫質"
 
@@ -25212,7 +24824,7 @@ msgid "Ready to upgrade?"
 msgstr "準備好升級了嗎？"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Realtime"
 msgstr "即時"
 
@@ -25287,11 +24899,9 @@ msgstr "重新檢查"
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "收件人將會前往 {0} <0>{1}</0>"
 
-#. Badge shown next to the auto codec option in the screen-share codec radio group. Keep it concise.
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:38
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Recommended"
 msgstr "推薦"
@@ -25556,11 +25166,6 @@ msgstr "拒絕"
 msgid "Rejected"
 msgstr "已拒絕"
 
-#. Voice participant context menu submenu label for friend and block actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:198
-msgid "Relationship"
-msgstr "關係"
-
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:129
 msgid "Relative"
@@ -25641,7 +25246,6 @@ msgstr "記住視窗大小和位置"
 #. Action label for removing the selected item from a list or relationship.
 #. Button label for removing the current webhook avatar image.
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the linked accounts tab. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the search engines tab. Keep it concise. Keep the tone plain and specific.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -25660,8 +25264,6 @@ msgstr "記住視窗大小和位置"
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
 #: src/features/ui/action_menu/UserContextMenu.tsx:80
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:75
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:133
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
@@ -25833,11 +25435,6 @@ msgstr "請從「{targetName}」中移除一個，以騰出空間，然後再試
 msgid "Remove override"
 msgstr "移除覆寫設定"
 
-#. Button or menu action label in the expression packs tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:54
-msgid "Remove pack"
-msgstr "移除貼圖包"
-
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the message reactions modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/MessageReactionsSheet.tsx:33
@@ -25966,11 +25563,6 @@ msgstr "已移除身分組「{oldLabel}」。"
 msgid "Removed roles."
 msgstr "已移除的身分組."
 
-#. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:57
-msgid "Removed scheduled message"
-msgstr "已移除預定訊息"
-
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:419
 msgid "Removed the channel from its category."
 msgstr "已將頻道從其類別中移除。"
@@ -26002,11 +25594,6 @@ msgstr "移除所有變數覆寫，但保留您的資料庫和資產。"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthPermissionsStep.tsx:112
 msgid "Removing permissions could limit the bot's features."
 msgstr "移除權限可能會限制機器人功能。"
-
-#. Description text in the expression packs tab.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:71
-msgid "Removing the pack will uninstall it from your account."
-msgstr "移除貼圖包會將它從您的帳號中解除安裝。"
 
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:55
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
@@ -26654,42 +26241,42 @@ msgid "Resize floating panel"
 msgstr "調整浮動面板大小"
 
 #. Accessible label for the bottom-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:80
+#: src/features/messaging/components/popouts/InboxPopout.tsx:74
 msgid "Resize inbox from bottom left"
 msgstr "從左下調整收件匣大小"
 
 #. Accessible label for the bottom-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:84
+#: src/features/messaging/components/popouts/InboxPopout.tsx:78
 msgid "Resize inbox from bottom right"
 msgstr "從右下角調整收件匣大小"
 
 #. Accessible label for the bottom resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:60
+#: src/features/messaging/components/popouts/InboxPopout.tsx:54
 msgid "Resize inbox from the bottom edge"
 msgstr "從底部邊緣調整收件匣大小"
 
 #. Accessible label for the left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:64
+#: src/features/messaging/components/popouts/InboxPopout.tsx:58
 msgid "Resize inbox from the left edge"
 msgstr "從左邊緣調整收件匣大小"
 
 #. Accessible label for the right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:68
+#: src/features/messaging/components/popouts/InboxPopout.tsx:62
 msgid "Resize inbox from the right edge"
 msgstr "從右側邊緣調整收件匣大小"
 
 #. Accessible label for the top resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:56
+#: src/features/messaging/components/popouts/InboxPopout.tsx:50
 msgid "Resize inbox from the top edge"
 msgstr "從頂端調整收件匣大小"
 
 #. Accessible label for the top-left resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:72
+#: src/features/messaging/components/popouts/InboxPopout.tsx:66
 msgid "Resize inbox from top left"
 msgstr "從左上角調整收件匣大小"
 
 #. Accessible label for the top-right resize handle on the inbox popout.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:76
+#: src/features/messaging/components/popouts/InboxPopout.tsx:70
 msgid "Resize inbox from top right"
 msgstr "從右上角調整收件匣大小"
 
@@ -27071,11 +26658,6 @@ msgstr "右側工具提示"
 msgid "Right-click here to open the context menu"
 msgstr "在此處按右鍵以開啟選單"
 
-#. Empty state hint in the scheduled messages popout explaining how to schedule a new message.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:22
-msgid "Right-click the send button to schedule a message."
-msgstr "在傳送按鈕上按一下右鍵，即可排程訊息。"
-
 #. Action that rings the selected participant in a voice call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -27110,8 +26692,8 @@ msgstr "角色顏色"
 msgid "Role created"
 msgstr "已建立角色"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:341
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:388
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:352
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:402
 msgid "Role created successfully"
 msgstr "身分組建立成功"
 
@@ -27120,8 +26702,8 @@ msgstr "身分組建立成功"
 msgid "Role deleted"
 msgstr "角色已刪除"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:425
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:440
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:469
 msgid "Role deleted successfully"
 msgstr "身分組已成功刪除"
 
@@ -27161,7 +26743,7 @@ msgstr "角色"
 msgid "Roles and members"
 msgstr "身分組和成員"
 
-#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:285
+#: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:296
 msgid "Roles updated successfully"
 msgstr "身分組已成功更新"
 
@@ -27269,7 +26851,6 @@ msgstr "儲存"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/expressions/components/modals/EditPackModal.tsx:127
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:624
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:90
@@ -27350,7 +26931,7 @@ msgstr "已儲存"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:63
 msgid "Saved media"
 msgstr "已儲存的媒體"
@@ -27403,22 +26984,10 @@ msgstr "排程"
 msgid "Schedule message"
 msgstr "排程訊息"
 
-#. Status pill on a scheduled message row indicating it will send at the chosen time.
-#. Tab label in the inbox popout listing the user scheduled messages.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:40
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:30
-msgid "Scheduled"
-msgstr "已排程"
-
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.
 #: src/features/devtools/components/NagbarControls.ts:22
 msgid "Scheduled maintenance nagbar"
 msgstr "排程維護通知列"
-
-#. Label in the messaging commands. {scheduledTimeLabel} is the localized scheduled date and time.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:49
-msgid "Scheduled message for {scheduledTimeLabel}"
-msgstr "已排程訊息於 {scheduledTimeLabel}"
 
 #. Inline validation message in the schedule-message modal when the picked time is more than 30 days away. Keep tone plain.
 #: src/features/messaging/components/modals/ScheduleMessageModal.tsx:31
@@ -27490,7 +27059,7 @@ msgid "Screen share codec"
 msgstr "螢幕分享編解碼器"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:140
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Screen share encoder controls"
 msgstr "螢幕分享編碼器控制項"
 
@@ -27511,12 +27080,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "螢幕分享正在使用軟體編碼 ({codec})。畫質可能會降低，且 CPU 使用率會增加。您的 GPU 可能不支援此編解碼器的硬體編碼。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:120
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 msgid "Screen share preview"
 msgstr "螢幕分享預覽"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:116
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "Screen share preview behavior"
 msgstr "螢幕分享預覽行為"
 
@@ -27534,6 +27103,11 @@ msgstr "螢幕分享預覽已停用。"
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
 msgid "Screen share previews are enabled."
 msgstr "螢幕分享預覽已啟用。"
+
+#. Voice screen share menu action that opens the screen share preview privacy controls.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
+msgid "Screen Share Privacy"
+msgstr "螢幕分享隱私設定"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
@@ -27561,11 +27135,6 @@ msgstr "螢幕分享開始"
 #: src/features/notification/utils/SoundLabels.ts:64
 msgid "Screen share stop"
 msgstr "螢幕分享已停止"
-
-#. Accessible label for the screen-share codec radio group.
-#: src/features/user/components/modals/tabs/components/CodecSelectorSection.tsx:42
-msgid "Screen share video codec"
-msgstr "螢幕分享視訊編解碼器"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -28931,6 +28500,11 @@ msgstr "分享螢幕和視窗。"
 msgid "Share source"
 msgstr "分享來源"
 
+#. Toggle label for sharing audio with an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+msgid "Share Stream Audio"
+msgstr "分享直播音訊"
+
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:40
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
@@ -28939,15 +28513,6 @@ msgstr "購買禮物訂閱，與好友分享 {premiumProductName} 體驗。"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:348
 msgid "Share theme"
 msgstr "分享主題"
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:192
-msgid "Share this link"
-msgstr "分享此連結"
-
-#. Description shown in the emoji pack invite modal.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:65
-msgid "Share this link — the pack installs when accepted."
-msgstr "分享此連結 — 接受邀請後，表情符號包就會安裝。"
 
 #. Privacy > Active now: confirmation modal title when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:33
@@ -28975,11 +28540,6 @@ msgstr "分享你的螢幕"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "以高畫質 (1080p)、Quad HD (1440p) 或原始解析度分享你的螢幕，幀率最高可達 60 FPS。"
-
-#. Description shown in the sticker pack invite modal.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:69
-msgid "Share your sticker pack via link."
-msgstr "透過連結分享你的貼圖包。"
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #: src/features/theme/components/modals/ShareThemeModal.tsx:39
@@ -29081,7 +28641,7 @@ msgstr "捷徑衝突"
 #. User settings tab for keyboard shortcuts and custom bindings.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:18
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:175
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:128
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:123
 msgid "Shortcuts"
 msgstr "捷徑"
 
@@ -29241,11 +28801,6 @@ msgstr "顯示表情符號按鈕"
 msgid "Show emoji reactions on messages"
 msgstr "在訊息上顯示表情回應"
 
-#. Developer option label for exposing the staff-only Expression packs page in user settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
-msgid "Show expression packs settings"
-msgstr "顯示表情符號設定"
-
 #. Short label for an advanced media button preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:77
 msgid "Show favorite button"
@@ -29381,16 +28936,16 @@ msgstr "顯示已靜音的頻道"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:69
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:814
+#: src/features/voice/components/VoiceSettingsMenus.tsx:815
 msgid "Show my own camera"
 msgstr "顯示我的相機"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-msgid "Show my screen share"
-msgstr "分享我的螢幕畫面"
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
+msgid "Show My Screen Share"
+msgstr "顯示我的螢幕分享"
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
@@ -29417,9 +28972,9 @@ msgstr "顯示新裝置彈出視窗"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether participants without video are shown in the grid.
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:77
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:828
+#: src/features/voice/components/VoiceSettingsMenus.tsx:829
 msgid "Show non-video participants"
 msgstr "顯示非視訊參與者"
 
@@ -29449,7 +29004,7 @@ msgid "Show per-device participant volume sliders in voice menus"
 msgstr "在語音選單中顯示個別裝置的參與者音量滑桿"
 
 #. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
 msgid "Show profile timezone settings"
 msgstr "顯示個人檔案時區設定"
 
@@ -29681,7 +29236,7 @@ msgstr "已登入"
 
 #. Settings section label for account sessions and devices.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:517
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
 msgid "Signed-in devices"
 msgstr "已登入的裝置"
 
@@ -29759,7 +29314,7 @@ msgid "Single community mode"
 msgstr "單一社群模式"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 msgid "Single layer"
 msgstr "單層"
 
@@ -29816,7 +29371,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "略過所有網域的外部連結警告"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:148
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "提交應用程式內報告時，跳過網路呼叫。流程仍會進展到成功畫面，讓您可以操作使用者介面，但實際上不會傳送任何內容給安全團隊。"
 
@@ -30063,12 +29618,12 @@ msgid "Social"
 msgstr "社群"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Software encoder"
 msgstr "軟體編碼器"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 msgid "Software encoder quality"
 msgstr "軟體編碼器品質"
 
@@ -30393,7 +29948,7 @@ msgid "Spanish (Spain)"
 msgstr "西班牙文（西班牙）"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Spatial and temporal layers"
 msgstr "空間與時間層"
 
@@ -30495,7 +30050,7 @@ msgstr "拼字檢查"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:414
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:456
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:58
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
 msgid "Spellcheck"
 msgstr "拼字檢查"
 
@@ -30683,10 +30238,6 @@ msgstr "開始通話"
 msgid "Start camera test and configure effects"
 msgstr "開始相機測試並設定效果"
 
-#: src/features/expressions/components/modals/CreatePackModal.tsx:93
-msgid "Start curating a custom emoji pack that you can share and install."
-msgstr "開始策劃一個專屬的表情符號包，你可以分享並安裝。"
-
 #. Label for the start of a date range (inclusive). Leave blank for no lower bound.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:175
 msgid "Start date"
@@ -30696,10 +30247,6 @@ msgstr "開始日期"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:191
 msgid "Start date must be earlier than end date."
 msgstr "開始日期必須早於結束日期。"
-
-#: src/features/voice/components/VoiceSettingsMenus.tsx:860
-msgid "Start debug logging session"
-msgstr "開始偵錯記錄工作階段"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:125
@@ -30883,45 +30430,6 @@ msgstr "貼圖密度"
 msgid "Sticker is too large"
 msgstr "貼圖檔案過大"
 
-#. Kind label on a sticker pack invite embed.
-#. Short label in the authentication invite header. Keep the tone plain and specific.
-#. Short label in the invite accept modal. Keep it concise.
-#: src/features/auth/flow/InviteHeader.tsx:25
-#: src/features/channel/components/InviteEmbed.tsx:88
-#: src/features/invite/components/modals/InviteAcceptModal.tsx:61
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:105
-msgid "Sticker pack"
-msgstr "貼圖包"
-
-#. placeholder {0}: invite.pack.name
-#: src/features/invite/commands/InviteCommands.tsx:146
-msgid "Sticker pack {0} has been installed."
-msgstr "貼圖包 {0} 已安裝。"
-
-#. Title of the error modal when creating a new sticker pack is rejected because the user is at the creation limit.
-#: src/features/invite/commands/InviteCommands.tsx:74
-msgid "Sticker pack creation limit reached"
-msgstr "貼圖包建立數量已達上限"
-
-#. Modal title for the sticker pack invite share flow.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:61
-msgid "Sticker pack invite"
-msgstr "貼圖包邀請"
-
-#. Title of the error modal when installing a sticker pack via invite is rejected because the user is at the install limit.
-#: src/features/invite/commands/InviteCommands.tsx:65
-msgid "Sticker pack limit reached"
-msgstr "貼圖包數量已達上限"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings section label for sticker expression packs.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:84
-#: src/features/user/components/settings_utils/search_index/ExpressionPacksIndex.ts:27
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:22
-msgid "Sticker packs"
-msgstr "貼圖"
-
 #: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:283
 msgid "Sticker slots"
 msgstr "貼圖欄位"
@@ -31039,6 +30547,13 @@ msgstr "停止與所有朋友分享語音活動嗎？"
 msgid "Stop speaking"
 msgstr "停止發言"
 
+#. Danger action that stops the active screen share.
+#. Voice screen share menu action that stops the current user stream.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:19
+msgid "Stop Streaming"
+msgstr "停止串流"
+
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31
 msgid "Stop trusting all links?"
@@ -31050,7 +30565,7 @@ msgid "Stop watching"
 msgstr "停止觀看"
 
 #. Tooltip / button label in the voice control bar that stops watching a remote screen share.
-#: src/features/voice/components/VoiceControlBar.tsx:151
+#: src/features/voice/components/VoiceControlBar.tsx:147
 msgid "Stop watching stream"
 msgstr "停止觀看直播"
 
@@ -31088,10 +30603,15 @@ msgstr "已隱藏串流"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "直播預覽"
+
+#. Compact submenu label for changing the resolution and frame rate of an active stream.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+msgid "Stream Quality"
+msgstr "直播畫質"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
@@ -31302,12 +30822,12 @@ msgid "Suspend"
 msgstr "停用"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:177
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
 msgid "SVC mode"
 msgstr "SVC 模式"
 
@@ -31757,7 +31277,7 @@ msgid "Template URL"
 msgstr "範本網址"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Temporal layers"
 msgstr "時間層"
 
@@ -31818,7 +31338,7 @@ msgstr "測試網址展開和已呈現的嵌入內容"
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
 msgid "Text"
 msgstr "文字"
 
@@ -32001,11 +31521,6 @@ msgstr "該訊息已不存在，或您已無法存取該對話。"
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:42
 msgid "That's all of them."
 msgstr "就這些了。"
-
-#. End-of-list body text in the scheduled messages popout when all scheduled messages are visible.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:56
-msgid "That's everything in the queue."
-msgstr "佇列中的訊息都已顯示。"
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
@@ -32671,7 +32186,7 @@ msgid "This invite has unlimited uses."
 msgstr "此邀請連結可無限次使用。"
 
 #. Helper text shown on an invite embed while streaming privacy is active.
-#: src/features/channel/components/InviteEmbed.tsx:141
+#: src/features/channel/components/InviteEmbed.tsx:112
 msgid "This invite is hidden while sharing is protected."
 msgstr "分享受保護時，此邀請會隱藏。"
 
@@ -33167,7 +32682,7 @@ msgstr "時間"
 #. Settings section label for app time display format.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:374
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:46
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "時間格式"
 
@@ -33393,11 +32908,6 @@ msgstr "切換音效面板"
 #: src/features/input/state/input_keybind/shared.ts:181
 msgid "Toggle the sticker picker"
 msgstr "切換貼圖選取器"
-
-#. Action that toggles whether the pack invite is unique to the recipient.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:73
-msgid "Toggle unique invite"
-msgstr "切換專屬邀請"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:305
@@ -33731,7 +33241,7 @@ msgid "Try another search term, or pick a different category or language."
 msgstr "嘗試另一個搜尋字詞，或選擇不同的分類或語言。"
 
 #. Helper text on an unknown invite embed suggesting the user request a fresh invite.
-#: src/features/channel/components/InviteEmbed.tsx:129
+#: src/features/channel/components/InviteEmbed.tsx:100
 msgid "Try asking for a new invite."
 msgstr "試著要求新的邀請。"
 
@@ -33754,7 +33264,7 @@ msgstr "請再試一次編輯訊息。"
 msgid "TRY gifts are one-time payments. Cards charged in TRY still need to be issued in Türkiye for the purchase to stay eligible."
 msgstr "TRY 贈禮為一次性付款。以 TRY 支付的卡片仍需在土耳其發行，才能符合購買資格。"
 
-#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:254
+#: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:252
 msgid "Try searching for something like \"theme\", \"notifications\", or \"privacy\""
 msgstr "試試看搜尋「主題」、「通知」或「隱私」等關鍵字"
 
@@ -33804,7 +33314,7 @@ msgstr "關閉"
 
 #. Bulk voice action that turns off the camera on every active device of the current user.
 #. Voice menu action that turns off every active device/session's camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:90
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:114
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:93
 msgid "Turn off all device cameras"
 msgstr "關閉所有裝置的相機"
@@ -33820,14 +33330,14 @@ msgstr "關閉視訊"
 
 #. Voice menu action that turns off the camera on a single device of the current user.
 #. Voice menu action that turns off the camera on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:81
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:81
 msgid "Turn off device camera"
 msgstr "關閉裝置相機"
 
 #. Voice menu action that ends the screen share on a single device of the current user.
 #. Voice menu action that stops screen sharing or streaming on one device/session.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:61
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:85
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:85
 msgid "Turn off device stream"
 msgstr "關閉裝置串流"
@@ -33839,7 +33349,7 @@ msgstr "關閉全站的私人訊息和好友邀請。此設定之後只能再更
 
 #. Voice menu action that ends the current user screen share.
 #. Voice menu action that stops the current user's screen share or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:65
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:89
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:69
 msgid "Turn off stream"
 msgstr "關閉直播"
@@ -34019,16 +33529,6 @@ msgstr "英國法律要求進行成人內容檢查。若要繼續，您必須透
 msgid "Ukrainian"
 msgstr "烏克蘭文"
 
-#. Generic title for the error modal when an emoji pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:99
-msgid "Unable to install emoji pack"
-msgstr "無法安裝表情貼圖包"
-
-#. Generic title for the error modal when a sticker pack invite fails with an unrecognized error code.
-#: src/features/invite/commands/InviteCommands.tsx:103
-msgid "Unable to install sticker pack"
-msgstr "無法安裝貼圖包"
-
 #. Error-state title in the activity log tab when fetching log entries failed.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:126
 msgid "Unable to load activity logs"
@@ -34037,11 +33537,6 @@ msgstr "無法載入活動記錄"
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:95
 msgid "Unable to load applications"
 msgstr "無法載入應用程式"
-
-#. Error message in the expression packs tab.
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:36
-msgid "Unable to load pack information."
-msgstr "無法載入貼圖包資訊。"
 
 #. Error message in the channel and chat textual attachment code panel.
 #. Error message in the channel and chat textual attachment code panel.
@@ -34265,7 +33760,7 @@ msgstr "取消收藏貼圖"
 
 #. Voice call layout action that removes focus from the currently pinned participant.
 #. Voice layout menu action that removes the focused participant or stream.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:25
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:41
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:97
 msgid "Unfocus"
 msgstr "取消聚焦"
@@ -34284,7 +33779,7 @@ msgstr "展開連結"
 
 #. Settings section label for the embed debugger URL input.
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
-#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:70
+#: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Unfurl debugger"
 msgstr "嵌入偵錯工具網址"
 
@@ -34292,10 +33787,6 @@ msgstr "嵌入偵錯工具網址"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:89
 msgid "Unicode emojis"
 msgstr "Unicode 表情符號"
-
-#: src/features/expressions/components/modals/PackInviteModal.tsx:180
-msgid "Unique invite"
-msgstr "專屬邀請"
 
 #. Codec description in the screen share codec policy menu, used for the universal fallback codec.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:20
@@ -34350,7 +33841,7 @@ msgstr "未知日期"
 #. Fallback device or operating-system label in the devices tab when session client data is unavailable.
 #. Short label in the app layout voice participant item.
 #. Short label in the notifications. Keep it concise.
-#: src/features/app/components/layout/VoiceParticipantItem.tsx:43
+#: src/features/app/components/layout/VoiceParticipantItem.tsx:44
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:65
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:78
 msgid "Unknown device"
@@ -34376,7 +33867,7 @@ msgid "Unknown gift"
 msgstr "不明禮物"
 
 #. Title shown on an invite embed when the invite code resolves to nothing (expired, revoked, or invalid).
-#: src/features/channel/components/InviteEmbed.tsx:125
+#: src/features/channel/components/InviteEmbed.tsx:96
 msgid "Unknown invite"
 msgstr "不明邀請"
 
@@ -34428,7 +33919,7 @@ msgstr "不明使用者"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
-#: src/features/voice/components/VoiceParticipantTile.tsx:161
+#: src/features/voice/components/VoiceParticipantTile.tsx:162
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "不明使用者"
@@ -34449,13 +33940,6 @@ msgstr "unknown-mention"
 #: src/features/messaging/utils/markdown/Plaintext.ts:76
 msgid "unknown-role"
 msgstr "unknown-role"
-
-#. Option label representing an unlimited count.
-#. Short label in the expression packs tab. Keep it concise.
-#: src/features/expressions/components/modals/PackInviteModal.tsx:29
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:32
-msgid "Unlimited"
-msgstr "無限制"
 
 #. Audit log community feature label for unlimited custom emoji capacity.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
@@ -34525,7 +34009,7 @@ msgid "Unmute"
 msgstr "解除靜音"
 
 #. Voice control button label to turn the user's microphone back on.
-#: src/features/voice/components/VoiceControlBar.tsx:121
+#: src/features/voice/components/VoiceControlBar.tsx:117
 msgctxt "voice-control-action"
 msgid "Unmute"
 msgstr "解除靜音"
@@ -34613,7 +34097,7 @@ msgstr "未命名頻道"
 #. Fallback display name for a group DM with no name set.
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
-#: src/features/channel/components/InviteEmbed.tsx:72
+#: src/features/channel/components/InviteEmbed.tsx:63
 #: src/features/channel/state/ChannelDisplayName.ts:19
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
@@ -34692,7 +34176,7 @@ msgstr "未讀"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the inbox popout filtering to channels with unread messages.
-#: src/features/messaging/components/popouts/InboxPopout.tsx:32
+#: src/features/messaging/components/popouts/InboxPopout.tsx:30
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:77
 msgid "Unread"
@@ -34828,7 +34312,7 @@ msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They sho
 msgstr "最多可設定 {DISCOVERY_MAX_TAGS} 個標籤，讓大家更容易找到你的社群。這些標籤會顯示在探索搜尋結果中。"
 
 #. Feature comparison table value label. Shown in the restricted or stock column for a text-valued perk. Format includes a resolution token (4K) and a framerate token that should not be translated.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:91
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:87
 msgid "Up to 4K/60fps"
 msgstr "最高 4K/60fps"
 
@@ -34903,11 +34387,6 @@ msgstr "政策更新"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:23
 msgid "Updated saved media"
 msgstr "已更新珍藏的媒體"
-
-#. Label in the messaging commands. {scheduledTimeLabel} is the localized scheduled date and time.
-#: src/features/messaging/commands/ScheduledMessageCommands.tsx:53
-msgid "Updated scheduled message for {scheduledTimeLabel}"
-msgstr "已更新排定的訊息，適用於 {scheduledTimeLabel}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:544
 msgid "Updated the avatar."
@@ -35165,7 +34644,7 @@ msgid "Uploading emojis"
 msgstr "正在上傳表情符號"
 
 #. Description for the maximum screen share bitrate select. Keep WebRTC literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
 msgid "Upper bitrate cap before WebRTC adapts to the network."
 msgstr "在 WebRTC 根據網路狀況調整之前，設定最高的位元速率上限。"
 
@@ -35294,7 +34773,7 @@ msgid "Use an email you can open. We will send a code there."
 msgstr "請使用您可以開啟的電子郵件。我們會將驗證碼傳送至該信箱。"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
 msgid "Use animated emojis"
 msgstr "使用動態表情符號"
 
@@ -35596,11 +35075,6 @@ msgstr "僅在此社群中使用."
 msgid "User"
 msgstr "用戶"
 
-#. Voice participant context menu submenu label for lower-frequency profile and communication actions.
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:202
-msgid "User actions"
-msgstr "使用者動作"
-
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:251
 msgid "User appears underage, or is involved in grooming or child exploitation."
@@ -35677,7 +35151,7 @@ msgid "User record"
 msgstr "使用者紀錄"
 
 #. Root label for the current user settings modal and settings search paths.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:352
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:341
 msgid "User settings"
 msgstr "使用者設定"
 
@@ -36215,7 +35689,7 @@ msgid "Video progress"
 msgstr "影片進度"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
 msgid "Video quality"
 msgstr "視訊畫質"
 
@@ -36604,7 +36078,7 @@ msgstr "語音 (成人內容)"
 
 #. User settings tab for microphone, speaker, camera, and call stats.
 #. User settings tab for microphone, speaker, camera, and call stats.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:124
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:119
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:30
 msgid "Voice & video"
 msgstr "語音與視訊"
@@ -36861,7 +36335,7 @@ msgid "Wait here"
 msgstr "請在此等候"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:56
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
 msgstr "正在等待連線…"
 
@@ -37362,11 +36836,6 @@ msgstr "搜尋內容。"
 msgid "What's happening?"
 msgstr "近況如何？"
 
-#. Form helper text for an expression pack description input.
-#: src/features/expressions/components/modals/CreatePackModal.tsx:50
-msgid "What's in this pack?"
-msgstr "這個組合包有什麼？"
-
 #. Short label in the settings dialog mobile settings view.
 #. Short label in the whats new modal.
 #. Sidebar item in settings that opens the app update notes modal.
@@ -37551,7 +37020,7 @@ msgid "Window state"
 msgstr "視窗狀態"
 
 #. User settings tab label shown on Windows desktop builds. Refers to the Microsoft Windows OS.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:74
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:69
 msgid "Windows app"
 msgstr "Windows 應用程式"
 
@@ -37873,16 +37342,6 @@ msgstr "您無法編輯此訊息。"
 msgid "You can't grant a permission you don't have in this channel."
 msgstr "您無法授予自己在此頻道中沒有的權限。"
 
-#. Body of the error modal when installing an emoji pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:91
-msgid "You can't install this emoji pack."
-msgstr "您無法安裝此表情符號包。"
-
-#. Body of the error modal when installing a sticker pack via invite is rejected for missing permissions.
-#: src/features/invite/commands/InviteCommands.tsx:95
-msgid "You can't install this sticker pack."
-msgstr "您無法安裝此貼圖包。"
-
 #. Title of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:38
 msgid "You can't join this community"
@@ -37942,8 +37401,8 @@ msgstr "您無法在此社群中傳送訊息。"
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:65
-#: src/features/voice/components/VoiceControlBar.tsx:141
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
+#: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "您無法在此頻道分享螢幕畫面"
 
@@ -37956,8 +37415,8 @@ msgstr "你無法在此頻道中發言"
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:74
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
-#: src/features/voice/components/VoiceControlBar.tsx:131
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
+#: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "您無法在此頻道中開啟相機"
 
@@ -38119,10 +37578,6 @@ msgstr "您加入此社群的時間還不夠長，因此無法傳送訊息。"
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:127
 msgid "You haven't blocked anyone yet."
 msgstr "您還沒有封鎖任何人。"
-
-#: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:343
-msgid "You haven't created any packs yet."
-msgstr "您還沒有建立任何表情貼圖包。"
 
 #. Intro copy in the keyboard navigation modal. {productName} is the app name.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:26
@@ -38345,13 +37800,6 @@ msgstr "您已達到書籤上限 {bookmarksText}。請移除一個書籤以新�
 msgid "You're at the cap of {freeItemsText} — your instance admin sets this limit."
 msgstr "您已達到 {freeItemsText} 的上限 — 此限制由您的實例管理員設定。"
 
-#. Fallback body of the emoji pack creation-limit error modal when no exact limit is known.
-#. Fallback body of the sticker pack creation-limit error modal when no exact limit is known.
-#: src/features/invite/commands/InviteCommands.tsx:61
-#: src/features/invite/commands/InviteCommands.tsx:79
-msgid "You're at the creation limit. Delete one to create another."
-msgstr "您已達到建立上限。請刪除一個，才能再建立一個。"
-
 #. Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
 #: src/features/app/components/alerts/MaxBookmarksModal.tsx:30
 msgid "You're at the free cap of {bookmarksText}. {premiumProductName} bumps you up to {premiumBookmarksText} — or remove one to add another."
@@ -38362,13 +37810,6 @@ msgstr "您已達到免費上限 {bookmarksText}。{premiumProductName} 會將�
 msgid "You're at the free cap of {freeItemsText}. {premiumProductName} bumps you up to {premiumItemsText}."
 msgstr "您已達到免費上限 {freeItemsText}。{premiumProductName} 能讓您增加到 {premiumItemsText}。"
 
-#. Fallback body of the emoji pack install-limit error modal when no exact limit is known.
-#. Fallback body of the sticker pack install-limit error modal when no exact limit is known.
-#: src/features/invite/commands/InviteCommands.tsx:52
-#: src/features/invite/commands/InviteCommands.tsx:70
-msgid "You're at the install limit. Remove one to add another."
-msgstr "您已達到安裝上限。請移除一個以新增另一個。"
-
 #. Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:8
 msgid "You're banned"
@@ -38378,11 +37819,6 @@ msgstr "你已被停權"
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx:19
 msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "您已達到使用上限。請等待 {duration} 後再試一次。"
-
-#. End-of-list title in the scheduled messages popout when all scheduled messages are visible. Tone can be friendly.
-#: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:51
-msgid "You're caught up"
-msgstr "你已讀完所有訊息"
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
@@ -38497,16 +37933,12 @@ msgstr "您最近已使用過自助退款。冷卻期結束後，您可以再次
 msgid "You've arrived, {username}! Let's get started."
 msgstr "{username}，歡迎上線！我們開始吧。"
 
-#: src/features/auth/flow/InviteHeader.tsx:200
-msgid "You've been invited to install"
-msgstr "你受邀安裝"
-
-#: src/features/auth/flow/InviteHeader.tsx:96
-#: src/features/auth/flow/InviteHeader.tsx:299
+#: src/features/auth/flow/InviteHeader.tsx:69
+#: src/features/auth/flow/InviteHeader.tsx:213
 msgid "You've been invited to join"
 msgstr "你受邀加入了"
 
-#: src/features/auth/flow/InviteHeader.tsx:151
+#: src/features/auth/flow/InviteHeader.tsx:124
 msgid "You've been invited to join a group DM by"
 msgstr "你受邀加入群組私訊，邀請人："
 
@@ -38586,7 +38018,7 @@ msgstr "您的 {premiumProductName} 訂閱已到期。您已失去所有 {premiu
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "您的 {productName} 工作階段已過期。請重新登入以繼續授權此應用程式。"
 
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:205
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:200
 msgid "Your account"
 msgstr "你的帳號"
 
