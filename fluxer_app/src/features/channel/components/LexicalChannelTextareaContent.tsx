@@ -39,6 +39,7 @@ import {TextareaButton} from '@app/features/channel/components/textarea/Textarea
 import {TextareaButtons} from '@app/features/channel/components/textarea/TextareaButtons';
 import styles from '@app/features/channel/components/textarea/TextareaInput.module.css';
 import {TextareaPlusMenu} from '@app/features/channel/components/textarea/TextareaPlusMenu';
+import {useChannelComposerDraftFocusRestore} from '@app/features/channel/components/useChannelComposerDraftFocusRestore';
 import {useChannelComposerGlobalShortcuts} from '@app/features/channel/components/useChannelComposerGlobalShortcuts';
 import {useChannelComposerPaste} from '@app/features/channel/components/useChannelComposerPaste';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -197,6 +198,13 @@ export const LexicalChannelTextareaContent = observer(
 				? containerRef.current.querySelector<HTMLDivElement>('[data-channel-textarea]')
 				: null;
 		}, []);
+		useChannelComposerDraftFocusRestore({
+			handleRef,
+			editableRef,
+			initialDraft: initialDraftRef.current.display,
+			textareaInputDisabled,
+			inlineEditActive: editingMessageId != null,
+		});
 		useEffect(() => {
 			const contentArea = contentAreaRef.current;
 			if (contentArea == null) {

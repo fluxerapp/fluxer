@@ -168,14 +168,52 @@ const isPointInsideMessageTree = (messageElement: HTMLElement, point: {x: number
 	const target = messageElement.ownerDocument.elementFromPoint(point.x, point.y);
 	return Boolean(target && messageElement.contains(target));
 };
+const HOVER_SCROLL_IDLE_MS = 150;
 let lastPointerPosition: {x: number; y: number} | null = null;
 let pointerPositionNotificationFrame: number | null = null;
 let pointerPositionSubscriptionCount = 0;
+let hoverInvalidationSubscriptionCount = 0;
+let pointerHoverSuspendedByScroll = false;
+let pointerHoverScrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
 const pointerPositionListeners = new Set<() => void>();
+const hoverInvalidationListeners = new Set<() => void>();
 const notifyPointerPositionListeners = (): void => {
 	for (const listener of Array.from(pointerPositionListeners)) {
 		listener();
 	}
+};
+const notifyHoverInvalidationListeners = (): void => {
+	for (const listener of Array.from(hoverInvalidationListeners)) {
+		listener();
+	}
+};
+const clearPointerHoverScrollIdleTimer = (): void => {
+	if (pointerHoverScrollIdleTimer == null) {
+		return;
+	}
+	clearTimeout(pointerHoverScrollIdleTimer);
+	pointerHoverScrollIdleTimer = null;
+};
+const resumePointerHoverAfterScroll = (): void => {
+	clearPointerHoverScrollIdleTimer();
+	if (!pointerHoverSuspendedByScroll) {
+		return;
+	}
+	pointerHoverSuspendedByScroll = false;
+	notifyHoverInvalidationListeners();
+};
+const suspendPointerHoverForScroll = (): void => {
+	clearPointerHoverScrollIdleTimer();
+	pointerHoverScrollIdleTimer = setTimeout(resumePointerHoverAfterScroll, HOVER_SCROLL_IDLE_MS);
+	if (pointerHoverSuspendedByScroll) {
+		return;
+	}
+	pointerHoverSuspendedByScroll = true;
+	if (pointerPositionNotificationFrame != null) {
+		cancelAnimationFrame(pointerPositionNotificationFrame);
+		pointerPositionNotificationFrame = null;
+	}
+	notifyHoverInvalidationListeners();
 };
 const schedulePointerPositionNotification = (): void => {
 	if (pointerPositionNotificationFrame != null) {
@@ -186,14 +224,12 @@ const schedulePointerPositionNotification = (): void => {
 		notifyPointerPositionListeners();
 	});
 };
-const notifyPointerPositionListenersOnLayoutChange = (): void => {
-	schedulePointerPositionNotification();
-};
 const updateLastPointerPosition = (event: PointerEvent | MouseEvent): void => {
 	if (lastPointerPosition?.x === event.clientX && lastPointerPosition.y === event.clientY) {
 		return;
 	}
 	lastPointerPosition = {x: event.clientX, y: event.clientY};
+	resumePointerHoverAfterScroll();
 	schedulePointerPositionNotification();
 };
 const clearLastPointerPosition = (): void => {
@@ -202,6 +238,10 @@ const clearLastPointerPosition = (): void => {
 	}
 	lastPointerPosition = null;
 	schedulePointerPositionNotification();
+};
+const clearLastPointerPositionOnWindowBlur = (): void => {
+	clearLastPointerPosition();
+	notifyHoverInvalidationListeners();
 };
 const clearLastPointerPositionOnWindowExit = (event: PointerEvent | MouseEvent): void => {
 	if (event.relatedTarget == null) {
@@ -220,9 +260,6 @@ const subscribePointerPosition = (listener: () => void): (() => void) => {
 			window.addEventListener('mousedown', updateLastPointerPosition, true);
 			window.addEventListener('mouseout', clearLastPointerPositionOnWindowExit, true);
 		}
-		window.addEventListener('scroll', notifyPointerPositionListenersOnLayoutChange, true);
-		window.addEventListener('resize', notifyPointerPositionListenersOnLayoutChange);
-		window.addEventListener('blur', clearLastPointerPosition);
 	}
 	pointerPositionSubscriptionCount += 1;
 	pointerPositionListeners.add(listener);
@@ -246,9 +283,27 @@ const subscribePointerPosition = (listener: () => void): (() => void) => {
 			window.removeEventListener('mousedown', updateLastPointerPosition, true);
 			window.removeEventListener('mouseout', clearLastPointerPositionOnWindowExit, true);
 		}
-		window.removeEventListener('scroll', notifyPointerPositionListenersOnLayoutChange, true);
-		window.removeEventListener('resize', notifyPointerPositionListenersOnLayoutChange);
-		window.removeEventListener('blur', clearLastPointerPosition);
+	};
+};
+const subscribeMessageHoverInvalidation = (listener: () => void): (() => void) => {
+	if (hoverInvalidationSubscriptionCount === 0) {
+		window.addEventListener('scroll', suspendPointerHoverForScroll, true);
+		window.addEventListener('resize', notifyHoverInvalidationListeners);
+		window.addEventListener('blur', clearLastPointerPositionOnWindowBlur);
+	}
+	hoverInvalidationSubscriptionCount += 1;
+	hoverInvalidationListeners.add(listener);
+	return () => {
+		hoverInvalidationListeners.delete(listener);
+		hoverInvalidationSubscriptionCount = Math.max(0, hoverInvalidationSubscriptionCount - 1);
+		if (hoverInvalidationSubscriptionCount !== 0) {
+			return;
+		}
+		clearPointerHoverScrollIdleTimer();
+		pointerHoverSuspendedByScroll = false;
+		window.removeEventListener('scroll', suspendPointerHoverForScroll, true);
+		window.removeEventListener('resize', notifyHoverInvalidationListeners);
+		window.removeEventListener('blur', clearLastPointerPositionOnWindowBlur);
 	};
 };
 
@@ -580,6 +635,9 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		if (mobileLayoutEnabled) {
 			return false;
 		}
+		if (pointerHoverSuspendedByScroll) {
+			return false;
+		}
 		const element = messageRef.current;
 		if (!element) {
 			return false;
@@ -640,6 +698,9 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		const element = messageRef.current;
 		const handleMouseEnter = (event: MouseEvent) => {
 			updateLastPointerPosition(event);
+			if (pointerHoverSuspendedByScroll) {
+				return;
+			}
 			setDesktopHoverState(true);
 		};
 		const handleMouseLeave = (event: MouseEvent) => {
@@ -649,12 +710,14 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		element.addEventListener('mouseenter', handleMouseEnter);
 		element.addEventListener('mouseleave', handleMouseLeave);
 		const unsubscribeFocus = subscribeWindowFocus(syncPointerHoverState);
+		const unsubscribeHoverInvalidation = subscribeMessageHoverInvalidation(syncPointerHoverState);
 		const rafId = requestAnimationFrame(syncPointerHoverState);
 		return () => {
 			cancelAnimationFrame(rafId);
 			element.removeEventListener('mouseenter', handleMouseEnter);
 			element.removeEventListener('mouseleave', handleMouseLeave);
 			unsubscribeFocus();
+			unsubscribeHoverInvalidation();
 		};
 	}, [mobileLayoutEnabled, keyboardModeEnabled, syncPointerHoverState]);
 	const shouldTrackActivePointer = !mobileLayoutEnabled && (isHoveringDesktop || isPopoutOpen || contextMenuOpen);

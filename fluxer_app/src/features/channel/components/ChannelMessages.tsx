@@ -5,6 +5,10 @@ import {useMessageListPlaceholderSpecs} from '@app/features/app/components/skele
 import {ScrollFillerSkeleton} from '@app/features/app/components/skeleton/ScrollFillerSkeleton';
 import {reportSkeletonMessagePresentation} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {measureSkeletonHeightPx, useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
+import {
+	type MessageFocusCandidate,
+	resolveBottommostFocusableMessageId,
+} from '@app/features/channel/components/ChannelMessageFocusTarget';
 import {renderChannelStream} from '@app/features/channel/components/ChannelMessageStream';
 import styles from '@app/features/channel/components/ChannelMessages.module.css';
 import {ChannelWelcomeSection} from '@app/features/channel/components/ChannelWelcomeSection';
@@ -397,28 +401,16 @@ export const Messages = observer(function Messages({
 			const messageElements = innerElement.querySelectorAll<HTMLElement>('[data-message-id]');
 			if (!messageElements.length) return;
 			const scrollerRect = scroller.getBoundingClientRect();
-			let bottomMostVisibleMessage: HTMLElement | null = null;
-			let bottomMostVisibleY = -Infinity;
+			const candidates: Array<MessageFocusCandidate> = [];
 			for (const messageEl of messageElements) {
+				const messageId = messageEl.dataset.messageId;
+				if (!messageId) continue;
 				const rect = messageEl.getBoundingClientRect();
-				const messageHeight = rect.height;
-				if (messageHeight === 0) continue;
-				const visibleTop = Math.max(rect.top, scrollerRect.top);
-				const visibleBottom = Math.min(rect.bottom, scrollerRect.bottom);
-				const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-				const visibilityRatio = visibleHeight / messageHeight;
-				if (visibilityRatio >= 0.75) {
-					if (rect.bottom > bottomMostVisibleY) {
-						bottomMostVisibleY = rect.bottom;
-						bottomMostVisibleMessage = messageEl;
-					}
-				}
+				candidates.push({messageId, top: rect.top, bottom: rect.bottom, height: rect.height});
 			}
-			if (bottomMostVisibleMessage) {
-				const messageId = bottomMostVisibleMessage.dataset.messageId;
-				if (messageId) {
-					scrollManager.focusRequestForMessage(messageId);
-				}
+			const messageId = resolveBottommostFocusableMessageId(candidates, scrollerRect.top, scrollerRect.bottom);
+			if (messageId) {
+				scrollManager.focusRequestForMessage(messageId);
 			}
 		};
 		const dispatchUnsubs = [

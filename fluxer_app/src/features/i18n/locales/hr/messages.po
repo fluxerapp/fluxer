@@ -7022,7 +7022,7 @@ msgstr "Očisti lažne privitke"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Očisti naredbu"
@@ -17816,7 +17816,7 @@ msgid "Jump to page"
 msgstr "Skoči na stranicu"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:83
 msgid "Jump to present"
 msgstr "Skoči na najnovije"
 
@@ -19799,12 +19799,12 @@ msgid "Message link"
 msgstr "Poveznica poruke"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:75
 msgid "Message list"
 msgstr "Popis poruka"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:67
+#: src/features/channel/components/ChannelMessages.tsx:71
 msgid "Message list for {channelName}"
 msgstr "Popis poruka za {channelName}"
 
@@ -19910,7 +19910,7 @@ msgid "Messages deleted"
 msgstr "Poruke izbrisane"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:87
 msgid "Messages failed to load"
 msgstr "Učitavanje poruka nije uspjelo"
 
@@ -37914,7 +37914,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Isteklo vam je vrijeme. Slanje poruka, reakcije i glasovne poruke pauzirani su dok ne istekne vrijeme."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:79
 msgid "You're viewing older messages"
 msgstr "Pregledavate starije poruke"
 

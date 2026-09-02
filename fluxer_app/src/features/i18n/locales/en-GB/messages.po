@@ -7022,7 +7022,7 @@ msgstr "Clear attachment mocks"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Clear command"
@@ -17816,7 +17816,7 @@ msgid "Jump to page"
 msgstr "Jump to page"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:83
 msgid "Jump to present"
 msgstr "Jump to present"
 
@@ -19799,12 +19799,12 @@ msgid "Message link"
 msgstr "Message link"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:75
 msgid "Message list"
 msgstr "Message list"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:67
+#: src/features/channel/components/ChannelMessages.tsx:71
 msgid "Message list for {channelName}"
 msgstr "Message list for {channelName}"
 
@@ -19910,7 +19910,7 @@ msgid "Messages deleted"
 msgstr "Messages deleted"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:87
 msgid "Messages failed to load"
 msgstr "Messages failed to load"
 
@@ -37914,7 +37914,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "You're timed out. Messaging, reactions, and voice are paused until the timeout expires."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:79
 msgid "You're viewing older messages"
 msgstr "You're viewing older messages"
 
