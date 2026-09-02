@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "È stato fornito uno stato non valido. Ora puoi chiudere questa scheda e tornare all'app."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "Si è verificato un errore imprevisto"
 
@@ -6500,7 +6500,7 @@ msgstr "Controlla la tua connessione, poi riprova."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Controlla la tua email"
@@ -11733,7 +11733,7 @@ msgstr "Non eliminare nulla"
 msgid "Don't display separately."
 msgstr "Non visualizzare separatamente."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Non hai un account?"
 
@@ -13228,7 +13228,7 @@ msgstr "Inserisci nome utente"
 msgid "Enter verification code"
 msgstr "Inserisci il codice di verifica"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Inserisci la tua email e ti invieremo un link per reimpostare la password."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Password dimenticata"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Hai dimenticato la password?"
@@ -25852,7 +25852,7 @@ msgstr "repost"
 msgid "Request a new code first."
 msgstr "Richiedi prima un nuovo codice."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Richiedi un nuovo link per il reset"
 
@@ -26106,7 +26106,7 @@ msgstr "Reimposta dati"
 msgid "Reset font size"
 msgstr "Reimposta dimensione carattere"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Link di reimpostazione non valido o scaduto"
 
@@ -26122,7 +26122,7 @@ msgstr "Reimposta posizione media"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Reimposta password"
 
@@ -26424,7 +26424,7 @@ msgstr "Ripristina finestra"
 msgid "Resubscribe"
 msgstr "Riattiva abbonamento"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Torna all'accesso"
 
@@ -27986,7 +27986,7 @@ msgstr "Invia segnalazione"
 msgid "Send request"
 msgstr "Invia richiesta"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Invia link di reimpostazione"
 
@@ -28240,8 +28240,8 @@ msgstr "Soglia cronologia messaggi impostata su {0}."
 msgid "Set mute shortcut"
 msgstr "Imposta scorciatoia disattiva audio"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Imposta nuova password"
 
@@ -28394,7 +28394,7 @@ msgstr "Imposta regione vocale"
 msgid "Set webhook type to {0}."
 msgstr "Imposta il tipo di webhook su {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Imposta la tua nuova password."
 
@@ -32425,7 +32425,7 @@ msgstr "Questo rimuove tutti i domini attendibili. Visualizzerai di nuovo l'avvi
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Verranno rimosse tutte le scorciatoie personalizzate e riattivate quelle predefinite. Questa azione non può essere annullata."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Questo link di reimpostazione è scaduto. I link di reimpostazione durano 1 ora. Richiedine uno nuovo."
 
@@ -35587,7 +35587,7 @@ msgstr "Verifica carta in corso"
 msgid "Verifying code…"
 msgstr "Verifica codice…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Verifica del link di reimpostazione…"
 
@@ -36601,7 +36601,7 @@ msgstr "Abbiamo apportato modifiche significative ai nostri <0>Termini di serviz
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "Abbiamo apportato modifiche significative ai nostri <0>Termini di servizio</0>. Rileggili prima di continuare a usare {productName}."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "Ti abbiamo inviato le istruzioni per reimpostare la password via email. Controlla la tua casella di posta per il link di reimpostazione."
 

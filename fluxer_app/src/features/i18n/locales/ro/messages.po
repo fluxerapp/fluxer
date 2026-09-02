@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "A fost furnizată o stare nevalidă. Acum poți închide această filă și poți reveni la aplicație."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "A apărut o eroare neașteptată"
 
@@ -6500,7 +6500,7 @@ msgstr "Verifică-ți conexiunea, apoi încearcă din nou."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Verifică-ți emailul"
@@ -11733,7 +11733,7 @@ msgstr "Nu șterge nimic"
 msgid "Don't display separately."
 msgstr "Nu afișa separat."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Nu ai un cont?"
 
@@ -13228,7 +13228,7 @@ msgstr "Introdu numele de utilizator"
 msgid "Enter verification code"
 msgstr "Introduceți codul de verificare"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Introdu adresa ta de e-mail și îți vom trimite un link pentru a-ți reseta parola."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Am uitat parola"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Ai uitat parola?"
@@ -25852,7 +25852,7 @@ msgstr "repostări"
 msgid "Request a new code first."
 msgstr "Solicită mai întâi un cod nou."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Solicită un link nou de resetare"
 
@@ -26106,7 +26106,7 @@ msgstr "Resetați datele"
 msgid "Reset font size"
 msgstr "Resetare dimensiune font"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Linkul de resetare este invalid sau a expirat"
 
@@ -26122,7 +26122,7 @@ msgstr "Resetați poziția media"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Resetare parolă"
 
@@ -26424,7 +26424,7 @@ msgstr "Restabiliți fereastra"
 msgid "Resubscribe"
 msgstr "Reabonează-te"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Înapoi la autentificare"
 
@@ -27986,7 +27986,7 @@ msgstr "Trimite raportul"
 msgid "Send request"
 msgstr "Trimite cererea"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Trimite link de resetare"
 
@@ -28240,8 +28240,8 @@ msgstr "Setează pragul istoricului mesajelor la {0}."
 msgid "Set mute shortcut"
 msgstr "Setează scurtătura pentru dezactivare sunet"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Setează o parolă nouă"
 
@@ -28394,7 +28394,7 @@ msgstr "Setează regiunea vocală"
 msgid "Set webhook type to {0}."
 msgstr "Tipul de webhook a fost setat la {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Setează-ți noua parolă."
 
@@ -32425,7 +32425,7 @@ msgstr "Aceasta elimină toate domeniile de încredere. Veți vedea din nou aver
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Aceasta elimină toate scurtăturile personalizate și reactivează toate scurtăturile încorporate. Această acțiune nu poate fi anulată."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Acest link de resetare a expirat. Linkurile de resetare sunt valabile 1 oră. Te rugăm să soliciți unul nou."
 
@@ -35587,7 +35587,7 @@ msgstr "Se verifică cardul"
 msgid "Verifying code…"
 msgstr "Se verifică codul…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Se verifică linkul de resetare…"
 
@@ -36601,7 +36601,7 @@ msgstr "Am adus modificări importante la <0>Termenii și condițiile</0> și la
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "Am adus modificări importante la <0>Termenii și condițiile</0> noștri. Revizuiește-i înainte de a continua să folosești {productName}."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "Am trimis instrucțiunile de resetare a parolei pe adresa ta de e-mail. Verifică-ți căsuța de e-mail pentru linkul de resetare."
 

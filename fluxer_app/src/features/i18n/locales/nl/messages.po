@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Er is een ongeldige status opgegeven. Je kunt dit tabblad nu sluiten en teruggaan naar de app."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "Er is een onverwachte fout opgetreden"
 
@@ -6500,7 +6500,7 @@ msgstr "Controleer je verbinding en probeer het opnieuw."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Controleer je e-mail"
@@ -11733,7 +11733,7 @@ msgstr "Niet verwijderen"
 msgid "Don't display separately."
 msgstr "Niet afzonderlijk weergeven."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Nog geen account?"
 
@@ -13228,7 +13228,7 @@ msgstr "Gebruikersnaam invoeren"
 msgid "Enter verification code"
 msgstr "Voer verificatiecode in"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Voer je e-mailadres in en we sturen je een link om je wachtwoord opnieuw in te stellen."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Wachtwoord vergeten"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
@@ -25852,7 +25852,7 @@ msgstr "reposts"
 msgid "Request a new code first."
 msgstr "Vraag eerst een nieuwe code aan."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Nieuwe resetlink aanvragen"
 
@@ -26106,7 +26106,7 @@ msgstr "Gegevens herstellen"
 msgid "Reset font size"
 msgstr "Lettergrootte herstellen"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Resetlink ongeldig of verlopen"
 
@@ -26122,7 +26122,7 @@ msgstr "Media-positie herstellen"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Wachtwoord opnieuw instellen"
 
@@ -26424,7 +26424,7 @@ msgstr "Venster herstellen"
 msgid "Resubscribe"
 msgstr "Opnieuw abonneren"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Terug naar inloggen"
 
@@ -27986,7 +27986,7 @@ msgstr "Rapport verzenden"
 msgid "Send request"
 msgstr "Verzoek verzenden"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Herstelkoppeling verzenden"
 
@@ -28240,8 +28240,8 @@ msgstr "Berichtgeschiedenisdrempel ingesteld op {0}."
 msgid "Set mute shortcut"
 msgstr "Sneltoets voor dempen instellen"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Nieuw wachtwoord instellen"
 
@@ -28394,7 +28394,7 @@ msgstr "Spraakregio instellen"
 msgid "Set webhook type to {0}."
 msgstr "Webhooks-type ingesteld op {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Stel je nieuwe wachtwoord in."
 
@@ -32425,7 +32425,7 @@ msgstr "Hiermee worden alle vertrouwde domeinen verwijderd. Je ziet dan opnieuw 
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Hiermee worden alle aangepaste sneltoetsen verwijderd en alle ingebouwde sneltoetsen opnieuw ingeschakeld. Dit kan niet ongedaan worden gemaakt."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Deze resetlink is verlopen. Resetlinks zijn 1 uur geldig. Vraag er alstublieft een nieuwe aan."
 
@@ -35587,7 +35587,7 @@ msgstr "Kaart verifiëren"
 msgid "Verifying code…"
 msgstr "Code verifiëren…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Je resetlink wordt geverifieerd…"
 
@@ -36601,7 +36601,7 @@ msgstr "We hebben belangrijke wijzigingen aangebracht in onze <0>Servicevoorwaar
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "We hebben belangrijke wijzigingen aangebracht in onze <0>Servicevoorwaarden</0>. Lees deze door voordat je {productName} blijft gebruiken."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "We hebben instructies voor het opnieuw instellen van je wachtwoord naar je e-mailadres gestuurd. Controleer je inbox voor de resetlink."
 

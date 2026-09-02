@@ -89,7 +89,7 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 						label={i18n._(CODE_DESCRIPTOR)}
 						value={form.getValue('code')}
 						onChange={(value) => form.setValue('code', value)}
-						error={form.getError('code') || fieldErrors?.code}
+						error={form.getError('code') || fieldErrors?.get('code')}
 						data-flx="auth.flow.mfa-screen.form-field.set-value.text"
 					/>
 					<Button

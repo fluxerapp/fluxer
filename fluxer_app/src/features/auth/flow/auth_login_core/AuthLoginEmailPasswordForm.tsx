@@ -7,7 +7,7 @@ import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
 import {useId} from 'react';
 
-type FieldErrors = Record<string, string | undefined> | null | undefined;
+type FieldErrors = ReadonlyMap<string, string> | null | undefined;
 
 export interface AuthFormControllerLike {
 	handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
@@ -71,7 +71,7 @@ export default function AuthLoginEmailPasswordForm({
 				label={i18n._(EMAIL_DESCRIPTOR)}
 				value={form.getValue('email')}
 				onChange={(value) => form.setValue('email', value)}
-				error={form.getError('email') || fieldErrors?.email}
+				error={form.getError('email') || fieldErrors?.get('email')}
 				data-flx="auth.flow.auth-login-core.auth-login-email-password-form.form-field.set-value.email"
 			/>
 			<FormField
@@ -84,7 +84,7 @@ export default function AuthLoginEmailPasswordForm({
 				label={i18n._(PASSWORD_DESCRIPTOR)}
 				value={form.getValue('password')}
 				onChange={(value) => form.setValue('password', value)}
-				error={form.getError('password') || fieldErrors?.password}
+				error={form.getError('password') || fieldErrors?.get('password')}
 				data-flx="auth.flow.auth-login-core.auth-login-email-password-form.form-field.set-value.password"
 			/>
 			{extraFields}

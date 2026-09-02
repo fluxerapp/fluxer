@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Надано недійсний статус. Тепер ви можете закрити цю вкладку та повернутися до застосунку."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "Сталася неочікувана помилка"
 
@@ -6500,7 +6500,7 @@ msgstr "Перевірте з’єднання, потім спробуйте щ
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Перевірте свою електронну пошту"
@@ -11733,7 +11733,7 @@ msgstr "Не видаляти жодних"
 msgid "Don't display separately."
 msgstr "Не показувати окремо."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Не маєте облікового запису?"
 
@@ -13228,7 +13228,7 @@ msgstr "Введіть ім'я користувача"
 msgid "Enter verification code"
 msgstr "Введіть код підтвердження"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Введіть свою електронну адресу, і ми надішлемо вам посилання для скидання пароля."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Забули пароль"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Забули пароль?"
@@ -25852,7 +25852,7 @@ msgstr "репости"
 msgid "Request a new code first."
 msgstr "Спершу запитайте новий код."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Запитати нове посилання для скидання"
 
@@ -26106,7 +26106,7 @@ msgstr "Скинути дані"
 msgid "Reset font size"
 msgstr "Скинути розмір шрифту"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Недійсне або прострочене посилання для скидання"
 
@@ -26122,7 +26122,7 @@ msgstr "Скинути положення медіафайлу"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Скинути пароль"
 
@@ -26424,7 +26424,7 @@ msgstr "Відновити вікно"
 msgid "Resubscribe"
 msgstr "Поновити підписку"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Повернутися до входу"
 
@@ -27986,7 +27986,7 @@ msgstr "Надіслати звіт"
 msgid "Send request"
 msgstr "Надіслати запит"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Надіслати посилання для скидання"
 
@@ -28240,8 +28240,8 @@ msgstr "Встановлено поріг історії повідомлень 
 msgid "Set mute shortcut"
 msgstr "Встановити швидкий доступ до вимкнення звуку"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Встановити новий пароль"
 
@@ -28394,7 +28394,7 @@ msgstr "Змінити голосовий регіон"
 msgid "Set webhook type to {0}."
 msgstr "Тип вебхука змінено на {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Встановіть новий пароль."
 
@@ -32425,7 +32425,7 @@ msgstr "Це видаляє всі довірені домени. Ви знов�
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Це видалить усі власні комбінації клавіш і знову ввімкне всі вбудовані. Цю дію не можна скасувати."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Цей посилання для скидання пароля застаріло. Посилання для скидання дійсні протягом 1 години. Будь ласка, запитайте нове."
 
@@ -35587,7 +35587,7 @@ msgstr "Перевірка картки"
 msgid "Verifying code…"
 msgstr "Перевірка коду…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Перевірка посилання для скидання пароля…"
 
@@ -36601,7 +36601,7 @@ msgstr "Ми внесли значні зміни до наших <0>Умов н
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "Ми внесли значні зміни до наших <0>Умов надання послуг</0>. Перегляньте їх, перш ніж продовжити користуватися {productName}."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "Ми надіслали інструкції зі скидання пароля на вашу електронну пошту. Перевірте свою скриньку на наявність посилання для скидання."
 

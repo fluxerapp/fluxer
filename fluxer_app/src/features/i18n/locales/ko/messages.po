@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "잘못된 상태가 제공되었습니다. 이제 이 탭을 닫고 앱으로 돌아가세요."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "예상치 못한 오류가 발생했습니다"
 
@@ -6500,7 +6500,7 @@ msgstr "연결을 확인한 후 다시 시도해 주세요."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "이메일을 확인해 주세요"
@@ -11733,7 +11733,7 @@ msgstr "모든 메시지 삭제 안 함"
 msgid "Don't display separately."
 msgstr "따로 표시 안 함."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "계정이 없으신가요?"
 
@@ -13228,7 +13228,7 @@ msgstr "사용자 이름 입력"
 msgid "Enter verification code"
 msgstr "인증 코드 입력"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "비밀번호를 잊으셨나요"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "비밀번호를 잊으셨나요?"
@@ -25852,7 +25852,7 @@ msgstr "다시 게시"
 msgid "Request a new code first."
 msgstr "먼저 새 코드를 요청하세요."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "새로운 재설정 링크 요청"
 
@@ -26106,7 +26106,7 @@ msgstr "데이터 초기화"
 msgid "Reset font size"
 msgstr "글꼴 크기 재설정"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "재설정 링크가 유효하지 않거나 만료되었습니다"
 
@@ -26122,7 +26122,7 @@ msgstr "미디어 위치 재설정"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "비밀번호 재설정"
 
@@ -26424,7 +26424,7 @@ msgstr "창 복원"
 msgid "Resubscribe"
 msgstr "재구독"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "로그인으로 돌아가기"
 
@@ -27986,7 +27986,7 @@ msgstr "보고서 보내기"
 msgid "Send request"
 msgstr "요청 보내기"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "재설정 링크 보내기"
 
@@ -28240,8 +28240,8 @@ msgstr "메시지 기록 보관 기간을 {0}으로 설정했습니다."
 msgid "Set mute shortcut"
 msgstr "음소거 단축키 설정"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "새 비밀번호 설정"
 
@@ -28394,7 +28394,7 @@ msgstr "음성 지역 설정"
 msgid "Set webhook type to {0}."
 msgstr "웹훅 유형을 {0}으로 설정했습니다."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "새 비밀번호를 설정하세요."
 
@@ -32425,7 +32425,7 @@ msgstr "모든 신뢰하는 도메인이 제거됩니다. 모든 도메인에 �
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "모든 사용자 지정 단축키를 제거하고 내장 단축키를 다시 활성화합니다. 이 작업은 되돌릴 수 없습니다."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "이 비밀번호 재설정 링크는 만료되었습니다. 링크는 1시간 동안 유효합니다. 새 링크를 요청해 주세요."
 
@@ -35587,7 +35587,7 @@ msgstr "카드 확인 중"
 msgid "Verifying code…"
 msgstr "코드 확인 중…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "재설정 링크 확인 중…"
 
@@ -36601,7 +36601,7 @@ msgstr "저희는 <0>서비스 약관</0> 및 <1>개인정보처리방침</1>을
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "<0>서비스 약관</0>에 중요한 변경 사항이 있습니다. {productName}을 계속 사용하기 전에 확인해 주세요."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "비밀번호 재설정 안내를 이메일로 보내드렸습니다. 받은 편지함에서 재설정 링크를 확인해 주세요."
 

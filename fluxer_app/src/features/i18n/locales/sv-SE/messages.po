@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "En ogiltig status angavs. Du kan nu stänga den här fliken och återgå till appen."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "Ett oväntat fel uppstod"
 
@@ -6500,7 +6500,7 @@ msgstr "Kontrollera din anslutning och försök igen."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Kolla din e-post"
@@ -11733,7 +11733,7 @@ msgstr "Radera inget"
 msgid "Don't display separately."
 msgstr "Visa inte separat."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Har du inget konto?"
 
@@ -13228,7 +13228,7 @@ msgstr "Ange användarnamn"
 msgid "Enter verification code"
 msgstr "Ange verifieringskod"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Ange din e-postadress så skickar vi en länk för att återställa ditt lösenord."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Glömt lösenord"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Glömt ditt lösenord?"
@@ -25852,7 +25852,7 @@ msgstr "reposter"
 msgid "Request a new code first."
 msgstr "Begär en ny kod först."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Begär en ny återställningslänk"
 
@@ -26106,7 +26106,7 @@ msgstr "Återställ data"
 msgid "Reset font size"
 msgstr "Återställ teckenstorlek"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Länken är ogiltig eller har gått ut"
 
@@ -26122,7 +26122,7 @@ msgstr "Återställ medieposition"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Återställ lösenord"
 
@@ -26424,7 +26424,7 @@ msgstr "Återställ fönster"
 msgid "Resubscribe"
 msgstr "Återprenumerera"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Tillbaka till inloggning"
 
@@ -27986,7 +27986,7 @@ msgstr "Skicka rapport"
 msgid "Send request"
 msgstr "Skicka förfrågan"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Skicka återställningslänk"
 
@@ -28240,8 +28240,8 @@ msgstr "Angav tröskel för meddelandehistorik till {0}."
 msgid "Set mute shortcut"
 msgstr "Ange genväg för tyst läge"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Ange nytt lösenord"
 
@@ -28394,7 +28394,7 @@ msgstr "Ange röstregion"
 msgid "Set webhook type to {0}."
 msgstr "Angav webhooks-typ till {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Ange ditt nya lösenord."
 
@@ -32425,7 +32425,7 @@ msgstr "Detta tar bort alla betrodda domäner. Du kommer att se varningen för e
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Detta tar bort alla anpassade genvägar och återaktiverar alla inbyggda genvägar. Detta kan inte ångras."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Den här återställningslänken har gått ut. Återställningslänkar är giltiga i 1 timme. Vänligen begär en ny."
 
@@ -35587,7 +35587,7 @@ msgstr "Verifierar kort"
 msgid "Verifying code…"
 msgstr "Verifierar kod…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Verifierar din återställningslänk…"
 
@@ -36601,7 +36601,7 @@ msgstr "Vi har gjort betydande ändringar i våra <0>användarvillkor</0> och <1
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "Vi har gjort betydande ändringar i våra <0>användarvillkor</0>. Granska dem innan du fortsätter att använda {productName}."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "Vi har skickat instruktioner för återställning av lösenord till din e-post. Kontrollera din inkorg efter återställningslänken."
 

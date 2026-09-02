@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Pateikta netinkama būsena. Dabar galite uždaryti šį skirtuką ir grįžti į programėlę."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "Įvyko netikėta klaida"
 
@@ -6500,7 +6500,7 @@ msgstr "Patikrinkite ryšį ir bandykite dar kartą."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Patikrinkite savo el. paštą"
@@ -11733,7 +11733,7 @@ msgstr "Neištrinti jokių"
 msgid "Don't display separately."
 msgstr "Nerodyti atskirai."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Neturite paskyros?"
 
@@ -13228,7 +13228,7 @@ msgstr "Įveskite naudotojo vardą"
 msgid "Enter verification code"
 msgstr "Įveskite patvirtinimo kodą"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Įveskite savo el. pašto adresą ir atsiųsime jums nuorodą slaptažodžiui nustatyti iš naujo."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Pamiršote slaptažodį"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Pamiršote slaptažodį?"
@@ -25852,7 +25852,7 @@ msgstr "pakartotiniai įrašai"
 msgid "Request a new code first."
 msgstr "Pirmiausia paprašykite naujo kodo."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Prašyti naujos nuorodos slaptažodžiui nustatyti iš naujo"
 
@@ -26106,7 +26106,7 @@ msgstr "Iš naujo nustatyti duomenis"
 msgid "Reset font size"
 msgstr "Atkurti šrifto dydį"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Nuoroda nebegalioja arba jos galiojimo laikas baigėsi"
 
@@ -26122,7 +26122,7 @@ msgstr "Atkurti medijos padėtį"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Atkurti slaptažodį"
 
@@ -26424,7 +26424,7 @@ msgstr "Atkurti langą"
 msgid "Resubscribe"
 msgstr "Prenumeruoti iš naujo"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Grįžti prie prisijungimo"
 
@@ -27986,7 +27986,7 @@ msgstr "Siųsti ataskaitą"
 msgid "Send request"
 msgstr "Siųsti užklausą"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Siųsti nuorodą nustatymui iš naujo"
 
@@ -28240,8 +28240,8 @@ msgstr "Nustatyti pranešimų istorijos slenkstį į {0}."
 msgid "Set mute shortcut"
 msgstr "Nustatyti nutildymo spartųjį klavišą"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Nustatyti naują slaptažodį"
 
@@ -28394,7 +28394,7 @@ msgstr "Nustatyti balso regioną"
 msgid "Set webhook type to {0}."
 msgstr "Nustatyti webhook tipą į \"{0}\"."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Nustatykite naują slaptažodį."
 
@@ -32425,7 +32425,7 @@ msgstr "Tai pašalina visus patikimus domenus. Vėl matysite išorinės nuorodos
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Tai pašalina visus pasirinktinius sparčiuosius klavišus ir iš naujo įgalina visus integruotus sparčiuosius klavišus. Šio veiksmo anuliuoti negalima."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Ši naujo slaptažodžio nuoroda nebegalioja. Nuorodos galioja 1 valandą. Paprašykite naujos."
 
@@ -35587,7 +35587,7 @@ msgstr "Kortelės tikrinimas"
 msgid "Verifying code…"
 msgstr "Tikrinamas kodas…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Tikrinama nuoroda slaptažodžiui nustatyti iš naujo…"
 
@@ -36601,7 +36601,7 @@ msgstr "Atlikome reikšmingų pakeitimų savo <0>paslaugų teikimo sąlygose</0>
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "Atlikome reikšmingų pakeitimų savo <0>paslaugų teikimo sąlygose</0>. Peržiūrėkite jas prieš tęsdami naudotis „{productName}\"."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "Išsiuntėme slaptažodžio nustatymo instrukcijas į jūsų el. paštą. Patikrinkite gautuosius, ar nėra nuorodos."
 

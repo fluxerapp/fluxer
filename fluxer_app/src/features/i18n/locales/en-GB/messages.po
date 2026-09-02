@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "An invalid status was provided. You can now close this tab and return to the app."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "An unexpected error occurred"
 
@@ -6500,7 +6500,7 @@ msgstr "Check your connection, then try again."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Check your email"
@@ -11733,7 +11733,7 @@ msgstr "Don't delete any"
 msgid "Don't display separately."
 msgstr "Don't display separately."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Don't have an account?"
 
@@ -13228,7 +13228,7 @@ msgstr "Enter username"
 msgid "Enter verification code"
 msgstr "Enter verification code"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Enter your email address and we'll send you a link to reset your password."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Forgot password"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Forgotten your password?"
@@ -25852,7 +25852,7 @@ msgstr "reposts"
 msgid "Request a new code first."
 msgstr "Request a new code first."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Request a new reset link"
 
@@ -26106,7 +26106,7 @@ msgstr "Reset data"
 msgid "Reset font size"
 msgstr "Reset font size"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Reset link invalid or expired"
 
@@ -26122,7 +26122,7 @@ msgstr "Reset media position"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Reset password"
 
@@ -26424,7 +26424,7 @@ msgstr "Restore window"
 msgid "Resubscribe"
 msgstr "Resubscribe"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Return to sign in"
 
@@ -27986,7 +27986,7 @@ msgstr "Send report"
 msgid "Send request"
 msgstr "Send request"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Send reset link"
 
@@ -28240,8 +28240,8 @@ msgstr "Set message history threshold to {0}."
 msgid "Set mute shortcut"
 msgstr "Set mute shortcut"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Set new password"
 
@@ -28394,7 +28394,7 @@ msgstr "Set voice region"
 msgid "Set webhook type to {0}."
 msgstr "Set webhook type to {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Set your new password."
 
@@ -32425,7 +32425,7 @@ msgstr "This removes all trusted domains. You'll see the external link warning f
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "This reset link has expired. Reset links last 1 hour. Please request a new one."
 
@@ -35587,7 +35587,7 @@ msgstr "Verifying card"
 msgid "Verifying code…"
 msgstr "Verifying code…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Verifying your reset link…"
 
@@ -36601,7 +36601,7 @@ msgstr "We've made significant changes to our <0>Terms of service</0> and <1>Pri
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "We've made significant changes to our <0>Terms of service</0>. Please review it before continuing to use {productName}."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "We've sent password reset instructions to your email. Check your inbox for the reset link."
 

@@ -29,13 +29,19 @@ const ForgotPasswordPage = observer(function ForgotPasswordPage() {
 	useFluxerDocumentTitle(i18n._(FORGOT_PASSWORD_DESCRIPTOR));
 	const form = useForm({
 		initialValues: {email: ''},
-		onSubmit: async (values) => {
+		onSubmit: async (submission) => {
 			setError(null);
 			try {
-				await AuthenticationCommands.forgotPassword(values.email);
+				await AuthenticationCommands.forgotPassword(submission.getValue('email'));
+				if (!submission.isCurrent()) {
+					return;
+				}
 				setIsSuccess(true);
-			} catch (_err) {
-				form.setErrors({email: 'Failed to send reset link. Try again.'});
+			} catch {
+				if (!submission.isCurrent()) {
+					return;
+				}
+				form.setError('email', 'Failed to send reset link. Try again.');
 			}
 		},
 	});

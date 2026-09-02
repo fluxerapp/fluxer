@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Naveden je nevažeći status. Sada možete zatvoriti ovu karticu i vratiti se u aplikaciju."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "Došlo je do neočekivane pogreške"
 
@@ -6500,7 +6500,7 @@ msgstr "Provjerite svoju vezu, pa pokušajte ponovno."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Provjerite e-poštu"
@@ -11733,7 +11733,7 @@ msgstr "Ne briši ništa"
 msgid "Don't display separately."
 msgstr "Ne prikazuj odvojeno."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Nemate račun?"
 
@@ -13228,7 +13228,7 @@ msgstr "Unesite korisničko ime"
 msgid "Enter verification code"
 msgstr "Unesite kontrolni kôd"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Unesite svoju e-adresu i poslat ćemo vam poveznicu za poništavanje lozinke."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Zaboravljena lozinka"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Zaboravili ste lozinku?"
@@ -25852,7 +25852,7 @@ msgstr "ponovne objave"
 msgid "Request a new code first."
 msgstr "Prvo zatražite novi kôd."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Zatražite novu poveznicu za poništavanje"
 
@@ -26106,7 +26106,7 @@ msgstr "Poništi podatke"
 msgid "Reset font size"
 msgstr "Vrati veličinu fonta"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Veza za ponovno postavljanje nije važeća ili je istekla"
 
@@ -26122,7 +26122,7 @@ msgstr "Poništi položaj medija"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Poništi lozinku"
 
@@ -26424,7 +26424,7 @@ msgstr "Vrati prozor"
 msgid "Resubscribe"
 msgstr "Ponovno se pretplatite"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Povratak na prijavu"
 
@@ -27986,7 +27986,7 @@ msgstr "Pošalji izvješće"
 msgid "Send request"
 msgstr "Pošalji zahtjev"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Pošalji poveznicu za ponovno postavljanje"
 
@@ -28240,8 +28240,8 @@ msgstr "Postavi prag povijesti poruka na {0}."
 msgid "Set mute shortcut"
 msgstr "Postavi prečac za isključivanje zvuka"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Postavi novu lozinku"
 
@@ -28394,7 +28394,7 @@ msgstr "Postavi glasovnu regiju"
 msgid "Set webhook type to {0}."
 msgstr "Postavi vrstu web-dojavnika na {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Postavite novu lozinku."
 
@@ -32425,7 +32425,7 @@ msgstr "Ovo uklanja sve pouzdane domene. Ponovno ćete vidjeti upozorenje o vanj
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Ovo uklanja sve prilagođene prečace i ponovno omogućuje sve ugrađene prečace. Ovo se ne može poništiti."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Ova poveznica za poništavanje lozinke istekla je. Poveznice za poništavanje vrijede 1 sat. Zatražite novu."
 
@@ -35587,7 +35587,7 @@ msgstr "Provjera kartice"
 msgid "Verifying code…"
 msgstr "Provjeravam kod…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Provjeravamo vašu poveznicu za poništavanje…"
 
@@ -36601,7 +36601,7 @@ msgstr "Uveli smo značajne promjene u naše <0>Uvjete pružanja usluge</0> i <1
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "Uveli smo značajne promjene u naše <0>Uvjete pružanja usluge</0>. Pregledajte ih prije nastavka korištenja aplikacije {productName}."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "Poslali smo upute za poništavanje lozinke na vašu e-poštu. Provjerite pristiglu poštu za poveznicu za poništavanje."
 

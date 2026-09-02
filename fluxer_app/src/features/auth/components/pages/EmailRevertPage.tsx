@@ -83,7 +83,7 @@ const EmailRevertPage = observer(function EmailRevertPage() {
 					label={i18n._(NEW_PASSWORD_DESCRIPTOR)}
 					value={form.getValue('password')}
 					onChange={(value) => form.setValue('password', value)}
-					error={form.getError('password') || fieldErrors?.password}
+					error={form.getError('password') || fieldErrors?.get('password')}
 					data-flx="auth.email-revert-page.form-field.set-value.password"
 				/>
 				<FormField

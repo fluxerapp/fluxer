@@ -3332,7 +3332,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Der blev angivet en ugyldig status. Du kan nu lukke denne fane og vende tilbage til appen."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:14
+#: src/features/auth/hooks/useAuthForm.ts:13
 msgid "An unexpected error occurred"
 msgstr "Der opstod en uventet fejl"
 
@@ -6500,7 +6500,7 @@ msgstr "Tjek din forbindelse, og prøv igen."
 
 #. Required-action modal carousel step title for existing-email verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:49
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:119
 msgid "Check your email"
 msgstr "Tjek din e-mail"
@@ -11733,7 +11733,7 @@ msgstr "Slet ingen"
 msgid "Don't display separately."
 msgstr "Vis ikke separat."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:100
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:106
 msgid "Don't have an account?"
 msgstr "Har du ikke en konto?"
 
@@ -13228,7 +13228,7 @@ msgstr "Indtast brugernavn"
 msgid "Enter verification code"
 msgstr "Indtast bekræftelseskode"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:68
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Indtast din e-mailadresse, så sender vi dig et link til at nulstille din adgangskode."
 
@@ -14710,7 +14710,7 @@ msgid "Forgot password"
 msgstr "Glemt adgangskode"
 
 #. Authentication link label that opens password recovery.
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:65
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
 #: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Forgot your password?"
 msgstr "Glemt din adgangskode?"
@@ -25852,7 +25852,7 @@ msgstr "reopslag"
 msgid "Request a new code first."
 msgstr "Anmod først om en ny kode."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:118
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
 msgid "Request a new reset link"
 msgstr "Anmod om et nyt nulstillingslink"
 
@@ -26106,7 +26106,7 @@ msgstr "Nulstil data"
 msgid "Reset font size"
 msgstr "Nulstil skriftstørrelse"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:111
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:124
 msgid "Reset link invalid or expired"
 msgstr "Nulstillingslinket er ugyldigt eller udløbet"
 
@@ -26122,7 +26122,7 @@ msgstr "Nulstil medieposition"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:168
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:181
 msgid "Reset password"
 msgstr "Nulstil adgangskode"
 
@@ -26424,7 +26424,7 @@ msgstr "Gendan vindue"
 msgid "Resubscribe"
 msgstr "Forny abonnement"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:56
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:62
 msgid "Return to sign-in"
 msgstr "Tilbage til login"
 
@@ -27986,7 +27986,7 @@ msgstr "Send rapport"
 msgid "Send request"
 msgstr "Send anmodning"
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:89
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:95
 msgid "Send reset link"
 msgstr "Send link til nulstilling"
 
@@ -28240,8 +28240,8 @@ msgstr "Sæt grænsen for beskedhistorik til {0}."
 msgid "Set mute shortcut"
 msgstr "Indstil genvej til lydløs"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:99
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:112
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:140
 msgid "Set new password"
 msgstr "Angiv ny adgangskode"
 
@@ -28394,7 +28394,7 @@ msgstr "Angiv stemmeregion"
 msgid "Set webhook type to {0}."
 msgstr "Angiv webhook-type til {0}."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:130
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:143
 msgid "Set your new password."
 msgstr "Angiv din nye adgangskode."
 
@@ -32425,7 +32425,7 @@ msgstr "Dette fjerner alle godkendte domæner. Du vil igen se advarslen om ekste
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Dette fjerner alle tilpassede genveje og genaktiverer alle indbyggede genveje. Dette kan ikke fortrydes."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:114
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:127
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Dette nulstillingslink er udløbet. Nulstillingslinks er gyldige i 1 time. Anmod venligst om et nyt."
 
@@ -35587,7 +35587,7 @@ msgstr "Bekræfter kort"
 msgid "Verifying code…"
 msgstr "Bekræfter kode…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:102
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:115
 msgid "Verifying your reset link…"
 msgstr "Bekræfter dit nulstillingslink…"
 
@@ -36601,7 +36601,7 @@ msgstr "Vi har foretaget væsentlige ændringer i vores <0>servicevilkår</0> og
 msgid "We've made significant changes to our <0>Terms of service</0>. Review it before continuing to use {productName}."
 msgstr "Vi har foretaget væsentlige ændringer i vores <0>servicevilkår</0>. Gennemgå dem, før du fortsætter med at bruge {productName}."
 
-#: src/features/auth/components/pages/ForgotPasswordPage.tsx:52
+#: src/features/auth/components/pages/ForgotPasswordPage.tsx:58
 msgid "We've sent password reset instructions to your email. Check your inbox for the reset link."
 msgstr "Vi har sendt en e-mail med instruktioner til nulstilling af adgangskode. Tjek din indbakke for nulstillingslinket."
 
