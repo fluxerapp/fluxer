@@ -41,8 +41,12 @@ handle_opcode(identify, _, State) ->
     gateway_handler_encode:close_with_reason(
         already_authenticated, <<"Already authenticated">>, State
     );
-handle_opcode(resume, #{<<"d">> := Data}, State) ->
-    gateway_handler_identify:handle_resume(Data, State);
+handle_opcode(resume, #{<<"d">> := Data}, #{session_pid := undefined} = State) ->
+    handle_rate_limited_resume(Data, State);
+handle_opcode(resume, _, State) ->
+    gateway_handler_encode:close_with_reason(
+        already_authenticated, <<"Already authenticated">>, State
+    );
 handle_opcode(Op, #{<<"d">> := Data}, State) ->
     handle_authenticated_opcode(Op, Data, State);
 handle_opcode(_, _, State) ->
@@ -83,6 +87,16 @@ handle_authenticated_opcode(
     handle_request_channel_member_counts(Data, Pid, State);
 handle_authenticated_opcode(_, _, State) ->
     gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State).
+
+-spec handle_rate_limited_resume(map(), state()) -> ws_result().
+handle_rate_limited_resume(Data, State) ->
+    case session_abuse_protection:check_identify_rate(peer_ip(State)) of
+        {error, identify_rate_limited} ->
+            logger:debug("Holding gateway resume: reason=rate_limited"),
+            {ok, State};
+        ok ->
+            gateway_handler_identify:handle_resume(Data, State)
+    end.
 
 -spec handle_dispatch(
     atom() | binary(), map() | null | {pre_encoded, binary()}, integer(), state()
