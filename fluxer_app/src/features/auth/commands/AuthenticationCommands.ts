@@ -8,7 +8,7 @@ import GatewayConnection from '@app/features/gateway/transport/GatewayConnection
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, ipAuthorizationRequiredResponseFromError} from '@app/features/platform/utils/ResponseInspection';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
@@ -210,17 +210,28 @@ function tokenBody(token: string): {token: string} {
 	return {token};
 }
 
+export class MalformedIpAuthorizationChallengeError extends HttpError {
+	constructor(error: HttpError) {
+		super({
+			method: error.method,
+			path: error.path,
+			status: error.status,
+			body: error.body,
+			responseHeaders: error.responseHeaders,
+		});
+		this.name = 'MalformedIpAuthorizationChallengeError';
+	}
+}
+
 function loginIpAuthorizationResponse(error: HttpError): IpAuthorizationRequiredResponse | null {
 	if (error.status !== 403 || failureCode(error) !== APIErrorCodes.IP_AUTHORIZATION_REQUIRED) {
 		return null;
 	}
-	const body = error.body as Record<string, unknown> | undefined;
-	return {
-		ip_authorization_required: true,
-		ticket: body?.ticket as string,
-		email: body?.email as string,
-		resend_available_in: (body?.resend_available_in as number) ?? 30,
-	};
+	const challenge = ipAuthorizationRequiredResponseFromError(error);
+	if (challenge === null) {
+		throw new MalformedIpAuthorizationChallengeError(error);
+	}
+	return challenge;
 }
 
 function verificationResultFromError(
