@@ -1176,6 +1176,7 @@ export class MessageSendService {
 			embeds: data.embeds,
 			attachments: this.attachmentsToProcess(data.attachments),
 			attachmentUploadUserId: this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
+			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
 			messageReference,
 			messageSnapshots,
 			guildId: channel.guildId,
