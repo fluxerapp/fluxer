@@ -350,8 +350,8 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 	}, [localParticipant, isCameraEnabled, isConnected]);
 	const renderScreenShareMenu = useCallback(
 		({onClose}: {onClose: () => void}) => {
-			const shareContext = ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display';
-			const shareContextResolved = ActiveScreenShareSource.getSourceId() != null;
+			const shareContext = ActiveScreenShareSource.getShareContext() ?? 'display';
+			const shareContextResolved = ActiveScreenShareSource.getPublishedSource() != null;
 			const screenShareSettingsMenu = (
 				<MenuGroup data-flx="voice.voice-control-bar.render-screen-share-menu.menu-group--2">
 					<MenuItem

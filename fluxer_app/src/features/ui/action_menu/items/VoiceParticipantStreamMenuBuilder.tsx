@@ -34,9 +34,12 @@ import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettin
 import {changeActiveScreenShare, stopActiveScreenShare} from '@app/features/voice/components/ActiveScreenShareMenu';
 import {openScreenSharePreviewPrivacyModal} from '@app/features/voice/components/modals/ScreenSharePickerModal';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import PopoutWindowManager, {isVoicePopoutSupported} from '@app/features/voice/state/PopoutWindowManager';
 import StreamAudioPrefs from '@app/features/voice/state/StreamAudioPrefs';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
+import {handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import {VOICE_STOP_WATCHING_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import type {I18n} from '@lingui/core';
@@ -78,6 +81,7 @@ function buildStreamStateAction(options: VoiceParticipantStreamMenuBuilderOption
 			onClick: () => {
 				onClose();
 				void stopActiveScreenShare().catch((error) => {
+					if (isScreenShareRollbackIncompleteError(error)) handleScreenShareError(error);
 					logger.error('Failed to stop active screen share from participant menu', error);
 				});
 			},
@@ -122,7 +126,7 @@ function buildOwnStreamChangeAction(options: VoiceParticipantStreamMenuBuilderOp
 		label: i18n._(CHANGE_STREAM_DESCRIPTOR),
 		onClick: () => {
 			onClose();
-			void changeActiveScreenShare('display').catch((error) => {
+			void changeActiveScreenShare(ActiveScreenShareSource.getShareContext() ?? 'display').catch((error) => {
 				logger.error('Failed to change active screen share from participant menu', error);
 			});
 		},

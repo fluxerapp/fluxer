@@ -202,8 +202,8 @@ export const VoiceParticipantContextMenu: React.FC<VoiceParticipantContextMenuPr
 				isDesktop(),
 				NativePermission.isLinuxWaylandDesktop,
 			);
-			const shareContext = ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display';
-			const shareContextResolved = ActiveScreenShareSource.getSourceId() != null;
+			const shareContext = ActiveScreenShareSource.getShareContext() ?? 'display';
+			const shareContextResolved = ActiveScreenShareSource.getPublishedSource() != null;
 			return (
 				<ActiveScreenShareMenu
 					onClose={onClose}
