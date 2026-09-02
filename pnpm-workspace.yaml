@@ -153,6 +153,7 @@ catalog:
   tsx: 4.21.0
   typed-css-modules: 0.9.1
   uint8array-extras: 1.5.0
+  undici: 7.29.0
   unique-names-generator: 4.7.1
   urlpattern-polyfill: 10.1.0
   valibot: 1.4.2

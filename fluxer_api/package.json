@@ -82,6 +82,7 @@
 		"transliteration": "catalog:",
 		"tsx": "catalog:",
 		"uint8array-extras": "catalog:",
+		"undici": "catalog:",
 		"validator": "catalog:",
 		"zod": "catalog:"
 	},

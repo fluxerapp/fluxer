@@ -360,6 +360,9 @@ catalogs:
     uint8array-extras:
       specifier: 1.5.0
       version: 1.5.0
+    undici:
+      specifier: 7.29.0
+      version: 7.29.0
     unique-names-generator:
       specifier: 4.7.1
       version: 4.7.1
@@ -656,6 +659,9 @@ importers:
       uint8array-extras:
         specifier: 'catalog:'
         version: 1.5.0
+      undici:
+        specifier: 'catalog:'
+        version: 7.29.0
       validator:
         specifier: 'catalog:'
         version: 13.15.26
@@ -820,7 +826,7 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/constants
       undici:
-        specifier: ^7.29.0
+        specifier: 'catalog:'
         version: 7.29.0
     devDependencies:
       '@types/node':
