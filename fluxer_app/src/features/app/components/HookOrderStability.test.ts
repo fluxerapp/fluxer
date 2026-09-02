@@ -58,6 +58,15 @@ function isFunctionNode(node: AstNode | null | undefined): boolean {
 	);
 }
 
+const REACT_HOOK_NAMESPACES = new Set(['React']);
+
+function isReactHookNamespace(object: AstNode | null | undefined): boolean {
+	if (!object || object.type !== 'Identifier' || typeof object.name !== 'string') {
+		return false;
+	}
+	return REACT_HOOK_NAMESPACES.has(object.name);
+}
+
 function getCalleeName(callee: AstNode | null | undefined): string | null {
 	if (!callee) {
 		return null;
@@ -69,7 +78,8 @@ function getCalleeName(callee: AstNode | null | undefined): string | null {
 		callee.type === 'MemberExpression' &&
 		callee.computed !== true &&
 		typeof callee.property === 'object' &&
-		callee.property !== null
+		callee.property !== null &&
+		isReactHookNamespace(callee.object as AstNode)
 	) {
 		return getCalleeName(callee.property as AstNode);
 	}
