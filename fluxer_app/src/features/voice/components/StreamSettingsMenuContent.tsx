@@ -41,11 +41,12 @@ import {
 	type ScreenShareContext,
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
+import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {
 	reconfigureActiveLinuxScreenShareAudioLink,
 	stopActiveLinuxScreenShareAudioLink,
 } from '@app/features/voice/utils/ScreenShareStartFlow';
-import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
+import {executeScreenShareOperation, handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import {
 	isLinuxDesktopAudioShare,
 	type StreamSettingsShareContext,
@@ -292,6 +293,7 @@ export async function pushActiveStreamSettings(
 				publishOptions,
 			);
 		} catch (error) {
+			if (isScreenShareRollbackIncompleteError(error)) handleScreenShareError(error);
 			logger.warn('Failed to restart active screen share with audio enabled', error);
 		}
 		return;

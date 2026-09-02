@@ -1693,7 +1693,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:103
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1774,7 +1774,7 @@ msgid "3 months"
 msgstr "3 meses"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:107
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1839,7 +1839,7 @@ msgid "6-digit code"
 msgstr "código de 6 dígitos"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2310,7 +2310,7 @@ msgid "Actual size"
 msgstr "Tamaño real"
 
 #. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:143
 msgid "Adaptive quality"
 msgstr "Calidad adaptable"
 
@@ -2770,7 +2770,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "Ajusta el nivel de zoom general de la app. Usa {zoomIn} / {zoomOut} para ajustar rápidamente."
 
 #. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
 msgid "Adjusted to {resolution} {frameRate} FPS"
 msgstr "Ajustado a {resolution} {frameRate} FPS"
 
@@ -4108,7 +4108,7 @@ msgid "Audio boost"
 msgstr "Refuerzo de audio"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:127
 msgid "Audio device"
 msgstr "Dispositivo de audio"
 
@@ -4198,7 +4198,7 @@ msgid "Audio send:"
 msgstr "Envío de audio:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:139
 msgid "Audio settings"
 msgstr "Ajustes de audio"
 
@@ -5820,15 +5820,15 @@ msgstr "Falló la verificación del captcha. Intenta de nuevo."
 msgid "Capture"
 msgstr "Capturar"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
 msgid "Capture app audio"
 msgstr "Capturar audio de la app"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:423
 msgid "Capture desktop audio"
 msgstr "Capturar audio del escritorio"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture device audio"
 msgstr "Capturar audio del dispositivo"
 
@@ -6089,7 +6089,7 @@ msgstr "Cambio programado"
 #. Action that opens the source picker for the active screen share.
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:23
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:25
 msgid "Change Stream"
 msgstr "Cambiar transmisión"
 
@@ -9780,7 +9780,7 @@ msgstr "Actualmente: {mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:91
 msgid "Custom"
 msgstr "Personalizado"
 
@@ -11028,7 +11028,7 @@ msgstr "Detalles del dispositivo"
 msgid "Device revoked"
 msgstr "Dispositivo revocado"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1024
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1026
 msgid "Device selection"
 msgstr "Selección de dispositivo"
 
@@ -11057,7 +11057,7 @@ msgid "Devices"
 msgstr "Dispositivos"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:95
 msgid "Dial in your own numbers"
 msgstr "Marca tus propios números"
 
@@ -14414,12 +14414,12 @@ msgid "Flexible text channel names"
 msgstr "Nombres de canales de texto flexibles"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:68
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "Movimiento fluido en 1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:73
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "Movimiento fluido a 720p 30 FPS"
 
@@ -14506,7 +14506,7 @@ msgstr "Ajustes de la carpeta"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Síguenos en {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:826
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:828
 msgid "Follow voice input"
 msgstr "Seguir entrada de voz"
 
@@ -14786,7 +14786,7 @@ msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Las velocidades de fotogramas superiores a 30 FPS requieren {premiumProductName}"
 
 #. Section header in the stream settings menu for frame rate options.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Framerate"
 msgstr "Velocidad de fotogramas"
 
@@ -15026,7 +15026,7 @@ msgstr "Control de juego"
 #. Discovery category dropdown option in the community Discovery settings tab.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:64
 msgid "Gaming"
 msgstr "Juegos"
 
@@ -15526,7 +15526,7 @@ msgstr "Se otorgó {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Otorga todos los permisos y omite las restricciones del canal. Muy delicado."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1011
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1013
 msgid "Granular selection"
 msgstr "Selección detallada"
 
@@ -16090,7 +16090,7 @@ msgstr "Ocultar contraseña"
 msgid "Hide picture-in-picture popout?"
 msgstr "¿Ocultar la ventana flotante de imagen en imagen?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:860
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:862
 msgid "Hide preview thumbnail"
 msgstr "Ocultar miniatura de vista previa"
 
@@ -16535,11 +16535,11 @@ msgstr "Ignorar"
 msgid "Ignore friend request"
 msgstr "Ignorar solicitud de amistad"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1001
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1003
 msgid "Ignore hardware devices"
 msgstr "Ignorar dispositivos de hardware"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:979
 msgid "Ignore input media"
 msgstr "Ignorar medios de entrada"
 
@@ -16565,7 +16565,7 @@ msgstr "Ignorar reporte de spam"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "¿Ignorar la solicitud de amistad de {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:988
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:990
 msgid "Ignore virtual"
 msgstr "Ignorar virtual"
 
@@ -19981,7 +19981,7 @@ msgstr "Se necesita permiso para el micrófono"
 msgid "Microphone test"
 msgstr "Prueba de micrófono"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
 msgid "Microphone workaround"
 msgstr "Solución alternativa para el micrófono"
 
@@ -22125,7 +22125,7 @@ msgstr "Solo se aplica en pantallas anchas."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Solo se aceptan tarjetas de crédito. Las tarjetas de débito y prepago no se pueden usar para la verificación de contenido para adultos."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
 msgid "Only default speakers"
 msgstr "Solo altavoces predeterminados"
 
@@ -22173,7 +22173,7 @@ msgstr "Solo ejecuta código aquí si entiendes exactamente lo que hace."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Mostrar solo previsualizaciones de mensajes para MD con mensajes no leídos"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:958
 msgid "Only speakers"
 msgstr "Solo oradores"
 
@@ -24734,7 +24734,7 @@ msgid "Raw embed JSON"
 msgstr "JSON sin formato del depurador de inserciones"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:81
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "Texto nítido en la fuente nativa, 15 FPS"
 
@@ -26342,7 +26342,7 @@ msgstr "El cambio de tamaño, la maximización y el ajuste de la ventana depende
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:119
 msgid "Resolution"
 msgstr "Resolución"
 
@@ -27039,7 +27039,7 @@ msgstr "Se necesita permiso para grabar la pantalla"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:77
 msgid "Screen share"
 msgstr "Compartir pantalla"
 
@@ -27155,10 +27155,20 @@ msgstr "Códec para compartir pantalla"
 msgid "Screen sharing failed"
 msgstr "Error al compartir pantalla"
 
+#. Body shown when a failed screen share could not be fully stopped.
+#: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx:12
+msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Use Stop Sharing or disconnect from the call before continuing."
+msgstr "La pantalla compartida falló, pero Fluxer no pudo confirmar que todas las rutas de captura se detuvieron. Usa Dejar de compartir o desconéctate de la llamada antes de continuar."
+
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:12
 msgid "Screen sharing is not supported on this device or browser. This feature requires a desktop browser that supports screen sharing, such as Chrome, Firefox, or Edge on Windows, macOS, or Linux."
 msgstr "No se puede compartir la pantalla en este dispositivo o navegador. Esta función requiere un navegador de escritorio compatible con la opción de compartir pantalla, como Chrome, Firefox o Edge en Windows, macOS o Linux."
+
+#. Title shown when a failed screen share could not be fully stopped.
+#: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx:8
+msgid "Screen sharing may still be active"
+msgstr "Es posible que el uso compartido de pantalla siga activo"
 
 #. Title of the modal shown when screen sharing is not supported on the current device / browser.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:8
@@ -28501,7 +28511,7 @@ msgid "Share source"
 msgstr "Compartir fuente"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
 msgid "Share Stream Audio"
 msgstr "Compartir audio de la transmisión"
 
@@ -28571,7 +28581,7 @@ msgid "Sharing personal information"
 msgstr "Compartir información personal"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:86
 msgid "Sharper text at 720p, 15 FPS"
 msgstr "Texto más nítido a 720p, 15 FPS"
 
@@ -29860,7 +29870,7 @@ msgstr "Sonidos"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:66
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:99
 msgid "Source"
 msgstr "Original"
 
@@ -30550,7 +30560,7 @@ msgstr "Dejar de hablar"
 #. Danger action that stops the active screen share.
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:19
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:21
 msgid "Stop Streaming"
 msgstr "Dejar de transmitir"
 
@@ -30609,7 +30619,7 @@ msgid "Stream preview"
 msgstr "Vista previa del stream"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
 msgid "Stream Quality"
 msgstr "Calidad de transmisión"
 
@@ -30635,7 +30645,7 @@ msgid "Streaming"
 msgstr "Transmitiendo"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "Streaming mode"
 msgstr "Modo de transmisión"
 
@@ -31097,7 +31107,7 @@ msgid "System announcements from {productName} staff. You can't reply here."
 msgstr "Anuncios del personal de {productName}. No puedes responder aquí."
 
 #. Audio device option label meaning the OS default audio input device.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:131
 msgid "System default"
 msgstr "Predeterminado del sistema"
 
@@ -34104,7 +34114,7 @@ msgid "Unnamed group"
 msgstr "Grupo sin nombre"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:135
 msgid "Unnamed input"
 msgstr "Entrada sin nombre"
 

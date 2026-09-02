@@ -1693,7 +1693,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:103
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1774,7 +1774,7 @@ msgid "3 months"
 msgstr "3개월"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:107
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1839,7 +1839,7 @@ msgid "6-digit code"
 msgstr "6자리 코드"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2310,7 +2310,7 @@ msgid "Actual size"
 msgstr "실제 크기"
 
 #. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:143
 msgid "Adaptive quality"
 msgstr "적응형 화질"
 
@@ -2770,7 +2770,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "앱의 전체적인 확대/축소 수준을 조정합니다. {zoomIn} 또는 {zoomOut}을(를) 사용하여 빠르게 조정할 수 있습니다."
 
 #. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
 msgid "Adjusted to {resolution} {frameRate} FPS"
 msgstr "{resolution} {frameRate} FPS로 조정됨"
 
@@ -4108,7 +4108,7 @@ msgid "Audio boost"
 msgstr "오디오 부스트"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:127
 msgid "Audio device"
 msgstr "오디오 장치"
 
@@ -4198,7 +4198,7 @@ msgid "Audio send:"
 msgstr "오디오 전송:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:139
 msgid "Audio settings"
 msgstr "오디오 설정"
 
@@ -5820,15 +5820,15 @@ msgstr "캡차 인증에 실패했습니다. 다시 시도해 주세요."
 msgid "Capture"
 msgstr "캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
 msgid "Capture app audio"
 msgstr "앱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:423
 msgid "Capture desktop audio"
 msgstr "데스크톱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture device audio"
 msgstr "기기 오디오 캡처"
 
@@ -6089,7 +6089,7 @@ msgstr "변경 예정"
 #. Action that opens the source picker for the active screen share.
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:23
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:25
 msgid "Change Stream"
 msgstr "스트림 변경"
 
@@ -9780,7 +9780,7 @@ msgstr "현재: {mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:91
 msgid "Custom"
 msgstr "사용자 지정"
 
@@ -11028,7 +11028,7 @@ msgstr "장치 정보"
 msgid "Device revoked"
 msgstr "기기 연결 해제됨"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1024
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1026
 msgid "Device selection"
 msgstr "기기 선택"
 
@@ -11057,7 +11057,7 @@ msgid "Devices"
 msgstr "기기"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:95
 msgid "Dial in your own numbers"
 msgstr "내 번호로 전화 걸기"
 
@@ -14414,12 +14414,12 @@ msgid "Flexible text channel names"
 msgstr "유연한 텍스트 채널 이름"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:68
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "1440p 60FPS에서 부드러운 움직임"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:73
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "720p 30FPS로 부드러운 움직임"
 
@@ -14506,7 +14506,7 @@ msgstr "폴더 설정"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "{blueskyProviderName}에서 팔로우하세요"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:826
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:828
 msgid "Follow voice input"
 msgstr "음성 입력 따라가기"
 
@@ -14786,7 +14786,7 @@ msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "30FPS를 초과하는 프레임 속도에는 {premiumProductName}이(가) 필요합니다"
 
 #. Section header in the stream settings menu for frame rate options.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Framerate"
 msgstr "프레임률"
 
@@ -15026,7 +15026,7 @@ msgstr "게임 컨트롤러"
 #. Discovery category dropdown option in the community Discovery settings tab.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:64
 msgid "Gaming"
 msgstr "게임"
 
@@ -15526,7 +15526,7 @@ msgstr "{0} 부여됨."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "모든 권한을 부여하고 채널 제한을 우회합니다. 매우 민감한 권한입니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1011
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1013
 msgid "Granular selection"
 msgstr "세부 선택"
 
@@ -16090,7 +16090,7 @@ msgstr "비밀번호 숨기기"
 msgid "Hide picture-in-picture popout?"
 msgstr "화면 속 화면 팝업 숨기기?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:860
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:862
 msgid "Hide preview thumbnail"
 msgstr "미리보기 썸네일 숨기기"
 
@@ -16535,11 +16535,11 @@ msgstr "무시"
 msgid "Ignore friend request"
 msgstr "친구 요청 무시하기"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1001
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1003
 msgid "Ignore hardware devices"
 msgstr "하드웨어 기기 무시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:979
 msgid "Ignore input media"
 msgstr "입력 미디어 무시"
 
@@ -16565,7 +16565,7 @@ msgstr "스팸 신고 무시"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "{displayName}님의 친구 요청을 무시하시겠어요?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:988
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:990
 msgid "Ignore virtual"
 msgstr "가상 배경 무시"
 
@@ -19981,7 +19981,7 @@ msgstr "마이크 권한 필요"
 msgid "Microphone test"
 msgstr "마이크 테스트"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
 msgid "Microphone workaround"
 msgstr "마이크 문제 해결"
 
@@ -22125,7 +22125,7 @@ msgstr "와이드 스크린에만 적용됩니다."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "신용카드만 사용할 수 있습니다. 성인 콘텐츠 확인을 위해 직불카드 및 선불카드는 사용할 수 없습니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
 msgid "Only default speakers"
 msgstr "기본 스피커만 사용"
 
@@ -22173,7 +22173,7 @@ msgstr "여기에서 실행하는 코드가 어떤 동작을 하는지 정확히
 msgid "Only show message previews for DMs with unread messages"
 msgstr "읽지 않은 메시지가 있는 DM에 대해서만 메시지 미리보기 표시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:958
 msgid "Only speakers"
 msgstr "스피커만"
 
@@ -24734,7 +24734,7 @@ msgid "Raw embed JSON"
 msgstr "원시 임베드 JSON"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:81
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "원본 화질 텍스트, 15 FPS"
 
@@ -26342,7 +26342,7 @@ msgstr "창 크기 조절, 최대화, 창 스냅은 컴포지터에 따라 달�
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:119
 msgid "Resolution"
 msgstr "해상도"
 
@@ -27039,7 +27039,7 @@ msgstr "화면 녹화 권한 필요"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:77
 msgid "Screen share"
 msgstr "화면 공유"
 
@@ -27155,10 +27155,20 @@ msgstr "화면 공유 코덱"
 msgid "Screen sharing failed"
 msgstr "화면 공유 실패"
 
+#. Body shown when a failed screen share could not be fully stopped.
+#: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx:12
+msgid "Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Use Stop Sharing or disconnect from the call before continuing."
+msgstr "화면 공유에 실패했지만, 모든 캡처 경로가 중지되었는지 Fluxer가 확인할 수 없습니다. 계속하기 전에 공유 중지 또는 통화 연결 끊기를 사용하세요."
+
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:12
 msgid "Screen sharing is not supported on this device or browser. This feature requires a desktop browser that supports screen sharing, such as Chrome, Firefox, or Edge on Windows, macOS, or Linux."
 msgstr "현재 기기 또는 브라우저에서는 화면 공유를 지원하지 않습니다. 이 기능은 Windows, macOS, Linux에서 Chrome, Firefox, Edge와 같이 화면 공유를 지원하는 데스크톱 브라우저가 필요합니다."
+
+#. Title shown when a failed screen share could not be fully stopped.
+#: src/features/voice/components/alerts/ScreenShareRollbackIncompleteModal.tsx:8
+msgid "Screen sharing may still be active"
+msgstr "화면 공유가 계속 활성화되어 있을 수 있습니다"
 
 #. Title of the modal shown when screen sharing is not supported on the current device / browser.
 #: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:8
@@ -28501,7 +28511,7 @@ msgid "Share source"
 msgstr "화면 공유"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
 msgid "Share Stream Audio"
 msgstr "스트림 오디오 공유"
 
@@ -28571,7 +28581,7 @@ msgid "Sharing personal information"
 msgstr "개인 정보 공유"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:86
 msgid "Sharper text at 720p, 15 FPS"
 msgstr "720p, 15 FPS에서 더 선명한 텍스트"
 
@@ -29860,7 +29870,7 @@ msgstr "소리"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:66
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:99
 msgid "Source"
 msgstr "원본"
 
@@ -30550,7 +30560,7 @@ msgstr "말하기 중단"
 #. Danger action that stops the active screen share.
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:19
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:21
 msgid "Stop Streaming"
 msgstr "스트리밍 중지"
 
@@ -30609,7 +30619,7 @@ msgid "Stream preview"
 msgstr "스트림 미리보기"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
 msgid "Stream Quality"
 msgstr "스트림 품질"
 
@@ -30635,7 +30645,7 @@ msgid "Streaming"
 msgstr "스트리밍 중"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "Streaming mode"
 msgstr "스트리밍 모드"
 
@@ -31097,7 +31107,7 @@ msgid "System announcements from {productName} staff. You can't reply here."
 msgstr "{productName} 직원의 시스템 공지입니다. 여기에 답장할 수 없습니다."
 
 #. Audio device option label meaning the OS default audio input device.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:131
 msgid "System default"
 msgstr "시스템 기본값"
 
@@ -34104,7 +34114,7 @@ msgid "Unnamed group"
 msgstr "이름 없는 그룹"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:135
 msgid "Unnamed input"
 msgstr "이름 없는 입력"
 

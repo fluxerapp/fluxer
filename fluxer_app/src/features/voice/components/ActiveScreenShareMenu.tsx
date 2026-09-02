@@ -10,6 +10,8 @@ import {
 import {StreamSettingsMenuContent} from '@app/features/voice/components/StreamSettingsMenuContent';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import type {DisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
+import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
+import {handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import type {StreamSettingsShareContext} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -85,6 +87,7 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 					onClick={() => {
 						onClose();
 						void stopActiveScreenShare().catch((error) => {
+							if (isScreenShareRollbackIncompleteError(error)) handleScreenShareError(error);
 							logger.error('Failed to stop active screen share', error);
 						});
 					}}

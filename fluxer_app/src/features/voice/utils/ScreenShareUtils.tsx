@@ -6,17 +6,21 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {ScreenShareFailedModal} from '@app/features/voice/components/alerts/ScreenShareFailedModal';
+import {ScreenShareRollbackIncompleteModal} from '@app/features/voice/components/alerts/ScreenShareRollbackIncompleteModal';
 import {ScreenShareUnsupportedModal} from '@app/features/voice/components/alerts/ScreenShareUnsupportedModal';
+import {isScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import {isScreenSharePortalUnavailableError} from '@app/features/voice/utils/ScreenSharePortalUnavailableError';
+import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 
 const logger = new Logger('ScreenShareUtils');
+const SCREEN_SHARE_ROLLBACK_INCOMPLETE_MODAL_KEY = 'screen-share-rollback-incomplete';
 const isScreenShareUnsupportedError = (error: unknown): boolean => {
 	if (!(error instanceof Error)) return false;
 	return (
 		error.name === 'DeviceUnsupportedError' || error.name === 'NotSupportedError' || error.name === 'NotAllowedError'
 	);
 };
-const handleScreenShareError = (error: unknown): void => {
+export const handleScreenShareError = (error: unknown): void => {
 	if (error instanceof ScreenRecordingPermissionDeniedError) {
 		handleMediaPermissionBlocked('screen');
 		return;
@@ -25,6 +29,20 @@ const handleScreenShareError = (error: unknown): void => {
 		logger.warn('Wayland screen share portal unavailable; portal modal is surfaced by the picker IPC handler', {
 			reason: error.reason,
 		});
+		return;
+	}
+	if (isScreenShareAudioCaptureError(error)) {
+		logger.warn('Screen share audio capture failed; the picker will surface the targeted error', error.debugInfo);
+		return;
+	}
+	if (isScreenShareRollbackIncompleteError(error)) {
+		logger.error('Screen share rollback was incomplete', {errors: error.errors});
+		ModalCommands.pushWithKey(
+			modal(() => (
+				<ScreenShareRollbackIncompleteModal data-flx="voice.screen-share-utils.handle-screen-share-error.rollback-incomplete-modal" />
+			)),
+			SCREEN_SHARE_ROLLBACK_INCOMPLETE_MODAL_KEY,
+		);
 		return;
 	}
 	if (isScreenShareUnsupportedError(error)) {
