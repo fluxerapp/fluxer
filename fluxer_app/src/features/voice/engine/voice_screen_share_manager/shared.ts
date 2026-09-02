@@ -17,6 +17,7 @@ import {
 	SCREEN_SHARE_DEGRADATION_PREFERENCE,
 	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 } from '@app/features/voice/utils/ScreenShareOptions';
+import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {classifyVideoEncoderAcceleration} from '@app/features/voice/utils/VideoAccelerationClassification';
 import {
 	BackupCodecPolicy,
@@ -42,6 +43,13 @@ export interface DeviceScreenShareCaptureOptions {
 export interface CapturedScreenShareTracks {
 	videoTrack: MediaStreamTrack;
 	audioTrack?: MediaStreamTrack;
+	displayCapture?: DisplayScreenShareCaptureContext;
+}
+
+export interface DisplayScreenShareCaptureContext {
+	sourceId: string | null;
+	displayShareEnvironment: string | null;
+	requireAudio: boolean;
 }
 
 export interface SimulcastTrackInfoLike {
@@ -60,12 +68,18 @@ export interface ScreenSharePublishOptionsResolutionOptions {
 	onCodecReadiness?: (status: ScreenShareCodecReadinessStatus) => void;
 }
 
+export interface ScreenShareSenderCleanupTarget {
+	sender: RTCRtpSender;
+	expectedTrack: MediaStreamTrack | null;
+}
+
 export interface ScreenShareCaptureCleanupSnapshot {
 	mediaTracks: Array<MediaStreamTrack>;
-	senders: Array<RTCRtpSender>;
+	senders: Array<ScreenShareSenderCleanupTarget>;
 }
 
 interface ScreenShareTrackLike {
+	mediaStream?: MediaStream;
 	mediaStreamTrack?: MediaStreamTrack;
 	sender?: RTCRtpSender;
 	simulcastCodecs?: Map<unknown, SimulcastTrackInfoLike>;
@@ -80,15 +94,25 @@ function pushUnique<T>(items: Array<T>, item: T | undefined | null): void {
 	items.push(item);
 }
 
+function pushUniqueSender(snapshot: ScreenShareCaptureCleanupSnapshot, sender: RTCRtpSender | undefined): void {
+	if (!sender) return;
+	const expectedTrack = sender.track;
+	if (snapshot.senders.some((target) => target.sender === sender && target.expectedTrack === expectedTrack)) return;
+	snapshot.senders.push({sender, expectedTrack});
+}
+
 function captureScreenShareTrackCleanup(
 	snapshot: ScreenShareCaptureCleanupSnapshot,
 	track: ScreenShareTrackLike | undefined | null,
 ): void {
+	for (const mediaStreamTrack of track?.mediaStream?.getTracks() ?? []) {
+		pushUnique(snapshot.mediaTracks, mediaStreamTrack);
+	}
 	pushUnique(snapshot.mediaTracks, track?.mediaStreamTrack);
-	pushUnique(snapshot.senders, track?.sender);
+	pushUniqueSender(snapshot, track?.sender);
 	for (const simulcastTrackInfo of track?.simulcastCodecs?.values() ?? []) {
 		pushUnique(snapshot.mediaTracks, simulcastTrackInfo.mediaStreamTrack);
-		pushUnique(snapshot.senders, simulcastTrackInfo.sender);
+		pushUniqueSender(snapshot, simulcastTrackInfo.sender);
 	}
 }
 
@@ -112,26 +136,43 @@ export function mergeScreenShareCaptureCleanupSnapshots(
 		for (const mediaTrack of snapshot?.mediaTracks ?? []) {
 			pushUnique(merged.mediaTracks, mediaTrack);
 		}
-		for (const sender of snapshot?.senders ?? []) {
-			pushUnique(merged.senders, sender);
+		for (const senderTarget of snapshot?.senders ?? []) {
+			if (
+				!merged.senders.some(
+					(target) => target.sender === senderTarget.sender && target.expectedTrack === senderTarget.expectedTrack,
+				)
+			) {
+				merged.senders.push(senderTarget);
+			}
 		}
 	}
 	return merged;
 }
 
-async function detachScreenShareSender(sender: RTCRtpSender): Promise<void> {
-	try {
-		if (sender.transport?.state === 'closed') return;
-		await sender.replaceTrack(null);
-	} catch (error) {
-		logger.warn('Failed to detach screen share sender during cleanup', {error});
-	}
+async function detachScreenShareSender(target: ScreenShareSenderCleanupTarget): Promise<void> {
+	if (target.sender.track !== target.expectedTrack) return;
+	if (target.sender.transport?.state === 'closed') return;
+	await target.sender.replaceTrack(null);
 }
 
 export async function releaseScreenShareCaptureCleanup(snapshot: ScreenShareCaptureCleanupSnapshot): Promise<void> {
-	await Promise.all(snapshot.senders.map(detachScreenShareSender));
+	const cleanupErrors: Array<unknown> = [];
+	const senderResults = await Promise.allSettled(snapshot.senders.map(detachScreenShareSender));
+	for (const result of senderResults) {
+		if (result.status === 'rejected') cleanupErrors.push(result.reason);
+	}
 	for (const mediaTrack of snapshot.mediaTracks) {
-		stopMediaTrack(mediaTrack);
+		try {
+			mediaTrack.stop();
+		} catch (error) {
+			cleanupErrors.push(error);
+		}
+		if (mediaTrack.readyState === 'live') {
+			cleanupErrors.push(new Error('Screen share capture track remained live after cleanup'));
+		}
+	}
+	if (cleanupErrors.length > 0) {
+		throw new ScreenShareRollbackIncompleteError(cleanupErrors);
 	}
 }
 

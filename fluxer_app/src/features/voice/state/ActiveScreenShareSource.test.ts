@@ -9,16 +9,19 @@ describe('ActiveScreenShareSource', () => {
 	});
 
 	it('tracks and clears whether the selected source is a Fluxer-owned window', () => {
-		ActiveScreenShareSource.setSourceId('window:42:0', {isOwnWindow: true});
+		ActiveScreenShareSource.setPublishedSource('app', 'window:42:0', {isOwnWindow: true});
 		expect(ActiveScreenShareSource.getSourceId()).toBe('window:42:0');
 		expect(ActiveScreenShareSource.isOwnWindow()).toBe(true);
+		expect(ActiveScreenShareSource.getShareContext()).toBe('app');
 
-		ActiveScreenShareSource.setSourceId('screen:1:0');
+		ActiveScreenShareSource.setPublishedSource('display', 'screen:1:0');
 		expect(ActiveScreenShareSource.getSourceId()).toBe('screen:1:0');
 		expect(ActiveScreenShareSource.isOwnWindow()).toBe(false);
+		expect(ActiveScreenShareSource.getShareContext()).toBe('display');
 
 		ActiveScreenShareSource.clear();
 		expect(ActiveScreenShareSource.getSourceId()).toBeNull();
 		expect(ActiveScreenShareSource.isOwnWindow()).toBe(false);
+		expect(ActiveScreenShareSource.getShareContext()).toBeNull();
 	});
 });

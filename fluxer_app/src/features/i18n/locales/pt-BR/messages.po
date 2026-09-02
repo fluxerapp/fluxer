@@ -27051,7 +27051,7 @@ msgid "Screen share encoder controls"
 msgstr "Controles do codificador de compartilhamento de tela"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:95
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:98
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Compartilhamento de tela encerrado"
@@ -31638,7 +31638,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "O redirect_uri fornecido precisa usar HTTP ou HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:103
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "A fonte de compartilhamento de tela parou de enviar vídeo, então o seu compartilhamento de tela foi interrompido."

@@ -46,6 +46,7 @@ import type {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/en
 import {
 	captureScreenSharePublicationCleanup,
 	type DeviceScreenShareCaptureOptions,
+	type DisplayScreenShareCaptureContext,
 	logger,
 	mergeScreenShareCaptureCleanupSnapshots,
 	releaseScreenShareCaptureCleanup,
@@ -73,6 +74,8 @@ import {
 	commitNativeAudioBridgeReplacement,
 	disarmNativeAudio,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
+import {handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
 import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2';
 import {msg} from '@lingui/core/macro';
@@ -403,6 +406,10 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	getScreenShareSimulcastCleanupSnapshotInternal(screenShareTrack: LocalVideoTrack): ScreenShareCaptureCleanupSnapshot {
 		const snapshot: ScreenShareCaptureCleanupSnapshot = {mediaTracks: [], senders: []};
+		const primarySender = screenShareTrack.sender;
+		if (primarySender) {
+			snapshot.senders.push({sender: primarySender, expectedTrack: primarySender.track});
+		}
 		const simulcastCodecs = (
 			screenShareTrack as LocalVideoTrack & {
 				simulcastCodecs?: Map<unknown, SimulcastTrackInfoLike>;
@@ -411,7 +418,17 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		for (const simulcastTrackInfo of simulcastCodecs?.values() ?? []) {
 			snapshot.mediaTracks.push(simulcastTrackInfo.mediaStreamTrack);
 			if (simulcastTrackInfo.sender) {
-				snapshot.senders.push(simulcastTrackInfo.sender);
+				const senderTarget = {
+					sender: simulcastTrackInfo.sender,
+					expectedTrack: simulcastTrackInfo.sender.track,
+				};
+				if (
+					!snapshot.senders.some(
+						(target) => target.sender === senderTarget.sender && target.expectedTrack === senderTarget.expectedTrack,
+					)
+				) {
+					snapshot.senders.push(senderTarget);
+				}
 			}
 		}
 		return snapshot;
@@ -558,14 +575,23 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			snapshot,
 			captureScreenSharePublicationCleanup(...publications),
 		);
+		const cleanupErrors: Array<unknown> = [];
 		const cleanupResult = await unpublishLocalMediaPublications(participant, publications);
 		for (const failure of cleanupResult.failedPublications) {
+			cleanupErrors.push(failure.error);
 			logger.warn('Failed to unpublish lingering screen share track', {
 				error: failure.error,
 				source: failure.publication.source,
 			});
 		}
-		await this.releaseScreenShareCapture(participant, cleanupSnapshot);
+		try {
+			await this.releaseScreenShareCapture(participant, cleanupSnapshot);
+		} catch (error) {
+			cleanupErrors.push(error);
+		}
+		if (cleanupErrors.length > 0) {
+			throw new ScreenShareRollbackIncompleteError(cleanupErrors);
+		}
 	}
 
 	handleLocalScreenShareTrackUnpublished(room: Room, playSound: boolean, publication?: LocalTrackPublication): void {
@@ -583,6 +609,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			this.applyScreenShareStateInternal(false, {reason: 'user', sendUpdate: true});
 		}
 		void this.cleanupLingeringScreenShareTracks(participant, cleanupSnapshot).catch((error) => {
+			if (error instanceof ScreenShareRollbackIncompleteError) handleScreenShareError(error);
 			logger.warn('Failed to clean up screen-share audio after video unpublish', {error});
 		});
 		if (playSound && !this.isScreenSharePending) {
@@ -746,8 +773,9 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		room: Room | null,
 		options?: ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
+		captureContext?: DisplayScreenShareCaptureContext,
 	): Promise<boolean> {
-		return this.liveKitFlows.replaceActiveDisplayShare(room, options, publishOptions);
+		return this.liveKitFlows.replaceActiveDisplayShare(room, options, publishOptions, captureContext);
 	}
 
 	async replaceActiveDeviceScreenShare(

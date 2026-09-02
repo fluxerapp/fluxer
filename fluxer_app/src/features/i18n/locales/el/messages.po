@@ -27051,7 +27051,7 @@ msgid "Screen share encoder controls"
 msgstr "Έλεγχος κωδικοποιητή κοινής χρήσης οθόνης"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:95
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:98
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Η κοινή χρήση οθόνης έληξε"
@@ -31638,7 +31638,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Το redirect_uri που δόθηκε πρέπει να χρησιμοποιεί HTTP ή HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:103
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Η πηγή κοινής χρήσης οθόνης σταμάτησε να στέλνει βίντεο, επομένως η κοινή χρήση της οθόνης σας διακόπηκε."
