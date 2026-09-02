@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {TrackSource} from 'livekit-server-sdk';
 import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
 import type {VoiceRegionMetadata, VoiceServerRecord} from '../voice/VoiceModel';
 import type {ILiveKitService, ListActiveRoomsResult, ListParticipantsResult} from './ILiveKitService';
@@ -51,6 +52,27 @@ interface UpdateParticipantPermissionsParams {
 	deaf?: boolean;
 }
 
+interface MuteParticipantTrackParams {
+	userId: UserID;
+	guildId?: GuildID;
+	channelId: ChannelID;
+	connectionId: string;
+	regionId: string;
+	serverId: string;
+	trackSid: string;
+	muted: boolean;
+}
+
+interface RevokeParticipantPublishSourceParams {
+	userId: UserID;
+	guildId?: GuildID;
+	channelId: ChannelID;
+	connectionId: string;
+	regionId: string;
+	serverId: string;
+	source: TrackSource;
+}
+
 export class DisabledLiveKitService implements ILiveKitService {
 	async createToken(_params: CreateTokenParams): Promise<{
 		token: string;
@@ -64,6 +86,14 @@ export class DisabledLiveKitService implements ILiveKitService {
 	async updateParticipantPermissions(_params: UpdateParticipantPermissionsParams): Promise<void> {}
 
 	async disconnectParticipant(_params: DisconnectParticipantParams): Promise<void> {}
+
+	async muteParticipantTrack(_params: MuteParticipantTrackParams): Promise<boolean> {
+		return false;
+	}
+
+	async revokeParticipantPublishSource(_params: RevokeParticipantPublishSourceParams): Promise<boolean> {
+		return false;
+	}
 
 	async listParticipants(_params: {
 		guildId?: GuildID;

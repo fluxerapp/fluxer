@@ -533,11 +533,18 @@ export class LiveKitWebhookService {
 					height: track.height,
 					trackSource: trackSourceLabel,
 				},
-				'User without higher video quality entitlement attempted to publish video exceeding free tier limits - disconnecting',
+				'User without higher video quality entitlement published video exceeding free tier limits - muting track and revoking source',
 			);
+			if (!track.sid) {
+				Logger.warn(
+					{userId: userId.toString(), roomName: room.name, trackSource: trackSourceLabel},
+					'Track published without a sid, cannot enforce free tier video limits',
+				);
+				return;
+			}
 			const roomContext = parseRoomName(room.name);
 			if (!roomContext) {
-				Logger.warn({roomName: room.name}, 'Unknown room name format, cannot disconnect');
+				Logger.warn({roomName: room.name}, 'Unknown room name format, cannot enforce free tier video limits');
 				return;
 			}
 			let regionId: string | undefined;
@@ -567,7 +574,7 @@ export class LiveKitWebhookService {
 			if (!regionId || !serverId) {
 				Logger.warn(
 					{participantId: participant.identity, roomName: room.name, apiKey},
-					'Missing region or server info, cannot disconnect',
+					'Missing region or server info, cannot enforce free tier video limits',
 				);
 				return;
 			}
@@ -585,21 +592,26 @@ export class LiveKitWebhookService {
 					height: track.height,
 					trackSource: trackSourceLabel,
 				},
-				'Disconnecting user without higher video quality entitlement for exceeding video quality limits',
+				'Muting oversized track and revoking its publish source for user without higher video quality entitlement',
 			);
-			await this.liveKitService.disconnectParticipant({
+			const muted = await this.liveKitService.muteParticipantTrack({
 				userId,
 				guildId,
 				channelId: roomContext.channelId,
 				connectionId,
 				regionId,
 				serverId,
+				trackSid: track.sid,
+				muted: true,
 			});
-			await this.gatewayService.disconnectVoiceUserIfInChannel({
+			const revoked = await this.liveKitService.revokeParticipantPublishSource({
+				userId,
 				guildId,
 				channelId: roomContext.channelId,
-				userId,
 				connectionId,
+				regionId,
+				serverId,
+				source: track.source,
 			});
 			Logger.info(
 				{
@@ -611,8 +623,13 @@ export class LiveKitWebhookService {
 					width: track.width,
 					height: track.height,
 					trackSource: trackSourceLabel,
+					trackSid: track.sid,
+					muted,
+					revoked,
 				},
-				'Disconnected user without higher video quality entitlement for exceeding video quality limits',
+				muted || revoked
+					? 'Enforced free tier video limits on user without higher video quality entitlement'
+					: 'Failed to enforce free tier video limits on user without higher video quality entitlement',
 			);
 		} catch (error) {
 			Logger.error({error}, 'Error processing track_published event');
