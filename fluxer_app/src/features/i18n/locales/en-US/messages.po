@@ -33965,7 +33965,7 @@ msgstr "unknown user"
 #: src/features/channel/utils/ChannelUtils.tsx:55
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
-#: src/features/voice/components/VoiceParticipantAvatarList.tsx:43
+#: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
 #: src/features/voice/components/VoiceParticipantTile.tsx:164
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
@@ -35966,7 +35966,7 @@ msgstr "View profile"
 #. Aria label on an avatar in the spectators popout. {displayName} is the participant's display name.
 #. Aria label on an avatar tile in the voice participants list. {displayName} is the participant's display name.
 #: src/features/voice/components/StreamSpectatorsPopout.tsx:43
-#: src/features/voice/components/VoiceParticipantAvatarList.tsx:34
+#: src/features/voice/components/VoiceParticipantAvatarList.tsx:35
 msgid "View profile for {displayName}"
 msgstr "View profile for {displayName}"
 
@@ -36282,7 +36282,7 @@ msgid "Voice mute"
 msgstr "Voice mute"
 
 #. Aria label on the voice participants avatar list container.
-#: src/features/voice/components/VoiceParticipantAvatarList.tsx:39
+#: src/features/voice/components/VoiceParticipantAvatarList.tsx:40
 msgid "Voice participants"
 msgstr "Voice participants"
 

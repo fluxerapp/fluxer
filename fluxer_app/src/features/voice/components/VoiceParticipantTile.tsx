@@ -629,7 +629,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	);
 	const participantMenuSource = useMemo<VoiceParticipantMenuSource>(() => {
 		if (!isScreenShare) {
-			return isCameraTile && isCameraPublicationActive ? {kind: 'camera'} : {kind: 'participant'};
+			return isCameraTile && isCameraActive ? {kind: 'camera'} : {kind: 'participant'};
 		}
 		if (isOwnScreenShare) {
 			return {kind: 'screen-share', streamKey, state: {kind: 'own'}};
@@ -655,7 +655,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	}, [
 		hasScreenShareAudio,
 		identity,
-		isCameraPublicationActive,
+		isCameraActive,
 		isCameraTile,
 		isOwnScreenShare,
 		isScreenShare,

@@ -23,6 +23,7 @@ import MediaEngine, {useMediaEngineVersion, useVoiceEngineV2Model} from '@app/fe
 import {selectVoiceEngineV2AppEffectiveSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {isParticipantVoicePermissionMuted} from '@app/features/voice/utils/VoicePermissionUtils';
+import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -212,20 +213,24 @@ export function useVoiceParticipantAvatarEntries({
 	const localSelfDeaf = LocalVoiceState.getSelfDeaf();
 	const sortSnapshotRef = useRef(createVoiceParticipantSortSnapshot());
 	return useMemo(() => {
+		if (!channelId) return [];
 		const nextEntries: Array<VoiceParticipantAvatarEntry> = [];
-		for (const snapshot of Object.values(participantSnapshots)) {
-			if (!snapshot.userId || !snapshot.connectionId) continue;
-			const user = Users.getUser(snapshot.userId);
+		for (const [connectionId, voiceState] of Object.entries(
+			MediaEngine.getAllVoiceStatesInChannel(guildId ?? ME, channelId),
+		)) {
+			if (!voiceState.user_id) continue;
+			const user = Users.getUser(voiceState.user_id);
 			if (!user) continue;
-			const voiceState = connectionVoiceStates[snapshot.connectionId] ?? null;
+			const snapshot = MediaEngine.getParticipantByUserIdAndConnectionId(voiceState.user_id, connectionId) ?? null;
+			const isLocal = connectionId === MediaEngine.connectionId;
 			const permissionMuted = isParticipantVoicePermissionMuted({
 				voiceState,
 				guildId,
 				channelId,
-				isCurrentUser: snapshot.isLocal,
+				isCurrentUser: isLocal,
 			});
 			const entryVoiceState = resolveVoiceParticipantAvatarEntryVoiceState({
-				snapshot,
+				snapshot: {...(snapshot ?? {}), isLocal},
 				voiceState,
 				permissionMuted,
 				localEffectiveSelfMute,
@@ -233,12 +238,12 @@ export function useVoiceParticipantAvatarEntries({
 			});
 			nextEntries.push({
 				user,
-				userId: snapshot.userId,
-				connectionId: snapshot.connectionId,
+				userId: voiceState.user_id,
+				connectionId,
 				speaking: entryVoiceState.speaking,
-				hasCamera: snapshot.isCameraEnabled,
-				hasScreenShare: snapshot.isScreenShareEnabled,
-				isLocal: snapshot.isLocal,
+				hasCamera: snapshot?.isCameraEnabled ?? false,
+				hasScreenShare: snapshot?.isScreenShareEnabled ?? false,
+				isLocal,
 				selfMute: entryVoiceState.selfMute,
 				selfDeaf: entryVoiceState.selfDeaf,
 			});
