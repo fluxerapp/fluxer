@@ -33,18 +33,12 @@ import {
 	formatVoiceAudioDeviceLabel,
 	getVoiceDeafenedByModeratorsStatusLabel,
 	getVoiceVideoSettingsLabel,
-	VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR,
-	VOICE_CAMERA_SETTINGS_DESCRIPTOR,
 	VOICE_DEAFEN_DESCRIPTOR,
 	VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR,
-	VOICE_ECHO_CANCELLATION_DESCRIPTOR,
 	VOICE_FOCUSED_VOICE_PROFILE_DESCRIPTOR,
 	VOICE_INPUT_DEVICE_DESCRIPTOR,
-	VOICE_INPUT_SETTINGS_DESCRIPTOR,
 	VOICE_INPUT_VOLUME_DESCRIPTOR,
-	VOICE_NOISE_SUPPRESSION_DESCRIPTOR,
 	VOICE_OUTPUT_DEVICE_DESCRIPTOR,
-	VOICE_OUTPUT_SETTINGS_DESCRIPTOR,
 	VOICE_OUTPUT_VOLUME_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
@@ -54,15 +48,14 @@ import type {RtcRegionResponse} from '@fluxer/schema/src/domains/channel/Channel
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
+	CameraIcon,
 	ChartBarIcon,
+	EyeIcon,
 	GearIcon,
 	GridFourIcon,
 	HandTapIcon,
-	MicrophoneIcon,
-	SpeakerSimpleSlashIcon,
 	SpeakerSlashIcon,
 	UsersIcon,
-	VideoIcon,
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -73,41 +66,8 @@ const CUSTOM_DESCRIPTOR = msg({
 	comment: 'Voice input processing profile where the user configures processing manually.',
 	context: 'voice-processing-profile',
 });
-const ENHANCED_DESCRIPTOR = msg({
-	message: 'Enhanced',
-	comment: 'Noise suppression option using enhanced filtering.',
-	context: 'noise-suppression-option',
-});
-const STANDARD_DESCRIPTOR = msg({
-	message: 'Standard',
-	comment: 'Noise suppression option using standard browser filtering.',
-	context: 'noise-suppression-option',
-});
-const OFF_DESCRIPTOR = msg({
-	message: 'Off',
-	comment: 'Noise suppression option that disables suppression.',
-	context: 'noise-suppression-option',
-});
-const MICROPHONE_DESCRIPTOR = msg({
-	message: 'Microphone',
-	comment: 'Fallback microphone label in the voice settings menu when the OS does not report a device name.',
-});
-const DEFAULT_DESCRIPTOR = msg({
-	message: 'Default',
-	comment: 'Default microphone device option.',
-	context: 'voice-input-device',
-});
-const SPEAKER_DESCRIPTOR = msg({
-	message: 'Speaker',
-	comment: 'Fallback speaker label in the voice settings menu when the OS does not report a device name.',
-});
-const DEFAULT_2_DESCRIPTOR = msg({
-	message: 'Default',
-	comment: 'Default speaker or output device option.',
-	context: 'voice-output-device',
-});
 const INPUT_PROFILE_DESCRIPTOR = msg({
-	message: 'Voice processing',
+	message: 'Input profile',
 	comment: 'Voice settings menu label for microphone processing profile.',
 });
 const MICROPHONE_2_DESCRIPTOR = msg({
@@ -132,6 +92,14 @@ const VOICE_REGION_DESCRIPTOR = msg({
 	message: 'Voice region',
 	comment: 'Section header in the voice settings menu for the voice region picker.',
 });
+const VOICE_SETTINGS_DESCRIPTOR = msg({
+	message: 'Voice settings',
+	comment: 'Menu action that opens voice settings.',
+});
+const VIDEO_SETTINGS_DESCRIPTOR = msg({
+	message: 'Video settings',
+	comment: 'Menu action that opens video settings.',
+});
 const MIRROR_CAMERA_DESCRIPTOR = msg({
 	message: 'Mirror camera',
 	comment: 'Camera settings menu checkbox for flipping the local camera preview horizontally.',
@@ -153,6 +121,146 @@ export function openVoiceVideoSettings(onClose: () => void, section?: VoiceVideo
 	);
 }
 
+interface VoiceAudioDeviceSubmenuProps {
+	devices: Array<MediaDeviceInfo>;
+	deviceType: 'input' | 'output';
+}
+
+const VoiceAudioDeviceSubmenu: React.FC<VoiceAudioDeviceSubmenuProps> = observer(({devices, deviceType}) => {
+	const {i18n} = useLingui();
+	const isInput = deviceType === 'input';
+	const storedDeviceId = isInput ? VoiceSettings.inputDeviceId : VoiceSettings.outputDeviceId;
+	const effectiveDeviceId = resolveEffectiveDeviceId(storedDeviceId, devices);
+	const effectiveDevice = devices.find((device) => device.deviceId === effectiveDeviceId) ?? null;
+	const fallbackLabel = i18n._(isInput ? MICROPHONE_2_DESCRIPTOR : SPEAKER_2_DESCRIPTOR);
+	const currentDeviceLabel = effectiveDevice
+		? formatVoiceAudioDeviceLabel(i18n, effectiveDevice, fallbackLabel)
+		: i18n._(DEFAULT_3_DESCRIPTOR);
+	const selectDevice = (deviceId: string): void => {
+		if (isInput) {
+			VoiceSettingsCommands.update({inputDeviceId: deviceId});
+			return;
+		}
+		VoiceSettingsCommands.update({outputDeviceId: deviceId});
+	};
+	return (
+		<MenuItemSubmenu
+			label={i18n._(isInput ? VOICE_INPUT_DEVICE_DESCRIPTOR : VOICE_OUTPUT_DEVICE_DESCRIPTOR)}
+			hint={currentDeviceLabel}
+			render={() => (
+				<>
+					{hasDeviceLabels(devices) ? (
+						devices.map((device) => (
+							<MenuItemRadio
+								key={device.deviceId}
+								selected={effectiveDeviceId === device.deviceId}
+								onSelect={() => selectDevice(device.deviceId)}
+								data-flx="voice.voice-settings-menus.audio-device-submenu.option"
+							>
+								{formatVoiceAudioDeviceLabel(i18n, device, fallbackLabel)}
+							</MenuItemRadio>
+						))
+					) : (
+						<MenuItemRadio
+							selected={storedDeviceId === 'default'}
+							onSelect={() => selectDevice('default')}
+							data-flx="voice.voice-settings-menus.audio-device-submenu.default"
+						>
+							{i18n._(DEFAULT_3_DESCRIPTOR)}
+						</MenuItemRadio>
+					)}
+				</>
+			)}
+			data-flx="voice.voice-settings-menus.audio-device-submenu"
+		/>
+	);
+});
+
+const VoiceInputProfileSubmenu: React.FC = observer(() => {
+	const {i18n} = useLingui();
+	const processingMode = getActiveVoiceProcessingMode(VoiceSettings);
+	const processingModeLabels: Record<VoiceProcessingMode, string> = {
+		voice: i18n._(VOICE_FOCUSED_VOICE_PROFILE_DESCRIPTOR),
+		studio: i18n._(VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR),
+		custom: i18n._(CUSTOM_DESCRIPTOR),
+	};
+	return (
+		<MenuItemSubmenu
+			label={i18n._(INPUT_PROFILE_DESCRIPTOR)}
+			hint={processingModeLabels[processingMode]}
+			render={() => (
+				<>
+					{(['voice', 'studio', 'custom'] as const).map((mode) => (
+						<MenuItemRadio
+							key={mode}
+							selected={processingMode === mode}
+							onSelect={() => VoiceSettingsCommands.setActiveInputVoiceProcessingMode(mode)}
+							data-flx="voice.voice-settings-menus.input-profile-submenu.option"
+						>
+							{processingModeLabels[mode]}
+						</MenuItemRadio>
+					))}
+				</>
+			)}
+			data-flx="voice.voice-settings-menus.input-profile-submenu"
+		/>
+	);
+});
+
+const VoiceInputVolumeItems: React.FC = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<>
+			<MenuItemSlider
+				label={i18n._(VOICE_INPUT_VOLUME_DESCRIPTOR)}
+				value={VoiceSettings.inputVolume}
+				minValue={0}
+				maxValue={VOICE_VOLUME_MAX_PERCENT}
+				onChange={(value) => VoiceSettingsCommands.update({inputVolume: value})}
+				onFormat={(value) => `${Math.round(value)}%`}
+				data-flx="voice.voice-settings-menus.input-volume"
+			/>
+		</>
+	);
+});
+
+const VoiceOutputVolumeItem: React.FC = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<MenuItemSlider
+			label={i18n._(VOICE_OUTPUT_VOLUME_DESCRIPTOR)}
+			value={VoiceSettings.outputVolume}
+			minValue={0}
+			maxValue={VOICE_VOLUME_MAX_PERCENT}
+			onChange={(value) => VoiceSettingsCommands.update({outputVolume: value})}
+			onFormat={(value) => `${Math.round(value)}%`}
+			data-flx="voice.voice-settings-menus.output-volume"
+		/>
+	);
+});
+
+const VoiceSettingsMenuItem: React.FC<{onClose: () => void}> = ({onClose}) => {
+	const {i18n} = useLingui();
+	return (
+		<MenuItem
+			onClick={() => openVoiceVideoSettings(onClose, 'audio')}
+			data-flx="voice.voice-settings-menus.voice-settings-item"
+		>
+			<span
+				className={styles.leadingActionLabel}
+				data-flx="voice.voice-settings-menus.voice-settings-menu-item.leading-action-label"
+			>
+				<GearIcon
+					weight="fill"
+					className={styles.icon}
+					data-flx="voice.voice-settings-menus.voice-settings-menu-item.icon"
+				/>
+				{i18n._(VOICE_SETTINGS_DESCRIPTOR)}
+			</span>
+		</MenuItem>
+	);
+};
+
 interface VoiceAudioSettingsMenuProps {
 	inputDevices: Array<MediaDeviceInfo>;
 	outputDevices: Array<MediaDeviceInfo>;
@@ -162,228 +270,59 @@ interface VoiceAudioSettingsMenuProps {
 export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = observer(
 	({inputDevices, outputDevices, onClose}) => {
 		const {i18n} = useLingui();
-		const voiceSettings = VoiceSettings;
 		const voiceState = MediaEngine.getCurrentUserVoiceState();
 		const isGuildDeafened = voiceState?.deaf ?? false;
 		const isDeafened = (voiceState?.self_deaf ?? false) || isGuildDeafened;
 		const deafenMenuLabel = isGuildDeafened
 			? getVoiceDeafenedByModeratorsStatusLabel(i18n, true)
 			: i18n._(VOICE_DEAFEN_DESCRIPTOR);
-		const isPushToTalk = Keybind.transmitMode === 'voice_push_to_talk';
-		const handleToggleDeafen = useCallback((_checked: boolean) => {
-			VoiceStateCommands.toggleSelfDeaf(null);
-		}, []);
-		const handleTogglePushToTalk = useCallback((checked: boolean) => {
-			Keybind.setTransmitMode(checked ? 'voice_push_to_talk' : 'voice_activity');
-			MediaEngine.handlePushToTalkModeChange();
-		}, []);
-		const effectiveInputDeviceId = resolveEffectiveDeviceId(voiceSettings.inputDeviceId, inputDevices);
-		const effectiveOutputDeviceId = resolveEffectiveDeviceId(voiceSettings.outputDeviceId, outputDevices);
-		const inputHasLabels = hasDeviceLabels(inputDevices);
-		const outputHasLabels = hasDeviceLabels(outputDevices);
-		const processingMode = getActiveVoiceProcessingMode(voiceSettings);
-		const isCustomMode = processingMode === 'custom';
-		const deepFilterEnabled = voiceSettings.deepFilterNoiseSuppression;
-		const browserNsEnabled = voiceSettings.noiseSuppression;
-		const processingModeLabels: Record<VoiceProcessingMode, string> = {
-			voice: i18n._(VOICE_FOCUSED_VOICE_PROFILE_DESCRIPTOR),
-			studio: i18n._(VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR),
-			custom: i18n._(CUSTOM_DESCRIPTOR),
-		};
-		type NoiseSuppressionChoice = 'enhanced' | 'standard' | 'none';
-		const noiseSuppressionChoice: NoiseSuppressionChoice = deepFilterEnabled
-			? 'enhanced'
-			: browserNsEnabled
-				? 'standard'
-				: 'none';
-		const noiseSuppressionLabels: Record<NoiseSuppressionChoice, string> = {
-			enhanced: i18n._(ENHANCED_DESCRIPTOR),
-			standard: i18n._(STANDARD_DESCRIPTOR),
-			none: i18n._(OFF_DESCRIPTOR),
-		};
-		const setNoiseSuppression = (choice: NoiseSuppressionChoice) => {
-			switch (choice) {
-				case 'enhanced':
-					VoiceSettingsCommands.update({deepFilterNoiseSuppression: true, noiseSuppression: false});
+		const isPushToTalk = Keybind.isPushToTalkEffective();
+		const handleTogglePushToTalk = useCallback(
+			(checked: boolean) => {
+				if (!checked) {
+					Keybind.setTransmitMode('voice_activity');
+					MediaEngine.handlePushToTalkModeChange();
 					return;
-				case 'standard':
-					VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: true});
-					return;
-				case 'none':
-					VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: false});
-					return;
-			}
-		};
+				}
+				Keybind.setTransmitMode('voice_push_to_talk');
+				MediaEngine.handlePushToTalkModeChange();
+				if (!Keybind.hasPushToTalkKeybind()) {
+					openVoiceVideoSettings(onClose, 'audio');
+				}
+			},
+			[onClose],
+		);
 		return (
 			<>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-group">
-					<MenuItemSubmenu
-						label={i18n._(VOICE_INPUT_DEVICE_DESCRIPTOR)}
-						render={() => (
-							<>
-								{inputHasLabels ? (
-									inputDevices.map((device) => (
-										<MenuItemRadio
-											key={device.deviceId}
-											selected={effectiveInputDeviceId === device.deviceId}
-											onSelect={() => {
-												VoiceSettingsCommands.update({inputDeviceId: device.deviceId});
-											}}
-											data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-radio.update"
-										>
-											{formatVoiceAudioDeviceLabel(i18n, device, i18n._(MICROPHONE_DESCRIPTOR))}
-										</MenuItemRadio>
-									))
-								) : (
-									<MenuItemRadio
-										key="default"
-										selected={true}
-										onSelect={() => {}}
-										data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-radio"
-									>
-										{i18n._(DEFAULT_DESCRIPTOR)}
-									</MenuItemRadio>
-								)}
-							</>
-						)}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-submenu"
+				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.devices">
+					<VoiceAudioDeviceSubmenu
+						devices={inputDevices}
+						deviceType="input"
+						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.voice-audio-device-submenu"
 					/>
-					<MenuItemSubmenu
-						label={i18n._(VOICE_OUTPUT_DEVICE_DESCRIPTOR)}
-						render={() => (
-							<>
-								{outputHasLabels ? (
-									outputDevices.map((device) => (
-										<MenuItemRadio
-											key={device.deviceId}
-											selected={effectiveOutputDeviceId === device.deviceId}
-											onSelect={() => {
-												VoiceSettingsCommands.update({outputDeviceId: device.deviceId});
-											}}
-											data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-radio.update--2"
-										>
-											{formatVoiceAudioDeviceLabel(i18n, device, i18n._(SPEAKER_DESCRIPTOR))}
-										</MenuItemRadio>
-									))
-								) : (
-									<MenuItemRadio
-										key="default"
-										selected={true}
-										onSelect={() => {}}
-										data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-radio--2"
-									>
-										{i18n._(DEFAULT_2_DESCRIPTOR)}
-									</MenuItemRadio>
-								)}
-							</>
-						)}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-submenu--2"
+					<VoiceInputProfileSubmenu data-flx="voice.voice-settings-menus.voice-audio-settings-menu.voice-input-profile-submenu" />
+					<VoiceAudioDeviceSubmenu
+						devices={outputDevices}
+						deviceType="output"
+						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.voice-audio-device-submenu--2"
 					/>
 				</MenuGroup>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-group--2">
-					<MenuItemSlider
-						label={i18n._(VOICE_INPUT_VOLUME_DESCRIPTOR)}
-						value={voiceSettings.inputVolume}
-						minValue={0}
-						maxValue={VOICE_VOLUME_MAX_PERCENT}
-						onChange={(value) => VoiceSettingsCommands.update({inputVolume: value})}
-						onFormat={(value) => `${Math.round(value)}%`}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-slider.update"
-					/>
-					<MenuItemSlider
-						label={i18n._(VOICE_OUTPUT_VOLUME_DESCRIPTOR)}
-						value={voiceSettings.outputVolume}
-						minValue={0}
-						maxValue={VOICE_VOLUME_MAX_PERCENT}
-						onChange={(value) => VoiceSettingsCommands.update({outputVolume: value})}
-						onFormat={(value) => `${Math.round(value)}%`}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-slider.update--2"
-					/>
+				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.levels">
+					<VoiceInputVolumeItems data-flx="voice.voice-settings-menus.voice-audio-settings-menu.voice-input-volume-items" />
+					<VoiceOutputVolumeItem data-flx="voice.voice-settings-menus.voice-audio-settings-menu.voice-output-volume-item" />
 				</MenuGroup>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-group--3">
-					<MenuItemSubmenu
-						label={i18n._(INPUT_PROFILE_DESCRIPTOR)}
-						hint={processingModeLabels[processingMode]}
-						render={() => (
-							<>
-								{(['voice', 'studio', 'custom'] as const).map((mode) => (
-									<MenuItemRadio
-										key={mode}
-										selected={processingMode === mode}
-										onSelect={() => VoiceSettingsCommands.setActiveInputVoiceProcessingMode(mode)}
-										data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-radio.update--3"
-									>
-										{processingModeLabels[mode]}
-									</MenuItemRadio>
-								))}
-								{isCustomMode ? (
-									<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-group--4">
-										<MenuItemSubmenu
-											label={i18n._(VOICE_NOISE_SUPPRESSION_DESCRIPTOR)}
-											hint={noiseSuppressionLabels[noiseSuppressionChoice]}
-											render={() => (
-												<>
-													{(['enhanced', 'standard', 'none'] as const).map((choice) => (
-														<MenuItemRadio
-															key={choice}
-															selected={noiseSuppressionChoice === choice}
-															onSelect={() => setNoiseSuppression(choice)}
-															data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-radio.set-noise-suppression"
-														>
-															{noiseSuppressionLabels[choice]}
-														</MenuItemRadio>
-													))}
-												</>
-											)}
-											data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-submenu--4"
-										/>
-										<CheckboxItem
-											icon={
-												<SpeakerSimpleSlashIcon
-													weight="fill"
-													className={styles.icon}
-													data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon"
-												/>
-											}
-											checked={voiceSettings.echoCancellation}
-											onCheckedChange={(checked) => VoiceSettingsCommands.update({echoCancellation: checked})}
-											data-flx="voice.voice-settings-menus.voice-audio-settings-menu.checkbox-item"
-										>
-											{i18n._(VOICE_ECHO_CANCELLATION_DESCRIPTOR)}
-										</CheckboxItem>
-										<CheckboxItem
-											icon={
-												<MicrophoneIcon
-													weight="fill"
-													className={styles.icon}
-													data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon--2"
-												/>
-											}
-											checked={voiceSettings.autoGainControl}
-											onCheckedChange={(checked) => VoiceSettingsCommands.update({autoGainControl: checked})}
-											data-flx="voice.voice-settings-menus.voice-audio-settings-menu.checkbox-item--2"
-										>
-											{i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR)}
-										</CheckboxItem>
-									</MenuGroup>
-								) : null}
-							</>
-						)}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item-submenu--3"
-					/>
-				</MenuGroup>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-group--5">
+				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.actions">
 					<CheckboxItem
 						icon={
 							<HandTapIcon
 								weight="fill"
 								className={styles.icon}
-								data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon--3"
+								data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon"
 							/>
 						}
 						checked={isPushToTalk}
 						onCheckedChange={handleTogglePushToTalk}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.checkbox-item--3"
+						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.push-to-talk"
 					>
 						<Trans>Push-to-talk</Trans>
 					</CheckboxItem>
@@ -392,31 +331,20 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 							<SpeakerSlashIcon
 								weight="fill"
 								className={styles.icon}
-								data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon--4"
+								data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon--2"
 							/>
 						}
 						checked={isDeafened}
 						disabled={isGuildDeafened}
-						onCheckedChange={handleToggleDeafen}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.checkbox-item--4"
+						onCheckedChange={() => VoiceStateCommands.toggleSelfDeaf(null)}
+						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.deafen"
 					>
 						{deafenMenuLabel}
 					</CheckboxItem>
-				</MenuGroup>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-group--6">
-					<MenuItem
-						icon={
-							<GearIcon
-								weight="fill"
-								className={styles.icon}
-								data-flx="voice.voice-settings-menus.voice-audio-settings-menu.icon--5"
-							/>
-						}
-						onClick={() => openVoiceVideoSettings(onClose, 'audio')}
-						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.menu-item.close"
-					>
-						{getVoiceVideoSettingsLabel(i18n)}
-					</MenuItem>
+					<VoiceSettingsMenuItem
+						onClose={onClose}
+						data-flx="voice.voice-settings-menus.voice-audio-settings-menu.voice-settings-menu-item"
+					/>
 				</MenuGroup>
 			</>
 		);
@@ -431,78 +359,31 @@ interface VoiceDeviceSettingsMenuProps {
 
 export const VoiceDeviceSettingsMenu: React.FC<VoiceDeviceSettingsMenuProps> = observer(
 	({devices, deviceType, onClose}) => {
-		const {i18n} = useLingui();
-		const voiceSettings = VoiceSettings;
 		const isInput = deviceType === 'input';
-		const deviceIdKey = isInput ? 'inputDeviceId' : 'outputDeviceId';
-		const volumeKey = isInput ? 'inputVolume' : 'outputVolume';
-		const storedDeviceId = voiceSettings[deviceIdKey];
-		const currentVolume = voiceSettings[volumeKey];
-		const effectiveDeviceId = resolveEffectiveDeviceId(storedDeviceId, devices);
-		const devicesHaveLabels = hasDeviceLabels(devices);
-		const menuLabel = i18n._(isInput ? VOICE_INPUT_DEVICE_DESCRIPTOR : VOICE_OUTPUT_DEVICE_DESCRIPTOR);
-		const volumeLabel = i18n._(isInput ? VOICE_INPUT_VOLUME_DESCRIPTOR : VOICE_OUTPUT_VOLUME_DESCRIPTOR);
-		const fallbackDeviceName = i18n._(isInput ? MICROPHONE_2_DESCRIPTOR : SPEAKER_2_DESCRIPTOR);
 		return (
 			<>
 				<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group">
-					<MenuItemSubmenu
-						label={menuLabel}
-						render={() => (
-							<>
-								{devicesHaveLabels ? (
-									devices.map((device) => (
-										<MenuItemRadio
-											key={device.deviceId}
-											selected={effectiveDeviceId === device.deviceId}
-											onSelect={() => {
-												VoiceSettingsCommands.update({[deviceIdKey]: device.deviceId});
-											}}
-											data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-item-radio.update"
-										>
-											{formatVoiceAudioDeviceLabel(i18n, device, fallbackDeviceName)}
-										</MenuItemRadio>
-									))
-								) : (
-									<MenuItemRadio
-										key="default"
-										selected={true}
-										onSelect={() => {}}
-										data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-item-radio"
-									>
-										{i18n._(DEFAULT_3_DESCRIPTOR)}
-									</MenuItemRadio>
-								)}
-							</>
-						)}
-						data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-item-submenu"
+					<VoiceAudioDeviceSubmenu
+						devices={devices}
+						deviceType={deviceType}
+						data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-audio-device-submenu"
 					/>
+					{isInput && (
+						<VoiceInputProfileSubmenu data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-input-profile-submenu" />
+					)}
 				</MenuGroup>
 				<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group--2">
-					<MenuItemSlider
-						label={volumeLabel}
-						value={currentVolume}
-						minValue={0}
-						maxValue={VOICE_VOLUME_MAX_PERCENT}
-						onChange={(value) => VoiceSettingsCommands.update({[volumeKey]: value})}
-						onFormat={(value) => `${Math.round(value)}%`}
-						data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-item-slider.update"
-					/>
+					{isInput ? (
+						<VoiceInputVolumeItems data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-input-volume-items" />
+					) : (
+						<VoiceOutputVolumeItem data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-output-volume-item" />
+					)}
 				</MenuGroup>
 				<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group--3">
-					<MenuItem
-						icon={
-							<GearIcon
-								weight="fill"
-								className={styles.icon}
-								data-flx="voice.voice-settings-menus.voice-device-settings-menu.icon"
-							/>
-						}
-						onClick={() => openVoiceVideoSettings(onClose, 'audio')}
-						data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-item.close"
-					>
-						{i18n._(isInput ? VOICE_INPUT_SETTINGS_DESCRIPTOR : VOICE_OUTPUT_SETTINGS_DESCRIPTOR)}
-					</MenuItem>
+					<VoiceSettingsMenuItem
+						onClose={onClose}
+						data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-settings-menu-item"
+					/>
 				</MenuGroup>
 			</>
 		);
@@ -541,6 +422,62 @@ export const VoiceOutputSettingsMenu: React.FC<VoiceOutputSettingsMenuProps> = o
 	);
 });
 
+interface VoiceCameraDeviceSubmenuProps {
+	videoDevices: Array<MediaDeviceInfo>;
+}
+
+const VoiceCameraDeviceSubmenu: React.FC<VoiceCameraDeviceSubmenuProps> = observer(({videoDevices}) => {
+	const {i18n} = useLingui();
+	const effectiveVideoDeviceId = resolveEffectiveDeviceId(VoiceSettings.videoDeviceId, videoDevices);
+	const effectiveVideoDevice = videoDevices.find((device) => device.deviceId === effectiveVideoDeviceId) ?? null;
+	return (
+		<MenuItemSubmenu
+			label={i18n._(CAMERA_DESCRIPTOR)}
+			hint={effectiveVideoDevice?.label || i18n._(DEFAULT_3_DESCRIPTOR)}
+			render={() =>
+				hasDeviceLabels(videoDevices) ? (
+					videoDevices.map((device) => (
+						<MenuItemRadio
+							key={device.deviceId}
+							icon={
+								<CameraIcon
+									weight="fill"
+									className={styles.icon}
+									data-flx="voice.voice-settings-menus.voice-camera-device-submenu.icon"
+								/>
+							}
+							selected={effectiveVideoDeviceId === device.deviceId}
+							onSelect={() => VoiceSettingsCommands.update({videoDeviceId: device.deviceId})}
+							data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item-radio.update"
+						>
+							{device.deviceId === 'default'
+								? i18n._(DEFAULT_3_DESCRIPTOR)
+								: device.label || formatFallbackCameraLabel(i18n)}
+						</MenuItemRadio>
+					))
+				) : (
+					<MenuItemRadio
+						key="default"
+						icon={
+							<CameraIcon
+								weight="fill"
+								className={styles.icon}
+								data-flx="voice.voice-settings-menus.voice-camera-device-submenu.icon--2"
+							/>
+						}
+						selected={VoiceSettings.videoDeviceId === 'default'}
+						onSelect={() => VoiceSettingsCommands.update({videoDeviceId: 'default'})}
+						data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item-radio"
+					>
+						{i18n._(DEFAULT_3_DESCRIPTOR)}
+					</MenuItemRadio>
+				)
+			}
+			data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item-submenu"
+		/>
+	);
+});
+
 interface VoiceCameraSettingsMenuProps {
 	videoDevices: Array<MediaDeviceInfo>;
 	onClose: () => void;
@@ -548,47 +485,15 @@ interface VoiceCameraSettingsMenuProps {
 
 export const VoiceCameraSettingsMenu: React.FC<VoiceCameraSettingsMenuProps> = observer(({videoDevices, onClose}) => {
 	const {i18n} = useLingui();
-	const voiceSettings = VoiceSettings;
-	const effectiveVideoDeviceId = resolveEffectiveDeviceId(voiceSettings.videoDeviceId, videoDevices);
-	const devicesHaveLabels = hasDeviceLabels(videoDevices);
 	return (
 		<>
 			<MenuGroup data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-group">
-				<MenuItemSubmenu
-					label={i18n._(CAMERA_DESCRIPTOR)}
-					render={() => (
-						<>
-							{devicesHaveLabels ? (
-								videoDevices.map((device) => (
-									<MenuItemRadio
-										key={device.deviceId}
-										selected={effectiveVideoDeviceId === device.deviceId}
-										onSelect={() => {
-											VoiceSettingsCommands.update({videoDeviceId: device.deviceId});
-										}}
-										data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item-radio.update"
-									>
-										{device.deviceId === 'default'
-											? i18n._(DEFAULT_3_DESCRIPTOR)
-											: device.label || formatFallbackCameraLabel(i18n)}
-									</MenuItemRadio>
-								))
-							) : (
-								<MenuItemRadio
-									key="default"
-									selected={true}
-									onSelect={() => {}}
-									data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item-radio"
-								>
-									{i18n._(DEFAULT_3_DESCRIPTOR)}
-								</MenuItemRadio>
-							)}
-						</>
-					)}
-					data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item-submenu"
+				<VoiceCameraDeviceSubmenu
+					videoDevices={videoDevices}
+					data-flx="voice.voice-settings-menus.voice-camera-settings-menu.voice-camera-device-submenu"
 				/>
 				<CheckboxItem
-					checked={voiceSettings.mirrorCamera}
+					checked={VoiceSettings.mirrorCamera}
 					onCheckedChange={(checked) => VoiceSettingsCommands.update({mirrorCamera: checked})}
 					data-flx="voice.voice-settings-menus.voice-camera-settings-menu.checkbox-item.mirror-camera"
 				>
@@ -597,13 +502,6 @@ export const VoiceCameraSettingsMenu: React.FC<VoiceCameraSettingsMenuProps> = o
 			</MenuGroup>
 			<MenuGroup data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-group--2">
 				<MenuItem
-					icon={
-						<VideoIcon
-							weight="fill"
-							className={styles.icon}
-							data-flx="voice.voice-settings-menus.voice-camera-settings-menu.icon"
-						/>
-					}
 					onClick={() => {
 						ModalCommands.pushAfterBottomSheetClose(
 							onClose,
@@ -614,22 +512,35 @@ export const VoiceCameraSettingsMenu: React.FC<VoiceCameraSettingsMenuProps> = o
 					}}
 					data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item.close"
 				>
-					<Trans>Preview camera</Trans>
+					<span
+						className={styles.leadingActionLabel}
+						data-flx="voice.voice-settings-menus.voice-camera-settings-menu.leading-action-label"
+					>
+						<EyeIcon
+							weight="fill"
+							className={styles.icon}
+							data-flx="voice.voice-settings-menus.voice-camera-settings-menu.icon"
+						/>
+						<Trans>Preview camera</Trans>
+					</span>
 				</MenuItem>
 			</MenuGroup>
 			<MenuGroup data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-group--3">
 				<MenuItem
-					icon={
+					onClick={() => openVoiceVideoSettings(onClose, 'video')}
+					data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item.close--2"
+				>
+					<span
+						className={styles.leadingActionLabel}
+						data-flx="voice.voice-settings-menus.voice-camera-settings-menu.leading-action-label--2"
+					>
 						<GearIcon
 							weight="fill"
 							className={styles.icon}
 							data-flx="voice.voice-settings-menus.voice-camera-settings-menu.icon--2"
 						/>
-					}
-					onClick={() => openVoiceVideoSettings(onClose, 'video')}
-					data-flx="voice.voice-settings-menus.voice-camera-settings-menu.menu-item.close--2"
-				>
-					{i18n._(VOICE_CAMERA_SETTINGS_DESCRIPTOR)}
+						{i18n._(VIDEO_SETTINGS_DESCRIPTOR)}
+					</span>
 				</MenuItem>
 			</MenuGroup>
 		</>

@@ -4436,7 +4436,7 @@ msgstr "자동 완성 제안: {label}, {resultCount}개 중 {selectedOptionPosit
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
-#: src/features/voice/components/VoiceSettingsMenus.tsx:126
+#: src/features/voice/components/VoiceSettingsMenus.tsx:86
 msgid "Automatic"
 msgstr "자동"
 
@@ -5591,7 +5591,7 @@ msgstr "카메라 접근 권한이 부여되지 않았습니다. 카메라 권�
 #. Section header in the mobile video settings bottom sheet. Picks the camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:173
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:76
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:56
 msgid "Camera device"
 msgstr "카메라 기기"
 
@@ -9822,7 +9822,7 @@ msgstr "현재: {mutedText}"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:91
 msgid "Custom"
@@ -9831,7 +9831,7 @@ msgstr "사용자 지정"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
-#: src/features/voice/components/VoiceSettingsMenus.tsx:71
+#: src/features/voice/components/VoiceSettingsMenus.tsx:64
 msgctxt "voice-processing-profile"
 msgid "Custom"
 msgstr "사용자 지정"
@@ -10366,22 +10366,10 @@ msgstr "장식용 구분선"
 #: src/features/ui/action_menu/items/SearchProviderMenuItems.tsx:14
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:117
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:66
-#: src/features/voice/components/VoiceSettingsMenus.tsx:121
+#: src/features/voice/components/VoiceSettingsMenus.tsx:81
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgid "Default"
 msgstr "기본"
-
-#. Default microphone device option.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:95
-msgctxt "voice-input-device"
-msgid "Default"
-msgstr "기본 장치"
-
-#. Default speaker or output device option.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:104
-msgctxt "voice-output-device"
-msgid "Default"
-msgstr "기본값"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:148
@@ -13042,21 +13030,13 @@ msgid "English (US)"
 msgstr "영어(미국)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#. Noise suppression option label (mobile voice settings). Enhanced engine (DeepFilterNet3).
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:783
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Enhanced"
 msgstr "향상됨"
-
-#. Noise suppression option using enhanced filtering.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:76
-msgctxt "noise-suppression-option"
-msgid "Enhanced"
-msgstr "향상된"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
@@ -15619,8 +15599,8 @@ msgid "Greek"
 msgstr "그리스어"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:785
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:68
+#: src/features/voice/components/VoiceSettingsMenus.tsx:696
 msgid "Grid view"
 msgstr "격자 보기"
 
@@ -17165,12 +17145,14 @@ msgid "Input device"
 msgstr "입력 장치"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Voice settings menu label for microphone processing profile.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:129
+#: src/features/voice/components/VoiceSettingsMenus.tsx:69
 msgid "Input profile"
 msgstr "입력 프로필"
 
 #. Row label in the mobile voice settings input-profile picker. {processingModeLabel} is the profile name.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:63
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:48
 msgid "Input profile: {processingModeLabel}"
 msgstr "입력 프로필: {processingModeLabel}"
 
@@ -20000,12 +19982,10 @@ msgid "Mic test"
 msgstr "마이크 테스트"
 
 #. Fallback microphone label in the voice settings menu when the OS does not report a device name.
-#. Fallback microphone label in the voice settings menu when the OS does not report a device name.
 #. Fallback microphone option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:21
-#: src/features/voice/components/VoiceSettingsMenus.tsx:91
-#: src/features/voice/components/VoiceSettingsMenus.tsx:113
+#: src/features/voice/components/VoiceSettingsMenus.tsx:73
 #: src/features/voice/utils/SettingsDeviceOptions.ts:15
 msgid "Microphone"
 msgstr "마이크"
@@ -20096,7 +20076,7 @@ msgstr "미성년자 위험 노출, 부적절한 성인 콘텐츠, 원치 않는
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
-#: src/features/voice/components/VoiceSettingsMenus.tsx:135
+#: src/features/voice/components/VoiceSettingsMenus.tsx:103
 msgid "Mirror camera"
 msgstr "카메라 좌우 반전"
 
@@ -21799,11 +21779,6 @@ msgstr "노이즈"
 msgid "Noise suppression"
 msgstr "노이즈 억제"
 
-#. Row label in the mobile voice settings noise-suppression picker. {noiseSuppressionLabel} is the suppression choice.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:67
-msgid "Noise suppression: {noiseSuppressionLabel}"
-msgstr "노이즈 억제: {noiseSuppressionLabel}"
-
 #. Section heading for static emoji in community emoji settings.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:102
 msgid "Non-animated emoji ({emojiCount})"
@@ -22038,7 +22013,6 @@ msgstr "사물"
 #. Explicit content filter option in the community moderation settings tab. Short standalone label meaning disabled.
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
-#. Noise suppression option label (mobile voice settings). Suppression disabled.
 #. Off state suffix appended to the reply bar mention toggle label.
 #. Option label for an H.264 backup stream select.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
@@ -22047,19 +22021,12 @@ msgstr "사물"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:59
 msgid "Off"
 msgstr "해제"
 
 #. Audit log value for a disabled boolean setting.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:43
 msgctxt "audit-log-boolean-value"
-msgid "Off"
-msgstr "사용 안 함"
-
-#. Noise suppression option that disables suppression.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:86
-msgctxt "noise-suppression-option"
 msgid "Off"
 msgstr "사용 안 함"
 
@@ -22504,7 +22471,7 @@ msgstr "브라우저에서 이모티콘 열기"
 msgid "Open emoji picker"
 msgstr "이모티콘 선택기 열기"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:859
+#: src/features/voice/components/VoiceSettingsMenus.tsx:770
 msgid "Open event sink"
 msgstr "이벤트 싱크를 엽니다."
 
@@ -24054,8 +24021,8 @@ msgstr "미리보기 버튼"
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
 #. Voice menu action that opens a preview of the current user camera.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
-#: src/features/voice/components/VoiceSettingsMenus.tsx:617
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:60
+#: src/features/voice/components/VoiceSettingsMenus.tsx:524
 msgid "Preview camera"
 msgstr "카메라 미리보기"
 
@@ -24631,7 +24598,7 @@ msgstr "무전 통화 키"
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
-#: src/features/voice/components/VoiceSettingsMenus.tsx:388
+#: src/features/voice/components/VoiceSettingsMenus.tsx:327
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
@@ -29010,8 +28977,8 @@ msgstr "숨긴 채널 보기"
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:815
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:72
+#: src/features/voice/components/VoiceSettingsMenus.tsx:726
 msgid "Show my own camera"
 msgstr "내 카메라 보기"
 
@@ -29046,8 +29013,8 @@ msgstr "새 기기 모달 표시"
 #. Toggle label in the mobile video settings bottom sheet. Controls whether participants without video are shown in the grid.
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:829
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:76
+#: src/features/voice/components/VoiceSettingsMenus.tsx:740
 msgid "Show non-video participants"
 msgstr "비디오 미참여자 표시"
 
@@ -30061,12 +30028,10 @@ msgid "Speak now. Press Stop when you are done — you can trim afterwards."
 msgstr "지금 말하세요. 완료되면 중지를 누르세요. 나중에 다듬을 수 있습니다."
 
 #. Fallback speaker label in the voice settings menu when the OS does not report a device name.
-#. Fallback speaker label in the voice settings menu when the OS does not report a device name.
 #. Fallback speaker option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:41
-#: src/features/voice/components/VoiceSettingsMenus.tsx:100
-#: src/features/voice/components/VoiceSettingsMenus.tsx:117
+#: src/features/voice/components/VoiceSettingsMenus.tsx:77
 #: src/features/voice/utils/SettingsDeviceOptions.ts:19
 msgid "Speaker"
 msgstr "스피커"
@@ -30212,18 +30177,10 @@ msgstr "SSO 로그인 시간이 초과되었습니다. 다시 시도해 주세�
 msgid "Staff controls"
 msgstr "직원 제어"
 
-#. Noise suppression option label (mobile voice settings). Browser built-in engine.
 #. Noise suppression option label in the voice tab (browser default). Keep it concise.
 #. Noise suppression option using the browser built-in engine. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:89
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:55
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
-msgid "Standard"
-msgstr "표준"
-
-#. Noise suppression option using standard browser filtering.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:81
-msgctxt "noise-suppression-option"
 msgid "Standard"
 msgstr "표준"
 
@@ -35789,8 +35746,10 @@ msgstr "비디오 스크러빙"
 msgid "Video send:"
 msgstr "비디오 전송:"
 
+#. Menu action that opens video settings.
 #. Title of the mobile video settings bottom sheet.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:84
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:64
+#: src/features/voice/components/VoiceSettingsMenus.tsx:99
 msgid "Video settings"
 msgstr "비디오 설정"
 
@@ -36321,11 +36280,9 @@ msgstr "음성 끄기"
 msgid "Voice participants"
 msgstr "음성 참여자"
 
-#. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
-#: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
 msgstr "음성 처리"
 
@@ -36344,7 +36301,7 @@ msgstr "이 브라우저에서는 음성 녹음을 지원하지 않습니다."
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Section header in the voice settings menu for the voice region picker.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:24
-#: src/features/voice/components/VoiceSettingsMenus.tsx:131
+#: src/features/voice/components/VoiceSettingsMenus.tsx:91
 msgid "Voice region"
 msgstr "음성 지역"
 
@@ -36353,8 +36310,10 @@ msgstr "음성 지역"
 msgid "Voice session restore nagbar"
 msgstr "음성 세션 복원 알림 표시줄"
 
+#. Menu action that opens voice settings.
 #. Title of the mobile voice settings bottom sheet.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:72
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:52
+#: src/features/voice/components/VoiceSettingsMenus.tsx:95
 msgid "Voice settings"
 msgstr "음성 설정"
 

@@ -4436,7 +4436,7 @@ msgstr "Forslag til autoudfyldelse: {label}, {selectedOptionPosition} af {result
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
-#: src/features/voice/components/VoiceSettingsMenus.tsx:126
+#: src/features/voice/components/VoiceSettingsMenus.tsx:86
 msgid "Automatic"
 msgstr "Automatisk"
 
@@ -5591,7 +5591,7 @@ msgstr "Kameraadgang blev ikke givet. Opdater kameratilladelser, og prøv igen."
 #. Section header in the mobile video settings bottom sheet. Picks the camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:173
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:76
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:56
 msgid "Camera device"
 msgstr "Kameraenhed"
 
@@ -9822,7 +9822,7 @@ msgstr "Aktuelt: {mutedText}"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:91
 msgid "Custom"
@@ -9831,7 +9831,7 @@ msgstr "Brugerdefineret"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
-#: src/features/voice/components/VoiceSettingsMenus.tsx:71
+#: src/features/voice/components/VoiceSettingsMenus.tsx:64
 msgctxt "voice-processing-profile"
 msgid "Custom"
 msgstr "Brugerdefineret"
@@ -10366,20 +10366,8 @@ msgstr "Dekorativ skillelinje"
 #: src/features/ui/action_menu/items/SearchProviderMenuItems.tsx:14
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:117
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:66
-#: src/features/voice/components/VoiceSettingsMenus.tsx:121
+#: src/features/voice/components/VoiceSettingsMenus.tsx:81
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
-msgid "Default"
-msgstr "Standard"
-
-#. Default microphone device option.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:95
-msgctxt "voice-input-device"
-msgid "Default"
-msgstr "Standard"
-
-#. Default speaker or output device option.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:104
-msgctxt "voice-output-device"
 msgid "Default"
 msgstr "Standard"
 
@@ -13042,19 +13030,11 @@ msgid "English (US)"
 msgstr "Engelsk (USA)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#. Noise suppression option label (mobile voice settings). Enhanced engine (DeepFilterNet3).
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:783
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
-msgid "Enhanced"
-msgstr "Forbedret"
-
-#. Noise suppression option using enhanced filtering.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:76
-msgctxt "noise-suppression-option"
 msgid "Enhanced"
 msgstr "Forbedret"
 
@@ -15619,8 +15599,8 @@ msgid "Greek"
 msgstr "Græsk"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:88
-#: src/features/voice/components/VoiceSettingsMenus.tsx:785
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:68
+#: src/features/voice/components/VoiceSettingsMenus.tsx:696
 msgid "Grid view"
 msgstr "Gittervisning"
 
@@ -17165,12 +17145,14 @@ msgid "Input device"
 msgstr "Inputenhed"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Voice settings menu label for microphone processing profile.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:129
+#: src/features/voice/components/VoiceSettingsMenus.tsx:69
 msgid "Input profile"
 msgstr "Inputprofil"
 
 #. Row label in the mobile voice settings input-profile picker. {processingModeLabel} is the profile name.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:63
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:48
 msgid "Input profile: {processingModeLabel}"
 msgstr "Inputprofil: {processingModeLabel}"
 
@@ -20000,12 +19982,10 @@ msgid "Mic test"
 msgstr "Mikrofontest"
 
 #. Fallback microphone label in the voice settings menu when the OS does not report a device name.
-#. Fallback microphone label in the voice settings menu when the OS does not report a device name.
 #. Fallback microphone option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:21
-#: src/features/voice/components/VoiceSettingsMenus.tsx:91
-#: src/features/voice/components/VoiceSettingsMenus.tsx:113
+#: src/features/voice/components/VoiceSettingsMenus.tsx:73
 #: src/features/voice/utils/SettingsDeviceOptions.ts:15
 msgid "Microphone"
 msgstr "Mikrofon"
@@ -20096,7 +20076,7 @@ msgstr "Mindreårige i fare, upassende indhold eller uønsket adfærd."
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
-#: src/features/voice/components/VoiceSettingsMenus.tsx:135
+#: src/features/voice/components/VoiceSettingsMenus.tsx:103
 msgid "Mirror camera"
 msgstr "Spejl kamera"
 
@@ -21799,11 +21779,6 @@ msgstr "Støj"
 msgid "Noise suppression"
 msgstr "Støjreduktion"
 
-#. Row label in the mobile voice settings noise-suppression picker. {noiseSuppressionLabel} is the suppression choice.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:67
-msgid "Noise suppression: {noiseSuppressionLabel}"
-msgstr "Støjreduktion: {noiseSuppressionLabel}"
-
 #. Section heading for static emoji in community emoji settings.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:102
 msgid "Non-animated emoji ({emojiCount})"
@@ -22038,7 +22013,6 @@ msgstr "Objekter"
 #. Explicit content filter option in the community moderation settings tab. Short standalone label meaning disabled.
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
-#. Noise suppression option label (mobile voice settings). Suppression disabled.
 #. Off state suffix appended to the reply bar mention toggle label.
 #. Option label for an H.264 backup stream select.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
@@ -22047,19 +22021,12 @@ msgstr "Objekter"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:59
 msgid "Off"
 msgstr "Fra"
 
 #. Audit log value for a disabled boolean setting.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:43
 msgctxt "audit-log-boolean-value"
-msgid "Off"
-msgstr "Fra"
-
-#. Noise suppression option that disables suppression.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:86
-msgctxt "noise-suppression-option"
 msgid "Off"
 msgstr "Fra"
 
@@ -22504,7 +22471,7 @@ msgstr "Åbn emoji i browser"
 msgid "Open emoji picker"
 msgstr "Åbn emoji-vælger"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:859
+#: src/features/voice/components/VoiceSettingsMenus.tsx:770
 msgid "Open event sink"
 msgstr "Åbn event sink"
 
@@ -24054,8 +24021,8 @@ msgstr "Forhåndsvisningsknap"
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
 #. Voice menu action that opens a preview of the current user camera.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
-#: src/features/voice/components/VoiceSettingsMenus.tsx:617
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:60
+#: src/features/voice/components/VoiceSettingsMenus.tsx:524
 msgid "Preview camera"
 msgstr "Forhåndsvis kamera"
 
@@ -24631,7 +24598,7 @@ msgstr "Tryk og tal-tast"
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
-#: src/features/voice/components/VoiceSettingsMenus.tsx:388
+#: src/features/voice/components/VoiceSettingsMenus.tsx:327
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
@@ -29010,8 +28977,8 @@ msgstr "Vis slåede kanaler fra"
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:92
-#: src/features/voice/components/VoiceSettingsMenus.tsx:815
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:72
+#: src/features/voice/components/VoiceSettingsMenus.tsx:726
 msgid "Show my own camera"
 msgstr "Vis mit eget kamera"
 
@@ -29046,8 +29013,8 @@ msgstr "Vis pop op-vindue for ny enhed"
 #. Toggle label in the mobile video settings bottom sheet. Controls whether participants without video are shown in the grid.
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
-#: src/features/voice/components/VoiceSettingsMenus.tsx:829
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:76
+#: src/features/voice/components/VoiceSettingsMenus.tsx:740
 msgid "Show non-video participants"
 msgstr "Vis deltagere uden video"
 
@@ -30061,12 +30028,10 @@ msgid "Speak now. Press Stop when you are done — you can trim afterwards."
 msgstr "Tal nu. Tryk på Stop, når du er færdig – du kan trimme bagefter."
 
 #. Fallback speaker label in the voice settings menu when the OS does not report a device name.
-#. Fallback speaker label in the voice settings menu when the OS does not report a device name.
 #. Fallback speaker option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:41
-#: src/features/voice/components/VoiceSettingsMenus.tsx:100
-#: src/features/voice/components/VoiceSettingsMenus.tsx:117
+#: src/features/voice/components/VoiceSettingsMenus.tsx:77
 #: src/features/voice/utils/SettingsDeviceOptions.ts:19
 msgid "Speaker"
 msgstr "Højttaler"
@@ -30212,18 +30177,10 @@ msgstr "SSO-login udløb. Prøv igen."
 msgid "Staff controls"
 msgstr "Medarbejderfunktioner"
 
-#. Noise suppression option label (mobile voice settings). Browser built-in engine.
 #. Noise suppression option label in the voice tab (browser default). Keep it concise.
 #. Noise suppression option using the browser built-in engine. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:89
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:55
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
-msgid "Standard"
-msgstr "Standard"
-
-#. Noise suppression option using standard browser filtering.
-#: src/features/voice/components/VoiceSettingsMenus.tsx:81
-msgctxt "noise-suppression-option"
 msgid "Standard"
 msgstr "Standard"
 
@@ -35789,8 +35746,10 @@ msgstr "Videoafspilningshastighed"
 msgid "Video send:"
 msgstr "Video sendt:"
 
+#. Menu action that opens video settings.
 #. Title of the mobile video settings bottom sheet.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:84
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:64
+#: src/features/voice/components/VoiceSettingsMenus.tsx:99
 msgid "Video settings"
 msgstr "Videoindstillinger"
 
@@ -36321,11 +36280,9 @@ msgstr "Slå stemme fra"
 msgid "Voice participants"
 msgstr "Stemmedeltagere"
 
-#. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
-#: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
 msgstr "Stemmebehandling"
 
@@ -36344,7 +36301,7 @@ msgstr "Stemmeoptagelse understøttes ikke i denne browser."
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Section header in the voice settings menu for the voice region picker.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:24
-#: src/features/voice/components/VoiceSettingsMenus.tsx:131
+#: src/features/voice/components/VoiceSettingsMenus.tsx:91
 msgid "Voice region"
 msgstr "Stemmeregion"
 
@@ -36353,8 +36310,10 @@ msgstr "Stemmeregion"
 msgid "Voice session restore nagbar"
 msgstr "Banner til gendannelse af stemmesession"
 
+#. Menu action that opens voice settings.
 #. Title of the mobile voice settings bottom sheet.
-#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:72
+#: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:52
+#: src/features/voice/components/VoiceSettingsMenus.tsx:95
 msgid "Voice settings"
 msgstr "Stemmeindstillinger"
 
