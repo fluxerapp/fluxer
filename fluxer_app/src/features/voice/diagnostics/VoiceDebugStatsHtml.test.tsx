@@ -58,7 +58,7 @@ function createStatsData(): StatsForNerdsData {
 			softwareQuality: 'balanced',
 			scalabilityMode: 'none',
 			backupCodecMode: 'auto',
-			maxBitrateMbps: 8,
+			maxBitrateMbps: 4.5,
 			adaptiveQuality: true,
 			adaptiveQualityAdapted: false,
 			adaptiveQualityConfiguredResolution: '1080p',

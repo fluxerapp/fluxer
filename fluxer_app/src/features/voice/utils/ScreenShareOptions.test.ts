@@ -3,11 +3,17 @@
 import {describe, expect, it} from 'vitest';
 import {
 	buildScreenShareOptions,
+	capScreenShareEncodingToDimensions,
+	getScreenShareBitrateBps,
 	getScreenShareEncoding,
 	resolveStreamingModeSettings,
-	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
+	SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
 	STREAMING_MODE_PRESETS,
+	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
+	type SupportedScreenShareFrameRate,
 } from './ScreenShareOptions';
+
+const RESOLUTIONS = ['low_240p', 'low_480p', 'medium', 'high', 'ultra', 'source'] as const;
 
 describe('buildScreenShareOptions', () => {
 	it('asks display capture to omit the cursor for app windows', () => {
@@ -118,21 +124,48 @@ describe('buildScreenShareOptions', () => {
 		});
 		expect(captureOptions.contentHint).toBeUndefined();
 	});
-	it('publishes the forced bitrate for the largest preset', () => {
+	it('publishes the ceiling bitrate for the largest preset', () => {
 		const {publishOptions} = buildScreenShareOptions({
 			resolution: 'source',
 			frameRate: 60,
 			includeAudio: false,
 		});
-		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS);
 	});
-	it('publishes the same forced bitrate for a smaller preset', () => {
+	it('publishes a lower bitrate for a smaller preset', () => {
 		const {publishOptions} = buildScreenShareOptions({
-			resolution: 'ultra',
-			frameRate: 60,
+			resolution: 'medium',
+			frameRate: 30,
 			includeAudio: false,
 		});
-		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(3_000_000);
+	});
+	it('bills the source preset at the rung the capture geometry actually fills', () => {
+		const {publishOptions} = buildScreenShareOptions({
+			resolution: 'source',
+			frameRate: 15,
+			includeAudio: false,
+			sourceDimensions: {width: 1920, height: 1080},
+		});
+		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(3_000_000);
+	});
+	it('bills a shared window at the rung its pixel count reaches', () => {
+		const {publishOptions} = buildScreenShareOptions({
+			resolution: 'source',
+			frameRate: 30,
+			includeAudio: false,
+			sourceDimensions: {width: 1080, height: 1920},
+		});
+		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(4_500_000);
+	});
+	it('keeps the source preset on its own rung when the capture fills it', () => {
+		const {publishOptions} = buildScreenShareOptions({
+			resolution: 'source',
+			frameRate: 15,
+			includeAudio: false,
+			sourceDimensions: {width: 3840, height: 2160},
+		});
+		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(4_500_000);
 	});
 	it('defaults the high-tier gaming preset to 60 fps', () => {
 		expect(resolveStreamingModeSettings('gaming', 'medium', 30, true)).toEqual({
@@ -174,26 +207,88 @@ describe('buildScreenShareOptions', () => {
 	});
 });
 
-describe('forced screen share bitrate', () => {
-	it('forces the screenshare preset to the fixed bitrate', () => {
-		const {frameRate} = STREAMING_MODE_PRESETS.screenshare;
-		expect(getScreenShareEncoding(frameRate).maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+describe('screen share bitrate ladder', () => {
+	it('publishes the Twitch anchor bitrates', () => {
+		expect(getScreenShareBitrateBps('high', 60)).toBe(6_000_000);
+		expect(getScreenShareBitrateBps('high', 30)).toBe(4_500_000);
+		expect(getScreenShareBitrateBps('medium', 60)).toBe(4_500_000);
+		expect(getScreenShareBitrateBps('medium', 30)).toBe(3_000_000);
 	});
 
-	it('forces the gaming preset to the fixed bitrate', () => {
-		const {frameRate} = STREAMING_MODE_PRESETS.gaming;
-		expect(getScreenShareEncoding(frameRate).maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+	it('never exceeds the published ceiling', () => {
+		for (const resolution of RESOLUTIONS) {
+			for (const frameRate of SUPPORTED_SCREEN_SHARE_FRAME_RATES) {
+				expect(getScreenShareBitrateBps(resolution, frameRate)).toBeLessThanOrEqual(SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS);
+			}
+		}
 	});
 
-	it('never exceeds the fixed bitrate even when a higher ceiling is supplied', () => {
-		expect(getScreenShareEncoding(60, 50000000).maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+	it('rises with frame rate at every resolution', () => {
+		for (const resolution of RESOLUTIONS) {
+			let previous = 0;
+			for (const frameRate of SUPPORTED_SCREEN_SHARE_FRAME_RATES) {
+				const bitrate = getScreenShareBitrateBps(resolution, frameRate);
+				expect(bitrate).toBeGreaterThanOrEqual(previous);
+				previous = bitrate;
+			}
+		}
 	});
 
-	it('still honours a lower ceiling so adaptive step-down keeps working', () => {
-		expect(getScreenShareEncoding(60, 2000000).maxBitrate).toBe(2000000);
+	it('rises with resolution at every frame rate', () => {
+		for (const frameRate of SUPPORTED_SCREEN_SHARE_FRAME_RATES) {
+			let previous = 0;
+			for (const resolution of RESOLUTIONS) {
+				const bitrate = getScreenShareBitrateBps(resolution, frameRate);
+				expect(bitrate).toBeGreaterThanOrEqual(previous);
+				previous = bitrate;
+			}
+		}
 	});
 
-	it('does not vary with frame rate', () => {
-		expect(getScreenShareEncoding(15).maxBitrate).toBe(getScreenShareEncoding(120).maxBitrate);
+	it('reuses the 60 fps cell above 60 fps', () => {
+		const highFrameRates: Array<SupportedScreenShareFrameRate> = [90, 120];
+		for (const resolution of RESOLUTIONS) {
+			for (const frameRate of highFrameRates) {
+				expect(getScreenShareBitrateBps(resolution, frameRate)).toBe(getScreenShareBitrateBps(resolution, 60));
+			}
+		}
+	});
+
+	it('scales the screenshare preset to its own rung', () => {
+		const {resolution, frameRate} = STREAMING_MODE_PRESETS.screenshare;
+		expect(getScreenShareEncoding(resolution, frameRate).maxBitrate).toBe(4_500_000);
+	});
+
+	it('scales the gaming preset to its own rung', () => {
+		const {resolution, frameRate} = STREAMING_MODE_PRESETS.gaming;
+		expect(getScreenShareEncoding(resolution, frameRate).maxBitrate).toBe(6_000_000);
+	});
+
+	it('varies with frame rate', () => {
+		expect(getScreenShareEncoding('medium', 15).maxBitrate).toBe(2_000_000);
+		expect(getScreenShareEncoding('medium', 60).maxBitrate).toBe(4_500_000);
+	});
+
+	it('rounds an unsupported frame rate down to a supported rung', () => {
+		expect(getScreenShareEncoding('medium', 45).maxBitrate).toBe(getScreenShareEncoding('medium', 30).maxBitrate);
+		expect(getScreenShareEncoding('medium', 45).maxFramerate).toBe(30);
+	});
+
+	it('caps a selected rung at the rung the captured picture actually fills', () => {
+		const encoding = getScreenShareEncoding('source', 30);
+		expect(capScreenShareEncodingToDimensions(encoding, {width: 800, height: 600}).maxBitrate).toBe(2_000_000);
+		expect(capScreenShareEncodingToDimensions(encoding, {width: 1920, height: 1080}).maxBitrate).toBe(4_500_000);
+	});
+
+	it('never raises a selected rung to match a larger capture', () => {
+		const encoding = getScreenShareEncoding('low_480p', 30);
+		expect(capScreenShareEncodingToDimensions(encoding, {width: 3840, height: 2160})).toEqual(encoding);
+	});
+
+	it('leaves the selected rung alone without usable capture dimensions', () => {
+		const encoding = getScreenShareEncoding('high', 60);
+		expect(capScreenShareEncodingToDimensions(encoding, undefined)).toEqual(encoding);
+		expect(capScreenShareEncodingToDimensions(encoding, {width: 0, height: 1080})).toEqual(encoding);
+		expect(capScreenShareEncodingToDimensions(encoding, {width: 1920})).toEqual(encoding);
 	});
 });

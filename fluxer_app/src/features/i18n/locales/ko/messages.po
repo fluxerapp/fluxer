@@ -1666,7 +1666,7 @@ msgid "1080p"
 msgstr "1080p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:51
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:48
 msgctxt "adaptive-screen-share"
 msgid "1080p"
 msgstr "1080p"
@@ -1692,7 +1692,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:56
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:53
 msgctxt "adaptive-screen-share"
 msgid "1440p"
 msgstr "1440p"
@@ -1736,7 +1736,7 @@ msgid "24-hour"
 msgstr "24-hour"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:36
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:33
 msgctxt "adaptive-screen-share"
 msgid "240p"
 msgstr "240p"
@@ -1801,7 +1801,7 @@ msgid "40px, 3 members"
 msgstr "40px, 멤버 3명"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:41
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:38
 msgctxt "adaptive-screen-share"
 msgid "480p"
 msgstr "480p"
@@ -1859,7 +1859,7 @@ msgid "7 days"
 msgstr "7일"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:46
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:43
 msgctxt "adaptive-screen-share"
 msgid "720p"
 msgstr "720p"
@@ -4840,7 +4840,7 @@ msgid "Bandwidth"
 msgstr "대역폭"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:66
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:63
 msgctxt "adaptive-screen-share"
 msgid "bandwidth limited"
 msgstr "대역폭 제한"
@@ -5845,15 +5845,15 @@ msgstr "캡차 인증에 실패했습니다. 다시 시도해 주세요."
 msgid "Capture"
 msgstr "캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture app audio"
 msgstr "앱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture desktop audio"
 msgstr "데스크톱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
 msgid "Capture device audio"
 msgstr "기기 오디오 캡처"
 
@@ -9417,7 +9417,7 @@ msgid "Cozy"
 msgstr "아늑한"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:71
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:68
 msgctxt "adaptive-screen-share"
 msgid "CPU limited"
 msgstr "CPU 제한"
@@ -11065,7 +11065,7 @@ msgstr "장치 정보"
 msgid "Device revoked"
 msgstr "기기 연결 해제됨"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1045
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1044
 msgid "Device selection"
 msgstr "기기 선택"
 
@@ -14545,7 +14545,7 @@ msgstr "폴더 설정"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "{blueskyProviderName}에서 팔로우하세요"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:840
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:839
 msgid "Follow voice input"
 msgstr "음성 입력 따라가기"
 
@@ -15564,7 +15564,7 @@ msgstr "{0} 부여됨."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "모든 권한을 부여하고 채널 제한을 우회합니다. 매우 민감한 권한입니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1032
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1031
 msgid "Granular selection"
 msgstr "세부 선택"
 
@@ -16128,7 +16128,7 @@ msgstr "비밀번호 숨기기"
 msgid "Hide picture-in-picture popout?"
 msgstr "화면 속 화면 팝업 숨기기?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:881
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
 msgid "Hide preview thumbnail"
 msgstr "미리보기 썸네일 숨기기"
 
@@ -16573,11 +16573,11 @@ msgstr "무시"
 msgid "Ignore friend request"
 msgstr "친구 요청 무시하기"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1022
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1021
 msgid "Ignore hardware devices"
 msgstr "하드웨어 기기 무시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:998
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
 msgid "Ignore input media"
 msgstr "입력 미디어 무시"
 
@@ -16603,7 +16603,7 @@ msgstr "스팸 신고 무시"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "{displayName}님의 친구 요청을 무시하시겠어요?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1009
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1008
 msgid "Ignore virtual"
 msgstr "가상 배경 무시"
 
@@ -18783,20 +18783,14 @@ msgstr "음량"
 msgid "Low"
 msgstr "낮음"
 
-#. Toast shown after adaptive screen-share quality lowers bitrate. {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:81
-msgctxt "adaptive-screen-share"
-msgid "Lowered screen share bitrate - {reason}"
-msgstr "화면 공유 비트 전송률을 낮춤 - {reason}"
-
 #. Toast shown after adaptive screen-share quality lowers frame rate. {frameRate} is a number and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:86
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:78
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {frameRate} FPS - {reason}"
 msgstr "화면 공유를 {frameRate} FPS로 낮춤 - {reason}"
 
 #. Toast shown after adaptive screen-share quality lowers resolution. {resolution} is a resolution label and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:92
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:84
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {resolution} - {reason}"
 msgstr "화면 공유를 {resolution}으로 낮춤 - {reason}"
@@ -20015,7 +20009,7 @@ msgstr "마이크 권한 필요"
 msgid "Microphone test"
 msgstr "마이크 테스트"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
 msgid "Microphone workaround"
 msgstr "마이크 문제 해결"
 
@@ -22152,7 +22146,7 @@ msgstr "와이드 스크린에만 적용됩니다."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "신용카드만 사용할 수 있습니다. 성인 콘텐츠 확인을 위해 직불카드 및 선불카드는 사용할 수 없습니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:987
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
 msgid "Only default speakers"
 msgstr "기본 스피커만 사용"
 
@@ -22200,7 +22194,7 @@ msgstr "여기에서 실행하는 코드가 어떤 동작을 하는지 정확히
 msgid "Only show message previews for DMs with unread messages"
 msgstr "읽지 않은 메시지가 있는 DM에 대해서만 메시지 미리보기 표시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:976
 msgid "Only speakers"
 msgstr "스피커만"
 
@@ -24642,7 +24636,7 @@ msgid "Quality"
 msgstr "품질"
 
 #. Fallback reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:76
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:73
 msgctxt "adaptive-screen-share"
 msgid "quality limited"
 msgstr "품질 제한됨"
@@ -24742,7 +24736,7 @@ msgid "Raid coordination"
 msgstr "레이드 조율"
 
 #. Toast shown after adaptive screen-share quality raises resolution. {resolution} is a resolution label.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:98
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:90
 msgctxt "adaptive-screen-share"
 msgid "Raised screen share to {resolution}"
 msgstr "{resolution}로 화면 공유 품질을 높였습니다"
@@ -29917,7 +29911,7 @@ msgid "Source"
 msgstr "원본"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:61
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:58
 msgctxt "adaptive-screen-share"
 msgid "source quality"
 msgstr "소스 품질"

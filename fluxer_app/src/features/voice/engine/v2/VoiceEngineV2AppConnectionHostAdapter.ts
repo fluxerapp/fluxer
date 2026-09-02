@@ -38,6 +38,7 @@ import {
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import {VoiceEngineV2AppReconnectPolicy} from '@app/features/voice/engine/v2/VoiceEngineV2AppReconnectPolicy';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
+import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
@@ -139,6 +140,10 @@ function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
 	return true;
 }
 
+const ROOM_PUBLISH_DEFAULTS: RoomOptions['publishDefaults'] = {
+	screenShareEncoding: {maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS, maxFramerate: 30, priority: 'high'},
+};
+
 function createRoomOptions(
 	e2eeKey: string | null,
 	subscriberVideoCodecExclusions: RoomOptions['subscriberVideoCodecExclusions'],
@@ -151,6 +156,7 @@ function createRoomOptions(
 		adaptiveStream: false,
 		dynacast: true,
 		webAudioMix: createWebAudioMixOption(),
+		publishDefaults: ROOM_PUBLISH_DEFAULTS,
 		subscriberVideoCodecExclusions,
 	};
 	let e2eeKeyProvider: ExternalE2EEKeyProvider | null = null;
@@ -675,6 +681,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			adaptiveStream: false,
 			dynacast: true,
 			webAudioMix: createWebAudioMixOption(),
+			publishDefaults: ROOM_PUBLISH_DEFAULTS,
 			subscriberVideoCodecExclusions: cachedExclusions && cachedExclusions.length > 0 ? cachedExclusions : undefined,
 		};
 		if (!this.isLatestConnectionAttempt(attemptId) || this.connectionState.room !== existingRoom) {

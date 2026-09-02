@@ -1666,7 +1666,7 @@ msgid "1080p"
 msgstr "1080p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:51
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:48
 msgctxt "adaptive-screen-share"
 msgid "1080p"
 msgstr "1080p"
@@ -1692,7 +1692,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:56
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:53
 msgctxt "adaptive-screen-share"
 msgid "1440p"
 msgstr "1440p"
@@ -1736,7 +1736,7 @@ msgid "24-hour"
 msgstr "24-hour"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:36
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:33
 msgctxt "adaptive-screen-share"
 msgid "240p"
 msgstr "240p"
@@ -1801,7 +1801,7 @@ msgid "40px, 3 members"
 msgstr "40px, 3 leden"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:41
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:38
 msgctxt "adaptive-screen-share"
 msgid "480p"
 msgstr "480p"
@@ -1859,7 +1859,7 @@ msgid "7 days"
 msgstr "7 dagen"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:46
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:43
 msgctxt "adaptive-screen-share"
 msgid "720p"
 msgstr "720p"
@@ -4840,7 +4840,7 @@ msgid "Bandwidth"
 msgstr "Bandbreedte"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:66
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:63
 msgctxt "adaptive-screen-share"
 msgid "bandwidth limited"
 msgstr "bandbreedte beperkt"
@@ -5845,15 +5845,15 @@ msgstr "Captcha-verificatie mislukt. Probeer het opnieuw."
 msgid "Capture"
 msgstr "Opnemen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture app audio"
 msgstr "App-audio opnemen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture desktop audio"
 msgstr "Bureaubladgeluid opnemen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:419
 msgid "Capture device audio"
 msgstr "App-audio opnemen"
 
@@ -9417,7 +9417,7 @@ msgid "Cozy"
 msgstr "Gezellig"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:71
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:68
 msgctxt "adaptive-screen-share"
 msgid "CPU limited"
 msgstr "CPU beperkt"
@@ -11065,7 +11065,7 @@ msgstr "Apparaatgegevens"
 msgid "Device revoked"
 msgstr "Apparaat ingetrokken"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1045
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1044
 msgid "Device selection"
 msgstr "Apparaat selecteren"
 
@@ -14545,7 +14545,7 @@ msgstr "Mapinstellingen"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Volg ons op {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:840
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:839
 msgid "Follow voice input"
 msgstr "Spraakinvoer volgen"
 
@@ -15564,7 +15564,7 @@ msgstr "{0} toegekend."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Verleent alle rechten en omzeilt kanaalbeperkingen. Zeer gevoelig."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1032
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1031
 msgid "Granular selection"
 msgstr "Nauwkeurige selectie"
 
@@ -16128,7 +16128,7 @@ msgstr "Wachtwoord verbergen"
 msgid "Hide picture-in-picture popout?"
 msgstr "Beeld-in-beeld-pop-out verbergen?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:881
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
 msgid "Hide preview thumbnail"
 msgstr "Voorbeeldweergave verbergen"
 
@@ -16573,11 +16573,11 @@ msgstr "Negeren"
 msgid "Ignore friend request"
 msgstr "Vriendschapsverzoek negeren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1022
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1021
 msgid "Ignore hardware devices"
 msgstr "Hardwareapparaten negeren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:998
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
 msgid "Ignore input media"
 msgstr "Invoermedia negeren"
 
@@ -16603,7 +16603,7 @@ msgstr "Spamvlag negeren"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Vriendschapsverzoek van {displayName} negeren?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1009
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1008
 msgid "Ignore virtual"
 msgstr "Virtuele audio negeren"
 
@@ -18783,20 +18783,14 @@ msgstr "Volume"
 msgid "Low"
 msgstr "Laag"
 
-#. Toast shown after adaptive screen-share quality lowers bitrate. {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:81
-msgctxt "adaptive-screen-share"
-msgid "Lowered screen share bitrate - {reason}"
-msgstr "Bitrate van het scherm delen verlaagd - {reason}"
-
 #. Toast shown after adaptive screen-share quality lowers frame rate. {frameRate} is a number and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:86
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:78
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {frameRate} FPS - {reason}"
 msgstr "Scherm delen verlaagd naar {frameRate} FPS - {reason}"
 
 #. Toast shown after adaptive screen-share quality lowers resolution. {resolution} is a resolution label and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:92
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:84
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {resolution} - {reason}"
 msgstr "Scherm delen verlaagd naar {resolution} - {reason}"
@@ -20015,7 +20009,7 @@ msgstr "Microfoonrechten vereist"
 msgid "Microphone test"
 msgstr "Microfoontest"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:966
 msgid "Microphone workaround"
 msgstr "Microfoonoplossing"
 
@@ -22152,7 +22146,7 @@ msgstr "Alleen van toepassing op brede schermen."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Alleen creditcards worden geaccepteerd. Debit- en prepaidkaarten kunnen niet worden gebruikt voor de controle van inhoud voor volwassenen."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:987
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
 msgid "Only default speakers"
 msgstr "Alleen standaardluidsprekers"
 
@@ -22200,7 +22194,7 @@ msgstr "Voer hier alleen code uit als je precies begrijpt wat het doet."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Toon alleen berichtvoorbeelden voor DM's met ongelezen berichten"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:976
 msgid "Only speakers"
 msgstr "Alleen sprekers"
 
@@ -24642,7 +24636,7 @@ msgid "Quality"
 msgstr "Kwaliteit"
 
 #. Fallback reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:76
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:73
 msgctxt "adaptive-screen-share"
 msgid "quality limited"
 msgstr "kwaliteit beperkt"
@@ -24742,7 +24736,7 @@ msgid "Raid coordination"
 msgstr "Raidcoördinatie"
 
 #. Toast shown after adaptive screen-share quality raises resolution. {resolution} is a resolution label.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:98
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:90
 msgctxt "adaptive-screen-share"
 msgid "Raised screen share to {resolution}"
 msgstr "Verhoogde schermdeling naar {resolution}"
@@ -29917,7 +29911,7 @@ msgid "Source"
 msgstr "Bron"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:61
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:58
 msgctxt "adaptive-screen-share"
 msgid "source quality"
 msgstr "bronkwaliteit"

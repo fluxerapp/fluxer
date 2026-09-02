@@ -17,12 +17,30 @@ const DIMENSIONS: Record<
 	ultra: {width: 2560, height: 1440},
 	source: {width: 3840, height: 2160},
 };
-export const SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS = 7000000;
+export const SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS = 6_000_000;
 export const SCREEN_SHARE_DEGRADATION_PREFERENCE: NonNullable<TrackPublishOptions['degradationPreference']> =
 	'maintain-resolution';
 export const SUPPORTED_SCREEN_SHARE_FRAME_RATES = [15, 30, 60, 90, 120] as const;
 
 export type SupportedScreenShareFrameRate = (typeof SUPPORTED_SCREEN_SHARE_FRAME_RATES)[number];
+
+const BITRATE_KBPS: Record<ScreenshareResolution, Record<SupportedScreenShareFrameRate, number>> = {
+	low_240p: {15: 300, 30: 500, 60: 700, 90: 700, 120: 700},
+	low_480p: {15: 1200, 30: 2000, 60: 3000, 90: 3000, 120: 3000},
+	medium: {15: 2000, 30: 3000, 60: 4500, 90: 4500, 120: 4500},
+	high: {15: 3000, 30: 4500, 60: 6000, 90: 6000, 120: 6000},
+	ultra: {15: 4000, 30: 5500, 60: 6000, 90: 6000, 120: 6000},
+	source: {15: 4500, 30: 6000, 60: 6000, 90: 6000, 120: 6000},
+};
+
+const BITRATE_RUNGS = [
+	'low_240p',
+	'low_480p',
+	'medium',
+	'high',
+	'ultra',
+	'source',
+] as const satisfies ReadonlyArray<ScreenshareResolution>;
 
 export function resolveScreenShareFrameRate(frameRate: number): SupportedScreenShareFrameRate {
 	if (frameRate >= 120) return 120;
@@ -39,13 +57,63 @@ export function getScreenShareDimensions(resolution: ScreenshareResolution): {
 	return DIMENSIONS[resolution];
 }
 
-export function getScreenShareEncoding(
-	frameRate: number,
-	maxBitrateBps = SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
+function resolveBitrateRungForDimensions(dimensions: {width: number; height: number}): ScreenshareResolution {
+	const pixels = dimensions.width * dimensions.height;
+	let rung: ScreenshareResolution = BITRATE_RUNGS[0];
+	for (const candidate of BITRATE_RUNGS) {
+		if (DIMENSIONS[candidate].width * DIMENSIONS[candidate].height > pixels) break;
+		rung = candidate;
+	}
+	return rung;
+}
+
+function resolveBitrateRung(
+	resolution: ScreenshareResolution,
+	sourceDimensions?: {
+		width: number;
+		height: number;
+	},
+): ScreenshareResolution {
+	return resolveBitrateRungForDimensions(resolveEffectiveScreenShareDimensions(resolution, sourceDimensions));
+}
+
+export function getScreenShareBitrateBps(
+	resolution: ScreenshareResolution,
+	frameRate: SupportedScreenShareFrameRate,
+	sourceDimensions?: {
+		width: number;
+		height: number;
+	},
+): number {
+	return BITRATE_KBPS[resolveBitrateRung(resolution, sourceDimensions)][frameRate] * 1000;
+}
+
+export function capScreenShareEncodingToDimensions(
+	encoding: VideoEncoding,
+	dimensions: {width?: number; height?: number} | undefined,
 ): VideoEncoding {
+	if (typeof encoding.maxBitrate !== 'number') return encoding;
+	const width = dimensions?.width;
+	const height = dimensions?.height;
+	if (!width || !height || width <= 0 || height <= 0) return encoding;
+	const frameRate = resolveScreenShareFrameRate(encoding.maxFramerate ?? 60);
+	const ceiling = BITRATE_KBPS[resolveBitrateRungForDimensions({width, height})][frameRate] * 1000;
+	if (encoding.maxBitrate <= ceiling) return encoding;
+	return {...encoding, maxBitrate: ceiling};
+}
+
+export function getScreenShareEncoding(
+	resolution: ScreenshareResolution,
+	frameRate: number,
+	sourceDimensions?: {
+		width: number;
+		height: number;
+	},
+): VideoEncoding {
+	const resolvedFrameRate = resolveScreenShareFrameRate(frameRate);
 	return {
-		maxBitrate: Math.min(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS, maxBitrateBps),
-		maxFramerate: frameRate,
+		maxBitrate: getScreenShareBitrateBps(resolution, resolvedFrameRate, sourceDimensions),
+		maxFramerate: resolvedFrameRate,
 		priority: 'high',
 	};
 }
@@ -148,7 +216,7 @@ export function buildScreenShareOptions(
 		},
 		publishOptions: {
 			degradationPreference: SCREEN_SHARE_DEGRADATION_PREFERENCE,
-			screenShareEncoding: getScreenShareEncoding(resolvedFrameRate),
+			screenShareEncoding: getScreenShareEncoding(config.resolution, resolvedFrameRate, config.sourceDimensions),
 		},
 	};
 }

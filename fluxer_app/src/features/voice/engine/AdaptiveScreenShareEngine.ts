@@ -9,11 +9,10 @@ import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import VoiceSettings, {type ScreenshareResolution, type StreamingMode} from '@app/features/voice/state/VoiceSettings';
 import {isNativeScreenShareTrack} from '@app/features/voice/utils/native_screen_capture_bridge/shared';
 import {
+	getScreenShareBitrateBps,
 	getScreenShareDimensions,
-	getScreenShareEncoding,
 	resolveScreenShareFrameRate,
 	SCREEN_SHARE_DEGRADATION_PREFERENCE,
-	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
@@ -30,8 +29,6 @@ const FRAME_RATE_GRACE_FPS = 8;
 const STEP_DOWN_COOLDOWN_MS = 10_000;
 const STEP_UP_COOLDOWN_MS = 5_000;
 const MAX_STEP_UP_COOLDOWN_MS = 30_000;
-const BANDWIDTH_BITRATE_STEP_FACTOR = 0.6;
-const OBSERVED_TARGET_BITRATE_HEADROOM = 1.1;
 
 const SCREEN_SHARE_240P_DESCRIPTOR = msg({
 	message: '240p',
@@ -76,11 +73,6 @@ const CPU_LIMITED_DESCRIPTOR = msg({
 const QUALITY_LIMITED_DESCRIPTOR = msg({
 	message: 'quality limited',
 	comment: 'Fallback reason label in adaptive screen-share quality toasts.',
-	context: 'adaptive-screen-share',
-});
-const LOWERED_SCREEN_SHARE_BITRATE_DESCRIPTOR = msg({
-	message: 'Lowered screen share bitrate - {reason}',
-	comment: 'Toast shown after adaptive screen-share quality lowers bitrate. {reason} is the limitation reason.',
 	context: 'adaptive-screen-share',
 });
 const LOWERED_SCREEN_SHARE_FRAME_RATE_DESCRIPTOR = msg({
@@ -129,7 +121,6 @@ export interface OutboundVideoAdaptationStats {
 	framesPerSecond?: number;
 	frameWidth?: number;
 	frameHeight?: number;
-	targetBitrate?: number;
 }
 
 export type PreviousOutboundVideoSample = OutboundVideoAdaptationStats | null;
@@ -169,12 +160,6 @@ function shouldPreferFrameRateStepDown(mode: StreamingMode, reason: QualityLimit
 	if (mode === 'gaming') return false;
 	if (mode === 'screenshare') return true;
 	return reason === 'cpu';
-}
-
-function getSenderMaxBitrate(sender: RTCRtpSender): number | null {
-	const encodings = sender.getParameters().encodings;
-	const maxBitrate = encodings?.find((encoding) => typeof encoding.maxBitrate === 'number')?.maxBitrate;
-	return typeof maxBitrate === 'number' && maxBitrate > 0 ? maxBitrate : null;
 }
 
 function getHigherResolution(
@@ -255,7 +240,6 @@ export function extractOutboundVideoAdaptationStats(stats: RTCStatsReport): Outb
 			framesPerSecond?: number;
 			frameWidth?: number;
 			frameHeight?: number;
-			targetBitrate?: number;
 		};
 		if (!isOutboundVideoReport(report)) continue;
 		return {
@@ -266,7 +250,6 @@ export function extractOutboundVideoAdaptationStats(stats: RTCStatsReport): Outb
 			framesPerSecond: typeof report.framesPerSecond === 'number' ? report.framesPerSecond : undefined,
 			frameWidth: typeof report.frameWidth === 'number' ? report.frameWidth : undefined,
 			frameHeight: typeof report.frameHeight === 'number' ? report.frameHeight : undefined,
-			targetBitrate: typeof report.targetBitrate === 'number' ? report.targetBitrate : undefined,
 		};
 	}
 	return null;
@@ -299,16 +282,6 @@ export function isOutboundFrameRateBelowTarget(
 	return frameRate < Math.max(1, targetFrameRate - FRAME_RATE_GRACE_FPS);
 }
 
-export function computeAdaptiveBitrate(
-	frameRate: number,
-	maxBitrateBps?: number,
-	observedTargetBitrateBps?: number,
-): number {
-	const base = getScreenShareEncoding(frameRate, maxBitrateBps).maxBitrate ?? 0;
-	if (typeof observedTargetBitrateBps !== 'number' || observedTargetBitrateBps <= 0) return base;
-	return Math.min(base, Math.round(observedTargetBitrateBps * OBSERVED_TARGET_BITRATE_HEADROOM));
-}
-
 export function computeResolutionScale(
 	fromResolution: ScreenshareResolution,
 	toResolution: ScreenshareResolution,
@@ -323,16 +296,15 @@ export async function applyResolutionFrameRateAndBitrate(
 	sender: RTCRtpSender,
 	resolution: ScreenshareResolution,
 	frameRate: SupportedScreenShareFrameRate,
-	maxBitrateBps?: number,
-	observedTargetBitrateBps?: number,
 ): Promise<void> {
 	const dimensions = getScreenShareDimensions(resolution);
+	const maxBitrate = getScreenShareBitrateBps(resolution, frameRate);
 	if (isNativeScreenShareTrack(track.mediaStreamTrack)) {
 		const updated = updateVoiceEngineV2ScreenEncodingFromMediaEngine({
 			width: dimensions.width,
 			height: dimensions.height,
 			frameRate,
-			maxBitrateBps: computeAdaptiveBitrate(frameRate, maxBitrateBps, observedTargetBitrateBps),
+			maxBitrateBps: maxBitrate,
 		});
 		if (!updated) {
 			logger.warn('Skipped native screen-share encoding update because v2 screen state is unavailable', {
@@ -361,7 +333,6 @@ export async function applyResolutionFrameRateAndBitrate(
 	}
 	const parameters = sender.getParameters();
 	const encodings = parameters.encodings?.length ? parameters.encodings : [{}];
-	const maxBitrate = computeAdaptiveBitrate(frameRate, maxBitrateBps, observedTargetBitrateBps);
 	parameters.degradationPreference = SCREEN_SHARE_DEGRADATION_PREFERENCE;
 	parameters.encodings = encodings.map((encoding) => ({
 		...encoding,
@@ -391,7 +362,6 @@ class AdaptiveScreenShareEngine extends Store {
 	private lastStepUpAt = 0;
 	private stepUpCooldownMs = STEP_UP_COOLDOWN_MS;
 	private previousSample: PreviousOutboundVideoSample = null;
-	private bandwidthBitrateStepActive = false;
 
 	get qualitySnapshot(): AdaptiveQualitySnapshot {
 		const configured = getConfiguredQuality();
@@ -449,7 +419,6 @@ class AdaptiveScreenShareEngine extends Store {
 			this.lastStepUpAt = 0;
 			this.stepUpCooldownMs = STEP_UP_COOLDOWN_MS;
 			this.previousSample = null;
-			this.bandwidthBitrateStepActive = false;
 			this.configuredResolution = null;
 			this.configuredFrameRate = null;
 			this.effectiveResolution = null;
@@ -474,7 +443,6 @@ class AdaptiveScreenShareEngine extends Store {
 				screenShare.sender,
 				snapshot.configuredResolution,
 				snapshot.configuredFrameRate,
-				SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 			);
 			logger.info('Restored configured screen share quality', {
 				resolution: snapshot.configuredResolution,
@@ -528,7 +496,6 @@ class AdaptiveScreenShareEngine extends Store {
 				this.stepUpStreak = 0;
 			} else if (stats.qualityLimitationReason === 'none') {
 				this.stepDownStreak = 0;
-				this.bandwidthBitrateStepActive = false;
 				if (this.isAdapted) {
 					this.stepUpStreak++;
 				}
@@ -566,30 +533,20 @@ class AdaptiveScreenShareEngine extends Store {
 		const nextFrameRate = shouldPreferFrameRateStepDown(streamingMode, reason)
 			? getLowerFrameRate(currentFrameRate)
 			: null;
-		const currentSenderMaxBitrate =
-			getSenderMaxBitrate(screenShare.sender) ??
-			computeAdaptiveBitrate(currentFrameRate, SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS, stats.targetBitrate);
-		const canApplyBandwidthBitrateStep =
-			reason === 'bandwidth' && !nextFrameRate && !this.bandwidthBitrateStepActive && currentSenderMaxBitrate > 0;
-		const nextResolution =
-			nextFrameRate || canApplyBandwidthBitrateStep ? currentResolution : getLowerResolution(currentResolution);
+		const nextResolution = nextFrameRate ? currentResolution : getLowerResolution(currentResolution);
 		if (!nextResolution) {
 			this.stepDownStreak = 0;
 			return;
 		}
-		const nextMaxBitrateBps = canApplyBandwidthBitrateStep
-			? Math.max(1, Math.round(currentSenderMaxBitrate * BANDWIDTH_BITRATE_STEP_FACTOR))
-			: SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS;
 		const nextEffectiveFrameRate = nextFrameRate ?? currentFrameRate;
-		const stepKind = nextFrameRate ? 'framerate' : canApplyBandwidthBitrateStep ? 'bitrate' : 'resolution';
+		const nextMaxBitrateBps = getScreenShareBitrateBps(nextResolution, nextEffectiveFrameRate);
+		const stepKind = nextFrameRate ? 'framerate' : 'resolution';
 		try {
 			await applyResolutionFrameRateAndBitrate(
 				screenShare.track,
 				screenShare.sender,
 				nextResolution,
 				nextEffectiveFrameRate,
-				nextMaxBitrateBps,
-				canApplyBandwidthBitrateStep ? undefined : stats.targetBitrate,
 			);
 			this.update(() => {
 				this.effectiveResolution = nextResolution;
@@ -599,7 +556,6 @@ class AdaptiveScreenShareEngine extends Store {
 				this.stepUpStreak = 0;
 				this.lastStepDownAt = Date.now();
 				this.stepUpCooldownMs = Math.min(this.stepUpCooldownMs * 2, MAX_STEP_UP_COOLDOWN_MS);
-				this.bandwidthBitrateStepActive = canApplyBandwidthBitrateStep;
 			});
 			logger.info('Reduced screen share quality adaptively', {
 				fromResolution: currentResolution,
@@ -611,9 +567,7 @@ class AdaptiveScreenShareEngine extends Store {
 				reason,
 			});
 			const reasonLabel = formatLimitationReasonForToast(reason);
-			if (stepKind === 'bitrate') {
-				showAdaptiveScreenShareToast(i18n._(LOWERED_SCREEN_SHARE_BITRATE_DESCRIPTOR, {reason: reasonLabel}));
-			} else if (stepKind === 'framerate') {
+			if (stepKind === 'framerate') {
 				showAdaptiveScreenShareToast(
 					i18n._(LOWERED_SCREEN_SHARE_FRAME_RATE_DESCRIPTOR, {
 						frameRate: nextEffectiveFrameRate,
@@ -656,7 +610,6 @@ class AdaptiveScreenShareEngine extends Store {
 				this.isAdapted = false;
 				this.stepUpStreak = 0;
 				this.stepUpCooldownMs = STEP_UP_COOLDOWN_MS;
-				this.bandwidthBitrateStepActive = false;
 			});
 			return;
 		}
@@ -666,7 +619,6 @@ class AdaptiveScreenShareEngine extends Store {
 				screenShare.sender,
 				nextResolution,
 				configuredFrameRate,
-				SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 			);
 			this.update(() => {
 				this.effectiveResolution = nextResolution;
@@ -674,7 +626,6 @@ class AdaptiveScreenShareEngine extends Store {
 				this.isAdapted = nextResolution !== configuredResolution;
 				this.stepUpStreak = 0;
 				this.lastStepUpAt = Date.now();
-				this.bandwidthBitrateStepActive = false;
 				if (!this.isAdapted) {
 					this.stepUpCooldownMs = STEP_UP_COOLDOWN_MS;
 				}
