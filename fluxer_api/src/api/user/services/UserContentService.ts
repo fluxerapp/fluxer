@@ -3,8 +3,10 @@
 import crypto from 'node:crypto';
 import type {Readable} from 'node:stream';
 import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MaxBookmarksError} from '@fluxer/errors/src/domains/core/MaxBookmarksError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
@@ -22,6 +24,7 @@ import type {
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {SavedMessageStatus} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {isPubliclyRoutableUrlShape} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type {ApiContext} from '../../ApiContext';
@@ -83,6 +86,18 @@ function createPushSubscriptionId(parts: Array<string>): string {
 
 function createWebPushSubscriptionId(endpoint: string): string {
 	return crypto.createHash('sha256').update(endpoint).digest('hex').substring(0, 32);
+}
+
+function assertPublicPushEndpoint(endpoint: string, fieldName: string): void {
+	let parsedUrl: URL;
+	try {
+		parsedUrl = new URL(endpoint);
+	} catch {
+		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.INVALID_URL_FORMAT);
+	}
+	if (!isPubliclyRoutableUrlShape(parsedUrl)) {
+		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE);
+	}
 }
 
 function normalizeMobileAppId(appId: string | undefined): string {
@@ -295,6 +310,7 @@ export class UserContentService {
 		userAgent?: string;
 	}): Promise<PushSubscription> {
 		const {userId, authSessionIdHash, endpoint, keys, userAgent} = params;
+		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const subscriptionId = createWebPushSubscriptionId(endpoint);
 		const data: PushSubscriptionRow = {
 			user_id: userId,
@@ -335,6 +351,7 @@ export class UserContentService {
 		userAgent?: string;
 	}): Promise<PushSubscription> {
 		const {userId, authSessionIdHash, oldEndpoint, endpoint, keys, userAgent} = params;
+		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const oldSubscriptionId = createWebPushSubscriptionId(oldEndpoint);
 		const newSubscriptionId = createWebPushSubscriptionId(endpoint);
 		if (oldSubscriptionId !== newSubscriptionId) {
@@ -359,6 +376,9 @@ export class UserContentService {
 
 	async registerMobileDevice(params: RegisterMobileDeviceParams): Promise<PushSubscription> {
 		const {userId, authSessionIdHash, device} = params;
+		if (device.platform === 'android_unified_push') {
+			assertPublicPushEndpoint(device.token, 'token');
+		}
 		const appId = normalizeMobileAppId(device.app_id);
 		const providerEnvironment = normalizeProviderEnvironment(device.platform, device.provider_environment);
 		const subscriptionId = createPushSubscriptionId([device.platform, appId, providerEnvironment ?? '', device.token]);

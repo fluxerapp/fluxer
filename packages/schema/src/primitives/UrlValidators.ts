@@ -7,6 +7,7 @@ import {z} from 'zod';
 
 const PROTOCOLS = ['http', 'https'];
 const FILENAME_SAFE_REGEX = /^[\p{L}\p{N}\p{M}_.-]+$/u;
+const HOSTNAME_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const URL_VALIDATOR_OPTIONS = {
 	require_protocol: true,
 	require_host: true,
@@ -49,6 +50,27 @@ function createUrlSchema() {
 			ValidationErrorCodes.INVALID_URL_FORMAT,
 		);
 }
+
+export function isFqdnHostname(hostname: string): boolean {
+	if (!hostname || hostname.length > 253 || !hostname.includes('.')) {
+		return false;
+	}
+	const labels = hostname.split('.');
+	for (const label of labels) {
+		if (!label || label.length > 63 || !HOSTNAME_LABEL_REGEX.test(label)) {
+			return false;
+		}
+	}
+	return !/^\d+$/.test(labels[labels.length - 1]);
+}
+
+export const HostnameType = z
+	.string()
+	.transform((value) => {
+		const trimmed = value.trim().toLowerCase();
+		return trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
+	})
+	.refine(isFqdnHostname, ValidationErrorCodes.INVALID_FORMAT);
 
 export const URLType = createUrlSchema();
 export const AttachmentURLType = z

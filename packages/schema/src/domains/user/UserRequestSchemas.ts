@@ -514,6 +514,13 @@ export const RegisterMobileDeviceRequest = z
 	})
 	.superRefine((value, ctx) => {
 		if (value.platform !== 'android_unified_push') return;
+		if (!URLType.safeParse(value.token).success) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ['token'],
+				message: 'UnifiedPush registrations require a valid endpoint URL',
+			});
+		}
 		if (!value.encryption_key) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
