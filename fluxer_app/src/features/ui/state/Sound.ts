@@ -17,6 +17,7 @@ export interface SoundSettings {
 
 export interface SoundPlayOptions {
 	bypassSelfDeafened?: boolean;
+	ignoreGroupCooldown?: boolean;
 }
 
 interface OneShotSoundPolicy {
@@ -294,6 +295,36 @@ class Sound {
 			});
 	}
 
+	async playOneShotSoundImmediately(
+		sound: SoundType,
+		options: SoundPlayOptions = {},
+		signal?: AbortSignal,
+	): Promise<boolean> {
+		if (StreamerMode.shouldDisableSounds) return false;
+		if (this.isSuppressedWhileSelfDeafened(sound, options)) return false;
+		if (!this.isSoundEnabled(sound)) return false;
+		const policy = getOneShotSoundPolicy(sound);
+		if (options.ignoreGroupCooldown !== true) {
+			const lastGroupPlayedAt = this.lastOneShotPlayedAtByGroup.get(policy.group);
+			if (lastGroupPlayedAt !== undefined && Date.now() < lastGroupPlayedAt + policy.cooldownMs) return false;
+		}
+		this.clearPendingOneShotSound(sound);
+		const effectiveVolume = this.volume * this.getEffectiveMultiplier(sound);
+		const played = await this.playOneShotSoundNow(
+			sound,
+			effectiveVolume,
+			options.bypassSelfDeafened === true,
+			signal,
+			false,
+		);
+		if (played) {
+			const playedAt = Date.now();
+			this.lastOneShotPlayedAt = playedAt;
+			this.lastOneShotPlayedAtByGroup.set(policy.group, playedAt);
+		}
+		return played;
+	}
+
 	previewSound(sound: SoundType): void {
 		if (StreamerMode.shouldDisableSounds) {
 			return;
@@ -553,7 +584,7 @@ class Sound {
 		) {
 			this.lastOneShotPlayedAt = now;
 			this.lastOneShotPlayedAtByGroup.set(selectedGroup, now);
-			this.playOneShotSoundNow(selectedSound.sound, selectedSound.volume, selectedSound.bypassSelfDeafened);
+			void this.playOneShotSoundNow(selectedSound.sound, selectedSound.volume, selectedSound.bypassSelfDeafened);
 		}
 		this.scheduleOneShotDrain();
 	}
@@ -579,23 +610,38 @@ class Sound {
 		if (Date.now() > pending.expiresAt) return;
 		if (!this.isSoundEnabled(pending.sound)) return;
 		if (this.isSuppressedWhileSelfDeafened(pending.sound, pending)) return;
-		this.playOneShotSoundNow(pending.sound, pending.volume, pending.bypassSelfDeafened);
+		void this.playOneShotSoundNow(pending.sound, pending.volume, pending.bypassSelfDeafened);
 	}
 
-	private playOneShotSoundNow(sound: SoundType, volume: number, bypassSelfDeafened: boolean): void {
-		SoundUtils.playSound(sound, false, volume, () =>
-			this.handleOneShotAutoplayBlocked(sound, volume, bypassSelfDeafened),
-		)
-			.then((result) => {
-				if (!result) return;
-				this.addCurrentlyPlayingSound(sound);
-				const remove = () => this.removeCurrentlyPlayingSound(sound);
-				result.addEventListener('ended', remove, {once: true});
-				result.addEventListener('error', remove, {once: true});
-			})
-			.catch((error) => {
-				this.logger.warn('Failed to play sound:', error);
-			});
+	private async playOneShotSoundNow(
+		sound: SoundType,
+		volume: number,
+		bypassSelfDeafened: boolean,
+		signal?: AbortSignal,
+		retryOnAutoplayBlocked = true,
+	): Promise<boolean> {
+		try {
+			const result = await SoundUtils.playSound(
+				sound,
+				false,
+				volume,
+				retryOnAutoplayBlocked ? () => this.handleOneShotAutoplayBlocked(sound, volume, bypassSelfDeafened) : undefined,
+				signal,
+			);
+			if (!result) return false;
+			this.addCurrentlyPlayingSound(sound);
+			const remove = (): void => {
+				signal?.removeEventListener('abort', remove);
+				this.removeCurrentlyPlayingSound(sound);
+			};
+			result.addEventListener('ended', remove, {once: true});
+			result.addEventListener('error', remove, {once: true});
+			signal?.addEventListener('abort', remove, {once: true});
+			return true;
+		} catch (error) {
+			this.logger.warn('Failed to play sound:', error);
+			return false;
+		}
 	}
 
 	private addCurrentlyPlayingSound(sound: SoundType): void {

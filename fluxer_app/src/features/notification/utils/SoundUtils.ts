@@ -350,8 +350,11 @@ const playOneShotSound = async (
 	type: SoundType,
 	volume: number,
 	onAutoplayBlocked?: () => void,
+	signal?: AbortSignal,
 ): Promise<HTMLAudioElement | null> => {
+	if (signal?.aborted) return null;
 	const soundUrl = await getSoundUrl(type);
+	if (signal?.aborted) return null;
 	const audio = createAudioElement(soundUrl);
 	audio.currentTime = 0;
 	audio.loop = false;
@@ -361,6 +364,7 @@ const playOneShotSound = async (
 	const routeToCaptureBus = shouldRouteSoundToCaptureBus(type);
 	try {
 		const ctx = await resumeAudioContextIfNeeded();
+		if (signal?.aborted) return null;
 		if (ctx.state !== 'suspended') {
 			sourceNode = ctx.createMediaElementSource(audio);
 			gainNode = ctx.createGain();
@@ -377,26 +381,49 @@ const playOneShotSound = async (
 		audio.volume = effectiveVolume;
 		applyOutputDeviceToAudioElement(audio);
 	}
+	let cleanedUp = false;
+	let abortPlayback: (() => void) | null = null;
 	const instance: OneShotAudioInstance = {
 		audio,
 		gainNode,
 		sourceNode,
 		cleanup: () => {
+			if (cleanedUp) return;
+			cleanedUp = true;
 			activeOneShotSounds.delete(instance);
 			audio.removeEventListener('ended', instance.cleanup);
 			audio.removeEventListener('error', instance.cleanup);
+			if (abortPlayback) signal?.removeEventListener('abort', abortPlayback);
 			disconnectNodes(sourceNode, gainNode);
 		},
 	};
+	abortPlayback = () => {
+		audio.pause();
+		audio.removeAttribute('src');
+		audio.load();
+		instance.cleanup();
+	};
 	audio.addEventListener('ended', instance.cleanup);
 	audio.addEventListener('error', instance.cleanup);
+	if (signal?.aborted) {
+		abortPlayback();
+		return null;
+	}
+	signal?.addEventListener('abort', abortPlayback, {once: true});
 	trimActiveOneShotSounds();
 	activeOneShotSounds.add(instance);
 	try {
 		await audio.play();
+		if (signal?.aborted) {
+			abortPlayback();
+			return null;
+		}
 		return audio;
 	} catch (error) {
 		instance.cleanup();
+		if (signal?.aborted) {
+			return null;
+		}
 		if (isAutoplayBlockedError(error)) {
 			logger.debug('Autoplay blocked; dropping sound', {type});
 			onAutoplayBlocked?.();
@@ -412,6 +439,7 @@ export async function playSound(
 	loop = false,
 	volume = 0.4,
 	onAutoplayBlocked?: () => void,
+	signal?: AbortSignal,
 ): Promise<HTMLAudioElement | null> {
 	const activeSound = activeSounds.get(type);
 	if (loop && activeSound && !activeSound.audio.paused) {
@@ -419,7 +447,7 @@ export async function playSound(
 	}
 	try {
 		if (!loop) {
-			return await playOneShotSound(type, volume, onAutoplayBlocked);
+			return await playOneShotSound(type, volume, onAutoplayBlocked, signal);
 		}
 		const ctx = await resumeAudioContextIfNeeded();
 		if (ctx.state === 'suspended') {
