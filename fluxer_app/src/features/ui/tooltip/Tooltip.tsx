@@ -34,6 +34,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {useExclusiveTooltip} from './TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from './TooltipHandoff';
 import {getTooltipScrollSuppressRemainingMs, subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 const logger = new Logger('Tooltip');
@@ -466,9 +467,10 @@ export const Tooltip = observer(
 		}, [updatePositionNow, cancelRaf, getTooltipOwnerWindow]);
 		const getVisibilityDriverDelayMs = useCallback(() => {
 			const scrollSuppressRemainingMs = getTooltipScrollSuppressRemainingMs();
+			const openDelay = isTooltipHandoffWarm() ? 0 : delay;
 			switch (true) {
-				case delay > 0 || scrollSuppressRemainingMs > 0:
-					return Math.max(delay, scrollSuppressRemainingMs > 0 ? scrollSuppressRemainingMs + 1 : 0);
+				case openDelay > 0 || scrollSuppressRemainingMs > 0:
+					return Math.max(openDelay, scrollSuppressRemainingMs > 0 ? scrollSuppressRemainingMs + 1 : 0);
 				default:
 					return 0;
 			}
@@ -602,6 +604,10 @@ export const Tooltip = observer(
 				cancelRaf();
 			};
 		}, [cancelRaf, clearDelayTimer, clearPointerFocusTimeout]);
+		useEffect(() => {
+			if (!shouldRenderTooltip) return;
+			return markTooltipOpen();
+		}, [shouldRenderTooltip]);
 		useEffect(() => {
 			if (!shouldRenderTooltip) return;
 			return subscribeTooltipScrollHide(dismissTooltip);

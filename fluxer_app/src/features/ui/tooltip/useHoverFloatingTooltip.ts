@@ -17,6 +17,7 @@ import {
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useExclusiveTooltip} from './TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from './TooltipHandoff';
 import {subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 export interface HoverFloatingTooltipState {
@@ -67,7 +68,10 @@ export function useHoverFloatingTooltip(hoverDelay = 500, placement: Placement =
 		middleware,
 		whileElementsMounted: hoverFloatingAutoUpdate,
 	});
-	const hoverDelayConfig = useMemo(() => ({open: hoverDelay, close: CLOSE_DELAY_MS}), [hoverDelay]);
+	const hoverDelayConfig = useCallback(
+		() => ({open: isTooltipHandoffWarm() ? 0 : hoverDelay, close: CLOSE_DELAY_MS}),
+		[hoverDelay],
+	);
 	const hoverSafePolygon = useMemo(() => safePolygon({buffer: SAFE_POLYGON_BUFFER_PX, requireIntent: false}), []);
 	const hover = useHover(context, {
 		delay: hoverDelayConfig,
@@ -95,6 +99,10 @@ export function useHoverFloatingTooltip(hoverDelay = 500, placement: Placement =
 		setIsOpen(false);
 	}, []);
 	useExclusiveTooltip(isOpen, hide);
+	useEffect(() => {
+		if (!isOpen) return;
+		return markTooltipOpen();
+	}, [isOpen]);
 	useEffect(() => {
 		if (!isOpen) return;
 		return subscribeTooltipScrollHide(hide);
