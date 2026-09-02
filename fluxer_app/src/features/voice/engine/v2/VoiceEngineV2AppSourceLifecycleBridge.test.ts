@@ -226,6 +226,71 @@ describe('VoiceEngineV2AppSourceLifecycleBridge', () => {
 		bridge.dispose();
 	});
 
+	it('unbind dispatches sourceLifecycle.removed so the reducer drops the snapshot slot', () => {
+		const binding = createMockNativeBinding();
+		const dispatched: Array<VoiceEngineV2Event> = [];
+		const bridge = new VoiceEngineV2AppSourceLifecycleBridge({
+			dispatch: (event) => dispatched.push(event),
+			subscribe: binding.subscribe,
+		});
+
+		bridge.bind({captureId: 'cap-removed', sourceId: 'src-removed'});
+		dispatched.length = 0;
+
+		expect(bridge.unbind('cap-removed')).toBe(true);
+
+		expect(dispatched).toHaveLength(1);
+		expect(dispatched[0]?.type).toBe('sourceLifecycle.removed');
+		if (dispatched[0]?.type === 'sourceLifecycle.removed') {
+			expect(dispatched[0].sourceId).toBe('src-removed');
+		}
+		expect(bridge.unbind('cap-removed')).toBe(false);
+		bridge.dispose();
+	});
+
+	it('dispose dispatches sourceLifecycle.removed for every remaining binding', () => {
+		const binding = createMockNativeBinding();
+		const dispatched: Array<VoiceEngineV2Event> = [];
+		const bridge = new VoiceEngineV2AppSourceLifecycleBridge({
+			dispatch: (event) => dispatched.push(event),
+			subscribe: binding.subscribe,
+		});
+
+		bridge.bind({captureId: 'cap-1', sourceId: 'src-1'});
+		bridge.bind({captureId: 'cap-2', sourceId: 'src-2'});
+		dispatched.length = 0;
+
+		bridge.dispose();
+
+		expect(dispatched.map((event) => event.type)).toEqual(['sourceLifecycle.removed', 'sourceLifecycle.removed']);
+		expect(dispatched.flatMap((event) => (event.type === 'sourceLifecycle.removed' ? [event.sourceId] : []))).toEqual([
+			'src-1',
+			'src-2',
+		]);
+	});
+
+	it('dispose is re-entrant safe and does not re-dispatch removals', () => {
+		const binding = createMockNativeBinding();
+		const dispatched: Array<VoiceEngineV2Event> = [];
+		let reentrant: VoiceEngineV2AppSourceLifecycleBridge | null = null;
+		const bridge = new VoiceEngineV2AppSourceLifecycleBridge({
+			dispatch: (event) => {
+				dispatched.push(event);
+				if (event.type === 'sourceLifecycle.removed') reentrant?.dispose();
+			},
+			subscribe: binding.subscribe,
+		});
+
+		bridge.bind({captureId: 'cap-reentrant', sourceId: 'src-reentrant'});
+		dispatched.length = 0;
+		reentrant = bridge;
+
+		bridge.dispose();
+
+		expect(dispatched.map((event) => event.type)).toEqual(['sourceLifecycle.removed']);
+		expect(binding.listenerCount()).toBe(0);
+	});
+
 	it('dispose unsubscribes from the native binding', () => {
 		const binding = createMockNativeBinding();
 		const bridge = new VoiceEngineV2AppSourceLifecycleBridge({
