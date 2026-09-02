@@ -506,6 +506,8 @@ class ScreenShareCodecNegotiation {
 	private rtcConnectionId = createId('rtc');
 	private mediaSessionId = createId('media');
 	private negotiationSnapshot = createScreenShareCodecNegotiationSnapshot();
+	private bindingRevision = 0;
+	private selectionRevision = 0;
 
 	getSelectedCodec(): VideoCodec | null {
 		return this.selectedCodec;
@@ -582,6 +584,7 @@ class ScreenShareCodecNegotiation {
 		this.dispose();
 		this.room = room;
 		this.bindOptions = options;
+		const bindingRevision = this.bindingRevision;
 		const onDataReceived = (
 			payload: Uint8Array,
 			participant: Participant | undefined,
@@ -589,23 +592,24 @@ class ScreenShareCodecNegotiation {
 			topic?: string,
 		): void => {
 			if (topic !== PROTOCOL_TOPIC || !participant) return;
-			this.handleDataMessage(room, participant, payload, options);
+			this.handleDataMessage(room, participant, payload, options, bindingRevision);
 		};
 		const onParticipantConnected = (): void => {
-			void this.publishLocalCapabilities(room, 'participant-connected', options);
+			void this.publishBoundLocalCapabilities(room, 'participant-connected', options, bindingRevision);
 		};
 		const onParticipantDisconnected = (participant: Participant): void => {
+			if (!this.isBindingCurrent(room, bindingRevision)) return;
 			this.remoteCodecsByIdentity.delete(participant.identity);
-			void this.updateSelection(room, 'participant-disconnected', options);
+			void this.updateSelection(room, 'participant-disconnected', options, bindingRevision);
 		};
 		const onReconnected = (): void => {
-			void this.publishLocalCapabilities(room, 'reconnected', options);
+			void this.publishBoundLocalCapabilities(room, 'reconnected', options, bindingRevision);
 		};
 		room.on(RoomEvent.DataReceived, onDataReceived);
 		room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
 		room.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
 		room.on(RoomEvent.Reconnected, onReconnected);
-		void this.publishLocalCapabilities(room, 'connected', options);
+		void this.publishBoundLocalCapabilities(room, 'connected', options, bindingRevision);
 		this.bindDisposer = () => {
 			room.off(RoomEvent.DataReceived, onDataReceived);
 			room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
@@ -616,6 +620,8 @@ class ScreenShareCodecNegotiation {
 	}
 
 	dispose(): void {
+		this.bindingRevision += 1;
+		this.selectionRevision += 1;
 		this.bindDisposer?.();
 		this.bindDisposer = null;
 		this.room = null;
@@ -632,15 +638,25 @@ class ScreenShareCodecNegotiation {
 		reason: NegotiationReason = 'manual',
 		options: BindOptions = this.bindOptions,
 	): Promise<CodecNegotiationSelection | null> {
+		if (!room) return null;
+		return await this.publishBoundLocalCapabilities(room, reason, options, this.bindingRevision);
+	}
+
+	private async publishBoundLocalCapabilities(
+		room: Room,
+		reason: NegotiationReason,
+		options: BindOptions,
+		bindingRevision: number,
+	): Promise<CodecNegotiationSelection | null> {
 		if (typeof window === 'undefined') return null;
-		if (!room?.localParticipant) return null;
-		this.room = room;
+		if (!room.localParticipant || !this.isBindingCurrent(room, bindingRevision)) return null;
 		await Promise.allSettled([
 			loadGpuEncoderReport(),
 			loadNativeHardwareEncoderCapabilities(),
 			loadVideoDecoderExclusions(),
 			loadOpenH264Status(),
 		]);
+		if (!this.isBindingCurrent(room, bindingRevision)) return null;
 		this.localCodecs = buildLocalCodecAdvertisements();
 		const message: FluxerSelectProtocolMessage = {
 			op: SELECT_PROTOCOL_OP,
@@ -655,15 +671,23 @@ class ScreenShareCodecNegotiation {
 			},
 		};
 		await this.publishMessage(room, message);
-		return await this.updateSelection(room, reason, options);
+		if (!this.isBindingCurrent(room, bindingRevision)) return null;
+		return await this.updateSelection(room, reason, options, bindingRevision);
 	}
 
-	private handleDataMessage(room: Room, participant: Participant, payload: Uint8Array, options: BindOptions): void {
+	private handleDataMessage(
+		room: Room,
+		participant: Participant,
+		payload: Uint8Array,
+		options: BindOptions,
+		bindingRevision: number,
+	): void {
+		if (!this.isBindingCurrent(room, bindingRevision)) return;
 		const message = parseMessage(payload);
 		if (!message) return;
 		if (message.op === SELECT_PROTOCOL_OP) {
 			this.remoteCodecsByIdentity.set(participant.identity, message.d.codecs);
-			void this.updateSelection(room, 'data', options);
+			void this.updateSelection(room, 'data', options, bindingRevision);
 		} else if (message.op === SESSION_UPDATE_OP) {
 			this.remoteCodecsByIdentity.set(participant.identity, message.d.codecs);
 			logger.debug('Received remote codec session update', {
@@ -672,7 +696,7 @@ class ScreenShareCodecNegotiation {
 				mediaSessionId: message.d.media_session_id,
 				reason: message.d.reason,
 			});
-			void this.updateSelection(room, 'data', options);
+			void this.updateSelection(room, 'data', options, bindingRevision);
 		}
 	}
 
@@ -680,8 +704,9 @@ class ScreenShareCodecNegotiation {
 		room: Room,
 		reason: NegotiationReason,
 		options: BindOptions,
+		bindingRevision: number,
 	): Promise<CodecNegotiationSelection | null> {
-		if (!room.localParticipant) return null;
+		if (!room.localParticipant || !this.isBindingCurrent(room, bindingRevision)) return null;
 		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
 		if (reason === 'participant-disconnected' && room.remoteParticipants.size === 0 && this.selectedCodec) {
 			logger.debug('Keeping active screen share codec after last viewer disconnected', {
@@ -703,11 +728,18 @@ class ScreenShareCodecNegotiation {
 		if (!selection) return null;
 		this.selectedCodec = selection.codec;
 		if (selection.codec === previousCodec) return selection;
+		const selectionRevision = ++this.selectionRevision;
 		this.mediaSessionId = createId('media');
 		logger.info('Selected screen share codec from XState capability intersection', selection);
 		await this.publishSessionUpdate(room, selection);
+		if (!this.isBindingCurrent(room, bindingRevision) || selectionRevision !== this.selectionRevision) return null;
 		await options.onSelectedCodecChanged?.(selection);
+		if (!this.isBindingCurrent(room, bindingRevision) || selectionRevision !== this.selectionRevision) return null;
 		return selection;
+	}
+
+	private isBindingCurrent(room: Room, bindingRevision: number): boolean {
+		return this.room === room && this.bindingRevision === bindingRevision;
 	}
 
 	private async publishSessionUpdate(room: Room, selection: CodecNegotiationSelection): Promise<void> {

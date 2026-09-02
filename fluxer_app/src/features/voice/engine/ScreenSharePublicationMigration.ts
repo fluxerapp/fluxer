@@ -324,6 +324,14 @@ function safeSetEnabled(publication: RemoteTrackPublication, enabled: boolean): 
 	}
 }
 
+function getRemoteTrackStatsReport(track: RemoteTrack): Promise<RTCStatsReport | undefined> | undefined {
+	try {
+		return track.getRTCStatsReport?.();
+	} catch {
+		return undefined;
+	}
+}
+
 function publishMigrationMessage(
 	participant: LocalParticipant,
 	message: ScreenShareMigrationMessage,
@@ -820,6 +828,7 @@ class ScreenSharePublicationMigration extends Store {
 		let disposed = false;
 		let video: HTMLVideoElement | null = null;
 		let statsInterval: NodeJS.Timeout | null = null;
+		let statsRequestPending = false;
 		const cleanups: Array<() => void> = [];
 		const complete = (): void => {
 			if (disposed) return;
@@ -850,8 +859,10 @@ class ScreenSharePublicationMigration extends Store {
 		cleanups.push(() => clearTimeout(expireTimer));
 
 		const checkStats = (): void => {
-			const statsPromise = track.getRTCStatsReport?.();
+			if (disposed || statsRequestPending) return;
+			const statsPromise = getRemoteTrackStatsReport(track);
 			if (!statsPromise) return;
+			statsRequestPending = true;
 			void statsPromise
 				.then((report) => {
 					if (!report) return;
@@ -870,7 +881,10 @@ class ScreenSharePublicationMigration extends Store {
 						}
 					}
 				})
-				.catch(() => {});
+				.catch(() => {})
+				.finally(() => {
+					statsRequestPending = false;
+				});
 		};
 		statsInterval = setInterval(checkStats, REMOTE_READY_PROBE_STATS_INTERVAL_MS);
 		checkStats();
