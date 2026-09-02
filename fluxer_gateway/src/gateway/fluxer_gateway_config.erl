@@ -56,7 +56,8 @@ env_proxy_config() ->
     #{
         <<"client_ip_header">> => env_binary(
             "FLUXER_CLIENT_IP_HEADER_NAME", <<"x-forwarded-for">>
-        )
+        ),
+        <<"trust_client_ip_header">> => env_bool("FLUXER_TRUST_CLIENT_IP_HEADER", false)
     }.
 
 -spec env_services_config() -> map().
@@ -213,6 +214,7 @@ build_core_config(Service, Internal, Nats, Proxy) ->
         port => get_int(Service, <<"port">>, 8080),
         gateway_role => normalize_gateway_role(get_value(Service, <<"gateway_role">>)),
         client_ip_header => get_binary(Proxy, <<"client_ip_header">>, <<"x-forwarded-for">>),
+        trust_client_ip_header => get_bool(Proxy, <<"trust_client_ip_header">>, false),
         api_internal_url => get_binary(Internal, <<"api">>, <<"http://127.0.0.1:8088">>),
         api_rpc_endpoint => get_optional_binary(Service, <<"api_rpc_endpoint">>),
         nats_core_url => get_string(Nats, <<"core_url">>, "nats://127.0.0.1:4222"),

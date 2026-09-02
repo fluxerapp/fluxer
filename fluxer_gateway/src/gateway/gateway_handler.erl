@@ -292,6 +292,13 @@ dispatch_after_rate_limit({rate_limited, RLState}, _OpAtom, _Payload) ->
 
 -spec extract_client_ip(cowboy_req:req()) -> binary().
 extract_client_ip(Req) ->
+    case fluxer_gateway_env:get(trust_client_ip_header) of
+        true -> extract_trusted_client_ip(Req);
+        _ -> peer_ip_to_binary(cowboy_req:peer(Req))
+    end.
+
+-spec extract_trusted_client_ip(cowboy_req:req()) -> binary().
+extract_trusted_client_ip(Req) ->
     ClientIpHeader = client_ip_header(),
     case cowboy_req:header(ClientIpHeader, Req) of
         undefined -> peer_ip_to_binary(cowboy_req:peer(Req));
