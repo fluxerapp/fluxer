@@ -474,6 +474,10 @@ export async function preloadScreenSharePickerSources(): Promise<ScreenSharePick
 }
 
 export async function openScreenSharePickerModal(): Promise<void> {
+	if (!getElectronAPI()) {
+		await startConfiguredDisplayScreenShare(null);
+		return;
+	}
 	ModalCommands.push(
 		ModalCommands.modal(() => (
 			<ScreenSharePickerModalPreloader data-flx="voice.screen-share-picker-modal.open-screen-share-picker-modal.preloader" />
@@ -484,6 +488,10 @@ export async function openScreenSharePickerModal(): Promise<void> {
 export async function openScreenShareSourceSwitcherModal(
 	options: {initialTab?: ScreenSharePickerTab} = {},
 ): Promise<void> {
+	if (!getElectronAPI()) {
+		await switchConfiguredDisplayScreenShare(null);
+		return;
+	}
 	ModalCommands.push(
 		ModalCommands.modal(() => (
 			<ScreenSharePickerModalPreloader
