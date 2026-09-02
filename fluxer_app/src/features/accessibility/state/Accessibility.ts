@@ -28,17 +28,17 @@ import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 export const ZOOM_LEVEL_MIN = 0.5;
 export const ZOOM_LEVEL_MAX = 2.0;
-export const ZOOM_KEYBOARD_STEP_PCT = 10;
+const ZOOM_KEYBOARD_STEP_PCT = 10;
 export const ZOOM_LEVEL_MARKERS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0] as const;
-export const ACCESSIBILITY_STORE_STORAGE_KEY = 'Accessibility';
-export const ACCESSIBILITY_ZOOM_STORAGE_KEY = 'Accessibility:zoomLevel';
-export const ACCESSIBILITY_CUSTOM_THEME_STORAGE_KEY = 'Accessibility:customThemeCss';
+const ACCESSIBILITY_STORE_STORAGE_KEY = 'Accessibility';
+const ACCESSIBILITY_ZOOM_STORAGE_KEY = 'Accessibility:zoomLevel';
+const ACCESSIBILITY_CUSTOM_THEME_STORAGE_KEY = 'Accessibility:customThemeCss';
 const ACCESSIBILITY_CUSTOM_THEME_SYNC_STORAGE_KEY = 'Accessibility:customThemeCssSyncAcrossDevices';
-export const ACCESSIBILITY_MOTION_STORAGE_KEY = 'Accessibility:motion';
-export const ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY = 'Accessibility:showNeko';
-export const ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY = 'Accessibility:keepNekoStill';
+const ACCESSIBILITY_MOTION_STORAGE_KEY = 'Accessibility:motion';
+const ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY = 'Accessibility:showNeko';
+const ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY = 'Accessibility:keepNekoStill';
 const ACCESSIBILITY_PIN_NEKO_TO_TEXTAREA_STORAGE_KEY = 'Accessibility:pinNekoToTextarea';
-export const ACCESSIBILITY_VIDEO_SEEK_PREVIEW_THUMBNAILS_STORAGE_KEY = 'Accessibility:videoSeekPreviewThumbnails';
+const ACCESSIBILITY_VIDEO_SEEK_PREVIEW_THUMBNAILS_STORAGE_KEY = 'Accessibility:videoSeekPreviewThumbnails';
 const SYNCED_PREFERENCES_LOCAL_STORAGE_KEY = 'UserSettings:syncedPreferencesLocal';
 const getShowNekoStorageKey = (userId: string): string => `${ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY}:${userId}`;
 const getKeepNekoStillStorageKey = (userId: string): string => `${ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY}:${userId}`;
@@ -92,14 +92,37 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function clampZoomLevel(level: number): number {
+const FONT_SIZE_MIN = 8;
+const FONT_SIZE_MAX = 48;
+const DEFAULT_FONT_SIZE_PX = 16;
+const MESSAGE_GROUP_SPACING_MIN = 0;
+const MESSAGE_GROUP_SPACING_MAX = 64;
+const MESSAGE_GUTTER_MIN = 0;
+const MESSAGE_GUTTER_MAX = 200;
+
+function clampFontSize(size: number): number {
+	if (!Number.isFinite(size)) return DEFAULT_FONT_SIZE_PX;
+	return Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, size));
+}
+
+function clampMessageGroupSpacing(spacing: number, fallback: number): number {
+	if (!Number.isFinite(spacing)) return fallback;
+	return Math.max(MESSAGE_GROUP_SPACING_MIN, Math.min(MESSAGE_GROUP_SPACING_MAX, spacing));
+}
+
+function clampMessageGutter(gutter: number): number {
+	if (!Number.isFinite(gutter)) return DEFAULT_MESSAGE_GUTTER_PX;
+	return Math.max(MESSAGE_GUTTER_MIN, Math.min(MESSAGE_GUTTER_MAX, gutter));
+}
+
+function clampZoomLevel(level: number): number {
 	if (!Number.isFinite(level)) return 1;
 	const pct = Math.round(level * 100);
 	const clampedPct = Math.max(Math.round(ZOOM_LEVEL_MIN * 100), Math.min(Math.round(ZOOM_LEVEL_MAX * 100), pct));
 	return clampedPct / 100;
 }
 
-export function nextZoomLevel(current: number, direction: 1 | -1): number {
+function nextZoomLevel(current: number, direction: 1 | -1): number {
 	const minPct = Math.round(ZOOM_LEVEL_MIN * 100);
 	const maxPct = Math.round(ZOOM_LEVEL_MAX * 100);
 	const step = ZOOM_KEYBOARD_STEP_PCT;
@@ -109,7 +132,7 @@ export function nextZoomLevel(current: number, direction: 1 | -1): number {
 	return Math.max(minPct, Math.min(maxPct, targetPct)) / 100;
 }
 
-export function readLocalZoomLevel(storage: StartupSettingsStorage = AppStorage): number | null {
+function readLocalZoomLevel(storage: StartupSettingsStorage = AppStorage): number | null {
 	let raw: string | null;
 	try {
 		raw = storage.getItem(ACCESSIBILITY_ZOOM_STORAGE_KEY);
@@ -181,7 +204,7 @@ function normalizeLocalMotionSettings(value: unknown): LocalMotionSettings | nul
 	};
 }
 
-export function readLocalMotionSettings(storage: StartupSettingsStorage = AppStorage): LocalMotionSettings | null {
+function readLocalMotionSettings(storage: StartupSettingsStorage = AppStorage): LocalMotionSettings | null {
 	let raw: string | null;
 	try {
 		raw = storage.getItem(ACCESSIBILITY_MOTION_STORAGE_KEY);
@@ -229,7 +252,7 @@ function readCachedSyncedMotionSettings(
 	};
 }
 
-export function readLocalShowNeko(
+function readLocalShowNeko(
 	storage: StartupSettingsStorage = AppStorage,
 	userId: string | null = readStoredSessionUserId(storage),
 ): boolean {
@@ -242,7 +265,7 @@ export function readLocalShowNeko(
 	return readStoredBoolean(storage, ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY) ?? false;
 }
 
-export function readLocalKeepNekoStill(
+function readLocalKeepNekoStill(
 	storage: StartupSettingsStorage = AppStorage,
 	userId: string | null = readStoredSessionUserId(storage),
 ): boolean {
@@ -341,7 +364,7 @@ function persistLocalVideoSeekPreviewThumbnails(value: boolean): void {
 	} catch {}
 }
 
-export function readLocalCustomThemeCss(storage: StartupSettingsStorage = AppStorage): string | null {
+function readLocalCustomThemeCss(storage: StartupSettingsStorage = AppStorage): string | null {
 	let raw: string | null;
 	try {
 		raw = storage.getItem(ACCESSIBILITY_CUSTOM_THEME_STORAGE_KEY);
@@ -431,7 +454,7 @@ function shouldPreserveLegacyZoomLevel(): boolean {
 	);
 }
 
-export function readAccessibilityStartupSettings(
+function readAccessibilityStartupSettings(
 	storage: StartupSettingsStorage = AppStorage,
 	options: AccessibilityStartupSettingsOptions = {},
 ): AccessibilityStartupSettings | null {
@@ -515,7 +538,7 @@ function normalizeCustomThemeCss(css: string | null | undefined): string | null 
 	return css.trim().length > 0 ? css : null;
 }
 
-export function resolveStartupReducedMotion(
+function resolveStartupReducedMotion(
 	settings: Pick<AccessibilityStartupSettings, 'syncReducedMotionWithSystem' | 'reducedMotionOverride'>,
 	systemReducedMotion: boolean,
 ): boolean {
@@ -667,7 +690,7 @@ class Accessibility {
 	messageGroupSpacing = COMFY_MESSAGE_GROUP_SPACING_DEFAULT;
 	compactMessageGroupSpacing = COMPACT_MESSAGE_GROUP_SPACING_DEFAULT;
 	messageGutter = DEFAULT_MESSAGE_GUTTER_PX;
-	fontSize = 16;
+	fontSize = DEFAULT_FONT_SIZE_PX;
 	showUserAvatarsInCompactMode = false;
 	mobileStickerAnimationOverridden = false;
 	mobileGifAutoPlayOverridden = false;
@@ -898,17 +921,22 @@ class Accessibility {
 				s.hideKeyboardHints = m.hideKeyboardHints;
 				if (m.escapeExitsKeyboardMode !== undefined) s.escapeExitsKeyboardMode = m.escapeExitsKeyboardMode;
 				if (m.messageGroupSpacing !== undefined) {
+					const messageGroupSpacing = clampMessageGroupSpacing(m.messageGroupSpacing, s.messageGroupSpacing);
 					if (m.compactMessageGroupSpacing === undefined) {
-						const spacing = migrateLegacyMessageGroupSpacing(m.messageGroupSpacing, false);
+						const spacing = migrateLegacyMessageGroupSpacing(messageGroupSpacing, false);
 						s.messageGroupSpacing = spacing.messageGroupSpacing;
 						s.compactMessageGroupSpacing = spacing.compactMessageGroupSpacing;
 					} else {
-						s.messageGroupSpacing = m.messageGroupSpacing;
+						s.messageGroupSpacing = messageGroupSpacing;
 					}
 				}
-				if (m.compactMessageGroupSpacing !== undefined) s.compactMessageGroupSpacing = m.compactMessageGroupSpacing;
-				if (m.messageGutter !== undefined) s.messageGutter = m.messageGutter;
-				if (m.fontSize !== undefined) s.fontSize = m.fontSize;
+				if (m.compactMessageGroupSpacing !== undefined)
+					s.compactMessageGroupSpacing = clampMessageGroupSpacing(
+						m.compactMessageGroupSpacing,
+						s.compactMessageGroupSpacing,
+					);
+				if (m.messageGutter !== undefined) s.messageGutter = clampMessageGutter(m.messageGutter);
+				if (m.fontSize !== undefined) s.fontSize = clampFontSize(m.fontSize);
 				if (m.showUserAvatarsInCompactMode !== undefined)
 					s.showUserAvatarsInCompactMode = m.showUserAvatarsInCompactMode;
 				s.mobileStickerAnimationOverridden = m.mobileStickerAnimationOverridden;
@@ -1341,10 +1369,16 @@ class Accessibility {
 				data.keepGifAutoPlayUnderReducedMotion ?? this.keepGifAutoPlayUnderReducedMotion,
 			keepStickerAnimationUnderReducedMotion:
 				data.keepStickerAnimationUnderReducedMotion ?? this.keepStickerAnimationUnderReducedMotion,
-			messageGroupSpacing: data.messageGroupSpacing ?? this.messageGroupSpacing,
-			compactMessageGroupSpacing: data.compactMessageGroupSpacing ?? this.compactMessageGroupSpacing,
-			messageGutter: Math.max(0, Math.min(200, data.messageGutter ?? this.messageGutter)),
-			fontSize: data.fontSize ?? this.fontSize,
+			messageGroupSpacing: clampMessageGroupSpacing(
+				data.messageGroupSpacing ?? this.messageGroupSpacing,
+				this.messageGroupSpacing,
+			),
+			compactMessageGroupSpacing: clampMessageGroupSpacing(
+				data.compactMessageGroupSpacing ?? this.compactMessageGroupSpacing,
+				this.compactMessageGroupSpacing,
+			),
+			messageGutter: clampMessageGutter(data.messageGutter ?? this.messageGutter),
+			fontSize: clampFontSize(data.fontSize ?? this.fontSize),
 			showUserAvatarsInCompactMode: data.showUserAvatarsInCompactMode ?? this.showUserAvatarsInCompactMode,
 			mobileStickerAnimationOverridden: data.mobileStickerAnimationOverridden ?? this.mobileStickerAnimationOverridden,
 			mobileGifAutoPlayOverridden: data.mobileGifAutoPlayOverridden ?? this.mobileGifAutoPlayOverridden,
