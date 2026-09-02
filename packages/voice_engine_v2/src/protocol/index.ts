@@ -9,6 +9,7 @@ export type {VoiceEngineV2Command, VoiceEngineV2CommandType} from './commands';
 export {getVoiceEngineV2CommandResourceKey, getVoiceEngineV2CommandTypeResourceKey} from './commands';
 export type {
 	VoiceEngineV2Event,
+	VoiceEngineV2SourceLifecycleRemovedEvent,
 	VoiceEngineV2SourceLifecycleTransitionedEvent,
 	VoiceEngineV2SourceLifecycleTransitionKind,
 } from './events';

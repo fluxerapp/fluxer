@@ -15,6 +15,11 @@ export interface VoiceEngineV2SourceLifecycleTransitionedEvent {
 	atMs: number;
 }
 
+export interface VoiceEngineV2SourceLifecycleRemovedEvent {
+	type: 'sourceLifecycle.removed';
+	sourceId: string;
+}
+
 import type {
 	VoiceEngineV2AudioControlsPatch,
 	VoiceEngineV2CameraEncodingOptions,
@@ -264,4 +269,5 @@ export type VoiceEngineV2Event =
 	| {type: 'inboundVideo.trackUnsubscribed'; trackSid: string}
 	| {type: 'inboundVideo.frameReceived'; frame: VoiceEngineV2InboundVideoFrame}
 	| {type: 'inboundVideo.frameStats'; stats: VoiceEngineV2InboundVideoFrameStats}
-	| VoiceEngineV2SourceLifecycleTransitionedEvent;
+	| VoiceEngineV2SourceLifecycleTransitionedEvent
+	| VoiceEngineV2SourceLifecycleRemovedEvent;

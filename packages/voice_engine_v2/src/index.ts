@@ -212,6 +212,7 @@ export type {
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2ScreenPacing,
 	VoiceEngineV2SendStats,
+	VoiceEngineV2SourceLifecycleRemovedEvent,
 	VoiceEngineV2SourceLifecycleTransitionedEvent,
 	VoiceEngineV2SourceLifecycleTransitionKind,
 	VoiceEngineV2Stats,

@@ -276,6 +276,7 @@ export function dispatchObservabilityEvent(
 	assert.equal(typeof event.type, 'string', 'dispatchObservabilityEvent event.type must be a string');
 	switch (event.type) {
 		case 'sourceLifecycle.transitioned':
+		case 'sourceLifecycle.removed':
 			return transitionSourceLifecycles(snapshot, event);
 		default:
 			return null;

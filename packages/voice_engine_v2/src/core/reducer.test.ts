@@ -847,6 +847,45 @@ describe('transitionVoiceEngineV2', () => {
 		expect(selectVoiceEngineV2SourceLifecycle(snapshot, 'unknown')).toBeNull();
 	});
 
+	it('sourceLifecycle.removed drops the lifecycle slot for that source only', () => {
+		const snapshot = applyEvents(initialSnapshot(), [
+			{
+				type: 'sourceLifecycle.transitioned',
+				sourceId: 'source-removed',
+				kind: 'failed',
+				since: 11n,
+				attempts: 8,
+				fault: 'captureDeviceLost',
+				atMs: 11,
+			},
+			{
+				type: 'sourceLifecycle.transitioned',
+				sourceId: 'source-kept',
+				kind: 'active',
+				since: 12n,
+				attempts: 0,
+				fault: null,
+				atMs: 12,
+			},
+		]);
+
+		const transition = transitionVoiceEngineV2(snapshot, {type: 'sourceLifecycle.removed', sourceId: 'source-removed'});
+
+		expect(transition.commands).toEqual([]);
+		expect(selectVoiceEngineV2SourceLifecycle(transition.snapshot, 'source-removed')).toBeNull();
+		expect(selectVoiceEngineV2SourceLifecycle(transition.snapshot, 'source-kept')?.kind).toBe('active');
+		expect([...selectVoiceEngineV2FailedSourceIds(transition.snapshot)]).toEqual([]);
+	});
+
+	it('sourceLifecycle.removed for an unknown source leaves the snapshot untouched', () => {
+		const snapshot = initialSnapshot();
+
+		const transition = transitionVoiceEngineV2(snapshot, {type: 'sourceLifecycle.removed', sourceId: 'source-absent'});
+
+		expect(transition.commands).toEqual([]);
+		expect(transition.snapshot).toBe(snapshot);
+	});
+
 	it('selectVoiceEngineV2FailedSourceIds returns only failed lifecycle ids', () => {
 		const snapshot = applyEvents(initialSnapshot(), [
 			{
