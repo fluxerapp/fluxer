@@ -182,7 +182,7 @@ export class AuthRequestService {
 	}
 
 	async logout({authorizationHeader, authToken}: AuthLogoutRequest): Promise<void> {
-		const token = authorizationHeader ?? authToken;
+		const token = authToken ?? authorizationHeader;
 		if (token) {
 			await AuthSession.revokeToken(this.apiContext, token);
 		}
