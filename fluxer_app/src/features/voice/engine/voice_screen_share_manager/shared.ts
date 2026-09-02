@@ -3,6 +3,7 @@
 import {getDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
+import {noteAppliedScreenShareFrameRate} from '@app/features/voice/engine/ScreenShareUnderperformance';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
@@ -372,6 +373,10 @@ export async function enforceScreenShareSenderParameters(
 	const scalabilityMode = getEffectiveScreenShareScalabilityMode(preferredVideoCodec, publishOptions, {
 		respectExplicit: !codecOverride || codecOverride === publishOptions?.videoCodec,
 	});
+	const senderTrackId = sender.track?.id;
+	if (senderTrackId && screenShareEncoding?.maxFramerate !== undefined) {
+		noteAppliedScreenShareFrameRate(senderTrackId, screenShareEncoding.maxFramerate);
+	}
 	try {
 		const params = sender.getParameters();
 		const encodings = params.encodings?.length ? params.encodings : [{}];

@@ -1882,6 +1882,9 @@
         "msgid": "Smoother video"
       },
       {
+        "msgid": "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
+      },
+      {
         "msgid": "Static Neko"
       },
       {
@@ -1892,6 +1895,9 @@
       },
       {
         "msgid": "Stop streaming"
+      },
+      {
+        "msgid": "Stream is not keeping up"
       },
       {
         "msgid": "Stream quality"

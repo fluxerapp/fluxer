@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {noteDeliberateScreenShareQualityChange} from '@app/features/voice/engine/ScreenShareUnderperformance';
 import VoiceSettings, {
 	type CameraResolution,
 	type ScreenshareResolution,
@@ -136,13 +137,44 @@ function shouldRefreshCameraCapture(
 	return CAMERA_CAPTURE_REFRESH_KEYS.some((key) => settings[key] !== undefined && before[key] !== after[key]);
 }
 
+function readScreenShareQualityValues(): VoiceSettingsPatch {
+	return {
+		screenshareResolution: VoiceSettings.getScreenshareResolution(),
+		videoFrameRate: VoiceSettings.getVideoFrameRate(),
+		streamingMode: VoiceSettings.getStreamingMode(),
+		screenShareContentHint: VoiceSettings.getScreenShareContentHint(),
+		preferredScreenShareCodec: VoiceSettings.getPreferredScreenShareCodec(),
+		screenShareAv1OptIn: VoiceSettings.getScreenShareAv1OptIn(),
+		screenShareHevcOptIn: VoiceSettings.getScreenShareHevcOptIn(),
+		screenShareEncoderMode: VoiceSettings.getScreenShareEncoderMode(),
+		screenShareSoftwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
+		screenShareScalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
+		screenShareBackupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
+		openH264Enabled: VoiceSettings.getOpenH264Enabled(),
+	};
+}
+
+function changesScreenShareQualityDeliberately(
+	settings: VoiceSettingsPatch,
+	before: VoiceSettingsPatch,
+	after: VoiceSettingsPatch,
+): boolean {
+	return (Object.keys(before) as Array<keyof VoiceSettingsPatch>).some(
+		(key) => settings[key] !== undefined && before[key] !== after[key],
+	);
+}
+
 function applyUpdatedVoiceSettings(
 	settings: VoiceSettingsPatch,
 	refreshInput: boolean,
 	options: VoiceSettingsUpdateOptions = {},
 ): void {
 	const cameraCaptureBefore = readCameraCaptureRefreshValues();
+	const screenShareQualityBefore = readScreenShareQualityValues();
 	VoiceSettings.updateSettings(settings);
+	if (changesScreenShareQualityDeliberately(settings, screenShareQualityBefore, readScreenShareQualityValues())) {
+		noteDeliberateScreenShareQualityChange();
+	}
 	if (settings.muteStreamAudio !== undefined) {
 		MediaEngine.setScreenShareAudioMuted(settings.muteStreamAudio);
 	}

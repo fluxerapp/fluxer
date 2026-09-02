@@ -450,7 +450,7 @@ msgstr "{count, plural, one {Expandir (# línea)} other {Expandir (# líneas)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Mostrar (# fila)} other {Mostrar (# filas)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:306
+#: src/features/voice/components/VoiceParticipantTile.tsx:310
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Expandir # otro dispositivo} other {Expandir # otros dispositivos}}"
 
@@ -471,7 +471,7 @@ msgstr "{count, plural, one {En llamada} other {# en llamada}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Unirse a la videollamada (# participante)} other {Unirse a la videollamada (# participantes)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:623
+#: src/features/voice/components/VoiceParticipantTile.tsx:630
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Seguir viendo # retransmisión y añadir esta} other {Seguir viendo # retransmisiones y añadir esta}}"
 
@@ -845,7 +845,7 @@ msgid "{length} users"
 msgstr "{length} usuarios"
 
 #. Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.
-#: src/features/voice/components/voice_participant_tile/shared.ts:73
+#: src/features/voice/components/voice_participant_tile/shared.ts:75
 msgid "{length} watching"
 msgstr "{length} viendo"
 
@@ -4666,7 +4666,7 @@ msgstr "Ventajas premium del backend desactivadas"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:725
 msgid "Background"
 msgstr "Fondo"
 
@@ -5070,7 +5070,7 @@ msgid "Blur"
 msgstr "Desenfoque"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:79
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:80
 msgid "Blur strength"
 msgstr "Intensidad del desenfoque"
 
@@ -5547,12 +5547,12 @@ msgstr "Dispositivo de cámara"
 msgid "Camera effects"
 msgstr "Efectos de cámara"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:803
 msgid "Camera error"
 msgstr "Error de la cámara"
 
 #. Overlay text on a participant tile when the local user hid the remote camera feed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:47
+#: src/features/voice/components/voice_participant_tile/shared.ts:49
 msgid "Camera hidden"
 msgstr "Cámara oculta"
 
@@ -5562,7 +5562,7 @@ msgid "Camera limit reached — up to {voiceChannelCameraUserLimit} people can s
 msgstr "Se alcanzó el límite de cámaras: hasta {voiceChannelCameraUserLimit} personas pueden compartir vídeo en este canal."
 
 #. Accessible status label while a voice participant camera feed is starting before video is renderable.
-#: src/features/voice/components/voice_participant_tile/shared.ts:51
+#: src/features/voice/components/voice_participant_tile/shared.ts:53
 msgid "Camera loading"
 msgstr "Cámara cargando"
 
@@ -5590,7 +5590,7 @@ msgstr "Se necesitan permisos para la cámara"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:181
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:62
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
 msgid "Camera preview"
 msgstr "Previsualización de la cámara"
 
@@ -5692,7 +5692,7 @@ msgstr "No se pueden subir archivos aquí"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:839
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "Cancelar"
@@ -5940,7 +5940,7 @@ msgstr "Centrado"
 msgid "Change avatar"
 msgstr "Cambiar avatar"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:738
 msgid "Change background"
 msgstr "Cambiar fondo"
 
@@ -7466,7 +7466,7 @@ msgstr "Contraer tema del canal"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
-#: src/features/voice/components/VoiceParticipantTile.tsx:168
+#: src/features/voice/components/VoiceParticipantTile.tsx:172
 msgid "Collapse devices"
 msgstr "Contraer dispositivos"
 
@@ -8217,7 +8217,7 @@ msgid "Connection volume controls"
 msgstr "Controles de volumen de conexión"
 
 #. Developer / debug overlay text on a participant tile. {connectionId} is the voice connection identifier.
-#: src/features/voice/components/voice_participant_tile/shared.ts:90
+#: src/features/voice/components/voice_participant_tile/shared.ts:110
 msgid "Connection: {connectionId}"
 msgstr "Conexión: {connectionId}"
 
@@ -10301,7 +10301,7 @@ msgstr "Divisor decorativo"
 #: src/features/ui/action_menu/items/SearchMenuData.tsx:43
 #: src/features/ui/action_menu/items/SearchProviderMenuItems.tsx:14
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:117
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:66
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
 #: src/features/voice/components/VoiceSettingsMenus.tsx:86
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgid "Default"
@@ -10825,7 +10825,7 @@ msgid "Desktop away"
 msgstr "Ausente en el ordenador"
 
 #. Aria label on a participant tile icon that indicates the participant is on desktop.
-#: src/features/voice/components/voice_participant_tile/shared.ts:86
+#: src/features/voice/components/voice_participant_tile/shared.ts:106
 msgid "Desktop device"
 msgstr "Dispositivo de escritorio"
 
@@ -13285,7 +13285,7 @@ msgid "Error"
 msgstr "Error"
 
 #. Subtitle on a remote screen-share tile after loading the watched stream failed. {code} is a numeric diagnostic code.
-#: src/features/voice/components/voice_participant_tile/shared.ts:42
+#: src/features/voice/components/voice_participant_tile/shared.ts:44
 msgid "error code {code}"
 msgstr "código de error {code}"
 
@@ -13773,7 +13773,7 @@ msgid "Failed to delete channel"
 msgstr "No se pudo eliminar el canal"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:58
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
 msgid "Failed to enable camera."
 msgstr "No se pudo activar la cámara."
 
@@ -13957,7 +13957,7 @@ msgid "Failed to start"
 msgstr "Error al iniciar"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:53
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "No se ha podido iniciar la vista previa de la cámara. Comprueba los permisos de la cámara."
 
@@ -14302,7 +14302,7 @@ msgstr "Filtrado"
 msgid "Filtering by {language}"
 msgstr "Filtrando por {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:782
 msgid "Finalizing camera..."
 msgstr "Finalizando cámara..."
 
@@ -17003,7 +17003,7 @@ msgstr "Heredado"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Heredado de {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:784
 msgid "Initializing camera..."
 msgstr "Inicializando cámara..."
 
@@ -19991,7 +19991,7 @@ msgstr "Menores en riesgo, contenido para adultos en el lugar equivocado o condu
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:76
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:70
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:71
 #: src/features/voice/components/VoiceSettingsMenus.tsx:112
 msgid "Mirror camera"
 msgstr "Reflejar cámara"
@@ -20028,7 +20028,7 @@ msgid "Misspelled words"
 msgstr "Palabras mal escritas"
 
 #. Aria label on a participant tile icon that indicates the participant is on mobile.
-#: src/features/voice/components/voice_participant_tile/shared.ts:82
+#: src/features/voice/components/voice_participant_tile/shared.ts:102
 msgid "Mobile device"
 msgstr "Dispositivo móvil"
 
@@ -20518,7 +20518,7 @@ msgid "Mute sounds"
 msgstr "Silenciar sonidos"
 
 #. Tooltip / button label on a voice participant tile that mutes the remote screen-share or camera audio.
-#: src/features/voice/components/voice_participant_tile/shared.ts:22
+#: src/features/voice/components/voice_participant_tile/shared.ts:24
 msgid "Mute stream audio"
 msgstr "Silenciar audio de la transmisión"
 
@@ -20545,7 +20545,7 @@ msgstr "silenciado"
 #: src/features/ui/avatars/AvatarWithPresence.tsx:20
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
-#: src/features/voice/components/voice_participant_tile/shared.ts:78
+#: src/features/voice/components/voice_participant_tile/shared.ts:98
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "Silenciado"
@@ -22678,7 +22678,7 @@ msgstr "Sistema operativo"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Activar los controles de insignias de mensajes no leídos por comunidad y canal, que están en fase experimental"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:780
 msgid "Optimizing camera..."
 msgstr "Optimizando cámara..."
 
@@ -22930,7 +22930,7 @@ msgid "Participant limit"
 msgstr "Límite de participantes"
 
 #. Aria label for the participant context-menu trigger button. {participantDisplayName} is the participant's display name.
-#: src/features/voice/components/voice_participant_tile/shared.ts:94
+#: src/features/voice/components/voice_participant_tile/shared.ts:114
 msgid "Participant options for {participantDisplayName}"
 msgstr "Opciones de participante para {participantDisplayName}"
 
@@ -23963,7 +23963,7 @@ msgid "Preview images are stored by {productName} temporarily for delivery and a
 msgstr "Las imágenes de vista previa se almacenan temporalmente en {productName} para su entrega y no están cifradas de extremo a extremo. Los usuarios siguen necesitando permiso para conectarse, pero no necesitan estar viendo activamente tu transmisión."
 
 #. Overlay on the local screen-share preview when playback is paused to reduce CPU / battery use. Local share is still being sent to others.
-#: src/features/voice/components/voice_participant_tile/shared.ts:59
+#: src/features/voice/components/voice_participant_tile/shared.ts:61
 msgid "Preview paused to save resources"
 msgstr "Vista previa en pausa para ahorrar recursos"
 
@@ -28658,7 +28658,7 @@ msgid "Show call avatars"
 msgstr "Mostrar avatares de la llamada"
 
 #. Action label that reveals a previously hidden remote camera feed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:55
+#: src/features/voice/components/voice_participant_tile/shared.ts:57
 msgid "Show camera"
 msgstr "Mostrar cámara"
 
@@ -29606,6 +29606,11 @@ msgstr "alguien"
 msgid "something"
 msgstr "algo"
 
+#. Fallback tooltip on the passive badge on your own screen-share tile when the encoder reports no specific limitation.
+#: src/features/voice/components/voice_participant_tile/shared.ts:93
+msgid "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
+msgstr "Algo limita esta transmisión, por lo que los espectadores reciben menos fotogramas de los que solicitaste."
+
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
@@ -30522,19 +30527,24 @@ msgid "Stream"
 msgstr "Retransmisión"
 
 #. Accessible status label for the black buffering frame shown while a screen share codec is renegotiated.
-#: src/features/voice/components/voice_participant_tile/shared.ts:34
+#: src/features/voice/components/voice_participant_tile/shared.ts:36
 msgid "Stream buffering"
 msgstr "Transmisión en búfer"
 
 #. Status overlay on a voice participant tile when the remote screen share has ended.
-#: src/features/voice/components/voice_participant_tile/shared.ts:26
+#: src/features/voice/components/voice_participant_tile/shared.ts:28
 msgid "Stream ended"
 msgstr "Transmisión finalizada"
 
 #. Overlay text on a participant tile when the local user hid the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts:30
+#: src/features/voice/components/voice_participant_tile/shared.ts:32
 msgid "Stream hidden"
 msgstr "Transmisión oculta"
+
+#. Accessible label for a passive badge on your own screen-share tile, shown when the encoder stays below the frame rate you asked for.
+#: src/features/voice/components/voice_participant_tile/shared.ts:80
+msgid "Stream is not keeping up"
+msgstr "La transmisión no sigue el ritmo"
 
 #. Aria label for the small thumbnail preview on the screen-share hover card.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -33858,7 +33868,7 @@ msgstr "usuario desconocido"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
-#: src/features/voice/components/VoiceParticipantTile.tsx:164
+#: src/features/voice/components/VoiceParticipantTile.tsx:168
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Usuario desconocido"
@@ -34016,7 +34026,7 @@ msgid "Unmute microphone"
 msgstr "Activar micrófono"
 
 #. Tooltip / button label on a voice participant tile that unmutes the remote screen-share or camera audio.
-#: src/features/voice/components/voice_participant_tile/shared.ts:18
+#: src/features/voice/components/voice_participant_tile/shared.ts:20
 msgid "Unmute stream audio"
 msgstr "Reactivar audio del stream"
 
@@ -36308,7 +36318,7 @@ msgid "Was this you?"
 msgstr "¿Fuiste tú?"
 
 #. Compact button label on a participant tile. Joins / opens the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts:69
+#: src/features/voice/components/voice_participant_tile/shared.ts:71
 msgid "Watch"
 msgstr "Ver"
 
@@ -36323,7 +36333,7 @@ msgid "Watching"
 msgstr "Viendo"
 
 #. Title on a remote screen-share tile when loading the watched stream failed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:38
+#: src/features/voice/components/voice_participant_tile/shared.ts:40
 msgid "Watching failed :("
 msgstr "Error al cargar la transmisión"
 
@@ -37352,7 +37362,7 @@ msgstr "No puedes hablar en este canal"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:74
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:75
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
@@ -38019,6 +38029,11 @@ msgstr "Tu comunidad aparece en Descubrir. Puedes actualizar los detalles de tu 
 msgid "Your community needs at least {minMemberCount} members before it can be listed in Discovery."
 msgstr "Tu comunidad necesita al menos {minMemberCount} miembros para poder aparecer en Descubrir."
 
+#. Tooltip on the passive badge on your own screen-share tile when the encoder is limited by CPU.
+#: src/features/voice/components/voice_participant_tile/shared.ts:85
+msgid "Your CPU cannot keep up, so viewers are getting fewer frames than you asked for."
+msgstr "Tu CPU no da abasto, por lo que los espectadores reciben menos fotogramas de los que solicitaste."
+
 #. Body copy on the mature content check callback page after a successful check submission.
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
@@ -38160,6 +38175,11 @@ msgstr "No se ha podido actualizar tu mensaje"
 msgid "Your most recent purchase is no longer within the refund window. Contact support for billing issues."
 msgstr "Tu compra más reciente ya no está dentro del plazo de reembolso. Contacta con soporte para problemas de facturación."
 
+#. Tooltip on the passive badge on your own screen-share tile when the encoder is limited by bandwidth.
+#: src/features/voice/components/voice_participant_tile/shared.ts:89
+msgid "Your network cannot keep up, so viewers are getting fewer frames than you asked for."
+msgstr "Tu red no puede seguir el ritmo, por lo que los espectadores reciben menos fotogramas de los que solicitaste."
+
 #. Placeholder text inside the new email field. Sentence-fragment hint, intentionally lowercase.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:88
 msgid "your new email"
@@ -38224,7 +38244,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "Tu registro necesita una comprobación antispam adicional antes de que puedas continuar."
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
-#: src/features/voice/components/voice_participant_tile/shared.ts:64
+#: src/features/voice/components/voice_participant_tile/shared.ts:66
 msgid "Your stream is still live"
 msgstr "Tu emisión sigue activa"
 

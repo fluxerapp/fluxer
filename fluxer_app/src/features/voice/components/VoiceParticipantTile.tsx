@@ -42,6 +42,7 @@ import {StreamInfoPill} from '@app/features/voice/components/StreamInfoPill';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {StreamSpectatorsPopout} from '@app/features/voice/components/StreamSpectatorsPopout';
 import {StreamWatchHoverCard} from '@app/features/voice/components/StreamWatchHoverCard';
+import {useScreenShareUnderperformance} from '@app/features/voice/components/useScreenShareUnderperformance';
 import {useScreenShareWatchFailure} from '@app/features/voice/components/useScreenShareWatchFailure';
 import {useStreamPreview} from '@app/features/voice/components/useStreamPreview';
 import {useStreamSpectators} from '@app/features/voice/components/useStreamSpectators';
@@ -77,6 +78,7 @@ import {
 	CONNECTION_DESCRIPTOR,
 	DESKTOP_DEVICE_DESCRIPTOR,
 	getSourceDataAttr,
+	getStreamUnderperformanceLabel,
 	isCameraSource,
 	logger,
 	MOBILE_DEVICE_DESCRIPTOR,
@@ -87,6 +89,7 @@ import {
 	STREAM_BUFFERING_DESCRIPTOR,
 	STREAM_ENDED_DESCRIPTOR,
 	STREAM_HIDDEN_DESCRIPTOR,
+	STREAM_NOT_KEEPING_UP_DESCRIPTOR,
 	TILE_AVATAR_BASE,
 	TILE_AVATAR_MEDIA_SIZE,
 	TILE_AVATAR_STYLE,
@@ -154,6 +157,7 @@ import {
 	PauseIcon,
 	SpeakerSlashIcon,
 	VideoCameraSlashIcon,
+	WarningIcon,
 } from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type {Participant, RemoteTrackPublication, Track} from 'livekit-client';
@@ -338,6 +342,9 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const streamKey = useMemo(() => getStreamKey(guildId, channelId, connectionId), [guildId, channelId, connectionId]);
 	const {viewerIds, viewerUsers, spectatorEntries} = useStreamSpectators(isScreenShare ? streamKey : '', userId);
 	const hasSpectatorDemand = viewerIds.length > 0;
+	const streamUnderperformanceReason = useScreenShareUnderperformance(
+		isOwnScreenShare && !isFocusedPlaceholderTile && viewerUsers.length > 0,
+	);
 	const isCameraTile = isCameraSource(trackRef.source);
 	const cameraLocallyDisabled = callId !== '' && isCameraTile && CallMediaPrefs.isVideoDisabled(callId, identity);
 	const screenSharePublicationMigrationVersion = ScreenSharePublicationMigration.version;
@@ -1280,6 +1287,26 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 												{groupHiddenCount}
 											</div>
 										</FocusRing>
+									</Tooltip>
+								)}
+								{isOwnScreenShare && viewerUsers.length > 0 && streamUnderperformanceReason && (
+									<Tooltip
+										text={getStreamUnderperformanceLabel(i18n, streamUnderperformanceReason)}
+										position="top"
+										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tooltip"
+									>
+										<div
+											className={clsx(voiceCallStyles.tileControlPillSlot, styles.streamUnderperformanceSlot)}
+											role="img"
+											aria-label={i18n._(STREAM_NOT_KEEPING_UP_DESCRIPTOR)}
+											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-underperformance-slot"
+										>
+											<WarningIcon
+												weight="fill"
+												className={styles.tilePillIcon}
+												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tile-pill-icon"
+											/>
+										</div>
 									</Tooltip>
 								)}
 								{isScreenShare && viewerUsers.length > 0 && (

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import type {ScreenShareUnderperformanceReason} from '@app/features/voice/engine/ScreenShareUnderperformance';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {MEDIA_PROXY_AVATAR_SIZE_PROFILE} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import type {TrackReferenceOrPlaceholder} from '@livekit/components-react';
 import type React from 'react';
@@ -75,6 +77,24 @@ export const WATCHING_DESCRIPTOR = msg({
 	comment:
 		'Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.',
 });
+export const STREAM_NOT_KEEPING_UP_DESCRIPTOR = msg({
+	message: 'Stream is not keeping up',
+	comment:
+		'Accessible label for a passive badge on your own screen-share tile, shown when the encoder stays below the frame rate you asked for.',
+});
+export const STREAM_LIMITED_BY_CPU_DESCRIPTOR = msg({
+	message: 'Your CPU cannot keep up, so viewers are getting fewer frames than you asked for.',
+	comment: 'Tooltip on the passive badge on your own screen-share tile when the encoder is limited by CPU.',
+});
+export const STREAM_LIMITED_BY_BANDWIDTH_DESCRIPTOR = msg({
+	message: 'Your network cannot keep up, so viewers are getting fewer frames than you asked for.',
+	comment: 'Tooltip on the passive badge on your own screen-share tile when the encoder is limited by bandwidth.',
+});
+export const STREAM_LIMITED_DESCRIPTOR = msg({
+	message: 'Something is limiting this stream, so viewers are getting fewer frames than you asked for.',
+	comment:
+		'Fallback tooltip on the passive badge on your own screen-share tile when the encoder reports no specific limitation.',
+});
 export const MUTED_DESCRIPTOR = msg({
 	message: 'Muted',
 	comment: "Status badge on a voice participant tile. The participant's microphone is muted.",
@@ -124,6 +144,12 @@ export interface VoiceParticipantTileInnerProps {
 	renderFocusedPlaceholder: boolean;
 	presentation: VoiceParticipantTilePresentation;
 	showParticipantMetadata: boolean;
+}
+
+export function getStreamUnderperformanceLabel(i18n: I18n, reason: ScreenShareUnderperformanceReason): string {
+	if (reason === 'cpu') return i18n._(STREAM_LIMITED_BY_CPU_DESCRIPTOR);
+	if (reason === 'bandwidth') return i18n._(STREAM_LIMITED_BY_BANDWIDTH_DESCRIPTOR);
+	return i18n._(STREAM_LIMITED_DESCRIPTOR);
 }
 
 export function isCameraSource(source: unknown) {
