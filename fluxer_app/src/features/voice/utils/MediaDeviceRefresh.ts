@@ -19,7 +19,10 @@ export async function refreshMediaDeviceLists(options: RefreshMediaDeviceListsOp
 	const {type} = options;
 	mediaDeviceCache.invalidate(type);
 	try {
-		await VoiceDevicePermissionState.ensureDevices({requestPermissions: true, forceRefresh: true});
+		await VoiceDevicePermissionState.ensureDevices({
+			requestPermissionTypes: [type === MediaDeviceRefreshType.audio ? 'audio' : 'video'],
+			forceRefresh: true,
+		});
 	} catch (error) {
 		logger.error('Failed to refresh media device lists', error);
 	}

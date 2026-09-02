@@ -102,7 +102,7 @@ class NewDeviceMonitoring {
 
 	private handleDeviceStateChange(state: VoiceDeviceState): void {
 		if (!this.isStarted) return;
-		if (state.permissionStatus !== 'granted') {
+		if (state.permissionStatus.audio !== 'granted') {
 			return;
 		}
 		if (this.suppressAlerts) {

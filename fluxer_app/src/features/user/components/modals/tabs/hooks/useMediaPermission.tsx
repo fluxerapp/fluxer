@@ -2,9 +2,12 @@
 
 import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import type {VoiceDeviceState} from '@app/features/voice/utils/VoiceDeviceManager';
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+
+const logger = new Logger('useMediaPermission');
 
 type PermissionType = 'audio' | 'video';
 type BrowserPermissionState = 'denied' | 'granted' | 'prompt';
@@ -34,21 +37,27 @@ const resolveStatusFromVoiceState = ({
 	deviceState,
 	isExplicitlyDenied,
 	osPermissionLooksGranted,
+	type,
 }: {
 	cachedPermissionState: BrowserPermissionState | null;
 	deviceState: VoiceDeviceState;
 	isExplicitlyDenied: boolean;
 	osPermissionLooksGranted: boolean;
+	type: PermissionType;
 }): PermissionState['status'] => {
 	if (isExplicitlyDenied) return 'denied';
-	if (deviceState.permissionStatus === 'loading') return 'loading';
-	if (deviceState.permissionStatus === 'granted') return 'granted';
-	if (deviceState.permissionStatus === 'denied') return 'denied';
-	if (cachedPermissionState === 'granted' || osPermissionLooksGranted) return 'loading';
+	if (cachedPermissionState === 'denied') return 'denied';
+	const permissionStatus = deviceState.permissionStatus[type];
+	if (permissionStatus === 'denied') return 'denied';
+	if (cachedPermissionState === 'granted' || osPermissionLooksGranted) {
+		return permissionStatus === 'loading' ? 'loading' : 'granted';
+	}
+	if (permissionStatus === 'loading') return 'loading';
+	if (permissionStatus === 'granted') return 'granted';
 	return 'idle';
 };
 export const useMediaPermission = (type: PermissionType, options: UseMediaPermissionOptions = {}) => {
-	const {autoRequest = true} = options;
+	const {autoRequest = false} = options;
 	const micExplicitlyDenied = MediaPermission.microphoneExplicitlyDenied;
 	const cameraExplicitlyDenied = MediaPermission.cameraExplicitlyDenied;
 	const isExplicitlyDenied = type === 'audio' ? micExplicitlyDenied : cameraExplicitlyDenied;
@@ -62,6 +71,7 @@ export const useMediaPermission = (type: PermissionType, options: UseMediaPermis
 			deviceState: initialDeviceState,
 			isExplicitlyDenied,
 			osPermissionLooksGranted,
+			type,
 		}),
 		devices: devicesFromVoiceState(initialDeviceState, type),
 		deviceState: initialDeviceState,
@@ -74,6 +84,7 @@ export const useMediaPermission = (type: PermissionType, options: UseMediaPermis
 					deviceState,
 					isExplicitlyDenied,
 					osPermissionLooksGranted,
+					type,
 				}),
 				devices: devicesFromVoiceState(deviceState, type),
 				deviceState,
@@ -85,25 +96,16 @@ export const useMediaPermission = (type: PermissionType, options: UseMediaPermis
 	);
 	const unlockDevices = useCallback(async (): Promise<PermissionState> => {
 		setState((prev) => ({...prev, status: 'loading'}));
-		const deviceState = await VoiceDevicePermissionState.ensureDevices({
-			requestPermissions: true,
-			forceRefresh: true,
-		});
-		if (deviceState.permissionStatus === 'granted') {
-			if (type === 'audio') {
-				MediaPermission.updateMicrophonePermissionGranted({refreshDevices: false});
-			} else {
-				MediaPermission.updateCameraPermissionGranted({refreshDevices: false});
-			}
-		} else if (deviceState.permissionStatus === 'denied') {
-			if (type === 'audio') {
-				MediaPermission.markMicrophoneExplicitlyDenied();
-			} else {
-				MediaPermission.markCameraExplicitlyDenied();
-			}
-		}
-		return applyVoiceDeviceState(deviceState);
-	}, [applyVoiceDeviceState, type]);
+		const granted = await VoiceDevicePermissionState.requestPermissionFor(type);
+		const deviceState = VoiceDevicePermissionState.getState();
+		const nextState = {
+			status: granted ? 'granted' : deviceState.permissionStatus[type] === 'denied' ? 'denied' : 'idle',
+			devices: devicesFromVoiceState(deviceState, type),
+			deviceState,
+		} satisfies PermissionState;
+		setState(nextState);
+		return nextState;
+	}, [type]);
 	const requestPermission = useCallback(async () => {
 		if (isExplicitlyDenied) {
 			handleMediaPermissionBlocked(type === 'audio' ? 'microphone' : 'camera');
@@ -111,7 +113,9 @@ export const useMediaPermission = (type: PermissionType, options: UseMediaPermis
 		}
 		const currentDeviceState = VoiceDevicePermissionState.getState();
 		const currentDevices = devicesFromVoiceState(currentDeviceState, type);
-		if (currentDeviceState.permissionStatus === 'granted' && hasPrimaryDeviceForType(currentDevices, type)) {
+		const permissionAlreadyGranted =
+			type === 'audio' ? MediaPermission.isMicrophoneGranted() : MediaPermission.isCameraGranted();
+		if (permissionAlreadyGranted && hasPrimaryDeviceForType(currentDevices, type)) {
 			applyVoiceDeviceState(currentDeviceState);
 			return true;
 		}
@@ -122,7 +126,8 @@ export const useMediaPermission = (type: PermissionType, options: UseMediaPermis
 				return false;
 			}
 			return nextState.status === 'granted' && hasPrimaryDeviceForType(nextState.devices, type);
-		} catch {
+		} catch (error) {
+			logger.error('Media permission request failed', {type, error});
 			return false;
 		}
 	}, [type, isExplicitlyDenied, applyVoiceDeviceState, unlockDevices]);
@@ -136,11 +141,16 @@ export const useMediaPermission = (type: PermissionType, options: UseMediaPermis
 			setState((prev) => ({...prev, status: 'denied'}));
 			return;
 		}
-		if (!autoRequest && !osPermissionLooksGranted) {
+		if (!autoRequest) {
+			void VoiceDevicePermissionState.ensureDevices({requestPermissions: false})
+				.then(applyVoiceDeviceState)
+				.catch((error) => logger.warn('Passive media device enumeration failed', {type, error}));
 			return;
 		}
-		void unlockDevicesRef.current().catch(() => {});
-	}, [isExplicitlyDenied, type, autoRequest, osPermissionLooksGranted]);
+		void unlockDevicesRef
+			.current()
+			.catch((error) => logger.error('Automatic media permission request failed', {type, error}));
+	}, [applyVoiceDeviceState, isExplicitlyDenied, type, autoRequest]);
 	return {
 		...state,
 		isExplicitlyDenied,

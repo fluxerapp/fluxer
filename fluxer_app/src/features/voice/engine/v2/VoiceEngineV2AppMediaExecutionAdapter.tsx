@@ -367,11 +367,11 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		);
 		this.transitionMediaState({type: 'permission.warmup.start'});
 		const devicePermission = VoiceDevicePermissionState.getState().permissionStatus;
-		if (MediaPermission.isMicrophoneGranted() || devicePermission === 'granted') {
+		if (MediaPermission.isMicrophoneGranted() || devicePermission.audio === 'granted') {
 			this.transitionMediaState({type: 'permission.warmup.granted'});
 			return true;
 		}
-		if (MediaPermission.isMicrophoneExplicitlyDenied() || devicePermission === 'denied') {
+		if (MediaPermission.isMicrophoneExplicitlyDenied() || devicePermission.audio === 'denied') {
 			this.transitionMediaState({type: 'permission.warmup.denied'});
 			this.handleMicrophonePermissionDenied();
 			return false;

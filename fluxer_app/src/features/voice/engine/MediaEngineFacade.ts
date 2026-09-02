@@ -2029,7 +2029,7 @@ class MediaEngineFacade extends Store {
 
 	syncLocalVoiceStateWithServer(partial?: VoiceStateSyncPartial): void {
 		const devicePermission = VoiceDevicePermissionState.getState().permissionStatus;
-		const micGranted = MediaPermission.isMicrophoneGranted() || devicePermission === 'granted';
+		const micGranted = MediaPermission.isMicrophoneGranted() || devicePermission.audio === 'granted';
 		if (!micGranted || LocalVoiceState.getMutedByPermission()) {
 			LocalVoiceState.ensurePermissionMute();
 		}

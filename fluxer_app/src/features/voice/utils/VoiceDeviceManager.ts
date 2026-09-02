@@ -26,10 +26,14 @@ export function hasDeviceLabels(devices: ReadonlyArray<MediaDeviceInfo>): boolea
 	return devices.some((d) => d.label && d.label.trim().length > 0);
 }
 
-type PermissionStatus = 'idle' | 'loading' | 'granted' | 'denied';
+export type VoiceMediaPermissionType = 'audio' | 'video';
+export type VoiceMediaPermissionStatus = 'idle' | 'loading' | 'granted' | 'denied';
+
+const MAX_ENUMERATION_CHAIN_PASSES = 3;
 
 export interface EnsureVoiceDevicesOptions {
 	requestPermissions?: boolean;
+	requestPermissionTypes?: ReadonlyArray<VoiceMediaPermissionType>;
 	forceRefresh?: boolean;
 }
 
@@ -37,7 +41,7 @@ export interface VoiceDeviceState {
 	inputDevices: Array<MediaDeviceInfo>;
 	outputDevices: Array<MediaDeviceInfo>;
 	videoDevices: Array<MediaDeviceInfo>;
-	permissionStatus: PermissionStatus;
+	permissionStatus: Record<VoiceMediaPermissionType, VoiceMediaPermissionStatus>;
 }
 
 type Listener = (state: VoiceDeviceState) => void;
@@ -382,13 +386,15 @@ class VoiceDeviceManager {
 		inputDevices: [],
 		outputDevices: [],
 		videoDevices: [],
-		permissionStatus: 'idle',
+		permissionStatus: {
+			audio: 'idle',
+			video: 'idle',
+		},
 	};
 	private listeners = new Set<Listener>();
-	private enumeratingPromise: Promise<VoiceDeviceState> | null = null;
-	private queuedPermissionEnumerationPromise: Promise<VoiceDeviceState> | null = null;
-	private currentEnumerationRequestsPermissions = false;
-	private shouldRequestPermissions = false;
+	private enumerationChainPromise: Promise<VoiceDeviceState> | null = null;
+	private scheduledEnumerationPermissionTypes = new Set<VoiceMediaPermissionType>();
+	private enumerationChainPermissionTypes = new Set<VoiceMediaPermissionType>();
 	private hasEnumeratedDevices = false;
 
 	constructor() {
@@ -410,86 +416,116 @@ class VoiceDeviceManager {
 	}
 
 	public async ensureDevices(options: EnsureVoiceDevicesOptions = {}): Promise<VoiceDeviceState> {
-		const requestPermissions = options.requestPermissions ?? false;
+		const requestPermissionTypes = this.resolveRequestedPermissionTypes(options);
+		const requestPermissions = requestPermissionTypes.length > 0;
 		const forceRefresh = options.forceRefresh ?? false;
 		logger.debug('ensureDevices called', {
-			requestPermissions,
+			requestPermissionTypes,
 			forceRefresh,
-			shouldRequestPermissions: this.shouldRequestPermissions,
-			hasEnumeratingPromise: !!this.enumeratingPromise,
+			hasEnumeratingPromise: !!this.enumerationChainPromise,
 			currentState: {
 				inputDeviceCount: this.state.inputDevices.length,
 				permissionStatus: this.state.permissionStatus,
 			},
 		});
-		if (requestPermissions) {
-			this.shouldRequestPermissions = true;
-		}
-		const shouldRequest = this.shouldRequestPermissions || requestPermissions;
-		if (!forceRefresh && !this.enumeratingPromise && this.canUseCachedState(shouldRequest)) {
+		if (!forceRefresh && !this.enumerationChainPromise && this.canUseCachedState(requestPermissions)) {
 			logger.debug('Using cached device state');
 			return this.state;
 		}
-		if (this.enumeratingPromise) {
-			if (shouldRequest && !this.currentEnumerationRequestsPermissions) {
-				logger.debug('Queueing permissioned enumeration after current enumeration');
-				if (!this.queuedPermissionEnumerationPromise) {
-					this.queuedPermissionEnumerationPromise = this.enumeratingPromise
-						.catch(() => this.state)
-						.then(() => this.startEnumeration(true))
-						.finally(() => {
-							this.queuedPermissionEnumerationPromise = null;
-						});
-				}
-				return this.queuedPermissionEnumerationPromise;
-			}
+		if (this.enumerationChainPromise) {
+			this.scheduleMissingPermissionTypes(requestPermissionTypes);
 			logger.debug('Joining existing enumeration promise');
-			return this.enumeratingPromise;
+			return this.enumerationChainPromise;
 		}
 		logger.debug('Creating new enumeration promise');
-		return this.startEnumeration(shouldRequest);
+		return this.startEnumerationChain(requestPermissionTypes);
+	}
+
+	private scheduleMissingPermissionTypes(requestPermissionTypes: ReadonlyArray<VoiceMediaPermissionType>): void {
+		for (const type of requestPermissionTypes) {
+			if (this.enumerationChainPermissionTypes.has(type)) continue;
+			this.enumerationChainPermissionTypes.add(type);
+			this.scheduledEnumerationPermissionTypes.add(type);
+		}
+	}
+
+	private resolveRequestedPermissionTypes(options: EnsureVoiceDevicesOptions): Array<VoiceMediaPermissionType> {
+		if (options.requestPermissionTypes) {
+			return [...new Set(options.requestPermissionTypes)];
+		}
+		return options.requestPermissions === true ? ['audio', 'video'] : [];
 	}
 
 	private canUseCachedState(requestPermissions: boolean): boolean {
 		if (!this.hasEnumeratedDevices) {
 			return false;
 		}
-		if (!requestPermissions) {
-			return true;
+		return !requestPermissions;
+	}
+
+	private updatePermissionStatusForTypes(
+		requestPermissionTypes: ReadonlyArray<VoiceMediaPermissionType>,
+		status: VoiceMediaPermissionStatus,
+	): void {
+		const permissionStatus = {...this.state.permissionStatus};
+		for (const type of requestPermissionTypes) {
+			permissionStatus[type] = status;
 		}
-		return this.state.permissionStatus === 'granted';
+		this.updateState({permissionStatus});
 	}
 
-	private startEnumeration(requestPermissions: boolean): Promise<VoiceDeviceState> {
-		this.currentEnumerationRequestsPermissions = requestPermissions;
-		const pendingPromise = this.enumerateDevices(requestPermissions).catch((error) => {
-			logger.debug('Failed to enumerate media devices:', error);
-			throw error;
+	private startEnumerationChain(
+		requestPermissionTypes: ReadonlyArray<VoiceMediaPermissionType>,
+	): Promise<VoiceDeviceState> {
+		this.enumerationChainPermissionTypes = new Set(requestPermissionTypes);
+		const pendingPromise = this.runEnumerationChain(requestPermissionTypes).finally(() => {
+			if (this.enumerationChainPromise !== pendingPromise) return;
+			logger.debug('Enumeration promise completed');
+			this.enumerationChainPromise = null;
+			this.scheduledEnumerationPermissionTypes.clear();
+			this.enumerationChainPermissionTypes.clear();
 		});
-		this.enumeratingPromise = pendingPromise;
-		return pendingPromise.finally(() => {
-			if (this.enumeratingPromise === pendingPromise) {
-				logger.debug('Enumeration promise completed');
-				this.enumeratingPromise = null;
-				this.currentEnumerationRequestsPermissions = false;
-			}
-		});
+		this.enumerationChainPromise = pendingPromise;
+		return pendingPromise;
 	}
 
-	private async enumerateDevices(requestPermissions: boolean): Promise<VoiceDeviceState> {
-		logger.debug('enumerateDevices started', {requestPermissions});
+	private async runEnumerationChain(
+		initialPermissionTypes: ReadonlyArray<VoiceMediaPermissionType>,
+	): Promise<VoiceDeviceState> {
+		let requestPermissionTypes = [...initialPermissionTypes];
+		let state = this.state;
+		for (let pass = 0; pass < MAX_ENUMERATION_CHAIN_PASSES; pass += 1) {
+			state = await this.enumerateDevices(requestPermissionTypes);
+			if (this.scheduledEnumerationPermissionTypes.size === 0) return state;
+			requestPermissionTypes = [...this.scheduledEnumerationPermissionTypes];
+			this.scheduledEnumerationPermissionTypes.clear();
+		}
+		if (this.scheduledEnumerationPermissionTypes.size > 0) {
+			throw new Error(`Voice device enumeration exceeded ${MAX_ENUMERATION_CHAIN_PASSES} bounded passes`);
+		}
+		return state;
+	}
+
+	private async enumerateDevices(
+		requestPermissionTypes: ReadonlyArray<VoiceMediaPermissionType>,
+	): Promise<VoiceDeviceState> {
+		const requestPermissions = requestPermissionTypes.length > 0;
+		logger.debug('enumerateDevices started', {requestPermissionTypes});
 		if (!navigator.mediaDevices?.enumerateDevices) {
 			logger.debug('Navigator or mediaDevices API not available');
 			return this.state;
 		}
-		if (requestPermissions && this.state.permissionStatus !== 'granted') {
+		const permissionTypesToLoad = requestPermissionTypes.filter(
+			(type) => this.state.permissionStatus[type] !== 'granted',
+		);
+		if (permissionTypesToLoad.length > 0) {
 			logger.debug('Setting permission status to loading');
-			this.updateState({permissionStatus: 'loading'});
+			this.updatePermissionStatusForTypes(permissionTypesToLoad, 'loading');
 		}
+		const permissionStatus = {...this.state.permissionStatus};
 		try {
 			logger.debug('Calling navigator.mediaDevices.enumerateDevices()');
 			let devices = await navigator.mediaDevices.enumerateDevices();
-			let permissionStatus = this.state.permissionStatus;
 			logger.debug('Initial enumeration result', {
 				deviceCount: devices.length,
 				devices: devices.map((d) => ({
@@ -499,61 +535,99 @@ class VoiceDeviceManager {
 					hasLabel: !!d.label,
 				})),
 			});
-			const hasLabels = devices.some((device) => device.label && device.label !== '');
-			let usedNativeFlow = false;
-			if (hasLabels) {
+			const permissionTypesWithLabels = requestPermissionTypes.filter((type) => {
+				const requiredKind = type === 'audio' ? 'audioinput' : 'videoinput';
+				return devices.some((device) => device.kind === requiredKind && device.label !== '');
+			});
+			for (const type of permissionTypesWithLabels) {
+				permissionStatus[type] = 'granted';
+			}
+			if (requestPermissions && permissionTypesWithLabels.length === requestPermissionTypes.length) {
 				logger.debug('Devices have labels, permissions already granted');
-				permissionStatus = 'granted';
 			} else if (requestPermissions && isDesktop()) {
 				logger.debug('No labels detected; attempting native permission flow');
-				const [nativeMic, nativeCamera] = await Promise.all([
-					ensureNativePermission('microphone'),
-					ensureNativePermission('camera'),
-				]);
-				usedNativeFlow = nativeMic !== 'unsupported' || nativeCamera !== 'unsupported';
-				if (nativeMic === 'denied' || nativeCamera === 'denied') {
-					permissionStatus = 'denied';
-				} else if (nativeMic === 'granted' || nativeCamera === 'granted') {
-					permissionStatus = 'granted';
+				const unresolvedNativeTypes = requestPermissionTypes.filter((type) => permissionStatus[type] !== 'granted');
+				const nativeResults = await Promise.all(
+					unresolvedNativeTypes.map(async (type) => {
+						try {
+							return {
+								type,
+								result: await ensureNativePermission(type === 'audio' ? 'microphone' : 'camera'),
+							};
+						} catch (error) {
+							logger.warn('Native media permission request failed', {type, error});
+							return {type, result: 'not-determined' as const};
+						}
+					}),
+				);
+				for (const {type, result} of nativeResults) {
+					if (result === 'granted') permissionStatus[type] = 'granted';
+					if (result === 'denied') permissionStatus[type] = 'denied';
+				}
+				if (nativeResults.some(({result}) => result === 'granted')) {
+					try {
+						devices = await navigator.mediaDevices.enumerateDevices();
+					} catch (error) {
+						logger.warn('Device re-enumeration after native permission grant failed', {error});
+					}
 				}
 			}
-			if (!hasLabels && requestPermissions && (!usedNativeFlow || permissionStatus !== 'granted')) {
-				const isIOSPWA = Platform.isIOSWeb && Platform.isPWA;
+			const browserPermissionTypes = requestPermissionTypes.filter(
+				(type) => permissionStatus[type] !== 'granted' && permissionStatus[type] !== 'denied',
+			);
+			if (browserPermissionTypes.length > 0) {
+				const isIOSPWA =
+					browserPermissionTypes.length === 1 &&
+					browserPermissionTypes[0] === 'audio' &&
+					Platform.isIOSWeb &&
+					Platform.isPWA;
 				let skipGetUserMedia = false;
 				if (isIOSPWA && navigator.permissions) {
 					try {
 						const micPermission = await navigator.permissions.query({name: 'microphone' as PermissionName});
 						if (micPermission.state === 'granted') {
 							logger.debug('iOS PWA: microphone permission already granted via Permissions API, skipping getUserMedia');
-							permissionStatus = 'granted';
-							devices = await navigator.mediaDevices.enumerateDevices();
-							skipGetUserMedia = devices.some((d) => d.label && d.label !== '');
+							permissionStatus.audio = 'granted';
+							try {
+								devices = await navigator.mediaDevices.enumerateDevices();
+								skipGetUserMedia = devices.some((device) => device.kind === 'audioinput' && device.label !== '');
+							} catch (error) {
+								logger.warn('iOS PWA device re-enumeration after permission grant failed', {error});
+							}
 						}
-					} catch {}
+					} catch (error) {
+						logger.debug('iOS PWA microphone permission query failed', {error});
+					}
 				}
 				if (!skipGetUserMedia) {
 					logger.debug('No labels found, requesting permissions via getUserMedia');
 					try {
 						const stream = await navigator.mediaDevices.getUserMedia({
-							audio: true,
-							video: true,
+							audio: browserPermissionTypes.includes('audio'),
+							video: browserPermissionTypes.includes('video'),
 						});
 						logger.debug('getUserMedia succeeded, stopping tracks');
 						stream.getTracks().forEach((track) => {
 							logger.debug('Stopping track', {kind: track.kind, label: track.label});
 							track.stop();
 						});
-						permissionStatus = 'granted';
+						for (const type of browserPermissionTypes) {
+							permissionStatus[type] = 'granted';
+						}
 						logger.debug('Re-enumerating devices after permission grant');
-						devices = await navigator.mediaDevices.enumerateDevices();
-						logger.debug('Re-enumeration result', {
-							deviceCount: devices.length,
-							devices: devices.map((d) => ({
-								kind: d.kind,
-								hasDeviceId: d.deviceId.trim().length > 0,
-								label: d.label,
-							})),
-						});
+						try {
+							devices = await navigator.mediaDevices.enumerateDevices();
+							logger.debug('Re-enumeration result', {
+								deviceCount: devices.length,
+								devices: devices.map((d) => ({
+									kind: d.kind,
+									hasDeviceId: d.deviceId.trim().length > 0,
+									label: d.label,
+								})),
+							});
+						} catch (error) {
+							logger.warn('Device re-enumeration after browser permission grant failed', {error});
+						}
 					} catch (error) {
 						logger.debug('getUserMedia failed', {
 							error,
@@ -564,9 +638,13 @@ class VoiceDeviceManager {
 							error instanceof DOMException &&
 							(error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')
 						) {
-							permissionStatus = 'denied';
+							for (const type of browserPermissionTypes) {
+								permissionStatus[type] = 'denied';
+							}
 						} else {
-							permissionStatus = 'granted';
+							for (const type of browserPermissionTypes) {
+								permissionStatus[type] = 'idle';
+							}
 						}
 					}
 				}
@@ -582,7 +660,7 @@ class VoiceDeviceManager {
 				inputDevices,
 				outputDevices,
 				videoDevices,
-				permissionStatus: this.resolvePermissionStatus(requestPermissions, permissionStatus),
+				permissionStatus,
 			};
 			this.hasEnumeratedDevices = true;
 			logger.debug('Final device state', {
@@ -593,25 +671,14 @@ class VoiceDeviceManager {
 			});
 			this.updateState(nextState);
 			return this.state;
-		} catch (_error) {
-			logger.debug('enumerateDevices failed with exception', _error);
-			if (requestPermissions) {
-				this.updateState({permissionStatus: 'denied'});
+		} catch (error) {
+			logger.warn('Voice device enumeration failed', {error, requestPermissionTypes});
+			for (const type of requestPermissionTypes) {
+				if (permissionStatus[type] === 'loading') permissionStatus[type] = 'idle';
 			}
+			this.updateState({permissionStatus});
 			return this.state;
 		}
-	}
-
-	private resolvePermissionStatus(requestPermissions: boolean, computedStatus: PermissionStatus): PermissionStatus {
-		if (!requestPermissions) {
-			if (this.state.permissionStatus === 'denied') {
-				return 'denied';
-			}
-			if (this.state.permissionStatus === 'granted') {
-				return 'granted';
-			}
-		}
-		return computedStatus;
 	}
 
 	private updateState(partial: Partial<VoiceDeviceState>) {
@@ -624,7 +691,9 @@ class VoiceDeviceManager {
 
 	private handleDeviceChange = () => {
 		this.hasEnumeratedDevices = false;
-		void this.ensureDevices({requestPermissions: this.shouldRequestPermissions});
+		void this.ensureDevices({requestPermissions: false}).catch((error) => {
+			logger.warn('Voice device refresh after device change failed', {error});
+		});
 	};
 }
 
