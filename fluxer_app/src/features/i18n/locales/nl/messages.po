@@ -11023,7 +11023,7 @@ msgstr "Apparaatgegevens"
 msgid "Device revoked"
 msgstr "Apparaat ingetrokken"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1025
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1045
 msgid "Device selection"
 msgstr "Apparaat selecteren"
 
@@ -14501,7 +14501,7 @@ msgstr "Mapinstellingen"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Volg ons op {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:827
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:840
 msgid "Follow voice input"
 msgstr "Spraakinvoer volgen"
 
@@ -14769,9 +14769,11 @@ msgstr "FPS"
 msgid "Frame"
 msgstr "Kader"
 
+#. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
 msgstr "Beeldsnelheid"
 
@@ -14779,11 +14781,6 @@ msgstr "Beeldsnelheid"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Framesnelheden boven 30 FPS vereisen {premiumProductName}"
-
-#. Section header in the stream settings menu for frame rate options.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
-msgid "Framerate"
-msgstr "Beeldsnelheid"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:147
@@ -15521,7 +15518,7 @@ msgstr "{0} toegekend."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Verleent alle rechten en omzeilt kanaalbeperkingen. Zeer gevoelig."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1012
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1032
 msgid "Granular selection"
 msgstr "Nauwkeurige selectie"
 
@@ -16085,7 +16082,7 @@ msgstr "Wachtwoord verbergen"
 msgid "Hide picture-in-picture popout?"
 msgstr "Beeld-in-beeld-pop-out verbergen?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:861
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:881
 msgid "Hide preview thumbnail"
 msgstr "Voorbeeldweergave verbergen"
 
@@ -16530,11 +16527,11 @@ msgstr "Negeren"
 msgid "Ignore friend request"
 msgstr "Vriendschapsverzoek negeren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1002
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1022
 msgid "Ignore hardware devices"
 msgstr "Hardwareapparaten negeren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:978
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:998
 msgid "Ignore input media"
 msgstr "Invoermedia negeren"
 
@@ -16560,7 +16557,7 @@ msgstr "Spamvlag negeren"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Vriendschapsverzoek van {displayName} negeren?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:989
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1009
 msgid "Ignore virtual"
 msgstr "Virtuele audio negeren"
 
@@ -19971,7 +19968,7 @@ msgstr "Microfoonrechten vereist"
 msgid "Microphone test"
 msgstr "Microfoontest"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:947
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
 msgid "Microphone workaround"
 msgstr "Microfoonoplossing"
 
@@ -22115,7 +22112,7 @@ msgstr "Alleen van toepassing op brede schermen."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Alleen creditcards worden geaccepteerd. Debit- en prepaidkaarten kunnen niet worden gebruikt voor de controle van inhoud voor volwassenen."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:987
 msgid "Only default speakers"
 msgstr "Alleen standaardluidsprekers"
 
@@ -22163,7 +22160,7 @@ msgstr "Voer hier alleen code uit als je precies begrijpt wat het doet."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Toon alleen berichtvoorbeelden voor DM's met ongelezen berichten"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Only speakers"
 msgstr "Alleen sprekers"
 
@@ -28502,7 +28499,7 @@ msgstr "Bron delen"
 
 #. Toggle label for sharing audio with an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:157
-msgid "Share Stream Audio"
+msgid "Share stream audio"
 msgstr "Streamaudio delen"
 
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
@@ -30610,7 +30607,7 @@ msgstr "Streamvoorbeeld"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:153
-msgid "Stream Quality"
+msgid "Stream quality"
 msgstr "Streamkwaliteit"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.

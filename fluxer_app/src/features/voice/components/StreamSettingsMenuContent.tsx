@@ -56,7 +56,7 @@ import {formatVoiceAudioDeviceLabel} from '@app/features/voice/utils/VoiceMessag
 import type {NativeAudioAvailability} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {CrownSimpleIcon} from '@phosphor-icons/react';
+import {CrownSimpleIcon, MicrophoneIcon} from '@phosphor-icons/react';
 import type {Track} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -121,7 +121,7 @@ const RESOLUTION_DESCRIPTOR = msg({
 	comment: 'Section header in the stream settings menu for resolution options.',
 });
 const FRAMERATE_DESCRIPTOR = msg({
-	message: 'Framerate',
+	message: 'Frame rate',
 	comment: 'Section header in the stream settings menu for frame rate options.',
 });
 const AUDIO_DEVICE_DESCRIPTOR = msg({
@@ -151,11 +151,11 @@ const ADAPTIVE_QUALITY_ACTIVE_DESCRIPTOR = msg({
 		'Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.',
 });
 const STREAM_QUALITY_DESCRIPTOR = msg({
-	message: 'Stream Quality',
+	message: 'Stream quality',
 	comment: 'Compact submenu label for changing the resolution and frame rate of an active stream.',
 });
 const SHARE_STREAM_AUDIO_DESCRIPTOR = msg({
-	message: 'Share Stream Audio',
+	message: 'Share stream audio',
 	comment: 'Toggle label for sharing audio with an active stream.',
 });
 const logger = new Logger('StreamSettingsMenuContent');
@@ -609,11 +609,14 @@ export const StreamSettingsMenuContent = observer(
 						render={() => (
 							<>
 								<MenuGroup data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-group">
-									<MenuGroupLabel data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-label">
+									<MenuGroupLabel
+										className={styles.compactLiveGroupLabel}
+										data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-label"
+									>
 										{i18n._(FRAMERATE_DESCRIPTOR)}
 									</MenuGroupLabel>
 									{frameRateOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+										const isPlutoniumReserved = showPremiumFeatures && option.isPremium;
 										return (
 											<MenuItemRadio
 												key={option.value}
@@ -631,7 +634,7 @@ export const StreamSettingsMenuContent = observer(
 													>
 														{option.label}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-premium-badge" />
 													)}
 												</span>
@@ -640,11 +643,14 @@ export const StreamSettingsMenuContent = observer(
 									})}
 								</MenuGroup>
 								<MenuGroup data-flx="voice.stream-settings-menu-content.compact-live.resolution-group">
-									<MenuGroupLabel data-flx="voice.stream-settings-menu-content.compact-live.resolution-label">
+									<MenuGroupLabel
+										className={styles.compactLiveGroupLabel}
+										data-flx="voice.stream-settings-menu-content.compact-live.resolution-label"
+									>
 										{i18n._(RESOLUTION_DESCRIPTOR)}
 									</MenuGroupLabel>
 									{resolutionOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+										const isPlutoniumReserved = showPremiumFeatures && option.isPremium;
 										return (
 											<MenuItemRadio
 												key={option.value}
@@ -662,7 +668,7 @@ export const StreamSettingsMenuContent = observer(
 													>
 														{option.label}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.compact-live.resolution-premium-badge" />
 													)}
 												</span>
@@ -693,7 +699,7 @@ export const StreamSettingsMenuContent = observer(
 						{i18n._(STREAMING_MODE_DESCRIPTOR)}
 					</MenuGroupLabel>
 					{modeOptions.map((option) => {
-						const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+						const isPlutoniumReserved = showPremiumFeatures && option.isPremium;
 						return (
 							<MenuItemRadio
 								key={option.value}
@@ -718,7 +724,7 @@ export const StreamSettingsMenuContent = observer(
 											</span>
 										)}
 									</span>
-									{premiumLocked && <PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge" />}
+									{isPlutoniumReserved && <PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge" />}
 								</span>
 							</MenuItemRadio>
 						);
@@ -731,7 +737,7 @@ export const StreamSettingsMenuContent = observer(
 							render={() => (
 								<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group--3">
 									{resolutionOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+										const isPlutoniumReserved = showPremiumFeatures && option.isPremium;
 										return (
 											<MenuItemRadio
 												key={option.value}
@@ -743,7 +749,7 @@ export const StreamSettingsMenuContent = observer(
 													<span className={styles.rowLabel} data-flx="voice.stream-settings-menu-content.row-label">
 														{option.label}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge--2" />
 													)}
 												</span>
@@ -759,7 +765,7 @@ export const StreamSettingsMenuContent = observer(
 							render={() => (
 								<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group--4">
 									{frameRateOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+										const isPlutoniumReserved = showPremiumFeatures && option.isPremium;
 										return (
 											<MenuItemRadio
 												key={option.value}
@@ -771,7 +777,7 @@ export const StreamSettingsMenuContent = observer(
 													<span className={styles.rowLabel} data-flx="voice.stream-settings-menu-content.row-label--2">
 														{option.label}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge--3" />
 													)}
 												</span>
@@ -816,21 +822,29 @@ export const StreamSettingsMenuContent = observer(
 										onSelect={() => handleAudioDeviceSelect('default')}
 										data-flx="voice.stream-settings-menu-content.menu-item-radio.audio-device-select"
 									>
-										<span
-											className={styles.audioDeviceLabel}
-											data-flx="voice.stream-settings-menu-content.audio-device-label"
-										>
+										<span className={styles.row} data-flx="voice.stream-settings-menu-content.audio-device-row">
+											<MicrophoneIcon
+												className={styles.audioDeviceIcon}
+												weight="fill"
+												aria-hidden={true}
+												data-flx="voice.stream-settings-menu-content.audio-device-icon"
+											/>
 											<span
-												className={styles.audioDeviceName}
-												data-flx="voice.stream-settings-menu-content.audio-device-name"
+												className={styles.audioDeviceLabel}
+												data-flx="voice.stream-settings-menu-content.audio-device-label"
 											>
-												<Trans>Follow voice input</Trans>
-											</span>
-											<span
-												className={styles.audioDeviceSubtext}
-												data-flx="voice.stream-settings-menu-content.audio-device-subtext"
-											>
-												{selectedAudioDeviceLabel}
+												<span
+													className={styles.audioDeviceName}
+													data-flx="voice.stream-settings-menu-content.audio-device-name"
+												>
+													<Trans>Follow voice input</Trans>
+												</span>
+												<span
+													className={styles.audioDeviceSubtext}
+													data-flx="voice.stream-settings-menu-content.audio-device-subtext"
+												>
+													{selectedAudioDeviceLabel}
+												</span>
 											</span>
 										</span>
 									</MenuItemRadio>
@@ -842,6 +856,12 @@ export const StreamSettingsMenuContent = observer(
 											data-flx="voice.stream-settings-menu-content.menu-item-radio.audio-device-select--2"
 										>
 											<span className={styles.row} data-flx="voice.stream-settings-menu-content.row--3">
+												<MicrophoneIcon
+													className={styles.audioDeviceIcon}
+													weight="fill"
+													aria-hidden={true}
+													data-flx="voice.stream-settings-menu-content.audio-device-icon--2"
+												/>
 												<span className={styles.rowLabel} data-flx="voice.stream-settings-menu-content.row-label--3">
 													{formatVoiceAudioDeviceLabel(i18n, device, i18n._(UNNAMED_INPUT_DESCRIPTOR))}
 												</span>

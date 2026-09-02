@@ -11023,7 +11023,7 @@ msgstr "Podrobnosti o zařízení"
 msgid "Device revoked"
 msgstr "Zařízení odebráno"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1025
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1045
 msgid "Device selection"
 msgstr "Výběr zařízení"
 
@@ -14501,7 +14501,7 @@ msgstr "Nastavení složky"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Sledujte nás na {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:827
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:840
 msgid "Follow voice input"
 msgstr "Sledovat hlasový vstup"
 
@@ -14769,9 +14769,11 @@ msgstr "FPS"
 msgid "Frame"
 msgstr "Rámeček"
 
+#. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
 msgstr "Snímková frekvence"
 
@@ -14779,11 +14781,6 @@ msgstr "Snímková frekvence"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Snímková frekvence nad 30 FPS vyžaduje {premiumProductName}"
-
-#. Section header in the stream settings menu for frame rate options.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
-msgid "Framerate"
-msgstr "Snímková frekvence"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:147
@@ -15521,7 +15518,7 @@ msgstr "Uděleno {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Uděluje všechna oprávnění a obchází omezení kanálu. Vysoce citlivé."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1012
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1032
 msgid "Granular selection"
 msgstr "Podrobný výběr"
 
@@ -16085,7 +16082,7 @@ msgstr "Skrýt heslo"
 msgid "Hide picture-in-picture popout?"
 msgstr "Skrýt obraz v obraze?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:861
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:881
 msgid "Hide preview thumbnail"
 msgstr "Skrýt náhled miniatury"
 
@@ -16530,11 +16527,11 @@ msgstr "Ignorovat"
 msgid "Ignore friend request"
 msgstr "Ignorovat žádost o přátelství"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1002
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1022
 msgid "Ignore hardware devices"
 msgstr "Ignorovat hardwarová zařízení"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:978
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:998
 msgid "Ignore input media"
 msgstr "Ignorovat vstupní média"
 
@@ -16560,7 +16557,7 @@ msgstr "Ignorovat označení spamu"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Ignorovat žádost o přátelství od uživatele {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:989
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1009
 msgid "Ignore virtual"
 msgstr "Ignorovat virtuální"
 
@@ -19971,7 +19968,7 @@ msgstr "Je potřeba povolit mikrofon"
 msgid "Microphone test"
 msgstr "Test mikrofonu"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:947
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
 msgid "Microphone workaround"
 msgstr "Alternativní mikrofon"
 
@@ -22115,7 +22112,7 @@ msgstr "Platí pouze na širokoúhlých obrazovkách."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Přijímáme pouze kreditní karty. Debetní a předplacené karty nelze použít pro ověření obsahu pro dospělé."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:987
 msgid "Only default speakers"
 msgstr "Pouze výchozí reproduktory"
 
@@ -22163,7 +22160,7 @@ msgstr "Spouštějte zde kód, pouze pokud přesně rozumíte tomu, co dělá."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Zobrazovat náhledy zpráv jen u soukromých chatů s nepřečtenými zprávami"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Only speakers"
 msgstr "Pouze reproduktory"
 
@@ -28502,7 +28499,7 @@ msgstr "Sdílet zdroj"
 
 #. Toggle label for sharing audio with an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:157
-msgid "Share Stream Audio"
+msgid "Share stream audio"
 msgstr "Sdílet zvuk streamu"
 
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
@@ -30610,7 +30607,7 @@ msgstr "Náhled streamu"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:153
-msgid "Stream Quality"
+msgid "Stream quality"
 msgstr "Kvalita streamu"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.

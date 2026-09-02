@@ -11023,7 +11023,7 @@ msgstr "Подробности за устройството"
 msgid "Device revoked"
 msgstr "Устройството е отнето"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1025
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1045
 msgid "Device selection"
 msgstr "Избор на устройство"
 
@@ -14501,7 +14501,7 @@ msgstr "Настройки на папката"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Последвайте ни в {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:827
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:840
 msgid "Follow voice input"
 msgstr "Следване на гласов вход"
 
@@ -14769,9 +14769,11 @@ msgstr "FPS"
 msgid "Frame"
 msgstr "Рамка"
 
+#. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
 msgstr "Кадрова честота"
 
@@ -14779,11 +14781,6 @@ msgstr "Кадрова честота"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Кадровите честоти над 30 кадъра в секунда изискват {premiumProductName}"
-
-#. Section header in the stream settings menu for frame rate options.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
-msgid "Framerate"
-msgstr "Кадрова честота"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:147
@@ -15521,7 +15518,7 @@ msgstr "Предоставено {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Предоставя всички разрешения и заобикаля ограниченията на канала. Изключително чувствително."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1012
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1032
 msgid "Granular selection"
 msgstr "Подробен избор"
 
@@ -16085,7 +16082,7 @@ msgstr "Скрий паролата"
 msgid "Hide picture-in-picture popout?"
 msgstr "Да скрия ли изскачащия прозорец \"картина в картината\"?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:861
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:881
 msgid "Hide preview thumbnail"
 msgstr "Скрий миниатюрата за предварителен преглед"
 
@@ -16530,11 +16527,11 @@ msgstr "Игнориране"
 msgid "Ignore friend request"
 msgstr "Игнориране на покана за приятелство"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1002
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1022
 msgid "Ignore hardware devices"
 msgstr "Игнориране на хардуерни устройства"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:978
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:998
 msgid "Ignore input media"
 msgstr "Игнориране на входни медии"
 
@@ -16560,7 +16557,7 @@ msgstr "Игнориране на сигнал за спам"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Игнориране на поканата за приятелство от {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:989
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1009
 msgid "Ignore virtual"
 msgstr "Игнориране на виртуални"
 
@@ -19971,7 +19968,7 @@ msgstr "Изисква се разрешение за микрофон"
 msgid "Microphone test"
 msgstr "Тест на микрофона"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:947
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
 msgid "Microphone workaround"
 msgstr "Временно решение за микрофона"
 
@@ -22115,7 +22112,7 @@ msgstr "Прилага се само на широки екрани."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Приемат се само кредитни карти. Дебитните и предплатените карти не могат да се използват за проверка на възрастта за съдържание за възрастни."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:987
 msgid "Only default speakers"
 msgstr "Само високоговорители по подразбиране"
 
@@ -22163,7 +22160,7 @@ msgstr "Изпълнявайте код тук само ако разбират�
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Показвай визуализации на съобщения само за директни съобщения с непрочетени съобщения"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Only speakers"
 msgstr "Само говорещи"
 
@@ -28502,8 +28499,8 @@ msgstr "Източник за споделяне"
 
 #. Toggle label for sharing audio with an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:157
-msgid "Share Stream Audio"
-msgstr "Споделяне на аудио от потока"
+msgid "Share stream audio"
+msgstr "Споделяне на аудио от стрийм"
 
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:40
@@ -30610,7 +30607,7 @@ msgstr "Преглед на стрийм"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:153
-msgid "Stream Quality"
+msgid "Stream quality"
 msgstr "Качество на потока"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.

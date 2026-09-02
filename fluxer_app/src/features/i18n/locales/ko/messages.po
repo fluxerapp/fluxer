@@ -11023,7 +11023,7 @@ msgstr "장치 정보"
 msgid "Device revoked"
 msgstr "기기 연결 해제됨"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1025
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1045
 msgid "Device selection"
 msgstr "기기 선택"
 
@@ -14501,7 +14501,7 @@ msgstr "폴더 설정"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "{blueskyProviderName}에서 팔로우하세요"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:827
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:840
 msgid "Follow voice input"
 msgstr "음성 입력 따라가기"
 
@@ -14769,9 +14769,11 @@ msgstr "FPS"
 msgid "Frame"
 msgstr "프레임"
 
+#. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
 msgstr "프레임률"
 
@@ -14779,11 +14781,6 @@ msgstr "프레임률"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:54
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "30FPS를 초과하는 프레임 속도에는 {premiumProductName}이(가) 필요합니다"
-
-#. Section header in the stream settings menu for frame rate options.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:123
-msgid "Framerate"
-msgstr "프레임률"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:147
@@ -15521,7 +15518,7 @@ msgstr "{0} 부여됨."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "모든 권한을 부여하고 채널 제한을 우회합니다. 매우 민감한 권한입니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1012
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1032
 msgid "Granular selection"
 msgstr "세부 선택"
 
@@ -16085,7 +16082,7 @@ msgstr "비밀번호 숨기기"
 msgid "Hide picture-in-picture popout?"
 msgstr "화면 속 화면 팝업 숨기기?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:861
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:881
 msgid "Hide preview thumbnail"
 msgstr "미리보기 썸네일 숨기기"
 
@@ -16530,11 +16527,11 @@ msgstr "무시"
 msgid "Ignore friend request"
 msgstr "친구 요청 무시하기"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1002
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1022
 msgid "Ignore hardware devices"
 msgstr "하드웨어 기기 무시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:978
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:998
 msgid "Ignore input media"
 msgstr "입력 미디어 무시"
 
@@ -16560,7 +16557,7 @@ msgstr "스팸 신고 무시"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "{displayName}님의 친구 요청을 무시하시겠어요?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:989
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1009
 msgid "Ignore virtual"
 msgstr "가상 배경 무시"
 
@@ -19971,7 +19968,7 @@ msgstr "마이크 권한 필요"
 msgid "Microphone test"
 msgstr "마이크 테스트"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:947
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
 msgid "Microphone workaround"
 msgstr "마이크 문제 해결"
 
@@ -22115,7 +22112,7 @@ msgstr "와이드 스크린에만 적용됩니다."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "신용카드만 사용할 수 있습니다. 성인 콘텐츠 확인을 위해 직불카드 및 선불카드는 사용할 수 없습니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:987
 msgid "Only default speakers"
 msgstr "기본 스피커만 사용"
 
@@ -22163,7 +22160,7 @@ msgstr "여기에서 실행하는 코드가 어떤 동작을 하는지 정확히
 msgid "Only show message previews for DMs with unread messages"
 msgstr "읽지 않은 메시지가 있는 DM에 대해서만 메시지 미리보기 표시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:977
 msgid "Only speakers"
 msgstr "스피커만"
 
@@ -28502,7 +28499,7 @@ msgstr "화면 공유"
 
 #. Toggle label for sharing audio with an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:157
-msgid "Share Stream Audio"
+msgid "Share stream audio"
 msgstr "스트림 오디오 공유"
 
 #. Description in the premium gift purchase section. premiumProductName is the short paid product name.
@@ -30610,7 +30607,7 @@ msgstr "스트림 미리보기"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:153
-msgid "Stream Quality"
+msgid "Stream quality"
 msgstr "스트림 품질"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
