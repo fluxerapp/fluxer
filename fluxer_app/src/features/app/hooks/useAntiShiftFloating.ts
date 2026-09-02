@@ -239,7 +239,7 @@ function observeFloatingResize(floating: HTMLElement, updatePosition: () => void
 	};
 }
 
-function getNativeTitlebarInset(ownerDocument: Document): number {
+export function getNativeTitlebarInset(ownerDocument: Document): number {
 	const titlebar = ownerDocument.querySelector<HTMLElement>(TITLEBAR_SELECTOR);
 	if (titlebar == null) return 0;
 	const rect = titlebar.getBoundingClientRect();
@@ -250,7 +250,7 @@ function getNativeTitlebarInset(ownerDocument: Document): number {
 	return Math.max(0, rect.bottom - viewportTop);
 }
 
-function getBoundaryPadding(ownerDocument: Document, basePadding: number): Padding {
+export function getBoundaryPadding(ownerDocument: Document, basePadding: number): Padding {
 	const titlebarInset = getNativeTitlebarInset(ownerDocument);
 	if (titlebarInset <= 0) {
 		return basePadding;

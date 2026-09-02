@@ -8311,7 +8311,7 @@ msgstr "Проверка контента"
 #. Accessible label for a context menu container.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/ui/action_menu/ContextMenu.tsx:22
+#: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:154
 msgid "Context menu"
@@ -30708,7 +30708,7 @@ msgid "Styling"
 msgstr "Оформление"
 
 #. Accessible label for a context menu submenu container.
-#: src/features/ui/action_menu/ContextMenu.tsx:26
+#: src/features/ui/action_menu/ContextMenu.tsx:27
 msgid "Submenu"
 msgstr "Подменю"
 
