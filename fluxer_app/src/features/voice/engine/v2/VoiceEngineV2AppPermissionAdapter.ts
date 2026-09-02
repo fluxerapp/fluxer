@@ -15,14 +15,16 @@ import {
 } from '@app/features/voice/engine/VoicePermissionStateMachine';
 import {
 	enforceLocalMediaPublicationCap,
+	getLocalCameraPublications,
 	getLocalMicrophonePublications,
 	getLocalScreenSharePublications,
 	unpublishLocalMediaPublications,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
 import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
 import {removeVoiceInputProcessor} from '@app/features/voice/utils/VoiceInputProcessor';
 import {getVoiceChannelPermissions, type VoiceChannelPermissions} from '@app/features/voice/utils/VoicePermissionUtils';
-import type {LocalAudioTrack, Room} from 'livekit-client';
+import type {LocalAudioTrack, LocalVideoTrack, Room} from 'livekit-client';
 
 export {
 	createVoiceEngineV2AppSystemPermissionAdapter,
@@ -325,11 +327,16 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 					}
 					break;
 				}
-				case 'video':
+				case 'video': {
 					await enforceLocalMediaPublicationCap(localParticipant, 'camera');
+					const cameraTrack = getLocalCameraPublications(localParticipant)[0]?.track as LocalVideoTrack | undefined;
+					if (cameraTrack != null) {
+						await clearCameraVideoProcessor(cameraTrack);
+					}
 					await localParticipant.setCameraEnabled(false);
 					await enforceLocalMediaPublicationCap(localParticipant, 'camera');
 					break;
+				}
 				case 'screenShare':
 					await unpublishLocalMediaPublications(localParticipant, getLocalScreenSharePublications(localParticipant), {
 						stopOnUnpublish: true,

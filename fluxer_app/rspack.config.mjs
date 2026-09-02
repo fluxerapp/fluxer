@@ -378,6 +378,13 @@ export default () => {
 					},
 				},
 				{
+					test: /\.onnx$/,
+					type: 'asset/resource',
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16][ext]' : 'assets/[name].[hash][ext]',
+					},
+				},
+				{
 					test: /\.(png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot|mp3|wav|ogg|mp4|webm)$/,
 					type: 'asset/resource',
 					generator: {

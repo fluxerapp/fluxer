@@ -48,6 +48,7 @@ import {
 import type {VoiceStateSyncPartial} from '@app/features/voice/engine/VoiceStateSyncTypes';
 import {
 	enforceLocalMediaPublicationCap,
+	getLocalCameraPublications,
 	getLocalMicrophonePublications,
 	getPrimaryLocalMicrophonePublication,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
@@ -97,7 +98,7 @@ import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {buildMicrophonePublishOptions} from '@app/features/voice/utils/AudioPublishOptions';
-import {applyBackgroundProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
+import {applyBackgroundProcessor, clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
 import {
 	removeVoiceInputProcessor,
 	syncVoiceInputProcessor,
@@ -1133,6 +1134,13 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		assert.ok(participant, 'camera transition requires a local participant');
 		assertBoolean(enabled, 'publishCameraTransition.enabled');
 		await this.enforceCameraPublicationCap(participant, enabled ? 'before camera enable' : 'before camera disable');
+		if (!enabled) {
+			this.unbindCameraLifecycle();
+			const cameraTrack = getLocalCameraPublications(participant)[0]?.track as LocalVideoTrack | undefined;
+			if (cameraTrack != null) {
+				await clearCameraVideoProcessor(cameraTrack);
+			}
+		}
 		const videoResolution = getCameraVideoPreset(VoiceSettings.getCameraResolution());
 		await participant.setCameraEnabled(enabled, {resolution: videoResolution, ...restOptions});
 		await this.enforceCameraPublicationCap(participant, enabled ? 'after camera enable' : 'after camera disable');
@@ -1228,6 +1236,8 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		if (!cameraTrack) {
 			return;
 		}
+		this.unbindCameraLifecycle();
+		await clearCameraVideoProcessor(cameraTrack as LocalVideoTrack);
 		await participant.unpublishTrack(cameraTrack);
 		await this.publishCameraTransition(activeRoom, true, {deviceId: VoiceSettings.getVideoDeviceId()});
 		updateLocalParticipantFromRoom(activeRoom);

@@ -15,6 +15,7 @@
 		"emitDecoratorMetadata": true,
 		"paths": {
 			"@app/*": ["./src/*"],
+			"onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm": ["./src/types/ort-wasm-asset.d.ts"],
 			"@fluxer/*": ["../packages/*", "../packages/*/src/index.ts"],
 			"@app_scripts/*": ["./scripts/*"],
 			"@pkgs/*": ["./pkgs/*"],
