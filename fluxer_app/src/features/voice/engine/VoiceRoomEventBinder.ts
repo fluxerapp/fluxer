@@ -10,7 +10,7 @@ import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSh
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import {noteLocalVoiceActivity} from '@app/features/voice/engine/VoiceIdleActivityBridge';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
-import {playSelfJoinChimeOnce} from '@app/features/voice/engine/VoiceSelfJoinChime';
+import {playSelfJoinChimeOnce, startVoiceJoinChimeSequence} from '@app/features/voice/engine/VoiceSelfJoinChime';
 import {
 	cancelDeferredStopWatchingStreamKey,
 	deferStopWatchingStreamKey,
@@ -325,9 +325,15 @@ export function bindRoomEvents(
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markConnected();
 			await callbacks.onConnected();
-			if (!suppressSelfJoinSound) {
-				const {connectionId} = parseVoiceParticipantIdentity(room.localParticipant.identity);
-				playSelfJoinChimeOnce(connectionId || null, 'livekit-room');
+			const {userId, connectionId} = parseVoiceParticipantIdentity(room.localParticipant.identity);
+			if (userId) {
+				void startVoiceJoinChimeSequence({userId, channelId}, connectionId || null, (signal) =>
+					suppressSelfJoinSound
+						? Promise.resolve(false)
+						: playSelfJoinChimeOnce(connectionId || null, 'livekit-room', signal),
+				);
+			} else if (!suppressSelfJoinSound) {
+				void playSelfJoinChimeOnce(connectionId || null, 'livekit-room');
 			}
 			await dependencies.media.playEntranceSound();
 			if (guildId && channelId) {
@@ -373,7 +379,6 @@ export function bindRoomEvents(
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 			dependencies.remoteSpeaking.hydrateFromRoom(room);
-			void ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'reconnected');
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markReconnected();
 			callbacks.onReconnected();

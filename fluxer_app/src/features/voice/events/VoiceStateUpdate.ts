@@ -7,7 +7,11 @@ import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {playSelfJoinChimeOnce} from '@app/features/voice/engine/VoiceSelfJoinChime';
+import {
+	discardVoiceJoinChimeSequence,
+	playSelfJoinChimeOnce,
+	startVoiceJoinChimeSequence,
+} from '@app/features/voice/engine/VoiceSelfJoinChime';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 
@@ -128,14 +132,27 @@ export function handleVoiceStateUpdate(data: VoiceStateUpdatePayload, _context: 
 	const playJoinChime =
 		!teleportingInPlace && shouldPlayJoinChime(data) && !shouldSuppressDuplicateJoinChime(data, now);
 	const playLeaveChime = !teleportingInPlace && !playJoinChime && shouldPlayLeaveChime(data);
+	const previousState = data.connection_id ? MediaEngine.getVoiceStateByConnectionId(data.connection_id) : null;
+	if (previousState && previousState.channel_id !== data.channel_id) {
+		const otherConnectionRemains = Object.values(
+			MediaEngine.getAllVoiceStatesInChannel(previousState.guild_id, previousState.channel_id),
+		).some((state) => state.user_id === data.user_id && state.connection_id !== data.connection_id);
+		if (!otherConnectionRemains) {
+			discardVoiceJoinChimeSequence({userId: data.user_id, channelId: previousState.channel_id});
+		}
+	}
 	MediaEngine.handleGatewayVoiceStateUpdate(guildId, voiceState);
 	if (playJoinChime) {
+		if (!data.channel_id) return;
 		rememberJoinChime(data, now);
-		if (shouldBypassSelfDeafenedForJoinChime(data)) {
-			playSelfJoinChimeOnce(data.connection_id, 'gateway');
-		} else {
-			SoundCommands.playSoundBypassingSelfDeafened(SoundType.UserJoin);
-		}
+		void startVoiceJoinChimeSequence(
+			{userId: data.user_id, channelId: data.channel_id},
+			data.connection_id ?? null,
+			(signal) =>
+				shouldBypassSelfDeafenedForJoinChime(data)
+					? playSelfJoinChimeOnce(data.connection_id, 'gateway', signal)
+					: SoundCommands.playOneShotSoundImmediatelyBypassingSelfDeafened(SoundType.UserJoin, signal),
+		);
 	} else if (playLeaveChime) {
 		if (data.connection_id) {
 			recentJoinChimesByConnectionId.delete(data.connection_id);
