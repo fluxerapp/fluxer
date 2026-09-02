@@ -38,6 +38,9 @@ import * as AuthPassword from './AuthPassword';
 import * as AuthSession from './AuthSession';
 import * as AuthUtility from './AuthUtility';
 
+const DUMMY_ARGON2_HASH =
+	'$argon2id$v=19$m=65536,t=3,p=4$fT6tGpAyxFiz+n1RbkRqWQ$v05UT17QGeqhsgRjcVjIWcGw6gUDYeCcAA8FiZ63MtA';
+
 interface LoginParams {
 	data: LoginRequest;
 	request: Request;
@@ -194,7 +197,7 @@ export async function login(
 	const {inviteService, kvDeletionQueue} = deps;
 	const skipRateLimits = config.dev.testModeEnabled || config.dev.disableRateLimits;
 	const emailRateLimit = await rateLimit.checkLimit({
-		identifier: `login:email:${data.email}`,
+		identifier: `login:email:${data.email.toLowerCase()}`,
 		maxAttempts: 5,
 		windowMs: ms('15 minutes'),
 	});
@@ -221,9 +224,16 @@ export async function login(
 		]);
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
+	if (!user.passwordHash) {
+		await AuthPassword.verifyPassword(ctx, {password: data.password, passwordHash: DUMMY_ARGON2_HASH});
+		throw InputValidationError.fromCodes([
+			{path: 'email', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
+			{path: 'password', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
+		]);
+	}
 	const isMatch = await AuthPassword.verifyPassword(ctx, {
 		password: data.password,
-		passwordHash: user.passwordHash!,
+		passwordHash: user.passwordHash,
 	});
 	if (!isMatch) {
 		throw InputValidationError.fromCodes([

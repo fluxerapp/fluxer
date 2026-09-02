@@ -79,7 +79,7 @@ export async function verifyMfaCode(ctx: ApiContext, params: VerifyMfaCodeParams
 				return true;
 			}
 			const reuseKey = `mfa-totp:${userId}:${code}`;
-			const lockToken = await cache.acquireLock(reuseKey, seconds('30 seconds'));
+			const lockToken = await cache.acquireLock(reuseKey, seconds('90 seconds'));
 			if (lockToken) {
 				return true;
 			}
