@@ -85,31 +85,21 @@ describe('buildScreenShareOptions', () => {
 			windowAudio: 'exclude',
 		});
 	});
-	it('prefers framerate for detail-oriented shares', () => {
+	it('prefers resolution for detail-oriented shares', () => {
 		const {publishOptions} = buildScreenShareOptions({
 			resolution: 'medium',
 			frameRate: 30,
 			includeAudio: true,
 		});
-		expect(publishOptions.degradationPreference).toBe('maintain-framerate');
+		expect(publishOptions.degradationPreference).toBe('maintain-resolution');
 	});
-	it('prefers framerate for non-gaming high-framerate shares', () => {
+	it('keeps resolution for gaming-style high-framerate shares', () => {
 		const {publishOptions} = buildScreenShareOptions({
 			resolution: 'ultra',
 			frameRate: 60,
 			includeAudio: true,
-			streamingMode: 'screenshare',
 		});
-		expect(publishOptions.degradationPreference).toBe('maintain-framerate');
-	});
-	it('prefers framerate degradation for gaming streams', () => {
-		const {publishOptions} = buildScreenShareOptions({
-			resolution: 'ultra',
-			frameRate: 60,
-			includeAudio: true,
-			streamingMode: 'gaming',
-		});
-		expect(publishOptions.degradationPreference).toBe('maintain-framerate');
+		expect(publishOptions.degradationPreference).toBe('maintain-resolution');
 	});
 	it('passes the selected content hint through capture options', () => {
 		const {captureOptions} = buildScreenShareOptions({

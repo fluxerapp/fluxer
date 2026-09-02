@@ -18,7 +18,10 @@ vi.mock('@app/features/app/utils/LimitUtils', () => ({
 
 const AppStorage = (await import('@app/features/platform/state/PersistentStorage')).default;
 
-AppStorage.setItem('VoiceSettings', JSON.stringify({preferredScreenShareCodec: 'av1'}));
+AppStorage.setItem(
+	'VoiceSettings',
+	JSON.stringify({preferredScreenShareCodec: 'av1', screenShareContentHintPrefV2: 'auto'}),
+);
 
 const storageWrites: Array<string> = [];
 AppStorage.subscribe(
@@ -130,5 +133,21 @@ describe('AV1/HEVC screen-share opt-in', () => {
 		VoiceSettings.updateSettings({preferredScreenShareCodec: 'vp9'});
 		expect(VoiceSettings.preferredScreenShareCodec).toBe('vp9');
 		expect(VoiceSettings.getPreferredScreenShareCodec()).toBe('vp9');
+	});
+});
+
+describe('screen share content hint default', () => {
+	it('moves a stored automatic content hint to text on first launch', () => {
+		const migrated = JSON.parse(storageWrites[0]);
+		expect(migrated.screenShareContentHintPrefV2).toBe('text');
+		expect(migrated.screenShareContentHintDefaultMigratedV1).toBe(true);
+		expect(VoiceSettings.getScreenShareContentHint()).toBe('text');
+		expect(VoiceSettings.getScreenShareContentHintOverride()).toBe('text');
+	});
+
+	it('keeps an automatic content hint chosen after the migration', () => {
+		VoiceSettings.updateSettings({screenShareContentHint: 'auto'});
+		expect(VoiceSettings.getScreenShareContentHint()).toBe('auto');
+		expect(VoiceSettings.getScreenShareContentHintOverride()).toBeUndefined();
 	});
 });

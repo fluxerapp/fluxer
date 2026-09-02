@@ -10,6 +10,7 @@ import {ScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShar
 import type {ScreenShareCaptureOptions} from 'livekit-client';
 
 type DisplayMediaVideoConstraints = MediaTrackConstraints & {
+	colorSpace?: string;
 	cursor?: 'always' | 'motion' | 'never';
 	displaySurface?: 'browser' | 'monitor' | 'window';
 };
@@ -92,6 +93,21 @@ export function getDisplayMediaOptions(options?: ScreenShareCaptureOptions): Dis
 	} as DisplayMediaStreamOptions;
 }
 
+function buildCapturedDisplayMediaConstraints(
+	displayMediaOptions: DisplayMediaStreamOptions,
+	cursor: 'always' | 'motion' | 'never',
+): MediaTrackConstraints {
+	const requestedVideo =
+		typeof displayMediaOptions.video === 'object' && displayMediaOptions.video
+			? (displayMediaOptions.video as DisplayMediaVideoConstraints)
+			: undefined;
+	const constraints: DisplayMediaVideoConstraints = {colorSpace: 'rec709', cursor};
+	if (requestedVideo?.width !== undefined) constraints.width = requestedVideo.width;
+	if (requestedVideo?.height !== undefined) constraints.height = requestedVideo.height;
+	if (requestedVideo?.frameRate !== undefined) constraints.frameRate = requestedVideo.frameRate;
+	return constraints;
+}
+
 export async function createDisplayScreenShareTracks(
 	options?: ScreenShareCaptureOptions,
 	captureContext?: DisplayScreenShareCaptureContext,
@@ -99,7 +115,8 @@ export async function createDisplayScreenShareTracks(
 	if (!navigator.mediaDevices.getDisplayMedia) {
 		throw new Error('getDisplayMedia not supported');
 	}
-	const stream = await navigator.mediaDevices.getDisplayMedia(getDisplayMediaOptions(options));
+	const displayMediaOptions = getDisplayMediaOptions(options);
+	const stream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
 	try {
 		const videoTrack = stream.getVideoTracks()[0];
 		if (!videoTrack) {
@@ -108,11 +125,10 @@ export async function createDisplayScreenShareTracks(
 		if (options?.contentHint) {
 			videoTrack.contentHint = options.contentHint;
 		}
-		await videoTrack.applyConstraints({colorSpace: 'rec709'} as MediaTrackConstraints).catch(() => undefined);
 		const cursor = resolveCapturedDisplayMediaCursorCapture(videoTrack, options);
-		if ((videoTrack.getSettings() as DisplayMediaTrackSettings).cursor !== cursor) {
-			await videoTrack.applyConstraints({cursor} as MediaTrackConstraints).catch(() => undefined);
-		}
+		await videoTrack
+			.applyConstraints(buildCapturedDisplayMediaConstraints(displayMediaOptions, cursor))
+			.catch(() => undefined);
 		const capturedAudioTrack = stream.getAudioTracks()[0];
 		const audioTrack = capturedAudioTrack?.readyState === 'live' ? capturedAudioTrack : undefined;
 		if (captureContext?.requireAudio && !audioTrack) {

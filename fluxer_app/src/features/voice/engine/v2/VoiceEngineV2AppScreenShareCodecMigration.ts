@@ -41,6 +41,11 @@ interface MigrationContext {
 	readonly previousTrackName: string | undefined;
 }
 
+type ScreenShareVideoConstraints = MediaTrackConstraints & {
+	colorSpace?: string;
+	cursor?: 'always' | 'motion' | 'never';
+};
+
 interface MigrationState {
 	candidateMediaStreamTrack: MediaStreamTrack | null;
 	candidatePublication: LocalTrackPublication | null;
@@ -85,14 +90,17 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 	): Promise<boolean> {
 		assert.ok(screenShareTrack);
 		assert.ok(resolution);
-		const nextConstraints: MediaTrackConstraints = {};
+		const mediaStreamTrack = screenShareTrack.mediaStreamTrack;
+		const currentConstraints = mediaStreamTrack.getConstraints() as ScreenShareVideoConstraints;
+		const nextConstraints: ScreenShareVideoConstraints = {...currentConstraints};
 		if (resolution.width > 0) nextConstraints.width = {ideal: resolution.width};
 		if (resolution.height > 0) nextConstraints.height = {ideal: resolution.height};
 		if (resolution.frameRate !== undefined) {
 			nextConstraints.frameRate = {ideal: resolution.frameRate, max: resolution.frameRate};
 		}
+		if (JSON.stringify(currentConstraints) === JSON.stringify(nextConstraints)) return true;
 		try {
-			await screenShareTrack.mediaStreamTrack.applyConstraints(nextConstraints);
+			await mediaStreamTrack.applyConstraints(nextConstraints);
 			return true;
 		} catch (error) {
 			logger.warn('Failed to update active screen share constraints', {error, resolution});

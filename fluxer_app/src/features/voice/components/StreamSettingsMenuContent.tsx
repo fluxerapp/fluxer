@@ -260,7 +260,6 @@ export async function pushActiveStreamSettings(
 		resolution,
 		frameRate,
 		includeAudio,
-		streamingMode: normalisedMode,
 		contentHint,
 		preferredDisplaySurface,
 	});

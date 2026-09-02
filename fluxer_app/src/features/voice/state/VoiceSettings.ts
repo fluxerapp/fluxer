@@ -57,7 +57,7 @@ const PREMIUM_SCREENSHARE_RESOLUTIONS: ReadonlySet<ScreenshareResolution> = new 
 export const CAMERA_EFFECT_STRENGTH_MIN = 0;
 export const CAMERA_EFFECT_STRENGTH_MAX = 100;
 export const CAMERA_EFFECT_STRENGTH_DEFAULT = 50;
-export const DEFAULT_SCREEN_SHARE_CONTENT_HINT: ScreenShareContentHint = 'auto';
+export const DEFAULT_SCREEN_SHARE_CONTENT_HINT: ScreenShareContentHint = 'text';
 export const DEFAULT_SCREEN_SHARE_ENCODER_MODE: ScreenShareEncoderMode = 'auto';
 export const DEFAULT_SCREEN_SHARE_SOFTWARE_QUALITY: ScreenShareSoftwareQuality = 'balanced';
 export const DEFAULT_SCREEN_SHARE_SCALABILITY_MODE: ScreenShareScalabilityModePreference = 'auto';
@@ -249,6 +249,17 @@ function applyStreamingModeDefaultMigrationV1(parsed: Record<string, unknown>): 
 	return true;
 }
 
+function applyScreenShareContentHintDefaultMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.screenShareContentHintDefaultMigratedV1 === true) {
+		return false;
+	}
+	if (parsed.screenShareContentHintPrefV2 === undefined || parsed.screenShareContentHintPrefV2 === 'auto') {
+		parsed.screenShareContentHintPrefV2 = DEFAULT_SCREEN_SHARE_CONTENT_HINT;
+	}
+	parsed.screenShareContentHintDefaultMigratedV1 = true;
+	return true;
+}
+
 function applyOutputVolumeRecalibrationMigrationV1(parsed: Record<string, unknown>): boolean {
 	if (parsed.outputVolumeRecalibratedV1 === true) {
 		return false;
@@ -361,6 +372,7 @@ class VoiceSettings {
 	screenShareHevcOptOutMigratedV1 = false;
 	emulatedDecodeVideoCodecCap: CodecPreference = 'auto';
 	screenShareContentHintPrefV2: ScreenShareContentHint = DEFAULT_SCREEN_SHARE_CONTENT_HINT;
+	screenShareContentHintDefaultMigratedV1 = false;
 	screenShareEncoderModePrefV2: ScreenShareEncoderMode = DEFAULT_SCREEN_SHARE_ENCODER_MODE;
 	screenShareSoftwareQualityPrefV2: ScreenShareSoftwareQuality = DEFAULT_SCREEN_SHARE_SOFTWARE_QUALITY;
 	screenShareScalabilityModePrefV2: ScreenShareScalabilityModePreference = DEFAULT_SCREEN_SHARE_SCALABILITY_MODE;
@@ -479,6 +491,7 @@ class VoiceSettings {
 			changed = applyScreenShareAudioConsentMigrationV1(parsed) || changed;
 			changed = applyScreenShareAudioDefaultOnMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
+			changed = applyScreenShareContentHintDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
 			changed = applyNoiseSuppressionStandardDefaultMigrationV1(parsed) || changed;
 			changed = applyScreenShareAv1OptOutMigrationV1(parsed) || changed;
@@ -545,6 +558,7 @@ class VoiceSettings {
 			'screenShareHevcOptOutMigratedV1',
 			'emulatedDecodeVideoCodecCap',
 			'screenShareContentHintPrefV2',
+			'screenShareContentHintDefaultMigratedV1',
 			'screenShareEncoderModePrefV2',
 			'screenShareSoftwareQualityPrefV2',
 			'screenShareScalabilityModePrefV2',

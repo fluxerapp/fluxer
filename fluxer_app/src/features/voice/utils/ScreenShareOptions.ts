@@ -18,13 +18,8 @@ const DIMENSIONS: Record<
 	source: {width: 3840, height: 2160},
 };
 export const SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS = 7000000;
-export const SCREEN_SHARE_GAMING_DEGRADATION_PREFERENCE: NonNullable<TrackPublishOptions['degradationPreference']> =
-	'maintain-framerate';
-export const SCREEN_SHARE_DEFAULT_DEGRADATION_PREFERENCE: NonNullable<TrackPublishOptions['degradationPreference']> =
-	'maintain-framerate';
 export const SCREEN_SHARE_DEGRADATION_PREFERENCE: NonNullable<TrackPublishOptions['degradationPreference']> =
-	SCREEN_SHARE_DEFAULT_DEGRADATION_PREFERENCE;
-export const SCREEN_SHARE_CONTENT_HINT: NonNullable<ScreenShareCaptureOptions['contentHint']> = 'motion';
+	'maintain-resolution';
 export const SUPPORTED_SCREEN_SHARE_FRAME_RATES = [15, 30, 60, 90, 120] as const;
 
 export type SupportedScreenShareFrameRate = (typeof SUPPORTED_SCREEN_SHARE_FRAME_RATES)[number];
@@ -85,7 +80,6 @@ export interface ScreenShareBuildConfig {
 	resolution: ScreenshareResolution;
 	frameRate: number;
 	includeAudio: boolean;
-	streamingMode?: StreamingMode;
 	contentHint?: ScreenShareCaptureOptions['contentHint'];
 	sourceDimensions?: {
 		width: number;
@@ -140,10 +134,6 @@ export function buildScreenShareOptions(
 		cursor: resolveScreenShareCursorCapture(config.preferredDisplaySurface),
 		...(config.preferredDisplaySurface ? {displaySurface: config.preferredDisplaySurface} : {}),
 	};
-	const degradationPreference =
-		config.streamingMode === 'gaming'
-			? SCREEN_SHARE_GAMING_DEGRADATION_PREFERENCE
-			: SCREEN_SHARE_DEFAULT_DEGRADATION_PREFERENCE;
 	return {
 		captureOptions: {
 			audio: config.includeAudio,
@@ -157,7 +147,7 @@ export function buildScreenShareOptions(
 			video,
 		},
 		publishOptions: {
-			degradationPreference,
+			degradationPreference: SCREEN_SHARE_DEGRADATION_PREFERENCE,
 			screenShareEncoding: getScreenShareEncoding(resolvedFrameRate),
 		},
 	};

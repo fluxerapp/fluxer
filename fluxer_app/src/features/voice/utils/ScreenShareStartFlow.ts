@@ -312,7 +312,6 @@ function getConfiguredScreenShareOptions(
 		resolution,
 		frameRate,
 		includeAudio,
-		streamingMode: normalisedStreamingMode,
 		contentHint,
 		sourceDimensions,
 		preferredDisplaySurface,
