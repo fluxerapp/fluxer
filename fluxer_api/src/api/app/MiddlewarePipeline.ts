@@ -36,6 +36,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	const resolvedHeader = resolveClientIpHeaderName(clientIpHeaderName);
 	routes.use('/webhooks/:webhook_id/:token', cors({origins: '*'}));
 	routes.use('/webhooks/:webhook_id/:token/messages/:message_id', cors({origins: '*'}));
+	routes.use('/invites/:invite_code', cors({origins: '*'}));
 	applyMiddlewareStack(routes, {
 		requestId: {},
 		cors: {origins: corsOrigins, exposedHeaders: [HttpHeaders.X_FLUXER_VERSION]},
