@@ -58,7 +58,11 @@ import {
 	asVoiceEngineConnectionState,
 	VoiceEngineConnectionState,
 } from '@app/features/voice/engine/VoiceConnectionStateMachine';
-import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {
+	asVoiceTrackSource,
+	isScreenShareAudioPublicationLike,
+	VoiceTrackSource,
+} from '@app/features/voice/engine/VoiceTrackSource';
 import PopoutWindowManager, {
 	getVoiceCallPopoutKey,
 	isVoicePopoutSupported,
@@ -274,6 +278,13 @@ const VoiceCallViewInner = observer(
 			return getStreamKey(channel.guildId, channel.id, focusedStreamInfo.connectionId);
 		}, [focusedStreamInfo, channel.guildId, channel.id]);
 		const focusedStreamTrackInfo = useStreamTrackInfo(isFocusedOnScreenShare ? effectiveFocusMainTrack : null);
+		const hasFocusedStreamAudio = Boolean(
+			effectiveFocusMainTrack &&
+				[...effectiveFocusMainTrack.participant.audioTrackPublications.values()].some((publication) =>
+					isScreenShareAudioPublicationLike(publication),
+				),
+		);
+		const canControlFocusedStreamVolume = focusedStreamInfo !== null && !effectiveFocusMainTrack?.participant.isLocal;
 		const focusedStreamerDisplayName = useMemo(() => {
 			if (!focusedStreamerUser) return '';
 			return NicknameUtils.getNickname(focusedStreamerUser, channel.guildId, channel.id);
@@ -615,7 +626,7 @@ const VoiceCallViewInner = observer(
 									{connectionStateText}
 								</div>
 							)}
-							{isFocusedOnScreenShare && focusedStreamKey && (
+							{isFocusedOnScreenShare && focusedStreamKey && hasFocusedStreamAudio && canControlFocusedStreamVolume && (
 								<MediaVerticalVolumeControl
 									volume={focusedStreamVolume / 100}
 									isMuted={isFocusedStreamMuted}

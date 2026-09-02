@@ -404,7 +404,7 @@ msgstr "{count, plural, one {# κοινή κοινότητα} other {# κοιν�
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# άλλος} other {# άλλοι}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:495
+#: src/features/voice/components/VoiceCallView.tsx:506
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# συμμετέχων στην κλήση} other {# συμμετέχοντες στην κλήση}}"
 
@@ -4689,7 +4689,7 @@ msgid "Back to sticker"
 msgstr "Επιστροφή στο αυτοκόλλητο"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:110
+#: src/features/voice/components/VoiceCallView.tsx:114
 msgid "Back to voice channel"
 msgstr "Επιστροφή στο κανάλι φωνής"
 
@@ -8184,7 +8184,7 @@ msgstr "Συνδεδεμένοι στην ομιλία"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:89
+#: src/features/voice/components/VoiceCallView.tsx:93
 msgid "Connecting..."
 msgstr "Σύνδεση..."
 
@@ -8245,7 +8245,7 @@ msgid "Connection removed"
 msgstr "Η σύνδεση καταργήθηκε"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:114
+#: src/features/voice/components/VoiceCallView.tsx:118
 msgid "Connection stats"
 msgstr "Στατιστικά σύνδεσης"
 
@@ -11459,7 +11459,7 @@ msgstr "Αποσύνδεση socket"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:98
+#: src/features/voice/components/VoiceCallView.tsx:102
 msgid "Disconnected"
 msgstr "Αποσυνδέθηκε"
 
@@ -13149,7 +13149,7 @@ msgstr "Εισαγωγή κωδικού"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:106
+#: src/features/voice/components/VoiceCallView.tsx:110
 msgid "Enter fullscreen"
 msgstr "Πλήρης οθόνη"
 
@@ -13517,7 +13517,7 @@ msgstr "Έξοδος"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:102
+#: src/features/voice/components/VoiceCallView.tsx:106
 msgid "Exit fullscreen"
 msgstr "Έξοδος από πλήρη οθόνη"
 
@@ -24978,7 +24978,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Η επανασύνδεση ήταν επιτυχής. Επιλέξτε ξανά μια οθόνη, αν θέλετε να συνεχίσετε την προηγούμενη ροή σας."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:93
+#: src/features/voice/components/VoiceCallView.tsx:97
 msgid "Reconnecting..."
 msgstr "Επανασύνδεση..."
 
@@ -35895,7 +35895,7 @@ msgid "View call"
 msgstr "Προβολή κλήσης"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:119
+#: src/features/voice/components/VoiceCallView.tsx:123
 msgid "View call controls"
 msgstr "Προβολή στοιχείων κλήσης"
 
