@@ -28,10 +28,17 @@ const PROTOCOL_TOPIC = 'fluxer.rtc.codec-negotiation.v1';
 const SELECT_PROTOCOL_OP = 1;
 const SESSION_UPDATE_OP = 14;
 const TEXT_ENCODER = new TextEncoder();
-const TEXT_DECODER = new TextDecoder();
+const TEXT_DECODER = new TextDecoder('utf-8', {fatal: true});
+const NEGOTIATION_MESSAGE_BYTES_MAX = 16 * 1024;
+const CODEC_ADVERTISEMENTS_MAX = 16;
+const NEGOTIATION_IDENTIFIER_CHARS_MAX = 256;
+const EXPERIMENTS_MAX = 16;
+const EXPERIMENT_NAME_CHARS_MAX = 128;
+const RTP_PAYLOAD_TYPE_MAX = 255;
+const CODEC_PRIORITY_MAX = 65_535;
 const CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
 const SOFTWARE_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'vp9', 'h264', 'vp8', 'h265'];
-const COMPATIBILITY_FALLBACK_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['vp9', 'vp8'];
+const COMPATIBILITY_FALLBACK_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['h264', 'vp9', 'vp8'];
 const BASELINE_VIDEO_CODEC: VideoCodec = 'vp8';
 const VIDEO_CODEC_NAMES: Record<VideoCodec, FluxerVideoCodecName> = {
 	av1: 'AV1',
@@ -393,8 +400,16 @@ function isBooleanOrUndefined(value: unknown): value is boolean | undefined {
 	return value === undefined || typeof value === 'boolean';
 }
 
-function isNumberOrUndefined(value: unknown): value is number | undefined {
-	return value === undefined || typeof value === 'number';
+function isBoundedInteger(value: unknown, maximum: number): value is number {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 && value <= maximum;
+}
+
+function isBoundedIntegerOrUndefined(value: unknown, maximum: number): value is number | undefined {
+	return value === undefined || isBoundedInteger(value, maximum);
+}
+
+function isBoundedString(value: unknown, maximumLength: number): value is string {
+	return typeof value === 'string' && value.length > 0 && value.length <= maximumLength;
 }
 
 function isFluxerVideoCodecName(value: unknown): value is FluxerVideoCodecName {
@@ -414,16 +429,22 @@ function isCodecAdvertisement(value: unknown): value is FluxerCodecAdvertisement
 	return (
 		isFluxerCodecName(value.name) &&
 		isFluxerCodecType(value.type) &&
-		typeof value.payload_type === 'number' &&
-		isNumberOrUndefined(value.rtx_payload_type) &&
-		typeof value.priority === 'number' &&
+		((value.name === 'opus' && value.type === 'audio') || (value.name !== 'opus' && value.type === 'video')) &&
+		isBoundedInteger(value.payload_type, RTP_PAYLOAD_TYPE_MAX) &&
+		isBoundedIntegerOrUndefined(value.rtx_payload_type, RTP_PAYLOAD_TYPE_MAX) &&
+		isBoundedInteger(value.priority, CODEC_PRIORITY_MAX) &&
 		isBooleanOrUndefined(value.encode) &&
 		isBooleanOrUndefined(value.decode)
 	);
 }
 
 function isCodecAdvertisementList(value: unknown): value is Array<FluxerCodecAdvertisement> {
-	return Array.isArray(value) && value.every(isCodecAdvertisement);
+	return (
+		Array.isArray(value) &&
+		value.length > 0 &&
+		value.length <= CODEC_ADVERTISEMENTS_MAX &&
+		value.every(isCodecAdvertisement)
+	);
 }
 
 function isSelectProtocolMessage(value: unknown): value is FluxerSelectProtocolMessage {
@@ -434,9 +455,11 @@ function isSelectProtocolMessage(value: unknown): value is FluxerSelectProtocolM
 		isObject(data) &&
 		data.mode === 'livekit-sfu' &&
 		isCodecAdvertisementList(value.d.codecs) &&
-		(typeof value.d.rtc_connection_id === 'string' || value.d.rtc_connection_id === null) &&
+		(isBoundedString(value.d.rtc_connection_id, NEGOTIATION_IDENTIFIER_CHARS_MAX) ||
+			value.d.rtc_connection_id === null) &&
 		Array.isArray(value.d.experiments) &&
-		value.d.experiments.every((experiment) => typeof experiment === 'string')
+		value.d.experiments.length <= EXPERIMENTS_MAX &&
+		value.d.experiments.every((experiment) => isBoundedString(experiment, EXPERIMENT_NAME_CHARS_MAX))
 	);
 }
 
@@ -455,13 +478,14 @@ function isSessionUpdateMessage(value: unknown): value is FluxerSessionUpdateMes
 	if (!isObject(value) || value.op !== SESSION_UPDATE_OP || !isObject(value.d)) return false;
 	return (
 		isFluxerVideoCodecName(value.d.video_codec) &&
-		typeof value.d.media_session_id === 'string' &&
+		isBoundedString(value.d.media_session_id, NEGOTIATION_IDENTIFIER_CHARS_MAX) &&
 		isNegotiationReason(value.d.reason) &&
 		isCodecAdvertisementList(value.d.codecs)
 	);
 }
 
 function parseMessage(payload: Uint8Array): FluxerCodecNegotiationMessage | null {
+	if (payload.byteLength === 0 || payload.byteLength > NEGOTIATION_MESSAGE_BYTES_MAX) return null;
 	try {
 		const parsed = JSON.parse(TEXT_DECODER.decode(payload)) as unknown;
 		if (isSelectProtocolMessage(parsed)) return parsed;

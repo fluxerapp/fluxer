@@ -16,7 +16,9 @@ import {
 import {Store} from '@app/features/voice/engine/Store';
 import {selectVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
+import {createVoiceMediaIdentity} from '@app/features/voice/engine/VoiceMediaIdentity';
 import {getStreamKeyForParticipantIdentity} from '@app/features/voice/engine/VoiceStreamWatchState';
+import {isScreenShareVideoCodecValue} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareNativePublishOptions';
 import {
 	type LocalParticipant,
 	type Participant,
@@ -40,7 +42,11 @@ const COMMIT_OP = 3;
 const ABORT_OP = 4;
 const BREAK_OP = 5;
 const TEXT_ENCODER = new TextEncoder();
-const TEXT_DECODER = new TextDecoder();
+const TEXT_DECODER = new TextDecoder('utf-8', {fatal: true});
+const MIGRATION_MESSAGE_BYTES_MAX = 4096;
+const MIGRATION_IDENTIFIER_CHARS_MAX = 256;
+const TRACK_SID_CHARS_MAX = 256;
+const MIGRATION_REASON_CHARS_MAX = 512;
 const DEFAULT_READY_TIMEOUT_MS = 5000;
 const REMOTE_READY_PROBE_TIMEOUT_MS = 6500;
 const REMOTE_MIGRATION_STATE_TIMEOUT_MS = 10000;
@@ -134,33 +140,35 @@ interface ReadyProbe {
 }
 
 function createId(prefix: string): string {
-	const cryptoObject = globalThis.crypto as Crypto | undefined;
-	if (typeof cryptoObject?.randomUUID === 'function') return `${prefix}_${cryptoObject.randomUUID()}`;
-	return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+	return `${prefix}_${createVoiceMediaIdentity()}`;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return value !== null && typeof value === 'object';
 }
 
-function isVideoCodec(value: unknown): value is VideoCodec {
-	return value === 'av1' || value === 'h265' || value === 'h264' || value === 'vp9' || value === 'vp8';
+function isBoundedString(value: unknown, maximumLength: number): value is string {
+	return typeof value === 'string' && value.length > 0 && value.length <= maximumLength;
 }
 
-function isStringOrNull(value: unknown): value is string | null {
-	return typeof value === 'string' || value === null;
+function isBoundedStringOrNull(value: unknown, maximumLength: number): value is string | null {
+	return value === null || isBoundedString(value, maximumLength);
+}
+
+function isMigrationGeneration(value: unknown): value is number {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
 function isCandidateMessage(message: unknown): message is ScreenShareMigrationCandidateMessage {
 	if (!isObject(message)) return false;
 	if (message.op !== CANDIDATE_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.previous_track_sid) &&
-		typeof message.d.candidate_track_sid === 'string' &&
-		isVideoCodec(message.d.codec) &&
-		typeof message.d.reason === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.previous_track_sid, TRACK_SID_CHARS_MAX) &&
+		isBoundedString(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX) &&
+		isScreenShareVideoCodecValue(message.d.codec) &&
+		isBoundedString(message.d.reason, MIGRATION_REASON_CHARS_MAX)
 	);
 }
 
@@ -168,11 +176,11 @@ function isBreakMessage(message: unknown): message is ScreenShareMigrationBreakM
 	if (!isObject(message)) return false;
 	if (message.op !== BREAK_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.previous_track_sid) &&
-		isVideoCodec(message.d.codec) &&
-		typeof message.d.reason === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.previous_track_sid, TRACK_SID_CHARS_MAX) &&
+		isScreenShareVideoCodecValue(message.d.codec) &&
+		isBoundedString(message.d.reason, MIGRATION_REASON_CHARS_MAX)
 	);
 }
 
@@ -180,9 +188,9 @@ function isReadyMessage(message: unknown): message is ScreenShareMigrationReadyM
 	if (!isObject(message)) return false;
 	if (message.op !== READY_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		typeof message.d.candidate_track_sid === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedString(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX)
 	);
 }
 
@@ -190,10 +198,10 @@ function isCommitMessage(message: unknown): message is ScreenShareMigrationCommi
 	if (!isObject(message)) return false;
 	if (message.op !== COMMIT_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.previous_track_sid) &&
-		typeof message.d.candidate_track_sid === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.previous_track_sid, TRACK_SID_CHARS_MAX) &&
+		isBoundedString(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX)
 	);
 }
 
@@ -201,14 +209,15 @@ function isAbortMessage(message: unknown): message is ScreenShareMigrationAbortM
 	if (!isObject(message)) return false;
 	if (message.op !== ABORT_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.candidate_track_sid) &&
-		typeof message.d.reason === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX) &&
+		isBoundedString(message.d.reason, MIGRATION_REASON_CHARS_MAX)
 	);
 }
 
 export function parseScreenShareMigrationMessage(payload: Uint8Array): ScreenShareMigrationMessage | null {
+	if (payload.byteLength === 0 || payload.byteLength > MIGRATION_MESSAGE_BYTES_MAX) return null;
 	try {
 		const parsed = JSON.parse(TEXT_DECODER.decode(payload)) as unknown;
 		if (!isObject(parsed)) return null;
