@@ -276,7 +276,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 				this.log.debug(`setting degradationPreference to ${preference}`, this.logContext);
 				const params = this.sender.getParameters();
 				params.degradationPreference = preference;
-				this.sender.setParameters(params);
+				await this.sender.setParameters(params);
 			} catch (e: unknown) {
 				this.log.warn(`failed to set degradationPreference`, {error: e, ...this.logContext});
 			}
