@@ -179,8 +179,8 @@ interface BuiltInBackground {
 type BackgroundItemType = BuiltInBackground | BackgroundImage;
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'];
-const ALLOWED_FILE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4'];
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+const ALLOWED_FILE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm'];
 
 function isAllowedBackgroundFile(file: File): boolean {
 	if (ALLOWED_MIME_TYPES.includes(file.type)) {
