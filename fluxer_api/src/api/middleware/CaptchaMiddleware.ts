@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Headers} from '@fluxer/constants/src/Headers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CaptchaRequiredError, InvalidCaptchaError} from '@fluxer/errors/src/CaptchaErrors';
 import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
@@ -55,13 +56,12 @@ export async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
 	const user = ctx.get('user') as User | undefined;
 	if (accountPolicyContactHasCapability(user?.email, 'captcha_exempt')) return;
 	if (userHasCaptchaExemptFlag(user)) return;
-	if (await requestContactHasCaptchaExemption(ctx.req.raw)) return;
 	if (await requestUserHasCaptchaExemptFlag(ctx)) return;
-	const token = ctx.req.header('x-captcha-token');
+	const token = ctx.req.header(Headers.X_CAPTCHA_TOKEN);
 	if (!token) {
 		throw new CaptchaRequiredError();
 	}
-	const provider = resolveCaptchaProvider(captchaConfig, ctx.req.header('x-captcha-type'));
+	const provider = resolveCaptchaProvider(captchaConfig, ctx.req.header(Headers.X_CAPTCHA_TYPE));
 	const isValid = await provider.verify({
 		token,
 		remoteIp:
@@ -72,17 +72,6 @@ export async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
 	});
 	if (!isValid) {
 		throw new InvalidCaptchaError();
-	}
-}
-
-async function requestContactHasCaptchaExemption(request: Request): Promise<boolean> {
-	try {
-		const body = (await request.clone().json()) as unknown;
-		if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
-		const email = (body as Record<string, unknown>).email;
-		return typeof email === 'string' && accountPolicyContactHasCapability(email, 'captcha_exempt');
-	} catch {
-		return false;
 	}
 }
 
