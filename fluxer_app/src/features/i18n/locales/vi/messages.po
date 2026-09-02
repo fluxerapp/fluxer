@@ -33877,7 +33877,7 @@ msgid "Unknown message type"
 msgstr "Loại tin nhắn không xác định"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:410
+#: src/features/permissions/utils/PermissionUtils.ts:421
 msgid "Unknown permission"
 msgstr "Quyền không xác định"
 

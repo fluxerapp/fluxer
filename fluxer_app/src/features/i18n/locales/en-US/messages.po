@@ -33878,7 +33878,7 @@ msgid "Unknown message type"
 msgstr "Unknown message type"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:410
+#: src/features/permissions/utils/PermissionUtils.ts:421
 msgid "Unknown permission"
 msgstr "Unknown permission"
 

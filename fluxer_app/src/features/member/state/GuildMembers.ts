@@ -109,6 +109,16 @@ class GuildMembers {
 		return this.members[guildId]?.[userId] ?? null;
 	}
 
+	isMembershipKnown(guildId: string, userId?: string | null): boolean {
+		if (!userId) {
+			return false;
+		}
+		if (this.members[guildId]?.[userId]) {
+			return true;
+		}
+		return this.nonMembers[guildId]?.has(userId) ?? false;
+	}
+
 	isUserTimedOut(guildId: string | null, userId?: string | null): boolean {
 		return this.getCommunicationDisabledUntil(guildId, userId) !== null;
 	}
@@ -155,6 +165,7 @@ class GuildMembers {
 		if (!this.members[guild.id]) {
 			this.members[guild.id] = {};
 		}
+		delete this.nonMembers[guild.id];
 		const members = this.members[guild.id];
 		cacheGuildMemberUsers(guild.members);
 		for (const member of guild.members) {
@@ -205,6 +216,7 @@ class GuildMembers {
 	}
 
 	handleMemberRemove(guildId: string, userId: string): void {
+		this.markAsNonMember(guildId, userId);
 		const existingMembers = this.members[guildId];
 		if (!existingMembers) {
 			return;
@@ -277,22 +289,18 @@ class GuildMembers {
 			return;
 		}
 		const returnedIds = new Set(pending.members.map((record) => record.user.id));
-		const notFound: Array<string> = [];
 		for (const id of requested) {
 			if (!returnedIds.has(id)) {
-				notFound.push(id);
+				this.markAsNonMember(pending.guildId, id);
 			}
 		}
-		if (notFound.length === 0) {
-			return;
+	}
+
+	private markAsNonMember(guildId: string, userId: string): void {
+		if (!this.nonMembers[guildId]) {
+			this.nonMembers[guildId] = new Set();
 		}
-		if (!this.nonMembers[pending.guildId]) {
-			this.nonMembers[pending.guildId] = new Set();
-		}
-		const cache = this.nonMembers[pending.guildId];
-		for (const id of notFound) {
-			cache.add(id);
-		}
+		this.nonMembers[guildId].add(userId);
 	}
 
 	async fetchMembers(
@@ -462,7 +470,7 @@ class GuildMembers {
 		}
 		const generation = this.messageMemberRequestGeneration;
 		try {
-			await this.fetchMembers(guildId, {userIds, markMissingAsNonMembers: false});
+			await this.fetchMembers(guildId, {userIds, markMissingAsNonMembers: true});
 			if (generation === this.messageMemberRequestGeneration) {
 				this.forgetPendingMessageMembers(guildId, userIds);
 			}
