@@ -101,6 +101,7 @@ vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 const {startConfiguredDisplayScreenShare, switchConfiguredDisplayScreenShare} = await import(
 	'@app/features/voice/utils/ScreenShareStartFlow'
 );
+const {isScreenShareAudioCaptureError} = await import('@app/features/voice/utils/ScreenShareAudioCaptureError');
 const ActiveScreenShareSource = (await import('@app/features/voice/state/ActiveScreenShareSource')).default;
 
 beforeEach(() => {
@@ -129,6 +130,18 @@ describe('sharing a Fluxer-owned window while app audio is enabled', () => {
 		expect(call[1].systemAudio).toBe('exclude');
 		expect(call[1].windowAudio).toBe('exclude');
 		expect(armNativeAudioForNextCapture).not.toHaveBeenCalled();
+	});
+});
+
+describe('sharing another application window while app audio is enabled', () => {
+	test('arms native per-window audio and hard-fails when it cannot be armed', async () => {
+		armNativeAudioForNextCapture.mockResolvedValue(false);
+
+		await expect(
+			startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'}),
+		).rejects.toSatisfy(isScreenShareAudioCaptureError);
+		expect(armNativeAudioForNextCapture).toHaveBeenCalledWith('window:42:0');
+		expect(setScreenShareEnabled).not.toHaveBeenCalled();
 	});
 });
 

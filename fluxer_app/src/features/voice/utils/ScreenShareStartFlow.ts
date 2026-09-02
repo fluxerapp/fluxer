@@ -28,7 +28,10 @@ import {
 	disarmPendingNativeAudio,
 	getLastNativeAudioArmFailure,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
-import type {ScreenShareAudioCaptureDebugInfo} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
+import {
+	type ScreenShareAudioCaptureDebugInfo,
+	ScreenShareAudioCaptureError,
+} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import {
 	type DisplayShareEnvironment,
 	getDisplayShareEnvironment,
@@ -250,6 +253,11 @@ function degradeAudioToVideoOnly(
 	removeAudioFromCaptureOptions(captureOptions);
 }
 
+function failRequestedAudioCapture(debugInfo: ScreenShareAudioCaptureDebugInfo): never {
+	logger.warn('Screen share audio capture was requested but could not start', debugInfo);
+	throw new ScreenShareAudioCaptureError(debugInfo);
+}
+
 function cleanupNativeAudioAfterCaptureDidNotStart(mode: 'start' | 'switch'): void {
 	if (mode === 'switch') {
 		disarmPendingNativeAudio();
@@ -399,8 +407,7 @@ async function runConfiguredDisplayScreenShare(
 				});
 			}
 			if (!nativeAudioArmed) {
-				degradeAudioToVideoOnly(
-					captureOptions,
+				failRequestedAudioCapture(
 					buildAudioCaptureFailureDebug({
 						sourceId,
 						reason: getLastNativeAudioArmFailure()?.reason ?? 'linux-window-audio-route-unavailable',
@@ -425,7 +432,7 @@ async function runConfiguredDisplayScreenShare(
 					reason: getLastNativeAudioArmFailure()?.reason ?? 'system-audio-route-unavailable',
 				});
 				logger.warn('Desktop audio unavailable; aborting screen share because audio was requested', debugInfo);
-				degradeAudioToVideoOnly(captureOptions, debugInfo);
+				failRequestedAudioCapture(debugInfo);
 			}
 		} else if (linuxDesktopAudioSourceMode === 'none') {
 			removeAudioFromCaptureOptions(captureOptions);
@@ -444,8 +451,7 @@ async function runConfiguredDisplayScreenShare(
 				});
 			}
 			if (!nativeAudioArmed) {
-				degradeAudioToVideoOnly(
-					captureOptions,
+				failRequestedAudioCapture(
 					buildAudioCaptureFailureDebug({
 						sourceMode,
 						reason: getLastNativeAudioArmFailure()?.reason ?? 'linux-system-audio-route-unavailable',
@@ -477,7 +483,7 @@ async function runConfiguredDisplayScreenShare(
 					platform: electronApi.platform,
 					reason: debugInfo.reason,
 				});
-				degradeAudioToVideoOnly(captureOptions, debugInfo);
+				failRequestedAudioCapture(debugInfo);
 			}
 		}
 		if (
@@ -489,8 +495,7 @@ async function runConfiguredDisplayScreenShare(
 			electronApi.platform !== 'win32' &&
 			electronApi.platform !== 'linux'
 		) {
-			degradeAudioToVideoOnly(
-				captureOptions,
+			failRequestedAudioCapture(
 				buildAudioCaptureFailureDebug({
 					sourceId,
 					platform: electronApi.platform,
