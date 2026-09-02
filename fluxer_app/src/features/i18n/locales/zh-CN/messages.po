@@ -6115,8 +6115,8 @@ msgstr "已安排更改"
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:25
-msgid "Change Stream"
-msgstr "更改直播"
+msgid "Change stream"
+msgstr "更改流"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
@@ -23224,8 +23224,8 @@ msgstr "暂停通知"
 
 #. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
-msgid "Pause Preview When Fluxer Isn’t Focused"
-msgstr "未聚焦 Fluxer 时暂停预览"
+msgid "Pause preview when Fluxer isn’t focused"
+msgstr "未专注时暂停预览"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23821,17 +23821,17 @@ msgstr "弹出通话窗口"
 
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
-msgid "Pop Out Stream"
-msgstr "弹出串流"
+msgid "Pop out stream"
+msgstr "弹出视频流"
 
 #. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
-msgid "Pop Out User"
-msgstr "在新窗口中打开用户"
+msgid "Pop out user"
+msgstr "弹出用户"
 
 #. Voice menu action on desktop that opens the active participant camera feed in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
-msgid "Pop Out Video"
+msgid "Pop out video"
 msgstr "弹出视频"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
@@ -24048,14 +24048,11 @@ msgid "Preview button"
 msgstr "预览按钮"
 
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
 #: src/features/voice/components/VoiceSettingsMenus.tsx:617
 msgid "Preview camera"
-msgstr "预览摄像头"
-
-#. Voice menu action that opens a preview of the current user camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
-msgid "Preview Camera"
 msgstr "预览摄像头"
 
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
@@ -27166,7 +27163,7 @@ msgstr "已启用屏幕共享预览。"
 
 #. Voice screen share menu action that opens the screen share preview privacy controls.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
-msgid "Screen Share Privacy"
+msgid "Screen share privacy"
 msgstr "屏幕共享隐私"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -29016,7 +29013,7 @@ msgstr "显示我的摄像头"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
-msgid "Show My Screen Share"
+msgid "Show my screen share"
 msgstr "显示我的屏幕共享"
 
 #. Developer option label for showing the current user as typing.
@@ -30630,8 +30627,8 @@ msgstr "停止发言"
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:21
-msgid "Stop Streaming"
-msgstr "停止直播"
+msgid "Stop streaming"
+msgstr "停止串流"
 
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31

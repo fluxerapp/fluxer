@@ -6115,7 +6115,7 @@ msgstr "Änderung geplant"
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:25
-msgid "Change Stream"
+msgid "Change stream"
 msgstr "Stream ändern"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
@@ -23224,7 +23224,7 @@ msgstr "Benachrichtigungen pausieren"
 
 #. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
-msgid "Pause Preview When Fluxer Isn’t Focused"
+msgid "Pause preview when Fluxer isn’t focused"
 msgstr "Vorschau pausieren, wenn Fluxer nicht aktiv ist"
 
 #. Description shown for the emoji toggle while reduced motion is active.
@@ -23821,17 +23821,17 @@ msgstr "Anruf in einem separaten Fenster öffnen"
 
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
-msgid "Pop Out Stream"
+msgid "Pop out stream"
 msgstr "Stream auslagern"
 
 #. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
-msgid "Pop Out User"
+msgid "Pop out user"
 msgstr "Nutzer auslagern"
 
 #. Voice menu action on desktop that opens the active participant camera feed in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
-msgid "Pop Out Video"
+msgid "Pop out video"
 msgstr "Video auslagern"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
@@ -24048,15 +24048,12 @@ msgid "Preview button"
 msgstr "Vorschau-Button"
 
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
 #: src/features/voice/components/VoiceSettingsMenus.tsx:617
 msgid "Preview camera"
 msgstr "Kameravorschau"
-
-#. Voice menu action that opens a preview of the current user camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
-msgid "Preview Camera"
-msgstr "Kamera-Vorschau"
 
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
@@ -27166,8 +27163,8 @@ msgstr "Bildschirmfreigabe-Vorschauen sind aktiviert."
 
 #. Voice screen share menu action that opens the screen share preview privacy controls.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
-msgid "Screen Share Privacy"
-msgstr "Datenschutz bei Bildschirmfreigabe"
+msgid "Screen share privacy"
+msgstr "Bildschirmfreigabe-Datenschutz"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
@@ -29016,7 +29013,7 @@ msgstr "Eigene Kamera anzeigen"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
-msgid "Show My Screen Share"
+msgid "Show my screen share"
 msgstr "Eigene Bildschirmfreigabe anzeigen"
 
 #. Developer option label for showing the current user as typing.
@@ -30630,7 +30627,7 @@ msgstr "Sprachnachricht stoppen"
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:21
-msgid "Stop Streaming"
+msgid "Stop streaming"
 msgstr "Streaming beenden"
 
 #. Confirmation prompt in the links tab.

@@ -6115,7 +6115,7 @@ msgstr "Wijziging gepland"
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:25
-msgid "Change Stream"
+msgid "Change stream"
 msgstr "Stream wijzigen"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
@@ -23224,8 +23224,8 @@ msgstr "Meldingen pauzeren"
 
 #. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
-msgid "Pause Preview When Fluxer Isn’t Focused"
-msgstr "Onderbreken voorbeeld wanneer Fluxer niet actief is"
+msgid "Pause preview when Fluxer isn’t focused"
+msgstr "Onderbreken van preview wanneer Fluxer niet actief is"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23821,18 +23821,18 @@ msgstr "Gesprek in apart venster openen"
 
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
-msgid "Pop Out Stream"
-msgstr "Stream uitklappen"
+msgid "Pop out stream"
+msgstr "Stream uitvouwen"
 
 #. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
-msgid "Pop Out User"
+msgid "Pop out user"
 msgstr "Gebruiker uitvouwen"
 
 #. Voice menu action on desktop that opens the active participant camera feed in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
-msgid "Pop Out Video"
-msgstr "Video uitklappen"
+msgid "Pop out video"
+msgstr "Video uitvouwen"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:19
@@ -24048,15 +24048,12 @@ msgid "Preview button"
 msgstr "Voorbeeldknop"
 
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
 #: src/features/voice/components/VoiceSettingsMenus.tsx:617
 msgid "Preview camera"
 msgstr "Cameravoorbeeld"
-
-#. Voice menu action that opens a preview of the current user camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
-msgid "Preview Camera"
-msgstr "CameraVoorvertoning"
 
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
@@ -27166,7 +27163,7 @@ msgstr "Voorbeeldbeelden van schermdeling zijn ingeschakeld."
 
 #. Voice screen share menu action that opens the screen share preview privacy controls.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
-msgid "Screen Share Privacy"
+msgid "Screen share privacy"
 msgstr "Privacy scherm delen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -29016,7 +29013,7 @@ msgstr "Mijn camera tonen"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
-msgid "Show My Screen Share"
+msgid "Show my screen share"
 msgstr "Mijn scherm delen tonen"
 
 #. Developer option label for showing the current user as typing.
@@ -30630,8 +30627,8 @@ msgstr "Spraakbericht stoppen"
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:21
-msgid "Stop Streaming"
-msgstr "Stop met streamen"
+msgid "Stop streaming"
+msgstr "Stoppen met streamen"
 
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31

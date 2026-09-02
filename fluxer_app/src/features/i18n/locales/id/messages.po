@@ -6115,8 +6115,8 @@ msgstr "Perubahan terjadwal"
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:25
-msgid "Change Stream"
-msgstr "Ubah Aliran"
+msgid "Change stream"
+msgstr "Ubah aliran"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
@@ -23224,8 +23224,8 @@ msgstr "Jeda notifikasi"
 
 #. Voice screen share menu preference that pauses the local stream preview while the app is unfocused.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:28
-msgid "Pause Preview When Fluxer Isn’t Focused"
-msgstr "Jeda Pratinjau Saat Fluxer Tidak Aktif"
+msgid "Pause preview when Fluxer isn’t focused"
+msgstr "Jeda pratinjau saat Fluxer tidak fokus"
 
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
@@ -23821,18 +23821,18 @@ msgstr "Buka panggilan di jendela terpisah"
 
 #. Voice menu action on desktop that opens the participant screen share in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:57
-msgid "Pop Out Stream"
-msgstr "Tampilkan Aliran"
+msgid "Pop out stream"
+msgstr "Keluarkan stream"
 
 #. Voice menu action on desktop that opens the participant placeholder tile in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:49
-msgid "Pop Out User"
-msgstr "Buka Pengguna"
+msgid "Pop out user"
+msgstr "Tampilkan pengguna"
 
 #. Voice menu action on desktop that opens the active participant camera feed in a separate window.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:45
-msgid "Pop Out Video"
-msgstr "Tampilkan Video"
+msgid "Pop out video"
+msgstr "Tampilkan video"
 
 #. Overlay text shown on a voice participant tile while it lives in a separate popped-out window.
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:19
@@ -24048,15 +24048,12 @@ msgid "Preview button"
 msgstr "Tombol pratinjau"
 
 #. Button label in the mobile video settings bottom sheet. Opens the camera preview.
+#. Voice menu action that opens a preview of the current user camera.
+#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:80
 #: src/features/voice/components/VoiceSettingsMenus.tsx:617
 msgid "Preview camera"
 msgstr "Pratinjau kamera"
-
-#. Voice menu action that opens a preview of the current user camera.
-#: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
-msgid "Preview Camera"
-msgstr "Pratinjau Kamera"
 
 #. Status text on the placeholder shown in the voice call view when the user has hidden a remote stream preview.
 #: src/features/voice/components/HiddenStreamPlaceholder.tsx:10
@@ -27166,8 +27163,8 @@ msgstr "Pratinjau berbagi layar diaktifkan."
 
 #. Voice screen share menu action that opens the screen share preview privacy controls.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:32
-msgid "Screen Share Privacy"
-msgstr "Privasi Berbagi Layar"
+msgid "Screen share privacy"
+msgstr "Privasi berbagi layar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
@@ -29016,8 +29013,8 @@ msgstr "Tampilkan kamera saya"
 
 #. Voice display preference checkbox that controls whether the current user sees their own screen share tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:97
-msgid "Show My Screen Share"
-msgstr "Tampilkan Layar Saya"
+msgid "Show my screen share"
+msgstr "Tampilkan berbagi layar saya"
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
@@ -30630,8 +30627,8 @@ msgstr "Berhenti bicara"
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
 #: src/features/voice/components/ActiveScreenShareMenu.tsx:21
-msgid "Stop Streaming"
-msgstr "Hentikan Streaming"
+msgid "Stop streaming"
+msgstr "Hentikan streaming"
 
 #. Confirmation prompt in the links tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:31

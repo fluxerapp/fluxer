@@ -19,11 +19,11 @@ import {MonitorPlayIcon, StopCircleIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
 const STOP_STREAMING_DESCRIPTOR = msg({
-	message: 'Stop Streaming',
+	message: 'Stop streaming',
 	comment: 'Danger action that stops the active screen share.',
 });
 const CHANGE_STREAM_DESCRIPTOR = msg({
-	message: 'Change Stream',
+	message: 'Change stream',
 	comment: 'Action that opens the source picker for the active screen share.',
 });
 const logger = new Logger('ActiveScreenShareMenu');
