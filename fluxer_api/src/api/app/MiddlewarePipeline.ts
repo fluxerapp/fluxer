@@ -36,6 +36,20 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	const resolvedHeader = resolveClientIpHeaderName(clientIpHeaderName);
 	routes.use('/webhooks/:webhook_id/:token', cors({origins: '*'}));
 	routes.use('/webhooks/:webhook_id/:token/messages/:message_id', cors({origins: '*'}));
+	routes.use(
+		'/.well-known/fluxer',
+		cors({
+			origins: '*',
+			methods: ['GET', 'HEAD', 'OPTIONS'],
+			allowedHeaders: [
+				HttpHeaders.ACCEPT,
+				HttpHeaders.CONTENT_TYPE,
+				HttpHeaders.IF_MODIFIED_SINCE,
+				HttpHeaders.IF_NONE_MATCH,
+			],
+			exposedHeaders: [HttpHeaders.ETAG, HttpHeaders.LAST_MODIFIED],
+		}),
+	);
 	applyMiddlewareStack(routes, {
 		requestId: {},
 		cors: {origins: corsOrigins, exposedHeaders: [HttpHeaders.X_FLUXER_VERSION]},

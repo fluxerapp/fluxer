@@ -13,7 +13,10 @@ import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '../RateLimitConfig';
 import type {HonoEnv} from '../types/HonoEnv';
+import {type DiscoveryValidators, isDiscoveryNotModified, nextDiscoveryValidators} from './DiscoveryValidators';
 import type {InstanceCaptchaEffectiveConfig} from './InstanceConfigRepository';
+
+let discoveryValidators: DiscoveryValidators | null = null;
 
 function buildDiscoveryStaticInput(
 	gifService: GifService | undefined,
@@ -131,6 +134,18 @@ export function InstanceController(app: Hono<HonoEnv>) {
 					limits,
 				},
 			);
+			discoveryValidators = nextDiscoveryValidators(response, discoveryValidators);
+			ctx.header('ETag', discoveryValidators.etag);
+			ctx.header('Last-Modified', discoveryValidators.lastModified.toUTCString());
+			if (
+				isDiscoveryNotModified(
+					discoveryValidators,
+					ctx.req.header('If-None-Match'),
+					ctx.req.header('If-Modified-Since'),
+				)
+			) {
+				return ctx.body(null, 304);
+			}
 			return ctx.json(response);
 		},
 	);
