@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, randomBytes, randomUUID} from 'node:crypto';
+import {getSameIpDecisionKey, getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {Logger} from '../../Logger';
@@ -19,7 +20,7 @@ interface PhoneAttemptRiskThresholds {
 	userDistinctCountriesRequireInbound: number;
 	ipDistinctPhonesHardBlock: number;
 	ipDistinctUsersHardBlock: number;
-	cidr24DistinctPhonesHardBlock: number;
+	subnetDistinctPhonesHardBlock: number;
 }
 
 const DEFAULT_THRESHOLDS: PhoneAttemptRiskThresholds = {
@@ -28,7 +29,7 @@ const DEFAULT_THRESHOLDS: PhoneAttemptRiskThresholds = {
 	userDistinctCountriesRequireInbound: 3,
 	ipDistinctPhonesHardBlock: 10,
 	ipDistinctUsersHardBlock: 3,
-	cidr24DistinctPhonesHardBlock: 30,
+	subnetDistinctPhonesHardBlock: 30,
 };
 
 type PhoneAttemptRiskDecision = 'allow' | 'require_captcha' | 'require_inbound' | 'hard_block';
@@ -38,10 +39,10 @@ type PhoneAttemptRiskReason =
 	| 'user_country_sweep'
 	| 'ip_distinct_phones'
 	| 'ip_user_pool'
-	| 'cidr24_distinct_phones'
+	| 'subnet_distinct_phones'
 	| 'user_already_hard_blocked'
 	| 'ip_already_hard_blocked'
-	| 'cidr24_already_hard_blocked';
+	| 'subnet_already_hard_blocked';
 
 interface PhoneAttemptRiskEvaluation {
 	decision: PhoneAttemptRiskDecision;
@@ -53,7 +54,7 @@ interface PhoneAttemptRiskEvaluation {
 		userDistinctCountries: number;
 		ipDistinctPhones: number;
 		ipDistinctUsers: number;
-		cidr24DistinctPhones: number;
+		subnetDistinctPhones: number;
 	};
 }
 
@@ -64,7 +65,7 @@ const ZERO_COUNTERS: PhoneAttemptRiskEvaluation['counters'] = {
 	userDistinctCountries: 0,
 	ipDistinctPhones: 0,
 	ipDistinctUsers: 0,
-	cidr24DistinctPhones: 0,
+	subnetDistinctPhones: 0,
 };
 
 interface PhoneAttemptRiskInput {
@@ -105,23 +106,16 @@ function prefix6(phone: string): string {
 	return phone.slice(0, 6);
 }
 
-function cidr24For(ip: string): string | null {
-	if (!ip.includes('.')) return null;
-	const parts = ip.split('.');
-	if (parts.length !== 4) return null;
-	return `${parts[0]}.${parts[1]}.${parts[2]}.0/24`;
-}
-
 function userKey(userId: string | bigint, suffix: string): string {
 	return `${KEY_PREFIX}user:${String(userId)}:${suffix}`;
 }
 
 function ipKey(ip: string, suffix: string): string {
-	return `${KEY_PREFIX}ip:${ip}:${suffix}`;
+	return `${KEY_PREFIX}ip:${getSameIpDecisionKey(ip) ?? ip}:${suffix}`;
 }
 
-function cidr24Key(cidr: string, suffix: string): string {
-	return `${KEY_PREFIX}ip24:${cidr}:${suffix}`;
+function subnetKey(subnet: string, suffix: string): string {
+	return `${KEY_PREFIX}ipnet:${subnet}:${suffix}`;
 }
 
 type PhoneAttemptHardBlockHook = (params: {
@@ -166,10 +160,10 @@ export class PhoneAttemptRiskService {
 				evaluation.reason = 'ip_already_hard_blocked';
 				return evaluation;
 			}
-			const cidr = cidr24For(input.clientIp);
-			if (cidr && (await this.kv.exists(cidr24Key(cidr, 'hard_block'))) > 0) {
+			const subnet = getSubnet(input.clientIp) ?? input.clientIp;
+			if ((await this.kv.exists(subnetKey(subnet, 'hard_block'))) > 0) {
 				evaluation.decision = 'hard_block';
-				evaluation.reason = 'cidr24_already_hard_blocked';
+				evaluation.reason = 'subnet_already_hard_blocked';
 				return evaluation;
 			}
 		}
@@ -212,15 +206,13 @@ export class PhoneAttemptRiskService {
 				evaluation.reason = 'ip_user_pool';
 				return evaluation;
 			}
-			const cidr = cidr24For(input.clientIp);
-			if (cidr) {
-				const cidr24DistinctPhones = await this.kv.scard(cidr24Key(cidr, 'phones'));
-				evaluation.counters.cidr24DistinctPhones = cidr24DistinctPhones;
-				if (cidr24DistinctPhones >= this.thresholds.cidr24DistinctPhonesHardBlock) {
-					evaluation.decision = 'hard_block';
-					evaluation.reason = 'cidr24_distinct_phones';
-					return evaluation;
-				}
+			const subnet = getSubnet(input.clientIp) ?? input.clientIp;
+			const subnetDistinctPhones = await this.kv.scard(subnetKey(subnet, 'phones'));
+			evaluation.counters.subnetDistinctPhones = subnetDistinctPhones;
+			if (subnetDistinctPhones >= this.thresholds.subnetDistinctPhonesHardBlock) {
+				evaluation.decision = 'hard_block';
+				evaluation.reason = 'subnet_distinct_phones';
+				return evaluation;
 			}
 		}
 		return evaluation;
@@ -248,16 +240,14 @@ export class PhoneAttemptRiskService {
 		}
 		let ipDistinctPhones = 0;
 		let ipDistinctUsers = 0;
-		let cidr24DistinctPhones = 0;
+		let subnetDistinctPhones = 0;
 		if (input.clientIp) {
 			ipDistinctPhones = await this.bumpSet(ipKey(input.clientIp, 'phones'), hmac(input.phone, key));
 			if (input.userId !== null && input.userId !== undefined && input.userId !== '') {
 				ipDistinctUsers = await this.bumpSet(ipKey(input.clientIp, 'users'), hmac(String(input.userId), key));
 			}
-			const cidr = cidr24For(input.clientIp);
-			if (cidr) {
-				cidr24DistinctPhones = await this.bumpSet(cidr24Key(cidr, 'phones'), hmac(input.phone, key));
-			}
+			const subnet = getSubnet(input.clientIp) ?? input.clientIp;
+			subnetDistinctPhones = await this.bumpSet(subnetKey(subnet, 'phones'), hmac(input.phone, key));
 		}
 		const counters = {
 			userAttempts,
@@ -266,7 +256,7 @@ export class PhoneAttemptRiskService {
 			userDistinctCountries,
 			ipDistinctPhones,
 			ipDistinctUsers,
-			cidr24DistinctPhones,
+			subnetDistinctPhones,
 		};
 		const tripped = this.tripsAt(counters);
 		if (tripped !== null) {
@@ -290,8 +280,8 @@ export class PhoneAttemptRiskService {
 		) {
 			return 'ip_user_pool';
 		}
-		if (counters.cidr24DistinctPhones >= this.thresholds.cidr24DistinctPhonesHardBlock) {
-			return 'cidr24_distinct_phones';
+		if (counters.subnetDistinctPhones >= this.thresholds.subnetDistinctPhonesHardBlock) {
+			return 'subnet_distinct_phones';
 		}
 		return null;
 	}
@@ -306,11 +296,9 @@ export class PhoneAttemptRiskService {
 			await this.kv.setex(userKey(input.userId, 'hard_block'), HARD_BLOCK_TTL_SECONDS, '1');
 		} else if (reason === 'ip_user_pool' && input.clientIp) {
 			await this.kv.setex(ipKey(input.clientIp, 'hard_block'), IP_BLOCK_TTL_SECONDS, '1');
-		} else if (reason === 'cidr24_distinct_phones' && input.clientIp) {
-			const cidr = cidr24For(input.clientIp);
-			if (cidr) {
-				await this.kv.setex(cidr24Key(cidr, 'hard_block'), IP_BLOCK_TTL_SECONDS, '1');
-			}
+		} else if (reason === 'subnet_distinct_phones' && input.clientIp) {
+			const subnet = getSubnet(input.clientIp) ?? input.clientIp;
+			await this.kv.setex(subnetKey(subnet, 'hard_block'), IP_BLOCK_TTL_SECONDS, '1');
 		}
 		Logger.warn(
 			{
