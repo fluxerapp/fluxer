@@ -128,7 +128,9 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 			{autoBind: true},
 		);
 		this._disposers = [];
-		this.persistenceHydrationPromise = this.initPersistence();
+		this.persistenceHydrationPromise = this.initPersistence().catch((error) => {
+			logger.error('Failed to hydrate LocalVoiceState from persistence', error);
+		});
 		this.initializePersistedDefaultSync();
 		this.initializePermissionSync();
 		this.initializeDevicePermissionSync();
