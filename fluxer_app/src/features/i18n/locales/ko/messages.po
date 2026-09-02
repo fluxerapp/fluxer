@@ -4713,7 +4713,7 @@ msgstr "백엔드 프리미엄 혜택 비활성화됨"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "배경"
 
@@ -5600,7 +5600,7 @@ msgstr "카메라 기기"
 msgid "Camera effects"
 msgstr "카메라 효과"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "카메라 오류"
 
@@ -5745,7 +5745,7 @@ msgstr "여기에 파일을 올릴 수 없어요"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "취소"
@@ -5993,7 +5993,7 @@ msgstr "가운데 정렬"
 msgid "Change avatar"
 msgstr "프로필 사진 변경"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "배경 변경"
 
@@ -14393,7 +14393,7 @@ msgstr "필터링"
 msgid "Filtering by {language}"
 msgstr "{language}(으)로 필터링"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "카메라 준비 중..."
 
@@ -17094,7 +17094,7 @@ msgstr "계승됨"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "{inheritedFromLabel}에서 상속됨"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "카메라 초기화 중..."
 
@@ -22795,7 +22795,7 @@ msgstr "운영체제"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "커뮤니티 및 채널별 미확인 배지 제어 기능을 사용하도록 설정합니다"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "카메라 최적화 중..."
 

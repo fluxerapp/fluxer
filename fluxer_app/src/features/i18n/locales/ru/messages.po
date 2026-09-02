@@ -4713,7 +4713,7 @@ msgstr "Преимущества Plutonium для бэкенда отключе�
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "Фон"
 
@@ -5600,7 +5600,7 @@ msgstr "Камера"
 msgid "Camera effects"
 msgstr "Эффекты камеры"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "Ошибка камеры"
 
@@ -5745,7 +5745,7 @@ msgstr "Не удается загрузить файлы сюда"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "Отмена"
@@ -5993,7 +5993,7 @@ msgstr "По центру"
 msgid "Change avatar"
 msgstr "Сменить фото профиля"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "Изменить фон"
 
@@ -14393,7 +14393,7 @@ msgstr "Фильтрация"
 msgid "Filtering by {language}"
 msgstr "Фильтр по {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "Завершение настройки камеры..."
 
@@ -17094,7 +17094,7 @@ msgstr "Унаследовано"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Унаследовано от {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "Инициализация камеры..."
 
@@ -22795,7 +22795,7 @@ msgstr "Операционная система"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Включить экспериментальные настройки для отображения значков непрочитанных сообщений в отдельных сообществах и каналах"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "Оптимизация камеры..."
 

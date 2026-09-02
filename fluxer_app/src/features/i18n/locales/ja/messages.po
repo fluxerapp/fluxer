@@ -4713,7 +4713,7 @@ msgstr "バックエンドのプレミアム特典が無効です"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "背景"
 
@@ -5600,7 +5600,7 @@ msgstr "カメラデバイス"
 msgid "Camera effects"
 msgstr "カメラエフェクト"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "カメラエラー"
 
@@ -5745,7 +5745,7 @@ msgstr "ここにファイルをアップロードできません"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "キャンセル"
@@ -5993,7 +5993,7 @@ msgstr "中央揃え"
 msgid "Change avatar"
 msgstr "アバターを変更"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "背景を変更"
 
@@ -14393,7 +14393,7 @@ msgstr "フィルター"
 msgid "Filtering by {language}"
 msgstr "{language}で絞り込み中"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "カメラを準備中…"
 
@@ -17094,7 +17094,7 @@ msgstr "引き継ぎ"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "{inheritedFromLabel}から継承"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "カメラを初期化しています…"
 
@@ -22795,7 +22795,7 @@ msgstr "OS"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "コミュニティごと、チャンネルごとの未読バッジ表示設定を有効にする"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "カメラを最適化中…"
 

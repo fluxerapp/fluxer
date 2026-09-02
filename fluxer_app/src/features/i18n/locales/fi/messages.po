@@ -4713,7 +4713,7 @@ msgstr "Taustaohjelman premium-edut poistettu käytöstä"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "Tausta"
 
@@ -5600,7 +5600,7 @@ msgstr "Kamera"
 msgid "Camera effects"
 msgstr "Kameratehosteet"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "Kameravirhe"
 
@@ -5745,7 +5745,7 @@ msgstr "Tiedostojen lähetys ei onnistu tähän"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "Peruuta"
@@ -5993,7 +5993,7 @@ msgstr "Keskitetty"
 msgid "Change avatar"
 msgstr "Vaihda profiilikuva"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "Vaihda taustaa"
 
@@ -14393,7 +14393,7 @@ msgstr "Suodatus"
 msgid "Filtering by {language}"
 msgstr "Suodatus kielen mukaan: {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "Kameraa viimeistellään..."
 
@@ -17094,7 +17094,7 @@ msgstr "Peritty"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Peritty kohteesta {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "Kameraa käynnistetään..."
 
@@ -22795,7 +22795,7 @@ msgstr "Käyttöjärjestelmä"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Ota käyttöön kokeelliset asetukset, joilla voit hallita lukemattomien viestien merkkien näkyvyyttä erikseen jokaisessa yhteisössä ja kanavassa"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "Kameraa optimoidaan..."
 

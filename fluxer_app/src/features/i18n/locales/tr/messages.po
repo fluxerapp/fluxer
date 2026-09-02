@@ -4713,7 +4713,7 @@ msgstr "Arka uç premium avantajları devre dışı bırakıldı"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "Arka plan"
 
@@ -5600,7 +5600,7 @@ msgstr "Kamera cihazı"
 msgid "Camera effects"
 msgstr "Kamera efektleri"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "Kamera hatası"
 
@@ -5745,7 +5745,7 @@ msgstr "Buraya dosya yüklenemiyor"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "İptal"
@@ -5993,7 +5993,7 @@ msgstr "Ortalanmış"
 msgid "Change avatar"
 msgstr "Avatarı değiştir"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "Arka planı değiştir"
 
@@ -14393,7 +14393,7 @@ msgstr "Filtreleme"
 msgid "Filtering by {language}"
 msgstr "{language} diline göre filtreleniyor"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "Kamera hazırlanıyor..."
 
@@ -17094,7 +17094,7 @@ msgstr "Devralındı"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "{inheritedFromLabel} kaynağından devralındı"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "Kamera başlatılıyor..."
 
@@ -22795,7 +22795,7 @@ msgstr "İşletim sistemi"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Topluluk ve kanal bazında deneysel okunmamış rozet kontrollerine katılın"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "Kamera optimize ediliyor..."
 

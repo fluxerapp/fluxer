@@ -4713,7 +4713,7 @@ msgstr "Backend-premiumförmåner inaktiverade"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "Bakgrund"
 
@@ -5600,7 +5600,7 @@ msgstr "Kameraenhet"
 msgid "Camera effects"
 msgstr "Kameraeffekter"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "Kamerafel"
 
@@ -5745,7 +5745,7 @@ msgstr "Kan inte ladda upp filer här"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "Avbryt"
@@ -5993,7 +5993,7 @@ msgstr "Centrerad"
 msgid "Change avatar"
 msgstr "Ändra avatar"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "Ändra bakgrund"
 
@@ -14393,7 +14393,7 @@ msgstr "Filtrering"
 msgid "Filtering by {language}"
 msgstr "Filtrerar efter {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "Slutför kamera..."
 
@@ -17094,7 +17094,7 @@ msgstr "Ärvd"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Ärvt från {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "Initierar kamera..."
 
@@ -22795,7 +22795,7 @@ msgstr "Operativsystem"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Aktivera experimentella inställningar för att visa olästa meddelanden per grupp och kanal"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "Optimerar kamera..."
 

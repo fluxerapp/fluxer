@@ -4713,7 +4713,7 @@ msgstr "Backend premium perks disabled"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "Background"
 
@@ -5600,7 +5600,7 @@ msgstr "Camera device"
 msgid "Camera effects"
 msgstr "Camera effects"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "Camera error"
 
@@ -5745,7 +5745,7 @@ msgstr "Can't upload files here"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "Cancel"
@@ -5993,7 +5993,7 @@ msgstr "Centred"
 msgid "Change avatar"
 msgstr "Change avatar"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "Change background"
 
@@ -14393,7 +14393,7 @@ msgstr "Filtering"
 msgid "Filtering by {language}"
 msgstr "Filtering by {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "Finalising camera..."
 
@@ -17094,7 +17094,7 @@ msgstr "Inherited"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Inherited from {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "Initialising camera..."
 
@@ -22795,7 +22795,7 @@ msgstr "Operating system"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Opt into experimental per-community and per-channel unread badge controls"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "Optimising camera..."
 

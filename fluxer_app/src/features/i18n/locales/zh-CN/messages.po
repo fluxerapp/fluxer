@@ -4713,7 +4713,7 @@ msgstr "后端高级特权已禁用"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:56
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:677
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:735
 msgid "Background"
 msgstr "背景"
 
@@ -5600,7 +5600,7 @@ msgstr "摄像头"
 msgid "Camera effects"
 msgstr "相机特效"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:755
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:813
 msgid "Camera error"
 msgstr "相机错误"
 
@@ -5745,7 +5745,7 @@ msgstr "无法在此上传文件"
 #: src/features/user/components/modals/PhoneAddModal.tsx:392
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:173
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:31
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:849
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:80
 msgid "Cancel"
 msgstr "取消"
@@ -5993,7 +5993,7 @@ msgstr "居中"
 msgid "Change avatar"
 msgstr "更换头像"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:690
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:748
 msgid "Change background"
 msgstr "更换背景"
 
@@ -14393,7 +14393,7 @@ msgstr "筛选"
 msgid "Filtering by {language}"
 msgstr "按 {language} 筛选"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:734
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:792
 msgid "Finalizing camera..."
 msgstr "正在准备相机…"
 
@@ -17094,7 +17094,7 @@ msgstr "已继承"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "继承自{inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:736
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:794
 msgid "Initializing camera..."
 msgstr "正在初始化摄像头…"
 
@@ -22795,7 +22795,7 @@ msgstr "操作系统"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "启用实验性的社区和频道级别的未读消息徽章控制功能"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
 msgid "Optimizing camera..."
 msgstr "正在优化相机…"
 
