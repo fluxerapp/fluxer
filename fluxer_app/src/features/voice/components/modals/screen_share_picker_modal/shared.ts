@@ -12,7 +12,6 @@ export type ScreenSharePickerTab = 'apps' | 'displays' | 'devices';
 export const DESKTOP_SOURCE_PRELOAD_TTL_MS = 2_500;
 export const DESKTOP_SOURCE_LIST_POLL_INTERVAL_MS = 1_000;
 export const THUMBNAIL_REFRESH_DEBOUNCE_MS = 750;
-export const SCREEN_SHARE_PICKER_TABS: ReadonlyArray<ScreenSharePickerTab> = ['apps', 'displays', 'devices'];
 export const NATIVE_DISPLAY_SELECTION_ID = '__native_display__';
 export const LINUX_GAME_CAPTURE_SELECTION_ID = '__linux_game_capture__';
 
@@ -26,6 +25,7 @@ export interface PickerCard {
 
 export interface ScreenSharePickerModalProps {
 	initialDesktopSources?: Array<DesktopSource>;
+	initialDesktopSourcesError?: boolean;
 	initialDesktopSourcesSkippedForPermission?: boolean;
 	displayShareEnvironment: DisplayShareEnvironment;
 	initialTab?: ScreenSharePickerTab;
@@ -34,6 +34,7 @@ export interface ScreenSharePickerModalProps {
 
 export interface ScreenSharePickerPreload {
 	desktopSources: Array<DesktopSource>;
+	desktopSourcesError?: boolean;
 	desktopSourcesSkippedForPermission?: boolean;
 	displayShareEnvironment: DisplayShareEnvironment;
 }

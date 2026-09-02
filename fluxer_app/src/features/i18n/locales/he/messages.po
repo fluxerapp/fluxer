@@ -1048,6 +1048,16 @@ msgstr "‎‏{productName} לא יכול להקליט אודיו מהשולחן
 msgid "{productName} cannot capture only one app's audio here without risking unrelated app audio or call audio."
 msgstr "‎‏{productName} לא יכולה להקליט רק את האודיו של אפליקציה אחת כאן, מבלי לסכן הקלטת אודיו מאפליקציות אחרות או שיחות."
 
+#. Inline notice body on Linux when desktop audio capture is unavailable.
+#: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:59
+msgid "{productName} cannot start a safe desktop audio route while excluding {productName}'s call audio."
+msgstr "{productName} לא יכול להתחיל נתיב אודיו שולחני בטוח תוך החרגת אודיו השיחה של {productName}."
+
+#. Inline notice body on Linux when isolated per-app audio capture is unavailable.
+#: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:51
+msgid "{productName} cannot start a safe isolated route for this app's audio."
+msgstr "{productName} לא יכול להתחיל מסלול מבודד בטוח עבור השמע של אפליקציה זו."
+
 #. Helper text shown under a codec option indicating no usable hardware encoder path is available and the CPU will be used. productName is the app name.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:36
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
@@ -3664,10 +3674,15 @@ msgstr "כל אחד יכול לבקש חשבון, אך מנהל מערכת חי�
 msgid "API key"
 msgstr "מפתח API"
 
+#. Inline notice on Linux when isolated per-app audio capture is unavailable.
+#: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:47
+msgid "App audio isn't available right now on Linux."
+msgstr "אודיו של אפליקציות אינו זמין כרגע בלינוקס."
+
 #. Inline notice on Windows when per-window audio capture is not supported. Title text.
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:9
-msgid "App audio isn't available on this build of Windows."
-msgstr "שמע של היישום אינו זמין בגרסה זו של Windows."
+msgid "App audio isn't available right now on Windows."
+msgstr "אודיו של האפליקציה אינו זמין כרגע ב-Windows."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:107
@@ -3689,7 +3704,7 @@ msgid "App state"
 msgstr "מצב האפליקציה"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:102
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
 msgid "App window"
 msgstr "חלון יישום"
 
@@ -3776,11 +3791,13 @@ msgstr "היישום עודכן בהצלחה"
 #. Developer settings tab for managing the current user developer applications and bots.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for developer application list.
+#. Tab label in the screen-share picker. Lists shareable app windows.
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:90
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:129
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
 msgid "Applications"
 msgstr "אפליקציות"
 
@@ -3827,9 +3844,7 @@ msgid "Approved"
 msgstr "אושר"
 
 #. Short label in the Discovery page sidebar. Keep it concise.
-#. Tab label in the screen-share picker. Lists shareable app windows.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:19
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Apps"
 msgstr "אפליקציות"
 
@@ -4121,6 +4136,11 @@ msgstr "קלט שמע"
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:61
 msgid "Audio level"
 msgstr "עוצמת שמע"
+
+#. Footer summary status shown when capture-device audio is disabled.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
+msgid "Audio muted"
+msgstr "השמע מושתק"
 
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx:29
@@ -5558,6 +5578,16 @@ msgstr "שיחות"
 msgid "Camera"
 msgstr "מצלמה"
 
+#. Title shown in the screen-share Devices tab before camera preview permission is granted.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+msgid "Camera access is needed for device previews"
+msgstr "נדרשת גישה למצלמה לתצוגה מקדימה של המכשיר"
+
+#. Description shown after camera preview permission is denied or unavailable.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+msgid "Camera access was not granted. Update camera permissions, then try again."
+msgstr "הגישה למצלמה לא הוענקה. עדכן את הרשאות המצלמה, ואז נסה שוב."
+
 #. Section header in the mobile video settings bottom sheet. Picks the camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:173
@@ -6089,7 +6119,7 @@ msgid "Change Stream"
 msgstr "שנה זרם"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
 msgid "Change stream source"
 msgstr "שינוי מקור השידור"
 
@@ -6728,7 +6758,7 @@ msgid "Choose payment method"
 msgstr "בחירת אמצעי תשלום"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
 msgid "Choose something to share"
 msgstr "בחר/י משהו לשתף"
 
@@ -7128,6 +7158,11 @@ msgstr "תיאור המדבקה נוקה."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:413
 msgid "Cleared the topic."
 msgstr "הנושא נוקה."
+
+#. Footer summary description for the text-focused screen-share quality preset.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+msgid "Clearer text"
+msgstr "טקסט ברור יותר"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
@@ -8106,6 +8141,10 @@ msgstr "מתנגש עם {conflictLabel}"
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "חבר/י מצלמה או התקן לכידה וירטואלי, ואז נסה/י שוב."
+
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
+msgid "Connect a display, then try again."
+msgstr "חבר צג, ואז נסה שוב."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -9765,6 +9804,7 @@ msgstr "מוצג כעת"
 msgid "Currently: {mutedText}"
 msgstr "נוכחי: {mutedText}"
 
+#. Footer summary label for custom screen-share quality settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the voice tab. Keep it concise.
 #. Streaming preset label in the stream settings menu. Lets user pick resolution and frame rate manually.
@@ -9775,6 +9815,7 @@ msgstr "נוכחי: {mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:91
 msgid "Custom"
 msgstr "מותאם אישית"
@@ -10335,7 +10376,7 @@ msgid "Default"
 msgstr "ברירת מחדל"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:112
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:148
 msgid "Default camera"
 msgstr "מצלמת ברירת מחדל"
 
@@ -10831,15 +10872,20 @@ msgstr "אפליקציית שולחן העבודה"
 msgid "Desktop app is up to date"
 msgstr "האפליקציה למחשב שולחני מעודכנת"
 
+#. Inline notice on Linux when desktop audio capture is unavailable.
+#: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:55
+msgid "Desktop audio isn't available right now on Linux."
+msgstr "אודיו של שולחן העבודה אינו זמין כעת בלינוקס."
+
 #. Inline notice on macOS when desktop/system audio capture is not supported because Fluxer cannot exclude call audio.
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:37
-msgid "Desktop audio isn't available on this build of macOS."
-msgstr "שמע שולחן עבודה אינו זמין בגרסה זו של macOS."
+msgid "Desktop audio isn't available right now on macOS."
+msgstr "שמע ממחשב אינו זמין כרגע ב-macOS."
 
 #. Inline notice on Windows when desktop/system audio capture is not supported because Fluxer cannot exclude call audio.
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:18
-msgid "Desktop audio isn't available on this build of Windows."
-msgstr "שמע שולחן עבודה אינו זמין בגרסה זו של Windows."
+msgid "Desktop audio isn't available right now on Windows."
+msgstr "שמע שולחן העבודה אינו זמין כעת ב-Windows."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:74
@@ -11047,7 +11093,7 @@ msgstr "מכשיר:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
 msgid "Devices"
 msgstr "מכשירים"
 
@@ -11155,7 +11201,7 @@ msgstr "העלאה ישירה פעילה"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:269
 msgid "Disable"
 msgstr "ביטול"
 
@@ -11354,7 +11400,7 @@ msgid "Disabled value"
 msgstr "ערך מושבת"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:317
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "השבתת התצוגות המקדימות תמנע העלאות עתידיות של תמונות מקדימות. ייתכן שתמונות מקדימות שהועלו בעבר עדיין יהיו גלויות עד לסיום הסטרימינג או עד לרענון התצוגה המקדימה."
 
@@ -11498,7 +11544,7 @@ msgstr "התעלם מהאזכור"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:12
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:12
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:107
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
 msgid "Display"
 msgstr "תצוגה"
 
@@ -11553,11 +11599,6 @@ msgstr "הצג חברי תפקיד בנפרד."
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:206
 msgid "Display scaling"
 msgstr "קנה מידה לתצוגה"
-
-#. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
-msgid "Displays"
-msgstr "מציג"
 
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:303
@@ -12678,6 +12719,11 @@ msgstr "אפשר אימות משתמש דרך Bluesky"
 msgid "Enable browser notifications"
 msgstr "הפעלת התראות בדפדפן"
 
+#. Description shown before the user explicitly requests camera preview permission.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
+msgstr "אפשר גישה למצלמה כדי להציג תצוגה מקדימה של מצלמות והתקני לכידה לפני שתבחר אחד לשידור."
+
 #. Button or menu action label in the notifications. Keep it concise.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:30
 msgid "Enable desktop notifications"
@@ -12783,6 +12829,11 @@ msgstr "הפעלה או השבתה של מנועי חיפוש מובנים. מנ
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:89
 msgid "Enable or disable built-in translators. Enabled translators appear in the message context menu when text is selected."
 msgstr "הפעלה או השבתה של מתרגמים מובנים. מתרגמים מופעלים יופיעו בתפריט ההקשר של ההודעה בעת בחירת טקסט."
+
+#. Button that explicitly requests camera permission for device previews.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+msgid "Enable previews"
+msgstr "אפשר תצוגות מקדימות"
 
 #. Button or menu action label in the notifications. Keep it concise.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:70
@@ -13246,6 +13297,11 @@ msgstr "הזן את מספר הטלפון שלך"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
 msgid "Entertainment"
 msgstr "בידור"
+
+#. Tab label in the screen-share picker. Lists shareable monitors / displays.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+msgid "Entire screen"
+msgstr "כל המסך"
 
 #. Summary label in the Linux audio source picker when capturing the whole system audio mix.
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:39
@@ -13856,7 +13912,7 @@ msgid "Failed to load invites. Try again."
 msgstr "טעינת ההזמנות נכשלה. יש לנסות שוב."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:93
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:117
 msgid "Failed to load shareable sources."
 msgstr "טעינת המקורות הניתנים לשיתוף נכשלה."
 
@@ -15016,8 +15072,10 @@ msgid "Game controller"
 msgstr "בקר משחק"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
+#. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:64
 msgid "Gaming"
 msgstr "גיימינג"
@@ -18094,7 +18152,7 @@ msgid "Layering for AV1 and VP9 when available."
 msgstr "שכבות עבור AV1 ו-VP9 כאשר זמין."
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:273
 msgid "Learn about screen share previews"
 msgstr "למידע נוסף על תצוגות מקדימות של שיתוף מסך"
 
@@ -20031,11 +20089,9 @@ msgstr "קטינים בסיכון, תוכן למבוגרים במקום הלא �
 
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
-#. Switch label in the screen-share device picker for flipping shared camera/device video horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
 #: src/features/voice/components/VoiceSettingsMenus.tsx:135
 msgid "Mirror camera"
 msgstr "שיקוף מצלמה"
@@ -21167,6 +21223,10 @@ msgstr "לא נמצאו הגדרות מתקדמות"
 msgid "No AFK channel"
 msgstr "אין ערוץ AFK"
 
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
+msgid "No application windows found"
+msgstr "לא נמצאו חלונות של יישומים"
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationsList.tsx:33
 msgid "No applications yet"
 msgstr "אין יישומים עדיין"
@@ -21311,6 +21371,10 @@ msgstr "אין תיאור."
 #: src/features/updater/commands/UpdaterModalCommands.tsx:49
 msgid "No desktop update is available."
 msgstr "אין עדכון זמין למחשב."
+
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
+msgid "No displays found"
+msgstr "לא נמצאו תצוגות"
 
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "No email address set"
@@ -22269,6 +22333,10 @@ msgstr "פתח את @{displayName}"
 msgid "Open advanced media settings"
 msgstr "פתח הגדרות מדיה מתקדמות"
 
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+msgid "Open an application window, then try again."
+msgstr "פתח חלון של אפליקציה, ואז נסה שוב."
+
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:74
@@ -22328,7 +22396,7 @@ msgid "Open browser"
 msgstr "פתח דפדפן"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
 msgid "Open browser picker"
 msgstr "פתיחת בורר דפדפנים"
 
@@ -22596,7 +22664,7 @@ msgid "Open system DM"
 msgstr "פתח התכתבות עם המערכת"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
 msgid "Open system picker"
 msgstr "פתיחת בורר המערכת"
 
@@ -23267,8 +23335,8 @@ msgstr "עוצמת שמע לכל צליל"
 
 #. Inline notice on macOS when per-window audio capture is not supported. Title text.
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:28
-msgid "Per-window audio isn't available on this build of macOS."
-msgstr "שמע לכל חלון אינו זמין בגרסת macOS זו."
+msgid "Per-window audio isn't available right now on macOS."
+msgstr "שמע לפי חלון אינו זמין כרגע ב-macOS."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:26
@@ -23996,17 +24064,17 @@ msgid "Preview hidden"
 msgstr "תצוגה מקדימה מוסתרת"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:222
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:311
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "תמונות התצוגה המקדימה מאוחסנות באופן זמני על ידי {productName} לצורך העברתן ואינן מוצפנות מקצה לקצה. השבת תמונות תצוגה מקדימה אם אינך רוצה שהפריימים של שיתוף המסך יועלו ליצירת תמונות ממוזערות."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:305
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "תמונות התצוגה המקדימה מאוחסנות באופן זמני על ידי {productName} לצורך העברתן ואינן מוצפנות מקצה לקצה. אנשים בקבוצת הצ'אט הזו לא צריכים לצפות בשידור שלך כדי לראות את התמונה הממוזערת."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:210
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:299
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "תמונות התצוגה המקדימה מאוחסנות באופן זמני על ידי {productName} לצורך העברה ואינן מוצפנות מקצה לקצה. עדיין נדרשת הרשאה כדי להתחבר, אך אין צורך שהמשתמשים יצפו בשידור שלך בזמן אמת."
 
@@ -27040,6 +27108,11 @@ msgstr "שיתוף שמע במסך"
 msgid "Screen share audio boost"
 msgstr "הגברת שמע בשיתוף מסך"
 
+#. Error modal title shown when the selected native screen-share audio route cannot start safely.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+msgid "Screen share audio couldn't start"
+msgstr "לא ניתן היה להתחיל את שיתוף המסך עם שמע"
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:68
 msgid "Screen share codec"
@@ -27077,17 +27150,17 @@ msgid "Screen share preview behavior"
 msgstr "התנהגות תצוגה מקדימה של שיתוף מסך"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:277
 msgid "Screen share previews"
 msgstr "תצוגות מקדימות של שיתוף מסך"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:265
 msgid "Screen share previews are disabled."
 msgstr "תצוגות מקדימות של שיתוף מסך מושבתות."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:261
 msgid "Screen share previews are enabled."
 msgstr "תצוגות מקדימות של שיתוף מסך מופעלות."
 
@@ -27166,6 +27239,11 @@ msgstr "שיתוף מסך אינו נתמך"
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:205
 msgid "Screen sharing quality"
 msgstr "איכות שיתוף מסך"
+
+#. Footer summary label for the text-focused screen-share quality preset.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
+msgid "Screenshare"
+msgstr "שיתוף מסך"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:174
@@ -27633,7 +27711,9 @@ msgstr "הצגת רשימת החברים בערוץ זה."
 msgid "Seek preview"
 msgstr "תצוגה מקדימה"
 
+#. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:196
 msgid "Select"
 msgstr "בחר"
 
@@ -28477,25 +28557,20 @@ msgstr "שיתוף ערכת נושא מותאמת אישית פעילה"
 msgid "Share active theme"
 msgstr "שיתוף ערכת נושא פעילה"
 
-#. Primary button in the screen-share picker (start mode, devices tab). Begins sharing the selected camera/device.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:138
-msgid "Share device"
-msgstr "שיתוף מכשיר"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:46
 msgid "Share gift"
 msgstr "שיתוף מתנה"
 
+#. Hover action on an application or display card that starts sharing that source.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+msgid "Share screen"
+msgstr "שתף מסך"
+
 #. One-line screen recording permission explanation in the macOS permissions modal.
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:48
 msgid "Share screens and windows."
 msgstr "שתף מסכים וחלונות."
-
-#. Primary button in the screen-share picker (start mode). Begins sharing the selected window or display.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:143
-msgid "Share source"
-msgstr "שיתוף מקור"
 
 #. Toggle label for sharing audio with an active stream.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:157
@@ -29590,6 +29665,11 @@ msgstr "חיוכים"
 msgid "Smooth scrolling"
 msgstr "גלילה חלקה"
 
+#. Footer summary description for the gaming screen-share quality preset.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:237
+msgid "Smoother video"
+msgstr "וידאו חלק יותר"
+
 #. Required-action error when the SMS provider cannot send or verify a code.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:418
 msgid "SMS verification is unavailable right now. Try again later or contact support."
@@ -29854,9 +29934,11 @@ msgctxt "notifications-settings-section"
 msgid "Sounds"
 msgstr "צלילים"
 
+#. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:66
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:99
 msgid "Source"
 msgstr "מקור"
@@ -30576,8 +30658,10 @@ msgstr "עצור."
 msgid "Stops your speakers from looping back into your mic."
 msgstr "מונע מהרמקולים שלך לחזור למיקרופון."
 
+#. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:235
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
 msgid "Stream"
 msgstr "סטרים"
 
@@ -30611,7 +30695,7 @@ msgid "Stream quality"
 msgstr "איכות השידור"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:221
 msgid "Stream settings"
 msgstr "הגדרות סטרימינג"
 
@@ -30891,11 +30975,6 @@ msgstr "החלף לתצוגה נוחה"
 msgid "Switch to dense layout"
 msgstr "החלף לתצוגה דחוסה"
 
-#. Primary button in the screen-share picker (switch mode, devices tab). Replaces the current stream with the selected camera/device.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:128
-msgid "Switch to device"
-msgstr "החלף למכשיר"
-
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Switch to direct input"
 msgstr "החלף לקלט ישיר"
@@ -30948,11 +31027,6 @@ msgstr "החלפה לקהילה או לצ'אטים פרטיים קודמים"
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:81
 msgid "Switch to single column"
 msgstr "החלף לתצוגה בטור יחיד"
-
-#. Primary button in the screen-share picker (switch mode). Replaces the current stream with the selected window or display.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
-msgid "Switch to source"
-msgstr "החלף למקור"
 
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:290
 msgid "Switch to this account"
@@ -31094,6 +31168,8 @@ msgid "System announcements from {productName} staff. You can't reply here."
 msgstr "הודעות מערכת מצוות {productName}. לא ניתן להשיב כאן."
 
 #. Audio device option label meaning the OS default audio input device.
+#. Footer summary fallback for the default capture-device audio input.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:253
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:131
 msgid "System default"
 msgstr "ברירת מחדל של המערכת"
@@ -31543,6 +31619,11 @@ msgstr "הבוט נוסף אל <0>{destinationName}</0>."
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:34
 msgid "The bot has been added."
 msgstr "הבוט נוסף."
+
+#. Status shown when a device preview has not released the camera before the bounded handoff deadline.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
+msgid "The camera preview is still stopping. Try streaming again in a moment."
+msgstr "עדיין עוצרים את תצוגה מקדימה של המצלמה. נסו לשדר שוב בעוד רגע."
 
 #: src/features/channel/components/ChannelLayout.tsx:51
 msgid "The channel you're looking for may have been deleted or you may not have access to it."
@@ -32376,7 +32457,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "מספר הטלפון הזה כבר נמצא בשימוש. נסה מספר אחר או צור קשר עם התמיכה."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:97
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
 msgid "This picker is only available in the desktop app."
 msgstr "בורר זה זמין רק באפליקציית המחשב השולחני."
 
@@ -33320,6 +33401,11 @@ msgstr "כבה את כל מצלמות המכשירים"
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "כבו כל מה שלא נוח לכם איתו. ייתכן שחלק מהתכונות יפסיקו לפעול."
 
+#. Error modal body shown after a native screen-share audio route fails to start.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+msgid "Turn off audio sharing for this source or try again in a moment."
+msgstr "כבה את שיתוף השמע עבור מקור זה או נסה שוב בעוד רגע."
+
 #. Voice / call action label that disables the local camera.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:506
 msgid "Turn off camera"
@@ -34101,6 +34187,8 @@ msgid "Unnamed group"
 msgstr "קבוצה ללא שם"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
+#. Footer summary fallback for an audio input without a reported name.
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:257
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:135
 msgid "Unnamed input"
 msgstr "קלט ללא שם"
@@ -34567,7 +34655,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "העלה אימוג'י ומדבקות חדשים, ונהל את היצירות שלך."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:234
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:323
 msgid "Upload preview frames for screen shares."
 msgstr "העלה תמונות לדוגמה עבור שיתופי מסך."
 
@@ -36860,17 +36948,17 @@ msgid "When posted as links to chat"
 msgstr "כשמפורסם כקישורים בצ'אט"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:198
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:287
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "כאשר התצוגות המקדימות מופעלות, {productName} מעלה מדי פעם תמונות JPEG מהשיתוף שלך במסך, כך שאנשים אחרים בצ'אט הקבוצתי הזה יוכלו לראות תמונה ממוזערת לפני שהם צופים."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:281
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "כאשר תצוגות מקדימות מופעלות, {productName} מעלה מדי פעם פריימים בפורמט JPEG מהשיתוף שלך במסך, כך שאנשים בעלי הרשאה להתחבר לערוץ הקולי הזה יוכלו לראות תמונה ממוזערת לפני שהם צופים."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:293
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "כאשר התצוגות המקדימות מופעלות, {productName} מעלה מדי פעם תמונות JPEG מהשיתוף שלך במסך, כך שהמשתמש השני בצ'אט הפרטי יוכל לראות תמונה ממוזערת לפני שהוא צופה."
 
