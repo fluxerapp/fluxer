@@ -4436,7 +4436,7 @@ msgstr "Prijedlog automatskog dovršavanja: {label}, {selectedOptionPosition} od
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
-#: src/features/voice/components/VoiceSettingsMenus.tsx:86
+#: src/features/voice/components/VoiceSettingsMenus.tsx:91
 msgid "Automatic"
 msgstr "Automatski"
 
@@ -9831,7 +9831,7 @@ msgstr "Prilagođeno"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
-#: src/features/voice/components/VoiceSettingsMenus.tsx:64
+#: src/features/voice/components/VoiceSettingsMenus.tsx:69
 msgctxt "voice-processing-profile"
 msgid "Custom"
 msgstr "Prilagođeno"
@@ -10366,7 +10366,7 @@ msgstr "Ukrasni razdjelnik"
 #: src/features/ui/action_menu/items/SearchProviderMenuItems.tsx:14
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:117
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:66
-#: src/features/voice/components/VoiceSettingsMenus.tsx:81
+#: src/features/voice/components/VoiceSettingsMenus.tsx:86
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgid "Default"
 msgstr "Zadano"
@@ -15600,7 +15600,7 @@ msgstr "Grčki"
 
 #. Toggle label in the mobile video settings bottom sheet. Switches to grid layout.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:68
-#: src/features/voice/components/VoiceSettingsMenus.tsx:696
+#: src/features/voice/components/VoiceSettingsMenus.tsx:786
 msgid "Grid view"
 msgstr "Prikaz rešetke"
 
@@ -17144,10 +17144,15 @@ msgstr "Ulaz i izlaz"
 msgid "Input device"
 msgstr "Ulazni uređaj"
 
+#. Read-only microphone input level shown in the voice device menu.
+#: src/features/voice/components/VoiceSettingsMenus.tsx:100
+msgid "Input level"
+msgstr "Ulazna razina"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice settings menu label for microphone processing profile.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:129
-#: src/features/voice/components/VoiceSettingsMenus.tsx:69
+#: src/features/voice/components/VoiceSettingsMenus.tsx:74
 msgid "Input profile"
 msgstr "Ulazni profil"
 
@@ -19985,7 +19990,7 @@ msgstr "Test mikrofona"
 #. Fallback microphone option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:21
-#: src/features/voice/components/VoiceSettingsMenus.tsx:73
+#: src/features/voice/components/VoiceSettingsMenus.tsx:78
 #: src/features/voice/utils/SettingsDeviceOptions.ts:15
 msgid "Microphone"
 msgstr "Mikrofon"
@@ -20076,7 +20081,7 @@ msgstr "Maloljetnici u opasnosti, neprikladan sadržaj na pogrešnom mjestu ili 
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:70
-#: src/features/voice/components/VoiceSettingsMenus.tsx:103
+#: src/features/voice/components/VoiceSettingsMenus.tsx:112
 msgid "Mirror camera"
 msgstr "Zrcali kameru"
 
@@ -22471,7 +22476,7 @@ msgstr "Otvori emoji u pregledniku"
 msgid "Open emoji picker"
 msgstr "Otvori birač emojija"
 
-#: src/features/voice/components/VoiceSettingsMenus.tsx:770
+#: src/features/voice/components/VoiceSettingsMenus.tsx:860
 msgid "Open event sink"
 msgstr "Otvorite sink događaja"
 
@@ -24022,7 +24027,7 @@ msgstr "Gumb za pretpregled"
 #. Voice menu action that opens a preview of the current user camera.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:53
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:60
-#: src/features/voice/components/VoiceSettingsMenus.tsx:524
+#: src/features/voice/components/VoiceSettingsMenus.tsx:614
 msgid "Preview camera"
 msgstr "Pregled kamere"
 
@@ -24598,7 +24603,7 @@ msgstr "Tipka za Pritisni za razgovor"
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
-#: src/features/voice/components/VoiceSettingsMenus.tsx:327
+#: src/features/voice/components/VoiceSettingsMenus.tsx:417
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
@@ -28978,7 +28983,7 @@ msgstr "Prikaži isključene kanale"
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:93
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:72
-#: src/features/voice/components/VoiceSettingsMenus.tsx:726
+#: src/features/voice/components/VoiceSettingsMenus.tsx:816
 msgid "Show my own camera"
 msgstr "Prikaži moju kameru"
 
@@ -29014,7 +29019,7 @@ msgstr "Prikaži skočni prozor za novi uređaj"
 #. Voice display preference checkbox that controls whether participants without video are shown in the grid.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:101
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:76
-#: src/features/voice/components/VoiceSettingsMenus.tsx:740
+#: src/features/voice/components/VoiceSettingsMenus.tsx:830
 msgid "Show non-video participants"
 msgstr "Prikaži sudionike bez videa"
 
@@ -30031,7 +30036,7 @@ msgstr "Govorite sada. Pritisnite Zaustavi kada završite — možete obrezati k
 #. Fallback speaker option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:41
-#: src/features/voice/components/VoiceSettingsMenus.tsx:77
+#: src/features/voice/components/VoiceSettingsMenus.tsx:82
 #: src/features/voice/utils/SettingsDeviceOptions.ts:19
 msgid "Speaker"
 msgstr "Zvučnik"
@@ -35749,7 +35754,7 @@ msgstr "Slanje videozapisa:"
 #. Menu action that opens video settings.
 #. Title of the mobile video settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:64
-#: src/features/voice/components/VoiceSettingsMenus.tsx:99
+#: src/features/voice/components/VoiceSettingsMenus.tsx:108
 msgid "Video settings"
 msgstr "Postavke videozapisa"
 
@@ -36301,7 +36306,7 @@ msgstr "Snimanje glasa nije podržano u ovom pregledniku."
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Section header in the voice settings menu for the voice region picker.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:24
-#: src/features/voice/components/VoiceSettingsMenus.tsx:91
+#: src/features/voice/components/VoiceSettingsMenus.tsx:96
 msgid "Voice region"
 msgstr "Regija glasa"
 
@@ -36313,7 +36318,7 @@ msgstr "Traka za obavijesti o vraćanju glasovne sesije"
 #. Menu action that opens voice settings.
 #. Title of the mobile voice settings bottom sheet.
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:52
-#: src/features/voice/components/VoiceSettingsMenus.tsx:95
+#: src/features/voice/components/VoiceSettingsMenus.tsx:104
 msgid "Voice settings"
 msgstr "Postavke glasa"
 

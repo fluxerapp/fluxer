@@ -13,6 +13,7 @@ import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {AudioLevelMeter} from '@app/features/user/components/modals/tabs/components/AudioLevelMeter';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
@@ -23,6 +24,10 @@ import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/Ca
 import {HideOwnCameraConfirmModal} from '@app/features/voice/components/modals/HideOwnCameraConfirmModal';
 import styles from '@app/features/voice/components/VoiceSettingsMenus.module.css';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import {
+	getLocalPublicationMediaStreamTrack,
+	getPrimaryLocalMicrophonePublication,
+} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
 import CallState from '@app/features/voice/state/CallState';
 import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import VoicePrompts from '@app/features/voice/state/VoicePrompts';
@@ -92,6 +97,10 @@ const VOICE_REGION_DESCRIPTOR = msg({
 	message: 'Voice region',
 	comment: 'Section header in the voice settings menu for the voice region picker.',
 });
+const INPUT_LEVEL_DESCRIPTOR = msg({
+	message: 'Input level',
+	comment: 'Read-only microphone input level shown in the voice device menu.',
+});
 const VOICE_SETTINGS_DESCRIPTOR = msg({
 	message: 'Voice settings',
 	comment: 'Menu action that opens voice settings.',
@@ -105,6 +114,9 @@ const MIRROR_CAMERA_DESCRIPTOR = msg({
 	comment: 'Camera settings menu checkbox for flipping the local camera preview horizontally.',
 });
 const logger = new Logger('VoiceSettingsMenus');
+
+const INPUT_LEVEL_MIN_DB = -60;
+const INPUT_LEVEL_MAX_DB = 0;
 
 type VoiceVideoSettingsSection = 'audio' | 'video';
 
@@ -207,6 +219,83 @@ const VoiceInputProfileSubmenu: React.FC = observer(() => {
 	);
 });
 
+const VoiceInputLevelItem: React.FC = () => {
+	const {i18n} = useLingui();
+	useMediaEngineVersion();
+	const room = MediaEngine.room;
+	const micPublication = room ? getPrimaryLocalMicrophonePublication(room.localParticipant) : null;
+	const micTrack = micPublication ? getLocalPublicationMediaStreamTrack(micPublication) : null;
+	const [level, setLevel] = useState(0);
+	useEffect(() => {
+		if (!micTrack) {
+			setLevel(0);
+			return;
+		}
+		const AudioContextClass =
+			window.AudioContext ?? (window as unknown as {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+		if (!AudioContextClass) {
+			return;
+		}
+		const audioContext = new AudioContextClass();
+		const source = audioContext.createMediaStreamSource(new MediaStream([micTrack]));
+		const analyser = audioContext.createAnalyser();
+		analyser.fftSize = 2048;
+		analyser.smoothingTimeConstant = 0.2;
+		source.connect(analyser);
+		const timeDomain = new Float32Array(analyser.fftSize);
+		let frame = 0;
+		let disposed = false;
+		void audioContext.resume().catch(() => undefined);
+		const sampleLevel = () => {
+			if (disposed) {
+				return;
+			}
+			analyser.getFloatTimeDomainData(timeDomain);
+			let sumOfSquares = 0;
+			for (let i = 0; i < timeDomain.length; i++) {
+				sumOfSquares += timeDomain[i] * timeDomain[i];
+			}
+			const rms = Math.sqrt(sumOfSquares / timeDomain.length);
+			const decibels = 20 * Math.log10(Math.max(rms, 1e-10));
+			const normalized = Math.max(
+				0,
+				Math.min(1, (decibels - INPUT_LEVEL_MIN_DB) / (INPUT_LEVEL_MAX_DB - INPUT_LEVEL_MIN_DB)),
+			);
+			setLevel(normalized);
+			frame = requestAnimationFrame(sampleLevel);
+		};
+		frame = requestAnimationFrame(sampleLevel);
+		return () => {
+			disposed = true;
+			cancelAnimationFrame(frame);
+			source.disconnect();
+			analyser.disconnect();
+			void audioContext.close().catch(() => undefined);
+		};
+	}, [micTrack]);
+	const label = i18n._(INPUT_LEVEL_DESCRIPTOR);
+	return (
+		<div className={styles.inputLevelItem} data-flx="voice.voice-settings-menus.input-level">
+			<div
+				className={styles.inputLevelLabel}
+				data-flx="voice.voice-settings-menus.voice-input-level-item.input-level-label"
+			>
+				{label}
+			</div>
+			<AudioLevelMeter
+				level={level}
+				className={styles.inputLevelMeter}
+				role="meter"
+				aria-label={label}
+				aria-valuemin={0}
+				aria-valuemax={100}
+				aria-valuenow={Math.round(level * 100)}
+				data-flx="voice.voice-settings-menus.voice-input-level-item.input-level-meter"
+			/>
+		</div>
+	);
+};
+
 const VoiceInputVolumeItems: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	return (
@@ -220,6 +309,7 @@ const VoiceInputVolumeItems: React.FC = observer(() => {
 				onFormat={(value) => `${Math.round(value)}%`}
 				data-flx="voice.voice-settings-menus.input-volume"
 			/>
+			<VoiceInputLevelItem data-flx="voice.voice-settings-menus.voice-input-volume-items.voice-input-level-item" />
 		</>
 	);
 });
