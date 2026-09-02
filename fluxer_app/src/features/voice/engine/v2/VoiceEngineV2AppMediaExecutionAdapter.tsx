@@ -66,7 +66,7 @@ import {
 	isMutedOrDeafened,
 	isPermissionDeniedError,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
-import {getCameraVideoPreset} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
+import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import {
 	runCameraTransition,
 	type VoiceEngineV2AppCameraTransitionOutcome,
@@ -1141,8 +1141,8 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 				await clearCameraVideoProcessor(cameraTrack);
 			}
 		}
-		const videoResolution = getCameraVideoPreset(VoiceSettings.getCameraResolution());
-		await participant.setCameraEnabled(enabled, {resolution: videoResolution, ...restOptions});
+		const captureDimensions = getCameraCaptureDimensions(VoiceSettings.getCameraResolution());
+		await participant.setCameraEnabled(enabled, {resolution: captureDimensions, ...restOptions});
 		await this.enforceCameraPublicationCap(participant, enabled ? 'after camera enable' : 'after camera disable');
 		if (enabled) {
 			await this.applyBackgroundToCamera(participant);

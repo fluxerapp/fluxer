@@ -3,16 +3,12 @@
 import type {CameraResolution} from '@app/features/voice/state/VoiceSettings';
 import {VideoPresets} from 'livekit-client';
 import {describe, expect, it} from 'vitest';
-import {
-	getCameraCaptureDimensions,
-	getCameraVideoPreset,
-	pickCameraSubscriptionQuality,
-} from './VoiceEngineV2AppCameraResolutionPresets';
+import {getCameraCaptureDimensions, pickCameraSubscriptionQuality} from './VoiceEngineV2AppCameraResolutionPresets';
 
 const EXPECTED_PRESET_TABLE = [
 	{resolution: 'high', width: 1920, height: 1080, frameRate: 30, videoPreset: VideoPresets.h1080},
 	{resolution: 'medium', width: 1280, height: 720, frameRate: 30, videoPreset: VideoPresets.h720},
-	{resolution: 'low', width: 640, height: 360, frameRate: 24, videoPreset: VideoPresets.h360},
+	{resolution: 'low', width: 640, height: 360, frameRate: 20, videoPreset: VideoPresets.h360},
 ] as const;
 
 describe('getCameraCaptureDimensions', () => {
@@ -28,29 +24,17 @@ describe('getCameraCaptureDimensions', () => {
 
 	it('falls back to the low entry for an unknown resolution key', () => {
 		const dimensions = getCameraCaptureDimensions('ultra' as CameraResolution);
-		expect(dimensions).toEqual({width: 640, height: 360, frameRate: 24});
-	});
-});
-
-describe('getCameraVideoPreset', () => {
-	for (const row of EXPECTED_PRESET_TABLE) {
-		it(`maps ${row.resolution} to the ${row.videoPreset.height}p LiveKit preset`, () => {
-			expect(getCameraVideoPreset(row.resolution)).toBe(row.videoPreset);
-		});
-	}
-
-	it('falls back to the 360p preset for an unknown resolution key', () => {
-		expect(getCameraVideoPreset('4k' as CameraResolution)).toBe(VideoPresets.h360);
+		expect(dimensions).toEqual({width: 640, height: 360, frameRate: 20});
 	});
 });
 
 describe('camera preset table consistency', () => {
 	for (const row of EXPECTED_PRESET_TABLE) {
-		it(`keeps capture dimensions and video preset in agreement for ${row.resolution}`, () => {
+		it(`keeps capture dimensions and the LiveKit encode preset in agreement for ${row.resolution}`, () => {
 			const capture = getCameraCaptureDimensions(row.resolution);
-			const preset = getCameraVideoPreset(row.resolution);
-			expect(preset.width).toBe(capture.width);
-			expect(preset.height).toBe(capture.height);
+			expect(row.videoPreset.width).toBe(capture.width);
+			expect(row.videoPreset.height).toBe(capture.height);
+			expect(row.videoPreset.encoding.maxFramerate).toBe(capture.frameRate);
 		});
 	}
 
@@ -60,6 +44,16 @@ describe('camera preset table consistency', () => {
 		expect(areas).toEqual(sorted);
 		expect(new Set(areas).size).toBe(areas.length);
 	});
+});
+
+describe('camera capture constraint shape', () => {
+	for (const row of EXPECTED_PRESET_TABLE) {
+		it(`hands getUserMedia a plain video resolution for ${row.resolution}`, () => {
+			const capture = getCameraCaptureDimensions(row.resolution);
+			expect(Object.keys(capture).sort()).toEqual(['frameRate', 'height', 'width']);
+			expect(capture.frameRate).toBeGreaterThan(0);
+		});
+	}
 });
 
 describe('pickCameraSubscriptionQuality', () => {

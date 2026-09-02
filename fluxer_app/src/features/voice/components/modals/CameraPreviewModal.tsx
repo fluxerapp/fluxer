@@ -24,6 +24,7 @@ import {useMaybeVoiceRoom} from '@app/features/voice/components/VoiceRoomContext
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import {VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR} from '@app/features/voice/engine/media_engine_facade/shared';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
+import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import {useCameraUserCapBlocked} from '@app/features/voice/hooks/useCameraUserCapBlocked';
 import VoiceSettings, {
 	BLUR_BACKGROUND_ID,
@@ -90,12 +91,6 @@ interface CameraPreviewModalProps {
 	isCameraEnabled?: boolean;
 }
 
-interface VideoResolutionPreset {
-	width: number;
-	height: number;
-	frameRate: number;
-}
-
 const TARGET_ASPECT_RATIO = 16 / 9;
 const ASPECT_RATIO_TOLERANCE = 0.1;
 const RESOLUTION_WAIT_TIMEOUT = 2000;
@@ -108,11 +103,6 @@ const VIDEO_READY_STATE_HAS_CURRENT_DATA = 2;
 const RESOLUTION_FIX_TRIGGER_DELAY = 800;
 const RESOLUTION_FIX_SETTLE_DELAY = 1200;
 const RESOLUTION_FIX_SWITCH_BACK_DELAY = 500;
-const CAMERA_RESOLUTION_PRESETS: Record<'low' | 'medium' | 'high', VideoResolutionPreset> = {
-	low: {width: 640, height: 360, frameRate: 24},
-	medium: {width: 1280, height: 720, frameRate: 30},
-	high: {width: 1920, height: 1080, frameRate: 30},
-};
 
 interface CameraPreviewConfig {
 	videoDeviceId: string;
@@ -280,15 +270,15 @@ async function setupPreviewTrackAndProcessor(args: CameraPreviewTrackSetupArgs):
 		await args.processorRef.current.destroy();
 		args.processorRef.current = null;
 	}
-	const resolutionPreset = CAMERA_RESOLUTION_PRESETS[args.cameraResolution];
+	const captureDimensions = getCameraCaptureDimensions(args.cameraResolution);
 	const track = await createLocalVideoTrack({
 		deviceId:
 			args.effectiveVideoDeviceId && args.effectiveVideoDeviceId !== 'default'
 				? args.effectiveVideoDeviceId
 				: undefined,
 		resolution: {
-			width: resolutionPreset.width,
-			height: resolutionPreset.height,
+			width: captureDimensions.width,
+			height: captureDimensions.height,
 			frameRate: args.videoFrameRate,
 			aspectRatio: TARGET_ASPECT_RATIO,
 		},
