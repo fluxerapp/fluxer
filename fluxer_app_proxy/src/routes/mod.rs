@@ -14,7 +14,7 @@ use axum::{
     extract::Request,
     http::{HeaderName, HeaderValue, header},
     middleware::{Next, from_fn, from_fn_with_state},
-    response::Response,
+    response::{IntoResponse, Response},
     routing::get,
 };
 use rand::RngExt;
@@ -125,6 +125,14 @@ async fn request_id_middleware(request: Request, next: Next) -> Response {
 fn generate_request_id() -> String {
     let bytes: [u8; 16] = rand::rng().random();
     hex::encode(bytes)
+}
+
+pub(super) fn capacity_refused_response() -> Response {
+    let mut response = axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    let headers = response.headers_mut();
+    headers.insert(header::RETRY_AFTER, HeaderValue::from_static("1"));
+    headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    response
 }
 
 fn set_static_header(headers: &mut axum::http::HeaderMap, name: HeaderName, value: &'static str) {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::config::HttpEndpoint;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -12,6 +13,26 @@ const COLD_START_RETRY_COOLDOWN: Duration = Duration::from_secs(10);
 pub struct DiscoveryResponse {
     #[serde(flatten)]
     pub data: serde_json::Value,
+}
+
+pub fn discovery_endpoint(
+    discovery: &DiscoveryResponse,
+    key: &'static str,
+) -> Option<HttpEndpoint> {
+    let raw = discovery
+        .data
+        .get("endpoints")
+        .and_then(|endpoints| endpoints.get(key))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())?;
+    match HttpEndpoint::parse(key, raw) {
+        Ok(endpoint) => Some(endpoint),
+        Err(error) => {
+            tracing::warn!(%error, "ignoring invalid discovery endpoint");
+            None
+        }
+    }
 }
 
 pub struct DiscoveryCache {

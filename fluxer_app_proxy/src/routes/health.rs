@@ -81,8 +81,13 @@ mod tests {
         let mut config = AppProxyConfig::from_env();
         config.invite_meta_enabled = invite_meta_enabled;
         config.discovery_upstream_url = spawn_discovery_origin().await;
+        let csp = Arc::new(
+            crate::csp::CompiledCspPolicy::from_config(&config)
+                .expect("the test configuration must compile to a valid CSP"),
+        );
         AppState {
             config: Arc::new(config),
+            csp,
             http_client: build_http_client().unwrap(),
             discovery_cache: Arc::new(DiscoveryCache::new()),
             geoip: Arc::new(GeoipResolver::from_config(&GeoipConfig {
@@ -95,6 +100,7 @@ mod tests {
             })),
             invite_meta: Arc::new(OnceLock::new()),
             index_html: None,
+            budgets: crate::state::AppProxyBudgets::default(),
         }
     }
 

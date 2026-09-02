@@ -1,16 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::config::CspConfig;
+use crate::config::{AppProxyConfig, CspConfig, CspSource, HttpEndpoint};
+use axum::http::HeaderValue;
+use axum::http::header::InvalidHeaderValue;
 use rand::RngExt;
-use reqwest::Url;
+
+const CSP_NONCE_HEX_DIGITS: usize = 32;
+const CSP_VALIDATION_NONCE: &str = "00000000000000000000000000000000";
+
+const _: () = assert!(
+    CSP_VALIDATION_NONCE.len() == CSP_NONCE_HEX_DIGITS,
+    "the nonce a policy is validated with must be shaped like the nonce a request carries"
+);
 
 #[derive(Clone, Debug, Default)]
 pub struct RuntimeCspSources {
-    pub static_cdn_endpoint: Option<String>,
-    pub media_endpoint: Option<String>,
-    pub s3_public_endpoint: Option<String>,
-    pub s3_uploads_bucket: Option<String>,
-    pub branding_image_origins: Vec<String>,
+    pub static_cdn_endpoint: Option<HttpEndpoint>,
+    pub media_endpoint: Option<HttpEndpoint>,
+    pub s3_public_endpoint: Option<HttpEndpoint>,
+    pub s3_uploads_endpoint: Option<HttpEndpoint>,
+    pub branding_image_origins: Vec<HttpEndpoint>,
 }
 
 const FRAME_SOURCES: &[&str] = &[
@@ -74,16 +83,99 @@ const WORKER_SOURCES: &[&str] = &["https://*.fluxer.app", "blob:"];
 
 const MANIFEST_SOURCES: &[&str] = &["https://*.fluxer.app"];
 
+#[derive(Debug)]
+pub enum CspCompileError {
+    InvalidAssetPolicy(InvalidHeaderValue),
+    InvalidSpaPolicy(InvalidHeaderValue),
+}
+
+impl std::fmt::Display for CspCompileError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidAssetPolicy(_) => {
+                formatter.write_str("the asset content security policy is not a valid header value")
+            }
+            Self::InvalidSpaPolicy(_) => {
+                formatter.write_str("the SPA content security policy is not a valid header value")
+            }
+        }
+    }
+}
+
+impl std::error::Error for CspCompileError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::InvalidAssetPolicy(source) | Self::InvalidSpaPolicy(source) => Some(source),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CompiledCspPolicy {
+    config: CspConfig,
+    asset: HeaderValue,
+}
+
+impl CompiledCspPolicy {
+    pub fn from_config(config: &AppProxyConfig) -> Result<Self, CspCompileError> {
+        Self::compile(
+            config.csp.clone(),
+            &RuntimeCspSources {
+                static_cdn_endpoint: config.static_cdn_endpoint.clone(),
+                media_endpoint: None,
+                s3_public_endpoint: config.s3_public_endpoint.clone(),
+                s3_uploads_endpoint: config.s3_uploads_endpoint.clone(),
+                branding_image_origins: Vec::new(),
+            },
+        )
+    }
+
+    pub fn compile(
+        config: CspConfig,
+        configured_sources: &RuntimeCspSources,
+    ) -> Result<Self, CspCompileError> {
+        let asset_sources = RuntimeCspSources {
+            static_cdn_endpoint: configured_sources.static_cdn_endpoint.clone(),
+            ..RuntimeCspSources::default()
+        };
+        let asset = HeaderValue::from_str(&build_asset_csp(&config, &asset_sources))
+            .map_err(CspCompileError::InvalidAssetPolicy)?;
+        HeaderValue::from_str(&build_csp(
+            &config,
+            CSP_VALIDATION_NONCE,
+            configured_sources,
+        ))
+        .map_err(CspCompileError::InvalidSpaPolicy)?;
+        Ok(Self { config, asset })
+    }
+
+    pub fn asset_header(&self) -> HeaderValue {
+        self.asset.clone()
+    }
+
+    pub fn spa_header(&self, nonce: &str, runtime_sources: &RuntimeCspSources) -> HeaderValue {
+        assert!(
+            nonce.len() == CSP_NONCE_HEX_DIGITS
+                && nonce.bytes().all(|byte| byte.is_ascii_hexdigit()),
+            "a CSP nonce must be a 128-bit hexadecimal value"
+        );
+        HeaderValue::from_str(&build_csp(&self.config, nonce, runtime_sources)).expect(
+            "every CSP source is a validated keyword, scheme, or ASCII origin, so a policy built \
+             from them is always a valid header value",
+        )
+    }
+}
+
 pub fn generate_nonce() -> String {
     let bytes: [u8; 16] = rand::rng().random();
     hex::encode(bytes)
 }
 
-pub fn build_csp(config: &CspConfig, nonce: &str, runtime_sources: &RuntimeCspSources) -> String {
+fn build_csp(config: &CspConfig, nonce: &str, runtime_sources: &RuntimeCspSources) -> String {
     build_csp_directives(config, Some(nonce), runtime_sources).join("; ")
 }
 
-pub fn build_asset_csp(config: &CspConfig, runtime_sources: &RuntimeCspSources) -> String {
+fn build_asset_csp(config: &CspConfig, runtime_sources: &RuntimeCspSources) -> String {
     build_csp_directives(config, None, runtime_sources).join("; ")
 }
 
@@ -95,7 +187,7 @@ fn build_csp_directives(
     let mut directives = Vec::with_capacity(14);
 
     let mut default = vec!["'self'".to_owned()];
-    extend_from(&mut default, config.extra_default_src.as_deref(), &[]);
+    extend_from(&mut default, &config.extra_default_src, &[]);
     directives.push(format!("default-src {}", default.join(" ")));
 
     let mut script = vec![
@@ -106,21 +198,17 @@ fn build_csp_directives(
     if let Some(n) = nonce {
         script.insert(1, format!("'nonce-{n}'"));
     }
-    extend_from(
-        &mut script,
-        config.extra_script_src.as_deref(),
-        SCRIPT_SOURCES,
-    );
+    extend_from(&mut script, &config.extra_script_src, SCRIPT_SOURCES);
     extend_runtime_sources(&mut script, runtime_sources, true, false);
     directives.push(format!("script-src {}", script.join(" ")));
 
     let mut style = vec!["'self'".to_owned(), "'unsafe-inline'".to_owned()];
-    extend_from(&mut style, config.extra_style_src.as_deref(), STYLE_SOURCES);
+    extend_from(&mut style, &config.extra_style_src, STYLE_SOURCES);
     extend_runtime_sources(&mut style, runtime_sources, true, true);
     directives.push(format!("style-src {}", style.join(" ")));
 
     let mut img = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
-    extend_from(&mut img, config.extra_img_src.as_deref(), IMAGE_SOURCES);
+    extend_from(&mut img, &config.extra_img_src, IMAGE_SOURCES);
     extend_runtime_sources(&mut img, runtime_sources, true, true);
     for origin in &runtime_sources.branding_image_origins {
         push_endpoint_source(&mut img, Some(origin));
@@ -128,44 +216,32 @@ fn build_csp_directives(
     directives.push(format!("img-src {}", img.join(" ")));
 
     let mut media = vec!["'self'".to_owned(), "blob:".to_owned()];
-    extend_from(&mut media, config.extra_media_src.as_deref(), MEDIA_SOURCES);
+    extend_from(&mut media, &config.extra_media_src, MEDIA_SOURCES);
     extend_runtime_sources(&mut media, runtime_sources, true, true);
     directives.push(format!("media-src {}", media.join(" ")));
 
     let mut font = vec!["'self'".to_owned(), "data:".to_owned()];
-    extend_from(&mut font, config.extra_font_src.as_deref(), FONT_SOURCES);
+    extend_from(&mut font, &config.extra_font_src, FONT_SOURCES);
     extend_runtime_sources(&mut font, runtime_sources, true, true);
     directives.push(format!("font-src {}", font.join(" ")));
 
     let mut connect = vec!["'self'".to_owned(), "data:".to_owned()];
-    extend_from(
-        &mut connect,
-        config.extra_connect_src.as_deref(),
-        CONNECT_SOURCES,
-    );
+    extend_from(&mut connect, &config.extra_connect_src, CONNECT_SOURCES);
     extend_runtime_sources(&mut connect, runtime_sources, true, true);
     extend_runtime_s3_sources(&mut connect, runtime_sources);
     directives.push(format!("connect-src {}", connect.join(" ")));
 
     let mut frame = vec!["'self'".to_owned()];
-    extend_from(&mut frame, config.extra_frame_src.as_deref(), FRAME_SOURCES);
+    extend_from(&mut frame, &config.extra_frame_src, FRAME_SOURCES);
     directives.push(format!("frame-src {}", frame.join(" ")));
 
     let mut worker = vec!["'self'".to_owned(), "blob:".to_owned()];
-    extend_from(
-        &mut worker,
-        config.extra_worker_src.as_deref(),
-        WORKER_SOURCES,
-    );
+    extend_from(&mut worker, &config.extra_worker_src, WORKER_SOURCES);
     extend_runtime_sources(&mut worker, runtime_sources, true, false);
     directives.push(format!("worker-src {}", worker.join(" ")));
 
     let mut manifest = vec!["'self'".to_owned()];
-    extend_from(
-        &mut manifest,
-        config.extra_manifest_src.as_deref(),
-        MANIFEST_SOURCES,
-    );
+    extend_from(&mut manifest, &config.extra_manifest_src, MANIFEST_SOURCES);
     extend_runtime_sources(&mut manifest, runtime_sources, true, false);
     directives.push(format!("manifest-src {}", manifest.join(" ")));
 
@@ -187,78 +263,40 @@ fn extend_runtime_sources(
     include_media: bool,
 ) {
     if include_static {
-        push_endpoint_source(target, runtime_sources.static_cdn_endpoint.as_deref());
+        push_endpoint_source(target, runtime_sources.static_cdn_endpoint.as_ref());
     }
     if include_media {
-        push_endpoint_source(target, runtime_sources.media_endpoint.as_deref());
+        push_endpoint_source(target, runtime_sources.media_endpoint.as_ref());
     }
 }
 
-pub fn http_origin(raw: &str) -> Option<String> {
-    let url = Url::parse(raw.trim()).ok()?;
-    let scheme = url.scheme();
-    if scheme != "http" && scheme != "https" {
-        return None;
-    }
-    let host = url.host_str()?;
-    let port = url
-        .port()
-        .map(|port| format!(":{port}"))
-        .unwrap_or_default();
-    Some(format!("{scheme}://{host}{port}"))
-}
-
-fn push_endpoint_source(target: &mut Vec<String>, endpoint: Option<&str>) {
+fn push_endpoint_source(target: &mut Vec<String>, endpoint: Option<&HttpEndpoint>) {
     let Some(endpoint) = endpoint else {
         return;
     };
-    let source = endpoint.trim().trim_end_matches('/');
-    if source.is_empty() || target.iter().any(|existing| existing == source) {
+    let source = endpoint.csp_origin();
+    if target.iter().any(|existing| existing == source) {
         return;
     }
     target.push(source.to_owned());
 }
 
 fn extend_runtime_s3_sources(target: &mut Vec<String>, runtime_sources: &RuntimeCspSources) {
-    push_endpoint_source(target, runtime_sources.s3_public_endpoint.as_deref());
-
-    let Some(source) = s3_uploads_bucket_origin(runtime_sources) else {
-        return;
-    };
-    push_endpoint_source(target, Some(&source));
+    push_endpoint_source(target, runtime_sources.s3_public_endpoint.as_ref());
+    push_endpoint_source(target, runtime_sources.s3_uploads_endpoint.as_ref());
 }
 
-fn s3_uploads_bucket_origin(runtime_sources: &RuntimeCspSources) -> Option<String> {
-    let bucket = runtime_sources
-        .s3_uploads_bucket
-        .as_deref()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())?;
-    let endpoint = runtime_sources.s3_public_endpoint.as_deref()?.trim();
-    let url = Url::parse(endpoint).ok()?;
-    let scheme = url.scheme();
-    if scheme != "http" && scheme != "https" {
-        return None;
+fn extend_from(target: &mut Vec<String>, extra: &[CspSource], defaults: &[&str]) {
+    for source in defaults {
+        if target.iter().any(|existing| existing == source) {
+            continue;
+        }
+        target.push((*source).to_owned());
     }
-    let host = url.host_str()?;
-    let host = if host.starts_with(&format!("{bucket}.")) {
-        host.to_owned()
-    } else {
-        format!("{bucket}.{host}")
-    };
-    let port = url
-        .port()
-        .map(|port| format!(":{port}"))
-        .unwrap_or_default();
-    Some(format!("{scheme}://{host}{port}"))
-}
 
-fn extend_from(target: &mut Vec<String>, extra: Option<&[String]>, defaults: &[&str]) {
-    target.extend(defaults.iter().map(|s| (*s).to_owned()));
-
-    for source in extra.into_iter().flatten() {
-        let source = source.trim();
-        if source.is_empty() || target.iter().any(|existing| existing == source) {
+    for source in extra {
+        let source = source.as_str();
+        if target.iter().any(|existing| existing == source) {
             continue;
         }
         target.push(source.to_owned());
@@ -272,8 +310,11 @@ mod tests {
     #[test]
     fn generate_nonce_produces_32_char_hex() {
         let nonce = generate_nonce();
-        assert_eq!(nonce.len(), 32);
+        assert_eq!(nonce.len(), CSP_NONCE_HEX_DIGITS);
         assert!(nonce.chars().all(|c| c.is_ascii_hexdigit()));
+        CompiledCspPolicy::compile(default_csp_config(), &runtime_sources())
+            .unwrap()
+            .spa_header(&nonce, &runtime_sources());
     }
 
     #[test]
@@ -289,6 +330,10 @@ mod tests {
 
     fn runtime_sources() -> RuntimeCspSources {
         RuntimeCspSources::default()
+    }
+
+    fn endpoint(value: &str) -> HttpEndpoint {
+        HttpEndpoint::parse("TEST_ENDPOINT", value).unwrap()
     }
 
     #[test]
@@ -336,7 +381,13 @@ mod tests {
     #[test]
     fn build_csp_includes_report_uri_when_configured() {
         let config = CspConfig {
-            report_uri: Some("https://example.com/csp-report".to_owned()),
+            report_uri: Some(
+                crate::config::CspReportUri::parse(
+                    "TEST_CSP_REPORT_URI",
+                    "https://example.com/csp-report",
+                )
+                .unwrap(),
+            ),
             ..Default::default()
         };
         let csp = build_csp(&config, "nonce1", &runtime_sources());
@@ -354,8 +405,8 @@ mod tests {
     fn build_csp_includes_configured_runtime_endpoints() {
         let config = default_csp_config();
         let runtime_sources = RuntimeCspSources {
-            static_cdn_endpoint: Some("https://static.example.test/".to_owned()),
-            media_endpoint: Some("https://media.example.test".to_owned()),
+            static_cdn_endpoint: Some(endpoint("https://static.example.test/")),
+            media_endpoint: Some(endpoint("https://media.example.test")),
             ..Default::default()
         };
         let csp = build_csp(&config, "nonce1", &runtime_sources);
@@ -366,11 +417,37 @@ mod tests {
     }
 
     #[test]
+    fn a_csp_source_cannot_smuggle_a_second_directive() {
+        for injected in [
+            "https://evil.test; script-src *",
+            "https://evil.test,https://other.test",
+            "https://evil.test https://other.test",
+            "https://evil.test\nscript-src *",
+        ] {
+            assert!(
+                CspSource::parse("TEST_CSP_SOURCE", injected).is_err(),
+                "{injected:?} must not parse as a single CSP source"
+            );
+        }
+    }
+
+    #[test]
+    fn a_report_uri_cannot_smuggle_a_second_directive() {
+        assert!(
+            crate::config::CspReportUri::parse(
+                "TEST_CSP_REPORT_URI",
+                "https://evil.test/r; script-src *"
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
     fn build_csp_includes_s3_public_and_virtual_hosted_upload_origins() {
         let config = default_csp_config();
         let runtime_sources = RuntimeCspSources {
-            s3_public_endpoint: Some("http://localhost:3900/".to_owned()),
-            s3_uploads_bucket: Some("fluxer-uploads".to_owned()),
+            s3_public_endpoint: Some(endpoint("http://localhost:3900/")),
+            s3_uploads_endpoint: Some(endpoint("http://fluxer-uploads.localhost:3900/")),
             ..Default::default()
         };
 
@@ -379,5 +456,73 @@ mod tests {
         assert!(csp.contains("http://localhost:3900"));
         assert!(csp.contains("http://fluxer-uploads.localhost:3900"));
         assert!(!csp.contains("http://localhost:3900/ "));
+    }
+
+    #[test]
+    fn a_compiled_asset_header_is_the_policy_every_asset_response_reuses() {
+        let sources = RuntimeCspSources {
+            static_cdn_endpoint: Some(endpoint("https://static.example.test/")),
+            media_endpoint: Some(endpoint("https://media.example.test")),
+            s3_public_endpoint: Some(endpoint("http://localhost:3900/")),
+            ..Default::default()
+        };
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &sources).unwrap();
+
+        assert_eq!(policy.asset_header(), policy.asset_header());
+        let asset = policy.asset_header();
+        let asset = asset.to_str().unwrap();
+        assert!(!asset.contains("nonce-"));
+        assert!(asset.contains("https://static.example.test"));
+        assert!(
+            !asset.contains("https://media.example.test"),
+            "an asset response must not widen the policy with the endpoints only the document needs"
+        );
+        assert!(!asset.contains("http://localhost:3900"));
+    }
+
+    #[test]
+    fn a_compiled_policy_stamps_the_requests_own_nonce_and_discovery_endpoints() {
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
+        let discovered = RuntimeCspSources {
+            static_cdn_endpoint: Some(endpoint("https://cdn.discovered.test")),
+            branding_image_origins: vec![endpoint("https://branding.discovered.test")],
+            ..Default::default()
+        };
+
+        let header = policy.spa_header("0123456789abcdef0123456789abcdef", &discovered);
+        let header = header.to_str().unwrap();
+
+        assert!(header.contains("'nonce-0123456789abcdef0123456789abcdef'"));
+        assert!(header.contains("https://cdn.discovered.test"));
+        assert!(header.contains("https://branding.discovered.test"));
+    }
+
+    #[test]
+    fn a_compiled_policy_matches_the_directives_it_was_compiled_from() {
+        let config = default_csp_config();
+        let sources = RuntimeCspSources {
+            static_cdn_endpoint: Some(endpoint("https://static.example.test/")),
+            ..Default::default()
+        };
+        let policy = CompiledCspPolicy::compile(config.clone(), &sources).unwrap();
+
+        assert_eq!(
+            policy.asset_header().to_str().unwrap(),
+            build_asset_csp(&config, &sources)
+        );
+        assert_eq!(
+            policy
+                .spa_header(CSP_VALIDATION_NONCE, &sources)
+                .to_str()
+                .unwrap(),
+            build_csp(&config, CSP_VALIDATION_NONCE, &sources)
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "a CSP nonce must be a 128-bit hexadecimal value")]
+    fn a_compiled_policy_refuses_a_nonce_it_did_not_generate() {
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
+        policy.spa_header("not-a-nonce", &runtime_sources());
     }
 }

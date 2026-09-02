@@ -3,10 +3,13 @@
 use anyhow::Context;
 use fluxer_app_proxy::{
     config::AppProxyConfig,
+    csp::CompiledCspPolicy,
     discovery_cache::DiscoveryCache,
     geoip, invite_meta,
     routes::build_router,
-    state::{AppState, build_http_client},
+    state::{
+        AppProxyBudgets, AppState, MAX_SPA_INDEX_BYTES, build_http_client, read_bounded_text_file,
+    },
 };
 use std::sync::{Arc, OnceLock};
 use tokio::{net::TcpListener, runtime::Builder};
@@ -22,6 +25,11 @@ fn main() -> anyhow::Result<()> {
 
     let config = Arc::new(AppProxyConfig::from_env());
     let addr = format!("{}:{}", config.host, config.port);
+
+    let csp = Arc::new(
+        CompiledCspPolicy::from_config(&config)
+            .context("failed to compile the Fluxer app proxy content security policy")?,
+    );
 
     let geoip = Arc::new(geoip::resolver_from_app_config(&config));
 
@@ -55,7 +63,7 @@ fn main() -> anyhow::Result<()> {
 
         let index_html = if config.index_upstream_url.is_none() {
             let index_path = std::path::Path::new(&config.static_dir).join("index.html");
-            match tokio::fs::read_to_string(&index_path).await {
+            match read_bounded_text_file(&index_path, MAX_SPA_INDEX_BYTES).await {
                 Ok(contents) => Some(Arc::<str>::from(contents)),
                 Err(err) => {
                     tracing::warn!(path = ?index_path, %err, "failed to preload index.html; will read per request");
@@ -68,11 +76,13 @@ fn main() -> anyhow::Result<()> {
 
         let state = AppState {
             config,
+            csp,
             http_client,
             discovery_cache,
             geoip,
             invite_meta,
             index_html,
+            budgets: AppProxyBudgets::default(),
         };
 
         let router = build_router(state);
