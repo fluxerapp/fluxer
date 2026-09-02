@@ -13,6 +13,7 @@ import {
 	getScreenShareEncoding,
 	resolveScreenShareFrameRate,
 	SCREEN_SHARE_DEGRADATION_PREFERENCE,
+	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
@@ -299,12 +300,11 @@ export function isOutboundFrameRateBelowTarget(
 }
 
 export function computeAdaptiveBitrate(
-	resolution: ScreenshareResolution,
 	frameRate: number,
 	maxBitrateBps?: number,
 	observedTargetBitrateBps?: number,
 ): number {
-	const base = getScreenShareEncoding(resolution, frameRate, maxBitrateBps).maxBitrate ?? 0;
+	const base = getScreenShareEncoding(frameRate, maxBitrateBps).maxBitrate ?? 0;
 	if (typeof observedTargetBitrateBps !== 'number' || observedTargetBitrateBps <= 0) return base;
 	return Math.min(base, Math.round(observedTargetBitrateBps * OBSERVED_TARGET_BITRATE_HEADROOM));
 }
@@ -332,7 +332,7 @@ export async function applyResolutionFrameRateAndBitrate(
 			width: dimensions.width,
 			height: dimensions.height,
 			frameRate,
-			maxBitrateBps: computeAdaptiveBitrate(resolution, frameRate, maxBitrateBps, observedTargetBitrateBps),
+			maxBitrateBps: computeAdaptiveBitrate(frameRate, maxBitrateBps, observedTargetBitrateBps),
 		});
 		if (!updated) {
 			logger.warn('Skipped native screen-share encoding update because v2 screen state is unavailable', {
@@ -361,7 +361,7 @@ export async function applyResolutionFrameRateAndBitrate(
 	}
 	const parameters = sender.getParameters();
 	const encodings = parameters.encodings?.length ? parameters.encodings : [{}];
-	const maxBitrate = computeAdaptiveBitrate(resolution, frameRate, maxBitrateBps, observedTargetBitrateBps);
+	const maxBitrate = computeAdaptiveBitrate(frameRate, maxBitrateBps, observedTargetBitrateBps);
 	parameters.degradationPreference = SCREEN_SHARE_DEGRADATION_PREFERENCE;
 	parameters.encodings = encodings.map((encoding) => ({
 		...encoding,
@@ -474,7 +474,7 @@ class AdaptiveScreenShareEngine extends Store {
 				screenShare.sender,
 				snapshot.configuredResolution,
 				snapshot.configuredFrameRate,
-				VoiceSettings.getScreenShareMaxBitrateBpsOverride(),
+				SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 			);
 			logger.info('Restored configured screen share quality', {
 				resolution: snapshot.configuredResolution,
@@ -568,12 +568,7 @@ class AdaptiveScreenShareEngine extends Store {
 			: null;
 		const currentSenderMaxBitrate =
 			getSenderMaxBitrate(screenShare.sender) ??
-			computeAdaptiveBitrate(
-				currentResolution,
-				currentFrameRate,
-				VoiceSettings.getScreenShareMaxBitrateBpsOverride(),
-				stats.targetBitrate,
-			);
+			computeAdaptiveBitrate(currentFrameRate, SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS, stats.targetBitrate);
 		const canApplyBandwidthBitrateStep =
 			reason === 'bandwidth' && !nextFrameRate && !this.bandwidthBitrateStepActive && currentSenderMaxBitrate > 0;
 		const nextResolution =
@@ -584,7 +579,7 @@ class AdaptiveScreenShareEngine extends Store {
 		}
 		const nextMaxBitrateBps = canApplyBandwidthBitrateStep
 			? Math.max(1, Math.round(currentSenderMaxBitrate * BANDWIDTH_BITRATE_STEP_FACTOR))
-			: VoiceSettings.getScreenShareMaxBitrateBpsOverride();
+			: SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS;
 		const nextEffectiveFrameRate = nextFrameRate ?? currentFrameRate;
 		const stepKind = nextFrameRate ? 'framerate' : canApplyBandwidthBitrateStep ? 'bitrate' : 'resolution';
 		try {
@@ -671,7 +666,7 @@ class AdaptiveScreenShareEngine extends Store {
 				screenShare.sender,
 				nextResolution,
 				configuredFrameRate,
-				VoiceSettings.getScreenShareMaxBitrateBpsOverride(),
+				SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 			);
 			this.update(() => {
 				this.effectiveResolution = nextResolution;

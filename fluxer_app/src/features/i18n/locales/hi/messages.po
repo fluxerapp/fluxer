@@ -867,11 +867,6 @@ msgstr "{mbWayPaymentMethod} का उपयोग एक बार के EUR 
 msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName} checkout, so it is not a recurring subscription path here."
 msgstr "{mbWayPaymentMethod} {paymentProviderName} चेकआउट में एक बार का भुगतान तरीका है, इसलिए यह यहां एक आवर्ती सदस्यता मार्ग नहीं है।"
 
-#. Screen share bitrate option label. Mbps means megabits per second.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
-msgid "{megabits} Mbps"
-msgstr "{megabits} Mbps"
-
 #. Community tooltip stat showing the total member count. memberCount is already localized for display; rawMemberCount controls plural grammar.
 #: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:36
 msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
@@ -1661,7 +1656,7 @@ msgid "1080p"
 msgstr "1080p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:50
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:51
 msgctxt "adaptive-screen-share"
 msgid "1080p"
 msgstr "1080p"
@@ -1687,7 +1682,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:55
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:56
 msgctxt "adaptive-screen-share"
 msgid "1440p"
 msgstr "1440p"
@@ -1731,7 +1726,7 @@ msgid "24-hour"
 msgstr "24-hour"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:35
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:36
 msgctxt "adaptive-screen-share"
 msgid "240p"
 msgstr "240p"
@@ -1796,7 +1791,7 @@ msgid "40px, 3 members"
 msgstr "40px, 3 सदस्य"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:40
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:41
 msgctxt "adaptive-screen-share"
 msgid "480p"
 msgstr "480p"
@@ -1854,7 +1849,7 @@ msgid "7 days"
 msgstr "7 दिन"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:45
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:46
 msgctxt "adaptive-screen-share"
 msgid "720p"
 msgstr "720p"
@@ -3025,7 +3020,7 @@ msgstr "जो कोई भी आपकी पूरी प्रोफ़ा�
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:236
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:191
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "स्क्रीन शेयरिंग के लिए AV1 की अनुमति दें"
@@ -3079,7 +3074,7 @@ msgstr "सभी कम्युनिटी के लिए अनुमत�
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:240
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "H.265 (HEVC) को स्क्रीन शेयरिंग के लिए अनुमति दें"
@@ -4418,7 +4413,7 @@ msgstr "ऑटो-कम्प्लीट सुझाव: {label}, {resultCoun
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:126
@@ -4432,7 +4427,7 @@ msgid "Automatic"
 msgstr "स्वचालित"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:222
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
 msgid "Automatic ({codec})"
 msgstr "स्वचालित ({codec})"
 
@@ -4532,7 +4527,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:226
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (ऑप्ट-इन आवश्यक)"
 
@@ -4825,7 +4820,7 @@ msgid "Bandwidth"
 msgstr "बैंडविड्थ"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:65
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:66
 msgctxt "adaptive-screen-share"
 msgid "bandwidth limited"
 msgstr "बैंडविड्थ सीमित"
@@ -5820,15 +5815,15 @@ msgstr "कैप्चा सत्यापन विफल रहा। फ�
 msgid "Capture"
 msgstr "कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture app audio"
 msgstr "ऐप ऑडियो कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:423
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
 msgid "Capture desktop audio"
 msgstr "डेस्कटॉप ऑडियो कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture device audio"
 msgstr "डिवाइस ऑडियो कैप्चर करें"
 
@@ -7969,7 +7964,7 @@ msgstr "कंपोजर फ़ोकस"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Configure"
 msgstr "कॉन्फ़िगर करें"
 
@@ -9375,7 +9370,7 @@ msgid "Cozy"
 msgstr "आरामदायक"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:70
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:71
 msgctxt "adaptive-screen-share"
 msgid "CPU limited"
 msgstr "सीपीयू सीमित"
@@ -11028,7 +11023,7 @@ msgstr "डिवाइस विवरण"
 msgid "Device revoked"
 msgstr "डिवाइस हटा दिया गया"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1026
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1025
 msgid "Device selection"
 msgstr "डिवाइस चुनें"
 
@@ -12607,7 +12602,7 @@ msgstr "पसंदीदा खाली हैं"
 
 #. Label for an advanced select that caps the best video codec this client advertises it can decode.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "Emulate decode codec (testing)"
 msgstr "डीकोड कोडेक का अनुकरण करें (परीक्षण)"
@@ -14506,7 +14501,7 @@ msgstr "फ़ोल्डर सेटिंग्ज़"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "हमें {blueskyProviderName} पर फ़ॉलो करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:828
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:827
 msgid "Follow voice input"
 msgstr "वॉइस इनपुट को फ़ॉलो करें"
 
@@ -15526,7 +15521,7 @@ msgstr "{0} दिया गया।"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "सभी अनुमतियाँ देता है और चैनल प्रतिबंधों को बायपास करता है। अत्यधिक संवेदनशील।"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1013
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1012
 msgid "Granular selection"
 msgstr "बारीक चयन"
 
@@ -15720,7 +15715,7 @@ msgid "H.264 simulcast backup"
 msgstr "H.264 सिमुलकास्ट बैकअप"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:231
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (ऑप्ट-इन आवश्यक है)"
 
@@ -16090,7 +16085,7 @@ msgstr "पासवर्ड छिपाएं"
 msgid "Hide picture-in-picture popout?"
 msgstr "पिक्चर-इन-पिक्चर पॉपआउट छिपाएँ?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:862
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:861
 msgid "Hide preview thumbnail"
 msgstr "पूर्वावलोकन थंबनेल छिपाएँ"
 
@@ -16535,11 +16530,11 @@ msgstr "नज़रअंदाज़ करें"
 msgid "Ignore friend request"
 msgstr "दोस्ती का अनुरोध अनदेखा करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1003
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1002
 msgid "Ignore hardware devices"
 msgstr "हार्डवेयर डिवाइस को अनदेखा करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:979
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:978
 msgid "Ignore input media"
 msgstr "इनपुट मीडिया को अनदेखा करें"
 
@@ -16565,7 +16560,7 @@ msgstr "स्पैम फ़्लैग को अनदेखा करे�
 msgid "Ignore the friend request from {displayName}?"
 msgstr "क्या आप {displayName} की फ्रेंड रिक्वेस्ट को अनदेखा करना चाहते हैं?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:990
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:989
 msgid "Ignore virtual"
 msgstr "वर्चुअल को अनदेखा करें"
 
@@ -18739,19 +18734,19 @@ msgid "Low"
 msgstr "कम"
 
 #. Toast shown after adaptive screen-share quality lowers bitrate. {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:80
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:81
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share bitrate - {reason}"
 msgstr "स्क्रीन शेयर बिटरेट कम किया गया - {reason}"
 
 #. Toast shown after adaptive screen-share quality lowers frame rate. {frameRate} is a number and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:85
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:86
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {frameRate} FPS - {reason}"
 msgstr "स्क्रीन शेयर को {frameRate} FPS तक कम किया गया - {reason}"
 
 #. Toast shown after adaptive screen-share quality lowers resolution. {resolution} is a resolution label and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:91
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:92
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {resolution} - {reason}"
 msgstr "स्क्रीन शेयर को {resolution} तक कम किया गया - {reason}"
@@ -19272,11 +19267,6 @@ msgstr "अधिकतम जीवनकाल (दिन)"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:122
 msgid "Maximum protection for family-friendly spaces"
 msgstr "परिवार के अनुकूल जगहों के लिए अधिकतम सुरक्षा"
-
-#. Label for an advanced screen-share bitrate select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
-msgid "Maximum screen share bitrate"
-msgstr "अधिकतम स्क्रीन शेयर बिटरेट"
 
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
@@ -19981,7 +19971,7 @@ msgstr "माइक्रोफ़ोन की अनुमति ज़रू
 msgid "Microphone test"
 msgstr "माइक टेस्ट"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:947
 msgid "Microphone workaround"
 msgstr "माइक्रोफ़ोन वर्कअराउंड"
 
@@ -22125,7 +22115,7 @@ msgstr "केवल चौड़ी स्क्रीन पर लागू �
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "केवल क्रेडिट कार्ड स्वीकार किए जाते हैं। परिपक्व सामग्री की जाँच के लिए डेबिट और प्रीपेड कार्ड का उपयोग नहीं किया जा सकता है।"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
 msgid "Only default speakers"
 msgstr "केवल डिफ़ॉल्ट स्पीकर"
 
@@ -22173,7 +22163,7 @@ msgstr "यहां कोड तभी चलाएं जब आप ठीक
 msgid "Only show message previews for DMs with unread messages"
 msgstr "केवल बिना पढ़े मैसेज वाले DM के लिए मैसेज प्रीव्यू दिखाएं"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:958
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
 msgid "Only speakers"
 msgstr "केवल स्पीकर"
 
@@ -23859,7 +23849,7 @@ msgid "Preferences..."
 msgstr "प्राथमिकताएँ..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:218
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
 msgid "Preferred screen share codec"
 msgstr "पसंदीदा स्क्रीन शेयर कोडेक"
 
@@ -24614,7 +24604,7 @@ msgid "Quality"
 msgstr "क्वालिटी"
 
 #. Fallback reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:75
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:76
 msgctxt "adaptive-screen-share"
 msgid "quality limited"
 msgstr "गुणवत्ता सीमित"
@@ -24714,7 +24704,7 @@ msgid "Raid coordination"
 msgstr "रेड कोऑर्डिनेशन"
 
 #. Toast shown after adaptive screen-share quality raises resolution. {resolution} is a resolution label.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:97
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:98
 msgctxt "adaptive-screen-share"
 msgid "Raised screen share to {resolution}"
 msgstr "स्क्रीन शेयर को {resolution} तक बढ़ाया गया"
@@ -29875,7 +29865,7 @@ msgid "Source"
 msgstr "स्रोत"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:60
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:61
 msgctxt "adaptive-screen-share"
 msgid "source quality"
 msgstr "स्रोत गुणवत्ता"
@@ -34652,11 +34642,6 @@ msgstr "{emojiText} अपलोड किया जा रहा है। इ�
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:26
 msgid "Uploading emojis"
 msgstr "इमोजी अपलोड हो रहे हैं"
-
-#. Description for the maximum screen share bitrate select. Keep WebRTC literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
-msgid "Upper bitrate cap before WebRTC adapts to the network."
-msgstr "WebRTC नेटवर्क के अनुकूल होने से पहले ऊपरी बिटरेट सीमा।"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

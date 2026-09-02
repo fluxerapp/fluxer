@@ -15,6 +15,7 @@ import {
 	getScreenShareEncoding,
 	resolveStreamingModeSettings,
 	SCREEN_SHARE_DEGRADATION_PREFERENCE,
+	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {classifyVideoEncoderAcceleration} from '@app/features/voice/utils/VideoAccelerationClassification';
 import {
@@ -143,7 +144,7 @@ function getCodecSpecificScreenShareBitrateCeiling(codec: VideoCodec): number | 
 
 function clampScreenShareEncoding(encoding: VideoEncoding | undefined, codec: VideoCodec): VideoEncoding | undefined {
 	if (!encoding) return undefined;
-	const maxBitrateBps = VoiceSettings.getScreenShareMaxBitrateBpsOverride();
+	const maxBitrateBps = SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS;
 	const codecCeilingBps = getCodecSpecificScreenShareBitrateCeiling(codec);
 	const bitrateCeilingBps =
 		maxBitrateBps !== undefined && codecCeilingBps !== undefined
@@ -168,11 +169,7 @@ export function getEffectiveScreenShareEncoding(publishOptions?: TrackPublishOpt
 			VoiceSettings.getScreenshareResolution(),
 			VoiceSettings.getVideoFrameRate(),
 		);
-		screenShareEncoding = getScreenShareEncoding(
-			settings.resolution,
-			settings.frameRate,
-			VoiceSettings.getScreenShareMaxBitrateBpsOverride(),
-		);
+		screenShareEncoding = getScreenShareEncoding(settings.frameRate);
 	}
 	if (!screenShareEncoding) return undefined;
 	return clampScreenShareEncoding(

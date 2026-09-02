@@ -69,7 +69,6 @@ type VoiceSettingsPatch = Partial<{
 	screenShareSoftwareQuality: ScreenShareSoftwareQuality;
 	screenShareScalabilityMode: ScreenShareScalabilityModePreference;
 	screenShareBackupCodecMode: ScreenShareBackupCodecMode;
-	screenShareMaxBitrateMbps: number;
 	adaptiveScreenShareQuality: boolean;
 	vadThreshold: number;
 	vadAutoSensitivity: boolean;

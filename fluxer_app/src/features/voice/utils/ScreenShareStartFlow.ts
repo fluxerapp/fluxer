@@ -305,7 +305,6 @@ function getConfiguredScreenShareOptions(
 		includeAudio,
 		streamingMode: normalisedStreamingMode,
 		contentHint,
-		maxBitrateBps: VoiceSettings.getScreenShareMaxBitrateBpsOverride(),
 		sourceDimensions,
 		preferredDisplaySurface,
 	});

@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {describe, expect, it} from 'vitest';
-import {buildScreenShareOptions, resolveStreamingModeSettings} from './ScreenShareOptions';
+import {
+	buildScreenShareOptions,
+	getScreenShareEncoding,
+	resolveStreamingModeSettings,
+	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
+	STREAMING_MODE_PRESETS,
+} from './ScreenShareOptions';
 
 describe('buildScreenShareOptions', () => {
 	it('asks display capture to omit the cursor for app windows', () => {
@@ -122,22 +128,21 @@ describe('buildScreenShareOptions', () => {
 		});
 		expect(captureOptions.contentHint).toBeUndefined();
 	});
-	it('uses a caller supplied bitrate ceiling', () => {
+	it('publishes the forced bitrate for the largest preset', () => {
 		const {publishOptions} = buildScreenShareOptions({
 			resolution: 'source',
 			frameRate: 60,
 			includeAudio: false,
-			maxBitrateBps: 50000000,
 		});
-		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(50000000);
+		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
 	});
-	it('lets the preset ladder exceed the old 10 Mbps default cap', () => {
+	it('publishes the same forced bitrate for a smaller preset', () => {
 		const {publishOptions} = buildScreenShareOptions({
 			resolution: 'ultra',
 			frameRate: 60,
 			includeAudio: false,
 		});
-		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(24000000);
+		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
 	});
 	it('defaults the high-tier gaming preset to 60 fps', () => {
 		expect(resolveStreamingModeSettings('gaming', 'medium', 30, true)).toEqual({
@@ -150,5 +155,29 @@ describe('buildScreenShareOptions', () => {
 			resolution: 'medium',
 			frameRate: 30,
 		});
+	});
+});
+
+describe('forced screen share bitrate', () => {
+	it('forces the screenshare preset to the fixed bitrate', () => {
+		const {frameRate} = STREAMING_MODE_PRESETS.screenshare;
+		expect(getScreenShareEncoding(frameRate).maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+	});
+
+	it('forces the gaming preset to the fixed bitrate', () => {
+		const {frameRate} = STREAMING_MODE_PRESETS.gaming;
+		expect(getScreenShareEncoding(frameRate).maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+	});
+
+	it('never exceeds the fixed bitrate even when a higher ceiling is supplied', () => {
+		expect(getScreenShareEncoding(60, 50000000).maxBitrate).toBe(SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS);
+	});
+
+	it('still honours a lower ceiling so adaptive step-down keeps working', () => {
+		expect(getScreenShareEncoding(60, 2000000).maxBitrate).toBe(2000000);
+	});
+
+	it('does not vary with frame rate', () => {
+		expect(getScreenShareEncoding(15).maxBitrate).toBe(getScreenShareEncoding(120).maxBitrate);
 	});
 });

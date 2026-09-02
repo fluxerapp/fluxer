@@ -867,11 +867,6 @@ msgstr "{paymentProviderName}에서 결제 페이지에 {mbWayPaymentMethod}를 
 msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName} checkout, so it is not a recurring subscription path here."
 msgstr "{mbWayPaymentMethod}은(는) {paymentProviderName} 결제 시 일회성 결제 수단이므로, 여기서는 정기 구독에 사용할 수 없습니다."
 
-#. Screen share bitrate option label. Mbps means megabits per second.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
-msgid "{megabits} Mbps"
-msgstr "{megabits}Mbps"
-
 #. Community tooltip stat showing the total member count. memberCount is already localized for display; rawMemberCount controls plural grammar.
 #: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:36
 msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
@@ -1661,7 +1656,7 @@ msgid "1080p"
 msgstr "1080p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:50
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:51
 msgctxt "adaptive-screen-share"
 msgid "1080p"
 msgstr "1080p"
@@ -1687,7 +1682,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:55
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:56
 msgctxt "adaptive-screen-share"
 msgid "1440p"
 msgstr "1440p"
@@ -1731,7 +1726,7 @@ msgid "24-hour"
 msgstr "24-hour"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:35
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:36
 msgctxt "adaptive-screen-share"
 msgid "240p"
 msgstr "240p"
@@ -1796,7 +1791,7 @@ msgid "40px, 3 members"
 msgstr "40px, 멤버 3명"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:40
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:41
 msgctxt "adaptive-screen-share"
 msgid "480p"
 msgstr "480p"
@@ -1854,7 +1849,7 @@ msgid "7 days"
 msgstr "7일"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:45
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:46
 msgctxt "adaptive-screen-share"
 msgid "720p"
 msgstr "720p"
@@ -3025,7 +3020,7 @@ msgstr "전체 프로필을 볼 수 있는 모든 사람이 내 프로필 현지
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:236
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:191
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "화면 공유에 AV1 사용 허용"
@@ -3079,7 +3074,7 @@ msgstr "모든 커뮤니티 허용"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:240
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "H.265(HEVC) 화면 공유 허용"
@@ -4418,7 +4413,7 @@ msgstr "자동 완성 제안: {label}, {resultCount}개 중 {selectedOptionPosit
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:126
@@ -4432,7 +4427,7 @@ msgid "Automatic"
 msgstr "자동"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:222
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
 msgid "Automatic ({codec})"
 msgstr "자동 ({codec})"
 
@@ -4532,7 +4527,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:226
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (옵트인 필요)"
 
@@ -4825,7 +4820,7 @@ msgid "Bandwidth"
 msgstr "대역폭"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:65
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:66
 msgctxt "adaptive-screen-share"
 msgid "bandwidth limited"
 msgstr "대역폭 제한"
@@ -5820,15 +5815,15 @@ msgstr "캡차 인증에 실패했습니다. 다시 시도해 주세요."
 msgid "Capture"
 msgstr "캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
 msgid "Capture app audio"
 msgstr "앱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:423
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:422
 msgid "Capture desktop audio"
 msgstr "데스크톱 오디오 캡처"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:421
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:420
 msgid "Capture device audio"
 msgstr "기기 오디오 캡처"
 
@@ -7969,7 +7964,7 @@ msgstr "입력창 자동 활성화"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Configure"
 msgstr "구성"
 
@@ -9375,7 +9370,7 @@ msgid "Cozy"
 msgstr "아늑한"
 
 #. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:70
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:71
 msgctxt "adaptive-screen-share"
 msgid "CPU limited"
 msgstr "CPU 제한"
@@ -11028,7 +11023,7 @@ msgstr "장치 정보"
 msgid "Device revoked"
 msgstr "기기 연결 해제됨"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1026
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1025
 msgid "Device selection"
 msgstr "기기 선택"
 
@@ -12607,7 +12602,7 @@ msgstr "즐겨찾기 없음"
 
 #. Label for an advanced select that caps the best video codec this client advertises it can decode.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "Emulate decode codec (testing)"
 msgstr "디코딩 코덱 에뮬레이션 (테스트용)"
@@ -14506,7 +14501,7 @@ msgstr "폴더 설정"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "{blueskyProviderName}에서 팔로우하세요"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:828
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:827
 msgid "Follow voice input"
 msgstr "음성 입력 따라가기"
 
@@ -15526,7 +15521,7 @@ msgstr "{0} 부여됨."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "모든 권한을 부여하고 채널 제한을 우회합니다. 매우 민감한 권한입니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1013
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1012
 msgid "Granular selection"
 msgstr "세부 선택"
 
@@ -15720,7 +15715,7 @@ msgid "H.264 simulcast backup"
 msgstr "H.264 동시 전송 백업"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:231
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
 msgid "H.265 (requires opt-in)"
 msgstr "H.265(옵트인 필요)"
 
@@ -16090,7 +16085,7 @@ msgstr "비밀번호 숨기기"
 msgid "Hide picture-in-picture popout?"
 msgstr "화면 속 화면 팝업 숨기기?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:862
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:861
 msgid "Hide preview thumbnail"
 msgstr "미리보기 썸네일 숨기기"
 
@@ -16535,11 +16530,11 @@ msgstr "무시"
 msgid "Ignore friend request"
 msgstr "친구 요청 무시하기"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1003
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1002
 msgid "Ignore hardware devices"
 msgstr "하드웨어 기기 무시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:979
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:978
 msgid "Ignore input media"
 msgstr "입력 미디어 무시"
 
@@ -16565,7 +16560,7 @@ msgstr "스팸 신고 무시"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "{displayName}님의 친구 요청을 무시하시겠어요?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:990
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:989
 msgid "Ignore virtual"
 msgstr "가상 배경 무시"
 
@@ -18739,19 +18734,19 @@ msgid "Low"
 msgstr "낮음"
 
 #. Toast shown after adaptive screen-share quality lowers bitrate. {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:80
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:81
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share bitrate - {reason}"
 msgstr "화면 공유 비트 전송률을 낮춤 - {reason}"
 
 #. Toast shown after adaptive screen-share quality lowers frame rate. {frameRate} is a number and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:85
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:86
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {frameRate} FPS - {reason}"
 msgstr "화면 공유를 {frameRate} FPS로 낮춤 - {reason}"
 
 #. Toast shown after adaptive screen-share quality lowers resolution. {resolution} is a resolution label and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:91
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:92
 msgctxt "adaptive-screen-share"
 msgid "Lowered screen share to {resolution} - {reason}"
 msgstr "화면 공유를 {resolution}으로 낮춤 - {reason}"
@@ -19272,11 +19267,6 @@ msgstr "최대 수명(일)"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:122
 msgid "Maximum protection for family-friendly spaces"
 msgstr "가족 친화적인 공간을 위한 최고의 보호"
-
-#. Label for an advanced screen-share bitrate select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
-msgid "Maximum screen share bitrate"
-msgstr "최대 화면 공유 비트레이트"
 
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
@@ -19981,7 +19971,7 @@ msgstr "마이크 권한 필요"
 msgid "Microphone test"
 msgstr "마이크 테스트"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:947
 msgid "Microphone workaround"
 msgstr "마이크 문제 해결"
 
@@ -22125,7 +22115,7 @@ msgstr "와이드 스크린에만 적용됩니다."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "신용카드만 사용할 수 있습니다. 성인 콘텐츠 확인을 위해 직불카드 및 선불카드는 사용할 수 없습니다."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:967
 msgid "Only default speakers"
 msgstr "기본 스피커만 사용"
 
@@ -22173,7 +22163,7 @@ msgstr "여기에서 실행하는 코드가 어떤 동작을 하는지 정확히
 msgid "Only show message previews for DMs with unread messages"
 msgstr "읽지 않은 메시지가 있는 DM에 대해서만 메시지 미리보기 표시"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:958
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
 msgid "Only speakers"
 msgstr "스피커만"
 
@@ -23859,7 +23849,7 @@ msgid "Preferences..."
 msgstr "환경설정..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:218
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
 msgid "Preferred screen share codec"
 msgstr "화면 공유 시 선호하는 코덱"
 
@@ -24614,7 +24604,7 @@ msgid "Quality"
 msgstr "품질"
 
 #. Fallback reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:75
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:76
 msgctxt "adaptive-screen-share"
 msgid "quality limited"
 msgstr "품질 제한됨"
@@ -24714,7 +24704,7 @@ msgid "Raid coordination"
 msgstr "레이드 조율"
 
 #. Toast shown after adaptive screen-share quality raises resolution. {resolution} is a resolution label.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:97
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:98
 msgctxt "adaptive-screen-share"
 msgid "Raised screen share to {resolution}"
 msgstr "{resolution}로 화면 공유 품질을 높였습니다"
@@ -29875,7 +29865,7 @@ msgid "Source"
 msgstr "원본"
 
 #. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:60
+#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:61
 msgctxt "adaptive-screen-share"
 msgid "source quality"
 msgstr "소스 품질"
@@ -34652,11 +34642,6 @@ msgstr "{emojiText} 업로드 중. 잠시 시간이 걸릴 수 있습니다."
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:26
 msgid "Uploading emojis"
 msgstr "이모티콘 업로드 중"
-
-#. Description for the maximum screen share bitrate select. Keep WebRTC literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
-msgid "Upper bitrate cap before WebRTC adapts to the network."
-msgstr "WebRTC가 네트워크에 맞춰 조정되기 전에 최대 비트 전송률을 설정합니다."
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.

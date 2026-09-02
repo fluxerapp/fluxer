@@ -34,7 +34,10 @@ import {
 	getNativeAudioCaptureDiagnosticState,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
-import {resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	resolveStreamingModeSettings,
+	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
+} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	buildVoiceStatsForNerdsPresentation,
 	type StatsForNerdsData,
@@ -287,7 +290,7 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		screenShareSoftwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 		screenShareScalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
 		screenShareBackupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
-		screenShareMaxBitrateMbps: VoiceSettings.getScreenShareMaxBitrateMbps(),
+		screenShareMaxBitrateMbps: SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS / 1000000,
 		adaptiveScreenShareQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
 		openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		linuxAudioCapture: {
@@ -514,7 +517,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			softwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
 			backupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
-			maxBitrateMbps: VoiceSettings.getScreenShareMaxBitrateMbps(),
+			maxBitrateMbps: SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS / 1000000,
 			adaptiveQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
 			adaptiveQualityAdapted: adaptiveQualitySnapshot.isAdapted,
 			adaptiveQualityConfiguredResolution: adaptiveQualitySnapshot.configuredResolution,

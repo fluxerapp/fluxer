@@ -15,7 +15,10 @@ import ScreenShareCodecNegotiation, {
 import {getScreenShareAudioPumpDiagnostics} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getNativeAudioCaptureDiagnosticState} from '@app/features/voice/utils/NativeAudioCaptureBridge';
-import {resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	resolveStreamingModeSettings,
+	SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS,
+} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	buildVoiceStatsForNerdsPresentation,
 	type StatsForNerdsData,
@@ -217,7 +220,7 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 			softwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
 			backupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
-			maxBitrateMbps: VoiceSettings.getScreenShareMaxBitrateMbps(),
+			maxBitrateMbps: SCREEN_SHARE_FORCED_VIDEO_BITRATE_BPS / 1000000,
 			adaptiveQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
 			adaptiveQualityAdapted: adaptiveQualitySnapshot.isAdapted,
 			adaptiveQualityConfiguredResolution: adaptiveQualitySnapshot.configuredResolution,

@@ -186,7 +186,7 @@ const PremiumBadge = () => (
 	</span>
 );
 
-function useHasHigherVideoQuality(): boolean {
+export function useHasHigherVideoQuality(): boolean {
 	return useMemo(
 		() =>
 			isLimitToggleEnabled(
@@ -262,7 +262,6 @@ export async function pushActiveStreamSettings(
 		includeAudio,
 		streamingMode: normalisedMode,
 		contentHint,
-		maxBitrateBps: VoiceSettings.getScreenShareMaxBitrateBpsOverride(),
 		preferredDisplaySurface,
 	});
 	if (preferredScreenShareCodecPreference !== 'auto') {
