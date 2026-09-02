@@ -1665,12 +1665,6 @@ msgstr "100 שימושים"
 msgid "1080p"
 msgstr "1080p"
 
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:48
-msgctxt "adaptive-screen-share"
-msgid "1080p"
-msgstr "1080p"
-
 #. Fixed duration label for a 12-hour interval. Used as a standalone label in duration text or option lists.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:23
 msgid "12 hours"
@@ -1691,14 +1685,8 @@ msgstr "12-hour"
 msgid "1440p"
 msgstr "1440p"
 
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:53
-msgctxt "adaptive-screen-share"
-msgid "1440p"
-msgstr "1440p"
-
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:100
 msgid "15 FPS"
 msgstr "15 פריימים לשנייה"
 
@@ -1734,12 +1722,6 @@ msgstr "2–32 תווים, אותיות, מספרים, קווים תחתונים
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "24-hour"
 msgstr "24-hour"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:33
-msgctxt "adaptive-screen-share"
-msgid "240p"
-msgstr "240p"
 
 #. Invite max-uses dropdown option for 25 uses.
 #: src/features/invite/components/modals/InviteModal.tsx:72
@@ -1779,7 +1761,7 @@ msgid "3 months"
 msgstr "3 חודשים"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:104
 msgid "30 FPS"
 msgstr "30 פריימים לשנייה"
 
@@ -1799,12 +1781,6 @@ msgstr "404: הדף לא נמצא"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:313
 msgid "40px, 3 members"
 msgstr "40px, 3 חברים"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:38
-msgctxt "adaptive-screen-share"
-msgid "480p"
-msgstr "480p"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:47
@@ -1844,7 +1820,7 @@ msgid "6-digit code"
 msgstr "קוד בן 6 ספרות"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:108
 msgid "60 FPS"
 msgstr "60 פריימים לשנייה"
 
@@ -1857,12 +1833,6 @@ msgstr "60 שניות"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:31
 msgid "7 days"
 msgstr "7 ימים"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:43
-msgctxt "adaptive-screen-share"
-msgid "720p"
-msgstr "720p"
 
 #. Required-action error when the API requires a captcha for phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:426
@@ -2313,11 +2283,6 @@ msgstr "סף פעילות"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:58
 msgid "Actual size"
 msgstr "גודל מקורי"
-
-#. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
-msgid "Adaptive quality"
-msgstr "איכות אדפטיבית"
 
 #. Action label for adding the current selection.
 #. Button label in the favorite meme editor that adds the typed tag to the tag list.
@@ -2773,11 +2738,6 @@ msgstr "כווננו את רמת ההגדלה הכללית של האפליקצי
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx:46
 msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adjust quickly."
 msgstr "התאם את רמת התצוגה הכוללת של האפליקציה. השתמש ב-{zoomIn} / {zoomOut} כדי להתאים במהירות."
-
-#. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
-msgid "Adjusted to {resolution} {frameRate} FPS"
-msgstr "הותאם ל-{resolution} {frameRate} פריימים לשנייה"
 
 #. Permission name: grants all permissions and bypasses restrictions.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
@@ -4118,7 +4078,7 @@ msgid "Audio boost"
 msgstr "הגברת שמע"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
 msgid "Audio device"
 msgstr "התקן שמע"
 
@@ -4213,7 +4173,7 @@ msgid "Audio send:"
 msgstr "שליחת שמע:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
 msgid "Audio settings"
 msgstr "הגדרות שמע"
 
@@ -4838,12 +4798,6 @@ msgstr "חסום משתמש זה"
 #: src/features/voice/components/voice_connection_status/shared.ts:68
 msgid "Bandwidth"
 msgstr "רוחב פס"
-
-#. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:63
-msgctxt "adaptive-screen-share"
-msgid "bandwidth limited"
-msgstr "רוחב פס מוגבל"
 
 #. IAR modal: disabled-state label on the ban card after the user is banned from this community.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:159
@@ -5845,15 +5799,15 @@ msgstr "אימות הקאפצ'ה נכשל. יש לנסות שוב."
 msgid "Capture"
 msgstr "לכידה"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:407
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:394
 msgid "Capture app audio"
 msgstr "הקלטת שמע מהאפליקציה"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:408
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:395
 msgid "Capture desktop audio"
 msgstr "הקלטת שמע מהמחשב"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:406
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:393
 msgid "Capture device audio"
 msgstr "לכידת שמע מהמכשיר"
 
@@ -9416,12 +9370,6 @@ msgstr "שער"
 msgid "Cozy"
 msgstr "נעים"
 
-#. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:68
-msgctxt "adaptive-screen-share"
-msgid "CPU limited"
-msgstr "מוגבל על ידי המעבד"
-
 #. Generic primary action label that creates the item described by the current dialog or form.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:148
 msgid "Create"
@@ -9824,7 +9772,7 @@ msgstr "נוכחי: {mutedText}"
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:88
 msgid "Custom"
 msgstr "מותאם אישית"
 
@@ -11065,7 +11013,7 @@ msgstr "פרטי מכשיר"
 msgid "Device revoked"
 msgstr "המכשיר נחסם"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1030
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
 msgid "Device selection"
 msgstr "בחירת מכשיר"
 
@@ -11094,7 +11042,7 @@ msgid "Devices"
 msgstr "מכשירים"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
 msgid "Dial in your own numbers"
 msgstr "התקשרו למספרים שלכם"
 
@@ -14453,12 +14401,12 @@ msgid "Flexible text channel names"
 msgstr "שמות גמישים לערוצי טקסט"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:65
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "תנועה חלקה ב-1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:70
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "תנועה חלקה ב-720p 30 FPS"
 
@@ -14545,7 +14493,7 @@ msgstr "הגדרות תיקייה"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "עקבו אחרינו ב- {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:825
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:816
 msgid "Follow voice input"
 msgstr "מעקב אחר קלט קולי"
 
@@ -14817,7 +14765,7 @@ msgstr "מסגרת"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:120
 msgid "Frame rate"
 msgstr "קצב פריימים"
 
@@ -15064,7 +15012,7 @@ msgstr "בקר משחק"
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:61
 msgid "Gaming"
 msgstr "גיימינג"
 
@@ -15564,7 +15512,7 @@ msgstr "הוענקה {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "מעניק את כל ההרשאות ועוקף הגבלות ערוץ. רגיש במיוחד."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1017
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:955
 msgid "Granular selection"
 msgstr "בחירה פרטנית"
 
@@ -16128,7 +16076,7 @@ msgstr "הסתר סיסמה"
 msgid "Hide picture-in-picture popout?"
 msgstr "להסתיר את החלון הקופץ של 'תמונה בתוך תמונה'?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:857
 msgid "Hide preview thumbnail"
 msgstr "הסתר תצוגה מקדימה ממוזערת"
 
@@ -16573,11 +16521,11 @@ msgstr "התעלם"
 msgid "Ignore friend request"
 msgstr "התעלם מבקשת חברות"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:945
 msgid "Ignore hardware devices"
 msgstr "התעלם מהתקני חומרה"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:921
 msgid "Ignore input media"
 msgstr "התעלם מקלט מדיה"
 
@@ -16603,7 +16551,7 @@ msgstr "התעלם מסימון ספאם"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "להתעלם מבקשת החברות מ- {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:932
 msgid "Ignore virtual"
 msgstr "התעלם משינוי קולי"
 
@@ -18783,18 +18731,6 @@ msgstr "עוצמת שמע"
 msgid "Low"
 msgstr "נמוכה"
 
-#. Toast shown after adaptive screen-share quality lowers frame rate. {frameRate} is a number and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:78
-msgctxt "adaptive-screen-share"
-msgid "Lowered screen share to {frameRate} FPS - {reason}"
-msgstr "הקטנת קצב פריימים של שיתוף המסך ל-{frameRate} FPS - {reason}"
-
-#. Toast shown after adaptive screen-share quality lowers resolution. {resolution} is a resolution label and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:84
-msgctxt "adaptive-screen-share"
-msgid "Lowered screen share to {resolution} - {reason}"
-msgstr "הקטנת רזולוציית שיתוף המסך ל-{resolution} - {reason}"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:179
 msgid "Luxembourg"
@@ -20009,7 +19945,7 @@ msgstr "נדרשת הרשאת מיקרופון"
 msgid "Microphone test"
 msgstr "בדיקת מיקרופון"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:952
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:890
 msgid "Microphone workaround"
 msgstr "פתרון עוקף למיקרופון"
 
@@ -22146,7 +22082,7 @@ msgstr "חל רק על מסכים רחבים."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "אנו מקבלים כרטיסי אשראי בלבד. לא ניתן להשתמש בכרטיסי חיוב או בכרטיסים נטענים לצורך אימות התוכן למבוגרים."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:972
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:910
 msgid "Only default speakers"
 msgstr "רמקולים מוגדרים כברירת מחדל בלבד"
 
@@ -22194,7 +22130,7 @@ msgstr "יש להריץ קוד כאן רק אם אתם מבינים בדיוק �
 msgid "Only show message previews for DMs with unread messages"
 msgstr "הצג תצוגה מקדימה של הודעות רק בצ'אטים פרטיים עם הודעות שלא נקראו"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:962
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:900
 msgid "Only speakers"
 msgstr "רמקולים בלבד"
 
@@ -24635,12 +24571,6 @@ msgstr "לא ניתן להפעיל את מצב הדיבור בלחיצה כאש�
 msgid "Quality"
 msgstr "איכות"
 
-#. Fallback reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:73
-msgctxt "adaptive-screen-share"
-msgid "quality limited"
-msgstr "איכות מוגבלת"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:49
@@ -24735,12 +24665,6 @@ msgstr "קבוצת לחצני בחירה"
 msgid "Raid coordination"
 msgstr "תיאום פשיטה"
 
-#. Toast shown after adaptive screen-share quality raises resolution. {resolution} is a resolution label.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:90
-msgctxt "adaptive-screen-share"
-msgid "Raised screen share to {resolution}"
-msgstr "הועלה שיתוף מסך ל-{resolution}"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:171
 msgid "Rate"
@@ -24756,7 +24680,7 @@ msgid "Raw embed JSON"
 msgstr "JSON לא מוצפן"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:78
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "טקסט חד במיוחד ברזולוציה מקורית, 15 פריימים לשנייה"
 
@@ -26364,7 +26288,7 @@ msgstr "שינוי גודל, הגדלה וצמדת חלונות תלויים ב�
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:116
 msgid "Resolution"
 msgstr "רזולוציה"
 
@@ -27061,7 +26985,7 @@ msgstr "נדרשת הרשאת הקלטת מסך"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
 msgid "Screen share"
 msgstr "שיתוף מסך"
 
@@ -27091,7 +27015,7 @@ msgid "Screen share encoder controls"
 msgstr "בקרות מקודד שיתוף מסך"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:98
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:97
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "שיתוף מסך הסתיים"
@@ -28540,7 +28464,7 @@ msgid "Share screens and windows."
 msgstr "שתף מסכים וחלונות."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
 msgid "Share stream audio"
 msgstr "שתף שמע של הזרם"
 
@@ -28610,7 +28534,7 @@ msgid "Sharing personal information"
 msgstr "שיתוף מידע אישי"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:83
 msgid "Sharper text at 720p, 30 FPS"
 msgstr "טקסט חד יותר ב-720p, 30 FPS"
 
@@ -29906,15 +29830,9 @@ msgstr "צלילים"
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:96
 msgid "Source"
 msgstr "מקור"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:58
-msgctxt "adaptive-screen-share"
-msgid "source quality"
-msgstr "איכות מקור"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:245
@@ -30647,7 +30565,7 @@ msgid "Stream preview"
 msgstr "תצוגה מקדימה של השידור"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
 msgid "Stream quality"
 msgstr "איכות השידור"
 
@@ -30673,7 +30591,7 @@ msgid "Streaming"
 msgstr "בשידור חי"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:112
 msgid "Streaming mode"
 msgstr "מצב סטרימינג"
 
@@ -31127,7 +31045,7 @@ msgstr "הודעות מערכת מצוות {productName}. לא ניתן להשי
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
 msgid "System default"
 msgstr "ברירת מחדל של המערכת"
 
@@ -31676,7 +31594,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "ה-redirect_uri שסופק חייב להשתמש ב-HTTP או ב-HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:103
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:102
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "מקור שיתוף המסך הפסיק לשלוח וידאו, ולכן שיתוף המסך שלך הופסק."
@@ -34146,7 +34064,7 @@ msgstr "קבוצה ללא שם"
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
 msgid "Unnamed input"
 msgstr "קלט ללא שם"
 

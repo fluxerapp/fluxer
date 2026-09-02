@@ -58,10 +58,6 @@ export function markNativeScreenShareTrack(track: MediaStreamTrack): void {
 	}
 }
 
-export function isNativeScreenShareTrack(track: MediaStreamTrack | undefined): boolean {
-	return Boolean(track && (track as MediaStreamTrack & Record<PropertyKey, unknown>)[NATIVE_SCREEN_SHARE_TRACK_MARKER]);
-}
-
 export function getVideoFrameCtor(): VideoFrameCtor | undefined {
 	return (
 		window as typeof window & {

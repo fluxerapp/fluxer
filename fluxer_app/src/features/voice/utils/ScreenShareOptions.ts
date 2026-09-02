@@ -50,7 +50,7 @@ export function resolveScreenShareFrameRate(frameRate: number): SupportedScreenS
 	return 15;
 }
 
-export function getScreenShareDimensions(resolution: ScreenshareResolution): {
+function getScreenShareDimensions(resolution: ScreenshareResolution): {
 	width: number;
 	height: number;
 } {

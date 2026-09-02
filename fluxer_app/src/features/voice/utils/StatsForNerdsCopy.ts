@@ -11,7 +11,6 @@ import {
 	isDesktop,
 	supportsDesktopScreenShareAudioCapture,
 } from '@app/features/ui/utils/NativeUtils';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
@@ -295,7 +294,6 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		screenShareBackupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
 		screenShareMaxBitrateMbps:
 			getScreenShareBitrateBps(configuredScreenShare.resolution, configuredScreenShare.frameRate) / 1000000,
-		adaptiveScreenShareQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
 		openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		linuxAudioCapture: {
 			workaround: VoiceSettings.getLinuxAudioCaptureWorkaround(),
@@ -461,7 +459,6 @@ async function collectDesktopMetadata(): Promise<Record<string, unknown>> {
 }
 
 export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
-	const adaptiveQualitySnapshot = AdaptiveScreenShareEngine.qualitySnapshot;
 	const effectiveScreenShareSettings = resolveStreamingModeSettings(
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
@@ -513,13 +510,6 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
 					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
 				1000000,
-			adaptiveQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
-			adaptiveQualityAdapted: adaptiveQualitySnapshot.isAdapted,
-			adaptiveQualityConfiguredResolution: adaptiveQualitySnapshot.configuredResolution,
-			adaptiveQualityConfiguredFrameRate: adaptiveQualitySnapshot.configuredFrameRate,
-			adaptiveQualityEffectiveResolution: adaptiveQualitySnapshot.effectiveResolution,
-			adaptiveQualityEffectiveFrameRate: adaptiveQualitySnapshot.effectiveFrameRate,
-			adaptiveQualityLimitationReason: adaptiveQualitySnapshot.limitationReason,
 			audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
 			audioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
 			audioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),

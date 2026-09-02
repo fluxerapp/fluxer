@@ -2,7 +2,6 @@
 
 import assert from 'node:assert/strict';
 import {isDesktop, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import {updateLocalParticipantFromRoom} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {
 	enforceLocalMediaPublicationCap,
@@ -180,7 +179,6 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			this.adapter.setStreamingPriorityInternal(false);
 			this.adapter.cleanupActiveScreenShareEndListenerInternal();
 			this.adapter.cancelEncoderVerificationInternal();
-			AdaptiveScreenShareEngine.stop();
 		}
 		SoftwareEncoderWarning.reset();
 		const stopCleanupSnapshot = enabled ? null : this.adapter.getScreenShareCaptureCleanupSnapshotInternal(participant);
@@ -837,7 +835,6 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 		applyScreenShareState(this.adapter, false, true, true);
 		this.adapter.syncLocalStreamWatchStateInternal(false);
 		this.adapter.syncLocalScreenShareAudioStateInternal(participant, false);
-		AdaptiveScreenShareEngine.stop();
 		if (cleanupError !== undefined) {
 			throw new ScreenShareRollbackIncompleteError([cleanupError]);
 		}
@@ -1084,7 +1081,6 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 				run: () =>
 					this.adapter.startEncoderVerificationInternal(room, participant, effectivePublishOptions?.videoCodec),
 			},
-			{name: 'adaptive engine', run: () => AdaptiveScreenShareEngine.start(room)},
 			{name: 'local stream state', run: () => applyScreenShareState(this.adapter, true, true, true)},
 			{name: 'participant snapshot', run: () => updateLocalParticipantFromRoom(room)},
 			{name: 'watch state', run: () => this.adapter.syncLocalStreamWatchStateInternal(true)},

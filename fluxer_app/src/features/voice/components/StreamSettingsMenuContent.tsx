@@ -16,10 +16,8 @@ import {
 	type StreamSettingsAudioControlLabelKey,
 	selectStreamSettingsAudioMenuState,
 } from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {useStoreVersion} from '@app/features/voice/engine/Store';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import VoiceSettings, {type ScreenshareResolution, type StreamingMode} from '@app/features/voice/state/VoiceSettings';
@@ -138,16 +136,6 @@ const UNNAMED_INPUT_DESCRIPTOR = msg({
 const AUDIO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Audio settings',
 	comment: 'Section header in the stream settings menu grouping audio-related toggles.',
-});
-const ADAPTIVE_QUALITY_DESCRIPTOR = msg({
-	message: 'Adaptive quality',
-	comment:
-		'Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.',
-});
-const ADAPTIVE_QUALITY_ACTIVE_DESCRIPTOR = msg({
-	message: 'Adjusted to {resolution} {frameRate} FPS',
-	comment:
-		'Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.',
 });
 const STREAM_QUALITY_DESCRIPTOR = msg({
 	message: 'Stream quality',
@@ -313,7 +301,6 @@ export async function pushActiveStreamSettings(
 	}
 	try {
 		await MediaEngine.updateActiveScreenShareSettings(activeCaptureOptions, publishOptions);
-		AdaptiveScreenShareEngine.start(MediaEngine.room);
 	} catch (error) {
 		logger.warn('Failed to push updated stream settings to the active share', error);
 	}
@@ -869,7 +856,6 @@ export const StreamSettingsMenuContent = observer(
 					>
 						<Trans>Hide preview thumbnail</Trans>
 					</CheckboxItem>
-					<AdaptiveQualityToggle data-flx="voice.stream-settings-menu-content.adaptive-quality-toggle" />
 				</MenuGroup>
 			</>
 		);
@@ -877,58 +863,6 @@ export const StreamSettingsMenuContent = observer(
 );
 
 StreamSettingsMenuContent.displayName = 'StreamSettingsMenuContent';
-
-const RESOLUTION_LABELS: Record<ScreenshareResolution, string> = {
-	low_240p: '240p',
-	low_480p: '480p',
-	medium: '720p',
-	high: '1080p',
-	ultra: '1440p',
-	source: '',
-};
-
-const AdaptiveQualityToggle = observer(() => {
-	const {i18n} = useLingui();
-	useStoreVersion(AdaptiveScreenShareEngine);
-	const enabled = VoiceSettings.getAdaptiveScreenShareQuality();
-	const snapshot = AdaptiveScreenShareEngine.qualitySnapshot;
-	const label = i18n._(ADAPTIVE_QUALITY_DESCRIPTOR);
-	const effectiveResolutionLabel =
-		snapshot.effectiveResolution === 'source'
-			? i18n._(SOURCE_DESCRIPTOR)
-			: RESOLUTION_LABELS[snapshot.effectiveResolution];
-	const adjustedStatus =
-		enabled && snapshot.isAdapted
-			? i18n._(ADAPTIVE_QUALITY_ACTIVE_DESCRIPTOR, {
-					resolution: effectiveResolutionLabel,
-					frameRate: snapshot.effectiveFrameRate,
-				})
-			: null;
-	return (
-		<CheckboxItem
-			label={label}
-			checked={enabled}
-			onCheckedChange={(checked) => {
-				VoiceSettingsCommands.update({adaptiveScreenShareQuality: checked});
-			}}
-			data-flx="voice.stream-settings-menu-content.adaptive-quality-toggle.checkbox-item"
-		>
-			<span className={styles.audioDeviceLabel} data-flx="voice.stream-settings-menu-content.adaptive-quality-label">
-				<span className={styles.audioDeviceName} data-flx="voice.stream-settings-menu-content.adaptive-quality-name">
-					{label}
-				</span>
-				{adjustedStatus && (
-					<span
-						className={styles.audioDeviceSubtext}
-						data-flx="voice.stream-settings-menu-content.adaptive-quality-status"
-					>
-						{adjustedStatus}
-					</span>
-				)}
-			</span>
-		</CheckboxItem>
-	);
-});
 
 const VenmicSettingsSubmenu = observer(({onSettingsChange}: {onSettingsChange?: () => void}) => {
 	const {i18n} = useLingui();

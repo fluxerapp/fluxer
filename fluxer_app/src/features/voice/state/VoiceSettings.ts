@@ -109,7 +109,6 @@ type VoiceSettingsUpdate = Partial<{
 	screenShareSoftwareQuality: ScreenShareSoftwareQuality;
 	screenShareScalabilityMode: ScreenShareScalabilityModePreference;
 	screenShareBackupCodecMode: ScreenShareBackupCodecMode;
-	adaptiveScreenShareQuality: boolean;
 	vadThreshold: number;
 	vadAutoSensitivity: boolean;
 	vadEnhanced: boolean;
@@ -194,15 +193,13 @@ function applyPiPPopoutDefaultsMigration(parsed: Record<string, unknown>): boole
 	return true;
 }
 
-function applyAdaptiveScreenShareQualityMigrationV2(parsed: Record<string, unknown>): boolean {
+function applyAdaptiveScreenShareQualityRemovalMigration(parsed: Record<string, unknown>): boolean {
 	let changed = false;
-	if (Object.hasOwn(parsed, 'adaptiveScreenShareQuality')) {
-		delete parsed.adaptiveScreenShareQuality;
-		changed = true;
-	}
-	if (typeof parsed.adaptiveScreenShareQualityPrefV2 !== 'boolean') {
-		parsed.adaptiveScreenShareQualityPrefV2 = false;
-		changed = true;
+	for (const key of ['adaptiveScreenShareQuality', 'adaptiveScreenShareQualityPrefV2']) {
+		if (Object.hasOwn(parsed, key)) {
+			delete parsed[key];
+			changed = true;
+		}
 	}
 	return changed;
 }
@@ -403,7 +400,6 @@ class VoiceSettings {
 	screenShareSoftwareQualityPrefV2: ScreenShareSoftwareQuality = DEFAULT_SCREEN_SHARE_SOFTWARE_QUALITY;
 	screenShareScalabilityModePrefV2: ScreenShareScalabilityModePreference = DEFAULT_SCREEN_SHARE_SCALABILITY_MODE;
 	screenShareBackupCodecModePrefV2: ScreenShareBackupCodecMode = DEFAULT_SCREEN_SHARE_BACKUP_CODEC_MODE;
-	adaptiveScreenShareQualityPrefV2 = false;
 	vadThreshold = 50;
 	vadAutoSensitivity = true;
 	vadEnhanced = true;
@@ -478,7 +474,6 @@ class VoiceSettings {
 				getScreenShareScalabilityModeOverride: false,
 				getScreenShareBackupCodecMode: false,
 				getScreenShareBackupCodecModeOverride: false,
-				getAdaptiveScreenShareQuality: false,
 				getVadThreshold: false,
 				getVadAutoSensitivity: false,
 				getVadEnhanced: false,
@@ -512,7 +507,7 @@ class VoiceSettings {
 				changed = applyLegacyVenmicKeyMigration(parsed);
 			}
 			changed = applyPiPPopoutDefaultsMigration(parsed) || changed;
-			changed = applyAdaptiveScreenShareQualityMigrationV2(parsed) || changed;
+			changed = applyAdaptiveScreenShareQualityRemovalMigration(parsed) || changed;
 			changed = applyScreenShareAudioConsentMigrationV1(parsed) || changed;
 			changed = applyScreenShareAudioDefaultOnMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
@@ -589,7 +584,6 @@ class VoiceSettings {
 			'screenShareSoftwareQualityPrefV2',
 			'screenShareScalabilityModePrefV2',
 			'screenShareBackupCodecModePrefV2',
-			'adaptiveScreenShareQualityPrefV2',
 			'vadThreshold',
 			'vadAutoSensitivity',
 			'vadEnhanced',
@@ -680,14 +674,6 @@ class VoiceSettings {
 
 	set screenShareBackupCodecMode(value: ScreenShareBackupCodecMode) {
 		this.screenShareBackupCodecModePrefV2 = value;
-	}
-
-	get adaptiveScreenShareQuality(): boolean {
-		return this.adaptiveScreenShareQualityPrefV2;
-	}
-
-	set adaptiveScreenShareQuality(value: boolean) {
-		this.adaptiveScreenShareQualityPrefV2 = value;
 	}
 
 	getInputDeviceId(): string {
@@ -945,10 +931,6 @@ class VoiceSettings {
 		return mode === 'off' ? undefined : mode;
 	}
 
-	getAdaptiveScreenShareQuality(): boolean {
-		return this.adaptiveScreenShareQuality;
-	}
-
 	getVadThreshold(): number {
 		return this.vadThreshold;
 	}
@@ -1088,8 +1070,6 @@ class VoiceSettings {
 			this.screenShareScalabilityMode = validated.screenShareScalabilityMode;
 		if (validated.screenShareBackupCodecMode !== undefined)
 			this.screenShareBackupCodecMode = validated.screenShareBackupCodecMode;
-		if (validated.adaptiveScreenShareQuality !== undefined)
-			this.adaptiveScreenShareQuality = validated.adaptiveScreenShareQuality;
 		if (validated.vadThreshold !== undefined) this.vadThreshold = validated.vadThreshold;
 		if (validated.vadAutoSensitivity !== undefined) this.vadAutoSensitivity = validated.vadAutoSensitivity;
 		if (validated.vadEnhanced !== undefined) this.vadEnhanced = validated.vadEnhanced;
@@ -1227,7 +1207,6 @@ class VoiceSettings {
 			screenShareSoftwareQuality,
 			screenShareScalabilityMode,
 			screenShareBackupCodecMode,
-			adaptiveScreenShareQuality: data.adaptiveScreenShareQuality ?? this.adaptiveScreenShareQuality,
 			vadThreshold: Math.max(0, Math.min(100, data.vadThreshold ?? this.vadThreshold)),
 			vadAutoSensitivity: data.vadAutoSensitivity ?? this.vadAutoSensitivity,
 			vadEnhanced: data.vadEnhanced ?? this.vadEnhanced,

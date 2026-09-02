@@ -2,7 +2,6 @@
 
 import assert from 'node:assert/strict';
 import {Platform} from '@app/features/platform/types/Platform';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import type {NegotiationReason} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {updateLocalParticipantFromRoom} from '@app/features/voice/engine/VoiceMediaEngineBridge';
@@ -194,7 +193,6 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 		this.adapter.ensureScreenShareKeepAliveSinkInternal(participant, track);
 		this.adapter.monitorActiveScreenShareEndInternal(room, participant, track);
 		this.adapter.startEncoderVerificationInternal(room, participant, publishOptions?.videoCodec, track);
-		AdaptiveScreenShareEngine.start(room);
 		this.adapter.applyScreenShareStateInternal(true, {reason: 'server', sendUpdate: false});
 		updateLocalParticipantFromRoom(room);
 		this.adapter.syncLocalStreamWatchStateInternal(true);
@@ -338,7 +336,6 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 			typeof ctx.mediaStreamTrack.clone === 'function' ? ctx.mediaStreamTrack.clone() : ctx.mediaStreamTrack;
 		this.adapter.applyScreenShareContentHintToMediaTrackInternal(state.candidateMediaStreamTrack);
 		this.adapter.cancelEncoderVerificationInternal();
-		AdaptiveScreenShareEngine.stop();
 		await this.announceBreakAndUnpublish(ctx, state);
 		state.candidatePublication = await ctx.participant.publishTrack(
 			state.candidateMediaStreamTrack,
@@ -410,7 +407,6 @@ export class VoiceEngineV2AppScreenShareCodecMigration {
 		this.adapter.syncLocalScreenShareAudioStateInternal(ctx.participant, actual);
 		if (actual) {
 			this.adapter.monitorActiveScreenShareEndInternal(ctx.room, ctx.participant);
-			AdaptiveScreenShareEngine.start(ctx.room);
 			await this.adapter.enforceScreenShareSenderParametersInternal(ctx.participant, ctx.previousOptions);
 			this.adapter.ensureScreenShareKeepAliveSinkInternal(ctx.participant);
 		} else {

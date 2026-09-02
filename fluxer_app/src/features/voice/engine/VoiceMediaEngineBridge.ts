@@ -11,7 +11,6 @@ import type {
 	VoiceEngineV2Controller,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
-	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2Snapshot,
 	VoiceEngineV2WatchedStream,
 } from '@fluxer/voice_engine_v2';
@@ -126,36 +125,6 @@ export function getVoiceStateByConnectionIdFromMediaEngine(
 
 export function getVoiceEngineV2SnapshotFromMediaEngine(): VoiceEngineV2Snapshot | null {
 	return getMediaEngine()?.voiceEngineV2Snapshot ?? null;
-}
-
-export interface VoiceEngineV2ScreenEncodingUpdateFromMediaEngine {
-	captureId?: string;
-	width: number;
-	height: number;
-	frameRate?: number;
-	maxBitrateBps?: number;
-}
-
-function getVoiceEngineV2ActiveScreenCaptureId(controller: VoiceEngineV2Controller): string | null {
-	return controller.snapshot.screen.desired?.captureId ?? controller.snapshot.screen.published?.captureId ?? null;
-}
-
-export function updateVoiceEngineV2ScreenEncodingFromMediaEngine(
-	options: VoiceEngineV2ScreenEncodingUpdateFromMediaEngine,
-): boolean {
-	const controller = getMediaEngine()?.voiceEngineV2Controller;
-	if (!controller) return false;
-	const captureId = options.captureId ?? getVoiceEngineV2ActiveScreenCaptureId(controller);
-	if (!captureId) return false;
-	const update: VoiceEngineV2ScreenEncodingOptions = {
-		captureId,
-		width: options.width,
-		height: options.height,
-		frameRate: options.frameRate,
-		maxBitrateBps: options.maxBitrateBps,
-	};
-	controller.updateScreenEncoding(update);
-	return true;
 }
 
 export function setVoiceEngineV2ParticipantAudioLevelSpeaking(

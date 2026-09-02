@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import VoiceSettings, {
 	type CameraResolution,
@@ -69,7 +68,6 @@ type VoiceSettingsPatch = Partial<{
 	screenShareSoftwareQuality: ScreenShareSoftwareQuality;
 	screenShareScalabilityMode: ScreenShareScalabilityModePreference;
 	screenShareBackupCodecMode: ScreenShareBackupCodecMode;
-	adaptiveScreenShareQuality: boolean;
 	vadThreshold: number;
 	vadAutoSensitivity: boolean;
 	vadEnhanced: boolean;
@@ -178,13 +176,6 @@ function applyUpdatedVoiceSettings(
 	}
 	if (settings.inputVolume !== undefined && !refreshInput) {
 		MediaEngine.applyLocalInputVolume();
-	}
-	if (settings.adaptiveScreenShareQuality !== undefined) {
-		if (settings.adaptiveScreenShareQuality) {
-			AdaptiveScreenShareEngine.start(MediaEngine.room);
-		} else {
-			void AdaptiveScreenShareEngine.restoreConfiguredQuality();
-		}
 	}
 	if (refreshInput) {
 		refreshMicrophone();

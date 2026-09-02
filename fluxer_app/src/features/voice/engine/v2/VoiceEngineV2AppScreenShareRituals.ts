@@ -3,7 +3,6 @@
 import assert from 'node:assert/strict';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import {updateLocalParticipantFromRoom} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import type {
 	VoiceScreenShareEvent,
@@ -81,7 +80,6 @@ async function runScreenSharePublishPipeline(
 	adapter.applyScreenShareAudioContentHintInternal(participant);
 	adapter.monitorActiveScreenShareEndInternal(room, participant);
 	adapter.startEncoderVerificationInternal(room, participant, pipeline.effectivePublishOptions?.videoCodec);
-	AdaptiveScreenShareEngine.start(room);
 }
 
 export async function runScreenShareActivationRitual(args: ScreenShareActivationRitualArgs): Promise<void> {
@@ -158,11 +156,8 @@ export function settleScreenShareFailure(args: ScreenShareFailureSettleArgs): bo
 	if (!actual) {
 		args.onInactiveAfterSync?.();
 	}
-	if (actual) {
-		if (args.monitorEndOnActive) {
-			adapter.monitorActiveScreenShareEndInternal(room, participant);
-		}
-		AdaptiveScreenShareEngine.start(room);
+	if (actual && args.monitorEndOnActive) {
+		adapter.monitorActiveScreenShareEndInternal(room, participant);
 	}
 	if (args.playSound) {
 		SoundCommands.playSound(actual ? SoundType.ScreenShareStart : SoundType.ScreenShareStop);

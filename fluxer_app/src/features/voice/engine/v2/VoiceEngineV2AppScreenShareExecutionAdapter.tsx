@@ -9,7 +9,6 @@ import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import type {NegotiationReason} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import {Store} from '@app/features/voice/engine/Store';
@@ -597,7 +596,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	handleLocalScreenShareTrackUnpublished(room: Room, playSound: boolean, publication?: LocalTrackPublication): void {
 		this.clearScreenShareKeepAliveSinkInternal();
 		this.cleanupActiveScreenShareEndListenerInternal();
-		AdaptiveScreenShareEngine.stop();
 		const participant = room.localParticipant;
 		const cleanupSnapshot = captureScreenSharePublicationCleanup(
 			publication,
@@ -848,7 +846,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		this.transitionScreenShareLifecycleInternal({type: 'share.reset'});
 		this.cleanupActiveScreenShareEndListenerInternal();
 		this.cancelEncoderVerificationInternal();
-		AdaptiveScreenShareEngine.stop();
 		this.endedScreenShareStopInFlight = null;
 		this.cleanupScreenShareAudioRoutingState();
 	}

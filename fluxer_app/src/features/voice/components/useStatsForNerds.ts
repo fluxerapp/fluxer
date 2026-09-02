@@ -5,7 +5,6 @@ import Config from '@app/features/app/config/Config';
 import {getCachedDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platform/types/Electron';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
@@ -157,7 +156,6 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 			clearInterval(id);
 		};
 	}, [enabled]);
-	const adaptiveQualitySnapshot = AdaptiveScreenShareEngine.qualitySnapshot;
 	const effectiveScreenShareSettings = resolveStreamingModeSettings(
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
@@ -209,13 +207,6 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
 					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
 				1000000,
-			adaptiveQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
-			adaptiveQualityAdapted: adaptiveQualitySnapshot.isAdapted,
-			adaptiveQualityConfiguredResolution: adaptiveQualitySnapshot.configuredResolution,
-			adaptiveQualityConfiguredFrameRate: adaptiveQualitySnapshot.configuredFrameRate,
-			adaptiveQualityEffectiveResolution: adaptiveQualitySnapshot.effectiveResolution,
-			adaptiveQualityEffectiveFrameRate: adaptiveQualitySnapshot.effectiveFrameRate,
-			adaptiveQualityLimitationReason: adaptiveQualitySnapshot.limitationReason,
 			audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
 			audioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
 			audioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),

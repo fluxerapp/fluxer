@@ -76,13 +76,6 @@ export interface StatsForNerdsData {
 		scalabilityMode: string;
 		backupCodecMode: string;
 		maxBitrateMbps: number;
-		adaptiveQuality: boolean;
-		adaptiveQualityAdapted: boolean;
-		adaptiveQualityConfiguredResolution: string;
-		adaptiveQualityConfiguredFrameRate: number;
-		adaptiveQualityEffectiveResolution: string;
-		adaptiveQualityEffectiveFrameRate: number;
-		adaptiveQualityLimitationReason: string;
 		audioSourceMode: string;
 		audioIncludeSources: Array<Record<string, string>>;
 		audioExcludeSources: Array<Record<string, string>>;

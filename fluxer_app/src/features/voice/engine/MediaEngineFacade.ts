@@ -26,7 +26,6 @@ import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
 import {getStreamKey, parseStreamKey} from '@app/features/voice/components/StreamKeys';
 import {voiceStatsDB} from '@app/features/voice/diagnostics/VoiceStatsDB';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import {
 	createMediaEngineFacadeSnapshot,
 	type MediaEngineFacadeEvent,
@@ -194,7 +193,6 @@ import {
 	type Room,
 	RoomEvent,
 	type ScreenShareCaptureOptions,
-	Track,
 	type TrackPublishOptions,
 } from 'livekit-client';
 import {makeObservable, observable} from 'mobx';
@@ -506,7 +504,6 @@ class MediaEngineFacade extends Store {
 		voiceEngineV2AppConnectionHostAdapter.subscribe(forwardChange);
 		voiceEngineV2AppVoiceStateAdapter.subscribe(forwardChange);
 		this.statsHostAdapter.subscribe(forwardChange);
-		AdaptiveScreenShareEngine.subscribe(forwardChange);
 		voiceEngineV2AppMediaExecutionAdapter.subscribe(forwardChange);
 		voiceEngineV2AppScreenShareExecutionAdapter.subscribe(forwardChange);
 		VoiceEngineV2AppSubscriptionAdapter.subscribe(forwardChange);
@@ -1605,20 +1602,14 @@ class MediaEngineFacade extends Store {
 							await this.reconcileLocalAudioState('voice room connected');
 						},
 						onDisconnected: () => {
-							AdaptiveScreenShareEngine.stop();
 							this.stopTracking();
 							this.statsHostAdapter.reset();
 						},
 						onReconnecting: () => {
-							AdaptiveScreenShareEngine.stop();
 							this.statsHostAdapter.stopLatencyTracking();
 							this.statsHostAdapter.stopStatsTracking();
 						},
 						onReconnected: () => {
-							const room = voiceEngineV2AppConnectionHostAdapter.room;
-							if (room?.localParticipant?.getTrackPublication(Track.Source.ScreenShare)?.videoTrack) {
-								AdaptiveScreenShareEngine.start(room);
-							}
 							this.statsHostAdapter.incrementReconnectionCount();
 							this.statsHostAdapter.startLatencyTracking();
 							this.statsHostAdapter.startStatsTracking();
@@ -1669,11 +1660,6 @@ class MediaEngineFacade extends Store {
 				VoiceEngineV2AppSubscriptionAdapter.reconcileSubscriptions();
 				VoiceEngineV2AppPermissionAdapter.applyDeafen(newRoom, getEffectiveAudioState().effectiveDeaf);
 				voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(newRoom);
-				if (newRoom.localParticipant?.getTrackPublication(Track.Source.ScreenShare)?.videoTrack) {
-					AdaptiveScreenShareEngine.start(newRoom);
-				} else {
-					AdaptiveScreenShareEngine.stop();
-				}
 				if (guildId && channelId) {
 					VoiceEngineV2AppPermissionAdapter.syncWithPermissionState(guildId, channelId, newRoom);
 				}

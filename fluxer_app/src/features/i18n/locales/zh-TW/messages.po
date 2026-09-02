@@ -1665,12 +1665,6 @@ msgstr "100 次使用"
 msgid "1080p"
 msgstr "1080p"
 
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:48
-msgctxt "adaptive-screen-share"
-msgid "1080p"
-msgstr "1080p"
-
 #. Fixed duration label for a 12-hour interval. Used as a standalone label in duration text or option lists.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:23
 msgid "12 hours"
@@ -1691,14 +1685,8 @@ msgstr "12-hour"
 msgid "1440p"
 msgstr "1440p"
 
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:53
-msgctxt "adaptive-screen-share"
-msgid "1440p"
-msgstr "1440p"
-
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:100
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1734,12 +1722,6 @@ msgstr "2-32 個字元，限英數字、底線。"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "24-hour"
 msgstr "24-hour"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:33
-msgctxt "adaptive-screen-share"
-msgid "240p"
-msgstr "240p"
 
 #. Invite max-uses dropdown option for 25 uses.
 #: src/features/invite/components/modals/InviteModal.tsx:72
@@ -1779,7 +1761,7 @@ msgid "3 months"
 msgstr "3 個月"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:104
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1799,12 +1781,6 @@ msgstr "404：找不到頁面"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:313
 msgid "40px, 3 members"
 msgstr "40px，3 位成員"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:38
-msgctxt "adaptive-screen-share"
-msgid "480p"
-msgstr "480p"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:47
@@ -1844,7 +1820,7 @@ msgid "6-digit code"
 msgstr "6 位數驗證碼"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:108
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -1857,12 +1833,6 @@ msgstr "60 秒"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:31
 msgid "7 days"
 msgstr "7 天"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:43
-msgctxt "adaptive-screen-share"
-msgid "720p"
-msgstr "720p"
 
 #. Required-action error when the API requires a captcha for phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:426
@@ -2313,11 +2283,6 @@ msgstr "語音偵測靈敏度"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:58
 msgid "Actual size"
 msgstr "實際尺寸"
-
-#. Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:142
-msgid "Adaptive quality"
-msgstr "自動調整畫質"
 
 #. Action label for adding the current selection.
 #. Button label in the favorite meme editor that adds the typed tag to the tag list.
@@ -2773,11 +2738,6 @@ msgstr "調整應用程式的整體縮放比例。Firefox 保留標準瀏覽器�
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx:46
 msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adjust quickly."
 msgstr "調整應用程式的整體縮放等級。使用 {zoomIn} / {zoomOut} 可快速調整。"
-
-#. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:147
-msgid "Adjusted to {resolution} {frameRate} FPS"
-msgstr "已調整為 {resolution} {frameRate} FPS"
 
 #. Permission name: grants all permissions and bypasses restrictions.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
@@ -4118,7 +4078,7 @@ msgid "Audio boost"
 msgstr "語音增強"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:126
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
 msgid "Audio device"
 msgstr "音訊裝置"
 
@@ -4213,7 +4173,7 @@ msgid "Audio send:"
 msgstr "音訊傳送："
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:138
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
 msgid "Audio settings"
 msgstr "語音設定"
 
@@ -4838,12 +4798,6 @@ msgstr "停用此使用者"
 #: src/features/voice/components/voice_connection_status/shared.ts:68
 msgid "Bandwidth"
 msgstr "頻寬"
-
-#. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:63
-msgctxt "adaptive-screen-share"
-msgid "bandwidth limited"
-msgstr "頻寬受限"
 
 #. IAR modal: disabled-state label on the ban card after the user is banned from this community.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:159
@@ -5845,15 +5799,15 @@ msgstr "驗證碼驗證失敗。請再試一次。"
 msgid "Capture"
 msgstr "擷取"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:407
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:394
 msgid "Capture app audio"
 msgstr "擷取應用程式音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:408
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:395
 msgid "Capture desktop audio"
 msgstr "擷取桌面音訊"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:406
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:393
 msgid "Capture device audio"
 msgstr "擷取裝置音訊"
 
@@ -9416,12 +9370,6 @@ msgstr "封面"
 msgid "Cozy"
 msgstr "溫馨"
 
-#. Reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:68
-msgctxt "adaptive-screen-share"
-msgid "CPU limited"
-msgstr "CPU 受限"
-
 #. Generic primary action label that creates the item described by the current dialog or form.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:148
 msgid "Create"
@@ -9824,7 +9772,7 @@ msgstr "目前：{mutedText}"
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:90
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:88
 msgid "Custom"
 msgstr "自訂"
 
@@ -11065,7 +11013,7 @@ msgstr "裝置詳細資訊"
 msgid "Device revoked"
 msgstr "裝置已撤銷"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1030
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
 msgid "Device selection"
 msgstr "選擇裝置"
 
@@ -11094,7 +11042,7 @@ msgid "Devices"
 msgstr "裝置"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:94
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
 msgid "Dial in your own numbers"
 msgstr "撥打您自己的號碼"
 
@@ -14453,12 +14401,12 @@ msgid "Flexible text channel names"
 msgstr "彈性的文字頻道名稱"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:67
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:65
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "1440p 60 FPS 流暢動作"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:72
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:70
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "720p 30 FPS 流暢動作"
 
@@ -14545,7 +14493,7 @@ msgstr "資料夾設定"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "在 {blueskyProviderName} 上追蹤我們"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:825
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:816
 msgid "Follow voice input"
 msgstr "跟隨語音輸入"
 
@@ -14817,7 +14765,7 @@ msgstr "外框"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:122
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:120
 msgid "Frame rate"
 msgstr "影格率"
 
@@ -15064,7 +15012,7 @@ msgstr "遊戲控制器"
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:63
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:61
 msgid "Gaming"
 msgstr "遊戲"
 
@@ -15564,7 +15512,7 @@ msgstr "已授予 {0}。"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "授予所有權限並繞過頻道限制。高度敏感。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1017
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:955
 msgid "Granular selection"
 msgstr "精細選取"
 
@@ -16128,7 +16076,7 @@ msgstr "隱藏密碼"
 msgid "Hide picture-in-picture popout?"
 msgstr "要隱藏子母畫面嗎？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:857
 msgid "Hide preview thumbnail"
 msgstr "隱藏預覽縮圖"
 
@@ -16573,11 +16521,11 @@ msgstr "忽略"
 msgid "Ignore friend request"
 msgstr "忽略好友邀請"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1007
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:945
 msgid "Ignore hardware devices"
 msgstr "忽略硬體裝置"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:921
 msgid "Ignore input media"
 msgstr "忽略輸入媒體"
 
@@ -16603,7 +16551,7 @@ msgstr "忽略垃圾訊息標記"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "要忽略來自 {displayName} 的交友邀請嗎？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:994
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:932
 msgid "Ignore virtual"
 msgstr "忽略虛擬裝置"
 
@@ -18783,18 +18731,6 @@ msgstr "音量"
 msgid "Low"
 msgstr "低"
 
-#. Toast shown after adaptive screen-share quality lowers frame rate. {frameRate} is a number and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:78
-msgctxt "adaptive-screen-share"
-msgid "Lowered screen share to {frameRate} FPS - {reason}"
-msgstr "已將螢幕分享降低至 {frameRate} FPS - {reason}"
-
-#. Toast shown after adaptive screen-share quality lowers resolution. {resolution} is a resolution label and {reason} is the limitation reason.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:84
-msgctxt "adaptive-screen-share"
-msgid "Lowered screen share to {resolution} - {reason}"
-msgstr "已將螢幕分享降低至 {resolution} - {reason}"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:179
 msgid "Luxembourg"
@@ -20009,7 +19945,7 @@ msgstr "需要麥克風權限"
 msgid "Microphone test"
 msgstr "麥克風測試"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:952
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:890
 msgid "Microphone workaround"
 msgstr "麥克風問題排除"
 
@@ -22146,7 +22082,7 @@ msgstr "僅適用於寬螢幕。"
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "僅接受信用卡。簽帳金融卡和預付卡無法用於成人內容驗證。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:972
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:910
 msgid "Only default speakers"
 msgstr "僅限預設揚聲器"
 
@@ -22194,7 +22130,7 @@ msgstr "請僅在您完全了解其作用時，才在此處執行程式碼。"
 msgid "Only show message previews for DMs with unread messages"
 msgstr "只顯示有未讀訊息的私訊預覽"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:962
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:900
 msgid "Only speakers"
 msgstr "只有發言人"
 
@@ -24635,12 +24571,6 @@ msgstr "按住「推動說話」鍵時，您的麥克風不會解除靜音，因
 msgid "Quality"
 msgstr "畫質"
 
-#. Fallback reason label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:73
-msgctxt "adaptive-screen-share"
-msgid "quality limited"
-msgstr "品質受限"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:49
@@ -24735,12 +24665,6 @@ msgstr "選項"
 msgid "Raid coordination"
 msgstr "群體攻擊協調"
 
-#. Toast shown after adaptive screen-share quality raises resolution. {resolution} is a resolution label.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:90
-msgctxt "adaptive-screen-share"
-msgid "Raised screen share to {resolution}"
-msgstr "已將螢幕分享解析度提高到 {resolution}"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:171
 msgid "Rate"
@@ -24756,7 +24680,7 @@ msgid "Raw embed JSON"
 msgstr "原始嵌入 JSON"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:78
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "原始畫質的清晰文字，15 FPS"
 
@@ -26364,7 +26288,7 @@ msgstr "視窗大小調整、最大化和視窗貼齊功能取決於合成器。
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:118
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:116
 msgid "Resolution"
 msgstr "解析度"
 
@@ -27061,7 +26985,7 @@ msgstr "需要螢幕錄影權限"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
 msgid "Screen share"
 msgstr "分享螢幕"
 
@@ -27091,7 +27015,7 @@ msgid "Screen share encoder controls"
 msgstr "螢幕分享編碼器控制項"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:98
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:97
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "螢幕分享已結束"
@@ -28540,7 +28464,7 @@ msgid "Share screens and windows."
 msgstr "分享螢幕和視窗。"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
 msgid "Share stream audio"
 msgstr "分享直播音訊"
 
@@ -28610,7 +28534,7 @@ msgid "Sharing personal information"
 msgstr "分享個人資訊"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:83
 msgid "Sharper text at 720p, 30 FPS"
 msgstr "720p、30 FPS 時文字更清晰"
 
@@ -29906,15 +29830,9 @@ msgstr "音效"
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:96
 msgid "Source"
 msgstr "來源"
-
-#. Resolution label in adaptive screen-share quality toasts.
-#: src/features/voice/engine/AdaptiveScreenShareEngine.ts:58
-msgctxt "adaptive-screen-share"
-msgid "source quality"
-msgstr "來源品質"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:245
@@ -30647,7 +30565,7 @@ msgid "Stream preview"
 msgstr "直播預覽"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
 msgid "Stream quality"
 msgstr "直播畫質"
 
@@ -30673,7 +30591,7 @@ msgid "Streaming"
 msgstr "直播中"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:112
 msgid "Streaming mode"
 msgstr "直播模式"
 
@@ -31127,7 +31045,7 @@ msgstr "來自 {productName} 團隊的系統公告。您無法在此回覆。"
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:130
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
 msgid "System default"
 msgstr "系統預設"
 
@@ -31676,7 +31594,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "提供的 redirect_uri 必須使用 HTTP 或 HTTPS。"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:103
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:102
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "螢幕分享來源已停止傳送視訊，因此您的螢幕分享已停止。"
@@ -34146,7 +34064,7 @@ msgstr "未命名群組"
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:134
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
 msgid "Unnamed input"
 msgstr "未命名的輸入"
 

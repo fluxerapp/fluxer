@@ -34,6 +34,7 @@ import {
 
 export const logger = new Logger('VoiceEngineV2ScreenShareSupport');
 const GPU_ENCODER_REPORT_START_TIMEOUT_MS = 500;
+const SCREEN_SHARE_FULL_RESOLUTION_SCALE = 1;
 
 export interface DeviceScreenShareCaptureOptions {
 	videoDeviceId?: string;
@@ -349,6 +350,14 @@ export function getPublishedScreenShareMaxBitrateBps(
 	return total > 0 ? total : undefined;
 }
 
+function resolveScreenShareScaleResolutionDownBy(
+	encodings: ReadonlyArray<RTCRtpEncodingParameters>,
+): number | undefined {
+	const simulcastLadderOwnsScale = encodings.length > 1;
+	if (simulcastLadderOwnsScale) return undefined;
+	return SCREEN_SHARE_FULL_RESOLUTION_SCALE;
+}
+
 export async function enforceScreenShareSenderParameters(
 	sender: RTCRtpSender | undefined,
 	publishOptions?: TrackPublishOptions,
@@ -370,11 +379,13 @@ export async function enforceScreenShareSenderParameters(
 			screenShareEncoding?.maxBitrate !== undefined
 				? distributeScreenShareBitrate(encodings, screenShareEncoding.maxBitrate)
 				: undefined;
+		const scaleResolutionDownBy = resolveScreenShareScaleResolutionDownBy(encodings);
 		params.degradationPreference = SCREEN_SHARE_DEGRADATION_PREFERENCE;
 		params.encodings = encodings.map((encoding, index) => ({
 			...encoding,
 			...(bitrates ? {maxBitrate: bitrates[index]} : {}),
 			...(screenShareEncoding?.maxFramerate !== undefined ? {maxFramerate: screenShareEncoding.maxFramerate} : {}),
+			...(scaleResolutionDownBy !== undefined ? {scaleResolutionDownBy} : {}),
 			priority: screenShareEncoding?.priority ?? encoding.priority ?? 'high',
 			networkPriority: screenShareEncoding?.priority ?? encoding.networkPriority ?? 'high',
 			...(scalabilityMode ? {scalabilityMode} : {}),
