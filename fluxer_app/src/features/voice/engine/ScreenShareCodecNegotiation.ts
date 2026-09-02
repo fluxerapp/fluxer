@@ -549,7 +549,11 @@ class ScreenShareCodecNegotiation {
 		selector: (preference: CodecPreference) => VideoCodec,
 		preference: CodecPreference,
 	): VideoCodec {
-		if (this.selectedCodec && this.canUseSelectedCodecForCurrentParticipants(this.selectedCodec)) {
+		if (
+			preference === 'auto' &&
+			this.selectedCodec &&
+			this.canUseSelectedCodecForCurrentParticipants(this.selectedCodec)
+		) {
 			return this.selectedCodec;
 		}
 		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
@@ -560,7 +564,8 @@ class ScreenShareCodecNegotiation {
 			unknownParticipants,
 			getScreenShareCodecPreferenceOrder(preference),
 		);
-		return negotiated.codec ?? selector('auto');
+		if (getEncodeSet(this.localCodecs).has(negotiated.codec)) return negotiated.codec;
+		return selector(preference);
 	}
 
 	private getRemoteCodecInputs(room: Room | null = this.room): {
