@@ -3,9 +3,7 @@
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
-import ScreenShareCodecNegotiation, {
-	type CodecNegotiationSelection,
-} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
+import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import {noteLocalVoiceActivity} from '@app/features/voice/engine/VoiceIdleActivityBridge';
@@ -92,8 +90,7 @@ export interface RoomEventDependencies {
 			didChangeLocalState: boolean,
 			publication?: LocalTrackPublication,
 		) => void;
-		isScreenShareCodecRepublishInFlight: () => boolean;
-		renegotiateActiveScreenShareCodec: (room: Room, selection: CodecNegotiationSelection) => Promise<unknown>;
+		isScreenSharePublicationReplaceInFlight: () => boolean;
 	};
 	subscriptions: {
 		isScreenShareSubscribed: (participantIdentity: string) => boolean;
@@ -243,17 +240,7 @@ export function bindRoomEvents(
 	};
 	const bindCodecNegotiation = (): void => {
 		codecNegotiationDisposer?.();
-		codecNegotiationDisposer = ScreenShareCodecNegotiation.bind(room, {
-			onSelectedCodecChanged: (selection) => {
-				void dependencies.screenShare.renegotiateActiveScreenShareCodec(room, selection).catch((error) => {
-					logger.warn('Failed to apply negotiated screen share codec', {
-						error,
-						codec: selection.codec,
-						reason: selection.reason,
-					});
-				});
-			},
-		});
+		codecNegotiationDisposer = ScreenShareCodecNegotiation.bind(room);
 	};
 	const unbindCodecNegotiation = (): void => {
 		ScreenShareCodecNegotiation.dispose();
@@ -550,7 +537,10 @@ export function bindRoomEvents(
 		RoomEvent.LocalTrackUnpublished,
 		guard(attemptId, (pub, p: Participant) => {
 			if (p.isLocal) {
-				if (pub.source === Track.Source.ScreenShare && dependencies.screenShare.isScreenShareCodecRepublishInFlight()) {
+				if (
+					pub.source === Track.Source.ScreenShare &&
+					dependencies.screenShare.isScreenSharePublicationReplaceInFlight()
+				) {
 					dependencies.participants.upsertParticipant(p);
 					return;
 				}

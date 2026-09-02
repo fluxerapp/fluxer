@@ -2764,11 +2764,6 @@ msgstr "進階"
 msgid "Advanced video settings"
 msgstr "進階影片設定"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
-msgid "Advertise a capped decode codec to force publisher migration"
-msgstr "廣告一個有上限的解碼轉碼器，以強制發佈者遷移"
-
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:300
 msgid "Aero Snap and Snap Layouts can stop working while transparency is enabled."
 msgstr "啟用透明度時，Aero Snap 和 Snap Layouts 可能會停止運作。"
@@ -2990,7 +2985,7 @@ msgstr "允許任何可檢視您完整個人檔案的人，查看您個人檔案
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:191
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "允許 AV1 用於螢幕共享"
@@ -3044,7 +3039,7 @@ msgstr "允許所有社群"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:187
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "允許使用 H.265 (HEVC) 進行螢幕分享"
@@ -4385,7 +4380,6 @@ msgstr "自動完成建議：{label}，{selectedOptionPosition} / {resultCount}"
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
-#. Option label for the emulated decode codec select. Means advertise true decode support.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
@@ -4393,7 +4387,6 @@ msgstr "自動完成建議：{label}，{selectedOptionPosition} / {resultCount}"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:91
@@ -4407,7 +4400,7 @@ msgid "Automatic"
 msgstr "自動"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
 msgid "Automatic ({codec})"
 msgstr "自動 ({codec})"
 
@@ -4507,7 +4500,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (需要選擇加入)"
 
@@ -4956,7 +4949,7 @@ msgid "Biometrics"
 msgstr "生物辨識"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:181
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Bitrate"
 msgstr "位元率"
 
@@ -6820,7 +6813,7 @@ msgid "Choose your profile accent color"
 msgstr "選擇您的個人檔案主題顏色"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Cisco"
 msgstr "思科"
 
@@ -7431,11 +7424,6 @@ msgstr "代碼："
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:76
 msgid "Codec"
 msgstr "編解碼器"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
-msgid "Codec negotiation testing"
-msgstr "轉碼器協商測試"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -12585,13 +12573,6 @@ msgstr "表情符號"
 msgid "Empty favorites"
 msgstr "沒有最愛項目"
 
-#. Label for an advanced select that caps the best video codec this client advertises it can decode.
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
-msgid "Emulate decode codec (testing)"
-msgstr "模擬解碼轉碼器 (測試中)"
-
 #. Button label in the Linux Wayland input-access nagbar.
 #. Button label in the keybind settings system-wide shortcuts section.
 #. Button or menu action label in the invites disable invites button. Keep it concise.
@@ -12893,7 +12874,7 @@ msgstr "已啟用成人內容。"
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 msgid "Encoder path"
 msgstr "編碼器路徑"
 
@@ -12903,7 +12884,7 @@ msgid "Encoder preference for new screen shares."
 msgstr "新螢幕分享的編碼器偏好設定。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:185
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "編碼器、SVC、備份串流和位元速率預設值"
 
@@ -15691,7 +15672,7 @@ msgid "Grouping"
 msgstr "分組"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "H.264"
 msgstr "H.264"
 
@@ -15706,7 +15687,7 @@ msgid "H.264 simulcast backup"
 msgstr "H.264 同步串流備份"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (需要選擇加入)"
 
@@ -15762,7 +15743,7 @@ msgid "Hardware acceleration can cause rendering glitches with transparent windo
 msgstr "硬體加速可能會導致透明視窗出現渲染異常。如果看到閃爍或塗抹，請嘗試使用 --disable-gpu。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Hardware encoder"
 msgstr "硬體編碼器"
 
@@ -22665,7 +22646,7 @@ msgid "Open your settings"
 msgstr "開啟設定"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "OpenH264 software codec on Linux"
 msgstr "OpenH264 軟體編解碼器（Linux）"
 
@@ -23466,7 +23447,7 @@ msgid "Picture"
 msgstr "圖片"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "Picture in picture"
 msgstr "子母畫面"
 
@@ -23586,7 +23567,7 @@ msgid "Pins popout"
 msgstr "釘選彈出視窗"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "PiP"
 msgstr "子母畫面"
 
@@ -23820,7 +23801,7 @@ msgid "Preferences..."
 msgstr "偏好設定..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
 msgid "Preferred screen share codec"
 msgstr "偏好的螢幕分享轉碼器"
 
@@ -23994,7 +23975,7 @@ msgid "Preview sound"
 msgstr "預覽音效"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "預覽、彈出和串流縮圖行為"
 
@@ -27010,12 +26991,12 @@ msgid "Screen share codec"
 msgstr "螢幕分享編解碼器"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "Screen share encoder controls"
 msgstr "螢幕分享編碼器控制項"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:97
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "螢幕分享已結束"
@@ -27031,12 +27012,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "螢幕分享正在使用軟體編碼 ({codec})。畫質可能會降低，且 CPU 使用率會增加。您的 GPU 可能不支援此編解碼器的硬體編碼。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Screen share preview"
 msgstr "螢幕分享預覽"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "Screen share preview behavior"
 msgstr "螢幕分享預覽行為"
 
@@ -29586,7 +29567,7 @@ msgid "Social"
 msgstr "社群"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Software encoder"
 msgstr "軟體編碼器"
 
@@ -30559,7 +30540,7 @@ msgstr "已隱藏串流"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "直播預覽"
@@ -30778,7 +30759,7 @@ msgid "Suspend"
 msgstr "停用"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:177
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "SVC"
 msgstr "SVC"
 
@@ -31594,7 +31575,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "提供的 redirect_uri 必須使用 HTTP 或 HTTPS。"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:102
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:104
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "螢幕分享來源已停止傳送視訊，因此您的螢幕分享已停止。"
@@ -38319,6 +38300,12 @@ msgstr "您的自訂網址已移除。"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:49
 msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "您的自訂網址已設為 {inviteEndpoint}/{vanitySlug}"
+
+#. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
+msgctxt "screen-share"
+msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
+msgstr "您的視訊編碼器停止編碼影格，因此您的螢幕分享已停止。請再試一次分享。"
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:285

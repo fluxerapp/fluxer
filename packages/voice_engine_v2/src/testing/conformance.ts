@@ -84,40 +84,6 @@ export function runVoiceEngineV2ConformanceSuite(
 			});
 		});
 
-		it('renegotiates the publication codec in place when a viewer cannot decode it', async () => {
-			const {implementation, driver} = createSubject();
-			const runtime = createConformanceRuntime(implementation);
-
-			runtime.dispatch({type: 'connection.connectRequested', options: {url: 'wss://voice', token: 'token'}});
-			await waitForRuntime();
-			runtime.dispatch({type: 'camera.publishRequested', options: {deviceId: 'cam-1', codec: 'av1'}});
-			await waitForRuntime();
-			runtime.dispatch({
-				type: 'codecNegotiation.streamRegistered',
-				source: 'camera',
-				streamIdentity: 'cam-stream-1',
-				preferredCodec: 'av1',
-			});
-			await waitForRuntime();
-			runtime.dispatch({
-				type: 'codecNegotiation.viewerChanged',
-				source: 'camera',
-				viewerIdentity: 'bob',
-				watching: true,
-				supportedVideoCodecs: ['h264', 'vp8'],
-			});
-			await waitForRuntime();
-
-			expect(driver.calls).toEqual([
-				{type: 'connect', options: {url: 'wss://voice', token: 'token'}},
-				{type: 'publishCamera', options: {deviceId: 'cam-1', codec: 'av1'}},
-				{type: 'publishCamera', options: {deviceId: 'cam-1', codec: 'h264'}},
-			]);
-			expect(runtime.snapshot.camera.published?.codec).toBe('h264');
-			expect(runtime.snapshot.codecNegotiation.streams.camera?.streamIdentity).toBe('cam-stream-1');
-			expect(runtime.snapshot.codecNegotiation.streams.camera?.constrainedBy).toBe('bob');
-		});
-
 		it('adds and removes screen-share audio without republishing the screen video', async () => {
 			const {implementation, driver} = createSubject();
 			const runtime = createConformanceRuntime(implementation);

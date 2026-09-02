@@ -161,14 +161,6 @@ const CONFIGURE_DESCRIPTOR = msg({
 	message: 'Configure',
 	comment: 'Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.',
 });
-const DECODE_CODEC_CAP_DESCRIPTOR = msg({
-	message: 'Emulate decode codec (testing)',
-	comment: 'Label for an advanced select that caps the best video codec this client advertises it can decode.',
-});
-const DECODE_CODEC_CAP_AUTO_DESCRIPTOR = msg({
-	message: 'Automatic',
-	comment: 'Option label for the emulated decode codec select. Means advertise true decode support.',
-});
 
 const PREFERRED_SCREEN_SHARE_CODEC_DESCRIPTOR = msg({
 	message: 'Preferred screen share codec',
@@ -265,29 +257,6 @@ export const ScreenShareHevcOptInControl = observer(() => {
 			onChange={(value) => VoiceSettingsCommands.update({screenShareHevcOptIn: value})}
 			compact
 			data-flx="user.advanced-settings-tab.switch.screen-share-hevc-opt-in"
-		/>
-	);
-});
-
-export const EmulatedDecodeCodecCapControl = observer(() => {
-	const {i18n} = useLingui();
-	const options: ReadonlyArray<ComboboxOption<CodecPreference>> = [
-		{value: 'auto', label: i18n._(DECODE_CODEC_CAP_AUTO_DESCRIPTOR)},
-		{value: 'av1', label: 'AV1'},
-		{value: 'h265', label: 'H.265'},
-		{value: 'vp9', label: 'VP9'},
-		{value: 'h264', label: 'H.264'},
-		{value: 'vp8', label: 'VP8'},
-	];
-	return (
-		<Combobox<CodecPreference, false>
-			value={VoiceSettings.emulatedDecodeVideoCodecCap}
-			options={options}
-			onChange={(value) => VoiceSettingsCommands.update({emulatedDecodeVideoCodecCap: value})}
-			density="compact"
-			isSearchable={false}
-			aria-label={i18n._(DECODE_CODEC_CAP_DESCRIPTOR)}
-			data-flx="user.advanced-settings-tab.select.emulated-decode-codec-cap"
 		/>
 	);
 });

@@ -40,7 +40,6 @@ import {
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls';
 import {UnreadBadgeCustomizationControl} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
 import {
-	EmulatedDecodeCodecCapControl,
 	OpenH264Control,
 	ScreenShareAv1OptInControl,
 	ScreenShareCodecControl,
@@ -87,7 +86,6 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'voice-video-screen-share-codec',
 	'voice-video-screen-share-av1-opt-in',
 	'voice-video-screen-share-hevc-opt-in',
-	'voice-video-emulated-decode-codec-cap',
 	'voice-video-openh264-codec',
 	'voice-video-screen-share-preview-behavior',
 	'voice-video-screen-share-encoder-controls',
@@ -280,10 +278,6 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'voice-video-screen-share-hevc-opt-in':
 			return (
 				<ScreenShareHevcOptInControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.screen-share-hevc-opt-in-control" />
-			);
-		case 'voice-video-emulated-decode-codec-cap':
-			return (
-				<EmulatedDecodeCodecCapControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.emulated-decode-codec-cap-control" />
 			);
 		case 'voice-video-openh264-codec':
 			return (

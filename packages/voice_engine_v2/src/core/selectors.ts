@@ -19,13 +19,11 @@ import type {
 	VoiceEngineV2Error,
 	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2InboundVideoTrack,
-	VoiceEngineV2LocalStreamSource,
 	VoiceEngineV2MediaModel,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
 	VoiceEngineV2PermissionResult,
 	VoiceEngineV2Stats,
-	VoiceEngineV2StreamNegotiationProjection,
 	VoiceEngineV2Track,
 	VoiceEngineV2WatchedStream,
 } from '../protocol/types';
@@ -129,27 +127,6 @@ export function selectVoiceEngineV2ParticipantProjection(
 
 export function selectVoiceEngineV2WatchedStreams(snapshot: VoiceEngineV2Snapshot): Array<VoiceEngineV2WatchedStream> {
 	return Object.values(snapshot.watchedStreams);
-}
-
-export function selectVoiceEngineV2StreamNegotiation(
-	snapshot: VoiceEngineV2Snapshot,
-	source: VoiceEngineV2LocalStreamSource,
-): VoiceEngineV2StreamNegotiationProjection | null {
-	const stream = snapshot.codecNegotiation.streams[source];
-	if (!stream) return null;
-	const media = source === 'camera' ? snapshot.camera : snapshot.screen;
-	const publishedCodec = media.status === 'published' ? (media.published?.codec ?? null) : null;
-	const renegotiating =
-		media.status === 'publishing' || (publishedCodec !== null && publishedCodec !== stream.negotiatedCodec);
-	return {
-		source,
-		streamIdentity: stream.streamIdentity,
-		negotiatedCodec: stream.negotiatedCodec,
-		preferredCodec: stream.preferredCodec,
-		constrainedBy: stream.constrainedBy,
-		renegotiating,
-		viewerCount: Object.keys(stream.viewers).length,
-	};
 }
 
 export function selectVoiceEngineV2DeviceProjection(snapshot: VoiceEngineV2Snapshot): VoiceEngineV2DeviceProjection {

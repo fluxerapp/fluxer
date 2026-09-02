@@ -2035,6 +2035,10 @@
         "msgid": "{remaining, plural, one {+# more} other {+# more}}"
       },
       {
+        "msgctxt": "screen-share",
+        "msgid": "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
+      },
+      {
         "msgctxt": "security-settings-section",
         "msgid": "Sign-in details"
       },

@@ -130,7 +130,7 @@ function failScreen(
 	};
 }
 
-export function beginScreenEncodingUpdate(
+function beginScreenEncodingUpdate(
 	snapshot: VoiceEngineV2Snapshot,
 	options: VoiceEngineV2ScreenEncodingOptions,
 ): VoiceEngineV2Transition {

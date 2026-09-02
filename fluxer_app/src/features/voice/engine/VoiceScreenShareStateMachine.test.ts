@@ -61,7 +61,7 @@ describe('VoiceScreenShareStateMachine', () => {
 		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.cancel', active: false, sourceType: null});
 		expect(getVoiceScreenShareStateValue(snapshot)).toBe('inactive');
 		expect(snapshot.context.pendingOperation).toBeNull();
-		expect(snapshot.context.codecRepublishInFlight).toBe(false);
+		expect(snapshot.context.publicationReplaceInFlight).toBe(false);
 		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.start', sourceType: 'device'});
 		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.reject', active: false, sourceType: null});
 		expect(getVoiceScreenShareStateValue(snapshot)).toBe('inactive');
@@ -103,30 +103,25 @@ describe('VoiceScreenShareStateMachine', () => {
 		expect(snapshot.context.sourceType).toBe('device');
 	});
 
-	it('holds the codec republish lock only while codec publication work is pending', () => {
+	it('holds the replace lock only while a replacing publication is pending', () => {
 		let snapshot = resolveActive(
 			transitionVoiceScreenShareSnapshot(createVoiceScreenShareSnapshot(), {
 				type: 'share.start',
 				sourceType: 'display',
 			}),
 		);
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.codecRepublish'});
-		expect(snapshot.context.pendingOperation).toBe('codecRepublishing');
-		expect(snapshot.context.codecRepublishInFlight).toBe(true);
-		snapshot = resolveActive(snapshot, 'display');
-		expect(snapshot.context.codecRepublishInFlight).toBe(false);
 		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {
 			type: 'share.replace',
 			sourceType: 'display',
-			codecRepublishInFlight: true,
+			publicationReplaceInFlight: true,
 		});
-		expect(snapshot.context.codecRepublishInFlight).toBe(true);
+		expect(snapshot.context.publicationReplaceInFlight).toBe(true);
 		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {
 			type: 'share.cancel',
 			active: true,
 			sourceType: 'display',
 		});
-		expect(snapshot.context.codecRepublishInFlight).toBe(false);
+		expect(snapshot.context.publicationReplaceInFlight).toBe(false);
 	});
 
 	it('tracks codec readiness through the xstate context while starting', () => {
@@ -156,76 +151,6 @@ describe('VoiceScreenShareStateMachine', () => {
 		expect(snapshot.context.codecReadiness).toBe('loading');
 		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.codecReadiness.reset'});
 		expect(snapshot.context.codecReadiness).toBe('idle');
-	});
-
-	it('retains the latest queued codec republish request while screen share work is pending', () => {
-		let snapshot = transitionVoiceScreenShareSnapshot(createVoiceScreenShareSnapshot(), {
-			type: 'share.start',
-			sourceType: 'display',
-		});
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {
-			type: 'share.codecRepublish.queue',
-			request: {codec: 'vp9', reason: 'manual', force: true},
-		});
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {
-			type: 'share.codecRepublish.queue',
-			request: {codec: 'vp9', reason: 'data', force: false},
-		});
-		expect(snapshot.context.pendingOperation).toBe('starting');
-		expect(snapshot.context.queuedCodecRepublishRequest).toEqual({
-			codec: 'vp9',
-			reason: 'data',
-			force: true,
-		});
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {
-			type: 'share.codecRepublish.queue',
-			request: {codec: 'h264', reason: 'manual', force: false},
-		});
-		expect(snapshot.context.queuedCodecRepublishRequest).toEqual({
-			codec: 'h264',
-			reason: 'manual',
-			force: false,
-		});
-		snapshot = resolveActive(snapshot, 'display');
-		expect(snapshot.context.queuedCodecRepublishRequest).toEqual({
-			codec: 'h264',
-			reason: 'manual',
-			force: false,
-		});
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.queuedCodecRepublish.clear'});
-		expect(snapshot.context.queuedCodecRepublishRequest).toBeNull();
-	});
-
-	it('records deferred codec republish requests without entering a pending state', () => {
-		let snapshot = resolveActive(
-			transitionVoiceScreenShareSnapshot(createVoiceScreenShareSnapshot(), {
-				type: 'share.start',
-				sourceType: 'display',
-			}),
-		);
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {
-			type: 'share.codecRepublish.defer',
-			request: {codec: 'h264', reason: 'participant-connected', force: false},
-		});
-		expect(getVoiceScreenShareStateValue(snapshot)).toBe('active');
-		expect(snapshot.context.pendingOperation).toBeNull();
-		expect(snapshot.context.codecRepublishInFlight).toBe(false);
-		expect(snapshot.context.deferredCodecRepublishRequest).toEqual({
-			codec: 'h264',
-			reason: 'participant-connected',
-			force: false,
-		});
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {
-			type: 'share.codecRepublish.defer',
-			request: {codec: 'h264', reason: 'data', force: true},
-		});
-		expect(snapshot.context.deferredCodecRepublishRequest).toEqual({
-			codec: 'h264',
-			reason: 'data',
-			force: true,
-		});
-		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.deferredCodecRepublish.clear'});
-		expect(snapshot.context.deferredCodecRepublishRequest).toBeNull();
 	});
 
 	it('tracks active track ended cleanup independently from stop resolution', () => {

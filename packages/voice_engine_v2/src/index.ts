@@ -46,7 +46,6 @@ export {
 	selectVoiceEngineV2StatsPresentationProjection,
 	selectVoiceEngineV2StatsProjection,
 	selectVoiceEngineV2StatsSummary,
-	selectVoiceEngineV2StreamNegotiation,
 	selectVoiceEngineV2WatchedStreams,
 	shouldApplyGatewayVoiceStateEcho,
 	transitionVoiceEngineV2,
@@ -105,19 +104,12 @@ export {
 	hasVoiceEngineV2NativeHardwareEncoder,
 	hasVoiceEngineV2NativeNvencEncoder,
 	hasVoiceEngineV2ZeroCopyNativeInput,
-	isMoreEfficientVoiceEngineV2VideoCodec,
-	maxDecodableVoiceEngineV2VideoCodec,
 	normalizeVoiceEngineV2HardwareEncoderCapabilities,
 	planVoiceEngineV2CameraEncodingChange,
-	planVoiceEngineV2NegotiatedVideoCodec,
 	planVoiceEngineV2ScreenEncodingChange,
 	summarizeVoiceEngineV2Stats,
 	unavailableVoiceEngineV2HardwareEncoderCapabilities,
-	VOICE_ENGINE_V2_VIDEO_CODEC_FLOOR,
-	VOICE_ENGINE_V2_VIDEO_CODEC_PREFERENCE,
 	VoiceEngineV2StatsTrackSource,
-	voiceEngineV2VideoCodecRank,
-	worseVoiceEngineV2VideoCodec,
 } from './policies';
 export type {
 	CapabilitiesPort,
@@ -149,9 +141,6 @@ export type {
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
 	VoiceEngineV2Capabilities,
-	VoiceEngineV2CodecGossipMessage,
-	VoiceEngineV2CodecNegotiationState,
-	VoiceEngineV2CodecStreamNegotiation,
 	VoiceEngineV2Command,
 	VoiceEngineV2CommandType,
 	VoiceEngineV2ConnectionModel,
@@ -217,7 +206,6 @@ export type {
 	VoiceEngineV2SourceLifecycleTransitionKind,
 	VoiceEngineV2Stats,
 	VoiceEngineV2StatsSample,
-	VoiceEngineV2StreamNegotiationProjection,
 	VoiceEngineV2TimerOptions,
 	VoiceEngineV2Track,
 	VoiceEngineV2TrackKind,
@@ -230,11 +218,8 @@ export type {
 	VoiceEngineV2WatchedStreamKey,
 } from './protocol';
 export {
-	decodeVoiceEngineV2CodecGossip,
-	encodeVoiceEngineV2CodecGossip,
 	getVoiceEngineV2CommandResourceKey,
 	getVoiceEngineV2CommandTypeResourceKey,
-	VOICE_ENGINE_V2_CODEC_GOSSIP_TOPIC,
 } from './protocol';
 export type {
 	VoiceEngineV2EventLogEntry,

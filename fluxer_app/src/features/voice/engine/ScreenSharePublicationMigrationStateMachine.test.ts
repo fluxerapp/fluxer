@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	createLocalMigrationReadinessState,
-	isLocalMigrationReadinessComplete,
 	type ScreenShareRemoteMigrationState,
-	selectLocalMigrationReadinessResult,
-	transitionLocalMigrationReadinessState,
 	transitionRemoteScreenShareMigrationState,
 } from '@app/features/voice/engine/ScreenSharePublicationMigrationStateMachine';
 import {describe, expect, it} from 'vitest';
@@ -287,39 +283,5 @@ describe('ScreenSharePublicationMigrationStateMachine remote migration', () => {
 
 		expect(ready).toMatchObject({readySent: true});
 		expect(transitionRemoteScreenShareMigrationState(ready, {type: 'migration.readySent'})).toBe(ready);
-	});
-});
-
-describe('ScreenSharePublicationMigrationStateMachine local readiness', () => {
-	it('dedupes targets and completes only after every known watcher is ready', () => {
-		let state = createLocalMigrationReadinessState(['viewer-a', 'viewer-a', 'viewer-b', '']);
-
-		state = transitionLocalMigrationReadinessState(state, {
-			type: 'watcher.ready',
-			participantIdentity: 'unknown-viewer',
-		});
-		state = transitionLocalMigrationReadinessState(state, {
-			type: 'watcher.ready',
-			participantIdentity: 'viewer-a',
-		});
-
-		expect(isLocalMigrationReadinessComplete(state)).toBe(false);
-		expect(selectLocalMigrationReadinessResult(state, false)).toEqual({
-			readyIdentities: ['viewer-a'],
-			missingIdentities: ['viewer-b'],
-			timedOut: false,
-		});
-
-		state = transitionLocalMigrationReadinessState(state, {
-			type: 'watcher.ready',
-			participantIdentity: 'viewer-b',
-		});
-
-		expect(isLocalMigrationReadinessComplete(state)).toBe(true);
-		expect(selectLocalMigrationReadinessResult(state, false)).toEqual({
-			readyIdentities: ['viewer-a', 'viewer-b'],
-			missingIdentities: [],
-			timedOut: false,
-		});
 	});
 });

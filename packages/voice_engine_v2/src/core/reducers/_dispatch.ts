@@ -6,7 +6,6 @@ import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
 import {planDesiredState} from './_plan';
 import {transitionCamera} from './camera';
 import {transitionCapabilities} from './capabilities';
-import {transitionCodecNegotiation} from './codecNegotiation';
 import {transitionCommand} from './command';
 import {transitionConnection} from './connection';
 import {transitionData} from './data';
@@ -137,13 +136,6 @@ export function dispatchSessionEvent(
 		case 'data.publishSucceeded':
 		case 'data.publishFailed':
 			return transitionData(snapshot, event);
-		case 'codecNegotiation.overrideSetRequested':
-		case 'codecNegotiation.localCapabilityChanged':
-		case 'codecNegotiation.remoteCapabilityChanged':
-		case 'codecNegotiation.streamRegistered':
-		case 'codecNegotiation.streamUnregistered':
-		case 'codecNegotiation.viewerChanged':
-			return transitionCodecNegotiation(snapshot, event);
 		case 'stats.collectRequested':
 		case 'stats.collected':
 		case 'stats.collectFailed':

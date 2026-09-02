@@ -676,41 +676,6 @@ export interface VoiceEngineV2WatchedStreamKey {
 
 export type VoiceEngineV2LocalStreamSource = 'camera' | 'screen';
 
-export interface VoiceEngineV2CodecStreamNegotiation {
-	source: VoiceEngineV2LocalStreamSource;
-	streamIdentity: string;
-	preferredCodec: VoiceEngineV2VideoCodec;
-	negotiatedCodec: VoiceEngineV2VideoCodec;
-	constrainedBy: string | null;
-	viewers: Record<string, VoiceEngineV2VideoCodec | null>;
-}
-
-export interface VoiceEngineV2CodecNegotiationState {
-	overrides: Partial<Record<VoiceEngineV2LocalStreamSource, VoiceEngineV2VideoCodec>>;
-	localSupportedVideoCodecs: Array<VoiceEngineV2VideoCodec>;
-	remoteSupportedVideoCodecs: Record<string, Array<VoiceEngineV2VideoCodec>>;
-	streams: Record<string, VoiceEngineV2CodecStreamNegotiation>;
-}
-
-export interface VoiceEngineV2StreamNegotiationProjection {
-	source: VoiceEngineV2LocalStreamSource;
-	streamIdentity: string;
-	negotiatedCodec: VoiceEngineV2VideoCodec;
-	preferredCodec: VoiceEngineV2VideoCodec;
-	constrainedBy: string | null;
-	renegotiating: boolean;
-	viewerCount: number;
-}
-
-export type VoiceEngineV2CodecGossipMessage =
-	| {kind: 'codec.capability'; supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>}
-	| {
-			kind: 'codec.viewing';
-			source: VoiceEngineV2LocalStreamSource;
-			watching: boolean;
-			supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>;
-	  };
-
 export interface VoiceEngineV2InboundVideoTrackSubscription {
 	participantSid: string;
 	participantIdentity?: string;

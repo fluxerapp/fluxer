@@ -2764,11 +2764,6 @@ msgstr "Gelişmiş"
 msgid "Advanced video settings"
 msgstr "Gelişmiş video ayarları"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
-msgid "Advertise a capped decode codec to force publisher migration"
-msgstr "Yayıncı geçişini zorlamak için sınırlı bir kod çözme kodeği reklamı yap"
-
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:300
 msgid "Aero Snap and Snap Layouts can stop working while transparency is enabled."
 msgstr "Şeffaflık etkinleştirildiğinde Aero Snap ve Snap Düzenleri çalışmayı durdurabilir."
@@ -2990,7 +2985,7 @@ msgstr "Profilinizin tamamını görüntüleyebilen herkesin yerel saatinizi gö
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:191
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "Ekran paylaşımı için AV1'e izin ver"
@@ -3044,7 +3039,7 @@ msgstr "Tüm topluluklara izin ver"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:187
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "Ekran paylaşımı için H.265 (HEVC) kullanılmasına izin ver"
@@ -4385,7 +4380,6 @@ msgstr "Otomatik tamamlama önerisi: {label}, {resultCount} sonuç içinde {sele
 #. Option label for a WebRTC content hint select.
 #. Option label for an SVC mode select.
 #. Option label for an encoder path select.
-#. Option label for the emulated decode codec select. Means advertise true decode support.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
@@ -4393,7 +4387,6 @@ msgstr "Otomatik tamamlama önerisi: {label}, {resultCount} sonuç içinde {sele
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:91
@@ -4407,7 +4400,7 @@ msgid "Automatic"
 msgstr "Otomatik"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:177
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
 msgid "Automatic ({codec})"
 msgstr "Otomatik ({codec})"
 
@@ -4507,7 +4500,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (katılım gerektirir)"
 
@@ -4956,7 +4949,7 @@ msgid "Biometrics"
 msgstr "Biyometrik veriler"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:181
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Bitrate"
 msgstr "Bit hızı"
 
@@ -6820,7 +6813,7 @@ msgid "Choose your profile accent color"
 msgstr "Profil vurgu renginizi seçin"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7431,11 +7424,6 @@ msgstr "Kod:"
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:76
 msgid "Codec"
 msgstr "Kodek"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
-msgid "Codec negotiation testing"
-msgstr "Kodek anlaşması testi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -12585,13 +12573,6 @@ msgstr "Emojiler"
 msgid "Empty favorites"
 msgstr "Favoriler boş"
 
-#. Label for an advanced select that caps the best video codec this client advertises it can decode.
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:164
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
-msgid "Emulate decode codec (testing)"
-msgstr "Kod çözme kodeğini öykün (test)"
-
 #. Button label in the Linux Wayland input-access nagbar.
 #. Button label in the keybind settings system-wide shortcuts section.
 #. Button or menu action label in the invites disable invites button. Keep it concise.
@@ -12893,7 +12874,7 @@ msgstr "Yetişkinlere uygun içerik etkinleştirildi."
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 msgid "Encoder path"
 msgstr "Kodlayıcı yolu"
 
@@ -12903,7 +12884,7 @@ msgid "Encoder preference for new screen shares."
 msgstr "Yeni ekran paylaşımları için kodlayıcı tercihi."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:185
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "Kodlayıcı, SVC, yedek akış ve bit hızı ön ayarları"
 
@@ -15691,7 +15672,7 @@ msgid "Grouping"
 msgstr "Gruplama"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "H.264"
 msgstr "H.264"
 
@@ -15706,7 +15687,7 @@ msgid "H.264 simulcast backup"
 msgstr "H.264 simulcast yedeklemesi"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (katılım gerektirir)"
 
@@ -15762,7 +15743,7 @@ msgid "Hardware acceleration can cause rendering glitches with transparent windo
 msgstr "Donanım hızlandırma, şeffaf pencerelerde görüntüleme sorunlarına neden olabilir. Titreme veya bulanıklık görüyorsanız --disable-gpu komutunu deneyin."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Hardware encoder"
 msgstr "Donanım kodlayıcı"
 
@@ -22665,7 +22646,7 @@ msgid "Open your settings"
 msgstr "Ayarlarınızı açın"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "OpenH264 software codec on Linux"
 msgstr "Linux'ta OpenH264 yazılım kodeki için ayarlar arama girişi açıklaması. Bu ayar arama girişinin neyi kontrol ettiğinin tek satırlık özeti."
 
@@ -23466,7 +23447,7 @@ msgid "Picture"
 msgstr "Resim"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "Picture in picture"
 msgstr "Resim içinde resim"
 
@@ -23586,7 +23567,7 @@ msgid "Pins popout"
 msgstr "Sabitlenmişler açılır penceresi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "PiP"
 msgstr "Resim içinde resim"
 
@@ -23820,7 +23801,7 @@ msgid "Preferences..."
 msgstr "Tercihler..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
 msgid "Preferred screen share codec"
 msgstr "Tercih edilen ekran paylaşımı kodeği"
 
@@ -23994,7 +23975,7 @@ msgid "Preview sound"
 msgstr "Sesi önizle"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "Önizleme, açılır pencere ve akış küçük resim davranışı"
 
@@ -27010,12 +26991,12 @@ msgid "Screen share codec"
 msgstr "Ekran paylaşımı kodeği"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "Screen share encoder controls"
 msgstr "Ekran paylaşımı kodlayıcı ayarları"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:97
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Ekran paylaşımı sona erdi"
@@ -27031,12 +27012,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "Ekran paylaşımı yazılım kodlaması kullanıyor ({codec}). Kalite düşebilir ve CPU kullanımı artabilir. GPU'nuz bu kodek için donanım kodlamayı desteklemeyebilir."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Screen share preview"
 msgstr "Ekran paylaşımı önizlemesi"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "Screen share preview behavior"
 msgstr "Ekran paylaşımı önizleme davranışı"
 
@@ -29586,7 +29567,7 @@ msgid "Social"
 msgstr "Sosyal"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Software encoder"
 msgstr "Yazılım kodlayıcı"
 
@@ -30559,7 +30540,7 @@ msgstr "Yayın gizlendi"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "Yayın önizlemesi"
@@ -30778,7 +30759,7 @@ msgid "Suspend"
 msgstr "Askıya al"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:177
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "SVC"
 msgstr "SVC"
 
@@ -31594,7 +31575,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Sağlanan redirect_uri HTTP veya HTTPS kullanmalıdır."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:102
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:104
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Ekran paylaşımı kaynağı video göndermeyi durdurdu, bu nedenle ekran paylaşımınız durduruldu."
@@ -38319,6 +38300,12 @@ msgstr "Özel URL'niz kaldırıldı."
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:49
 msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Özel URL'niz {inviteEndpoint}/{vanitySlug} olarak ayarlandı"
+
+#. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
+msgctxt "screen-share"
+msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
+msgstr "Video kodlayıcınız kare kodlamayı durdurduğu için ekran paylaşımınız durduruldu. Lütfen tekrar paylaşmayı deneyin."
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:285

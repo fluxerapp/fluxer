@@ -58,7 +58,6 @@ import {
 	saveCurrentVoiceSessionRestoreSnapshot,
 	type VoiceSessionRestoreSyncHandle,
 } from '@app/features/voice/engine/media_engine_facade/VoiceSessionRestoreSync';
-import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {Store, useStoreVersion} from '@app/features/voice/engine/Store';
 import {shouldMoveToAfkOnTick} from '@app/features/voice/engine/VoiceAfkTracking';
@@ -101,11 +100,6 @@ import {
 } from '@app/features/voice/engine/VoiceStreamWatchState';
 import {type VoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {bindVoiceEngineV2AppAudioPreferencesSync} from '@app/features/voice/engine/v2/VoiceEngineV2AppAudioPreferencesSyncBinding';
-import {getLocalDecodableVideoCodecs} from '@app/features/voice/engine/v2/VoiceEngineV2AppCodecCapability';
-import {
-	computeVoiceEngineV2WatchedStreamGossip,
-	ingestVoiceEngineV2CodecGossip,
-} from '@app/features/voice/engine/v2/VoiceEngineV2AppCodecGossipAdapter';
 import voiceEngineV2AppConnectionHostAdapter, {
 	type VoiceServerUpdateData,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppConnectionHostAdapter';
@@ -149,7 +143,6 @@ import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import VoiceSessionRestore, {type VoiceSessionRestoreSnapshot} from '@app/features/voice/state/VoiceSessionRestore';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import type {CodecPreference} from '@app/features/voice/utils/CodecCapabilityDetector';
 import {setNativeAudioCaptureBridgeLifecycleBridge} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
@@ -171,29 +164,22 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2GatewayVoiceState,
 	VoiceEngineV2LatencyDataPoint,
-	VoiceEngineV2LocalStreamSource,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2Model,
 	VoiceEngineV2PerTrackStats,
 	VoiceEngineV2Snapshot,
 	VoiceEngineV2StatsSample,
 	VoiceEngineV2TransportInfo,
-	VoiceEngineV2VideoCodec,
 	VoiceEngineV2VoiceStats,
 } from '@fluxer/voice_engine_v2';
-import {
-	encodeVoiceEngineV2CodecGossip,
-	shouldApplyGatewayVoiceStateEcho,
-	VOICE_ENGINE_V2_CODEC_GOSSIP_TOPIC,
-} from '@fluxer/voice_engine_v2';
+import {shouldApplyGatewayVoiceStateEcho} from '@fluxer/voice_engine_v2';
 import {type I18n, i18n as linguiI18n, type MessageDescriptor} from '@lingui/core';
-import {
-	type ConnectionQuality as LiveKitConnectionQuality,
-	type Participant,
-	type Room,
-	RoomEvent,
-	type ScreenShareCaptureOptions,
-	type TrackPublishOptions,
+import type {
+	ConnectionQuality as LiveKitConnectionQuality,
+	Participant,
+	Room,
+	ScreenShareCaptureOptions,
+	TrackPublishOptions,
 } from 'livekit-client';
 import {makeObservable, observable} from 'mobx';
 
@@ -278,14 +264,8 @@ function buildRoomEventDependencies(facade: {
 					didChangeLocalState,
 					publication,
 				),
-			isScreenShareCodecRepublishInFlight: () =>
-				voiceEngineV2AppScreenShareExecutionAdapter.isScreenShareCodecRepublishInFlight(),
-			renegotiateActiveScreenShareCodec: (activeRoom, selection) =>
-				voiceEngineV2AppScreenShareExecutionAdapter.renegotiateActiveScreenShareCodec(
-					activeRoom,
-					selection.codec,
-					selection.reason,
-				),
+			isScreenSharePublicationReplaceInFlight: () =>
+				voiceEngineV2AppScreenShareExecutionAdapter.isScreenSharePublicationReplaceInFlight(),
 		},
 		subscriptions: {
 			isScreenShareSubscribed: (participantIdentity) =>
@@ -336,17 +316,9 @@ class MediaEngineFacade extends Store {
 	private voiceSessionRestoreSync: VoiceSessionRestoreSyncHandle | null = null;
 	private outputDeviceSyncDisposer: (() => void) | null = null;
 	private audioPreferencesSyncDisposer: (() => void) | null = null;
-	private videoCodecDecodeCapResyncDisposer: (() => void) | null = null;
-	private videoCodecPublishOverrideSyncDisposer: (() => void) | null = null;
-	private localStreamCodecReconcileScheduled = false;
 	private localAudioReconcileCoalescer: VoiceLocalAudioReconcileCoalescerSnapshot =
 		createVoiceLocalAudioReconcileCoalescerSnapshot();
 	private applyingGatewayVoiceStateEcho = false;
-	private previousWatchedStreamCodecGossip = new Map<
-		string,
-		{identity: string; source: VoiceEngineV2LocalStreamSource}
-	>();
-	private videoCodecGossipReceiverDisposer: (() => void) | null = null;
 	private i18n: I18n | null = linguiI18n;
 	private pendingServerDisconnectTimeout: NodeJS.Timeout | null = null;
 	private facadeSnapshot: MediaEngineFacadeSnapshot = createMediaEngineFacadeSnapshot();
@@ -497,7 +469,6 @@ class MediaEngineFacade extends Store {
 
 	private initializeEngineStoreSync(): void {
 		const forwardChange = () => {
-			this.scheduleLocalStreamCodecReconcile();
 			this.emitChange();
 		};
 		this.voiceEngineV2ProjectionStore.subscribe(forwardChange);
@@ -764,17 +735,6 @@ class MediaEngineFacade extends Store {
 
 	private async refreshCameraCaptureFromCurrentEngine(): Promise<void> {
 		await voiceEngineV2AppMediaExecutionAdapter.refreshCameraCapture();
-	}
-
-	async refreshActiveScreenShareCodecNegotiation(): Promise<void> {
-		const room = this.room;
-		const selection = await ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'manual', {});
-		const codec =
-			selection?.codec ??
-			ScreenShareCodecNegotiation.selectScreenShareCodec(VoiceSettings.getPreferredScreenShareCodec());
-		await voiceEngineV2AppScreenShareExecutionAdapter.renegotiateActiveScreenShareCodec(room, codec, 'manual', {
-			force: true,
-		});
 	}
 
 	private reconcileLocalAudioStateInBackground(reason: string): void {
@@ -2343,12 +2303,6 @@ class MediaEngineFacade extends Store {
 		this.outputDeviceSyncDisposer = bindOutputDeviceSync(room);
 		this.audioPreferencesSyncDisposer?.();
 		this.audioPreferencesSyncDisposer = this.bindAudioPreferencesSync(room);
-		this.videoCodecDecodeCapResyncDisposer?.();
-		this.videoCodecDecodeCapResyncDisposer = this.bindVideoDecodeCapResync();
-		this.videoCodecPublishOverrideSyncDisposer?.();
-		this.videoCodecPublishOverrideSyncDisposer = this.bindVideoCodecPublishOverrideSync();
-		this.videoCodecGossipReceiverDisposer?.();
-		this.videoCodecGossipReceiverDisposer = this.bindVideoCodecGossipReceiver(room);
 		this.startAfkTracking();
 		const channelId = voiceEngineV2AppConnectionHostAdapter.channelId;
 		if (channelId) {
@@ -2373,13 +2327,6 @@ class MediaEngineFacade extends Store {
 		this.outputDeviceSyncDisposer = null;
 		this.audioPreferencesSyncDisposer?.();
 		this.audioPreferencesSyncDisposer = null;
-		this.videoCodecDecodeCapResyncDisposer?.();
-		this.videoCodecDecodeCapResyncDisposer = null;
-		this.videoCodecPublishOverrideSyncDisposer?.();
-		this.videoCodecPublishOverrideSyncDisposer = null;
-		this.videoCodecGossipReceiverDisposer?.();
-		this.videoCodecGossipReceiverDisposer = null;
-		this.previousWatchedStreamCodecGossip = new Map();
 		this.stopAfkTracking();
 		logger.info('All tracking stopped');
 	}
@@ -2387,103 +2334,6 @@ class MediaEngineFacade extends Store {
 	private abortVoiceConnection(): void {
 		this.transitionFacadeState({type: 'screenShareReconnect.clear'});
 		voiceEngineV2AppConnectionHostAdapter.abortConnection();
-	}
-
-	private bindVideoCodecPublishOverrideSync(): () => void {
-		assert.ok(this.voiceEngineV2Host != null, 'video codec publish override sync requires the v2 host');
-		const apply = (source: VoiceEngineV2LocalStreamSource, preference: CodecPreference): void => {
-			this.voiceEngineV2Controller.setVideoCodecOverride(source, preference === 'auto' ? null : preference);
-		};
-		let previousScreen: CodecPreference = VoiceSettings.getPreferredScreenShareCodec();
-		let previousCamera: CodecPreference = VoiceSettings.getPreferredVideoCodec();
-		apply('screen', previousScreen);
-		apply('camera', previousCamera);
-		return VoiceSettings.subscribe(() => {
-			const screen = VoiceSettings.getPreferredScreenShareCodec();
-			if (screen !== previousScreen) {
-				previousScreen = screen;
-				apply('screen', screen);
-			}
-			const camera = VoiceSettings.getPreferredVideoCodec();
-			if (camera !== previousCamera) {
-				previousCamera = camera;
-				apply('camera', camera);
-			}
-		});
-	}
-
-	private bindVideoDecodeCapResync(): () => void {
-		assert.ok(this.voiceEngineV2Host != null, 'video decode cap resync requires the v2 host');
-		let previous: CodecPreference = VoiceSettings.getEmulatedDecodeVideoCodecCap();
-		return VoiceSettings.subscribe(() => {
-			const current = VoiceSettings.getEmulatedDecodeVideoCodecCap();
-			if (current === previous) return;
-			previous = current;
-			this.previousWatchedStreamCodecGossip = new Map();
-			this.syncWatchedStreamCodecGossip();
-		});
-	}
-
-	private scheduleLocalStreamCodecReconcile(): void {
-		if (this.localStreamCodecReconcileScheduled) return;
-		this.localStreamCodecReconcileScheduled = true;
-		queueMicrotask(() => {
-			this.localStreamCodecReconcileScheduled = false;
-			if (this.voiceEngineV2Host == null) return;
-			this.reconcileLocalStreamCodec('camera', this.voiceEngineV2Snapshot.camera);
-			this.reconcileLocalStreamCodec('screen', this.voiceEngineV2Snapshot.screen);
-			this.syncWatchedStreamCodecGossip();
-		});
-	}
-
-	private syncWatchedStreamCodecGossip(): void {
-		const result = computeVoiceEngineV2WatchedStreamGossip(
-			this.previousWatchedStreamCodecGossip,
-			this.voiceEngineV2Snapshot.watchedStreams,
-			getLocalDecodableVideoCodecs(VoiceSettings.getEmulatedDecodeVideoCodecCap()),
-		);
-		this.previousWatchedStreamCodecGossip = result.next;
-		for (const {destinationIdentity, message} of result.messages) {
-			this.voiceEngineV2Controller.publishData({
-				payload: encodeVoiceEngineV2CodecGossip(message),
-				reliable: true,
-				topic: VOICE_ENGINE_V2_CODEC_GOSSIP_TOPIC,
-				destinationIdentities: [destinationIdentity],
-			});
-		}
-	}
-
-	private bindVideoCodecGossipReceiver(room: Room): () => void {
-		const handler = (payload: Uint8Array, participant?: Participant, _kind?: unknown, topic?: string): void => {
-			if (topic !== VOICE_ENGINE_V2_CODEC_GOSSIP_TOPIC) return;
-			const identity = participant?.identity;
-			if (!identity) return;
-			ingestVoiceEngineV2CodecGossip(this.voiceEngineV2Controller, identity, payload);
-		};
-		room.on(RoomEvent.DataReceived, handler);
-		return () => {
-			room.off(RoomEvent.DataReceived, handler);
-		};
-	}
-
-	private reconcileLocalStreamCodec(
-		source: VoiceEngineV2LocalStreamSource,
-		media: {
-			status: string;
-			published: {codec?: VoiceEngineV2VideoCodec} | null;
-			desired: {codec?: VoiceEngineV2VideoCodec} | null;
-		},
-	): void {
-		const registered = this.voiceEngineV2Snapshot.codecNegotiation.streams[source] != null;
-		const active = media.published != null || media.status === 'publishing';
-		if (!active) {
-			if (registered) this.voiceEngineV2Controller.unregisterLocalStreamCodec(source);
-			return;
-		}
-		if (registered) return;
-		const codec: VoiceEngineV2VideoCodec = media.published?.codec ?? media.desired?.codec ?? '';
-		const streamIdentity = `${source}:${crypto.randomUUID()}`;
-		this.voiceEngineV2Controller.registerLocalStreamCodec(source, streamIdentity, codec);
 	}
 
 	private bindAudioPreferencesSync(room: Room): () => void {

@@ -25,7 +25,6 @@ export {
 	selectVoiceEngineV2StatsPresentationProjection,
 	selectVoiceEngineV2StatsProjection,
 	selectVoiceEngineV2StatsSummary,
-	selectVoiceEngineV2StreamNegotiation,
 	selectVoiceEngineV2WatchedStreams,
 } from './selectors';
 export type {

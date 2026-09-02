@@ -7,20 +7,6 @@ export type {
 	VoiceEngineV2CameraEncodingPlanReason,
 } from './cameraShare';
 export {applyVoiceEngineV2CameraEncodingOptions, planVoiceEngineV2CameraEncodingChange} from './cameraShare';
-export type {
-	VoiceEngineV2CodecViewer,
-	VoiceEngineV2NegotiatedCodecPlan,
-	VoiceEngineV2NegotiatedCodecReason,
-} from './codecNegotiation';
-export {
-	isMoreEfficientVoiceEngineV2VideoCodec,
-	maxDecodableVoiceEngineV2VideoCodec,
-	planVoiceEngineV2NegotiatedVideoCodec,
-	VOICE_ENGINE_V2_VIDEO_CODEC_FLOOR,
-	VOICE_ENGINE_V2_VIDEO_CODEC_PREFERENCE,
-	voiceEngineV2VideoCodecRank,
-	worseVoiceEngineV2VideoCodec,
-} from './codecNegotiation';
 export {
 	hasVoiceEngineV2NativeHardwareEncoder,
 	hasVoiceEngineV2NativeNvencEncoder,

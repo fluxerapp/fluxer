@@ -105,7 +105,7 @@ function failCamera(
 	};
 }
 
-export function beginCameraEncodingUpdate(
+function beginCameraEncodingUpdate(
 	snapshot: VoiceEngineV2Snapshot,
 	options: VoiceEngineV2CameraEncodingOptions,
 ): VoiceEngineV2Transition {

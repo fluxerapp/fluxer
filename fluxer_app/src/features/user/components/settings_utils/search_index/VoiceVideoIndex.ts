@@ -110,18 +110,6 @@ const OPENH264_VIDEO_CODEC_DESCRIPTOR = msg({
 	message: 'OpenH264 video codec',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
-const EMULATE_DECODE_CODEC_DESCRIPTOR = msg({
-	message: 'Emulate decode codec (testing)',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const CODEC_NEGOTIATION_TESTING_DESCRIPTOR = msg({
-	message: 'Codec negotiation testing',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ADVERTISE_A_CAPPED_DECODE_CODEC_TO_FORCE_PUBLISHER_MIGRATION_DESCRIPTOR = msg({
-	message: 'Advertise a capped decode codec to force publisher migration',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
 const H264_DESCRIPTOR = msg({
 	message: 'H.264',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -245,16 +233,6 @@ export const voiceVideoIndex: Array<SearchableSettingDescriptor> = [
 		label: ALLOW_HEVC_SCREEN_SHARE_DESCRIPTOR,
 		keywords: [HEVC_KEYWORD_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
 		description: ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR,
-		audience: 'advanced',
-		tags: ['media', 'voice'],
-	},
-	{
-		id: 'voice-video-emulated-decode-codec-cap',
-		tabType: 'voice_video',
-		sectionId: 'video',
-		label: EMULATE_DECODE_CODEC_DESCRIPTOR,
-		keywords: [CODEC_NEGOTIATION_TESTING_DESCRIPTOR, CODEC_DESCRIPTOR, VIDEO_CODEC_DESCRIPTOR],
-		description: ADVERTISE_A_CAPPED_DECODE_CODEC_TO_FORCE_PUBLISHER_MIGRATION_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['media', 'voice'],
 	},

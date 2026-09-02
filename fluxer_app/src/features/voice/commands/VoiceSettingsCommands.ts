@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Logger} from '@app/features/platform/utils/AppLogger';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import VoiceSettings, {
 	type CameraResolution,
@@ -16,8 +15,6 @@ import type {
 	ScreenShareSoftwareQuality,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getActiveInputDeviceLabel, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
-
-const logger = new Logger('VoiceSettingsCommands');
 
 type VoiceSettingsPatch = Partial<{
 	inputDeviceId: string;
@@ -62,7 +59,6 @@ type VoiceSettingsPatch = Partial<{
 	preferredScreenShareCodec: CodecPreference;
 	screenShareAv1OptIn: boolean;
 	screenShareHevcOptIn: boolean;
-	emulatedDecodeVideoCodecCap: CodecPreference;
 	screenShareContentHint: ScreenShareContentHint;
 	screenShareEncoderMode: ScreenShareEncoderMode;
 	screenShareSoftwareQuality: ScreenShareSoftwareQuality;
@@ -105,17 +101,6 @@ const CAMERA_BACKGROUND_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'mirrorCamera',
 ];
 const CAMERA_CAPTURE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = ['cameraResolution', 'videoDeviceId'];
-const SCREEN_SHARE_CODEC_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
-	'preferredScreenShareCodec',
-	'screenShareAv1OptIn',
-	'screenShareHevcOptIn',
-	'screenShareEncoderMode',
-	'screenShareSoftwareQuality',
-	'screenShareScalabilityMode',
-	'screenShareBackupCodecMode',
-	'openH264Enabled',
-];
-
 function refreshMicrophone(): void {
 	MediaEngine.refreshMicrophoneFromSettings();
 }
@@ -151,14 +136,6 @@ function shouldRefreshCameraCapture(
 	return CAMERA_CAPTURE_REFRESH_KEYS.some((key) => settings[key] !== undefined && before[key] !== after[key]);
 }
 
-function shouldRefreshScreenShareCodecNegotiation(settings: VoiceSettingsPatch): boolean {
-	return SCREEN_SHARE_CODEC_REFRESH_KEYS.some((key) => settings[key] !== undefined);
-}
-
-async function refreshScreenShareCodecNegotiation(): Promise<void> {
-	await MediaEngine.refreshActiveScreenShareCodecNegotiation();
-}
-
 function applyUpdatedVoiceSettings(
 	settings: VoiceSettingsPatch,
 	refreshInput: boolean,
@@ -185,11 +162,6 @@ function applyUpdatedVoiceSettings(
 	}
 	if (shouldRefreshCameraCapture(settings, cameraCaptureBefore, readCameraCaptureRefreshValues())) {
 		refreshCameraCapture();
-	}
-	if (shouldRefreshScreenShareCodecNegotiation(settings)) {
-		void refreshScreenShareCodecNegotiation().catch((error) => {
-			logger.warn('Failed to refresh active screen share codec negotiation after settings update', {error});
-		});
 	}
 }
 

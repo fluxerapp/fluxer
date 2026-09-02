@@ -9,7 +9,6 @@ import type {
 	VoiceEngineV2AudioControls,
 	VoiceEngineV2CameraOptions,
 	VoiceEngineV2Capabilities,
-	VoiceEngineV2CodecNegotiationState,
 	VoiceEngineV2ConnectionStatus,
 	VoiceEngineV2ConnectOptions,
 	VoiceEngineV2DeviceInventory,
@@ -170,7 +169,6 @@ export interface VoiceEngineV2Snapshot {
 	participantVolumes: Record<string, number>;
 	remoteTrackSubscriptions: Record<string, VoiceEngineV2RemoteTrackSubscriptionOptions>;
 	watchedStreams: Record<string, VoiceEngineV2WatchedStream>;
-	codecNegotiation: VoiceEngineV2CodecNegotiationState;
 	stats: VoiceEngineV2Stats | null;
 	statsOperationId: VoiceEngineV2OperationId | null;
 	statsFailure: VoiceEngineV2Error | null;
@@ -338,12 +336,6 @@ export function createVoiceEngineV2InitialSnapshot(
 		participantVolumes: {},
 		remoteTrackSubscriptions: {},
 		watchedStreams: {},
-		codecNegotiation: {
-			overrides: {},
-			localSupportedVideoCodecs: [],
-			remoteSupportedVideoCodecs: {},
-			streams: {},
-		},
 		stats: null,
 		statsOperationId: null,
 		statsFailure: null,
