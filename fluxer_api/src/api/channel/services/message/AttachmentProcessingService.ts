@@ -209,7 +209,7 @@ export class AttachmentProcessingService {
 		}
 		const attachmentId = createAttachmentID(await this.snowflakeService.generate());
 		const cdnKey = makeAttachmentCdnKey(message.channelId, attachmentId, attachment.filename);
-		let contentType = attachment.content_type ?? getContentType(attachment.filename);
+		let contentType = pendingUpload.content_type ?? getContentType(attachment.filename);
 		let size = BigInt(uploadedFile.contentLength);
 		const clientFlags =
 			(attachment.flags ?? 0) & (MessageAttachmentFlags.IS_SPOILER | MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA);

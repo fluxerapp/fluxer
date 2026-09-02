@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
+import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -16,6 +17,7 @@ import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
 import type {ChannelID, EmojiID, GuildID, MessageID, RoleID, StickerID, UserID, WebhookID} from '../../../BrandedTypes';
 import {createAttachmentID, createEmojiID, createGuildID} from '../../../BrandedTypes';
+import {Config} from '../../../Config';
 import {getContentMessage} from '../../../content_i18n/ContentI18n';
 import type {
 	MessageAttachment,
@@ -29,6 +31,8 @@ import type {IMediaService, MediaProxyNsfwMode} from '../../../infrastructure/IM
 import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
 import type {IStorageService} from '../../../infrastructure/IStorageService';
 import type {LimitConfigService} from '../../../limits/LimitConfigService';
+import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
+import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
 import type {Channel} from '../../../models/Channel';
 import type {Message} from '../../../models/Message';
 import type {MessageSnapshot} from '../../../models/MessageSnapshot';
@@ -43,7 +47,7 @@ import type {AttachmentUploadTraceRepository} from '../../repositories/message/A
 import {AttachmentProcessingService} from './AttachmentProcessingService';
 import {type DmNsfwContext, MessageContentService} from './MessageContentService';
 import {MessageEmbedAttachmentResolver} from './MessageEmbedAttachmentResolver';
-import {collectMessageAttachments} from './MessageHelpers';
+import {assertAttachmentFileSizesWithinLimit, collectMessageAttachments} from './MessageHelpers';
 import {MessageStickerService} from './MessageStickerService';
 
 function mapAttachmentForEmbedResolution(att: MessageAttachment) {
@@ -119,13 +123,13 @@ export class MessagePersistenceService {
 		private userRepository: IUserRepository,
 		private guildRepository: IGuildRepositoryAggregate,
 		private embedService: EmbedService,
-		storageService: IStorageService,
+		private readonly storageService: IStorageService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		mediaService: IMediaService,
 		virusScanService: IVirusScanService,
 		snowflakeService: ISnowflakeService,
 		private readStateService: ReadStateService,
-		limitConfigService: LimitConfigService,
+		private readonly limitConfigService: LimitConfigService,
 	) {
 		this.attachmentService = new AttachmentProcessingService(
 			storageService,
@@ -492,6 +496,32 @@ export class MessagePersistenceService {
 						uploadUserId !== undefined,
 						'Attachment upload actor must be resolved before processing new attachments',
 					);
+					const uploader = await this.userRepository.findUnique(uploadUserId);
+					const guildFeatures = guild?.features ?? null;
+					const maxFileSize = Math.floor(
+						resolveLimitSafe(
+							this.limitConfigService.getConfigSnapshot(),
+							createLimitMatchContext({user: uploader, guildFeatures}),
+							'max_attachment_file_size',
+							ATTACHMENT_MAX_SIZE_NON_PREMIUM,
+							guildFeatures ? 'guild' : 'user',
+						),
+					);
+					const uploadedSizes: Array<number> = [];
+					for (const [index, attachment] of newAttachments.entries()) {
+						const uploadedFile = await this.storageService.getObjectMetadata(
+							Config.s3.buckets.uploads,
+							attachment.upload_filename,
+						);
+						if (!uploadedFile) {
+							throw InputValidationError.fromCode(
+								`attachments.${index}.upload_filename`,
+								ValidationErrorCodes.FILE_NOT_FOUND,
+							);
+						}
+						uploadedSizes.push(uploadedFile.contentLength);
+					}
+					assertAttachmentFileSizesWithinLimit(uploadedSizes, maxFileSize);
 					const attachmentResult = await this.attachmentService.computeAttachments({
 						message,
 						attachments: newAttachments,
