@@ -39,6 +39,33 @@ export class SimulcastTrackInfo {
 
 const refreshSubscribedCodecAfterNewCodec = 5000;
 
+function restoreSecondarySenderTrack(
+	sender: RTCRtpSender | undefined,
+	track: MediaStreamTrack | null,
+): Promise<void> | undefined {
+	if (!sender) return undefined;
+	if (sender.track === track) return undefined;
+	if (track != null && track.readyState !== 'live') return undefined;
+	return sender.replaceTrack(track);
+}
+
+function createProcessorRecoveryError(
+	primaryError: unknown,
+	cleanupErrors: ReadonlyArray<unknown>,
+	rollbackErrors: ReadonlyArray<unknown>,
+): AggregateError {
+	const recoveryErrors: Array<AggregateError> = [];
+	if (cleanupErrors.length > 0) {
+		recoveryErrors.push(new AggregateError(cleanupErrors, 'Video processor candidate cleanup failed'));
+	}
+	if (rollbackErrors.length > 0) {
+		recoveryErrors.push(new AggregateError(rollbackErrors, 'Video processor secondary sender rollback failed'));
+	}
+	return new AggregateError(recoveryErrors, 'Video processor apply failed and recovery was incomplete', {
+		cause: primaryError,
+	});
+}
+
 export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 	signalClient?: SignalClient;
 
@@ -251,21 +278,86 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 
 		this.isCpuConstrained = false;
 
+		const processedTrack = this.processor?.processedTrack;
 		for await (const sc of this.simulcastCodecs.values()) {
 			if (sc.sender && sc.sender.transport?.state !== 'closed') {
-				sc.mediaStreamTrack = this.mediaStreamTrack.clone();
-				await sc.sender.replaceTrack(sc.mediaStreamTrack);
+				const previousTrack = sc.mediaStreamTrack;
+				const nextTrack = this._mediaStreamTrack.clone();
+				try {
+					await sc.sender.replaceTrack(processedTrack ?? nextTrack);
+					sc.mediaStreamTrack = nextTrack;
+					previousTrack.stop();
+				} catch (error) {
+					nextTrack.stop();
+					throw error;
+				}
 			}
 		}
 	}
 
 	override async setProcessor(processor: TrackProcessor<Track.Kind.Video>, showProcessedStreamLocally = true) {
-		await super.setProcessor(processor, showProcessedStreamLocally);
-
-		if (this.processor?.processedTrack) {
-			for await (const sc of this.simulcastCodecs.values()) {
-				await sc.sender?.replaceTrack(this.processor.processedTrack);
+		const secondarySenderSnapshots = Array.from(this.simulcastCodecs.values(), (trackInfo) => ({
+			sender: trackInfo.sender,
+			track: trackInfo.sender?.track ?? null,
+		}));
+		try {
+			await super.setProcessor(processor, showProcessedStreamLocally);
+			if (this.processor?.processedTrack) {
+				for await (const sc of this.simulcastCodecs.values()) {
+					await sc.sender?.replaceTrack(this.processor.processedTrack);
+				}
 			}
+		} catch (error) {
+			const cleanupErrors: Array<unknown> = [];
+			if (this.processor === processor) {
+				try {
+					await this.stopProcessor(false);
+				} catch (cleanupError) {
+					cleanupErrors.push(cleanupError);
+				}
+			}
+			const rollbackResults = await Promise.allSettled(
+				secondarySenderSnapshots.map(({sender, track}) => restoreSecondarySenderTrack(sender, track)),
+			);
+			const rollbackErrors = rollbackResults.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+			if (cleanupErrors.length === 0 && rollbackErrors.length === 0) {
+				throw error;
+			}
+			throw createProcessorRecoveryError(error, cleanupErrors, rollbackErrors);
+		}
+	}
+
+	protected override async internalStopProcessor(keepElement = true) {
+		const processor = this.processor;
+		if (!processor) {
+			await super.internalStopProcessor(keepElement);
+			return;
+		}
+		const secondarySenderSnapshots = Array.from(this.simulcastCodecs.values(), (trackInfo) => ({
+			sender: trackInfo.sender,
+			track: trackInfo.sender?.track ?? null,
+			replacement: trackInfo.mediaStreamTrack,
+		}));
+		try {
+			for (const {sender, replacement} of secondarySenderSnapshots) {
+				await sender?.replaceTrack(replacement);
+			}
+			await super.internalStopProcessor(keepElement);
+		} catch (error) {
+			const rollbackResults = await Promise.allSettled(
+				secondarySenderSnapshots.map(({sender, track}) => restoreSecondarySenderTrack(sender, track)),
+			);
+			const rollbackErrors = rollbackResults.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+			if (rollbackErrors.length === 0) {
+				throw error;
+			}
+			throw new AggregateError(
+				rollbackErrors,
+				'Video processor stop failed and secondary sender recovery was incomplete',
+				{
+					cause: error,
+				},
+			);
 		}
 	}
 
@@ -290,7 +382,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		}
 		const simulcastCodecInfo: SimulcastTrackInfo = {
 			codec,
-			mediaStreamTrack: this.mediaStreamTrack.clone(),
+			mediaStreamTrack: this._mediaStreamTrack.clone(),
 			sender: undefined,
 			encodings,
 		};
@@ -304,6 +396,12 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 			return;
 		}
 		simulcastCodecInfo.sender = sender;
+		const processedTrack = this.processor?.processedTrack;
+		if (processedTrack) {
+			void sender.replaceTrack(processedTrack).catch((error: unknown) => {
+				this.log.warn('failed to route processed track to secondary sender', {...this.logContext, error});
+			});
+		}
 
 		setTimeout(() => {
 			if (this.subscribedCodecs) {

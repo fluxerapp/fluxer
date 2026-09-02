@@ -159,21 +159,69 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 				audioContext: this.audioContext as AudioContext,
 			};
 			this.log.debug(`setting up audio processor ${processor.name}`, this.logContext);
-
-			await processor.init(processorOptions);
-			this.processor = processor;
-			if (this.processor.processedTrack) {
-				await this.sender?.replaceTrack(this.processor.processedTrack);
-				this.processor.processedTrack.addEventListener(
-					'enable-lk-krisp-noise-filter',
-					this.handleKrispNoiseFilterEnable,
-				);
-				this.processor.processedTrack.addEventListener(
-					'disable-lk-krisp-noise-filter',
-					this.handleKrispNoiseFilterDisable,
-				);
+			try {
+				await processor.init(processorOptions);
+			} catch (error) {
+				try {
+					await processor.destroy();
+				} catch (cleanupError) {
+					throw new AggregateError(
+						[error, cleanupError],
+						'Audio track processor setup and candidate cleanup both failed',
+					);
+				}
+				throw error;
 			}
-			this.emit(TrackEvent.TrackProcessorUpdate, this.processor);
+			const processedTrack = processor.processedTrack;
+			try {
+				if (processedTrack) await this.sender?.replaceTrack(processedTrack);
+				this.processor = processor;
+				if (processedTrack) {
+					processedTrack.addEventListener('enable-lk-krisp-noise-filter', this.handleKrispNoiseFilterEnable);
+					processedTrack.addEventListener('disable-lk-krisp-noise-filter', this.handleKrispNoiseFilterDisable);
+				}
+				this.emit(TrackEvent.TrackProcessorUpdate, processor);
+			} catch (error) {
+				const cleanupErrors: Array<unknown> = [];
+				if (this.processor === processor) this.processor = undefined;
+				processedTrack?.removeEventListener('enable-lk-krisp-noise-filter', this.handleKrispNoiseFilterEnable);
+				processedTrack?.removeEventListener('disable-lk-krisp-noise-filter', this.handleKrispNoiseFilterDisable);
+				try {
+					await processor.destroy();
+				} catch (cleanupError) {
+					cleanupErrors.push(cleanupError);
+				}
+				if (processedTrack && processedTrack.readyState !== 'ended') {
+					processedTrack.enabled = false;
+					try {
+						processedTrack.stop();
+					} catch (cleanupError) {
+						cleanupErrors.push(cleanupError);
+					}
+				}
+				const sender = this.sender;
+				if (sender && sender.transport?.state !== 'closed') {
+					const rawSenderTrack = this._mediaStreamTrack.readyState === 'live' ? this._mediaStreamTrack : null;
+					if (sender.track !== rawSenderTrack) {
+						try {
+							await sender.replaceTrack(rawSenderTrack);
+						} catch (cleanupError) {
+							cleanupErrors.push(cleanupError);
+							if (sender.track?.readyState === 'ended') {
+								try {
+									await sender.replaceTrack(null);
+								} catch (failCloseError) {
+									cleanupErrors.push(failCloseError);
+								}
+							}
+						}
+					}
+				}
+				if (cleanupErrors.length > 0) {
+					throw new AggregateError([error, ...cleanupErrors], 'Audio track processor install rollback was incomplete');
+				}
+				throw error;
+			}
 		} finally {
 			unlock();
 		}

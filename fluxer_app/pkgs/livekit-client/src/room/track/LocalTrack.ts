@@ -19,6 +19,12 @@ import type {ReplaceTrackOptions} from './types.ts';
 const DEFAULT_DIMENSIONS_TIMEOUT = 1000;
 const PRE_CONNECT_BUFFER_TIMEOUT = 10_000;
 
+interface SetMediaStreamTrackOptions {
+	force?: boolean;
+	deferEndedListener?: boolean;
+	preservePreviousTrack: boolean;
+}
+
 export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Kind> extends Track<TrackKind> {
 	protected _sender?: RTCRtpSender;
 
@@ -66,6 +72,8 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 
 	protected pendingDeviceChange: boolean = false;
 
+	private stagedReplacementTrack: MediaStreamTrack | undefined;
+
 	protected constructor(
 		mediaTrack: MediaStreamTrack,
 		kind: TrackKind,
@@ -81,7 +89,10 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		this.trackChangeLock = new Mutex();
 		this.trackChangeLock.lock().then(async (unlock) => {
 			try {
-				await this.setMediaStreamTrack(mediaTrack, true);
+				await this.setMediaStreamTrack(mediaTrack, {
+					force: true,
+					preservePreviousTrack: userProvidedTrack,
+				});
 			} finally {
 				unlock();
 			}
@@ -134,58 +145,131 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		return this._mediaStreamTrack.getSettings();
 	}
 
-	private async setMediaStreamTrack(newTrack: MediaStreamTrack, force?: boolean) {
-		if (newTrack === this._mediaStreamTrack && !force) {
-			return;
+	private addMediaStreamTrackListeners(track: MediaStreamTrack, includeEndedListener = true) {
+		if (includeEndedListener) {
+			track.addEventListener('ended', this.handleEnded);
 		}
-		if (this._mediaStreamTrack) {
-			this.attachedElements.forEach((el) => {
-				detachTrack(this._mediaStreamTrack, el);
-			});
-			this.debouncedTrackMuteHandler.cancel('new-track');
-			this._mediaStreamTrack.removeEventListener('ended', this.handleEnded);
-			this._mediaStreamTrack.removeEventListener('mute', this.handleTrackMuteEvent);
-			this._mediaStreamTrack.removeEventListener('unmute', this.handleTrackUnmuteEvent);
-		}
+		track.addEventListener('mute', this.handleTrackMuteEvent);
+		track.addEventListener('unmute', this.handleTrackUnmuteEvent);
+	}
 
-		this.mediaStream = new MediaStream([newTrack]);
-		if (newTrack) {
-			newTrack.addEventListener('ended', this.handleEnded);
-			newTrack.addEventListener('mute', this.handleTrackMuteEvent);
-			newTrack.addEventListener('unmute', this.handleTrackUnmuteEvent);
-			this._constraints = newTrack.getConstraints();
-		}
-		let processedTrack: MediaStreamTrack | undefined;
-		if (this.processor && newTrack) {
-			this.log.debug('restarting processor', this.logContext);
-			if (this.kind === 'unknown') {
-				throw TypeError('cannot set processor on track of unknown kind');
+	private removeMediaStreamTrackListeners(track: MediaStreamTrack) {
+		track.removeEventListener('ended', this.handleEnded);
+		track.removeEventListener('mute', this.handleTrackMuteEvent);
+		track.removeEventListener('unmute', this.handleTrackUnmuteEvent);
+	}
+
+	private async restoreMediaStreamTrackAfterFailure(
+		previousTrack: MediaStreamTrack,
+		previousConstraints: MediaTrackConstraints,
+		previousEnabled: boolean,
+		failedTrack: MediaStreamTrack,
+		failedProcessedTrack: MediaStreamTrack | undefined,
+		previousTrackEndedListenerDeferred: boolean,
+	) {
+		this.removeMediaStreamTrackListeners(failedTrack);
+		for (const element of this.attachedElements) {
+			detachTrack(failedTrack, element);
+			if (failedProcessedTrack) {
+				detachTrack(failedProcessedTrack, element);
 			}
-
+		}
+		if (previousTrack.readyState !== 'live') {
+			throw new TrackInvalidError('unable to restore an ended track after replacement failure');
+		}
+		this.mediaStream = new MediaStream([previousTrack]);
+		this._mediaStreamTrack = previousTrack;
+		this._constraints = previousConstraints;
+		previousTrack.enabled = previousEnabled;
+		this.addMediaStreamTrackListeners(previousTrack, !previousTrackEndedListenerDeferred);
+		let restoredProcessedTrack: MediaStreamTrack | undefined;
+		if (this.processor) {
+			if (this.kind === 'unknown') {
+				throw TypeError('cannot restore processor on track of unknown kind');
+			}
 			if (this.processorElement) {
-				attachToElement(newTrack, this.processorElement);
+				attachToElement(previousTrack, this.processorElement);
 				this.processorElement.muted = true;
 			}
 			await this.processor.restart({
-				track: newTrack,
+				track: previousTrack,
 				kind: this.kind,
 				element: this.processorElement,
 			});
-			processedTrack = this.processor.processedTrack;
+			restoredProcessedTrack = this.processor.processedTrack;
 		}
 		if (this.sender && this.sender.transport?.state !== 'closed') {
-			await this.sender.replaceTrack(processedTrack ?? newTrack);
+			await this.sender.replaceTrack(restoredProcessedTrack ?? previousTrack);
 		}
-		if (!this.providedByUser && this._mediaStreamTrack !== newTrack) {
-			this._mediaStreamTrack.stop();
+		await this.resumeUpstream();
+		for (const element of this.attachedElements) {
+			attachToElement(restoredProcessedTrack ?? previousTrack, element);
 		}
-		this._mediaStreamTrack = newTrack;
-		if (newTrack) {
+	}
+
+	private async setMediaStreamTrack(newTrack: MediaStreamTrack, options: SetMediaStreamTrackOptions) {
+		const {deferEndedListener = false, force = false, preservePreviousTrack} = options;
+		if (newTrack === this._mediaStreamTrack && !force) {
+			return;
+		}
+		const previousTrack = this._mediaStreamTrack;
+		const previousConstraints = this._constraints;
+		const previousEnabled = previousTrack.enabled;
+		const previousTrackEndedListenerDeferred = this.stagedReplacementTrack === previousTrack;
+		const nextTrackEndedListenerDeferred = deferEndedListener || this.stagedReplacementTrack === newTrack;
+		let processedTrack: MediaStreamTrack | undefined;
+		try {
+			this.attachedElements.forEach((el) => {
+				detachTrack(previousTrack, el);
+			});
+			this.debouncedTrackMuteHandler.cancel('new-track');
+			this.removeMediaStreamTrackListeners(previousTrack);
+			this.mediaStream = new MediaStream([newTrack]);
+			this.addMediaStreamTrackListeners(newTrack, !nextTrackEndedListenerDeferred);
+			this._constraints = newTrack.getConstraints();
+			if (this.processor) {
+				this.log.debug('restarting processor', this.logContext);
+				if (this.kind === 'unknown') {
+					throw TypeError('cannot set processor on track of unknown kind');
+				}
+
+				if (this.processorElement) {
+					attachToElement(newTrack, this.processorElement);
+					this.processorElement.muted = true;
+				}
+				await this.processor.restart({
+					track: newTrack,
+					kind: this.kind,
+					element: this.processorElement,
+				});
+				processedTrack = this.processor.processedTrack;
+			}
+			if (this.sender && this.sender.transport?.state !== 'closed') {
+				await this.sender.replaceTrack(processedTrack ?? newTrack);
+			}
+			this._mediaStreamTrack = newTrack;
 			this._mediaStreamTrack.enabled = !this.isMuted;
 			await this.resumeUpstream();
 			this.attachedElements.forEach((el) => {
 				attachToElement(processedTrack ?? newTrack, el);
 			});
+			if (!preservePreviousTrack && previousTrack !== newTrack) {
+				previousTrack.stop();
+			}
+		} catch (error) {
+			try {
+				await this.restoreMediaStreamTrackAfterFailure(
+					previousTrack,
+					previousConstraints,
+					previousEnabled,
+					newTrack,
+					processedTrack,
+					previousTrackEndedListenerDeferred,
+				);
+			} catch (rollbackError) {
+				throw new AggregateError([error, rollbackError], 'Track replacement and internal rollback both failed');
+			}
+			throw error;
 		}
 	}
 
@@ -255,7 +339,12 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 	async replaceTrack(track: MediaStreamTrack, userProvidedTrack?: boolean): Promise<typeof this>;
 	async replaceTrack(track: MediaStreamTrack, userProvidedOrOptions: boolean | ReplaceTrackOptions | undefined) {
 		const unlock = await this.trackChangeLock.lock();
+		const previousProvidedByUser = this.providedByUser;
+		let replacementCommitted = false;
 		try {
+			if (this.stagedReplacementTrack) {
+				throw new TrackInvalidError('unable to replace a track while a staged replacement is active');
+			}
 			if (!this.sender) {
 				throw new TrackInvalidError('unable to replace an unpublished track');
 			}
@@ -273,11 +362,87 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 			this.providedByUser = userProvidedTrack ?? true;
 
 			this.log.debug('replace MediaStreamTrack', this.logContext);
-			await this.setMediaStreamTrack(track);
+			await this.setMediaStreamTrack(track, {preservePreviousTrack: previousProvidedByUser});
+			replacementCommitted = true;
 
 			if (stopProcessor && this.processor) {
 				await this.internalStopProcessor();
 			}
+			return this;
+		} catch (error) {
+			if (!replacementCommitted) {
+				this.providedByUser = previousProvidedByUser;
+			}
+			throw error;
+		} finally {
+			unlock();
+		}
+	}
+
+	async runWithTrackChangeLock<T>(operation: () => Promise<T>): Promise<T> {
+		const unlock = await this.trackChangeLock.lock();
+		try {
+			return await operation();
+		} finally {
+			unlock();
+		}
+	}
+
+	async stageTrackReplacement(track: MediaStreamTrack): Promise<typeof this> {
+		const unlock = await this.trackChangeLock.lock();
+		const previousProvidedByUser = this.providedByUser;
+		const previousStagedReplacementTrack = this.stagedReplacementTrack;
+		try {
+			if (!this.sender) {
+				throw new TrackInvalidError('unable to stage a replacement for an unpublished track');
+			}
+			if (previousStagedReplacementTrack && previousStagedReplacementTrack !== this._mediaStreamTrack) {
+				throw new TrackInvalidError('staged replacement identity does not match the active source track');
+			}
+			if (track === this._mediaStreamTrack) {
+				throw new TrackInvalidError('unable to stage the active source track as its own replacement');
+			}
+			if (track.readyState !== 'live') {
+				throw new TrackInvalidError('unable to stage an ended replacement track');
+			}
+
+			this.providedByUser = true;
+			this.log.debug('stage MediaStreamTrack replacement', this.logContext);
+			await this.setMediaStreamTrack(track, {
+				deferEndedListener: true,
+				preservePreviousTrack: true,
+			});
+			this.stagedReplacementTrack = track;
+			return this;
+		} catch (error) {
+			this.providedByUser = previousProvidedByUser;
+			this.stagedReplacementTrack = previousStagedReplacementTrack;
+			throw error;
+		} finally {
+			unlock();
+		}
+	}
+
+	async commitStagedTrackReplacement(track: MediaStreamTrack, userProvidedTrack: boolean): Promise<typeof this> {
+		const unlock = await this.trackChangeLock.lock();
+		try {
+			if (this.stagedReplacementTrack !== track || this._mediaStreamTrack !== track) {
+				throw new TrackInvalidError('unable to commit a replacement that is not the active staged track');
+			}
+			if (!this.sender) {
+				throw new TrackInvalidError('unable to commit a replacement for an unpublished track');
+			}
+			if (track.readyState !== 'live') {
+				throw new TrackInvalidError('unable to commit an ended staged track');
+			}
+
+			track.addEventListener('ended', this.handleEnded);
+			if (track.readyState !== 'live') {
+				track.removeEventListener('ended', this.handleEnded);
+				throw new TrackInvalidError('staged track ended while its replacement was committed');
+			}
+			this.providedByUser = userProvidedTrack;
+			this.stagedReplacementTrack = undefined;
 			return this;
 		} finally {
 			unlock();
@@ -287,8 +452,14 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 	protected async restart(constraints?: MediaTrackConstraints) {
 		this.manuallyStopped = false;
 		const unlock = await this.trackChangeLock.lock();
+		const previousProvidedByUser = this.providedByUser;
+		let newTrack: MediaStreamTrack | undefined;
+		let replacementCommitted = false;
 
 		try {
+			if (this.stagedReplacementTrack) {
+				throw new TrackInvalidError('unable to restart a track while a staged replacement is active');
+			}
 			if (!constraints) {
 				constraints = this._constraints;
 			}
@@ -313,14 +484,18 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 			this._mediaStreamTrack.stop();
 
 			const mediaStream = await navigator.mediaDevices.getUserMedia(streamConstraints);
-			const newTrack = mediaStream.getTracks()[0];
+			newTrack = mediaStream.getTracks()[0];
+			if (!newTrack) {
+				throw new TrackInvalidError('getUserMedia returned no track during restart');
+			}
 			if (this.kind === Track.Kind.Video) {
 				await newTrack.applyConstraints(otherConstraints);
 			}
-			newTrack.addEventListener('ended', this.handleEnded);
 			this.log.debug('re-acquired MediaStreamTrack', this.logContext);
 
-			await this.setMediaStreamTrack(newTrack);
+			this.providedByUser = false;
+			await this.setMediaStreamTrack(newTrack, {preservePreviousTrack: previousProvidedByUser});
+			replacementCommitted = true;
 			this._constraints = constraints;
 			this.pendingDeviceChange = false;
 			this.emit(TrackEvent.Restarted, this);
@@ -329,6 +504,12 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 				this.stop();
 			}
 			return this;
+		} catch (error) {
+			if (!replacementCommitted) {
+				this.providedByUser = previousProvidedByUser;
+				newTrack?.stop();
+			}
+			throw error;
 		} finally {
 			unlock();
 		}
@@ -392,13 +573,21 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 
 	override stop() {
 		this.manuallyStopped = true;
+		this.stagedReplacementTrack = undefined;
+		const processor = this.processor;
+		this.processor = undefined;
+		try {
+			void processor?.destroy().catch((error) => {
+				this.log.error('failed to destroy track processor during stop', {...this.logContext, error});
+			});
+		} catch (error) {
+			this.log.error('failed to destroy track processor during stop', {...this.logContext, error});
+		}
 		super.stop();
 
 		this._mediaStreamTrack.removeEventListener('ended', this.handleEnded);
 		this._mediaStreamTrack.removeEventListener('mute', this.handleTrackMuteEvent);
 		this._mediaStreamTrack.removeEventListener('unmute', this.handleTrackUnmuteEvent);
-		this.processor?.destroy();
-		this.processor = undefined;
 	}
 
 	async pauseUpstream() {
@@ -459,56 +648,159 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		const unlock = await this.trackChangeLock.lock();
 		try {
 			this.log.debug('setting up processor', this.logContext);
-
 			const processorElement = document.createElement(this.kind) as HTMLMediaElement;
-
 			const processorOptions = {
 				kind: this.kind,
 				track: this._mediaStreamTrack,
 				element: processorElement,
 				audioContext: this.audioContext,
 			};
-			await processor.init(processorOptions);
+			try {
+				await processor.init(processorOptions);
+			} catch (error) {
+				try {
+					await processor.destroy();
+				} catch (cleanupError) {
+					throw new AggregateError([error, cleanupError], 'Track processor setup and candidate cleanup both failed');
+				}
+				throw error;
+			}
 			this.log.debug('processor initialized', this.logContext);
-
-			if (this.processor) {
-				await this.internalStopProcessor();
+			const previousProcessor = this.processor;
+			if (previousProcessor) {
+				try {
+					await this.internalStopProcessor(false);
+				} catch (error) {
+					const cleanupErrors: Array<unknown> = [];
+					try {
+						await processor.destroy();
+					} catch (cleanupError) {
+						cleanupErrors.push(cleanupError);
+					}
+					processorElement.remove();
+					const sender = this.sender;
+					if (this.processor !== previousProcessor && sender && sender.transport?.state !== 'closed') {
+						const rawSenderTrack = this._mediaStreamTrack.readyState === 'live' ? this._mediaStreamTrack : null;
+						if (sender.track !== rawSenderTrack) {
+							try {
+								await sender.replaceTrack(rawSenderTrack);
+							} catch (cleanupError) {
+								cleanupErrors.push(cleanupError);
+								if (sender.track?.readyState === 'ended') {
+									try {
+										await sender.replaceTrack(null);
+									} catch (failCloseError) {
+										cleanupErrors.push(failCloseError);
+									}
+								}
+							}
+						}
+					}
+					if (cleanupErrors.length > 0) {
+						throw new AggregateError(
+							[error, ...cleanupErrors],
+							'Existing track processor removal and candidate cleanup both failed',
+						);
+					}
+					throw error;
+				}
 			}
 			if (this.kind === 'unknown') {
-				throw TypeError('cannot set processor on track of unknown kind');
-			}
-
-			attachToElement(this._mediaStreamTrack, processorElement);
-			processorElement.muted = true;
-
-			processorElement.play().catch((error) => {
-				if (error instanceof DOMException && error.name === 'AbortError') {
-					this.log.warn('failed to play processor element, retrying', {
-						...this.logContext,
-						error,
-					});
-					setTimeout(() => {
-						processorElement.play().catch((err) => {
-							this.log.error('failed to play processor element', {...this.logContext, err});
-						});
-					}, 100);
-				} else {
-					this.log.error('failed to play processor element', {...this.logContext, error});
+				let cleanupError: unknown;
+				try {
+					await processor.destroy();
+				} catch (error) {
+					cleanupError = error;
 				}
-			});
-
-			this.processor = processor;
-			this.processorElement = processorElement;
-			if (this.processor.processedTrack) {
-				for (const el of this.attachedElements) {
-					if (el !== this.processorElement && showProcessedStreamLocally) {
-						detachTrack(this._mediaStreamTrack, el);
-						attachToElement(this.processor.processedTrack, el);
+				processorElement.remove();
+				const kindError = new TypeError('cannot set processor on track of unknown kind');
+				if (cleanupError !== undefined) {
+					throw new AggregateError([kindError, cleanupError], 'Invalid track processor kind and cleanup both failed');
+				}
+				throw kindError;
+			}
+			const processedTrack = processor.processedTrack;
+			try {
+				attachToElement(this._mediaStreamTrack, processorElement);
+				processorElement.muted = true;
+				processorElement.play().catch((error) => {
+					if (error instanceof DOMException && error.name === 'AbortError') {
+						this.log.warn('failed to play processor element, retrying', {
+							...this.logContext,
+							error,
+						});
+						setTimeout(() => {
+							processorElement.play().catch((err) => {
+								this.log.error('failed to play processor element', {...this.logContext, err});
+							});
+						}, 100);
+					} else {
+						this.log.error('failed to play processor element', {...this.logContext, error});
+					}
+				});
+				if (processedTrack) {
+					for (const el of this.attachedElements) {
+						if (showProcessedStreamLocally) {
+							detachTrack(this._mediaStreamTrack, el);
+							attachToElement(processedTrack, el);
+						}
+					}
+					await this.sender?.replaceTrack(processedTrack);
+				}
+				this.processor = processor;
+				this.processorElement = processorElement;
+				this.emit(TrackEvent.TrackProcessorUpdate, processor);
+			} catch (error) {
+				const cleanupErrors: Array<unknown> = [];
+				if (this.processor === processor) this.processor = undefined;
+				if (this.processorElement === processorElement) this.processorElement = undefined;
+				if (processedTrack) {
+					for (const el of this.attachedElements) {
+						try {
+							detachTrack(processedTrack, el);
+							if (this._mediaStreamTrack.readyState === 'live') attachToElement(this._mediaStreamTrack, el);
+						} catch (cleanupError) {
+							cleanupErrors.push(cleanupError);
+						}
 					}
 				}
-				await this.sender?.replaceTrack(this.processor.processedTrack);
+				processorElement.remove();
+				try {
+					await processor.destroy();
+				} catch (cleanupError) {
+					cleanupErrors.push(cleanupError);
+				}
+				if (processedTrack && processedTrack.readyState !== 'ended') {
+					processedTrack.enabled = false;
+					try {
+						processedTrack.stop();
+					} catch (cleanupError) {
+						cleanupErrors.push(cleanupError);
+					}
+				}
+				const sender = this.sender;
+				if (sender && sender.transport?.state !== 'closed') {
+					const rawSenderTrack = this._mediaStreamTrack.readyState === 'live' ? this._mediaStreamTrack : null;
+					if (sender.track !== rawSenderTrack) {
+						try {
+							await sender.replaceTrack(rawSenderTrack);
+						} catch (cleanupError) {
+							cleanupErrors.push(cleanupError);
+							if (sender.track?.readyState === 'ended') {
+								try {
+									await sender.replaceTrack(null);
+								} catch (failCloseError) {
+									cleanupErrors.push(failCloseError);
+								}
+							}
+						}
+					}
+				}
+				if (cleanupErrors.length > 0) {
+					throw new AggregateError([error, ...cleanupErrors], 'Track processor install rollback was incomplete');
+				}
+				throw error;
 			}
-			this.emit(TrackEvent.TrackProcessorUpdate, this.processor);
 		} finally {
 			unlock();
 		}
@@ -527,18 +819,88 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		}
 	}
 
+	async stopProcessorIfCurrent(processor: TrackProcessor<TrackKind>, keepElement = true): Promise<boolean> {
+		const unlock = await this.trackChangeLock.lock();
+		try {
+			if (this.processor !== processor) {
+				return false;
+			}
+			await this.internalStopProcessor(keepElement);
+			return true;
+		} finally {
+			unlock();
+		}
+	}
+
 	protected async internalStopProcessor(keepElement = true) {
 		if (!this.processor) return;
 		this.log.debug('stopping processor', this.logContext);
-		this.processor.processedTrack?.stop();
-		await this.processor.destroy();
+		const processor = this.processor;
+		const processedTrack = processor.processedTrack;
+		const constraints = this._constraints;
 		this.processor = undefined;
+		if (processedTrack) {
+			for (const element of this.attachedElements) {
+				detachTrack(processedTrack, element);
+			}
+		}
 		if (!keepElement) {
 			this.processorElement?.remove();
 			this.processorElement = undefined;
 		}
-		await this._mediaStreamTrack.applyConstraints(this._constraints);
-		await this.setMediaStreamTrack(this._mediaStreamTrack, true);
+		const cleanupErrors: Array<unknown> = [];
+		if (this._mediaStreamTrack.readyState === 'live') {
+			try {
+				await this.setMediaStreamTrack(this._mediaStreamTrack, {
+					force: true,
+					preservePreviousTrack: this.providedByUser,
+				});
+			} catch (error) {
+				cleanupErrors.push(error);
+			}
+			if (this._mediaStreamTrack.readyState === 'live') {
+				try {
+					await this._mediaStreamTrack.applyConstraints(constraints);
+				} catch (error) {
+					cleanupErrors.push(error);
+				}
+			}
+		}
+		this._constraints = constraints;
+		if (processedTrack && processedTrack.readyState !== 'ended') {
+			processedTrack.enabled = false;
+			try {
+				processedTrack.stop();
+			} catch (error) {
+				cleanupErrors.push(error);
+			}
+		}
+		try {
+			await processor.destroy();
+		} catch (error) {
+			cleanupErrors.push(error);
+		}
+		const sender = this.sender;
+		if (sender && sender.transport?.state !== 'closed') {
+			const rawSenderTrack = this._mediaStreamTrack.readyState === 'live' ? this._mediaStreamTrack : null;
+			if (sender.track !== rawSenderTrack) {
+				try {
+					await sender.replaceTrack(rawSenderTrack);
+				} catch (error) {
+					cleanupErrors.push(error);
+					if (sender.track?.readyState === 'ended') {
+						try {
+							await sender.replaceTrack(null);
+						} catch (failCloseError) {
+							cleanupErrors.push(failCloseError);
+						}
+					}
+				}
+			}
+		}
+		if (cleanupErrors.length > 0) {
+			throw new AggregateError(cleanupErrors, 'Failed to stop track processor cleanly');
+		}
 		this.emit(TrackEvent.TrackProcessorUpdate);
 	}
 

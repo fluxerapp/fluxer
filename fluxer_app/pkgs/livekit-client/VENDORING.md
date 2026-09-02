@@ -61,6 +61,41 @@ source edits in this package.
     `gainNode` branch; the `el.volume` branch would throw `IndexSizeError`.
     `webAudioMix` must stay unconditional.
 
+11. **Processor teardown before source stop** (`src/room/track/LocalTrack.ts`)
+    `stop()` called `super.stop()` first, killing the source `MediaStreamTrack`
+    and closing the readable feeding a track processor before `processor.destroy()`
+    ran. A camera-effect worker therefore saw input EOF before its owner's stop
+    command and reported an operational failure during an ordinary camera-off.
+    The processor is now captured, detached, and its teardown initiated before
+    `super.stop()`.
+
+12. **Transactional source and processor swaps** (`src/room/track/LocalTrack.ts`,
+    `LocalVideoTrack.ts`, `LocalAudioTrack.ts`)
+    `setMediaStreamTrack()` applied the new source, restarted the processor and
+    re-armed the sender with no unwind path, so a failure anywhere in the middle
+    left a half-applied track: listeners moved, elements detached, sender pointing
+    at a dead track. It now takes `SetMediaStreamTrackOptions`
+    (`force`, `deferEndedListener`, `preservePreviousTrack`) and, on failure,
+    restores the previous source, constraints, `enabled` state, listeners,
+    processor and sender, throwing `TrackInvalidError` when the previous source is
+    no longer `live` because an ended track cannot be restored. Both errors are
+    surfaced together as an `AggregateError` when the unwind itself fails.
+    `stageTrackReplacement()` / `commitStagedTrackReplacement()` expose a two-phase
+    swap: the candidate becomes the active source with its `ended` listener
+    deferred and the previous source preserved, and only the commit adopts the
+    `ended` listener and clears the staged identity, so a caller can validate its
+    publication before the swap is observable. `replaceTrack()` and `restart()`
+    guard the `providedByUser` flip behind a `replacementCommitted` flag.
+    `restart()` still detaches and stops the previous source before calling
+    `getUserMedia()`, as upstream does, because Safari ends a freshly acquired
+    track with a capture failure while the old track for the same device is
+    live. `setSimulcastTrackSender()` routes an already-installed processor's
+    `processedTrack` to a newly registered secondary sender so a backup codec
+    never publishes raw frames while the primary is processed.
+    Processor install and teardown in all three classes roll the processed/raw
+    sender track back, including `LocalVideoTrack`'s secondary simulcast senders,
+    and aggregate every cleanup failure instead of discarding it.
+
 ## Updating from upstream
 
 1. Check the upstream changelog for the target version.
