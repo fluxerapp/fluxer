@@ -1124,7 +1124,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} cần quyền truy cập camera để liệt kê thiết bị của bạn."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} cần quyền truy cập micrô để liệt kê thiết bị của bạn."
 
@@ -2304,7 +2304,7 @@ msgid "Activity sharing"
 msgstr "Chia sẻ hoạt động"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:97
 msgid "Activity threshold"
 msgstr "Ngưỡng hoạt động"
@@ -2741,7 +2741,7 @@ msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Thêm H.264 cho các thiết bị hỗn hợp. Tốn nhiều tài nguyên xử lý hơn."
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:81
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Tự điều chỉnh từng cài đặt: khử tiếng ồn, loại bỏ tiếng vọng và độ lợi."
 
@@ -3002,11 +3002,11 @@ msgstr "Cho phép {everyoneMention} và {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Cho phép {PRODUCT_NAME} truy cập camera của bạn trong {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Cho phép {PRODUCT_NAME} truy cập micrô của bạn trong {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Cho phép {PRODUCT_NAME} truy cập micrô của bạn. Kiểm tra thanh địa chỉ hoặc cài đặt trình duyệt của bạn."
 
@@ -3108,7 +3108,7 @@ msgstr "Cho phép thành viên không có quyền {readMessageHistoryPermissionL
 msgid "Allow mentions for this role"
 msgstr "Cho phép nhắc đến vai trò này"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow microphone"
 msgstr "Cho phép truy cập micro"
 
@@ -4383,8 +4383,8 @@ msgid "Auto sensitivity"
 msgstr "Độ nhạy tự động"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:114
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
 msgid "Auto-set activity threshold"
 msgstr "Tự động đặt ngưỡng hoạt động"
 
@@ -7358,12 +7358,12 @@ msgstr "Đóng tin nhắn này"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Đóng tin nhắn nhóm này? Bạn có thể mở lại bất cứ lúc nào."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 msgid "Close to menu bar"
 msgstr "Đóng vào thanh menu"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "Thu nhỏ xuống khay hệ thống"
@@ -9811,7 +9811,7 @@ msgstr "Hiện tại: {mutedText}"
 #. Summary label in the Linux audio source picker when a custom subset of apps is selected.
 #. Voice processing profile option label (mobile voice settings). User configures processing manually.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
@@ -10953,7 +10953,7 @@ msgstr "Phiên bản dành cho máy tính để bàn {version} đã có sẵn. T
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:151
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
@@ -11863,7 +11863,7 @@ msgid "Download button"
 msgstr "Nút tải xuống"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:102
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Download desktop app"
 msgstr "Tải ứng dụng máy tính"
 
@@ -12661,7 +12661,7 @@ msgid "Enable"
 msgstr "Bật"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:122
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
 msgid "Enable {permissionName} permission"
 msgstr "Bật quyền {permissionName}"
 
@@ -13038,7 +13038,7 @@ msgstr "Tiếng Anh (Mỹ)"
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:783
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Enhanced"
@@ -13318,7 +13318,7 @@ msgstr "Toàn bộ âm thanh hệ thống"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
 msgid "Entrance sound"
 msgstr "Âm thanh vào phòng"
@@ -13437,7 +13437,7 @@ msgstr "Buổi tối"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:170
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:72
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Làm đều âm lượng mic của bạn để không bị quá nhỏ."
@@ -16414,7 +16414,7 @@ msgstr "Tôi cần một cách khác"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:106
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "I understand"
 msgstr "Tôi đã hiểu"
 
@@ -16862,7 +16862,7 @@ msgstr "Trong"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "Ở chế độ \"Hệ điều hành\", các từ điển được liệt kê ở trên chỉ mang tính chất gợi ý. {PRODUCT_NAME} sẽ chuyển các thẻ ngôn ngữ này đến trình kiểm tra chính tả của hệ điều hành nếu được hỗ trợ. Các thẻ không được nhận dạng sẽ bị bỏ qua."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:323
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "Trong trình duyệt, tính năng nhấn để nói chỉ hoạt động khi tab {PRODUCT_NAME} đang được lấy nét. Hãy cài đặt ứng dụng dành cho máy tính để bàn để sử dụng tính năng nhấn để nói trên toàn hệ thống."
 
@@ -17147,7 +17147,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "Quyền truy cập đầu vào đã thay đổi. Thoát hoàn toàn và khởi động lại {productName} để các phím tắt toàn hệ thống có thể sử dụng."
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:174
 msgid "Input and output"
 msgstr "Đầu vào và đầu ra"
 
@@ -17955,7 +17955,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Hãy giữ an toàn. Việc tạo lại sẽ làm hỏng các tích hợp hiện có."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:66
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:65
 msgid "Keep transmitting briefly after release."
 msgstr "Tiếp tục truyền trong một khoảng thời gian ngắn sau khi nhả nút."
 
@@ -18125,7 +18125,7 @@ msgstr "Biểu đồ độ trễ"
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
 msgid "Later"
 msgstr "Để sau"
 
@@ -18136,7 +18136,7 @@ msgstr "Latvia"
 
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:31
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "Khởi chạy {productName} khi đăng nhập"
@@ -18770,7 +18770,7 @@ msgid "Look and feel"
 msgstr "Giao diện người dùng"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Có vẻ như bạn đang dùng {0}. Việc xếp chồng xử lý của {PRODUCT_NAME} lên trên có thể gây ra hiện tượng bơm tiếng hoặc méo tiếng. Đầu vào trực tiếp sẽ truyền âm thanh của bạn mà không bị thay đổi."
 
@@ -18811,11 +18811,6 @@ msgstr "Đã giảm độ phân giải chia sẻ màn hình xuống {resolution}
 msgid "Luxembourg"
 msgstr "Luxembourg"
 
-#. Subsection title in the voice tab for macOS-specific settings. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:191
-msgid "macOS"
-msgstr "macOS"
-
 #. User settings tab label shown on macOS desktop builds.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
@@ -18830,6 +18825,7 @@ msgstr "Mặc định của macOS"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
 msgid "macOS permissions"
 msgstr "Quyền của macOS"
 
@@ -19990,7 +19986,7 @@ msgstr "Micrô"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:137
 msgid "Mic test"
 msgstr "Kiểm tra mic"
@@ -20062,12 +20058,12 @@ msgstr "Thu nhỏ"
 msgid "Minimize"
 msgstr "Thu nhỏ"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 msgid "Minimize to menu bar"
 msgstr "Thu nhỏ vào thanh menu"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Thu nhỏ xuống khay hệ thống"
@@ -21491,7 +21487,7 @@ msgstr "Không tìm thấy kết quả nào"
 msgid "No mentions yet"
 msgstr "Chưa có lượt nhắc đến nào"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:524
 msgid "No microphone found"
 msgstr "Không tìm thấy micrô"
 
@@ -21816,7 +21812,7 @@ msgstr "Biểu tượng cảm xúc tĩnh ({emojiCount})"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:36
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:213
 msgid "None"
 msgstr "Không"
@@ -24625,18 +24621,18 @@ msgid "Push to talk key"
 msgstr "Phím nhấn để nói"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:110
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
 #: src/features/voice/components/VoiceSettingsMenus.tsx:388
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:98
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:97
 msgid "Push-to-talk (limited)"
 msgstr "Nhấn để nói (giới hạn)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Nhấn để nói sẽ bị bỏ qua khi nhập trực tiếp. Chuyển sang chế độ giọng nói tập trung hoặc tùy chỉnh để sử dụng."
 
@@ -24646,12 +24642,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Đã bật chế độ nhấn để nói. Giữ {pushToTalkHint} để nói."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:130
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Nhấn để nói chỉ hoạt động khi {productName} đang được tập trung cho đến khi {permissionName} được bật. Sau khi thay đổi quyền, hãy thoát hoàn toàn và khởi động lại {productName} để các phím tắt toàn hệ thống có thể sử dụng."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:126
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Nhấn để nói chỉ hoạt động khi tab trình duyệt đang được lấy nét."
 
@@ -24959,7 +24955,7 @@ msgid "Recommended"
 msgstr "Được đề xuất"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:69
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Được đề xuất. Làm sạch micrô của bạn để có giọng nói rõ ràng."
 
@@ -25225,7 +25221,7 @@ msgstr "Tương đối"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:62
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:61
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:89
 msgid "Release delay"
 msgstr "Độ trễ nhả nút"
@@ -25289,7 +25285,7 @@ msgstr "Nhớ lựa chọn này"
 msgid "Remember window"
 msgstr "Ghi nhớ cửa sổ"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
 msgid "Remember window size and position"
 msgstr "Nhớ kích thước và vị trí cửa sổ"
 
@@ -26419,7 +26415,7 @@ msgid "Restart {productName}"
 msgstr "Khởi động lại {productName}"
 
 #. Desktop setting description shown when a tray-icon change on Linux requires restart.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:34
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:35
 msgid "Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime."
 msgstr "Khởi động lại {productName} để thay đổi này có hiệu lực vì máy tính để bàn Linux không thể thêm hoặc xóa biểu tượng khay hệ thống một cách đáng tin cậy trong thời gian chạy."
 
@@ -26445,7 +26441,7 @@ msgstr "Khởi động lại {productName} để sử dụng tính năng chia s�
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:44
 msgid "Restart {productName}?"
 msgstr "Khởi động lại {productName}?"
 
@@ -26456,7 +26452,7 @@ msgstr "Khởi động lại {productName}?"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:40
 msgid "Restart now"
 msgstr "Khởi động lại ngay"
 
@@ -27830,7 +27826,7 @@ msgid "Select the account you want to sign in with on the desktop app."
 msgstr "Chọn tài khoản bạn muốn đăng nhập trên ứng dụng máy tính."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:118
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
 msgid "Select voice processing mode"
 msgstr "Chọn chế độ xử lý giọng nói"
 
@@ -28148,7 +28144,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Gửi âm thanh mic thô không qua xử lý."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:73
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Gửi âm thanh của bạn nguyên bản. Tốt nhất nếu bạn đang dùng phần mềm âm thanh bên ngoài."
 
@@ -28687,7 +28683,7 @@ msgstr "Mã ngắn"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:372
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
 msgid "Shortcut"
@@ -28965,7 +28961,7 @@ msgstr "Hiện thông tin phương tiện"
 msgid "Show members"
 msgstr "Hiện thành viên"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show menu bar icon"
 msgstr "Hiện biểu tượng trên thanh menu"
 
@@ -29128,7 +29124,7 @@ msgstr "Hiển thị văn bản Markdown gạch ngang với màu hơi mờ."
 msgid "Show suppress embeds button"
 msgstr "Hiển thị nút chặn nhúng"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show system tray icon"
 msgstr "Hiện biểu tượng trên khay hệ thống"
 
@@ -30211,7 +30207,7 @@ msgstr "Điều khiển nội bộ"
 #. Noise suppression option label (mobile voice settings). Browser built-in engine.
 #. Noise suppression option label in the voice tab (browser default). Keep it concise.
 #. Noise suppression option using the browser built-in engine. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:89
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:55
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Standard"
@@ -30972,7 +30968,7 @@ msgstr "Chuyển sang bố cục thoải mái"
 msgid "Switch to dense layout"
 msgstr "Chuyển sang bố cục gọn gàng"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
 msgid "Switch to direct input"
 msgstr "Chuyển sang nhập trực tiếp"
 
@@ -33155,7 +33151,7 @@ msgstr "Khay"
 msgid "Tray icon"
 msgstr "Biểu tượng trên khay hệ thống"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:129
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:130
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "Các thay đổi đối với biểu tượng khay chỉ áp dụng sau khi khởi động lại trên Linux vì giao thức khay hệ thống không cho phép ứng dụng thêm hoặc xóa biểu tượng trong thời gian chạy một cách đáng tin cậy. Khởi động lại ngay để áp dụng thay đổi của bạn."
 
@@ -36319,7 +36315,7 @@ msgstr "Người tham gia trò chuyện thoại"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
@@ -36374,7 +36370,7 @@ msgstr "Đã hủy"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:373
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
 msgid "Volume"
@@ -36994,7 +36990,7 @@ msgstr "Những cuộc trò chuyện nào"
 msgid "Which rule was broken?"
 msgstr "Quy tắc nào đã bị vi phạm?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:371
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:366
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Khi bật tính năng nhấn để nói, phím tắt sẽ điều khiển micrô của bạn, vì vậy nút tắt tiếng sẽ bị vô hiệu hóa."
 

@@ -1124,7 +1124,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "O {productName} precisa de acesso à câmera para listar seus dispositivos."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "{productName} needs microphone access to list your devices."
 msgstr "O {productName} precisa de acesso ao microfone para listar seus dispositivos."
 
@@ -2304,7 +2304,7 @@ msgid "Activity sharing"
 msgstr "Compartilhamento de atividade"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:97
 msgid "Activity threshold"
 msgstr "Limite de atividade"
@@ -2741,7 +2741,7 @@ msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Adiciona H.264 para clientes mistos. Usa mais recursos de codificação."
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:81
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Ajuste cada configuração: supressão de ruído, cancelamento de eco e ganho."
 
@@ -3002,11 +3002,11 @@ msgstr "Permitir {everyoneMention} e {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Permita que o {PRODUCT_NAME} acesse sua câmera em {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Permita que o {PRODUCT_NAME} acesse seu microfone em {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Permita que o {PRODUCT_NAME} acesse seu microfone. Verifique a barra de endereço ou as configurações do seu navegador."
 
@@ -3108,7 +3108,7 @@ msgstr "Permitir que membros sem a permissão {readMessageHistoryPermissionLabel
 msgid "Allow mentions for this role"
 msgstr "Permitir menções para esta função"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow microphone"
 msgstr "Permitir microfone"
 
@@ -4383,8 +4383,8 @@ msgid "Auto sensitivity"
 msgstr "Sensibilidade automática"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:114
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
 msgid "Auto-set activity threshold"
 msgstr "Definir limite de atividade automaticamente"
 
@@ -7358,12 +7358,12 @@ msgstr "Fechar esta conversa"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Fechar este DM em grupo? Você pode reabri-lo a qualquer momento."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 msgid "Close to menu bar"
 msgstr "Fechar na barra de menus"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "Fechar para a bandeja"
@@ -9811,7 +9811,7 @@ msgstr "Atualmente: {mutedText}"
 #. Summary label in the Linux audio source picker when a custom subset of apps is selected.
 #. Voice processing profile option label (mobile voice settings). User configures processing manually.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
@@ -10953,7 +10953,7 @@ msgstr "A versão para desktop {version} está disponível. Baixe o instalador e
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:151
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
@@ -11863,7 +11863,7 @@ msgid "Download button"
 msgstr "Botão de download"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:102
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Download desktop app"
 msgstr "Baixar app para computador"
 
@@ -12661,7 +12661,7 @@ msgid "Enable"
 msgstr "Ativar"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:122
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
 msgid "Enable {permissionName} permission"
 msgstr "Ativar a permissão {permissionName}"
 
@@ -13038,7 +13038,7 @@ msgstr "inglês (EUA)"
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:783
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Enhanced"
@@ -13318,7 +13318,7 @@ msgstr "Áudio do sistema inteiro"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
 msgid "Entrance sound"
 msgstr "Som de entrada"
@@ -13437,7 +13437,7 @@ msgstr "Noite"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:170
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:72
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Nivelam o volume do seu microfone para que você não fique muito baixo."
@@ -16414,7 +16414,7 @@ msgstr "Preciso de outra forma"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:106
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "I understand"
 msgstr "Entendi"
 
@@ -16862,7 +16862,7 @@ msgstr "Em"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "No modo \"Sistema operacional\", os dicionários listados acima são apenas sugestões. O {PRODUCT_NAME} passará essas tags de idioma para o corretor ortográfico do seu SO quando compatível. As tags que ele não reconhece são ignoradas."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:323
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "No navegador, o push-to-talk só funciona enquanto a aba do {PRODUCT_NAME} estiver em foco. Instale o aplicativo para desktop para usar o push-to-talk em todo o sistema."
 
@@ -17147,7 +17147,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "O acesso de entrada foi alterado. Saia e reinicie o {productName} para que os atalhos de todo o sistema possam usá-lo."
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:174
 msgid "Input and output"
 msgstr "Entrada e saída"
 
@@ -17955,7 +17955,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Mantenha-os em segurança. Gerar novamente vai quebrar as integrações existentes."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:66
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:65
 msgid "Keep transmitting briefly after release."
 msgstr "Continue transmitindo por um breve período após soltar o botão."
 
@@ -18125,7 +18125,7 @@ msgstr "Gráfico de latência"
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
 msgid "Later"
 msgstr "Depois"
 
@@ -18136,7 +18136,7 @@ msgstr "Letônia"
 
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:31
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "Iniciar o {productName} ao fazer login"
@@ -18770,7 +18770,7 @@ msgid "Look and feel"
 msgstr "Aparência"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Parece que você está usando {0}. Usar o processamento do {PRODUCT_NAME} em conjunto pode causar bombeamento ou distorção. A entrada direta passa seu áudio sem alterações."
 
@@ -18811,11 +18811,6 @@ msgstr "Compartilhamento de tela reduzido para {resolution} - {reason}"
 msgid "Luxembourg"
 msgstr "Luxemburgo"
 
-#. Subsection title in the voice tab for macOS-specific settings. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:191
-msgid "macOS"
-msgstr "macOS"
-
 #. User settings tab label shown on macOS desktop builds.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
@@ -18830,6 +18825,7 @@ msgstr "Dispositivo de áudio padrão do macOS"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
 msgid "macOS permissions"
 msgstr "Permissões do macOS"
 
@@ -19990,7 +19986,7 @@ msgstr "Microfone"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:137
 msgid "Mic test"
 msgstr "Teste de microfone"
@@ -20062,12 +20058,12 @@ msgstr "Minimizar"
 msgid "Minimize"
 msgstr "Minimizar"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 msgid "Minimize to menu bar"
 msgstr "Minimizar para a barra de menus"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Minimizar para a bandeja"
@@ -21491,7 +21487,7 @@ msgstr "Nenhum resultado encontrado"
 msgid "No mentions yet"
 msgstr "Nenhuma menção ainda"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:524
 msgid "No microphone found"
 msgstr "Nenhum microfone encontrado"
 
@@ -21816,7 +21812,7 @@ msgstr "Emojis não animados ({emojiCount})"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:36
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:213
 msgid "None"
 msgstr "Nenhum"
@@ -24625,18 +24621,18 @@ msgid "Push to talk key"
 msgstr "Teclas para falar"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:110
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
 #: src/features/voice/components/VoiceSettingsMenus.tsx:388
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:98
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:97
 msgid "Push-to-talk (limited)"
 msgstr "Pressione para falar (limitado)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "O push-to-talk é ignorado na entrada direta. Mude para voz focada ou personalizada para usá-lo."
 
@@ -24646,12 +24642,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "O push-to-talk está ativado. Segure {pushToTalkHint} para falar."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:130
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "O push-to-talk só funciona enquanto o {productName} estiver em foco até que a permissão {permissionName} seja ativada. Depois de alterar a permissão, saia e reinicie o {productName} para que as teclas de atalho de todo o sistema possam usá-lo."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:126
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "O \"Apertar para falar\" só funciona enquanto a aba do navegador estiver em foco."
 
@@ -24959,7 +24955,7 @@ msgid "Recommended"
 msgstr "Recomendado"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:69
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Recomendado. Limpa seu microfone para uma fala clara."
 
@@ -25225,7 +25221,7 @@ msgstr "Relativo"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:62
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:61
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:89
 msgid "Release delay"
 msgstr "Atraso de liberação"
@@ -25289,7 +25285,7 @@ msgstr "Lembrar desta preferência"
 msgid "Remember window"
 msgstr "Lembrar janela"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
 msgid "Remember window size and position"
 msgstr "Lembrar tamanho e posição da janela"
 
@@ -26419,7 +26415,7 @@ msgid "Restart {productName}"
 msgstr "Reiniciar {productName}"
 
 #. Desktop setting description shown when a tray-icon change on Linux requires restart.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:34
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:35
 msgid "Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime."
 msgstr "Reinicie o {productName} para que esta alteração entre em vigor, pois os desktops Linux não conseguem adicionar ou remover ícones da bandeja de forma confiável em tempo de execução."
 
@@ -26445,7 +26441,7 @@ msgstr "Reinicie o {productName} para usar o compartilhamento de tela"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:44
 msgid "Restart {productName}?"
 msgstr "Reiniciar o {productName}?"
 
@@ -26456,7 +26452,7 @@ msgstr "Reiniciar o {productName}?"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:40
 msgid "Restart now"
 msgstr "Reiniciar agora"
 
@@ -27830,7 +27826,7 @@ msgid "Select the account you want to sign in with on the desktop app."
 msgstr "Selecione a conta com a qual você quer entrar no aplicativo para computador."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:118
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
 msgid "Select voice processing mode"
 msgstr "Selecionar modo de processamento de voz"
 
@@ -28148,7 +28144,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Envia o áudio bruto do microfone sem processamento."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:73
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Envia seu áudio sem alterações. Ideal se você estiver usando um software de áudio externo."
 
@@ -28687,7 +28683,7 @@ msgstr "Códigos curtos"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:372
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
 msgid "Shortcut"
@@ -28965,7 +28961,7 @@ msgstr "Mostrar informações da mídia"
 msgid "Show members"
 msgstr "Mostrar membros"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show menu bar icon"
 msgstr "Mostrar ícone na barra de menus"
 
@@ -29128,7 +29124,7 @@ msgstr "Mostrar texto riscado em Markdown com uma cor levemente mais suave."
 msgid "Show suppress embeds button"
 msgstr "Mostrar botão para ocultar mídias incorporadas"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show system tray icon"
 msgstr "Mostrar ícone na bandeja do sistema"
 
@@ -30211,7 +30207,7 @@ msgstr "Controles da equipe"
 #. Noise suppression option label (mobile voice settings). Browser built-in engine.
 #. Noise suppression option label in the voice tab (browser default). Keep it concise.
 #. Noise suppression option using the browser built-in engine. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:89
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:55
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Standard"
@@ -30972,7 +30968,7 @@ msgstr "Mudar para o layout confortável"
 msgid "Switch to dense layout"
 msgstr "Mudar para layout compacto"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
 msgid "Switch to direct input"
 msgstr "Mudar para entrada direta"
 
@@ -33155,7 +33151,7 @@ msgstr "Bandeja"
 msgid "Tray icon"
 msgstr "Ícone da bandeja"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:129
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:130
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "As alterações no ícone da bandeja só se aplicam após reiniciar no Linux, porque o protocolo da bandeja do sistema não permite que os aplicativos adicionem ou removam ícones de forma confiável durante a execução. Reinicie agora para aplicar sua alteração."
 
@@ -36319,7 +36315,7 @@ msgstr "Participantes da chamada de voz"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
@@ -36374,7 +36370,7 @@ msgstr "Anulado"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:373
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
 msgid "Volume"
@@ -36994,7 +36990,7 @@ msgstr "Quais conversas"
 msgid "Which rule was broken?"
 msgstr "Qual regra foi quebrada?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:371
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:366
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Enquanto o push-to-talk estiver ativado, seu atalho controlará seu microfone, então o botão mudo estará desativado."
 

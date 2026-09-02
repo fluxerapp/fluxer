@@ -13,7 +13,6 @@ import {
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
 import Keybind, {getDefaultKeybind} from '@app/features/input/state/InputKeybind';
 import {openMacPermissionsModal} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
-import {MacPermissionsSettingsRow} from '@app/features/permissions/system/components/MacPermissionsSettingsRow';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -187,10 +186,6 @@ const MIC_TEST_DESCRIPTOR = msg({
 const ENTRANCE_SOUND_DESCRIPTOR = msg({
 	message: 'Entrance sound',
 	comment: 'Subsection title in the voice tab. Keep it concise.',
-});
-const MACOS_DESCRIPTOR = msg({
-	message: 'macOS',
-	comment: 'Subsection title in the voice tab for macOS-specific settings. Keep it concise.',
 });
 
 type NoiseSuppressionMethod = 'enhanced' | 'standard' | 'none';
@@ -698,11 +693,6 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			>
 				<EntranceSoundSection data-flx="user.voice-tab.entrance-sound-section" />
 			</SettingsTabSection>
-			{NativePermission.isNativeMacDesktop && (
-				<SettingsTabSection title={i18n._(MACOS_DESCRIPTOR)} data-flx="user.voice-tab.macos-section">
-					<MacPermissionsSettingsRow data-flx="user.voice-tab.macos-permissions-row" />
-				</SettingsTabSection>
-			)}
 		</>
 	);
 });

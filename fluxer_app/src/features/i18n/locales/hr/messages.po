@@ -1124,7 +1124,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "Aplikacija {productName} treba pristup kameri za prikaz vaših uređaja."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "{productName} needs microphone access to list your devices."
 msgstr "Aplikacija {productName} treba pristup mikrofonu za popisivanje vaših uređaja."
 
@@ -2304,7 +2304,7 @@ msgid "Activity sharing"
 msgstr "Dijeljenje aktivnosti"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:97
 msgid "Activity threshold"
 msgstr "Prag aktivnosti"
@@ -2741,7 +2741,7 @@ msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Dodaje H.264 za mješovite klijente. Koristi više resursa za kodiranje."
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:81
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Sami prilagodite svaku postavku: potiskivanje buke, poništavanje jeke i pojačanje."
 
@@ -3002,11 +3002,11 @@ msgstr "Dopusti {everyoneMention} i {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Dopustite aplikaciji {PRODUCT_NAME} pristup vašoj kameri u {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Dopustite aplikaciji {PRODUCT_NAME} pristup mikrofonu u {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Dopustite aplikaciji {PRODUCT_NAME} pristup mikrofonu. Provjerite adresnu traku ili postavke preglednika."
 
@@ -3108,7 +3108,7 @@ msgstr "Dopusti članovima bez dozvole {readMessageHistoryPermissionLabel} da vi
 msgid "Allow mentions for this role"
 msgstr "Dopusti spominjanje za ovu ulogu"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow microphone"
 msgstr "Dopusti mikrofon"
 
@@ -4383,8 +4383,8 @@ msgid "Auto sensitivity"
 msgstr "Automatska osjetljivost"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:114
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
 msgid "Auto-set activity threshold"
 msgstr "Automatsko postavljanje praga aktivnosti"
 
@@ -7358,12 +7358,12 @@ msgstr "Zatvori ovaj DM"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Zatvoriti ovaj grupni izravni chat? Možete ga ponovno otvoriti bilo kada."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 msgid "Close to menu bar"
 msgstr "Zatvori na traku izbornika"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "Zatvori u paletu"
@@ -9811,7 +9811,7 @@ msgstr "Trenutačno: {mutedText}"
 #. Summary label in the Linux audio source picker when a custom subset of apps is selected.
 #. Voice processing profile option label (mobile voice settings). User configures processing manually.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
@@ -10953,7 +10953,7 @@ msgstr "Dostupna je desktop verzija {version}. Preuzmite instalacijski program i
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:151
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
@@ -11863,7 +11863,7 @@ msgid "Download button"
 msgstr "Preuzmi"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:102
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Download desktop app"
 msgstr "Preuzmite aplikaciju za računalo"
 
@@ -12661,7 +12661,7 @@ msgid "Enable"
 msgstr "Omogući"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:122
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
 msgid "Enable {permissionName} permission"
 msgstr "Omogućite dopuštenje {permissionName}"
 
@@ -13038,7 +13038,7 @@ msgstr "Engleski (SAD)"
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:783
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Enhanced"
@@ -13318,7 +13318,7 @@ msgstr "Zvuk cijelog sustava"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
 msgid "Entrance sound"
 msgstr "Zvuk ulaska"
@@ -13437,7 +13437,7 @@ msgstr "Večernje vrijeme"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:170
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:72
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Ujednačava glasnoću mikrofona kako ne biste bili pretihi."
@@ -16414,7 +16414,7 @@ msgstr "Trebam drugi način"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:106
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "I understand"
 msgstr "Razumijem"
 
@@ -16862,7 +16862,7 @@ msgstr "U"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "U načinu rada \"Operativni sustav\" gore navedeni rječnici su savjetodavni. {PRODUCT_NAME} će proslijediti ove jezične oznake provjeri pravopisa vašeg OS-a kada je podržano. Oznake koje ne prepoznaje bit će zanemarene."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:323
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "U pregledniku, pritisni za razgovor radi samo dok je kartica {PRODUCT_NAME} aktivna. Instalirajte desktop aplikaciju za pritisni za razgovor na cijelom sustavu."
 
@@ -17147,7 +17147,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "Pristup unosa je promijenjen. Potpuno zatvorite i ponovno pokrenite {productName} kako bi ga sistemski prečaci mogli koristiti."
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:174
 msgid "Input and output"
 msgstr "Ulaz i izlaz"
 
@@ -17955,7 +17955,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Čuvajte ih na sigurnom. Ponovno generiranje prekinut će postojeće integracije."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:66
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:65
 msgid "Keep transmitting briefly after release."
 msgstr "Nastavi s prijenosom podataka neko vrijeme nakon otpuštanja tipke."
 
@@ -18125,7 +18125,7 @@ msgstr "Grafikon latencije"
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
 msgid "Later"
 msgstr "Kasnije"
 
@@ -18136,7 +18136,7 @@ msgstr "Latvija"
 
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:31
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "Pokreni {productName} pri prijavi"
@@ -18770,7 +18770,7 @@ msgid "Look and feel"
 msgstr "Izgled i osjećaj"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Čini se da koristite {0}. Dodavanje obrade s {PRODUCT_NAME} može uzrokovati pojačavanje ili izobličenje. Izravan unos prenosi vaš zvuk netaknutim."
 
@@ -18811,11 +18811,6 @@ msgstr "Smanjena kvaliteta dijeljenja zaslona na {resolution} - {reason}"
 msgid "Luxembourg"
 msgstr "Luksemburg"
 
-#. Subsection title in the voice tab for macOS-specific settings. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:191
-msgid "macOS"
-msgstr "macOS"
-
 #. User settings tab label shown on macOS desktop builds.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
@@ -18830,6 +18825,7 @@ msgstr "macOS – zadani uređaj"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
 msgid "macOS permissions"
 msgstr "macOS dozvole"
 
@@ -19990,7 +19986,7 @@ msgstr "Mikrofon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:137
 msgid "Mic test"
 msgstr "Test mikrofona"
@@ -20062,12 +20058,12 @@ msgstr "Minimiziraj"
 msgid "Minimize"
 msgstr "Minimiziraj"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 msgid "Minimize to menu bar"
 msgstr "Minimiziraj u traku izbornika"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Minimiziraj u ladicu"
@@ -21491,7 +21487,7 @@ msgstr "Nema rezultata"
 msgid "No mentions yet"
 msgstr "Još nema spominjanja"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:524
 msgid "No microphone found"
 msgstr "Nije pronađen mikrofon"
 
@@ -21816,7 +21812,7 @@ msgstr "Neanimirani emotikoni ({emojiCount})"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:36
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:213
 msgid "None"
 msgstr "Ništa"
@@ -24625,18 +24621,18 @@ msgid "Push to talk key"
 msgstr "Tipka za Pritisni za razgovor"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:110
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
 #: src/features/voice/components/VoiceSettingsMenus.tsx:388
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:98
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:97
 msgid "Push-to-talk (limited)"
 msgstr "Pritisni za govor (ograničeno)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Pritisni za govor zanemaruje se u izravnom unosu. Prebacite se na fokusirani glas ili prilagođeno da biste ga koristili."
 
@@ -24646,12 +24642,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Uključeno je pritisni za govor. Držite {pushToTalkHint} za govor."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:130
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Pritisni za govor radi samo dok je {productName} u fokusu, sve dok se ne omogući {permissionName}. Nakon promjene dopuštenja, u potpunosti zatvorite i ponovno pokrenite {productName} kako bi ga sistemske prečice mogle koristiti."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:126
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Pritisni za govor radi samo dok je kartica preglednika u fokusu."
 
@@ -24959,7 +24955,7 @@ msgid "Recommended"
 msgstr "Preporučeno"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:69
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Preporučeno. Pročišćava mikrofon za jasan govor."
 
@@ -25225,7 +25221,7 @@ msgstr "Relativno"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:62
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:61
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:89
 msgid "Release delay"
 msgstr "Odgoda otpuštanja"
@@ -25289,7 +25285,7 @@ msgstr "Zapamti ovaj odabir"
 msgid "Remember window"
 msgstr "Zapamti prozor"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
 msgid "Remember window size and position"
 msgstr "Zapamti veličinu i položaj prozora"
 
@@ -26419,7 +26415,7 @@ msgid "Restart {productName}"
 msgstr "Ponovno pokreni {productName}"
 
 #. Desktop setting description shown when a tray-icon change on Linux requires restart.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:34
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:35
 msgid "Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime."
 msgstr "Ponovo pokrenite {productName} kako bi ova promjena stupila na snagu jer Linux radne površine ne mogu pouzdano dodavati ili uklanjati ikone programske trake tijekom izvođenja."
 
@@ -26445,7 +26441,7 @@ msgstr "Ponovno pokrenite {productName} da biste omogućili dijeljenje zaslona"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:44
 msgid "Restart {productName}?"
 msgstr "Ponovno pokrenuti {productName}?"
 
@@ -26456,7 +26452,7 @@ msgstr "Ponovno pokrenuti {productName}?"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:40
 msgid "Restart now"
 msgstr "Ponovo pokreni sada"
 
@@ -27830,7 +27826,7 @@ msgid "Select the account you want to sign in with on the desktop app."
 msgstr "Odaberite račun kojim se želite prijaviti u aplikaciju za stolna računala."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:118
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
 msgid "Select voice processing mode"
 msgstr "Odaberite način obrade glasa"
 
@@ -28148,7 +28144,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Šalje neobrađeni zvuk mikrofona bez obrade."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:73
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Šalje vaš zvuk netaknut. Najbolje ako koristite vanjski audio softver."
 
@@ -28687,7 +28683,7 @@ msgstr "Kratki kodovi"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:372
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
 msgid "Shortcut"
@@ -28965,7 +28961,7 @@ msgstr "Prikaži informacije o mediju"
 msgid "Show members"
 msgstr "Prikaži članove"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show menu bar icon"
 msgstr "Prikaži ikonu trake izbornika"
 
@@ -29128,7 +29124,7 @@ msgstr "Prikaži precrtani Markdown tekst u blago prigušenoj boji."
 msgid "Show suppress embeds button"
 msgstr "Prikaži gumb za suzbijanje ugrađenih sadržaja"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show system tray icon"
 msgstr "Prikaži ikonu u paleti sustava"
 
@@ -30211,7 +30207,7 @@ msgstr "Kontrole za osoblje"
 #. Noise suppression option label (mobile voice settings). Browser built-in engine.
 #. Noise suppression option label in the voice tab (browser default). Keep it concise.
 #. Noise suppression option using the browser built-in engine. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:89
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:55
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Standard"
@@ -30972,7 +30968,7 @@ msgstr "Prebaci na udoban izgled"
 msgid "Switch to dense layout"
 msgstr "Prebaci na zbijeni prikaz"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
 msgid "Switch to direct input"
 msgstr "Prebaci na izravan unos"
 
@@ -33155,7 +33151,7 @@ msgstr "Ladica"
 msgid "Tray icon"
 msgstr "Ikona u paleti sustava"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:129
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:130
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "Promjene ikone programske trake primjenjuju se tek nakon ponovnog pokretanja na Linuxu jer protokol programske trake ne dopušta aplikacijama pouzdano dodavanje ili uklanjanje ikona tijekom izvođenja. Ponovno pokrenite sada kako biste primijenili promjenu."
 
@@ -36319,7 +36315,7 @@ msgstr "Sudionici glasovnog poziva"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
@@ -36374,7 +36370,7 @@ msgstr "Poništeno"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:373
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
 msgid "Volume"
@@ -36994,7 +36990,7 @@ msgstr "Koje razgovore"
 msgid "Which rule was broken?"
 msgstr "Koje je pravilo prekršeno?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:371
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:366
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Dok je uključena značajka pritisni za razgovor, vaš prečac kontrolira mikrofon, pa je gumb za isključivanje zvuka onemogućen."
 

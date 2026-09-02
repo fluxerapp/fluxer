@@ -1124,7 +1124,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} 需要相機存取權限才能列出您的裝置。"
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} 需要麥克風存取權限才能列出您的裝置。"
 
@@ -2304,7 +2304,7 @@ msgid "Activity sharing"
 msgstr "活動分享"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:97
 msgid "Activity threshold"
 msgstr "語音偵測靈敏度"
@@ -2741,7 +2741,7 @@ msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "新增 H.264 以支援混合型客戶端。會增加更多編碼工作量。"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:81
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "自行調整每個設定：雜訊抑制、回音消除和增益。"
 
@@ -3002,11 +3002,11 @@ msgstr "允許 {everyoneMention} 和 {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "在「{MACOS_SYSTEM_SETTINGS_NAME}」→「{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME}」→「{MACOS_CAMERA_PERMISSION_NAME}」中允許 {PRODUCT_NAME} 存取您的相機。"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "請在「{MACOS_SYSTEM_SETTINGS_NAME}」→「{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME}」→「{MACOS_MICROPHONE_PERMISSION_NAME}」中允許 {PRODUCT_NAME} 存取您的麥克風。"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "允許 {PRODUCT_NAME} 存取您的麥克風。請檢查瀏覽器的網址列或設定。"
 
@@ -3108,7 +3108,7 @@ msgstr "允許沒有「{readMessageHistoryPermissionLabel}」權限的成員查�
 msgid "Allow mentions for this role"
 msgstr "允許提及此身分組"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow microphone"
 msgstr "允許麥克風"
 
@@ -4383,8 +4383,8 @@ msgid "Auto sensitivity"
 msgstr "自動靈敏度"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:114
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
 msgid "Auto-set activity threshold"
 msgstr "自動設定活動閾值"
 
@@ -7358,12 +7358,12 @@ msgstr "關閉此私訊"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "要關閉這個群組私訊嗎？您可以隨時重新開啟。"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 msgid "Close to menu bar"
 msgstr "關閉至選單列"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "關閉時縮到最小"
@@ -9811,7 +9811,7 @@ msgstr "目前：{mutedText}"
 #. Summary label in the Linux audio source picker when a custom subset of apps is selected.
 #. Voice processing profile option label (mobile voice settings). User configures processing manually.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
@@ -10953,7 +10953,7 @@ msgstr "桌面版 {version} 已推出。下載安裝程式，然後執行以更�
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:151
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
@@ -11863,7 +11863,7 @@ msgid "Download button"
 msgstr "下載按鈕"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:102
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Download desktop app"
 msgstr "下載電腦版應用程式"
 
@@ -12661,7 +12661,7 @@ msgid "Enable"
 msgstr "啟用"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:122
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
 msgid "Enable {permissionName} permission"
 msgstr "啟用「{permissionName}」權限"
 
@@ -13038,7 +13038,7 @@ msgstr "英文（美國）"
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:783
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Enhanced"
@@ -13318,7 +13318,7 @@ msgstr "整個系統音訊"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
 msgid "Entrance sound"
 msgstr "進場音效"
@@ -13437,7 +13437,7 @@ msgstr "晚上"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:170
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:72
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "讓你的麥克風音量更平均，避免太小聲。"
@@ -16414,7 +16414,7 @@ msgstr "我需要其他方式"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:106
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "I understand"
 msgstr "我了解了"
 
@@ -16862,7 +16862,7 @@ msgstr "在"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "在「作業系統」模式中，上方列出的字典僅供參考。如果支援，{PRODUCT_NAME} 會將這些語言標籤傳遞給您的作業系統拼字檢查工具。無法辨識的標籤將會被忽略。"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:323
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "在瀏覽器中，只有當「{PRODUCT_NAME}」分頁為焦點時，按下通話功能才能運作。請安裝桌面版應用程式以使用全系統的按下通話功能。"
 
@@ -17147,7 +17147,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "輸入權限已變更。請完全結束並重新啟動 {productName}，以便系統範圍的快捷鍵可以使用它。"
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:174
 msgid "Input and output"
 msgstr "輸入和輸出"
 
@@ -17955,7 +17955,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "請妥善保管。重新產生金鑰會導致現有的整合服務中斷。"
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:66
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:65
 msgid "Keep transmitting briefly after release."
 msgstr "釋放按鈕後繼續傳輸一段時間。"
 
@@ -18125,7 +18125,7 @@ msgstr "延遲圖表"
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
 msgid "Later"
 msgstr "稍後"
 
@@ -18136,7 +18136,7 @@ msgstr "拉脫維亞"
 
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:31
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "登入時啟動 {productName}"
@@ -18770,7 +18770,7 @@ msgid "Look and feel"
 msgstr "外觀和風格"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "看來您正在使用 {0}。在 {PRODUCT_NAME} 的處理上再疊加一層可能會導致聲音過強或失真。直接輸入會讓您的音訊不受影響地通過。"
 
@@ -18811,11 +18811,6 @@ msgstr "已將螢幕分享降低至 {resolution} - {reason}"
 msgid "Luxembourg"
 msgstr "盧森堡"
 
-#. Subsection title in the voice tab for macOS-specific settings. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:191
-msgid "macOS"
-msgstr "macOS"
-
 #. User settings tab label shown on macOS desktop builds.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
@@ -18830,6 +18825,7 @@ msgstr "macOS 預設值"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
 msgid "macOS permissions"
 msgstr "macOS 權限"
 
@@ -19990,7 +19986,7 @@ msgstr "麥克風"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:137
 msgid "Mic test"
 msgstr "麥克風測試"
@@ -20062,12 +20058,12 @@ msgstr "最小化"
 msgid "Minimize"
 msgstr "最小化"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 msgid "Minimize to menu bar"
 msgstr "最小化到選單列"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "最小化到系統匣"
@@ -21491,7 +21487,7 @@ msgstr "沒有找到符合的項目"
 msgid "No mentions yet"
 msgstr "還沒有提及內容"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:524
 msgid "No microphone found"
 msgstr "找不到麥克風"
 
@@ -21816,7 +21812,7 @@ msgstr "非動態表情符號 ({emojiCount})"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:36
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:213
 msgid "None"
 msgstr "無"
@@ -24625,18 +24621,18 @@ msgid "Push to talk key"
 msgstr "按鍵通話"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:110
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
 #: src/features/voice/components/VoiceSettingsMenus.tsx:388
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:98
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:97
 msgid "Push-to-talk (limited)"
 msgstr "按住說話 (限制)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "在直接輸入模式中，按鍵通話會被忽略。請切換到語音焦點或自訂模式以使用此功能。"
 
@@ -24646,12 +24642,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "已開啟按鍵通話。按住 {pushToTalkHint} 即可說話。"
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:130
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "啟用「{permissionName}」之前，按鍵通話功能僅在「{productName}」為焦點時有效。變更權限後，請完全退出並重新啟動「{productName}」，以便系統範圍的快捷鍵可以使用此功能。"
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:126
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "按下通話功能僅在瀏覽器分頁為焦點時有效。"
 
@@ -24959,7 +24955,7 @@ msgid "Recommended"
 msgstr "推薦"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:69
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "建議使用。讓你的麥克風更清晰地收音。"
 
@@ -25225,7 +25221,7 @@ msgstr "相對"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:62
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:61
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:89
 msgid "Release delay"
 msgstr "延遲釋放"
@@ -25289,7 +25285,7 @@ msgstr "記住此偏好設定"
 msgid "Remember window"
 msgstr "記住視窗"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
 msgid "Remember window size and position"
 msgstr "記住視窗大小和位置"
 
@@ -26419,7 +26415,7 @@ msgid "Restart {productName}"
 msgstr "重新啟動 {productName}"
 
 #. Desktop setting description shown when a tray-icon change on Linux requires restart.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:34
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:35
 msgid "Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime."
 msgstr "請重新啟動 {productName} 以讓此變更生效，因為 Linux 桌面無法在執行時可靠地新增或移除系統匣圖示。"
 
@@ -26445,7 +26441,7 @@ msgstr "重新啟動 {productName} 以使用螢幕分享功能"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:44
 msgid "Restart {productName}?"
 msgstr "要重新啟動 {productName} 嗎？"
 
@@ -26456,7 +26452,7 @@ msgstr "要重新啟動 {productName} 嗎？"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:40
 msgid "Restart now"
 msgstr "立即重新啟動"
 
@@ -27830,7 +27826,7 @@ msgid "Select the account you want to sign in with on the desktop app."
 msgstr "請選擇您想登入桌面版應用程式的帳號。"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:118
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
 msgid "Select voice processing mode"
 msgstr "選取語音處理模式"
 
@@ -28148,7 +28144,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "傳送未經處理的原始麥克風音訊。"
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:73
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "直接傳送您的音訊。如果您使用外部音訊軟體，此為最佳選擇。"
 
@@ -28687,7 +28683,7 @@ msgstr "短代碼"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:372
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
 msgid "Shortcut"
@@ -28965,7 +28961,7 @@ msgstr "顯示媒體資訊"
 msgid "Show members"
 msgstr "顯示成員"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show menu bar icon"
 msgstr "顯示選單列圖示"
 
@@ -29128,7 +29124,7 @@ msgstr "以稍微柔和的顏色顯示刪除線 Markdown 文字。"
 msgid "Show suppress embeds button"
 msgstr "顯示隱藏嵌入內容按鈕"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show system tray icon"
 msgstr "顯示系統匣圖示"
 
@@ -30211,7 +30207,7 @@ msgstr "內部人員控制選項"
 #. Noise suppression option label (mobile voice settings). Browser built-in engine.
 #. Noise suppression option label in the voice tab (browser default). Keep it concise.
 #. Noise suppression option using the browser built-in engine. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:89
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:55
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Standard"
@@ -30972,7 +30968,7 @@ msgstr "切換成舒適版面配置"
 msgid "Switch to dense layout"
 msgstr "切換為緊湊版面配置"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
 msgid "Switch to direct input"
 msgstr "切換為直接輸入"
 
@@ -33155,7 +33151,7 @@ msgstr "工具列"
 msgid "Tray icon"
 msgstr "工具列圖示"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:129
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:130
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "在 Linux 上，系統匣圖示的變更只有在重新啟動後才會生效，因為系統匣通訊協定無法可靠地讓應用程式在執行時新增或移除圖示。立即重新啟動以套用您的變更。"
 
@@ -36319,7 +36315,7 @@ msgstr "語音聊天成員"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
@@ -36374,7 +36370,7 @@ msgstr "已作廢"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:373
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
 msgid "Volume"
@@ -36994,7 +36990,7 @@ msgstr "哪些對話"
 msgid "Which rule was broken?"
 msgstr "違反了哪條規則？"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:371
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:366
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "啟用按住說話功能時，您的快捷鍵會控制麥克風，因此靜音按鈕會停用。"
 

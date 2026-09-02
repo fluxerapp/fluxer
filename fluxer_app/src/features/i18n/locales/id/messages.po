@@ -1124,7 +1124,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} memerlukan akses kamera untuk menampilkan daftar perangkat Anda."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} memerlukan akses mikrofon untuk menampilkan perangkat Anda."
 
@@ -2304,7 +2304,7 @@ msgid "Activity sharing"
 msgstr "Berbagi aktivitas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:97
 msgid "Activity threshold"
 msgstr "Batas aktivitas"
@@ -2741,7 +2741,7 @@ msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Menambahkan H.264 untuk klien campuran. Menggunakan lebih banyak daya pemrosesan."
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:81
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Sesuaikan setiap pengaturan sendiri: penekanan derau, pembatalan gema, dan penguatan."
 
@@ -3002,11 +3002,11 @@ msgstr "Izinkan {everyoneMention} dan {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Izinkan {PRODUCT_NAME} mengakses kamera Anda di {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Izinkan {PRODUCT_NAME} mengakses mikrofon Anda di {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:534
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Izinkan {PRODUCT_NAME} mengakses mikrofon Anda. Periksa bilah alamat atau pengaturan browser Anda."
 
@@ -3108,7 +3108,7 @@ msgstr "Izinkan anggota tanpa izin {readMessageHistoryPermissionLabel} untuk mel
 msgid "Allow mentions for this role"
 msgstr "Izinkan sebutan untuk peran ini"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow microphone"
 msgstr "Izinkan mikrofon"
 
@@ -4383,8 +4383,8 @@ msgid "Auto sensitivity"
 msgstr "Sensitivitas otomatis"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:114
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
 msgid "Auto-set activity threshold"
 msgstr "Atur ambang aktivitas otomatis"
 
@@ -7358,12 +7358,12 @@ msgstr "Tutup DM ini"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Tutup DM grup ini? Anda bisa membukanya lagi kapan saja."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 msgid "Close to menu bar"
 msgstr "Tutup ke bilah menu"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:191
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
 msgid "Close to tray"
 msgstr "Tutup ke baki"
@@ -9811,7 +9811,7 @@ msgstr "Saat ini: {mutedText}"
 #. Summary label in the Linux audio source picker when a custom subset of apps is selected.
 #. Voice processing profile option label (mobile voice settings). User configures processing manually.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:30
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:47
@@ -10953,7 +10953,7 @@ msgstr "Versi desktop {version} sudah tersedia. Unduh penginstalnya, lalu jalank
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings section label for desktop window behavior.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:150
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:151
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:94
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:54
 msgid "Desktop window"
@@ -11863,7 +11863,7 @@ msgid "Download button"
 msgstr "Tombol unduh"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:102
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Download desktop app"
 msgstr "Unduh aplikasi desktop"
 
@@ -12661,7 +12661,7 @@ msgid "Enable"
 msgstr "Aktifkan"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:122
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
 msgid "Enable {permissionName} permission"
 msgstr "Aktifkan izin {permissionName}"
 
@@ -13038,7 +13038,7 @@ msgstr "Inggris (AS)"
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:783
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:51
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Enhanced"
@@ -13318,7 +13318,7 @@ msgstr "Seluruh audio sistem"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:179
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:309
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:145
 msgid "Entrance sound"
 msgstr "Suara masuk"
@@ -13437,7 +13437,7 @@ msgstr "Waktu malam"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:170
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:72
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Meratakan volume mikrofon Anda agar tidak terlalu pelan."
@@ -16414,7 +16414,7 @@ msgstr "Saya butuh cara lain"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:106
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "I understand"
 msgstr "Saya mengerti"
 
@@ -16862,7 +16862,7 @@ msgstr "Di"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "Dalam mode \"Sistem operasi\", kamus yang tercantum di atas bersifat saran. {PRODUCT_NAME} akan meneruskan tag bahasa ini ke pemeriksa ejaan OS Anda jika didukung. Tag yang tidak dikenali akan diabaikan."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:323
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "Di browser, push-to-talk hanya berfungsi saat tab {PRODUCT_NAME} sedang aktif. Instal aplikasi desktop untuk push-to-talk di seluruh sistem."
 
@@ -17147,7 +17147,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "Akses input telah diubah. Keluar sepenuhnya dan mulai ulang {productName} agar pintasan sistem dapat menggunakannya."
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:174
 msgid "Input and output"
 msgstr "Input dan output"
 
@@ -17955,7 +17955,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Jaga kerahasiaan ini. Membuat ulang akan merusak integrasi yang ada."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:66
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:65
 msgid "Keep transmitting briefly after release."
 msgstr "Terus mengirimkan sinyal sebentar setelah tombol dilepas."
 
@@ -18125,7 +18125,7 @@ msgstr "Grafik latensi"
 #: src/features/updater/commands/UpdaterModalCommands.tsx:37
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:52
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:47
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
 msgid "Later"
 msgstr "Nanti"
 
@@ -18136,7 +18136,7 @@ msgstr "Latvia"
 
 #. Desktop setting label for starting the app automatically after OS sign-in.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:30
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:31
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Launch {productName} at login"
 msgstr "Luncurkan {productName} saat masuk"
@@ -18770,7 +18770,7 @@ msgid "Look and feel"
 msgstr "Tampilan dan nuansa"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Sepertinya Anda menggunakan {0}. Menumpuk pemrosesan {PRODUCT_NAME} di atasnya dapat menyebabkan pumping atau distorsi. Input langsung akan meneruskan audio Anda tanpa perubahan."
 
@@ -18811,11 +18811,6 @@ msgstr "Berbagi layar diturunkan menjadi {resolution} - {reason}"
 msgid "Luxembourg"
 msgstr "Luksemburg"
 
-#. Subsection title in the voice tab for macOS-specific settings. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:191
-msgid "macOS"
-msgstr "macOS"
-
 #. User settings tab label shown on macOS desktop builds.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:77
 msgid "macOS app"
@@ -18830,6 +18825,7 @@ msgstr "Default macOS"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
 msgid "macOS permissions"
 msgstr "Izin macOS"
 
@@ -19990,7 +19986,7 @@ msgstr "Mikrofon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:137
 msgid "Mic test"
 msgstr "Tes mikrofon"
@@ -20062,12 +20058,12 @@ msgstr "Minimalkan"
 msgid "Minimize"
 msgstr "Minimalkan"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 msgid "Minimize to menu bar"
 msgstr "Minimalkan ke bilah menu"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:184
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Minimalkan ke baki sistem"
@@ -21491,7 +21487,7 @@ msgstr "Tidak ada yang cocok"
 msgid "No mentions yet"
 msgstr "Belum ada sebutan"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:529
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:524
 msgid "No microphone found"
 msgstr "Mikrofon tidak ditemukan"
 
@@ -21816,7 +21812,7 @@ msgstr "Emoji non-animasi ({emojiCount})"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:36
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:213
 msgid "None"
 msgstr "Tidak ada"
@@ -24625,18 +24621,18 @@ msgid "Push to talk key"
 msgstr "Tombol push to talk"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:110
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:357
 #: src/features/voice/components/VoiceSettingsMenus.tsx:388
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:98
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:97
 msgid "Push-to-talk (limited)"
 msgstr "Tekan untuk bicara (terbatas)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Push-to-talk diabaikan dalam input langsung. Beralih ke suara terfokus atau kustom untuk menggunakannya."
 
@@ -24646,12 +24642,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Push-to-talk aktif. Tahan {pushToTalkHint} untuk bicara."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:130
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Push-to-talk hanya berfungsi saat {productName} dalam fokus hingga {permissionName} diaktifkan. Setelah mengubah izin, tutup sepenuhnya dan mulai ulang {productName} agar hotkey di seluruh sistem dapat menggunakannya."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:126
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Tekan untuk bicara hanya berfungsi saat tab browser sedang aktif."
 
@@ -24959,7 +24955,7 @@ msgid "Recommended"
 msgstr "Direkomendasikan"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:70
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:69
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Direkomendasikan. Membersihkan mikrofon Anda agar suara lebih jernih."
 
@@ -25225,7 +25221,7 @@ msgstr "Relatif"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:62
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:61
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:89
 msgid "Release delay"
 msgstr "Jeda rilis"
@@ -25289,7 +25285,7 @@ msgstr "Ingat preferensi ini"
 msgid "Remember window"
 msgstr "Ingat jendela"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
 msgid "Remember window size and position"
 msgstr "Ingat ukuran dan posisi jendela"
 
@@ -26419,7 +26415,7 @@ msgid "Restart {productName}"
 msgstr "Mulai ulang {productName}"
 
 #. Desktop setting description shown when a tray-icon change on Linux requires restart.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:34
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:35
 msgid "Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime."
 msgstr "Mulai ulang {productName} agar perubahan ini diterapkan karena desktop Linux tidak dapat menambah atau menghapus ikon baki saat runtime secara andal."
 
@@ -26445,7 +26441,7 @@ msgstr "Mulai ulang {productName} untuk menggunakan fitur berbagi layar"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:49
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:48
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:43
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:44
 msgid "Restart {productName}?"
 msgstr "Mulai ulang {productName}?"
 
@@ -26456,7 +26452,7 @@ msgstr "Mulai ulang {productName}?"
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:57
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:43
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:44
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:39
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:40
 msgid "Restart now"
 msgstr "Mulai ulang sekarang"
 
@@ -27830,7 +27826,7 @@ msgid "Select the account you want to sign in with on the desktop app."
 msgstr "Pilih akun yang ingin Anda gunakan untuk masuk di aplikasi desktop."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:118
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
 msgid "Select voice processing mode"
 msgstr "Pilih mode pemrosesan suara"
 
@@ -28148,7 +28144,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Mengirim audio mikrofon mentah tanpa pemrosesan."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:73
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Mengirim audio Anda tanpa perubahan. Terbaik jika Anda menggunakan perangkat lunak audio eksternal."
 
@@ -28687,7 +28683,7 @@ msgstr "Kode singkat"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:377
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:372
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:105
 msgid "Shortcut"
@@ -28965,7 +28961,7 @@ msgstr "Tampilkan info media"
 msgid "Show members"
 msgstr "Tampilkan anggota"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show menu bar icon"
 msgstr "Tampilkan ikon bilah menu"
 
@@ -29128,7 +29124,7 @@ msgstr "Tampilkan teks Markdown coret dengan warna yang sedikit diredam."
 msgid "Show suppress embeds button"
 msgstr "Tampilkan tombol sembunyikan sematan"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:172
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
 msgid "Show system tray icon"
 msgstr "Tampilkan ikon baki sistem"
 
@@ -30211,7 +30207,7 @@ msgstr "Kontrol staf"
 #. Noise suppression option label (mobile voice settings). Browser built-in engine.
 #. Noise suppression option label in the voice tab (browser default). Keep it concise.
 #. Noise suppression option using the browser built-in engine. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:89
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:55
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Standard"
@@ -30972,7 +30968,7 @@ msgstr "Beralih ke tata letak nyaman"
 msgid "Switch to dense layout"
 msgstr "Beralih ke tata letak rapat"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
 msgid "Switch to direct input"
 msgstr "Beralih ke input langsung"
 
@@ -33155,7 +33151,7 @@ msgstr "Baki"
 msgid "Tray icon"
 msgstr "Ikon baki"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:129
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:130
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "Perubahan ikon baki hanya berlaku setelah memulai ulang di Linux karena protokol baki sistem tidak memungkinkan aplikasi untuk menambah atau menghapus ikon saat runtime secara andal. Mulai ulang sekarang untuk menerapkan perubahan Anda."
 
@@ -36319,7 +36315,7 @@ msgstr "Peserta obrolan suara"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
@@ -36374,7 +36370,7 @@ msgstr "Batal"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:373
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
 msgid "Volume"
@@ -36994,7 +36990,7 @@ msgstr "Pilih percakapan"
 msgid "Which rule was broken?"
 msgstr "Aturan mana yang dilanggar?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:371
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:366
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Saat push-to-talk aktif, pintasan Anda mengontrol mikrofon Anda, jadi tombol bisu dinonaktifkan."
 
