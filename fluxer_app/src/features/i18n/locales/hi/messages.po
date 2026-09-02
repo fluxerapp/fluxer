@@ -3045,7 +3045,7 @@ msgstr "बॉट के सीधे मैसेज की अनुमति 
 msgid "Allow bots to send you direct messages?"
 msgstr "क्या बॉट आपको सीधे मैसेज भेज सकते हैं?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "कैमरे की अनुमति दें"
 
@@ -3108,7 +3108,7 @@ msgstr "उन सदस्यों को अनुमति दें जि�
 msgid "Allow mentions for this role"
 msgstr "इस भूमिका के लिए उल्लेखों की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "माइक ऐक्सेस दें"
 
@@ -8137,6 +8137,10 @@ msgstr "समुदाय वॉइस जॉइन के लिए पुष�
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel} से विरोध"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "कैमरा कनेक्ट करें और फिर से प्रयास करें।"
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "कैमरा या वर्चुअल कैप्चर डि�
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "एक डिस्प्ले कनेक्ट करें, फिर दोबारा प्रयास करें।"
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "माइक्रोफ़ोन कनेक्ट करें और फिर से प्रयास करें।"
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "फ़्रेम"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "दिखावट और अनुभव"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "लगता है आप {0} का उपयोग कर रहे हैं। {PRODUCT_NAME} की प्रोसेसिंग को इसके ऊपर रखने से पंपिंग या डिस्टॉर्शन हो सकता है। डायरेक्ट इनपुट आपके ऑडियो को बिना किसी बदलाव के पास करता है।"
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "पुश-टू-टॉक (सीमित)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "डायरेक्ट इनपुट में पुश-टू-टॉक को अनदेखा किया जाता है. इसका उपयोग करने के लिए फ़ोकस की गई वॉइस या कस्टम पर स्विच करें."
 
@@ -28602,7 +28610,7 @@ msgstr "कम्युनिटी मॉडरेटर के साथ श�
 msgid "Share your screen"
 msgstr "अपनी स्क्रीन शेयर करें"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "अपनी स्क्रीन को हाई डेफ़िनिशन (1080p), क्वाड HD (1440p) या नेटिव सोर्स रिज़ॉल्यूशन में, 60 FPS तक शेयर करें।"
 
@@ -30306,7 +30314,7 @@ msgstr "क्या वॉइस कॉल शुरू करें?"
 msgid "Start call"
 msgstr "कॉल शुरू करें"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "कैमरा टेस्ट शुरू करें और इफ़ेक्ट कॉन्फ़िगर करें"
 
@@ -30968,7 +30976,7 @@ msgstr "आरामदायक लेआउट पर स्विच कर�
 msgid "Switch to dense layout"
 msgstr "सघन लेआउट पर स्विच करें"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "सीधा इनपुट पर स्विच करें"
 
@@ -36315,7 +36323,7 @@ msgstr "वॉइस प्रतिभागी"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

@@ -3045,7 +3045,7 @@ msgstr "Cho phép bot nhắn tin trực tiếp"
 msgid "Allow bots to send you direct messages?"
 msgstr "Cho phép bot gửi tin nhắn trực tiếp cho bạn?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Cho phép truy cập camera"
 
@@ -3108,7 +3108,7 @@ msgstr "Cho phép thành viên không có quyền {readMessageHistoryPermissionL
 msgid "Allow mentions for this role"
 msgstr "Cho phép nhắc đến vai trò này"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Cho phép truy cập micro"
 
@@ -8137,6 +8137,10 @@ msgstr "Xác nhận hoặc nhấp đúp để tham gia kênh thoại cộng đ�
 msgid "Conflicts with {conflictLabel}"
 msgstr "Xung đột với {conflictLabel}"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Kết nối máy ảnh và thử lại."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Kết nối camera hoặc thiết bị ghi hình ảo, rồi thử lại
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Kết nối một màn hình, rồi thử lại."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Kết nối micrô và thử lại."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Khung"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Giao diện người dùng"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Có vẻ như bạn đang dùng {0}. Việc xếp chồng xử lý của {PRODUCT_NAME} lên trên có thể gây ra hiện tượng bơm tiếng hoặc méo tiếng. Đầu vào trực tiếp sẽ truyền âm thanh của bạn mà không bị thay đổi."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Nhấn để nói (giới hạn)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Nhấn để nói sẽ bị bỏ qua khi nhập trực tiếp. Chuyển sang chế độ giọng nói tập trung hoặc tùy chỉnh để sử dụng."
 
@@ -28602,7 +28610,7 @@ msgstr "Chia sẻ với người kiểm duyệt cộng đồng."
 msgid "Share your screen"
 msgstr "Chia sẻ màn hình của bạn"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Chia sẻ màn hình của bạn ở độ nét cao (1080p), Quad HD (1440p) hoặc độ phân giải nguồn gốc, với tốc độ lên đến 60 FPS."
 
@@ -30306,7 +30314,7 @@ msgstr "Bắt đầu cuộc gọi thoại?"
 msgid "Start call"
 msgstr "Bắt đầu cuộc gọi"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Bắt đầu kiểm tra camera và định cấu hình hiệu ứng"
 
@@ -30968,7 +30976,7 @@ msgstr "Chuyển sang bố cục thoải mái"
 msgid "Switch to dense layout"
 msgstr "Chuyển sang bố cục gọn gàng"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Chuyển sang nhập trực tiếp"
 
@@ -36315,7 +36323,7 @@ msgstr "Người tham gia trò chuyện thoại"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

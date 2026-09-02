@@ -202,7 +202,7 @@ function resolveNoiseSuppressionMethod(deepFilterEnabled: boolean, browserNsEnab
 	return 'none';
 }
 
-export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoRequestPermission = true}) => {
+export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoRequestPermission = false}) => {
 	const {i18n} = useLingui();
 	const {
 		inputDeviceId,
@@ -517,7 +517,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 	return (
 		<>
 			<SettingsTabSection title={i18n._(INPUT_AND_OUTPUT_DESCRIPTOR)} data-flx="user.voice-tab.devices-section">
-				{devices.length === 0 && permissionStatus !== 'loading' && permissionStatus !== 'granted' ? (
+				{inputDevices.length === 0 && permissionStatus !== 'loading' ? (
 					<div className={styles.deviceNotice} data-flx="user.voice-tab.device-notice">
 						<div className={styles.deviceNoticeText} data-flx="user.voice-tab.device-notice-text">
 							<div className={styles.deviceNoticeTitle} data-flx="user.voice-tab.device-notice-title">
@@ -535,21 +535,25 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 											Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings.
 										</Trans>
 									)
+								) : permissionStatus === 'granted' ? (
+									<Trans>Connect a microphone and try again.</Trans>
 								) : (
 									i18n._(PRODUCT_NEEDS_MICROPHONE_ACCESS_DESCRIPTOR, {productName: PRODUCT_NAME})
 								)}
 							</p>
 						</div>
-						<Button
-							variant="secondary"
-							small={true}
-							onClick={() => {
-								void requestPermission();
-							}}
-							data-flx="user.voice-tab.button"
-						>
-							<Trans>Allow microphone</Trans>
-						</Button>
+						{permissionStatus !== 'granted' ? (
+							<Button
+								variant="secondary"
+								small={true}
+								onClick={() => {
+									void requestPermission();
+								}}
+								data-flx="user.voice-tab.button"
+							>
+								<Trans>Allow microphone</Trans>
+							</Button>
+						) : null}
 					</div>
 				) : null}
 				<CompactComboboxRow

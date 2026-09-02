@@ -3045,7 +3045,7 @@ msgstr "允許機器人傳送私人訊息"
 msgid "Allow bots to send you direct messages?"
 msgstr "允許機器人傳送私人訊息給您？"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "允許使用相機"
 
@@ -3108,7 +3108,7 @@ msgstr "允許沒有「{readMessageHistoryPermissionLabel}」權限的成員查�
 msgid "Allow mentions for this role"
 msgstr "允許提及此身分組"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "允許麥克風"
 
@@ -8137,6 +8137,10 @@ msgstr "社群語音加入時的確認或雙擊動作"
 msgid "Conflicts with {conflictLabel}"
 msgstr "與 {conflictLabel} 衝突"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "請連接相機後再試一次。"
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "請連接相機或虛擬擷取裝置，然後再試一次。"
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "請連接顯示器後再試一次。"
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "請連接麥克風後再試一次。"
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "外框"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "外觀和風格"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "看來您正在使用 {0}。在 {PRODUCT_NAME} 的處理上再疊加一層可能會導致聲音過強或失真。直接輸入會讓您的音訊不受影響地通過。"
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "按住說話 (限制)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "在直接輸入模式中，按鍵通話會被忽略。請切換到語音焦點或自訂模式以使用此功能。"
 
@@ -28602,7 +28610,7 @@ msgstr "分享給社群版主."
 msgid "Share your screen"
 msgstr "分享你的螢幕"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "以高畫質 (1080p)、Quad HD (1440p) 或原始解析度分享你的螢幕，幀率最高可達 60 FPS。"
 
@@ -30306,7 +30314,7 @@ msgstr "要開始語音通話嗎？"
 msgid "Start call"
 msgstr "開始通話"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "開始相機測試並設定效果"
 
@@ -30968,7 +30976,7 @@ msgstr "切換成舒適版面配置"
 msgid "Switch to dense layout"
 msgstr "切換為緊湊版面配置"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "切換為直接輸入"
 
@@ -36315,7 +36323,7 @@ msgstr "語音聊天成員"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

@@ -3045,7 +3045,7 @@ msgstr "Bot doğrudan mesajlarına izin ver"
 msgid "Allow bots to send you direct messages?"
 msgstr "Botların size doğrudan mesaj göndermesine izin verilsin mi?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Kameraya izin ver"
 
@@ -3108,7 +3108,7 @@ msgstr "{readMessageHistoryPermissionLabel} izni olmayan üyelerin belirli bir t
 msgid "Allow mentions for this role"
 msgstr "Bu rol için bahsetmelere izin ver"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Mikrofona izin ver"
 
@@ -8137,6 +8137,10 @@ msgstr "Topluluk sesli sohbetlerine katılmak için onay veya çift tıklama"
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel} ile çakışıyor"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Bir kamera bağlayıp tekrar deneyin."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Bir kamera veya sanal yakalama cihazı bağlayın, ardından tekrar dene
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Bir ekran bağlayın, sonra tekrar deneyin."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Mikrofon bağlayıp tekrar deneyin."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Çerçeve"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Görünüm ve his"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "{0} kullanıyor gibisiniz. Bunun üzerine {PRODUCT_NAME} işlemcisini eklemek ses yükselmesine veya bozulmaya neden olabilir. Doğrudan giriş, sesinizi olduğu gibi iletir."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Bas konuş (sınırlı)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Bas konuş özelliği doğrudan girişte yok sayılır. Kullanmak için odaklanmış sese veya özel seçeneğine geçin."
 
@@ -28602,7 +28610,7 @@ msgstr "Topluluk moderatörleriyle paylaş."
 msgid "Share your screen"
 msgstr "Ekranını paylaş"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Ekranınızı yüksek çözünürlükte (1080p), dörtlü HD'de (1440p) veya yerel kaynak çözünürlüğünde, 60 FPS'ye kadar paylaşın."
 
@@ -30306,7 +30314,7 @@ msgstr "Sesli arama başlatılsın mı?"
 msgid "Start call"
 msgstr "Aramayı başlat"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Kamera testini başlat ve efektleri yapılandır"
 
@@ -30968,7 +30976,7 @@ msgstr "Rahat düzene geç"
 msgid "Switch to dense layout"
 msgstr "Yoğun düzene geç"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Doğrudan girişe geç"
 
@@ -36315,7 +36323,7 @@ msgstr "Sesli sohbete katılanlar"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

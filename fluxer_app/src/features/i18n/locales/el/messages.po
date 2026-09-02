@@ -3045,7 +3045,7 @@ msgstr "Να επιτρέπονται απευθείας μηνύματα από
 msgid "Allow bots to send you direct messages?"
 msgstr "Να επιτρέπεται στα bot να σου στέλνουν απευθείας μηνύματα;"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Να επιτρέπεται η κάμερα"
 
@@ -3108,7 +3108,7 @@ msgstr "Να επιτρέπεται στα μέλη χωρίς την άδεια
 msgid "Allow mentions for this role"
 msgstr "Να επιτρέπονται οι αναφορές για αυτόν τον ρόλο"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Να επιτρέπεται το μικρόφωνο"
 
@@ -8137,6 +8137,10 @@ msgstr "Επιβεβαίωση ή διπλό κλικ για συμμετοχή 
 msgid "Conflicts with {conflictLabel}"
 msgstr "Συγκρούεται με {conflictLabel}"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Συνδέστε μια κάμερα και δοκιμάστε ξανά."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Συνδέστε μια κάμερα ή μια συσκευή εικον
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Συνδέστε μια οθόνη και δοκιμάστε ξανά."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Συνδέστε ένα μικρόφωνο και δοκιμάστε ξανά."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Κορνίζα"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Εμφάνιση και αίσθηση"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Φαίνεται ότι χρησιμοποιείτε {0}. Η προσθήκη της επεξεργασίας του {PRODUCT_NAME} μπορεί να προκαλέσει υπερφόρτωση ή παραμόρφωση. Η άμεση είσοδος περνάει τον ήχο σας χωρίς επεξεργασία."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Push-to-talk (περιορισμένο)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Η λειτουργία \"Πατώντας μιλάω\" αγνοείται στην άμεση εισαγωγή. Μεταβείτε σε εστιασμένη φωνή ή προσαρμοσμένη για να τη χρησιμοποιήσετε."
 
@@ -28602,7 +28610,7 @@ msgstr "Κοινοποίηση στους συντονιστές της κοιν
 msgid "Share your screen"
 msgstr "Κοινοποίηση οθόνης"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Κοινοποιήστε την οθόνη σας σε υψηλή ευκρίνεια (1080p), quad HD (1440p) ή εγγενή ανάλυση πηγής, έως 60 FPS."
 
@@ -30306,7 +30314,7 @@ msgstr "Να ξεκινήσει μια φωνητική κλήση;"
 msgid "Start call"
 msgstr "Έναρξη κλήσης"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Έναρξη δοκιμής κάμερας και διαμόρφωση εφέ"
 
@@ -30968,7 +30976,7 @@ msgstr "Εναλλαγή σε άνετη διάταξη"
 msgid "Switch to dense layout"
 msgstr "Συμπυκνωμένη διάταξη"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Εναλλαγή σε απευθείας εισαγωγή"
 
@@ -36315,7 +36323,7 @@ msgstr "Συμμετέχοντες φωνητικής συνομιλίας"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

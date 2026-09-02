@@ -3045,7 +3045,7 @@ msgstr "Permite mesaje directe de la boți"
 msgid "Allow bots to send you direct messages?"
 msgstr "Permiți roboților să-ți trimită mesaje directe?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Permite accesul la cameră"
 
@@ -3108,7 +3108,7 @@ msgstr "Permiteți membrilor fără permisiunea {readMessageHistoryPermissionLab
 msgid "Allow mentions for this role"
 msgstr "Permite menționări pentru acest rol"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Permite accesul la microfon"
 
@@ -8137,6 +8137,10 @@ msgstr "Confirmare sau dublu clic pentru a te alătura unui canal vocal."
 msgid "Conflicts with {conflictLabel}"
 msgstr "Intră în conflict cu {conflictLabel}"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Conectează o cameră și încearcă din nou."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Conectează o cameră sau un dispozitiv de captură virtual, apoi încea
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Conectează un ecran, apoi încearcă din nou."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Conectează un microfon și încearcă din nou."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Ramă"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Aspect și funcționalitate"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Se pare că folosești {0}. Suprapunerea procesării audio de la {PRODUCT_NAME} poate cauza distorsiuni sau efecte de pompare. Intrarea directă transmite sunetul netratat."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Apăsare pentru a vorbi (limitat)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Apăsarea pentru a vorbi este ignorată în modul de introducere directă. Comută la voce focalizată sau personalizată pentru a o utiliza."
 
@@ -28602,7 +28610,7 @@ msgstr "Trimite moderatorilor comunității."
 msgid "Share your screen"
 msgstr "Partajează-ți ecranul"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Partajează-ți ecranul la rezoluție înaltă (1080p), Quad HD (1440p) sau rezoluția sursă nativă, la până la 60 FPS."
 
@@ -30306,7 +30314,7 @@ msgstr "Începi un apel vocal?"
 msgid "Start call"
 msgstr "Inițiază apelul"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Porniți testul camerei și configurați efectele"
 
@@ -30968,7 +30976,7 @@ msgstr "Treci la aspectul confortabil"
 msgid "Switch to dense layout"
 msgstr "Comută la aspectul compact"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Treci la introducerea directă"
 
@@ -36315,7 +36323,7 @@ msgstr "Participanți la apelul vocal"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

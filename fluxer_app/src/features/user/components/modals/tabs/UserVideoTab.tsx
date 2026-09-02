@@ -99,7 +99,7 @@ interface VideoTabProps {
 }
 
 export const VideoTab: React.FC<VideoTabProps> = observer(
-	({voiceSettings, hasPremium: _hasPremium, autoRequestPermission = true}) => {
+	({voiceSettings, hasPremium: _hasPremium, autoRequestPermission = false}) => {
 		const {i18n} = useLingui();
 		const {videoDeviceId, cameraResolution, mirrorCamera, screenshareResolution, videoFrameRate} = voiceSettings;
 		const hasHigherQuality = isLimitToggleEnabled(
@@ -205,7 +205,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 		}, []);
 		return (
 			<div className={styles.content} data-flx="user.video-tab.content">
-				{devices.length === 0 && permissionStatus !== 'loading' && permissionStatus !== 'granted' ? (
+				{devices.length === 0 && permissionStatus !== 'loading' ? (
 					<div className={styles.deviceNotice} data-flx="user.video-tab.device-notice">
 						<div className={styles.deviceNoticeText} data-flx="user.video-tab.device-notice-text">
 							<div className={styles.deviceNoticeTitle} data-flx="user.video-tab.device-notice-title">
@@ -217,21 +217,25 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 										Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} →{' '}
 										{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}.
 									</Trans>
+								) : permissionStatus === 'granted' ? (
+									<Trans>Connect a camera and try again.</Trans>
 								) : (
 									i18n._(PRODUCT_NEEDS_CAMERA_ACCESS_DESCRIPTOR, {productName: PRODUCT_NAME})
 								)}
 							</p>
 						</div>
-						<Button
-							variant="secondary"
-							small={true}
-							onClick={() => {
-								void requestPermission();
-							}}
-							data-flx="user.video-tab.button"
-						>
-							<Trans>Allow camera</Trans>
-						</Button>
+						{permissionStatus !== 'granted' ? (
+							<Button
+								variant="secondary"
+								small={true}
+								onClick={() => {
+									void requestPermission();
+								}}
+								data-flx="user.video-tab.button"
+							>
+								<Trans>Allow camera</Trans>
+							</Button>
+						) : null}
 					</div>
 				) : null}
 				<div className={styles.controlGroup} data-flx="user.video-tab.camera-settings-group">

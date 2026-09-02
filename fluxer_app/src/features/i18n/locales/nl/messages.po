@@ -3045,7 +3045,7 @@ msgstr "Bot-privéberichten toestaan"
 msgid "Allow bots to send you direct messages?"
 msgstr "Bots toestaan om je directe berichten te sturen?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Camera toegang geven"
 
@@ -3108,7 +3108,7 @@ msgstr "Sta leden zonder de toestemming \"{readMessageHistoryPermissionLabel}\" 
 msgid "Allow mentions for this role"
 msgstr "Vermeldingen voor deze rol toestaan"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Microfoon toestaan"
 
@@ -8137,6 +8137,10 @@ msgstr "Bevestiging of dubbelklik voor het deelnemen aan een community-gesprek."
 msgid "Conflicts with {conflictLabel}"
 msgstr "Conflict met {conflictLabel}"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Sluit een camera aan en probeer het opnieuw."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Sluit een camera of virtueel opnameapparaat aan en probeer het opnieuw."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Sluit een beeldscherm aan en probeer het opnieuw."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Sluit een microfoon aan en probeer het opnieuw."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Kader"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Uiterlijk"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Het lijkt erop dat je {0} gebruikt. Als je de verwerking van {PRODUCT_NAME} hier bovenop stapelt, kan dit pompen of vervorming veroorzaken. Directe invoer stuurt je audio onbewerkt door."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Walkie-talkie (beperkt)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Push-to-talk wordt genegeerd bij directe invoer. Schakel over naar gerichte spraak of aangepast om het te gebruiken."
 
@@ -28602,7 +28610,7 @@ msgstr "Delen met communitymoderators."
 msgid "Share your screen"
 msgstr "Deel je scherm"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Deel je scherm in hoge definitie (1080p), quad HD (1440p) of native bronresolutie, met maximaal 60 FPS."
 
@@ -30306,7 +30314,7 @@ msgstr "Spraakoproep starten?"
 msgid "Start call"
 msgstr "Oproep starten"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Start cameratest en configureer effecten"
 
@@ -30968,7 +30976,7 @@ msgstr "Overschakelen naar comfortabele lay-out"
 msgid "Switch to dense layout"
 msgstr "Compacte weergave"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Overschakelen naar directe invoer"
 
@@ -36315,7 +36323,7 @@ msgstr "Deelnemers spraakoproep"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

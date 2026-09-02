@@ -3045,7 +3045,7 @@ msgstr "Autoriser les messages directs des bots"
 msgid "Allow bots to send you direct messages?"
 msgstr "Autoriser les bots à vous envoyer des messages directs ?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Autoriser l'accès à la caméra"
 
@@ -3108,7 +3108,7 @@ msgstr "Autoriser les membres n'ayant pas la permission {readMessageHistoryPermi
 msgid "Allow mentions for this role"
 msgstr "Autoriser les mentions pour ce rôle"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Autoriser le micro"
 
@@ -8137,6 +8137,10 @@ msgstr "Confirmation ou double-clic pour rejoindre les salons vocaux de la commu
 msgid "Conflicts with {conflictLabel}"
 msgstr "Conflits avec {conflictLabel}"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Connectez une caméra et réessayez."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Connectez une caméra ou un appareil de capture virtuel, puis réessayez
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Connectez un écran, puis réessayez."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Connectez un microphone et réessayez."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Cadre"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Apparence"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Il semble que vous utilisiez {0}. Empiler le traitement de {PRODUCT_NAME} par-dessus peut provoquer des pompages ou des distorsions. L'entrée directe transmet votre audio sans modification."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Appuyer pour parler (limité)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "L'option Appuyer-pour-parler est ignorée en saisie directe. Passez en mode vocal ciblé ou personnalisé pour l'utiliser."
 
@@ -28602,7 +28610,7 @@ msgstr "Partager avec les modérateurs de la communauté."
 msgid "Share your screen"
 msgstr "Partager votre écran"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Partagez votre écran en haute définition (1080p), en Quad HD (1440p) ou dans la résolution source native, jusqu'à 60 FPS."
 
@@ -30306,7 +30314,7 @@ msgstr "Démarrer un appel vocal ?"
 msgid "Start call"
 msgstr "Démarrer l'appel"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Lancer le test de la caméra et configurer les effets"
 
@@ -30968,7 +30976,7 @@ msgstr "Passer à la mise en page confortable"
 msgid "Switch to dense layout"
 msgstr "Passer à la mise en page dense"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Passer en saisie directe"
 
@@ -36315,7 +36323,7 @@ msgstr "Participants à l'appel"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

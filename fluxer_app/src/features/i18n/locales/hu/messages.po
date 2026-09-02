@@ -3045,7 +3045,7 @@ msgstr "Botok közvetlen üzeneteinek engedélyezése"
 msgid "Allow bots to send you direct messages?"
 msgstr "Engedélyezi, hogy botok közvetlen üzeneteket küldjenek Önnek?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Kamera engedélyezése"
 
@@ -3108,7 +3108,7 @@ msgstr "Engedélyezze a tagoknak, hogy a \"{readMessageHistoryPermissionLabel}\"
 msgid "Allow mentions for this role"
 msgstr "Említések engedélyezése ehhez a szerepkörhöz"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Mikrofon engedélyezése"
 
@@ -8137,6 +8137,10 @@ msgstr "Megerősítés vagy dupla kattintás a közösségi hangcsatornákhoz va
 msgid "Conflicts with {conflictLabel}"
 msgstr "Ütközik a(z) {conflictLabel} billentyűkombinációval"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Csatlakoztass egy kamerát, és próbáld újra."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Csatlakoztass egy kamerát vagy virtuális rögzítőeszközt, majd pró
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Csatlakoztass egy kijelzőt, majd próbáld újra."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Csatlakoztass egy mikrofont, és próbáld újra."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Keret"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Megjelenés és érzet"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Úgy tűnik, hogy a(z) {0} alkalmazást használja. A {PRODUCT_NAME} feldolgozásának ráépítése pumpálást vagy torzítást okozhat. A közvetlen bemenet érintetlenül továbbítja a hangot."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Adóvevő (korlátozott)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "A nyomva tartva beszéd funkció figyelmen kívül marad közvetlen bemenet esetén. Váltson fókuszált hangra vagy egyéni módra a használatához."
 
@@ -28602,7 +28610,7 @@ msgstr "Megosztás a közösségi moderátorokkal."
 msgid "Share your screen"
 msgstr "Képernyő megosztása"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Képernyőmegosztás nagy felbontásban (1080p), QHD (1440p) vagy natív forrásfelbontásban, akár 60 FPS-sel."
 
@@ -30306,7 +30314,7 @@ msgstr "Hanghívás indítása?"
 msgid "Start call"
 msgstr "Hívás indítása"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Kamera tesztelése és effektek beállítása"
 
@@ -30968,7 +30976,7 @@ msgstr "Átváltás kényelmes elrendezésre"
 msgid "Switch to dense layout"
 msgstr "Váltás sűrű elrendezésre"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Váltás közvetlen bevitelre"
 
@@ -36315,7 +36323,7 @@ msgstr "Hanghívás résztvevői"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

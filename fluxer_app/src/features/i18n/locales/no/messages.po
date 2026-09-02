@@ -3045,7 +3045,7 @@ msgstr "Tillat direkte meldinger fra bot"
 msgid "Allow bots to send you direct messages?"
 msgstr "Tillat roboter å sende deg direktemeldinger?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "Tillat kamera"
 
@@ -3108,7 +3108,7 @@ msgstr "Tillat medlemmer uten tillatelsen {readMessageHistoryPermissionLabel} å
 msgid "Allow mentions for this role"
 msgstr "Tillat omtaler for denne rollen"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "Tillat mikrofon"
 
@@ -8137,6 +8137,10 @@ msgstr "Bekreftelse eller dobbeltklikk for å bli med i samtaler i fellesskapet"
 msgid "Conflicts with {conflictLabel}"
 msgstr "I konflikt med {conflictLabel}"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "Koble til et kamera og prøv igjen."
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "Koble til et kamera eller en virtuell opptaksenhet, og prøv deretter p�
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "Koble til en skjerm, og prøv igjen."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "Koble til en mikrofon og prøv igjen."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "Ramme"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "Utseende og følelse"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Det ser ut som du bruker {0}. Hvis du legger til {PRODUCT_NAME}s prosessering i tillegg, kan det føre til pumping eller forvrengning. Direkte inndata sender lyden din uendret gjennom."
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Trykk for å snakke (begrenset)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Trykk-og-snakk ignoreres ved direkte innskriving. Bytt til fokusert tale eller tilpasset for å bruke det."
 
@@ -28602,7 +28610,7 @@ msgstr "Del med fellesskapsmoderatorer."
 msgid "Share your screen"
 msgstr "Del skjermen din"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Del skjermen din i HD (1080p), Quad HD (1440p) eller original oppløsning, med opptil 60 FPS."
 
@@ -30306,7 +30314,7 @@ msgstr "Starte en taleanrop?"
 msgid "Start call"
 msgstr "Start samtale"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "Start kameratest og konfigurer effekter"
 
@@ -30968,7 +30976,7 @@ msgstr "Bytt til komfortabelt oppsett"
 msgid "Switch to dense layout"
 msgstr "Bytt til kompakt visning"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "Bytt til direkte inndata"
 
@@ -36315,7 +36323,7 @@ msgstr "Stemmedeltakere"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"

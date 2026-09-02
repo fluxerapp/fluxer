@@ -3045,7 +3045,7 @@ msgstr "ボットからのDMを許可"
 msgid "Allow bots to send you direct messages?"
 msgstr "ボットからのダイレクトメッセージを許可しますか？"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:233
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow camera"
 msgstr "カメラを許可"
 
@@ -3108,7 +3108,7 @@ msgstr "{readMessageHistoryPermissionLabel}権限がないメンバーが、特�
 msgid "Allow mentions for this role"
 msgstr "このロールへのメンションを許可"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:554
 msgid "Allow microphone"
 msgstr "マイクを許可"
 
@@ -8137,6 +8137,10 @@ msgstr "コミュニティボイスへの参加時の確認またはダブルク
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel} と競合しています"
 
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:221
+msgid "Connect a camera and try again."
+msgstr "カメラを接続して、もう一度お試しください。"
+
 #. Empty-state explanation in the screen-share picker devices tab. Prompts user to connect hardware and retry.
 #: src/features/voice/components/modals/screen_share_picker_modal/useDeviceEmptyStateCopy.ts:28
 msgid "Connect a camera or virtual capture device, then try again."
@@ -8145,6 +8149,10 @@ msgstr "カメラまたは仮想キャプチャデバイスを接続してから
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "Connect a display, then try again."
 msgstr "ディスプレイを接続してから、もう一度お試しください。"
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:539
+msgid "Connect a microphone and try again."
+msgstr "マイクを接続して、もう一度お試しください。"
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
@@ -14827,7 +14835,7 @@ msgstr "フレーム"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:321
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:123
 msgid "Frame rate"
@@ -18770,7 +18778,7 @@ msgid "Look and feel"
 msgstr "見た目と操作感"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:648
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "{0}をお使いのようです。その上に{PRODUCT_NAME}の処理を重ねると、ポンピングや歪みが発生する可能性があります。ダイレクト入力では、オーディオはそのまま通過します。"
 
@@ -24632,7 +24640,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "プッシュトゥトーク (制限あり)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:670
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "ダイレクト入力ではプッシュトゥトークは無視されます。使用するには、フォーカス音声またはカスタムに切り替えてください。"
 
@@ -28602,7 +28610,7 @@ msgstr "コミュニティのモデレーターと共有."
 msgid "Share your screen"
 msgstr "画面を共有"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:301
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:305
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "画面を最大60FPSで、高画質（1080p）、クアッドHD（1440p）、またはネイティブソース解像度で共有できます。"
 
@@ -30306,7 +30314,7 @@ msgstr "音声通話を開始しますか？"
 msgid "Start call"
 msgstr "通話を開始"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:262
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:266
 msgid "Start camera test and configure effects"
 msgstr "カメラテストを開始してエフェクトを設定"
 
@@ -30968,7 +30976,7 @@ msgstr "快適なレイアウトに切り替える"
 msgid "Switch to dense layout"
 msgstr "コンパクト表示に切り替える"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:643
 msgid "Switch to direct input"
 msgstr "直接入力に切り替える"
 
@@ -36315,7 +36323,7 @@ msgstr "通話の参加者"
 
 #. Voice settings menu label for microphone processing profile.
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:634
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:638
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:64
 #: src/features/voice/components/VoiceSettingsMenus.tsx:109
 msgid "Voice processing"
