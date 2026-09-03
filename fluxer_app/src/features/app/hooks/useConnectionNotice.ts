@@ -86,6 +86,12 @@ export function useConnectionNotice(): ConnectionNotice | null {
 		}, BOOT_NOTICE_DELAY_MS);
 		return () => window.clearTimeout(timer);
 	}, [booting]);
+	useEffect(() => {
+		if (!reconnecting) {
+			return;
+		}
+		StatusPage.refreshForConnectionIssue();
+	}, [reconnecting]);
 	if (Nagbar.forceHideConnectionNotice) {
 		return null;
 	}

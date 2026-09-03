@@ -32,6 +32,7 @@ const GATEWAY_TIMEOUTS = {
 	ResumeWindow: 180000,
 	MinReconnect: 1000,
 	MaxReconnect: 60000,
+	ReconnectSpread: 2000,
 	Hello: 20000,
 } as const;
 export const GatewayState = {
@@ -1034,7 +1035,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		}
 		const allowImmediate = options.allowImmediate ?? true;
 		const wasImmediate = allowImmediate && this.shouldReconnectImmediately;
-		const delay = wasImmediate ? 0 : this.nextReconnectDelay();
+		const delay = wasImmediate ? this.reconnectSpread() : this.nextReconnectDelay();
 		this.shouldReconnectImmediately = false;
 		this.log.info(`Scheduling reconnect in ${delay}ms${wasImmediate ? ' (immediate)' : ''}`);
 		this.reconnectTimeoutId = window.setTimeout(() => {
@@ -1047,12 +1048,16 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		}, delay);
 	}
 
+	private reconnectSpread(): number {
+		return Math.floor(Math.random() * GATEWAY_TIMEOUTS.ReconnectSpread);
+	}
+
 	private nextReconnectDelay(): number {
 		const now = Date.now();
 		const elapsed = now - this.lastReconnectAt;
 		if (elapsed < GATEWAY_TIMEOUTS.MinReconnect) {
 			this.log.debug(`Last reconnect ${elapsed}ms ago, enforcing minimum delay (${GATEWAY_TIMEOUTS.MinReconnect}ms)`);
-			return GATEWAY_TIMEOUTS.MinReconnect;
+			return GATEWAY_TIMEOUTS.MinReconnect + this.reconnectSpread();
 		}
 		this.lastReconnectAt = now;
 		const delay = this.reconnectBackoff.next();
