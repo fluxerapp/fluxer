@@ -58,6 +58,7 @@ import {
 	saveCurrentVoiceSessionRestoreSnapshot,
 	type VoiceSessionRestoreSyncHandle,
 } from '@app/features/voice/engine/media_engine_facade/VoiceSessionRestoreSync';
+import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {Store, useStoreVersion} from '@app/features/voice/engine/Store';
 import {shouldMoveToAfkOnTick} from '@app/features/voice/engine/VoiceAfkTracking';
@@ -388,6 +389,17 @@ class MediaEngineFacade extends Store {
 		this.voiceEngineV2SourceLifecycleBridge = this.createSourceLifecycleBridge();
 		voiceEngineV2AppScreenShareExecutionAdapter.setControllerGateway(this.createScreenShareControllerGateway());
 		voiceEngineV2AppScreenShareExecutionAdapter.setSourceLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
+		ScreenShareCodecNegotiation.setSelectionChangeListener((activeRoom, codec, reason) => {
+			void voiceEngineV2AppScreenShareExecutionAdapter
+				.republishActiveScreenShareForNegotiatedCodecInternal(activeRoom, codec)
+				.catch((error) => {
+					logger.warn('Failed to republish active screen share after a codec negotiation change', {
+						error,
+						codec,
+						reason,
+					});
+				});
+		});
 		voiceEngineV2AppMediaExecutionAdapter.setSourceLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
 		setNativeAudioCaptureBridgeLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
 		this.syncVoiceEngineV2AudioControlsFromAppState();

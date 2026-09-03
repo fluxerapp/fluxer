@@ -74,10 +74,45 @@ Object.defineProperty(globalThis, 'RTCRtpReceiver', {
 	value: {getCapabilities: () => VIDEO_CAPABILITIES},
 });
 
-const {buildLocalCodecAdvertisements, computeNegotiatedVideoCodec, getScreenShareCodecPreferenceOrder} = await import(
-	'./ScreenShareCodecNegotiation'
-);
+const {
+	default: ScreenShareCodecNegotiation,
+	buildLocalCodecAdvertisements,
+	computeNegotiatedVideoCodec,
+	getScreenShareCodecPreferenceOrder,
+	SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC,
+} = await import('./ScreenShareCodecNegotiation');
 const {resetCachedCodecCapabilities} = await import('@app/features/voice/utils/CodecCapabilityDetector');
+const {RoomEvent} = await import('livekit-client');
+
+class FakeRoom {
+	private handlers = new Map<string, Set<(...args: Array<unknown>) => void>>();
+	localParticipant = {identity: 'local', publishData: vi.fn(async () => undefined)};
+	remoteParticipants = new Map<string, {identity: string}>();
+
+	on(event: string, handler: (...args: Array<unknown>) => void): this {
+		if (!this.handlers.has(event)) this.handlers.set(event, new Set());
+		this.handlers.get(event)?.add(handler);
+		return this;
+	}
+
+	off(event: string, handler: (...args: Array<unknown>) => void): this {
+		this.handlers.get(event)?.delete(handler);
+		return this;
+	}
+
+	emit(event: string, ...args: Array<unknown>): void {
+		for (const handler of this.handlers.get(event) ?? []) handler(...args);
+	}
+}
+
+function sessionUpdatePayload(codecs: Array<FluxerCodecAdvertisement>): Uint8Array {
+	return new TextEncoder().encode(
+		JSON.stringify({
+			op: 14,
+			d: {video_codec: 'H264', media_session_id: 'peer-session', reason: 'connected', codecs},
+		}),
+	);
+}
 
 function videoAdvertisement(name: 'AV1' | 'VP9' | 'H265', encode: boolean, decode: boolean): FluxerCodecAdvertisement {
 	const payloadType = name === 'AV1' ? 101 : name === 'H265' ? 105 : 109;
@@ -178,5 +213,91 @@ describe('screen-share codec negotiation with the HEVC opt-in off', () => {
 		hevcOptIn = true;
 		resetCachedCodecCapabilities();
 		expect(computeNegotiatedVideoCodec(local, remote, 0, getScreenShareCodecPreferenceOrder()).codec).toBe('h265');
+	});
+});
+
+describe('reacting to a mid-session codec selection change', () => {
+	let room: FakeRoom;
+
+	beforeEach(() => {
+		av1OptIn = false;
+		hevcOptIn = true;
+		preferredScreenShareCodec = 'auto';
+		gpuReport = {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'};
+		resetCachedCodecCapabilities();
+		room = new FakeRoom();
+		ScreenShareCodecNegotiation.setSelectionChangeListener(null);
+	});
+
+	function flush(): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, 0));
+	}
+
+	async function establishBaseline(): Promise<void> {
+		ScreenShareCodecNegotiation.bind(room as never);
+		room.emit(RoomEvent.ParticipantDisconnected, {identity: 'nobody-was-connected'});
+		await flush();
+	}
+
+	it('picks the locally preferred codec while no remote participant is known', async () => {
+		await establishBaseline();
+		expect(ScreenShareCodecNegotiation.getSelectedCodec()).toBe('h265');
+		ScreenShareCodecNegotiation.dispose();
+	});
+
+	it('notifies the selection-change listener once a peer without HEVC decode is discovered', async () => {
+		await establishBaseline();
+		expect(ScreenShareCodecNegotiation.getSelectedCodec()).toBe('h265');
+		const listener = vi.fn();
+		ScreenShareCodecNegotiation.setSelectionChangeListener(listener);
+		room.remoteParticipants.set('peer-without-hevc', {identity: 'peer-without-hevc'});
+		const payload = sessionUpdatePayload([videoAdvertisement('VP9', true, true)]);
+		room.emit(
+			RoomEvent.DataReceived,
+			payload,
+			{identity: 'peer-without-hevc'},
+			undefined,
+			SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC,
+		);
+		await flush();
+		const negotiated = ScreenShareCodecNegotiation.getSelectedCodec();
+		expect(negotiated).not.toBe('h265');
+		expect(listener).toHaveBeenCalledTimes(1);
+		expect(listener).toHaveBeenCalledWith(room, negotiated, 'data');
+		ScreenShareCodecNegotiation.dispose();
+	});
+
+	it('does not notify the listener when the recomputed selection is unchanged', async () => {
+		await establishBaseline();
+		room.remoteParticipants.set('peer-with-hevc', {identity: 'peer-with-hevc'});
+		const firstPayload = sessionUpdatePayload([
+			videoAdvertisement('H265', true, true),
+			videoAdvertisement('VP9', true, true),
+		]);
+		room.emit(
+			RoomEvent.DataReceived,
+			firstPayload,
+			{identity: 'peer-with-hevc'},
+			undefined,
+			SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC,
+		);
+		await flush();
+		expect(ScreenShareCodecNegotiation.getSelectedCodec()).toBe('h265');
+		const listener = vi.fn();
+		ScreenShareCodecNegotiation.setSelectionChangeListener(listener);
+		const secondPayload = sessionUpdatePayload([
+			videoAdvertisement('H265', true, true),
+			videoAdvertisement('VP9', true, true),
+		]);
+		room.emit(
+			RoomEvent.DataReceived,
+			secondPayload,
+			{identity: 'peer-with-hevc'},
+			undefined,
+			SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC,
+		);
+		await flush();
+		expect(listener).not.toHaveBeenCalled();
+		ScreenShareCodecNegotiation.dispose();
 	});
 });

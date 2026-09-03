@@ -73,7 +73,7 @@ const VIDEO_CODEC_PROTOCOL_TABLE: Record<
 type FluxerVideoCodecName = 'AV1' | 'H265' | 'H264' | 'VP9' | 'VP8';
 type FluxerCodecName = 'opus' | FluxerVideoCodecName;
 type FluxerCodecType = 'audio' | 'video';
-type NegotiationReason =
+export type NegotiationReason =
 	| 'connected'
 	| 'data'
 	| 'participant-connected'
@@ -499,9 +499,16 @@ class ScreenShareCodecNegotiation {
 	private mediaSessionId = createId('media');
 	private negotiationSnapshot = createScreenShareCodecNegotiationSnapshot();
 	private bindingRevision = 0;
+	private onSelectionChanged: ((room: Room, codec: VideoCodec, reason: NegotiationReason) => void) | null = null;
 
 	getSelectedCodec(): VideoCodec | null {
 		return this.selectedCodec;
+	}
+
+	setSelectionChangeListener(
+		listener: ((room: Room, codec: VideoCodec, reason: NegotiationReason) => void) | null,
+	): void {
+		this.onSelectionChanged = listener;
 	}
 
 	selectScreenShareCodec(preference: CodecPreference = 'auto'): VideoCodec {
@@ -716,6 +723,7 @@ class ScreenShareCodecNegotiation {
 		logger.info('Selected screen share codec from XState capability intersection', selection);
 		await this.publishSessionUpdate(room, selection);
 		if (!this.isBindingCurrent(room, bindingRevision)) return null;
+		this.onSelectionChanged?.(room, selection.codec, selection.reason);
 		return selection;
 	}
 

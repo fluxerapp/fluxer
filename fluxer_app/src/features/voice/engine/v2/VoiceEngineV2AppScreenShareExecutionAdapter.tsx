@@ -433,6 +433,23 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		this.stopScreenShareAfterEncoderFailure(room, participant, track, failedCodec, 'stalled');
 	}
 
+	async republishActiveScreenShareForNegotiatedCodecInternal(room: Room | null, codec: VideoCodec): Promise<void> {
+		const participant = room?.localParticipant;
+		if (!room || !participant) return;
+		const publication = participant.getTrackPublication(Track.Source.ScreenShare);
+		const track = publication?.videoTrack as LocalVideoTrack | undefined;
+		if (!track || !this.isScreenShareTrackPublishedInternal(participant, track)) return;
+		const publishedOptions = ((publication as {options?: TrackPublishOptions}).options ?? {}) as TrackPublishOptions;
+		if (publishedOptions.videoCodec === codec) return;
+		const republished = await this.liveKitFlows.republishActiveShareWithCodec(room, track, codec);
+		if (!republished) {
+			logger.warn('Failed to republish active screen share after a codec negotiation change', {
+				codec,
+				previousCodec: publishedOptions.videoCodec,
+			});
+		}
+	}
+
 	private async correctVerifiedScreenShareCodec(
 		room: Room | null,
 		participant: LocalParticipant,
