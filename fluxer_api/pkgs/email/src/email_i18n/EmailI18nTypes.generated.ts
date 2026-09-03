@@ -15,6 +15,7 @@ export type EmailTemplateKey =
 	| 'harvest_completed'
 	| 'inactivity_warning'
 	| 'ip_authorization'
+	| 'mfa_backup_codes_view'
 	| 'password_change_verification'
 	| 'password_reset'
 	| 'registration_approved'

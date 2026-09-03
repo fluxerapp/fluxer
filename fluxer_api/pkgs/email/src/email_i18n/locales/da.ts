@@ -59,6 +59,10 @@ const EMAIL_I18N_DA_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Godkend login fra en ny IP-adresse",
 		"body": "Hej {username},\n\nVi har registreret et login-forsøg på din {product_name}-konto fra en ny IP-adresse:\n\nIP-adresse: {ipAddress}\nSted: {location}\n\nHvis dette var dig, skal du godkende denne IP-adresse ved at klikke på linket nedenfor:\n\n{authUrl}\n\nHvis du ikke har forsøgt at logge ind, skal du straks ændre din adgangskode.\n\nDette link er gyldigt i 30 minutter.\n\n– {product_name} Team"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Bekræft adgang til dine {product_name}-backupkoder",
+		"body": "Hej {username},\n\nVi har modtaget en anmodning om at se backupkoderne på din {product_name}-konto.\n\nFor at bekræfte denne anmodning skal du indtaste denne kode i appen:\n\n{code}\n\nDenne kode udløber den {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke har anmodet om dette, har nogen muligvis adgang til din konto. Skift din adgangskode med det samme.\n\n– {product_name} Team"
+	},
 	"password_change_verification": {
 		"subject": "Bekræft din {product_name}-adgangskodeændring",
 		"body": "Hej {username},\n\nVi har modtaget en anmodning om at ændre adgangskoden på din {product_name}-konto.\n\nFor at bekræfte denne ændring skal du indtaste denne kode i appen:\n\n{code}\n\nDenne kode udløber kl. {expiresAt}.\n\nHvis du ikke har anmodet om dette, har nogen muligvis adgang til din konto. Skift din adgangskode med det samme, og aktiver totrinsgodkendelse.\n\n– {product_name} Team"

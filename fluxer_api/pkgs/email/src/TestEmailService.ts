@@ -223,6 +223,16 @@ export class TestEmailService implements ITestEmailService {
 		return this.record(email, 'password_change_verification', {code});
 	}
 
+	async sendMfaBackupCodesVerification(
+		email: string,
+		username: string,
+		code: string,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(`MFA backup codes verification sent to ${email} for user ${username}`);
+		return this.record(email, 'mfa_backup_codes_view', {code});
+	}
+
 	async sendEmailChangeOriginal(
 		email: string,
 		username: string,

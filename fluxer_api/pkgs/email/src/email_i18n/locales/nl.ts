@@ -59,6 +59,10 @@ const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Autoriseer inlog vanaf een nieuw IP-adres",
 		"body": "Hallo {username},\n\nWe hebben een inlogpoging op je {product_name}-account gedetecteerd vanaf een nieuw IP-adres:\n\nIP-adres: {ipAddress}\nLocatie: {location}\n\nAls jij dit was, autoriseer dan dit IP-adres door op de onderstaande link te klikken:\n\n{authUrl}\n\nAls je niet hebt geprobeerd in te loggen, wijzig dan onmiddellijk je wachtwoord.\n\nDeze link is 30 minuten geldig.\n\n– {product_name} Team"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Bevestig toegang tot je {product_name}-back-upcodes",
+		"body": "Hallo {username},\n\nWe hebben een verzoek ontvangen om de back-upcodes van je {product_name}-account te bekijken.\n\nOm dit verzoek te bevestigen, voer je deze code in de app in:\n\n{code}\n\nDeze code verloopt op {expiresAt, date, full} om {expiresAt, time, short}.\n\nAls je dit niet hebt aangevraagd, heeft iemand mogelijk toegang tot je account. Wijzig onmiddellijk je wachtwoord.\n\n– {product_name} Team"
+	},
 	"password_change_verification": {
 		"subject": "Bevestig je {product_name}-wachtwoordwijziging",
 		"body": "Hallo {username},\n\nWe hebben een verzoek ontvangen om het wachtwoord van je {product_name}-account te wijzigen.\n\nOm deze wijziging te bevestigen, voer je deze code in de app in:\n\n{code}\n\nDeze code verloopt om {expiresAt}.\n\nAls je dit niet hebt aangevraagd, heeft iemand mogelijk toegang tot je account. Wijzig onmiddellijk je wachtwoord en schakel tweefactorauthenticatie in.\n\n– {product_name} Team"

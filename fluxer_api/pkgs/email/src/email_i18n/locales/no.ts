@@ -59,6 +59,10 @@ const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Godkjenn pålogging fra en ny IP-adresse",
 		"body": "Hei {username},\n\nVi oppdaget et påloggingsforsøk til {product_name}-kontoen din fra en ny IP-adresse:\n\nIP-adresse: {ipAddress}\nSted: {location}\n\nHvis dette var deg, godkjenn denne IP-adressen ved å klikke på lenken nedenfor:\n\n{authUrl}\n\nHvis du ikke forsøkte å logge inn, endre passordet ditt med en gang.\n\nDenne lenken er gyldig i 30 minutter.\n\n– {product_name} Team"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Bekreft tilgang til {product_name}-reservekodene dine",
+		"body": "Hei {username},\n\nVi mottok en forespørsel om å se reservekodene på {product_name}-kontoen din.\n\nFor å bekrefte denne forespørselen, skriv inn denne koden i appen:\n\n{code}\n\nDenne koden utløper {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke ba om dette, kan noen ha tilgang til kontoen din. Endre passordet ditt med en gang.\n\n– {product_name} Team"
+	},
 	"password_change_verification": {
 		"subject": "Bekreft din {product_name}-passordendring",
 		"body": "Hei {username},\n\nVi mottok en forespørsel om å endre passordet på {product_name}-kontoen din.\n\nFor å bekrefte denne endringen, skriv inn denne koden i appen:\n\n{code}\n\nDenne koden utløper {expiresAt}.\n\nHvis du ikke ba om dette, kan noen ha tilgang til kontoen din. Endre passordet ditt med en gang og aktiver tofaktorautentisering.\n\n– {product_name} Team"

@@ -59,6 +59,10 @@ const EMAIL_I18N_ES_ES_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Autorizar inicio de sesión desde una nueva dirección IP",
 		"body": "Hola {username}:\n\nHemos detectado un intento de inicio de sesión en tu cuenta de {product_name} desde una nueva IP:\n\nDirección IP: {ipAddress}\nUbicación: {location}\n\nSi fuiste tú, autoriza esta dirección IP haciendo clic en el siguiente enlace:\n\n{authUrl}\n\nSi no intentaste iniciar sesión, cambia tu contraseña de inmediato.\n\nEste enlace es válido durante 30 minutos.\n\n– Equipo de {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Confirma el acceso a tus códigos de respaldo de {product_name}",
+		"body": "Hola {username}:\n\nHemos recibido una solicitud para ver los códigos de respaldo de tu cuenta de {product_name}.\n\nPara confirmar esta solicitud, introduce este código en la aplicación:\n\n{code}\n\nEste código caduca el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, alguien podría tener acceso a tu cuenta. Cambia tu contraseña inmediatamente.\n\n– Equipo de {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Confirma tu cambio de contraseña en {product_name}",
 		"body": "Hola {username}:\n\nHemos recibido una solicitud para cambiar la contraseña de tu cuenta de {product_name}.\n\nPara confirmar este cambio, introduce este código en la aplicación:\n\n{code}\n\nEste código caduca el {expiresAt}.\n\nSi no solicitaste esto, alguien podría tener acceso a tu cuenta. Cambia tu contraseña inmediatamente y activa la autenticación de dos factores.\n\n– Equipo de {product_name}"

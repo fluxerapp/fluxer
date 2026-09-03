@@ -69,6 +69,7 @@ import type {EntranceSoundPlayService} from '../user/entrance_sound/EntranceSoun
 import type {EntranceSoundService} from '../user/entrance_sound/EntranceSoundService';
 import type {IUserRepository} from '../user/IUserRepository';
 import type {EmailChangeService} from '../user/services/EmailChangeService';
+import type {MfaBackupCodesChallengeService} from '../user/services/MfaBackupCodesChallengeService';
 import type {PasswordChangeService} from '../user/services/PasswordChangeService';
 import type {UserAccountRequestService} from '../user/services/UserAccountRequestService';
 import type {UserActivityBuffer} from '../user/services/UserActivityBuffer';
@@ -129,6 +130,7 @@ export interface HonoEnv {
 		streamService: StreamService;
 		emailService: IEmailService;
 		emailChangeService: EmailChangeService;
+		mfaBackupCodesChallengeService: MfaBackupCodesChallengeService;
 		passwordChangeService: PasswordChangeService;
 		embedService: EmbedService;
 		entityAssetService: EntityAssetService;

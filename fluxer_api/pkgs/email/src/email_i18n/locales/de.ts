@@ -59,6 +59,10 @@ const EMAIL_I18N_DE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Anmeldung von einer neuen IP-Adresse bestätigen",
 		"body": "Hallo {username},\n\nwir haben einen Anmeldeversuch für deinen {product_name}-Account von einer neuen IP-Adresse festgestellt:\n\nIP-Adresse: {ipAddress}\nStandort: {location}\n\nWenn du das warst, bestätige diese IP-Adresse bitte, indem du auf den untenstehenden Link klickst:\n\n{authUrl}\n\nWenn du dich nicht anmelden wolltest, ändere bitte sofort dein Passwort.\n\nDieser Link ist 30 Minuten gültig.\n\n– {product_name} Team"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Bestätige den Zugriff auf deine {product_name}-Backup-Codes",
+		"body": "Hallo {username},\n\nwir haben eine Anfrage erhalten, die Backup-Codes deines {product_name}-Accounts anzusehen.\n\nUm diese Anfrage zu bestätigen, gib diesen Code in der App ein:\n\n{code}\n\nDieser Code läuft am {expiresAt, date, full} um {expiresAt, time, short} ab.\n\nWenn du dies nicht angefordert hast, könnte jemand Zugriff auf deinen Account haben. Ändere dein Passwort sofort.\n\n– {product_name} Team"
+	},
 	"password_change_verification": {
 		"subject": "Bestätige deine {product_name}-Passwortänderung",
 		"body": "Hallo {username},\n\nwir haben eine Anfrage zur Änderung des Passworts deines {product_name}-Accounts erhalten.\n\nUm diese Änderung zu bestätigen, gib diesen Code in der App ein:\n\n{code}\n\nDieser Code läuft um {expiresAt} ab.\n\nWenn du diese Änderung nicht angefordert hast, könnte jemand Zugriff auf deinen Account haben. Ändere dein Passwort sofort und aktiviere die Zwei-Faktor-Authentifizierung.\n\n– {product_name} Team"

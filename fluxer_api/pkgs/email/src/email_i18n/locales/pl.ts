@@ -59,6 +59,10 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Autoryzuj logowanie z nowego adresu IP",
 		"body": "Witaj {username},\n\nWykryliśmy próbę logowania do Twojego konta {product_name} z nowego adresu IP:\n\nAdres IP: {ipAddress}\nLokalizacja: {location}\n\nJeśli to Ty, autoryzuj ten adres IP, klikając poniższy link:\n\n{authUrl}\n\nJeśli nie próbowałeś się zalogować, natychmiast zmień hasło.\n\nTen link jest ważny przez 30 minut.\n\n– Zespół {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Potwierdź dostęp do kodów zapasowych w {product_name}",
+		"body": "Witaj {username},\n\nOtrzymaliśmy prośbę o wyświetlenie kodów zapasowych Twojego konta {product_name}.\n\nAby potwierdzić tę prośbę, wprowadź ten kod w aplikacji:\n\n{code}\n\nTen kod wygasa {expiresAt, date, full} o {expiresAt, time, short}.\n\nJeśli nie prosiłeś o to, ktoś może mieć dostęp do Twojego konta. Natychmiast zmień hasło.\n\n– Zespół {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Potwierdź zmianę hasła w {product_name}",
 		"body": "Witaj {username},\n\nOtrzymaliśmy prośbę o zmianę hasła do Twojego konta {product_name}.\n\nAby potwierdzić tę zmianę, wprowadź ten kod w aplikacji:\n\n{code}\n\nTen kod wygasa o godzinie {expiresAt}.\n\nJeśli nie prosiłeś o to, ktoś może mieć dostęp do Twojego konta. Natychmiast zmień hasło i włącz uwierzytelnianie dwuskładnikowe.\n\n– Zespół {product_name}"

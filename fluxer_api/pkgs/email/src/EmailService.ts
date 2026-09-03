@@ -229,6 +229,19 @@ export class EmailService implements IEmailService {
 		});
 	}
 
+	async sendMfaBackupCodesVerification(
+		email: string,
+		username: string,
+		code: string,
+		locale: string | null = null,
+	): Promise<boolean> {
+		return this.sendTemplatedEmail(email, 'mfa_backup_codes_view', locale, {
+			username,
+			code,
+			expiresAt: new Date(Date.now() + ms('10 minutes')),
+		});
+	}
+
 	async sendEmailChangeOriginal(
 		email: string,
 		username: string,

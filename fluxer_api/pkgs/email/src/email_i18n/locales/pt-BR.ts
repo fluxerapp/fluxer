@@ -59,6 +59,10 @@ const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Autorizar login de um novo endereço IP",
 		"body": "Olá, {username},\n\nDetectamos uma tentativa de login em sua conta do {product_name} de um novo endereço IP:\n\nEndereço IP: {ipAddress}\nLocalização: {location}\n\nSe foi você, por favor, autorize este endereço IP clicando no link abaixo:\n\n{authUrl}\n\nSe você não tentou entrar, por favor, altere sua senha imediatamente.\n\nEste link é válido por 30 minutos.\n\n– Equipe do {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Confirme o acesso aos códigos de backup da sua conta do {product_name}",
+		"body": "Olá, {username},\n\nRecebemos uma solicitação para visualizar os códigos de backup da sua conta do {product_name}.\n\nPara confirmar esta solicitação, insira este código no aplicativo:\n\n{code}\n\nEste código expira em {expiresAt, date, full} às {expiresAt, time, short}.\n\nSe você não solicitou isso, alguém pode ter acesso à sua conta. Altere sua senha imediatamente.\n\n– Equipe do {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Confirme a alteração da senha da sua conta do {product_name}",
 		"body": "Olá, {username},\n\nRecebemos uma solicitação para alterar a senha da sua conta do {product_name}.\n\nPara confirmar esta alteração, insira este código no aplicativo:\n\n{code}\n\nEste código expira em {expiresAt}.\n\nSe você não solicitou isso, alguém pode ter acesso à sua conta. Altere sua senha imediatamente e ative a autenticação de dois fatores.\n\n– Equipe do {product_name}"

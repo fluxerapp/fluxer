@@ -59,6 +59,10 @@ const EMAIL_I18N_VI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Cho phép đăng nhập từ địa chỉ IP mới",
 		"body": "Xin chào {username},\n\nChúng tôi đã phát hiện một nỗ lực đăng nhập vào tài khoản {product_name} của bạn từ một địa chỉ IP mới:\n\nĐịa chỉ IP: {ipAddress}\nVị trí: {location}\n\nNếu đây là bạn, vui lòng cho phép địa chỉ IP này bằng cách nhấp vào liên kết bên dưới:\n\n{authUrl}\n\nNếu bạn không thực hiện nỗ lực đăng nhập, vui lòng thay đổi mật khẩu ngay lập tức.\n\nLiên kết này có hiệu lực trong 30 phút.\n\n– Đội ngũ {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Xác nhận quyền truy cập mã dự phòng {product_name} của bạn",
+		"body": "Xin chào {username},\n\nChúng tôi đã nhận được yêu cầu xem mã dự phòng trên tài khoản {product_name} của bạn.\n\nĐể xác nhận yêu cầu này, hãy nhập mã này vào ứng dụng:\n\n{code}\n\nMã này hết hạn vào {expiresAt, date, full} lúc {expiresAt, time, short}.\n\nNếu bạn không yêu cầu điều này, ai đó có thể đã truy cập vào tài khoản của bạn. Thay đổi mật khẩu ngay lập tức.\n\n– Đội ngũ {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Xác nhận thay đổi mật khẩu của bạn trên {product_name}",
 		"body": "Xin chào {username},\n\nChúng tôi đã nhận được yêu cầu thay đổi mật khẩu trên tài khoản {product_name} của bạn.\n\nĐể xác nhận thay đổi này, hãy nhập mã này vào ứng dụng:\n\n{code}\n\nMã này hết hạn lúc {expiresAt}.\n\nNếu bạn không yêu cầu thay đổi này, ai đó có thể đã truy cập vào tài khoản của bạn. Thay đổi mật khẩu ngay lập tức và bật xác thực hai yếu tố.\n\n– Đội ngũ {product_name}"

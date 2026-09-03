@@ -18327,6 +18327,222 @@
 				}
 			}
 		},
+		"/users/@me/mfa/backup-codes/challenge": {
+			"post": {
+				"operationId": "start_backup_codes_challenge",
+				"summary": "Start backup codes challenge",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeStartResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Start backup codes challenge"}},
+				"description": "Initiates the challenge required to view existing backup codes. Sends a verification code to the user's email address. Returns a ticket for use in the remaining challenge steps.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EmptyBodyRequest"}}}
+				}
+			}
+		},
+		"/users/@me/mfa/backup-codes/challenge/resend": {
+			"post": {
+				"operationId": "resend_backup_codes_challenge",
+				"summary": "Resend backup codes challenge code",
+				"tags": ["Users"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Resend backup codes challenge code"}},
+				"description": "Resends the verification code for a backup codes challenge. Use if the original code was not received. Requires a valid backup codes challenge ticket.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeResendRequest"}}
+					}
+				}
+			}
+		},
+		"/users/@me/mfa/backup-codes/challenge/verify": {
+			"post": {
+				"operationId": "verify_backup_codes_challenge",
+				"summary": "Verify backup codes challenge code",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Verify backup codes challenge code"}},
+				"description": "Verifies the email code sent during a backup codes challenge and returns the existing backup codes. The ticket is consumed on success.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeVerifyRequest"}}
+					}
+				}
+			}
+		},
 		"/users/@me/mfa/totp/disable": {
 			"post": {
 				"operationId": "disable_totp_mfa",
@@ -33300,6 +33516,28 @@
 					"webauthn_challenge": {"type": "string", "description": "WebAuthn challenge string"}
 				},
 				"required": ["regenerate"]
+			},
+			"MfaBackupCodesChallengeStartResponse": {
+				"type": "object",
+				"properties": {
+					"ticket": {"type": "string", "description": "Ticket for backup codes challenge actions"},
+					"code_expires_at": {"type": "string", "description": "ISO8601 timestamp when the verification code expires"},
+					"resend_available_at": {"type": "string", "description": "ISO8601 timestamp when the code can be resent"}
+				},
+				"required": ["ticket", "code_expires_at", "resend_available_at"]
+			},
+			"MfaBackupCodesChallengeResendRequest": {
+				"type": "object",
+				"properties": {"ticket": {"type": "string", "description": "Backup codes challenge ticket identifier"}},
+				"required": ["ticket"]
+			},
+			"MfaBackupCodesChallengeVerifyRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"type": "string", "description": "Backup codes challenge ticket identifier"},
+					"code": {"type": "string", "description": "Verification code sent to the email address"}
+				},
+				"required": ["ticket", "code"]
 			},
 			"DisableTotpRequest": {
 				"type": "object",

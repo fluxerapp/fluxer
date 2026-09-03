@@ -59,6 +59,10 @@ const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "新しいIPアドレスからのログインを承認",
 		"body": "こんにちは、{username}さん\n\n新しいIPアドレスから{product_name}アカウントへのログイン試行を検出しました。\n\nIPアドレス: {ipAddress}\n場所: {location}\n\nこれがご自身によるものである場合は、以下のリンクをクリックしてこのIPアドレスを承認してください。\n\n{authUrl}\n\nログインを試行していない場合は、すぐにパスワードを変更してください。\n\nこのリンクは30分間有効です。\n\n– {product_name}チーム"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "{product_name}バックアップコードへのアクセスを確認",
+		"body": "こんにちは、{username}さん\n\n{product_name}アカウントのバックアップコードを表示するリクエストを受け付けました。\n\nこのリクエストを確認するには、アプリでこのコードを入力してください。\n\n{code}\n\nこのコードは{expiresAt, date, full} {expiresAt, time, short}に期限切れになります。\n\nご自身でリクエストしていない場合は、誰かがあなたのアカウントにアクセスしている可能性があります。すぐにパスワードを変更してください。\n\n– {product_name}チーム"
+	},
 	"password_change_verification": {
 		"subject": "{product_name}パスワードの変更を確認",
 		"body": "こんにちは、{username}さん\n\n{product_name}アカウントのパスワード変更リクエストを受け付けました。\n\nこの変更を確認するには、アプリでこのコードを入力してください。\n\n{code}\n\nこのコードは{expiresAt}に期限切れになります。\n\nご自身でリクエストしていない場合は、誰かがあなたのアカウントにアクセスしている可能性があります。すぐにパスワードを変更し、二段階認証を有効にしてください。\n\n– {product_name}チーム"

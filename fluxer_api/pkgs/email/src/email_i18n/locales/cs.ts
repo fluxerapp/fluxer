@@ -59,6 +59,10 @@ const EMAIL_I18N_CS_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Povolit přihlášení z nové IP adresy",
 		"body": "Ahoj {username},\n\nZaznamenali jsme pokus o přihlášení k tvému účtu {product_name} z nové IP adresy:\n\nIP adresa: {ipAddress}\nPoloha: {location}\n\nPokud jsi to byl ty, autorizuj tuto IP adresu kliknutím na odkaz níže:\n\n{authUrl}\n\nPokud jsi se nepřihlašoval, okamžitě si změň heslo.\n\nTento odkaz je platný 30 minut.\n\n– Tým {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Potvrď přístup k záložním kódům pro {product_name}",
+		"body": "Ahoj {username},\n\nObdrželi jsme požadavek na zobrazení záložních kódů tvého účtu {product_name}.\n\nPro potvrzení tohoto požadavku zadej tento kód do aplikace:\n\n{code}\n\nTento kód vyprší dne {expiresAt, date, full} v {expiresAt, time, short}.\n\nPokud jsi o to nežádal, někdo může mít přístup k tvému účtu. Okamžitě si změň heslo.\n\n– Tým {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Potvrď změnu hesla k {product_name}",
 		"body": "Ahoj {username},\n\nObdrželi jsme požadavek na změnu hesla k tvému účtu pro {product_name}.\n\nPro potvrzení této změny zadej tento kód do aplikace:\n\n{code}\n\nTento kód vyprší v {expiresAt}.\n\nPokud jsi o to nežádal, někdo může mít přístup k tvému účtu. Okamžitě si změň heslo a povol dvoufaktorové ověřování.\n\n– Tým {product_name}"

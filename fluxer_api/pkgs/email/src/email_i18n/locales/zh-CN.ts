@@ -59,6 +59,10 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "授权新 IP 地址登录",
 		"body": "你好 {username}，\n\n我们检测到你的 {product_name} 账号有来自新 IP 地址的登录尝试：\n\nIP 地址：{ipAddress}\n位置：{location}\n\n如果你本人进行了此操作，请点击下方链接授权此 IP 地址：\n\n{authUrl}\n\n如果你没有进行此操作，请立即更改密码。\n\n此链接 30 分钟内有效。\n\n– {product_name} 团队"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "确认访问你的 {product_name} 备用码",
+		"body": "你好 {username}，\n\n我们收到了查看你的 {product_name} 账号备用码的请求。\n\n要确认此请求，请在应用中输入此验证码：\n\n{code}\n\n此验证码将于 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果你未请求此操作，可能有人访问了你的账号。请立即更改密码。\n\n– {product_name} 团队"
+	},
 	"password_change_verification": {
 		"subject": "确认你的 {product_name} 密码更改",
 		"body": "你好 {username}，\n\n我们收到了更改你的 {product_name} 账号密码的请求。\n\n要确认此更改，请在应用中输入此验证码：\n\n{code}\n\n此验证码将于 {expiresAt} 失效。\n\n如果你未请求此操作，可能有人访问了你的账号。请立即更改密码并启用双重身份验证。\n\n– {product_name} 团队"

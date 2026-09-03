@@ -59,6 +59,10 @@ const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Autoriser la connexion depuis une nouvelle adresse IP",
 		"body": "Bonjour {username},\n\nNous avons détecté une tentative de connexion à ton compte {product_name} depuis une nouvelle adresse IP :\n\nAdresse IP : {ipAddress}\nLocalisation : {location}\n\nSi c'était toi, autorise cette adresse IP en cliquant sur le lien ci-dessous :\n\n{authUrl}\n\nSi tu n'as pas tenté de te connecter, change ton mot de passe immédiatement.\n\nCe lien est valide pendant 30 minutes.\n\n– L'équipe {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Confirme l'accès à tes codes de secours {product_name}",
+		"body": "Bonjour {username},\n\nNous avons reçu une demande de consultation des codes de secours de ton compte {product_name}.\n\nPour confirmer cette demande, saisis ce code dans l'application :\n\n{code}\n\nCe code expire le {expiresAt, date, full} à {expiresAt, time, short}.\n\nSi tu n'as pas demandé cela, quelqu'un a peut-être eu accès à ton compte. Change ton mot de passe immédiatement.\n\n– L'équipe {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Confirme la modification de ton mot de passe {product_name}",
 		"body": "Bonjour {username},\n\nNous avons reçu une demande de modification du mot de passe de ton compte {product_name}.\n\nPour confirmer cette modification, saisis ce code dans l'application :\n\n{code}\n\nCe code expire à {expiresAt}.\n\nSi tu n'as pas demandé cela, quelqu'un a peut-être eu accès à ton compte. Change ton mot de passe immédiatement et active l'authentification à deux facteurs.\n\n– L'équipe {product_name}"

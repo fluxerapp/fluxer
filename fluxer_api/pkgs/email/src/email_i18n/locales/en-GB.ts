@@ -59,6 +59,10 @@ const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Authorize login from a new IP address",
 		"body": "Hello {username},\n\nWe detected a login attempt to your {product_name} account from a new IP address:\n\nIP address: {ipAddress}\nLocation: {location}\n\nIf this was you, please authorize this IP address by clicking the link below:\n\n{authUrl}\n\nIf you didn't attempt to log in, please change your password right away.\n\nThis link is valid for 30 minutes.\n\n– {product_name} Team"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Confirm access to your {product_name} backup codes",
+		"body": "Hello {username},\n\nWe received a request to view the backup codes on your {product_name} account.\n\nTo confirm this request, enter this code in the app:\n\n{code}\n\nThis code expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\nIf you didn't request this, someone may have access to your account. Change your password immediately.\n\n– {product_name} Team"
+	},
 	"password_change_verification": {
 		"subject": "Confirm your {product_name} password change",
 		"body": "Hello {username},\n\nWe received a request to change the password on your {product_name} account.\n\nTo confirm this change, enter this code in the app:\n\n{code}\n\nThis code expires at {expiresAt}.\n\nIf you didn't request this, someone may have access to your account. Change your password immediately and enable two-factor authentication.\n\n– {product_name} Team"

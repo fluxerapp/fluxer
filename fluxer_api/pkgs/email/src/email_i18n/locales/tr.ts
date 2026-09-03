@@ -59,6 +59,10 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Yeni bir IP adresinden girişi yetkilendir",
 		"body": "Merhaba {username},\n\n{product_name} hesabına yeni bir IP adresinden giriş denemesi tespit ettik:\n\nIP adresi: {ipAddress}\nKonum: {location}\n\nBu sen isen, lütfen aşağıdaki bağlantıya tıklayarak bu IP adresini yetkilendir:\n\n{authUrl}\n\nGiriş yapmaya sen çalışmadıysan, lütfen hemen şifreni değiştir.\n\nBu bağlantı 30 dakika boyunca geçerlidir.\n\n– {product_name} Ekibi"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "{product_name} yedek kodlarına erişimi onayla",
+		"body": "Merhaba {username},\n\n{product_name} hesabındaki yedek kodları görüntüleme isteği aldık.\n\nBu isteği onaylamak için bu kodu uygulamaya gir:\n\n{code}\n\nBu kod {expiresAt, date, full} {expiresAt, time, short} tarihinde sona erecektir.\n\nBunu sen talep etmediysen, birisi hesabına erişmiş olabilir. Şifreni hemen değiştir.\n\n– {product_name} Ekibi"
+	},
 	"password_change_verification": {
 		"subject": "{product_name} şifre değişikliğini onayla",
 		"body": "Merhaba {username},\n\n{product_name} hesabının şifresini değiştirme isteği aldık.\n\nBu değişikliği onaylamak için bu kodu uygulamaya gir:\n\n{code}\n\nBu kod {expiresAt} tarihinde sona erecektir.\n\nBunu sen talep etmediysen, birisi hesabına erişmiş olabilir. Şifreni hemen değiştir ve iki faktörlü kimlik doğrulamayı etkinleştir.\n\n– {product_name} Ekibi"

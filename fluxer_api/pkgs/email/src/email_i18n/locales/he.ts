@@ -59,6 +59,10 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "אישור כניסה מכתובת IP חדשה",
 		"body": "שלום {username},\n\nזיהינו ניסיון התחברות לחשבון ה-{product_name} שלכם מכתובת IP חדשה:\n\nכתובת IP: {ipAddress}\nמיקום: {location}\n\nאם זה הייתם אתם, אנא אשרו כתובת IP זו על ידי לחיצה על הקישור למטה:\n\n{authUrl}\n\nאם לא ניסיתם להתחבר, אנא שנו את הסיסמה שלכם מיד.\n\nקישור זה תקף למשך 30 דקות.\n\nצוות {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "אישור גישה לקודי הגיבוי שלכם ב-{product_name}",
+		"body": "שלום {username},\n\nקיבלנו בקשה לצפייה בקודי הגיבוי בחשבון ה-{product_name} שלכם.\n\nכדי לאשר בקשה זו, הזינו קוד זה באפליקציה:\n\n{code}\n\nקוד זה יפוג ב- {expiresAt, date, full} בשעה {expiresAt, time, short}.\n\nאם לא ביקשתם זאת, ייתכן שלמישהו יש גישה לחשבונכם. שנו את הסיסמה שלכם מיד.\n\nצוות {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "אישור שינוי הסיסמה שלכם ב-{product_name}",
 		"body": "שלום {username},\n\nקיבלנו בקשה לשינוי הסיסמה בחשבון ה-{product_name} שלכם.\n\nכדי לאשר שינוי זה, הזינו קוד זה באפליקציה:\n\n{code}\n\nקוד זה יפוג ב- {expiresAt}.\n\nאם לא ביקשתם זאת, ייתכן שלמישהו יש גישה לחשבונכם. שנו את הסיסמה שלכם מיד ואפשרו אימות דו-שלבי.\n\nצוות {product_name}"

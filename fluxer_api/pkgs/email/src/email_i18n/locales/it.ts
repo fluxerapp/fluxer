@@ -59,6 +59,10 @@ const EMAIL_I18N_IT_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Autorizza l'accesso da un nuovo indirizzo IP",
 		"body": "Ciao {username},\n\nAbbiamo rilevato un tentativo di accesso al tuo account {product_name} da un nuovo indirizzo IP:\n\nIndirizzo IP: {ipAddress}\nPosizione: {location}\n\nSe sei stato tu, autorizza questo indirizzo IP cliccando sul link qui sotto:\n\n{authUrl}\n\nSe non hai tentato di accedere, cambia subito la password.\n\nQuesto link è valido per 30 minuti.\n\n– Team {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Conferma l'accesso ai tuoi codici di backup di {product_name}",
+		"body": "Ciao {username},\n\nAbbiamo ricevuto una richiesta di visualizzazione dei codici di backup del tuo account {product_name}.\n\nPer confermare questa richiesta, inserisci questo codice nell'app:\n\n{code}\n\nQuesto codice scade il {expiresAt, date, full} alle {expiresAt, time, short}.\n\nSe non hai richiesto questa operazione, qualcuno potrebbe avere accesso al tuo account. Cambia immediatamente la password.\n\n– Team {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Conferma la modifica della password di {product_name}",
 		"body": "Ciao {username},\n\nAbbiamo ricevuto una richiesta di modifica della password del tuo account {product_name}.\n\nPer confermare questa modifica, inserisci questo codice nell'app:\n\n{code}\n\nQuesto codice scade alle {expiresAt}.\n\nSe non hai richiesto questa modifica, qualcuno potrebbe avere accesso al tuo account. Cambia immediatamente la password e abilita l'autenticazione a due fattori.\n\n– Team {product_name}"

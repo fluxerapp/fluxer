@@ -59,6 +59,10 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "授權從新的 IP 位址登入",
 		"body": "哈囉 {username}，\n\n我們偵測到您的 {product_name} 帳號有來自新 IP 位址的登入嘗試：\n\nIP 位址：{ipAddress}\n位置：{location}\n\n如果這是您本人操作，請點擊下方連結授權此 IP 位址：\n\n{authUrl}\n\n如果您沒有嘗試登入，請立即變更您的密碼。\n\n此連結在 30 分鐘內有效。\n\n– {product_name} 團隊"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "確認存取您的 {product_name} 備用碼",
+		"body": "哈囉 {username}，\n\n我們收到查看您 {product_name} 帳號備用碼的請求。\n\n若要確認此請求，請在應用程式中輸入此驗證碼：\n\n{code}\n\n此驗證碼將於 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果您沒有要求此操作，可能有人存取了您的帳號。請立即變更您的密碼。\n\n– {product_name} 團隊"
+	},
 	"password_change_verification": {
 		"subject": "確認您的 {product_name} 密碼變更",
 		"body": "哈囉 {username}，\n\n我們收到變更您 {product_name} 帳號密碼的請求。\n\n若要確認此變更，請在應用程式中輸入此驗證碼：\n\n{code}\n\n此驗證碼將於 {expiresAt} 失效。\n\n如果您沒有要求此驗證碼，可能有人存取了您的帳號。請立即變更您的密碼並啟用雙重驗證。\n\n– {product_name} 團隊"

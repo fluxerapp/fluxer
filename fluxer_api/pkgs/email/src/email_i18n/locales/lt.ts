@@ -59,6 +59,10 @@ const EMAIL_I18N_LT_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Leisti prisijungimą iš naujo IP adreso",
 		"body": "Sveikas, {username},\n\nAptikome bandymą prisijungti prie tavo {product_name} paskyros iš naujo IP adreso:\n\nIP adresas: {ipAddress}\nVieta: {location}\n\nJei tai buvai tu, patvirtink šį IP adresą spustelėdamas žemiau esančią nuorodą:\n\n{authUrl}\n\nJei nebandei prisijungti, nedelsdamas pakeisk slaptažodį.\n\nŠi nuoroda galioja 30 minučių.\n\n– {product_name} komanda"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Patvirtink prieigą prie savo {product_name} atsarginių kodų",
+		"body": "Sveikas, {username},\n\nGavome prašymą peržiūrėti tavo {product_name} paskyros atsarginius kodus.\n\nNorėdamas patvirtinti šį prašymą, įvesk šį kodą programėlėje:\n\n{code}\n\nŠis kodas galioja iki {expiresAt, date, full} {expiresAt, time, short}.\n\nJei to neprašei, kažkas gali turėti prieigą prie tavo paskyros. Nedelsdamas pakeisk slaptažodį.\n\n– {product_name} komanda"
+	},
 	"password_change_verification": {
 		"subject": "Patvirtink savo {product_name} slaptažodžio keitimą",
 		"body": "Sveikas, {username},\n\nGavome prašymą pakeisti tavo {product_name} paskyros slaptažodį.\n\nNorėdamas patvirtinti šį pakeitimą, įvesk šį kodą programėlėje:\n\n{code}\n\nŠis kodas galioja iki {expiresAt}.\n\nJei to neprašei, kažkas gali turėti prieigą prie tavo paskyros. Nedelsdamas pakeisk slaptažodį ir įjunk dviejų veiksnių autentifikavimą.\n\n– {product_name} komanda"

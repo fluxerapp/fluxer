@@ -68,6 +68,10 @@ function constantTimeEquals(a: string, b: string): boolean {
 	return timingSafeEqual(bufferA, bufferB);
 }
 
+function normalizeBackupCode(code: string): string {
+	return code.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 export async function verifyMfaCode(ctx: ApiContext, params: VerifyMfaCodeParams): Promise<boolean> {
 	const {userId, mfaSecret, code, allowBackup = false} = params;
 	const {users, cache, config} = ctx.services;
@@ -88,11 +92,16 @@ export async function verifyMfaCode(ctx: ApiContext, params: VerifyMfaCodeParams
 		Logger.error({userId, code: `${code.slice(0, 3)}***`, error}, 'Failed to validate TOTP code');
 	}
 	if (allowBackup) {
-		const backupCodes = await users.listMfaBackupCodes(userId);
-		const backupCode = backupCodes.find((bc) => !bc.consumed && constantTimeEquals(bc.code, code));
-		if (backupCode) {
-			await users.consumeMfaBackupCode(userId, code);
-			return true;
+		const normalizedCode = normalizeBackupCode(code);
+		if (normalizedCode.length > 0) {
+			const backupCodes = await users.listMfaBackupCodes(userId);
+			const backupCode = backupCodes.find(
+				(bc) => !bc.consumed && constantTimeEquals(normalizeBackupCode(bc.code), normalizedCode),
+			);
+			if (backupCode) {
+				await users.consumeMfaBackupCode(userId, backupCode.code);
+				return true;
+			}
 		}
 	}
 	return false;

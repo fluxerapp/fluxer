@@ -59,6 +59,10 @@ const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "새 IP 주소에서 로그인을 승인해 주세요",
 		"body": "안녕하세요, {username}님.\n\n새로운 IP 주소에서 {product_name} 계정으로 로그인 시도가 감지되었어요:\n\nIP 주소: {ipAddress}\n위치: {location}\n\n본인이 시도한 경우, 아래 링크를 클릭하여 이 IP 주소를 승인해 주세요:\n\n{authUrl}\n\n로그인을 시도하지 않으셨다면 즉시 비밀번호를 변경하세요.\n\n이 링크는 30분 동안 유효해요.\n\n– {product_name} 팀"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "{product_name} 백업 코드 액세스를 확인해 주세요",
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 백업 코드를 보려는 요청이 접수되었어요.\n\n이 요청을 확인하려면 앱에 이 코드를 입력해 주세요:\n\n{code}\n\n이 코드는 {expiresAt, date, full} {expiresAt, time, short}에 만료돼요.\n\n요청하지 않으셨다면 누군가 계정에 액세스했을 수 있어요. 즉시 비밀번호를 변경하세요.\n\n– {product_name} 팀"
+	},
 	"password_change_verification": {
 		"subject": "{product_name} 비밀번호 변경을 확인해 주세요",
 		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 비밀번호 변경 요청이 접수되었어요.\n\n이 변경을 확인하려면 앱에 이 코드를 입력해 주세요:\n\n{code}\n\n이 코드는 {expiresAt}에 만료돼요.\n\n요청하지 않으셨다면 누군가 계정에 액세스했을 수 있어요. 즉시 비밀번호를 변경하고 2단계 인증을 활성화하세요.\n\n– {product_name} 팀"

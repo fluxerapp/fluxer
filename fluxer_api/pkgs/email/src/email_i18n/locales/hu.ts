@@ -59,6 +59,10 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Új IP-címről való bejelentkezés engedélyezése",
 		"body": "Szia {username},\n\nBejelentkezési kísérletet észleltünk a {product_name} fiókodba egy új IP-címről:\n\nIP-cím: {ipAddress}\nHelyszín: {location}\n\nHa te voltál, engedélyezd ezt az IP-címet az alábbi linkre kattintva:\n\n{authUrl}\n\nHa nem te próbáltál bejelentkezni, azonnal változtasd meg a jelszavadat.\n\nEz a link 30 percig érvényes.\n\n– {product_name} Csapat"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Erősítsd meg a {product_name} biztonsági kódjaidhoz való hozzáférést",
+		"body": "Szia {username},\n\nKérést kaptunk a {product_name} fiókod biztonsági kódjainak megtekintésére.\n\nA kérés megerősítéséhez add meg ezt a kódot az alkalmazásban:\n\n{code}\n\nEz a kód {expiresAt, date, full} {expiresAt, time, short} időpontban jár le.\n\nHa nem kérted ezt, valaki hozzáférhet a fiókodhoz. Azonnal változtasd meg a jelszavadat.\n\n– {product_name} Csapat"
+	},
 	"password_change_verification": {
 		"subject": "Erősítsd meg a {product_name} jelszócserédet",
 		"body": "Szia {username},\n\nKérést kaptunk a {product_name} fiókod jelszavának megváltoztatására.\n\nA változtatás megerősítéséhez add meg ezt a kódot az alkalmazásban:\n\n{code}\n\nEz a kód {expiresAt}-kor jár le.\n\nHa nem kérted ezt, valaki hozzáférhet a fiókodhoz. Azonnal változtasd meg a jelszavadat, és engedélyezd a kétfaktoros hitelesítést.\n\n– {product_name} Csapat"

@@ -12,6 +12,12 @@ interface BackupCodesResponse {
 	backup_codes: Array<BackupCode>;
 }
 
+interface BackupCodesChallengeResponse {
+	ticket: string;
+	code_expires_at: string;
+	resend_available_at: string | null;
+}
+
 type BackupCodeMode = 'fetch' | 'regenerate';
 
 function backupCodeMode(regenerate: boolean): BackupCodeMode {
@@ -32,6 +38,24 @@ async function requestTotpDisable(code: string): Promise<void> {
 async function requestBackupCodes(regenerate: boolean): Promise<Array<BackupCode>> {
 	const response = await http.post<BackupCodesResponse>(Endpoints.USER_MFA_BACKUP_CODES, {
 		body: {regenerate},
+	});
+	return response.body.backup_codes;
+}
+
+async function requestBackupCodesChallengeStart(): Promise<BackupCodesChallengeResponse> {
+	const response = await http.post<BackupCodesChallengeResponse>(Endpoints.USER_MFA_BACKUP_CODES_CHALLENGE_START, {
+		body: {},
+	});
+	return response.body;
+}
+
+async function requestBackupCodesChallengeResend(ticket: string): Promise<void> {
+	await http.post(Endpoints.USER_MFA_BACKUP_CODES_CHALLENGE_RESEND, {body: {ticket}});
+}
+
+async function requestBackupCodesChallengeVerify(ticket: string, code: string): Promise<Array<BackupCode>> {
+	const response = await http.post<BackupCodesResponse>(Endpoints.USER_MFA_BACKUP_CODES_CHALLENGE_VERIFY, {
+		body: {ticket, code},
 	});
 	return response.body.backup_codes;
 }
@@ -72,5 +96,37 @@ export async function getBackupCodes(regenerate = false): Promise<Array<BackupCo
 		return backupCodes;
 	} catch (error) {
 		rethrowMfaFailure(`Failed to ${mode} MFA backup codes:`, error);
+	}
+}
+
+export async function startBackupCodesChallenge(): Promise<BackupCodesChallengeResponse> {
+	try {
+		logger.debug('Starting MFA backup codes challenge');
+		const challenge = await requestBackupCodesChallengeStart();
+		logger.debug('Successfully started MFA backup codes challenge');
+		return challenge;
+	} catch (error) {
+		rethrowMfaFailure('Failed to start MFA backup codes challenge:', error);
+	}
+}
+
+export async function resendBackupCodesChallengeCode(ticket: string): Promise<void> {
+	try {
+		logger.debug('Resending MFA backup codes challenge code');
+		await requestBackupCodesChallengeResend(ticket);
+		logger.debug('Successfully resent MFA backup codes challenge code');
+	} catch (error) {
+		rethrowMfaFailure('Failed to resend MFA backup codes challenge code:', error);
+	}
+}
+
+export async function verifyBackupCodesChallenge(ticket: string, code: string): Promise<Array<BackupCode>> {
+	try {
+		logger.debug('Verifying MFA backup codes challenge code');
+		const backupCodes = await requestBackupCodesChallengeVerify(ticket, code);
+		logger.debug('Successfully verified MFA backup codes challenge code');
+		return backupCodes;
+	} catch (error) {
+		rethrowMfaFailure('Failed to verify MFA backup codes challenge code:', error);
 	}
 }

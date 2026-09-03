@@ -59,6 +59,10 @@ const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Otorisasi masuk dari alamat IP barumu",
 		"body": "Halo {username},\n\nKami mendeteksi upaya masuk ke akun {product_name}mu dari alamat IP baru:\n\nAlamat IP: {ipAddress}\nLokasi: {location}\n\nKalau ini kamu, otorisasi alamat IP ini dengan mengeklik tautan di bawah ini:\n\n{authUrl}\n\nJika kamu tidak mencoba masuk, segera ubah kata sandimu.\n\nTautan ini berlaku selama 30 menit.\n\n– Tim {product_name}"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Konfirmasi akses ke kode cadangan {product_name}mu",
+		"body": "Halo {username},\n\nKami menerima permintaan untuk melihat kode cadangan di akun {product_name}mu.\n\nUntuk mengonfirmasi permintaan ini, masukkan kode ini di aplikasi:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt, date, full} pukul {expiresAt, time, short}.\n\nJika kamu tidak meminta ini, seseorang mungkin punya akses ke akunmu. Ubah kata sandimu segera.\n\n– Tim {product_name}"
+	},
 	"password_change_verification": {
 		"subject": "Konfirmasi perubahan kata sandi {product_name}mu",
 		"body": "Halo {username},\n\nKami menerima permintaan untuk mengubah kata sandi di akun {product_name}mu.\n\nUntuk mengonfirmasi perubahan ini, masukkan kode ini di aplikasi:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt}.\n\nJika kamu tidak meminta ini, seseorang mungkin punya akses ke akunmu. Ubah kata sandimu segera dan aktifkan autentikasi dua faktor.\n\n– Tim {product_name}"

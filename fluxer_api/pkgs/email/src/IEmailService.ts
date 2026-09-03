@@ -92,6 +92,12 @@ export interface IEmailService {
 		code: string,
 		locale?: string | null,
 	): Promise<boolean>;
+	sendMfaBackupCodesVerification(
+		email: string,
+		username: string,
+		code: string,
+		locale?: string | null,
+	): Promise<boolean>;
 	sendDonationMagicLink(
 		email: string,
 		token: string,

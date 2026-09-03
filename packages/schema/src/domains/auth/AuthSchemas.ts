@@ -382,6 +382,26 @@ export const MfaBackupCodesResponse = z.object({
 
 export type MfaBackupCodesResponse = z.infer<typeof MfaBackupCodesResponse>;
 
+export const MfaBackupCodesChallengeStartResponse = z.object({
+	ticket: z.string().describe('Ticket for backup codes challenge actions'),
+	code_expires_at: z.string().describe('ISO8601 timestamp when the verification code expires'),
+	resend_available_at: z.string().describe('ISO8601 timestamp when the code can be resent'),
+});
+
+export type MfaBackupCodesChallengeStartResponse = z.infer<typeof MfaBackupCodesChallengeStartResponse>;
+
+export const MfaBackupCodesChallengeResendRequest = z.object({
+	ticket: createStringType().describe('Backup codes challenge ticket identifier'),
+});
+
+export type MfaBackupCodesChallengeResendRequest = z.infer<typeof MfaBackupCodesChallengeResendRequest>;
+
+export const MfaBackupCodesChallengeVerifyRequest = MfaBackupCodesChallengeResendRequest.extend({
+	code: createStringType().describe('Verification code sent to the email address'),
+});
+
+export type MfaBackupCodesChallengeVerifyRequest = z.infer<typeof MfaBackupCodesChallengeVerifyRequest>;
+
 export const PhoneSendVerificationRequest = z.object({
 	phone: PhoneNumberType.describe('Phone number to send verification code'),
 	channel: z

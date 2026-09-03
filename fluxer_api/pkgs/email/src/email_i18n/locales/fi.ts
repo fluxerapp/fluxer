@@ -59,6 +59,10 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Hyväksy kirjautuminen uudesta IP-osoitteesta",
 		"body": "Hei {username},\n\nHavaitsimme kirjautumisyrityksen {product_name}-tilillesi uudesta IP-osoitteesta:\n\nIP-osoite: {ipAddress}\nSijainti: {location}\n\nJos tämä olit sinä, valtuuta tämä IP-osoite napsauttamalla alla olevaa linkkiä:\n\n{authUrl}\n\nJos et yrittänyt kirjautua sisään, vaihda salasanasi välittömästi.\n\nTämä linkki on voimassa 30 minuuttia.\n\n– {product_name}-tiimi"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Vahvista pääsy {product_name}-tilisi varmuuskoodeihin",
+		"body": "Hei {username},\n\nSaimme pyynnön tarkastella varmuuskoodeja {product_name}-tililläsi.\n\nVahvistaaksesi tämän pyynnön, syötä tämä koodi sovellukseen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi.\n\n– {product_name}-tiimi"
+	},
 	"password_change_verification": {
 		"subject": "Vahvista salasanan muutos {product_name}-tilillä",
 		"body": "Hei {username},\n\nSaimme pyynnön muuttaa salasanaa {product_name}-tililläsi.\n\nVahvistaaksesi tämän muutoksen, syötä tämä koodi sovellukseen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi ja ota käyttöön kaksivaiheinen todennus.\n\n– {product_name}-tiimi"

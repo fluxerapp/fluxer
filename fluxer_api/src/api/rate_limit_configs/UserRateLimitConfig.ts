@@ -192,6 +192,18 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:mfa:backup_codes',
 		config: {limit: 6, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_START: {
+		bucket: 'user:mfa:backup_codes_challenge:start',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_RESEND: {
+		bucket: 'user:mfa:backup_codes_challenge:resend',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_VERIFY: {
+		bucket: 'user:mfa:backup_codes_challenge:verify',
+		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	USER_PUSH_SUBSCRIBE: {
 		bucket: 'user:push:subscribe',
 		config: {limit: 20, windowMs: ms('1 minute')},

@@ -59,6 +59,10 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Auktorisera inloggning från en ny IP-adress",
 		"body": "Hej {username},\n\nVi upptäckte ett inloggningsförsök till ditt {product_name}-konto från en ny IP-adress:\n\nIP-adress: {ipAddress}\nPlats: {location}\n\nOm detta var du, godkänn denna IP-adress genom att klicka på länken nedan:\n\n{authUrl}\n\nOm du inte försökte logga in, ändra ditt lösenord omedelbart.\n\nDenna länk är giltig i 30 minuter.\n\n– {product_name} Team"
 	},
+	"mfa_backup_codes_view": {
+		"subject": "Bekräfta åtkomst till dina {product_name}-reservkoder",
+		"body": "Hej {username},\n\nVi har mottagit en begäran om att visa reservkoderna för ditt {product_name}-konto.\n\nFör att bekräfta denna begäran, ange denna kod i appen:\n\n{code}\n\nDenna kod upphör att gälla {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nOm du inte begärde detta kan någon ha åtkomst till ditt konto. Ändra ditt lösenord omedelbart.\n\n– {product_name} Team"
+	},
 	"password_change_verification": {
 		"subject": "Bekräfta din {product_name}-lösenordsändring",
 		"body": "Hej {username},\n\nVi har mottagit en begäran om att ändra lösenordet för ditt {product_name}-konto.\n\nFör att bekräfta denna ändring, ange denna kod i appen:\n\n{code}\n\nDenna kod upphör att gälla {expiresAt}.\n\nOm du inte begärde detta kan någon ha åtkomst till ditt konto. Ändra ditt lösenord omedelbart och aktivera tvåfaktorsautentisering.\n\n– {product_name} Team"

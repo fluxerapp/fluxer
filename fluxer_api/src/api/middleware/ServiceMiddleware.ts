@@ -71,6 +71,7 @@ import {AgeVerificationService} from '../stripe/services/AgeVerificationService'
 import type {HonoEnv} from '../types/HonoEnv';
 import type {UserRepository} from '../user/repositories/UserRepository';
 import {EmailChangeService} from '../user/services/EmailChangeService';
+import {MfaBackupCodesChallengeService} from '../user/services/MfaBackupCodesChallengeService';
 import {PasswordChangeService} from '../user/services/PasswordChangeService';
 import {UserAccountRequestService} from '../user/services/UserAccountRequestService';
 import {UserAuthRequestService} from '../user/services/UserAuthRequestService';
@@ -363,6 +364,7 @@ class RequestServices implements RequestScopedServices {
 	private cachedFavoriteMemeRequestService: FavoriteMemeRequestService | undefined;
 	private cachedSingleCommunityService: SingleCommunityService | undefined;
 	private cachedEmailChangeService: EmailChangeService | undefined;
+	private cachedMfaBackupCodesChallengeService: MfaBackupCodesChallengeService | undefined;
 	private cachedPasswordChangeService: PasswordChangeService | undefined;
 	private cachedInviteRequestService: InviteRequestService | undefined;
 	private cachedOAuth2Service: OAuth2Service | undefined;
@@ -797,6 +799,11 @@ class RequestServices implements RequestScopedServices {
 	get emailChangeService(): EmailChangeService {
 		this.cachedEmailChangeService ??= new EmailChangeService(this.context, getEmailChangeRepository());
 		return this.cachedEmailChangeService;
+	}
+
+	get mfaBackupCodesChallengeService(): MfaBackupCodesChallengeService {
+		this.cachedMfaBackupCodesChallengeService ??= new MfaBackupCodesChallengeService(this.context);
+		return this.cachedMfaBackupCodesChallengeService;
 	}
 
 	get passwordChangeService(): PasswordChangeService {
