@@ -71,8 +71,7 @@ normalize_buffer(_) ->
 -spec deque_to_list(map()) -> [term()].
 deque_to_list(Buffer) ->
     try limited_deque:to_list(eqwalizer:dynamic_cast(Buffer)) of
-        List when is_list(List) -> List;
-        _ -> []
+        List -> List
     catch
         error:_Reason -> [];
         exit:_Reason -> []
@@ -109,14 +108,14 @@ restored_deque_bytes(Raw, Buffer) ->
 replay_buffer_bytes(Buffer) ->
     WordSize = erlang:system_info(wordsize),
     lists:foldl(
-        fun(Event, Acc) -> Acc + erts_debug:flat_size(Event) * WordSize end,
+        fun(Event, Acc) -> trunc(Acc + erts_debug:flat_size(Event) * WordSize) end,
         0,
         Buffer
     ).
 
 -spec replay_payload_bytes([map()]) -> non_neg_integer().
 replay_payload_bytes(Buffer) ->
-    lists:foldl(fun(Event, Acc) -> Acc + entry_payload_bytes(Event) end, 0, Buffer).
+    lists:foldl(fun(Event, Acc) -> trunc(Acc + entry_payload_bytes(Event)) end, 0, Buffer).
 
 -spec entry_payload_bytes(term()) -> non_neg_integer().
 entry_payload_bytes(#{data := {pre_encoded, Payload}}) when is_binary(Payload) ->

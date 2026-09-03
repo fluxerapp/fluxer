@@ -287,8 +287,7 @@ expire_blocked_ids() ->
     Now = erlang:system_time(second),
     MatchSpec = [{{'_', '_', '$1'}, [{is_integer, '$1'}, {'=<', '$1', Now}], [true]}],
     try ets:select_delete(?BLOCKED_IDS, MatchSpec) of
-        Deleted when is_integer(Deleted) -> Deleted;
-        _ -> 0
+        Deleted -> Deleted
     catch
         error:badarg -> 0
     end.

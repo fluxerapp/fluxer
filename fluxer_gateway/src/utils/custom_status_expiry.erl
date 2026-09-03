@@ -81,8 +81,7 @@ expires_at_ms(_Value) ->
 -spec parse_rfc3339(term()) -> offset().
 parse_rfc3339(Chars) ->
     try calendar:rfc3339_to_system_time(Chars, [{unit, millisecond}]) of
-        Ms when is_integer(Ms) -> {ok, Ms};
-        _Other -> none
+        Ms -> {ok, Ms}
     catch
         _Class:_Reason -> none
     end.

@@ -375,7 +375,7 @@ counter_table_status() ->
 
 -spec queue_backlog_lost(term(), non_neg_integer()) -> counter_value().
 queue_backlog_lost(Enqueued, Queued) when is_integer(Enqueued) ->
-    max(0, Enqueued - dequeued_total() - Queued);
+    max(0, trunc(Enqueued - dequeued_total() - Queued));
 queue_backlog_lost(_Enqueued, _Queued) ->
     unavailable.
 

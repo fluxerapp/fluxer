@@ -334,9 +334,8 @@ truncate_preview(Content) ->
 valid_utf8_prefix(Content) ->
     case unicode:characters_to_binary(Content, utf8, utf8) of
         Valid when is_binary(Valid) -> Valid;
-        {incomplete, Valid, _Rest} when is_binary(Valid) -> Valid;
-        {error, Valid, _Rest} when is_binary(Valid) -> Valid;
-        _ -> <<>>
+        {incomplete, Valid, _Rest} -> Valid;
+        {error, Valid, _Rest} -> Valid
     end.
 
 -spec build_content_fallback_preview(map()) -> binary().

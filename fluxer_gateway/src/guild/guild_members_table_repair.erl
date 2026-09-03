@@ -59,7 +59,7 @@ repair_unhealthy(State) ->
 repair_pass(State) ->
     case maps:get(?REPAIR_KEY, State, undefined) of
         #{tab := Tab, ticks := Ticks} when is_reference(Tab), is_integer(Ticks) ->
-            continue_repair(Tab, Ticks, State);
+            continue_repair(eqwalizer:dynamic_cast(Tab), Ticks, State);
         _ ->
             start_repair(maps:remove(?REPAIR_KEY, State))
     end.
@@ -90,7 +90,7 @@ refuse_oversized(Size, State) ->
 -spec create_staging_table(guild_state()) -> guild_state().
 create_staging_table(State) ->
     case new_staging_table() of
-        Tab when is_reference(Tab) -> continue_repair(Tab, 0, State);
+        Tab when is_reference(Tab) -> continue_repair(eqwalizer:dynamic_cast(Tab), 0, State);
         undefined -> record_start_failure(State)
     end.
 
@@ -221,9 +221,12 @@ collect_extra_iter(Key, Tab, MemberMap, Budget, Acc) ->
 -spec release_pending_repair(guild_state()) -> guild_state().
 release_pending_repair(State) ->
     case maps:get(?REPAIR_KEY, State, undefined) of
-        undefined -> State;
-        #{tab := Tab} when is_reference(Tab) -> discard_staging_table(Tab, State);
-        _ -> maps:remove(?REPAIR_KEY, State)
+        undefined ->
+            State;
+        #{tab := Tab} when is_reference(Tab) ->
+            discard_staging_table(eqwalizer:dynamic_cast(Tab), State);
+        _ ->
+            maps:remove(?REPAIR_KEY, State)
     end.
 
 -spec discard_staging_table(ets:tid(), guild_state()) -> guild_state().

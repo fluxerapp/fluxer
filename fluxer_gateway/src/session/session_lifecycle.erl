@@ -301,7 +301,7 @@ ack_state(State, AckedSeq, NewBuffer, NewBytes) ->
 
 -spec buffer_payload_bytes(term()) -> non_neg_integer().
 buffer_payload_bytes(Buffer) when is_list(Buffer) ->
-    lists:foldl(fun(Entry, Acc) -> Acc + entry_payload_bytes(Entry) end, 0, Buffer);
+    lists:foldl(fun(Entry, Acc) -> trunc(Acc + entry_payload_bytes(Entry)) end, 0, Buffer);
 buffer_payload_bytes(Buffer) ->
     try limited_deque:to_list(Buffer) of
         Entries -> buffer_payload_bytes(Entries)
@@ -642,7 +642,7 @@ trim_transfer_list([Dropped | Rest], Bytes, AckSeq) ->
 
 -spec transfer_payload_bytes([term()]) -> non_neg_integer().
 transfer_payload_bytes(Entries) ->
-    lists:foldl(fun(Entry, Acc) -> Acc + entry_payload_bytes(Entry) end, 0, Entries).
+    lists:foldl(fun(Entry, Acc) -> trunc(Acc + entry_payload_bytes(Entry)) end, 0, Entries).
 
 -spec entry_payload_bytes(term()) -> non_neg_integer().
 entry_payload_bytes(#{data := {pre_encoded, Payload}}) when is_binary(Payload) ->

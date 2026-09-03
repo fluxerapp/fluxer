@@ -543,7 +543,7 @@ abandon_delivery_workers([], Stranded) ->
     Stranded;
 abandon_delivery_workers([{_Pid, {Ref, Left}} | Rest], Stranded) ->
     _ = erlang:demonitor(Ref, [flush]),
-    abandon_delivery_workers(Rest, Stranded + Left).
+    abandon_delivery_workers(Rest, trunc(Stranded + Left)).
 
 -spec delivery_ids(tuple()) -> {integer(), integer()}.
 delivery_ids(Ctx) ->

@@ -190,7 +190,9 @@ spawn_push(FinalData, GuildId, UpdatedState) ->
     Data = maps:get(data, UpdatedState, #{}),
     case maps:get(members_ets, Data, undefined) of
         MembersTab when is_reference(MembersTab) ->
-            CompactState = compact_push_state(MembersTab, Data, GuildId, UpdatedState),
+            CompactState = compact_push_state(
+                eqwalizer:dynamic_cast(MembersTab), Data, GuildId, UpdatedState
+            ),
             spawn_compact_push(FinalData, GuildId, CompactState);
         _ ->
             missing_members_table(FinalData, GuildId, UpdatedState)
@@ -344,7 +346,7 @@ send_compact_push_notifications(MessageData, GuildId, State) ->
 -spec scan_and_send_compact_push(event_data(), guild_id(), integer(), guild_state()) -> ok.
 scan_and_send_compact_push(MessageData, GuildId, ChannelId, State) ->
     Context = compact_scan_context(MessageData, ChannelId, State),
-    MembersTab = maps:get(members_ets, State),
+    MembersTab = eqwalizer:dynamic_cast(maps:get(members_ets, State)),
     case scan_push_members(MembersTab, Context, State) of
         {ok, #{eligible_user_ids := []}} ->
             ok;
@@ -809,8 +811,7 @@ actively_engaged(UserId, Presences) ->
 -spec lookup_presence_safe(user_id(), term()) -> map() | undefined.
 lookup_presence_safe(UserId, Presences) ->
     try guild_state_member:lookup_presence(Presences, UserId) of
-        Presence when is_map(Presence) -> Presence;
-        _ -> undefined
+        Presence -> Presence
     catch
         error:badarg -> undefined
     end.

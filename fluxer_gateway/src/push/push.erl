@@ -529,10 +529,8 @@ fetch_blocked_ids_chunk(UserIds) ->
         <<"user_ids">> => [integer_to_binary(UserId) || UserId <- UserIds]
     },
     case rpc_client:call(Request) of
-        {ok, Data} when is_map(Data) ->
+        {ok, Data} ->
             cache_blocked_ids_response(UserIds, Data);
-        {ok, _Data} ->
-            fetch_blocked_ids_failed(malformed_response, length(UserIds));
         {error, Reason} ->
             fetch_blocked_ids_failed(Reason, length(UserIds))
     end.

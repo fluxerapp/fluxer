@@ -162,8 +162,6 @@ is_channel_visible(Channel, UserId, Member, State) ->
 -spec dispatch_bulk_to_pid(
     pid(), event(), event_data(), [map()], guild_id(), non_neg_integer()
 ) -> non_neg_integer().
-dispatch_bulk_to_pid(_, _, _, [], _GuildId, Acc) ->
-    Acc;
 dispatch_bulk_to_pid(Pid, Event, FinalData, FilteredChannels, GuildId, Acc) when is_pid(Pid) ->
     EncodedData = encode_bulk_payload(FinalData, FilteredChannels),
     try
