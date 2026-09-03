@@ -44,9 +44,14 @@ source edits in this package.
    OpenH264 software profile.
 
 8. **Media publishing defaults** (`src/room/defaults.ts`, `src/room/utils.ts`, `src/room/track/options.ts`)
-   Prefers AV1, then HEVC/H.265, H.264, VP9, and VP8 according to actual
-   sender capabilities; pairs advanced codecs with H.264 backup simulcast; and
+   Falls back to H.264, then VP9, VP8, AV1, and HEVC/H.265 according to actual
+   sender capabilities, pairs advanced codecs with H.264 backup simulcast, and
    uses maintain-resolution screen-share defaults with a 4K60-ready bitrate cap.
+   The order puts AV1 and HEVC last because both are opt-in in Fluxer, so a
+   fallback inside `publishTrack` must not land on a codec the user did not
+   enable. Fluxer picks the codec itself before publishing, so this list only
+   applies when the client overrides the request, such as the reconnect
+   republish that runs outside Fluxer's own flows.
 
 9. **High-fidelity Opus SDP munging** (`src/room/PCTransport.ts`)
    Forces Opus RED/FEC, stereo signaling, 10 ms packet time, no DTX, and a

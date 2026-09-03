@@ -6,7 +6,7 @@ import DefaultReconnectPolicy from './DefaultReconnectPolicy.ts';
 import type {AudioCaptureOptions, TrackPublishDefaults, VideoCaptureOptions} from './track/options.ts';
 import {AudioPresets, BackupCodecPolicy, ScreenSharePresets, VideoPresets} from './track/options.ts';
 
-export const defaultVideoCodec = 'av1';
+export const defaultVideoCodec = 'h264';
 
 export const publishDefaults: TrackPublishDefaults = {
 	audioPreset: AudioPresets.music,

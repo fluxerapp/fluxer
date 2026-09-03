@@ -124,6 +124,23 @@ describe('VoiceScreenShareStateMachine', () => {
 		expect(snapshot.context.publicationReplaceInFlight).toBe(false);
 	});
 
+	it('lets a pending start or restore raise and drop the replace lock around a codec correction', () => {
+		let snapshot = createVoiceScreenShareSnapshot();
+		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.publicationReplace.set', inFlight: true});
+		expect(snapshot.context.publicationReplaceInFlight).toBe(false);
+		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.start', sourceType: 'display'});
+		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.publicationReplace.set', inFlight: true});
+		expect(getVoiceScreenShareStateValue(snapshot)).toBe('pending');
+		expect(snapshot.context.pendingOperation).toBe('starting');
+		expect(snapshot.context.publicationReplaceInFlight).toBe(true);
+		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.publicationReplace.set', inFlight: false});
+		expect(snapshot.context.publicationReplaceInFlight).toBe(false);
+		snapshot = transitionVoiceScreenShareSnapshot(snapshot, {type: 'share.publicationReplace.set', inFlight: true});
+		snapshot = resolveActive(snapshot);
+		expect(getVoiceScreenShareStateValue(snapshot)).toBe('active');
+		expect(snapshot.context.publicationReplaceInFlight).toBe(false);
+	});
+
 	it('tracks codec readiness through the xstate context while starting', () => {
 		let snapshot = createVoiceScreenShareSnapshot();
 		expect(snapshot.context.codecReadiness).toBe('idle');

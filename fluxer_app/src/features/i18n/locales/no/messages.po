@@ -450,7 +450,7 @@ msgstr "{count, plural, one {Vis (# linje)} other {Vis (# linjer)}}"
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Vis flere (# rad)} other {Vis flere (# rader)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:310
+#: src/features/voice/components/VoiceParticipantTile.tsx:311
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Vis # annen enhet} other {Vis # andre enheter}}"
 
@@ -471,7 +471,7 @@ msgstr "{count, plural, one {I samtale} other {# i samtale}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Bli med i videosamtale (# deltaker)} other {Bli med i videosamtale (# deltakere)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:630
+#: src/features/voice/components/VoiceParticipantTile.tsx:637
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Fortsett å se # strøm og legg til denne} other {Fortsett å se # strømmer og legg til denne}}"
 
@@ -7466,7 +7466,7 @@ msgstr "Skjul kanalemne"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
-#: src/features/voice/components/VoiceParticipantTile.tsx:172
+#: src/features/voice/components/VoiceParticipantTile.tsx:173
 msgid "Collapse devices"
 msgstr "Skjul enheter"
 
@@ -26996,7 +26996,7 @@ msgid "Screen share encoder controls"
 msgstr "Kontroller for skjermdelingsenkoder"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:99
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Skjermdelingen ble avsluttet"
@@ -31585,7 +31585,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Den oppgitte redirect_uri må bruke HTTP eller HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:104
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:105
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Kilden for skjermdelingen sluttet å sende video, så skjermdelingen ble stoppet."
@@ -33868,7 +33868,7 @@ msgstr "ukjent bruker"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
-#: src/features/voice/components/VoiceParticipantTile.tsx:168
+#: src/features/voice/components/VoiceParticipantTile.tsx:169
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Ukjent bruker"
@@ -38243,6 +38243,12 @@ msgstr "din region"
 msgid "Your registration needs an extra anti-spam check before you can continue."
 msgstr "Registreringen din krever en ekstra antispam-sjekk før du kan fortsette."
 
+#. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:111
+msgctxt "screen-share"
+msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
+msgstr "Selve skjermdelingen din kunne ikke publiseres med en kompatibel videokodek, så den ble stoppet. Prøv å dele igjen."
+
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts:66
 msgid "Your stream is still live"
@@ -38322,7 +38328,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Din tilpassede URL er nå satt til {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:118
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Videokoderen din sluttet å kode bilder, så skjermdelingen ble stoppet. Prøv å dele igjen."

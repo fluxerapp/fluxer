@@ -7,6 +7,7 @@ import {
 	type CodecPreference,
 	type CodecSupportInfo,
 	getCodecCapabilityReport,
+	isVideoCodecAllowedForPublish,
 	resolveEffectiveScreenShareEncoderMode,
 	type ScreenShareEncoderMode,
 	selectNativeScreenCaptureScreenShareCodec,
@@ -184,12 +185,7 @@ export function getScreenShareCodecPreferenceOrder(
 		encoderMode === 'software' ? SOFTWARE_CODEC_PREFERENCE : getHardwareFirstScreenShareCodecPreferenceOrder();
 	const order =
 		preference !== 'auto' ? [preference, ...automaticOrder.filter((codec) => codec !== preference)] : automaticOrder;
-	const filtered = order.filter(
-		(codec) =>
-			(codec !== 'av1' || VoiceSettings.getScreenShareAv1OptIn()) &&
-			(codec !== 'h265' || VoiceSettings.getScreenShareHevcOptIn()),
-	);
-	return filtered;
+	return order.filter((codec) => isVideoCodecAllowedForPublish(codec));
 }
 
 function getHardwareFirstScreenShareCodecPreferenceOrder(): ReadonlyArray<VideoCodec> {
@@ -209,14 +205,15 @@ function getLocalEncodeCapabilities(): Record<VideoCodec, boolean> {
 		(codec) => report[codec].supported && report[codec].hardwareAccelerated === 'hardware',
 	);
 	const advertise = (codec: VideoCodec): boolean =>
-		(pinned === codec && report[codec].supported) ||
-		shouldAdvertiseVideoEncode(codec, report[codec], encoderMode, hardwareEncodeAvailable, report);
+		isVideoCodecAllowedForPublish(codec) &&
+		((pinned === codec && report[codec].supported) ||
+			shouldAdvertiseVideoEncode(codec, report[codec], encoderMode, hardwareEncodeAvailable, report));
 	return {
 		av1: advertise('av1'),
 		h265: advertise('h265'),
 		h264: advertise('h264'),
 		vp9: advertise('vp9'),
-		vp8: report.vp8.supported,
+		vp8: report.vp8.supported && isVideoCodecAllowedForPublish('vp8'),
 	};
 }
 

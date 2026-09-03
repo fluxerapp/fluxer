@@ -8,12 +8,15 @@ let av1OptIn = false;
 let hevcOptIn = false;
 let desktop = true;
 let gpuReport: HardwareEncodeReport | null = null;
+let cameraPreference = 'auto';
+let openH264Status: {enabled: boolean; downloaded: boolean} | null = null;
 let codecCapabilityInfo: MockInstance<(...args: Array<unknown>) => void>;
 
 vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 	default: {
 		getScreenShareAv1OptIn: () => av1OptIn,
 		getScreenShareHevcOptIn: () => hevcOptIn,
+		getPreferredVideoCodec: () => cameraPreference,
 	},
 }));
 
@@ -39,29 +42,34 @@ vi.mock('@app/features/voice/utils/NativeHardwareEncoderCapabilities', () => ({
 }));
 
 vi.mock('@app/features/voice/utils/OpenH264Status', () => ({
-	getOpenH264StatusSync: () => null,
+	getOpenH264StatusSync: () => openH264Status,
 	resetOpenH264Status: () => undefined,
 }));
+
+const ALL_SENDER_CODECS = ['video/VP8', 'video/VP9', 'video/H264', 'video/H265', 'video/AV1'];
+let senderCodecs = ALL_SENDER_CODECS;
 
 Object.defineProperty(globalThis, 'RTCRtpSender', {
 	configurable: true,
 	writable: true,
 	value: {
-		getCapabilities: () => ({
-			codecs: [
-				{mimeType: 'video/VP8'},
-				{mimeType: 'video/VP9'},
-				{mimeType: 'video/H264'},
-				{mimeType: 'video/H265'},
-				{mimeType: 'video/AV1'},
-			],
-		}),
+		getCapabilities: () => ({codecs: senderCodecs.map((mimeType) => ({mimeType}))}),
 	},
 });
 
-const {getCodecCapabilityReport, resetCachedCodecCapabilities, selectAutomaticScreenShareCodec} = await import(
-	'./CodecCapabilityDetector'
-);
+const {
+	buildCameraPublishOptions,
+	findVideoPublishCodecPolicyViolation,
+	getAllowedVideoPublishCodecs,
+	getCodecCapabilityReport,
+	getRoomVideoPublishDefaults,
+	isVideoCodecAllowedForPublish,
+	markScreenShareCodecEncodeRuntimeFailure,
+	resetCachedCodecCapabilities,
+	resolveScreenShareEncoderVerificationAction,
+	resolveVideoPublishCodecPolicy,
+	selectAutomaticScreenShareCodec,
+} = await import('./CodecCapabilityDetector');
 
 const ALL_SOFTWARE: HardwareEncodeReport = {
 	av1: 'software',
@@ -156,5 +164,127 @@ describe('screen-share AV1/HEVC opt-in gate', () => {
 		expect(getCodecCapabilityReport().av1.supported).toBe(true);
 		hevcOptIn = true;
 		expect(getCodecCapabilityReport().h265.supported).toBe(true);
+	});
+});
+
+describe('video publish codec policy', () => {
+	beforeEach(() => {
+		av1OptIn = false;
+		hevcOptIn = false;
+		desktop = true;
+		gpuReport = null;
+		cameraPreference = 'auto';
+		openH264Status = null;
+		senderCodecs = ALL_SENDER_CODECS;
+		resetCachedCodecCapabilities();
+	});
+
+	it('keeps AV1 and HEVC out of the allowed set while the opt-ins are off', () => {
+		expect(getAllowedVideoPublishCodecs()).toEqual(['vp8', 'h264', 'vp9']);
+		expect(isVideoCodecAllowedForPublish('av1')).toBe(false);
+		expect(isVideoCodecAllowedForPublish('h265')).toBe(false);
+	});
+
+	it('admits AV1 and HEVC only once their opt-ins are on', () => {
+		av1OptIn = true;
+		expect(getAllowedVideoPublishCodecs()).toEqual(['vp8', 'h264', 'vp9', 'av1']);
+		hevcOptIn = true;
+		expect(getAllowedVideoPublishCodecs()).toEqual(['vp8', 'h264', 'vp9', 'av1', 'h265']);
+		expect(resolveVideoPublishCodecPolicy('av1').primary).toBe('av1');
+		expect(resolveVideoPublishCodecPolicy('h265').primary).toBe('h265');
+	});
+
+	it('substitutes an opted-out request with the first compatible codec and never AV1 or HEVC', () => {
+		expect(resolveVideoPublishCodecPolicy('av1')).toMatchObject({primary: 'h264', backupCodec: false});
+		expect(resolveVideoPublishCodecPolicy('h265')).toMatchObject({primary: 'h264', backupCodec: false});
+		expect(resolveVideoPublishCodecPolicy('vp9')).toMatchObject({primary: 'vp9', backupCodec: {codec: 'h264'}});
+		expect(resolveVideoPublishCodecPolicy('h264')).toMatchObject({primary: 'h264', backupCodec: false});
+	});
+
+	it('drops H.264 from the allowed set when the sender cannot encode it even though OpenH264 claims it is ready', () => {
+		senderCodecs = ALL_SENDER_CODECS.filter((mimeType) => mimeType !== 'video/H264');
+		openH264Status = {enabled: true, downloaded: true};
+		expect(getCodecCapabilityReport().h264.supported).toBe(true);
+		expect(isVideoCodecAllowedForPublish('h264')).toBe(false);
+		expect(resolveVideoPublishCodecPolicy('h264')).toMatchObject({primary: 'vp9', backupCodec: false});
+		expect(getRoomVideoPublishDefaults()).toEqual({videoCodec: 'vp9', backupCodec: false});
+	});
+
+	it('drops a codec from the allowed set once it failed to encode at runtime', () => {
+		expect(markScreenShareCodecEncodeRuntimeFailure('vp9', 'test')).toBe(true);
+		expect(getAllowedVideoPublishCodecs()).toEqual(['vp8', 'h264']);
+		expect(resolveVideoPublishCodecPolicy('vp9').primary).toBe('h264');
+	});
+
+	it('hands the camera an explicit allowed codec for every preference while the opt-ins are off', () => {
+		expect(buildCameraPublishOptions()).toEqual({
+			videoCodec: 'vp9',
+			backupCodec: {codec: 'h264'},
+			backupCodecPolicy: 1,
+		});
+		for (const preference of ['auto', 'vp8', 'vp9', 'h264', 'av1', 'h265']) {
+			cameraPreference = preference;
+			const options = buildCameraPublishOptions();
+			expect(options.videoCodec).toBeDefined();
+			expect(getAllowedVideoPublishCodecs()).toContain(options.videoCodec);
+			expect(options.videoCodec).not.toBe('av1');
+			expect(options.videoCodec).not.toBe('h265');
+		}
+		cameraPreference = 'av1';
+		expect(buildCameraPublishOptions().videoCodec).toBe('h264');
+		av1OptIn = true;
+		expect(buildCameraPublishOptions().videoCodec).toBe('av1');
+	});
+
+	it('derives the room publish defaults from the same policy', () => {
+		expect(getRoomVideoPublishDefaults()).toEqual({videoCodec: 'vp9', backupCodec: {codec: 'h264'}});
+		cameraPreference = 'av1';
+		expect(getRoomVideoPublishDefaults().videoCodec).toBe('h264');
+	});
+
+	it('flags a negotiated codec outside the policy with a bounded alternative', () => {
+		expect(findVideoPublishCodecPolicyViolation('h264', 'av1')).toEqual({
+			requested: 'h264',
+			negotiated: 'av1',
+			alternative: 'vp9',
+		});
+		expect(findVideoPublishCodecPolicyViolation('h264', 'h264')).toBeNull();
+		expect(findVideoPublishCodecPolicyViolation('h264', 'vp9')).toBeNull();
+		expect(findVideoPublishCodecPolicyViolation('h264', undefined)).toBeNull();
+	});
+
+	it('no longer blacklists the requested codec when the publisher negotiated a different one', () => {
+		expect(
+			resolveScreenShareEncoderVerificationAction({reason: 'codec-mismatch', codec: 'h264', activeCodecs: ['av1']}),
+		).toEqual({kind: 'correct-negotiated', requested: 'h264', negotiated: ['av1'], alternative: 'vp9'});
+		expect(isVideoCodecAllowedForPublish('h264')).toBe(true);
+		expect(getCodecCapabilityReport().h264.supported).toBe(true);
+		expect(
+			resolveScreenShareEncoderVerificationAction({reason: 'codec-mismatch', codec: 'h264', activeCodecs: ['vp9']}),
+		).toEqual({kind: 'accept-negotiated', requested: 'h264', negotiated: ['vp9']});
+		expect(isVideoCodecAllowedForPublish('h264')).toBe(true);
+	});
+
+	it('still blacklists a codec whose encoder stalled, and only warns about it once', () => {
+		expect(resolveScreenShareEncoderVerificationAction({reason: 'stalled', codec: 'h264'})).toEqual({
+			kind: 'recover-stalled',
+			codec: 'h264',
+		});
+		expect(isVideoCodecAllowedForPublish('h264')).toBe(false);
+		expect(getCodecCapabilityReport().h264).toMatchObject({supported: false, reason: 'runtime-failed'});
+		expect(resolveScreenShareEncoderVerificationAction({reason: 'stalled', codec: 'h264'})).toEqual({
+			kind: 'ignore-repeated-stall',
+			codec: 'h264',
+		});
+	});
+
+	it('keeps recovering from a vp8 stall because vp8 is never blacklisted', () => {
+		for (let attempt = 0; attempt < 2; attempt++) {
+			expect(resolveScreenShareEncoderVerificationAction({reason: 'stalled', codec: 'vp8'})).toEqual({
+				kind: 'recover-stalled',
+				codec: 'vp8',
+			});
+			expect(isVideoCodecAllowedForPublish('vp8')).toBe(true);
+		}
 	});
 });

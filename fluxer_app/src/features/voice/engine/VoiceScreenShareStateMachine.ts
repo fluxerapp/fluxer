@@ -59,6 +59,7 @@ export type VoiceScreenShareEvent =
 	| {type: 'share.codecReadiness.timeout'}
 	| {type: 'share.codecReadiness.reset'}
 	| {type: 'share.streamingPriority.set'; active: boolean}
+	| {type: 'share.publicationReplace.set'; inFlight: boolean}
 	| {type: 'share.queuedStop.clear'}
 	| {
 			type: 'share.localWatcher.sync';
@@ -261,6 +262,11 @@ export const voiceScreenShareStateMachine = setup({
 		setStreamingPriority: assign(({context, event}) =>
 			event.type === 'share.streamingPriority.set' ? {...context, streamingPriorityHeld: event.active} : context,
 		),
+		setPublicationReplaceInFlight: assign(({context, event}) =>
+			event.type === 'share.publicationReplace.set' && context.pendingOperation
+				? {...context, publicationReplaceInFlight: event.inFlight}
+				: context,
+		),
 		clearQueuedStop: assign(({context}) =>
 			context.queuedStopRequest ? {...context, queuedStopRequest: null} : context,
 		),
@@ -306,6 +312,7 @@ export const voiceScreenShareStateMachine = setup({
 				'share.encoderVerification.scheduled': {target: 'routing', actions: 'scheduleEncoderVerification'},
 				'share.encoderVerification.cleared': {target: 'routing', actions: 'clearEncoderVerification'},
 				'share.streamingPriority.set': {target: 'routing', actions: 'setStreamingPriority'},
+				'share.publicationReplace.set': {target: 'routing', actions: 'setPublicationReplaceInFlight'},
 				'share.queuedStop.clear': {target: 'routing', actions: 'clearQueuedStop'},
 				'share.localWatcher.sync': {target: 'routing', actions: 'syncLocalWatcher'},
 				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
@@ -326,6 +333,7 @@ export const voiceScreenShareStateMachine = setup({
 				'share.encoderVerification.scheduled': {target: 'routing', actions: 'scheduleEncoderVerification'},
 				'share.encoderVerification.cleared': {target: 'routing', actions: 'clearEncoderVerification'},
 				'share.streamingPriority.set': {target: 'routing', actions: 'setStreamingPriority'},
+				'share.publicationReplace.set': {target: 'routing', actions: 'setPublicationReplaceInFlight'},
 				'share.queuedStop.clear': {target: 'routing', actions: 'clearQueuedStop'},
 				'share.localWatcher.sync': {target: 'routing', actions: 'syncLocalWatcher'},
 				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
@@ -346,6 +354,7 @@ export const voiceScreenShareStateMachine = setup({
 				'share.encoderVerification.scheduled': {actions: 'scheduleEncoderVerification'},
 				'share.encoderVerification.cleared': {actions: 'clearEncoderVerification'},
 				'share.streamingPriority.set': {actions: 'setStreamingPriority'},
+				'share.publicationReplace.set': {actions: 'setPublicationReplaceInFlight'},
 				'share.queuedStop.clear': {actions: 'clearQueuedStop'},
 				'share.localWatcher.sync': {actions: 'syncLocalWatcher'},
 				'share.clearWatchCommands': {actions: 'clearWatchCommands'},

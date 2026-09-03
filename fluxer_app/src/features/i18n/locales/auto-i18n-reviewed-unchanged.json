@@ -2042,6 +2042,10 @@
       },
       {
         "msgctxt": "screen-share",
+        "msgid": "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
+      },
+      {
+        "msgctxt": "screen-share",
         "msgid": "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
       },
       {

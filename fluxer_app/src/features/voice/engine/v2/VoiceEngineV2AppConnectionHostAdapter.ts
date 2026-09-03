@@ -38,6 +38,10 @@ import {
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import {VoiceEngineV2AppReconnectPolicy} from '@app/features/voice/engine/v2/VoiceEngineV2AppReconnectPolicy';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
+import {
+	findVideoPublishCodecPolicyViolation,
+	getRoomVideoPublishDefaults,
+} from '@app/features/voice/utils/CodecCapabilityDetector';
 import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	getVideoDecoderExclusionsSync,
@@ -140,9 +144,12 @@ function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
 	return true;
 }
 
-const ROOM_PUBLISH_DEFAULTS: RoomOptions['publishDefaults'] = {
-	screenShareEncoding: {maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS, maxFramerate: 30, priority: 'high'},
-};
+function createRoomPublishDefaults(): RoomOptions['publishDefaults'] {
+	return {
+		screenShareEncoding: {maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS, maxFramerate: 30, priority: 'high'},
+		...getRoomVideoPublishDefaults(),
+	};
+}
 
 function createRoomOptions(
 	e2eeKey: string | null,
@@ -156,7 +163,7 @@ function createRoomOptions(
 		adaptiveStream: false,
 		dynacast: true,
 		webAudioMix: createWebAudioMixOption(),
-		publishDefaults: ROOM_PUBLISH_DEFAULTS,
+		publishDefaults: createRoomPublishDefaults(),
 		subscriberVideoCodecExclusions,
 	};
 	let e2eeKeyProvider: ExternalE2EEKeyProvider | null = null;
@@ -681,7 +688,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			adaptiveStream: false,
 			dynacast: true,
 			webAudioMix: createWebAudioMixOption(),
-			publishDefaults: ROOM_PUBLISH_DEFAULTS,
+			publishDefaults: createRoomPublishDefaults(),
 			subscriberVideoCodecExclusions: cachedExclusions && cachedExclusions.length > 0 ? cachedExclusions : undefined,
 		};
 		if (!this.isLatestConnectionAttempt(attemptId) || this.connectionState.room !== existingRoom) {
@@ -804,6 +811,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			Array.from(oldParticipant.trackPublications.values()),
 		);
 		const errors: Array<{source: string; error: unknown}> = [];
+		let codecPolicyFailure: Error | null = null;
 		for (const publication of publications) {
 			const track = publication.track as LocalTrack | undefined;
 			if (!isReadyToRepublishTrack(track)) {
@@ -823,7 +831,16 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					source: publication.source,
 					name: publication.trackName,
 				};
-				await newParticipant.publishTrack(track.mediaStreamTrack, publishOptions);
+				const republished = await newParticipant.publishTrack(track.mediaStreamTrack, publishOptions);
+				const violation = publishOptions.videoCodec
+					? findVideoPublishCodecPolicyViolation(publishOptions.videoCodec, republished.options?.videoCodec)
+					: null;
+				if (violation) {
+					codecPolicyFailure = new Error(
+						`Region hot-swap: ${publication.source} negotiated ${violation.negotiated} after requesting ${violation.requested}`,
+					);
+					break;
+				}
 			} catch (error) {
 				errors.push({source: publication.source ?? 'unknown', error});
 				logger.warn('Region hot-swap: failed to republish track', {
@@ -832,6 +849,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				});
 			}
 		}
+		if (codecPolicyFailure) throw codecPolicyFailure;
 		const screenShareFailure = errors.find(
 			(error) => error.source === Track.Source.ScreenShare || error.source === Track.Source.ScreenShareAudio,
 		);

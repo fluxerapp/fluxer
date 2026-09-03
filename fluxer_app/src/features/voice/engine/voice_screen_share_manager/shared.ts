@@ -9,6 +9,8 @@ import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	adjustScreenShareEncodingForCodec,
 	getCodecCapabilityReport,
+	resolveVideoPublishCodecPolicy,
+	type VideoPublishCodecPolicy,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getGpuEncoderReportSync, loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {loadNativeHardwareEncoderCapabilities} from '@app/features/voice/utils/NativeHardwareEncoderCapabilities';
@@ -244,6 +246,15 @@ function getConfiguredBackupCodecForPrimary(primaryCodec: VideoCodec):
 	return {codec: 'h264'};
 }
 
+function resolveBackupCodecWithinPolicy(
+	configured: TrackPublishOptions['backupCodec'] | undefined,
+	policy: VideoPublishCodecPolicy,
+): TrackPublishOptions['backupCodec'] {
+	if (configured === undefined || configured === true) return policy.backupCodec;
+	if (configured === false) return false;
+	return configured.codec !== policy.primary && policy.allowed.includes(configured.codec) ? configured : false;
+}
+
 function getEffectiveScreenShareScalabilityMode(
 	codec: VideoCodec,
 	publishOptions?: TrackPublishOptions,
@@ -292,8 +303,12 @@ export async function getEffectivePublishOptions(
 		return publishOptions;
 	}
 	await waitForGpuEncoderReportForPublish(options);
-	const preferredVideoCodec = publishOptions?.videoCodec ?? getPreferredScreenShareCodec();
-	const backupCodec = publishOptions?.backupCodec ?? getConfiguredBackupCodecForPrimary(preferredVideoCodec);
+	const policy = resolveVideoPublishCodecPolicy(publishOptions?.videoCodec ?? getPreferredScreenShareCodec());
+	const preferredVideoCodec = policy.primary;
+	const backupCodec = resolveBackupCodecWithinPolicy(
+		publishOptions?.backupCodec ?? getConfiguredBackupCodecForPrimary(preferredVideoCodec),
+		policy,
+	);
 	const backupCodecPolicy =
 		publishOptions?.backupCodecPolicy ?? (backupCodec ? BackupCodecPolicy.SIMULCAST : undefined);
 	const scalabilityMode = getEffectiveScreenShareScalabilityMode(preferredVideoCodec, publishOptions, {
@@ -306,7 +321,7 @@ export async function getEffectivePublishOptions(
 		degradationPreference: SCREEN_SHARE_DEGRADATION_PREFERENCE,
 		simulcast: isSvcScreenShareCodec(preferredVideoCodec) ? false : (publishOptions?.simulcast ?? false),
 		scalabilityMode,
-		...(backupCodec !== undefined ? {backupCodec} : {}),
+		backupCodec,
 		...(backupCodecPolicy !== undefined ? {backupCodecPolicy} : {}),
 	};
 }

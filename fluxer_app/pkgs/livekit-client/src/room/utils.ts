@@ -32,7 +32,7 @@ import type {ChatMessage, LiveKitReactNativeInfo, TranscriptionSegment} from './
 
 const separator = '|';
 export const ddExtensionURI = 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension';
-const preferredPublishVideoCodecs: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
+const preferredPublishVideoCodecs: ReadonlyArray<VideoCodec> = ['h264', 'vp9', 'vp8', 'av1', 'h265'];
 
 export function unpackStreamId(packed: string): Array<string> {
 	const parts = packed.split(separator);

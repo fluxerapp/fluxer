@@ -21,9 +21,9 @@ import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/v
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type CodecCapabilityReport,
+	getCameraPublishCodecPolicy,
 	getCodecCapabilityReport,
 	getLiveKitSupportedCodecs,
-	selectOptimalCameraCodec,
 	selectOptimalScreenShareCodec,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
@@ -225,7 +225,7 @@ async function collectCodecMetadata(): Promise<Record<string, unknown>> {
 		report = null;
 	}
 	try {
-		resolvedCameraCodec = selectOptimalCameraCodec(cameraPreference);
+		resolvedCameraCodec = getCameraPublishCodecPolicy().primary;
 	} catch {
 		resolvedCameraCodec = null;
 	}
