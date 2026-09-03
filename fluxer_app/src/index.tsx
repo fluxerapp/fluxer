@@ -30,6 +30,7 @@ import {
 } from '@app/features/platform/utils/ClientInfo';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {scheduleNonLatinScriptFaces} from '@app/features/theme/fonts/ScriptFontLoader';
+import {installVoiceSubscriptionDebugApi} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugApi';
 import {i18n} from '@lingui/core';
 import {I18nProvider} from '@lingui/react';
 import {configure} from 'mobx';
@@ -48,6 +49,7 @@ if (typeof window !== 'undefined' && window.history) {
 }
 
 installFluxerConfigDebugApi();
+installVoiceSubscriptionDebugApi();
 
 function createRoot(): ReactDOM.Root {
 	const container = document.getElementById('root');

@@ -3,6 +3,7 @@
 import i18n from '@app/app/I18n';
 import Config from '@app/features/app/config/Config';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {getFluxerDebugObject} from '@app/features/platform/utils/FluxerDebugGlobal';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {DesktopInfo} from '@app/types/electron.d';
 import Bowser from 'bowser';
@@ -323,29 +324,6 @@ export function getFormattedClientInfoSync(): string {
 
 export async function getFormattedClientInfo(): Promise<string> {
 	return formatClientBuildInfo(await getClientInfo());
-}
-
-interface FluxerDebugApi {
-	getClientInfo?: () => Promise<string>;
-	getClientInfoSync?: () => string;
-	getClientInfoObject?: () => Promise<ClientInfo>;
-	getClientInfoObjectSync?: () => ClientInfo;
-}
-
-function getFluxerDebugObject(): (Record<string, unknown> & FluxerDebugApi) | null {
-	if (typeof window === 'undefined') {
-		return null;
-	}
-	const win = window as Window & {
-		__FLUXER_DEBUG__?: Record<string, unknown> & FluxerDebugApi;
-	};
-	if (win.__FLUXER_DEBUG__ === undefined || win.__FLUXER_DEBUG__ === null) {
-		win.__FLUXER_DEBUG__ = {};
-	}
-	if (typeof win.__FLUXER_DEBUG__ !== 'object' || Array.isArray(win.__FLUXER_DEBUG__)) {
-		return null;
-	}
-	return win.__FLUXER_DEBUG__;
 }
 
 export function installFluxerConfigDebugApi(): void {
