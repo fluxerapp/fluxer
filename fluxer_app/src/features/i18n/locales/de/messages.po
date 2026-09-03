@@ -399,8 +399,8 @@ msgstr "{count, plural, one {# Mitglied} other {# Mitglieder}}"
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {# gemeinsame Community} other {# gemeinsame Communitys}}"
 
-#: src/features/messaging/utils/MessageReactionUtils.ts:51
-#: src/features/messaging/utils/ReactionUtils.ts:52
+#: src/features/messaging/utils/MessageReactionUtils.ts:54
+#: src/features/messaging/utils/ReactionUtils.ts:55
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# andere} other {# andere}}"
 
@@ -671,13 +671,6 @@ msgstr "Status: {effectiveStatusLabel}"
 #: src/features/app/config/TimeWindowPresets.ts:30
 msgid "{eightHours} hours"
 msgstr "{eightHours} Stunden"
-
-#. Label in the reaction utils helper. Preserve {emojiName}, {reactors}; they are inserted by code.
-#. Label in the reaction utils helper. Preserve {emojiName}, {reactors}; they are inserted by code.
-#: src/features/messaging/utils/MessageReactionUtils.ts:16
-#: src/features/messaging/utils/ReactionUtils.ts:17
-msgid "{emojiName} reacted by {reactors}"
-msgstr "{emojiName} reagiert von {reactors}"
 
 #. Short label in the shared app message reactions content. Preserve placeholders {emojiName}, {reactionCountText}; they are inserted by code.
 #: src/features/app/components/shared/MessageReactionsContent.tsx:30
@@ -1183,6 +1176,13 @@ msgstr "{productName} Visionary seit {premiumSinceFormatted}"
 msgid "{productName} wordmark"
 msgstr "{productName} Wortmarke"
 
+#. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
+#. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
+#: src/features/messaging/utils/MessageReactionUtils.ts:16
+#: src/features/messaging/utils/ReactionUtils.ts:17
+msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
+msgstr "{reactorCount, plural, one {{emojiName} Reaktion von {reactors}} other {{emojiName} Reaktion von {reactors}}}"
+
 #. Client info web build identifier line. Example: "Canary Web 2026.518.0". Preserve placeholders.
 #. Client info web build identifier shown after the desktop build when the web and desktop channels differ. Example: "Stable Web 2026.518.0". Preserve placeholders.
 #: src/features/app/components/dialogs/components/ClientInfo.tsx:23
@@ -1686,7 +1686,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:101
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:104
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1761,7 +1761,7 @@ msgid "3 months"
 msgstr "3 Monate"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:105
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:108
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1820,7 +1820,7 @@ msgid "6-digit code"
 msgstr "6-stelliger Code"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:109
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:112
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2706,7 +2706,7 @@ msgid "Adds a manual audio source picker to the stream settings menu. Without it
 msgstr "Fügt eine manuelle Audioquellen-Auswahl zum Stream-Einstellungen-Menü hinzu. Ohne diese erfasst ein freigegebenes Fenster bereits die App und ein freigegebener Bildschirm erfasst deinen Desktop."
 
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:129
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Fügt H.264 für gemischte Clients hinzu. Benötigt mehr Rechenleistung."
 
@@ -2990,7 +2990,7 @@ msgstr "Allen, die dein vollständiges Profil sehen können, erlauben, deine lok
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:90
 msgid "Allow AV1 for screen sharing"
 msgstr "AV1 für Bildschirmfreigabe zulassen"
@@ -3044,7 +3044,7 @@ msgstr "Für alle Communitys zulassen"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:192
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:190
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:94
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "H.265 (HEVC) für Bildschirmfreigabe zulassen"
@@ -4083,7 +4083,7 @@ msgid "Audio boost"
 msgstr "Audio-Boost"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
 msgid "Audio device"
 msgstr "Audiogerät"
 
@@ -4178,7 +4178,7 @@ msgid "Audio send:"
 msgstr "Audio senden:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
 msgid "Audio settings"
 msgstr "Audioeinstellungen"
 
@@ -4399,9 +4399,9 @@ msgstr "Vervollständigungsvorschlag: {label}, {selectedOptionPosition} von {res
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:69
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:109
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:149
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:91
@@ -4415,7 +4415,7 @@ msgid "Automatic"
 msgstr "Automatisch"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:174
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
 msgid "Automatic ({codec})"
 msgstr "Automatisch ({codec})"
 
@@ -4515,7 +4515,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (erfordert Opt-in)"
 
@@ -4728,7 +4728,7 @@ msgstr "Rücktaste"
 #. Security modal title for one-time account recovery codes.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/auth/components/modals/BackupCodesModal.tsx:17
+#: src/features/auth/components/modals/BackupCodesModal.tsx:18
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:65
@@ -4736,7 +4736,7 @@ msgid "Backup codes"
 msgstr "Backup-Codes"
 
 #. Toast shown after new account recovery backup codes were generated.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:17
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:19
 msgid "Backup codes regenerated"
 msgstr "Backup-Codes neu generiert"
 
@@ -4746,7 +4746,7 @@ msgid "Badge"
 msgstr "Abzeichen"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:93
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
 msgid "Balanced"
 msgstr "Ausgewogen"
 
@@ -5662,8 +5662,9 @@ msgstr "Dateien können hier nicht hochgeladen werden"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:74
 #: src/features/auth/components/modals/AccountDisableModal.tsx:45
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:78
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:61
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:100
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:174
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:193
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
@@ -5807,7 +5808,7 @@ msgstr "Captcha-Verifizierung fehlgeschlagen. Bitte versuche es erneut."
 msgid "Capture"
 msgstr "Aufnehmen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:837
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:842
 msgid "Capture app audio"
 msgstr "App-Audio aufnehmen"
 
@@ -5816,11 +5817,11 @@ msgstr "App-Audio aufnehmen"
 msgid "Capture card"
 msgstr "Aufnahmekarte"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:838
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:843
 msgid "Capture desktop audio"
 msgstr "Desktop-Audio aufnehmen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:836
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:841
 msgid "Capture device audio"
 msgstr "Geräteaudio aufnehmen"
 
@@ -7961,7 +7962,7 @@ msgstr "Fokus auf Texteingabe"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
 msgid "Configure"
 msgstr "Konfigurieren"
 
@@ -8303,7 +8304,7 @@ msgid "Content filtering"
 msgstr "Inhaltsfilter"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:141
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
 msgid "Content hint"
 msgstr "Inhaltshinweis"
 
@@ -8341,8 +8342,8 @@ msgstr "Kontextmenüs können per Linksklick (auf Schaltflächen) oder Rechtskli
 #. Generic primary button label that advances a multi-step flow.
 #. OAuth authorization primary button. Advances to the next step after choosing an account.
 #. Primary button in the required-action modal. Continues the current verification path.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:85
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:68
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:107
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:181
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:77
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:162
@@ -8478,7 +8479,7 @@ msgstr "URL in Zwischenablage kopiert"
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
 #: src/features/app/components/dialogs/shared/CopyLinkSection.tsx:11
-#: src/features/auth/components/modals/BackupCodesModal.tsx:94
+#: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:423
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
@@ -9780,7 +9781,7 @@ msgstr "Aktuell: {mutedText}"
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:31
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:89
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
 msgid "Custom"
 msgstr "Benutzerdefiniert"
 
@@ -10933,7 +10934,7 @@ msgid "Detached banner"
 msgstr "Banner entfernt"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:157
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
 msgid "Detail"
 msgstr "Details"
 
@@ -11021,7 +11022,7 @@ msgstr "Gerätedetails"
 msgid "Device revoked"
 msgstr "Gerät entfernt"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1028
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1033
 msgid "Device selection"
 msgstr "Geräteauswahl"
 
@@ -11050,7 +11051,7 @@ msgid "Devices"
 msgstr "Geräte"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:93
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:96
 msgid "Dial in your own numbers"
 msgstr "Eigene Nummern einwählen"
 
@@ -11226,7 +11227,7 @@ msgid "Disable mobile push notifications"
 msgstr "Mobile Push-Benachrichtigungen deaktivieren"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:53
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Bild-im-Bild-Pop-out für Bildschirmfreigaben deaktivieren"
 
@@ -11786,7 +11787,7 @@ msgstr "Doppelklicken, um den Stream anzusehen."
 #. Button that downloads account backup codes as a text file.
 #. Generic action label that downloads an attachment / file.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/auth/components/modals/BackupCodesModal.tsx:83
+#: src/features/auth/components/modals/BackupCodesModal.tsx:85
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:377
 #: src/features/theme_studio/sections/QuickCssSection.tsx:205
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:216
@@ -12893,13 +12894,13 @@ msgstr "Inhalte für Erwachsene aktiviert."
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:61
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:180
 msgid "Encoder path"
 msgstr "Encoder-Pfad"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:65
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
 msgid "Encoder preference for new screen shares."
 msgstr "Encoder-Einstellung für neue Bildschirmfreigaben."
 
@@ -13150,6 +13151,7 @@ msgstr "Gib den Code ein, der an {emailAddress} gesendet wurde."
 msgid "Enter the code sent to your current email."
 msgstr "Gib den Code ein, der an deine aktuelle E-Mail-Adresse gesendet wurde."
 
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:152
 #: src/features/user/components/modals/PasswordChangeModal.tsx:155
 msgid "Enter the code sent to your email address."
 msgstr "Gib den Code ein, der an deine E-Mail-Adresse gesendet wurde."
@@ -13245,7 +13247,7 @@ msgstr "Gesamter Bildschirm"
 msgid "Entire system"
 msgstr "Gesamtes System"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:231
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:235
 msgid "Entire system audio"
 msgstr "Gesamtes System-Audio"
 
@@ -14402,12 +14404,12 @@ msgid "Flexible text channel names"
 msgstr "Flexible Textkanalnamen"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:66
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:69
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "Flüssige Bewegung bei 1440p und 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:71
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "Flüssige Bewegung bei 720p 30 FPS"
 
@@ -14494,7 +14496,7 @@ msgstr "Ordnereinstellungen"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Folge uns auf {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:890
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:895
 msgid "Follow voice input"
 msgstr "Spracheingabe folgen"
 
@@ -14766,7 +14768,7 @@ msgstr "Rahmen"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:121
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
 msgid "Frame rate"
 msgstr "Bildrate"
 
@@ -15013,7 +15015,7 @@ msgstr "Gamecontroller"
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:62
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:65
 msgid "Gaming"
 msgstr "Gaming"
 
@@ -15513,7 +15515,7 @@ msgstr "{0} gewährt."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Gewährt alle Berechtigungen und umgeht Kanalbeschränkungen. Hochsensibel."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1015
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1020
 msgid "Granular selection"
 msgstr "Feinauswahl"
 
@@ -15697,17 +15699,17 @@ msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:125
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
 msgid "H.264 backup stream"
 msgstr "H.264-Backup-Stream"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:137
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
 msgid "H.264 simulcast backup"
 msgstr "H.264-Simulcast-Backup"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (erfordert Opt-in)"
 
@@ -15898,7 +15900,7 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "Hilf mit, {PRODUCT_NAME} in deiner Sprache auf <0>{I18N_WEBLATE_DOMAIN}</0> zu übersetzen."
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:145
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "Hilft dem Browser bei der Auswahl von Motion-, Detail- oder Textverarbeitung."
 
@@ -16058,7 +16060,7 @@ msgid "Hide muted channels by default?"
 msgstr "Stummgeschaltete Kanäle standardmäßig ausblenden?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:57
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
 msgid "Hide my stream preview thumbnail"
 msgstr "Vorschaubild meines Streams ausblenden"
 
@@ -16077,7 +16079,7 @@ msgstr "Passwort ausblenden"
 msgid "Hide picture-in-picture popout?"
 msgstr "Bild-im-Bild-Fenster ausblenden?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:799
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:804
 msgid "Hide preview thumbnail"
 msgstr "Vorschaubild ausblenden"
 
@@ -16139,7 +16141,7 @@ msgid "High dynamic range display mode"
 msgstr "HDR-Anzeigemodus"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:85
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
 msgid "Higher quality can cost more CPU and latency."
 msgstr "Höhere Qualität kann mehr CPU-Leistung und Latenz verursachen."
 
@@ -16522,11 +16524,11 @@ msgstr "Ignorieren"
 msgid "Ignore friend request"
 msgstr "Freundschaftsanfrage ignorieren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1005
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1010
 msgid "Ignore hardware devices"
 msgstr "Hardwaregeräte ignorieren"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:981
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
 msgid "Ignore input media"
 msgstr "Eingabemedien ignorieren"
 
@@ -16552,7 +16554,7 @@ msgstr "Spam-Markierung ignorieren"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Freundschaftsanfrage von {displayName} ignorieren?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:992
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
 msgid "Ignore virtual"
 msgstr "Virtuelle ignorieren"
 
@@ -17243,8 +17245,10 @@ msgstr "Ungültiges Bild"
 msgid "Invalid JSON. Paste the full response from the URL above."
 msgstr "Ungültiges JSON. Füge die vollständige Antwort von der obigen URL ein."
 
+#. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
 #. Error message in the email change modal.
 #. Error message in the password change modal. Keep the tone plain and specific.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:27
 #: src/features/user/components/modals/EmailChangeModal.tsx:27
 #: src/features/user/components/modals/PasswordChangeModal.tsx:26
 msgid "Invalid or expired code"
@@ -18091,7 +18095,7 @@ msgid "Launch at login"
 msgstr "Beim Anmelden starten"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:105
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Layering für AV1 und VP9, falls verfügbar."
 
@@ -20270,7 +20274,7 @@ msgstr "Relevanteste"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:153
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -21735,7 +21739,7 @@ msgstr "Nicht animierte Emojis ({emojiCount})"
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:238
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:242
 msgid "None"
 msgstr "Keine"
 
@@ -21959,7 +21963,7 @@ msgstr "Objekte"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:133
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
 msgid "Off"
 msgstr "Aus"
 
@@ -22086,7 +22090,7 @@ msgstr "Gilt nur für breite Bildschirme."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Es werden nur Kreditkarten akzeptiert. Debit- und Prepaid-Karten können für die Altersprüfung von Inhalten nicht verwendet werden."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:975
 msgid "Only default speakers"
 msgstr "Nur Standardlautsprecher"
 
@@ -22134,7 +22138,7 @@ msgstr "Führe hier nur Code aus, wenn du genau verstehst, was er bewirkt."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Nachrichtenvorschauen nur für DMs mit ungelesenen Nachrichten anzeigen"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:960
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:965
 msgid "Only speakers"
 msgstr "Nur Sprecher"
 
@@ -22679,7 +22683,7 @@ msgid "OpenH264 video codec"
 msgstr "OpenH264-Videocodec"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:42
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "OpenH264-Video-Codec von Cisco Systems, Inc."
 
@@ -23123,7 +23127,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Einladungen pausieren? Neue Nutzer können über Einladungslinks nicht beitreten, bis du sie wieder aktivierst. Bestehende Mitglieder sind davon nicht betroffen."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:49
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
 msgid "Pause my screen share preview in the background"
 msgstr "Bildschirmfreigabe-Vorschau im Hintergrund pausieren"
 
@@ -23441,7 +23445,7 @@ msgstr "Wähle das Erscheinungsbild, mit dem dieser Administratoraccount beginne
 
 #. Settings search entry label. Names an advanced screen-share audio setting in the settings UI.
 #. Switch label for the advanced opt-in that reveals a manual per-application audio source picker in the stream settings menu.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:197
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:127
 msgid "Pick the apps to capture audio from"
 msgstr "Wähle die Apps aus, deren Audio erfasst werden soll"
@@ -23799,7 +23803,7 @@ msgid "Prefer @mention"
 msgstr "@-Erwähnung bevorzugen"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:73
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
 msgid "Prefer hardware"
 msgstr "Hardware bevorzugen"
 
@@ -23811,7 +23815,7 @@ msgid "Prefer no @mention"
 msgstr "Keine @-Erwähnungen bevorzugen"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:77
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
 msgid "Prefer software"
 msgstr "Software bevorzugen"
 
@@ -23831,7 +23835,7 @@ msgid "Preferences..."
 msgstr "Einstellungen..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:170
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 msgid "Preferred screen share codec"
 msgstr "Bevorzugter Codec für Bildschirmfreigabe"
 
@@ -24578,7 +24582,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Wenn du dich selbst stummgeschaltet hast, wird die Push-to-Talk-Funktion dein Mikrofon nicht wieder aktivieren. Hebe die Stummschaltung auf, um zu sprechen."
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
 msgid "Quality"
 msgstr "Qualität"
 
@@ -24691,7 +24695,7 @@ msgid "Raw embed JSON"
 msgstr "Rohes Embed-JSON"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:82
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "Gestochen scharfer Text in nativer Auflösung, 15 FPS"
 
@@ -24781,7 +24785,7 @@ msgid "Ready to upgrade?"
 msgstr "Bereit zum Upgrade?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:89
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
 msgid "Realtime"
 msgstr "Echtzeit"
 
@@ -25020,7 +25024,7 @@ msgstr "Referenz kopiert."
 msgid "Referral parameters"
 msgstr "Empfehlungsparameter"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:281
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:285
 msgid "Refresh audio sources"
 msgstr "Audioquellen aktualisieren"
 
@@ -25055,7 +25059,7 @@ msgstr "Deine letzte Zahlung erstatten?"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the application detail. Keep it concise.
 #. Short label in the secrets section. Keep it concise.
-#: src/features/auth/components/modals/BackupCodesModal.tsx:111
+#: src/features/auth/components/modals/BackupCodesModal.tsx:114
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/SecretsSection.tsx:23
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:78
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:128
@@ -25063,7 +25067,7 @@ msgid "Regenerate"
 msgstr "Neu generieren"
 
 #. Security confirmation title for replacing account recovery backup codes.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:21
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:23
 msgid "Regenerate backup codes"
 msgstr "Ersatzcodes neu generieren"
 
@@ -25931,6 +25935,7 @@ msgstr "Erfordert alles, was in \"Mittel\" enthalten ist, plus eine Mitgliedscha
 msgid "Reschedule message"
 msgstr "Nachricht neu planen"
 
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:200
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:240
 #: src/features/user/components/modals/EmailChangeModal.tsx:296
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
@@ -25954,6 +25959,7 @@ msgstr "Erneut senden ({resendCooldownSeconds}s)"
 msgid "Resend ({resendSecondsRemaining}s)"
 msgstr "Erneut senden ({resendSecondsRemaining}s)"
 
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:200
 #: src/features/user/components/modals/PasswordChangeModal.tsx:244
 msgid "Resend ({secondsRemaining}s)"
 msgstr "Erneut senden ({secondsRemaining}s)"
@@ -26299,7 +26305,7 @@ msgstr "Größenänderung, Maximierung und Fenster-Snapping hängen vom Composit
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:117
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:120
 msgid "Resolution"
 msgstr "Auflösung"
 
@@ -26996,7 +27002,7 @@ msgstr "Berechtigung zur Bildschirmaufnahme erforderlich"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:75
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:78
 msgid "Screen share"
 msgstr "Bildschirm teilen"
 
@@ -28475,7 +28481,7 @@ msgid "Share screens and windows."
 msgstr "Bildschirme und Fenster teilen."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
 msgid "Share stream audio"
 msgstr "Stream-Audio teilen"
 
@@ -28545,7 +28551,7 @@ msgid "Sharing personal information"
 msgstr "Teilen persönlicher Informationen"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:84
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
 msgid "Sharper text at 720p, 30 FPS"
 msgstr "Scharfer Text bei 720p, 30 FPS"
 
@@ -29288,7 +29294,7 @@ msgid "Single community mode"
 msgstr "Einzelner Community-Modus"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:113
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
 msgid "Single layer"
 msgstr "Einzelne Ebene"
 
@@ -29602,7 +29608,7 @@ msgid "Software encoder"
 msgstr "Software-Encoder"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:81
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
 msgid "Software encoder quality"
 msgstr "Qualität des Software-Encoders"
 
@@ -29846,7 +29852,7 @@ msgstr "Töne"
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:100
 msgid "Source"
 msgstr "Quelle"
 
@@ -29928,7 +29934,7 @@ msgid "Spanish (Spain)"
 msgstr "Spanisch (Spanien)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:121
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
 msgid "Spatial and temporal layers"
 msgstr "Räumliche und zeitliche Ebenen"
 
@@ -30586,7 +30592,7 @@ msgid "Stream preview"
 msgstr "Stream-Vorschau"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
 msgid "Stream quality"
 msgstr "Streamqualität"
 
@@ -30612,7 +30618,7 @@ msgid "Streaming"
 msgstr "Streamt"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:113
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:116
 msgid "Streaming mode"
 msgstr "Streaming-Modus"
 
@@ -30804,7 +30810,7 @@ msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:101
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
 msgid "SVC mode"
 msgstr "SVC-Modus"
 
@@ -31066,7 +31072,7 @@ msgstr "Systemankündigungen vom {productName}-Team. Hier können Sie nicht antw
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
 msgid "System default"
 msgstr "Systemstandard"
 
@@ -31246,7 +31252,7 @@ msgid "Template URL"
 msgstr "Vorlagen-URL"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:117
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
 msgid "Temporal layers"
 msgstr "Zeitliche Ebenen"
 
@@ -31307,7 +31313,7 @@ msgstr "URL-Vorschauen und gerenderte Einbettungen testen"
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:161
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
 msgid "Text"
 msgstr "Text"
 
@@ -32533,7 +32539,7 @@ msgid "This will hide all favorites-related UI elements including buttons and me
 msgstr "Dadurch werden alle Favoriten-bezogenen UI-Elemente wie Schaltflächen und Menüpunkte ausgeblendet. Deine bestehenden Favoriten bleiben erhalten und können jederzeit unter <0>{favoritesSettingsPath}</0> wieder aktiviert werden."
 
 #. Security warning shown before replacing account recovery backup codes.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:66
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:88
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "Dadurch werden deine bestehenden Backup-Codes ungültig und neue generiert."
 
@@ -33533,12 +33539,19 @@ msgstr "Profilbanner, Abzeichen und Bio konnten nicht geladen werden."
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Emojis konnten nicht für den Upload vorbereitet werden. Die folgenden Fehler sind aufgetreten:"
 
+#. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
 #. Error message in the email change modal.
 #. Error message in the password change modal. Keep the tone plain and specific.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:31
 #: src/features/user/components/modals/EmailChangeModal.tsx:31
 #: src/features/user/components/modals/PasswordChangeModal.tsx:30
 msgid "Unable to resend code right now"
 msgstr "Code konnte gerade nicht erneut gesendet werden"
+
+#. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:23
+msgid "Unable to send verification code"
+msgstr "Verifizierungscode konnte nicht gesendet werden"
 
 #. Error toast shown when sending the recorded voice message fails.
 #. Toast shown when the voice message send pipeline fails.
@@ -34085,7 +34098,7 @@ msgstr "Unbenannte Gruppe"
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
 msgid "Unnamed input"
 msgstr "Unbenannte Eingabe"
 
@@ -34958,7 +34971,7 @@ msgstr "Verwenden Sie die Pfeiltasten nach oben und unten, um zwischen Elementen
 msgid "Use these buttons to quickly set all permissions."
 msgstr "Mit diesen Schaltflächen kannst du schnell alle Berechtigungen festlegen."
 
-#: src/features/auth/components/modals/BackupCodesModal.tsx:35
+#: src/features/auth/components/modals/BackupCodesModal.tsx:37
 msgid "Use these codes to access your account if you lose your authenticator app."
 msgstr "Verwende diese Codes, um auf deinen Account zuzugreifen, falls du deine Authentifizierungsapp verlierst."
 
@@ -35379,6 +35392,8 @@ msgstr "Verifizierungscode gesendet. Prüfe deinen neuen E-Mail-Posteingang."
 msgid "Verification email sent. Check your inbox."
 msgstr "Verifizierungs-E-Mail gesendet. Posteingang prüfen."
 
+#. Error title shown when the backup codes email verification expired and must be started again.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:35
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:224
 msgid "Verification expired"
 msgstr "Verifizierung abgelaufen"
@@ -35387,10 +35402,6 @@ msgstr "Verifizierung abgelaufen"
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
 msgstr "Verifizierung fehlgeschlagen"
-
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:55
-msgid "Verification may be required before viewing your backup codes."
-msgstr "Möglicherweise ist eine Verifizierung erforderlich, bevor du deine Backup-Codes ansehen kannst."
 
 #. Label in the community badge.
 #: src/features/guild/components/GuildBadge.tsx:12
@@ -35782,7 +35793,7 @@ msgid "View and regenerate client secrets and bot tokens"
 msgstr "Client-Secrets und Bot-Tokens ansehen und neu generieren"
 
 #. Short label in the authentication backup codes view modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:16
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:19
 msgid "View backup codes"
 msgstr "Backup-Codes ansehen"
 
@@ -36479,7 +36490,7 @@ msgstr "Wir müssen sicherstellen, dass du kein Bot bist. Bitte führe folgende 
 msgid "We need two verification steps before you continue. We will show one step at a time."
 msgstr "Wir benötigen zwei Schritte zur Verifizierung, bevor du fortfahren kannst. Wir zeigen dir die Schritte nacheinander an."
 
-#: src/features/auth/components/modals/BackupCodesModal.tsx:38
+#: src/features/auth/components/modals/BackupCodesModal.tsx:40
 msgid "We recommend saving these codes now so that you don't get locked out of your account."
 msgstr "Wir empfehlen, diese Codes jetzt zu speichern, damit du nicht aus deinem Account ausgesperrt wirst."
 
@@ -36545,6 +36556,10 @@ msgstr "Wir senden dir einen kurzen Code, um zu bestätigen, dass du Updates zu 
 #: src/features/user/components/modals/PasswordChangeModal.tsx:149
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "Wir senden einen Bestätigungscode an deine E-Mail-Adresse, bevor du dein Passwort ändern kannst."
+
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:146
+msgid "We'll send a verification code to your email before you can view your backup codes."
+msgstr "Wir senden dir einen Verifizierungscode an deine E-Mail, bevor du deine Backup-Codes anzeigen kannst."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:285
 msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, to allow at most {PHONE_VERIFICATION_LIMIT} verifications in about {PHONE_VERIFICATION_WINDOW_DAYS} days."

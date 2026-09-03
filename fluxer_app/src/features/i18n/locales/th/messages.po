@@ -399,8 +399,8 @@ msgstr "{count, plural, one {# สมาชิก} other {# สมาชิก}}
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {# ชุมชนร่วมกัน} other {# ชุมชนร่วมกัน}}"
 
-#: src/features/messaging/utils/MessageReactionUtils.ts:51
-#: src/features/messaging/utils/ReactionUtils.ts:52
+#: src/features/messaging/utils/MessageReactionUtils.ts:54
+#: src/features/messaging/utils/ReactionUtils.ts:55
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# คนอื่น} other {# คนอื่น}}"
 
@@ -671,13 +671,6 @@ msgstr "สถานะ{effectiveStatusLabel}"
 #: src/features/app/config/TimeWindowPresets.ts:30
 msgid "{eightHours} hours"
 msgstr "{eightHours} ชั่วโมง"
-
-#. Label in the reaction utils helper. Preserve {emojiName}, {reactors}; they are inserted by code.
-#. Label in the reaction utils helper. Preserve {emojiName}, {reactors}; they are inserted by code.
-#: src/features/messaging/utils/MessageReactionUtils.ts:16
-#: src/features/messaging/utils/ReactionUtils.ts:17
-msgid "{emojiName} reacted by {reactors}"
-msgstr "{emojiName} โดย {reactors}"
 
 #. Short label in the shared app message reactions content. Preserve placeholders {emojiName}, {reactionCountText}; they are inserted by code.
 #: src/features/app/components/shared/MessageReactionsContent.tsx:30
@@ -1183,6 +1176,13 @@ msgstr "ผู้มีวิสัยทัศน์ {productName} ตั้ง
 msgid "{productName} wordmark"
 msgstr "โลโก้ {productName}"
 
+#. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
+#. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
+#: src/features/messaging/utils/MessageReactionUtils.ts:16
+#: src/features/messaging/utils/ReactionUtils.ts:17
+msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
+msgstr "{reactorCount, plural, one {{emojiName} ตอบสนองโดย {reactors}} other {{emojiName} ตอบสนองโดย {reactors}}}"
+
 #. Client info web build identifier line. Example: "Canary Web 2026.518.0". Preserve placeholders.
 #. Client info web build identifier shown after the desktop build when the web and desktop channels differ. Example: "Stable Web 2026.518.0". Preserve placeholders.
 #: src/features/app/components/dialogs/components/ClientInfo.tsx:23
@@ -1686,7 +1686,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:101
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:104
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1761,7 +1761,7 @@ msgid "3 months"
 msgstr "3 เดือน"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:105
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:108
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1820,7 +1820,7 @@ msgid "6-digit code"
 msgstr "รหัส 6 หลัก"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:109
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:112
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2706,7 +2706,7 @@ msgid "Adds a manual audio source picker to the stream settings menu. Without it
 msgstr "เพิ่มตัวเลือกแหล่งเสียงแบบกำหนดเองไปยังเมนูการตั้งค่าสตรีม หากไม่มีตัวเลือกนี้ หน้าต่างที่แชร์อยู่แล้วจะจับภาพแอปนั้น และหน้าจอที่แชร์จะจับภาพเดสก์ท็อปของคุณ"
 
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:129
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "เพิ่ม H.264 สำหรับอุปกรณ์ที่หลากหลาย ใช้ทรัพยากรในการเข้ารหัสมากขึ้น"
 
@@ -2990,7 +2990,7 @@ msgstr "อนุญาตให้ทุกคนที่ดูโปรไฟ
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:188
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:90
 msgid "Allow AV1 for screen sharing"
 msgstr "อนุญาต AV1 สำหรับการแชร์หน้าจอ"
@@ -3044,7 +3044,7 @@ msgstr "อนุญาตสำหรับทุกชุมชน"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:192
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:190
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:94
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "อนุญาต H.265 (HEVC) สำหรับการแชร์หน้าจอ"
@@ -4083,7 +4083,7 @@ msgid "Audio boost"
 msgstr "เพิ่มเสียง"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
 msgid "Audio device"
 msgstr "อุปกรณ์เสียง"
 
@@ -4178,7 +4178,7 @@ msgid "Audio send:"
 msgstr "ส่งเสียง:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
 msgid "Audio settings"
 msgstr "การตั้งค่าเสียง"
 
@@ -4399,9 +4399,9 @@ msgstr "คำแนะนำเติมข้อความอัตโนม
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:69
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:109
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:149
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:91
@@ -4415,7 +4415,7 @@ msgid "Automatic"
 msgstr "อัตโนมัติ"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:174
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
 msgid "Automatic ({codec})"
 msgstr "อัตโนมัติ ({codec})"
 
@@ -4515,7 +4515,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (ต้องเปิดใช้งานก่อน)"
 
@@ -4728,7 +4728,7 @@ msgstr "Backspace"
 #. Security modal title for one-time account recovery codes.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/auth/components/modals/BackupCodesModal.tsx:17
+#: src/features/auth/components/modals/BackupCodesModal.tsx:18
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:65
@@ -4736,7 +4736,7 @@ msgid "Backup codes"
 msgstr "รหัสสำรอง"
 
 #. Toast shown after new account recovery backup codes were generated.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:17
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:19
 msgid "Backup codes regenerated"
 msgstr "สร้างรหัสสำรองใหม่แล้ว"
 
@@ -4746,7 +4746,7 @@ msgid "Badge"
 msgstr "ป้ายกำกับ"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:93
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
 msgid "Balanced"
 msgstr "สมดุล"
 
@@ -5662,8 +5662,9 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:74
 #: src/features/auth/components/modals/AccountDisableModal.tsx:45
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:78
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:61
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:100
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:174
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:193
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
@@ -5807,7 +5808,7 @@ msgstr "การยืนยันแคปต์ชาล้มเหลว �
 msgid "Capture"
 msgstr "บันทึกเสียง"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:837
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:842
 msgid "Capture app audio"
 msgstr "บันทึกเสียงจากแอป"
 
@@ -5816,11 +5817,11 @@ msgstr "บันทึกเสียงจากแอป"
 msgid "Capture card"
 msgstr "การ์ดจับภาพ"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:838
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:843
 msgid "Capture desktop audio"
 msgstr "บันทึกเสียงเดสก์ท็อป"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:836
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:841
 msgid "Capture device audio"
 msgstr "บันทึกเสียงจากอุปกรณ์"
 
@@ -7961,7 +7962,7 @@ msgstr "โฟกัสช่องพิมพ์ข้อความ"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
 msgid "Configure"
 msgstr "กำหนดค่า"
 
@@ -8303,7 +8304,7 @@ msgid "Content filtering"
 msgstr "การกรองเนื้อหา"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:141
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
 msgid "Content hint"
 msgstr "คำแนะนำเนื้อหา"
 
@@ -8341,8 +8342,8 @@ msgstr "เมนูบริบทสามารถเปิดได้ด้
 #. Generic primary button label that advances a multi-step flow.
 #. OAuth authorization primary button. Advances to the next step after choosing an account.
 #. Primary button in the required-action modal. Continues the current verification path.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:85
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:68
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:107
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:181
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:77
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:162
@@ -8478,7 +8479,7 @@ msgstr "คัดลอก URL ไปยังคลิปบอร์ดแล�
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
 #: src/features/app/components/dialogs/shared/CopyLinkSection.tsx:11
-#: src/features/auth/components/modals/BackupCodesModal.tsx:94
+#: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:423
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
@@ -9780,7 +9781,7 @@ msgstr "ปัจจุบัน: {mutedText}"
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:31
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:89
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
 msgid "Custom"
 msgstr "กำหนดเอง"
 
@@ -10933,7 +10934,7 @@ msgid "Detached banner"
 msgstr "แบนเนอร์ที่ไม่ได้ใช้งาน"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:157
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
 msgid "Detail"
 msgstr "รายละเอียด"
 
@@ -11021,7 +11022,7 @@ msgstr "รายละเอียดอุปกรณ์"
 msgid "Device revoked"
 msgstr "ยกเลิกอุปกรณ์แล้ว"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1028
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1033
 msgid "Device selection"
 msgstr "การเลือกอุปกรณ์"
 
@@ -11050,7 +11051,7 @@ msgid "Devices"
 msgstr "อุปกรณ์"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:93
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:96
 msgid "Dial in your own numbers"
 msgstr "โทรเข้าด้วยหมายเลขของคุณเอง"
 
@@ -11226,7 +11227,7 @@ msgid "Disable mobile push notifications"
 msgstr "ปิดการแจ้งเตือนบนมือถือ"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:53
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "ปิดหน้าต่างย่อยสำหรับแชร์หน้าจอ"
 
@@ -11786,7 +11787,7 @@ msgstr "ดับเบิลคลิกที่ใครบางคนเพ
 #. Button that downloads account backup codes as a text file.
 #. Generic action label that downloads an attachment / file.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/auth/components/modals/BackupCodesModal.tsx:83
+#: src/features/auth/components/modals/BackupCodesModal.tsx:85
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:377
 #: src/features/theme_studio/sections/QuickCssSection.tsx:205
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:216
@@ -12893,13 +12894,13 @@ msgstr "เปิดใช้งานเนื้อหาสำหรับผ
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:61
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:180
 msgid "Encoder path"
 msgstr "เส้นทางตัวเข้ารหัส"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:65
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
 msgid "Encoder preference for new screen shares."
 msgstr "การตั้งค่าตัวเข้ารหัสสำหรับแชร์หน้าจอใหม่"
 
@@ -13150,6 +13151,7 @@ msgstr "ป้อนรหัสที่ส่งไปยัง {emailAddress}
 msgid "Enter the code sent to your current email."
 msgstr "กรอกรหัสที่ส่งไปยังอีเมลปัจจุบันของคุณ"
 
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:152
 #: src/features/user/components/modals/PasswordChangeModal.tsx:155
 msgid "Enter the code sent to your email address."
 msgstr "ป้อนรหัสที่ส่งไปยังอีเมลของคุณ"
@@ -13245,7 +13247,7 @@ msgstr "ทั้งหน้าจอ"
 msgid "Entire system"
 msgstr "ทั้งระบบ"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:231
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:235
 msgid "Entire system audio"
 msgstr "เสียงทั้งระบบ"
 
@@ -14402,12 +14404,12 @@ msgid "Flexible text channel names"
 msgstr "ชื่อช่องข้อความที่ยืดหยุ่น"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:66
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:69
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "ภาพเคลื่อนไหวราบรื่นที่ 1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:71
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "ภาพคมชัด 720p 30 FPS"
 
@@ -14494,7 +14496,7 @@ msgstr "การตั้งค่าโฟลเดอร์"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "ติดตามเราบน {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:890
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:895
 msgid "Follow voice input"
 msgstr "ติดตามอินพุตเสียง"
 
@@ -14766,7 +14768,7 @@ msgstr "กรอบรูป"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:121
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
 msgid "Frame rate"
 msgstr "อัตราเฟรม"
 
@@ -15013,7 +15015,7 @@ msgstr "จอยเกม"
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:62
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:65
 msgid "Gaming"
 msgstr "เกม"
 
@@ -15513,7 +15515,7 @@ msgstr "ให้สิทธิ์ {0} แล้ว"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "ให้สิทธิ์ทั้งหมดและข้ามข้อจำกัดของช่อง มีความละเอียดอ่อนสูง"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1015
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1020
 msgid "Granular selection"
 msgstr "เลือกแบบละเอียด"
 
@@ -15697,17 +15699,17 @@ msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:125
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
 msgid "H.264 backup stream"
 msgstr "สตรีมสำรอง H.264"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:137
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
 msgid "H.264 simulcast backup"
 msgstr "สำรอง H.264 simulcast"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (ต้องสมัครสมาชิกก่อน)"
 
@@ -15898,7 +15900,7 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "ช่วยแปล {PRODUCT_NAME} เป็นภาษาของคุณบน <0>{I18N_WEBLATE_DOMAIN}</0>"
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:145
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "ช่วยให้เบราว์เซอร์เลือกวิธีการจัดการภาพเคลื่อนไหว รายละเอียด หรือข้อความ"
 
@@ -16058,7 +16060,7 @@ msgid "Hide muted channels by default?"
 msgstr "ซ่อนช่องที่ปิดเสียงไว้เป็นค่าเริ่มต้นหรือไม่"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:57
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
 msgid "Hide my stream preview thumbnail"
 msgstr "ซ่อนภาพตัวอย่างสตรีมของฉัน"
 
@@ -16077,7 +16079,7 @@ msgstr "ซ่อนรหัสผ่าน"
 msgid "Hide picture-in-picture popout?"
 msgstr "ซ่อนหน้าต่างย่อย Picture-in-picture หรือไม่"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:799
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:804
 msgid "Hide preview thumbnail"
 msgstr "ซ่อนภาพตัวอย่าง"
 
@@ -16139,7 +16141,7 @@ msgid "High dynamic range display mode"
 msgstr "โหมดการแสดงผลแบบ HDR"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:85
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
 msgid "Higher quality can cost more CPU and latency."
 msgstr "คุณภาพที่สูงขึ้นอาจทำให้ใช้ CPU มากขึ้นและเกิดความหน่วงได้"
 
@@ -16522,11 +16524,11 @@ msgstr "ไม่สนใจ"
 msgid "Ignore friend request"
 msgstr "ไม่รับคำขอเป็นเพื่อน"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1005
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1010
 msgid "Ignore hardware devices"
 msgstr "ไม่ใช้อุปกรณ์ฮาร์ดแวร์"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:981
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
 msgid "Ignore input media"
 msgstr "ไม่สนใจสื่อนำเข้า"
 
@@ -16552,7 +16554,7 @@ msgstr "ไม่สนใจการแจ้งว่าเป็นสแป
 msgid "Ignore the friend request from {displayName}?"
 msgstr "ไม่สนใจคำขอเป็นเพื่อนจาก {displayName} ใช่ไหม"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:992
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
 msgid "Ignore virtual"
 msgstr "ไม่สนใจอุปกรณ์เสมือน"
 
@@ -17243,8 +17245,10 @@ msgstr "รูปภาพไม่ถูกต้อง"
 msgid "Invalid JSON. Paste the full response from the URL above."
 msgstr "JSON ไม่ถูกต้อง วางการตอบกลับทั้งหมดจาก URL ด้านบน"
 
+#. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
 #. Error message in the email change modal.
 #. Error message in the password change modal. Keep the tone plain and specific.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:27
 #: src/features/user/components/modals/EmailChangeModal.tsx:27
 #: src/features/user/components/modals/PasswordChangeModal.tsx:26
 msgid "Invalid or expired code"
@@ -18091,7 +18095,7 @@ msgid "Launch at login"
 msgstr "เปิดเมื่อเข้าสู่ระบบ"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:105
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
 msgid "Layering for AV1 and VP9 when available."
 msgstr "การจัดเรียงลำดับสำหรับ AV1 และ VP9 เมื่อมีให้ใช้"
 
@@ -20270,7 +20274,7 @@ msgstr "เกี่ยวข้องมากที่สุด"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:153
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -21735,7 +21739,7 @@ msgstr "อิโมจิแบบไม่เคลื่อนไหว ({emo
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:238
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:242
 msgid "None"
 msgstr "ไม่มี"
 
@@ -21959,7 +21963,7 @@ msgstr "วัตถุ"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:133
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
 msgid "Off"
 msgstr "ปิด"
 
@@ -22086,7 +22090,7 @@ msgstr "ใช้ได้เฉพาะบนหน้าจอขนาดใ
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "รับเฉพาะบัตรเครดิตเท่านั้น ไม่สามารถใช้บัตรเดบิตและบัตรเติมเงินในการตรวจสอบเนื้อหาสำหรับผู้ใหญ่ได้"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:975
 msgid "Only default speakers"
 msgstr "ลำโพงเริ่มต้นเท่านั้น"
 
@@ -22134,7 +22138,7 @@ msgstr "เรียกใช้โค้ดที่นี่เฉพาะเ
 msgid "Only show message previews for DMs with unread messages"
 msgstr "แสดงตัวอย่างข้อความเฉพาะแชทส่วนตัวที่มีข้อความที่ยังไม่ได้อ่าน"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:960
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:965
 msgid "Only speakers"
 msgstr "เฉพาะผู้พูด"
 
@@ -22679,7 +22683,7 @@ msgid "OpenH264 video codec"
 msgstr "เปิดตัวแปลงสัญญาณวิดีโอ OpenH264"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:42
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "ตัวแปลงรหัสวิดีโอ OpenH264 ให้บริการโดย Cisco Systems, Inc."
 
@@ -23123,7 +23127,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "หยุดรับคำเชิญชั่วคราว? ผู้ใช้ใหม่จะไม่สามารถเข้าร่วมผ่านลิงก์คำเชิญได้จนกว่าคุณจะเปิดใช้งานอีกครั้ง สมาชิกปัจจุบันจะไม่ได้รับผลกระทบ"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:49
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
 msgid "Pause my screen share preview in the background"
 msgstr "หยุดแสดงตัวอย่างการแชร์หน้าจอของฉันในพื้นหลังชั่วคราว"
 
@@ -23441,7 +23445,7 @@ msgstr "เลือกรูปลักษณ์ที่บัญชีผู
 
 #. Settings search entry label. Names an advanced screen-share audio setting in the settings UI.
 #. Switch label for the advanced opt-in that reveals a manual per-application audio source picker in the stream settings menu.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:197
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:127
 msgid "Pick the apps to capture audio from"
 msgstr "เลือกแอปที่จะจับภาพเสียง"
@@ -23799,7 +23803,7 @@ msgid "Prefer @mention"
 msgstr "ต้องการ @mention"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:73
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
 msgid "Prefer hardware"
 msgstr "ใช้ฮาร์ดแวร์ที่ต้องการ"
 
@@ -23811,7 +23815,7 @@ msgid "Prefer no @mention"
 msgstr "ไม่ต้องการถูกกล่าวถึง"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:77
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
 msgid "Prefer software"
 msgstr "ใช้ซอฟต์แวร์ที่ต้องการ"
 
@@ -23831,7 +23835,7 @@ msgid "Preferences..."
 msgstr "การตั้งค่า..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:170
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
 msgid "Preferred screen share codec"
 msgstr "ตัวแปลงสัญญาณที่ต้องการสำหรับการแชร์หน้าจอ"
 
@@ -24578,7 +24582,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "การกดปุ่มเพื่อพูดจะไม่ทำให้ไมโครโฟนของคุณกลับมาทำงานขณะที่คุณปิดเสียงตัวเอง โปรดเปิดเสียงเพื่อให้สามารถพูดได้"
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
 msgid "Quality"
 msgstr "คุณภาพ"
 
@@ -24691,7 +24695,7 @@ msgid "Raw embed JSON"
 msgstr "JSON สำหรับการดีบักแบบดิบ"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:82
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "ข้อความคมชัดระดับต้นฉบับ, 15 FPS"
 
@@ -24781,7 +24785,7 @@ msgid "Ready to upgrade?"
 msgstr "พร้อมจะอัปเกรดหรือยัง?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:89
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
 msgid "Realtime"
 msgstr "เรียลไทม์"
 
@@ -25020,7 +25024,7 @@ msgstr "คัดลอกข้อมูลอ้างอิงแล้ว"
 msgid "Referral parameters"
 msgstr "พารามิเตอร์การแนะนำ"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:281
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:285
 msgid "Refresh audio sources"
 msgstr "รีเฟรชแหล่งเสียง"
 
@@ -25055,7 +25059,7 @@ msgstr "คืนเงินสำหรับการซื้อล่าส
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the application detail. Keep it concise.
 #. Short label in the secrets section. Keep it concise.
-#: src/features/auth/components/modals/BackupCodesModal.tsx:111
+#: src/features/auth/components/modals/BackupCodesModal.tsx:114
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/SecretsSection.tsx:23
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:78
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:128
@@ -25063,7 +25067,7 @@ msgid "Regenerate"
 msgstr "สร้างใหม่"
 
 #. Security confirmation title for replacing account recovery backup codes.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:21
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:23
 msgid "Regenerate backup codes"
 msgstr "สร้างรหัสสำรองใหม่"
 
@@ -25931,6 +25935,7 @@ msgstr "ต้องมีทุกอย่างเหมือนระดั
 msgid "Reschedule message"
 msgstr "กำหนดเวลาข้อความใหม่"
 
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:200
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:240
 #: src/features/user/components/modals/EmailChangeModal.tsx:296
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
@@ -25954,6 +25959,7 @@ msgstr "ส่งอีกครั้ง ({resendCooldownSeconds} วินา�
 msgid "Resend ({resendSecondsRemaining}s)"
 msgstr "ส่งอีกครั้ง ({resendSecondsRemaining} วินาที)"
 
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:200
 #: src/features/user/components/modals/PasswordChangeModal.tsx:244
 msgid "Resend ({secondsRemaining}s)"
 msgstr "ส่งอีกครั้งใน ({secondsRemaining} วินาที)"
@@ -26299,7 +26305,7 @@ msgstr "การปรับขนาด, การขยายสูงสุ�
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:117
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:120
 msgid "Resolution"
 msgstr "ความละเอียด"
 
@@ -26996,7 +27002,7 @@ msgstr "ต้องอนุญาตการบันทึกหน้าจ
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:75
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:78
 msgid "Screen share"
 msgstr "แชร์หน้าจอ"
 
@@ -28475,7 +28481,7 @@ msgid "Share screens and windows."
 msgstr "แชร์หน้าจอและหน้าต่าง"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
 msgid "Share stream audio"
 msgstr "แชร์เสียงสตรีม"
 
@@ -28545,7 +28551,7 @@ msgid "Sharing personal information"
 msgstr "แชร์ข้อมูลส่วนตัว"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:84
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
 msgid "Sharper text at 720p, 30 FPS"
 msgstr "คมชัดขึ้นที่ 720p, 30 FPS"
 
@@ -29288,7 +29294,7 @@ msgid "Single community mode"
 msgstr "โหมดชุมชนเดียว"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:113
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
 msgid "Single layer"
 msgstr "เลเยอร์เดียว"
 
@@ -29602,7 +29608,7 @@ msgid "Software encoder"
 msgstr "ตัวเข้ารหัสซอฟต์แวร์"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:81
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
 msgid "Software encoder quality"
 msgstr "คุณภาพตัวเข้ารหัสซอฟต์แวร์"
 
@@ -29846,7 +29852,7 @@ msgstr "เสียง"
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:100
 msgid "Source"
 msgstr "ต้นฉบับ"
 
@@ -29928,7 +29934,7 @@ msgid "Spanish (Spain)"
 msgstr "สเปน (สเปน)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:121
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
 msgid "Spatial and temporal layers"
 msgstr "เลเยอร์เชิงพื้นที่และเชิงเวลา"
 
@@ -30586,7 +30592,7 @@ msgid "Stream preview"
 msgstr "ตัวอย่างสตรีม"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
 msgid "Stream quality"
 msgstr "คุณภาพสตรีม"
 
@@ -30612,7 +30618,7 @@ msgid "Streaming"
 msgstr "กำลังสตรีม"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:113
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:116
 msgid "Streaming mode"
 msgstr "โหมดสตรีมมิง"
 
@@ -30804,7 +30810,7 @@ msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:101
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
 msgid "SVC mode"
 msgstr "โหมด SVC"
 
@@ -31066,7 +31072,7 @@ msgstr "ประกาศจากทีมงาน {productName} คุณไ
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
 msgid "System default"
 msgstr "ค่าเริ่มต้นของระบบ"
 
@@ -31246,7 +31252,7 @@ msgid "Template URL"
 msgstr "ลิงก์เทมเพลต"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:117
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
 msgid "Temporal layers"
 msgstr "เลเยอร์ชั่วคราว"
 
@@ -31307,7 +31313,7 @@ msgstr "ทดสอบการแสดงตัวอย่าง URL แล�
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:161
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
 msgid "Text"
 msgstr "ข้อความ"
 
@@ -32533,7 +32539,7 @@ msgid "This will hide all favorites-related UI elements including buttons and me
 msgstr "การดำเนินการนี้จะซ่อนองค์ประกอบ UI ทั้งหมดที่เกี่ยวข้องกับรายการโปรด รวมถึงปุ่มและรายการเมนู รายการโปรดที่คุณมีอยู่จะยังคงอยู่และสามารถเปิดใช้งานได้อีกครั้งทุกเมื่อจาก <0>{favoritesSettingsPath}</0>"
 
 #. Security warning shown before replacing account recovery backup codes.
-#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:66
+#: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:88
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "การดำเนินการนี้จะทำให้รหัสสำรองที่คุณมีอยู่เป็นโมฆะและสร้างรหัสใหม่ขึ้นมา"
 
@@ -33533,12 +33539,19 @@ msgstr "ไม่สามารถโหลดแบนเนอร์โปร
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "ไม่สามารถเตรียมอิโมจิสำหรับอัปโหลดได้ เกิดข้อผิดพลาดดังนี้:"
 
+#. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
 #. Error message in the email change modal.
 #. Error message in the password change modal. Keep the tone plain and specific.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:31
 #: src/features/user/components/modals/EmailChangeModal.tsx:31
 #: src/features/user/components/modals/PasswordChangeModal.tsx:30
 msgid "Unable to resend code right now"
 msgstr "ไม่สามารถส่งรหัสซ้ำได้ในขณะนี้"
+
+#. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:23
+msgid "Unable to send verification code"
+msgstr "ไม่สามารถส่งรหัสยืนยันได้"
 
 #. Error toast shown when sending the recorded voice message fails.
 #. Toast shown when the voice message send pipeline fails.
@@ -34085,7 +34098,7 @@ msgstr "กลุ่มที่ไม่มีชื่อ"
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
 msgid "Unnamed input"
 msgstr "อินพุตไม่ระบุชื่อ"
 
@@ -34958,7 +34971,7 @@ msgstr "ใช้ปุ่มลูกศรขึ้นและลงเพื
 msgid "Use these buttons to quickly set all permissions."
 msgstr "ใช้ปุ่มเหล่านี้เพื่อตั้งค่าการอนุญาตทั้งหมดอย่างรวดเร็ว"
 
-#: src/features/auth/components/modals/BackupCodesModal.tsx:35
+#: src/features/auth/components/modals/BackupCodesModal.tsx:37
 msgid "Use these codes to access your account if you lose your authenticator app."
 msgstr "ใช้รหัสเหล่านี้เพื่อเข้าถึงบัญชีของคุณ หากคุณทำแอปยืนยันตัวตนหาย"
 
@@ -35379,6 +35392,8 @@ msgstr "ส่งรหัสยืนยันแล้ว ตรวจสอ�
 msgid "Verification email sent. Check your inbox."
 msgstr "ส่งอีเมลยืนยันแล้ว โปรดตรวจสอบกล่องจดหมายเข้าของคุณ"
 
+#. Error title shown when the backup codes email verification expired and must be started again.
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:35
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:224
 msgid "Verification expired"
 msgstr "การยืนยันหมดอายุแล้ว"
@@ -35387,10 +35402,6 @@ msgstr "การยืนยันหมดอายุแล้ว"
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
 msgstr "ยืนยันตัวตนไม่สำเร็จ"
-
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:55
-msgid "Verification may be required before viewing your backup codes."
-msgstr "อาจต้องมีการยืนยันตัวตนก่อนดูรหัสสำรองของคุณ"
 
 #. Label in the community badge.
 #: src/features/guild/components/GuildBadge.tsx:12
@@ -35782,7 +35793,7 @@ msgid "View and regenerate client secrets and bot tokens"
 msgstr "ดูและสร้าง Client Secret และ Bot Token ใหม่"
 
 #. Short label in the authentication backup codes view modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/BackupCodesViewModal.tsx:16
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:19
 msgid "View backup codes"
 msgstr "ดูรหัสสำรอง"
 
@@ -36479,7 +36490,7 @@ msgstr "เราต้องตรวจสอบให้แน่ใจว่
 msgid "We need two verification steps before you continue. We will show one step at a time."
 msgstr "เราต้องการขั้นตอนการยืนยันสองขั้นตอนก่อนที่คุณจะดำเนินการต่อ เราจะแสดงทีละขั้นตอน"
 
-#: src/features/auth/components/modals/BackupCodesModal.tsx:38
+#: src/features/auth/components/modals/BackupCodesModal.tsx:40
 msgid "We recommend saving these codes now so that you don't get locked out of your account."
 msgstr "เราแนะนำให้บันทึกรหัสเหล่านี้ไว้ตอนนี้ เพื่อป้องกันไม่ให้คุณเข้าสู่ระบบบัญชีไม่ได้"
 
@@ -36545,6 +36556,10 @@ msgstr "เราจะส่งรหัสยืนยันเพื่อแ
 #: src/features/user/components/modals/PasswordChangeModal.tsx:149
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "เราจะส่งรหัสยืนยันไปที่อีเมลของคุณก่อนที่คุณจะเปลี่ยนรหัสผ่านได้"
+
+#: src/features/auth/components/modals/BackupCodesViewModal.tsx:146
+msgid "We'll send a verification code to your email before you can view your backup codes."
+msgstr "เราจะส่งรหัสยืนยันไปยังอีเมลของคุณก่อนที่คุณจะดูรหัสสำรองได้"
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:285
 msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, to allow at most {PHONE_VERIFICATION_LIMIT} verifications in about {PHONE_VERIFICATION_WINDOW_DAYS} days."

@@ -1972,6 +1972,9 @@
         "msgid": "Turn off audio sharing for this source or try again in a moment."
       },
       {
+        "msgid": "Unable to send verification code"
+      },
+      {
         "msgid": "Unavailable"
       },
       {
@@ -1991,6 +1994,9 @@
       },
       {
         "msgid": "Volume sliders"
+      },
+      {
+        "msgid": "We'll send a verification code to your email before you can view your backup codes."
       },
       {
         "msgid": "Welcome"

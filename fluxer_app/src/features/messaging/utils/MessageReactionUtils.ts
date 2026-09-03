@@ -14,8 +14,9 @@ import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, plural} from '@lingui/core/macro';
 
 const REACTED_BY_DESCRIPTOR = msg({
-	message: '{emojiName} reacted by {reactors}',
-	comment: 'Label in the reaction utils helper. Preserve {emojiName}, {reactors}; they are inserted by code.',
+	message: '{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}',
+	comment:
+		'Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.',
 });
 const listFormatterCache = new Map<string, Intl.ListFormat>();
 
@@ -44,14 +45,15 @@ export function getReactionTooltip(message: Message, emoji: ReactionEmoji) {
 	}
 	const reaction = message.getReaction(emoji);
 	const reactionCount = reaction === null || reaction === undefined ? 0 : reaction.count;
-	const othersCount = Math.max(0, (reactionCount || 0) - users.length);
+	const reactorCount = Math.max(users.length, reactionCount);
+	const othersCount = Math.max(0, reactorCount - users.length);
 	const emojiName = getEmojiNameWithColons(emoji);
 	const parts: Array<string> = [...users];
 	if (othersCount > 0) {
 		parts.push(plural({count: othersCount}, {one: '# other', other: '# others'}));
 	}
 	const reactors = getReactorListFormatter(getCurrentLocale()).format(parts);
-	return i18n._(REACTED_BY_DESCRIPTOR, {emojiName, reactors});
+	return i18n._(REACTED_BY_DESCRIPTOR, {emojiName, reactors, reactorCount});
 }
 
 const isCustomEmoji = (emoji: UnicodeEmoji | ReactionEmoji): emoji is ReactionEmoji =>
