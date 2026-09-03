@@ -235,6 +235,19 @@ function patternsEqual(a, b) {
 	return true;
 }
 
+function routingRulesEqual(a, b) {
+	if (a === b) return true;
+	if (!a || !b) return false;
+	if (!patternsEqual(a.include, b.include)) return false;
+	if (!patternsEqual(a.exclude, b.exclude)) return false;
+	if (!patternsEqual(a.workaround, b.workaround)) return false;
+	return (
+		Boolean(a.ignoreDevices) === Boolean(b.ignoreDevices) &&
+		Boolean(a.onlySpeakers) === Boolean(b.onlySpeakers) &&
+		Boolean(a.onlyDefaultSpeakers) === Boolean(b.onlyDefaultSpeakers)
+	);
+}
+
 class ProcessLoopback extends EventEmitter {
 	constructor(target, options = {}) {
 		super();
@@ -289,6 +302,28 @@ class ProcessLoopback extends EventEmitter {
 			this.refreshTimer = setInterval(() => this.refreshRuleForLateChildren(), LATE_SPAWN_REFRESH_INTERVAL_MS);
 			this.refreshTimer.unref?.();
 		}
+	}
+
+	setRoutingRule(target, options = {}) {
+		if (this.closed || !this.started) return false;
+		if (typeof this.capture?.setRule !== 'function') return false;
+		let nextRule;
+		try {
+			nextRule = routingRuleFromTarget(target, options);
+		} catch {
+			return false;
+		}
+		if (routingRulesEqual(nextRule, this.rule)) return true;
+		let applied = false;
+		try {
+			applied = this.capture.setRule(nextRule) !== false;
+		} catch {
+			return false;
+		}
+		if (!applied) return false;
+		this.rule = nextRule;
+		this.options = options;
+		return true;
 	}
 
 	refreshRuleForLateChildren() {

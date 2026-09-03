@@ -684,6 +684,8 @@ const api: ElectronAPI = {
 			ipcRenderer.invoke('native-audio:resolve-root-pid', sourceId),
 		start: (options: NativeAudioStartOptions): Promise<NativeAudioStartResult> =>
 			ipcRenderer.invoke('native-audio:start', options),
+		setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>): Promise<boolean> =>
+			ipcRenderer.invoke('native-audio:set-rule', captureId, linuxRule),
 		stop: (captureId: string): Promise<void> => ipcRenderer.invoke('native-audio:stop', captureId),
 		getRoutingGraph: (captureId?: string): Promise<NativeAudioRoutingGraphResult> =>
 			ipcRenderer.invoke('native-audio:get-routing-graph', captureId),

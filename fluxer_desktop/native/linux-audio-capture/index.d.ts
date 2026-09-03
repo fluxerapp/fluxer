@@ -120,6 +120,8 @@ export declare class ProcessLoopback extends EventEmitter implements ProcessLoop
 
 	start(): void;
 
+	setRoutingRule(target: {linuxRule: JsRoutingRule} | number, options?: {includeProcessTree?: boolean}): boolean;
+
 	routingGraph(): RoutingGraph | null;
 
 	stop(): Promise<void>;

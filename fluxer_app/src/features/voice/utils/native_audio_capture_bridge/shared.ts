@@ -40,6 +40,43 @@ export interface NativeAudioBridgeHandle {
 export interface ActiveNativeAudioBridge {
 	captureId: string;
 	cleanup: (stopRemote?: boolean) => Promise<void>;
+	linuxRule?: NativeAudioRoutingRule;
+	includeSelfWindowAudio?: boolean;
+}
+
+export type NativeAudioRoutingRule = NonNullable<NativeAudioStartOptions['linuxRule']>;
+
+function routingPatternsEqual(a: NativeAudioRoutingRule['include'], b: NativeAudioRoutingRule['include']): boolean {
+	const left = a ?? [];
+	const right = b ?? [];
+	if (left.length !== right.length) return false;
+	const serialize = (entry: Record<string, unknown>): string =>
+		JSON.stringify(
+			Object.entries(entry)
+				.filter(([, value]) => typeof value === 'string')
+				.sort(([x], [y]) => x.localeCompare(y)),
+		);
+	const serializedLeft = left.map(serialize).sort();
+	const serializedRight = right.map(serialize).sort();
+	return serializedLeft.every((entry, index) => entry === serializedRight[index]);
+}
+
+export function nativeAudioRoutingRulesEqual(
+	a: NativeAudioRoutingRule | undefined,
+	b: NativeAudioRoutingRule | undefined,
+): boolean {
+	if (a === b) return true;
+	if (!a || !b) return false;
+	if (!routingPatternsEqual(a.include, b.include)) return false;
+	if (!routingPatternsEqual(a.exclude, b.exclude)) return false;
+	return (
+		Boolean(a.ignoreDevices) === Boolean(b.ignoreDevices) &&
+		Boolean(a.ignoreInputMedia) === Boolean(b.ignoreInputMedia) &&
+		Boolean(a.ignoreVirtual) === Boolean(b.ignoreVirtual) &&
+		Boolean(a.workaround) === Boolean(b.workaround) &&
+		Boolean(a.onlySpeakers) === Boolean(b.onlySpeakers) &&
+		Boolean(a.onlyDefaultSpeakers) === Boolean(b.onlyDefaultSpeakers)
+	);
 }
 
 export interface GeneratorAudioTrack extends MediaStreamTrack {

@@ -653,6 +653,7 @@ export interface NativeAudioApi {
 	listAudibleApplications(): Promise<Array<NativeAudioApplication>>;
 	resolveAudioRootPidForSource(sourceId: string): Promise<number | null>;
 	start(options: NativeAudioStartOptions): Promise<NativeAudioStartResult>;
+	setRule(captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>): Promise<boolean>;
 	stop(captureId: string): Promise<void>;
 	getRoutingGraph(captureId?: string): Promise<NativeAudioRoutingGraphResult>;
 	onFrame(callback: (message: NativeAudioFrameMessage) => void): () => void;

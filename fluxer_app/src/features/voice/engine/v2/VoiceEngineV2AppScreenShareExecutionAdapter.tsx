@@ -75,6 +75,7 @@ import {
 	captureNativeAudioTrackForLinuxRouting,
 	commitNativeAudioBridgeReplacement,
 	disarmNativeAudio,
+	reconfigureLinuxNativeAudioRouting,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {SCREEN_SHARE_DEGRADATION_PREFERENCE} from '@app/features/voice/utils/ScreenShareOptions';
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
@@ -752,6 +753,14 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		const participant = room?.localParticipant;
 		if (!participant || !participant.isScreenShareEnabled) return false;
 		if (!linuxRule) return false;
+		if (options.replaceExisting !== true) {
+			const reconfigured = await reconfigureLinuxNativeAudioRouting(linuxRule, options);
+			if (reconfigured !== 'unsupported') {
+				this.syncLocalScreenShareAudioStateInternal(participant, true);
+				this.syncPersistedScreenShareAudioPreferenceInternal(participant);
+				return true;
+			}
+		}
 		const capturedTrack = await captureNativeAudioTrackForLinuxRouting(linuxRule, options);
 		if (!capturedTrack) return false;
 		let adopted = false;
