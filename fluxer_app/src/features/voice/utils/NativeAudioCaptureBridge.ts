@@ -47,6 +47,7 @@ const logger = new Logger('NativeAudioCaptureBridge');
 let patched = false;
 let originalGetDisplayMedia: MediaDevices['getDisplayMedia'] | null = null;
 let availabilityCache: Promise<NativeAudioAvailability> | null = null;
+let resolvedAvailability: NativeAudioAvailability | null = null;
 let armedCapture: ArmedNativeAudioCapture | null = null;
 let lastArmFailure: ScreenShareAudioCaptureDebugInfo | null = null;
 let activeBridge: ActiveNativeAudioBridge | null = null;
@@ -765,10 +766,18 @@ export async function getNativeAudioAvailabilityCached(): Promise<NativeAudioAva
 			: Promise.resolve<NativeAudioAvailability>({available: false, reason: 'unsupported-platform'});
 	}
 	const availability = await availabilityCache;
+	resolvedAvailability = availability;
 	if (!availability.available) {
 		availabilityCache = null;
 	}
 	return availability;
+}
+
+export function getNativeAudioAvailabilitySnapshot(): NativeAudioAvailability | null {
+	if (resolvedAvailability == null) {
+		void getNativeAudioAvailabilityCached().catch(() => undefined);
+	}
+	return resolvedAvailability;
 }
 
 function nativeAudioSupportsScope(availability: NativeAudioAvailability, scope: 'process' | 'system'): boolean {
@@ -1439,6 +1448,7 @@ export function disarmNativeAudio(): void {
 
 export function resetNativeAudioAvailabilityCache(): void {
 	availabilityCache = null;
+	resolvedAvailability = null;
 }
 
 export function resetNativeAudioCaptureBridgeForTests(): void {

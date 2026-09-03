@@ -17,6 +17,7 @@ import {
 	mapLinuxAudioNodeToItems,
 	uniqueLinuxAudioSourceItems,
 } from '@app/features/voice/utils/LinuxAudioSourceRules';
+import type {StreamSettingsShareContext} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import type {VirtmicNode} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -39,6 +40,16 @@ const APPS_DESCRIPTOR = msg({
 const ENTIRE_SYSTEM_DESCRIPTOR = msg({
 	message: 'Entire system',
 	comment: 'Summary label in the Linux audio source picker when capturing the whole system audio mix.',
+});
+const MICROPHONE_DESCRIPTOR = msg({
+	message: 'Microphone',
+	comment:
+		'Summary label in the Linux audio source picker on a video device share, where the default is the microphone rather than the system mix.',
+});
+const MICROPHONE_WITH_DEVICE_DESCRIPTOR = msg({
+	message: 'Microphone ({deviceLabel})',
+	comment:
+		'Capture option in the Linux audio source picker on a video device share. {deviceLabel} is the selected audio input device name.',
 });
 const AUDIO_SOURCES_DESCRIPTOR = msg({
 	message: 'Audio sources: {summaryLabel}',
@@ -119,10 +130,14 @@ async function fetchAudioSources(options: LinuxAudioSourceFilterOptions): Promis
 
 interface AudioSourcePickerLinuxSubmenuProps {
 	onSelectionChange?: () => void;
+	shareContext?: StreamSettingsShareContext;
+	microphoneLabel?: string;
 }
 
-export const AudioSourcePickerLinuxSubmenu = observer(({onSelectionChange}: AudioSourcePickerLinuxSubmenuProps) => {
+export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerLinuxSubmenuProps) => {
+	const {onSelectionChange, shareContext = 'display', microphoneLabel} = props;
 	const {i18n} = useLingui();
+	const isDeviceShare = shareContext === 'device';
 	const sourceMode = VoiceSettings.getScreenShareAudioSourceMode();
 	const includeSources = VoiceSettings.getScreenShareAudioIncludeSources();
 	const excludeSources = VoiceSettings.getScreenShareAudioExcludeSources();
@@ -132,8 +147,17 @@ export const AudioSourcePickerLinuxSubmenu = observer(({onSelectionChange}: Audi
 	const [snapshot, setSnapshot] = useState<AudioSourceSnapshot>(EMPTY_SNAPSHOT);
 	const refresh = useCallback(() => {
 		setSnapshot((prev) => ({...prev, loading: true}));
-		void fetchAudioSources({granular, deviceSelect, ignoreVirtual}).then(setSnapshot);
-	}, [granular, deviceSelect, ignoreVirtual]);
+		void fetchAudioSources({granular, deviceSelect, ignoreVirtual}).then((next) => {
+			if (!next.available) {
+				logger.warn('Hiding the audio source picker because no audio-bridge backend is available', {
+					shareContext,
+					reason: next.error,
+					hasPipewire: next.hasPipewire,
+				});
+			}
+			setSnapshot(next);
+		});
+	}, [granular, deviceSelect, ignoreVirtual, shareContext]);
 	useEffect(() => {
 		refresh();
 	}, [refresh]);
@@ -178,6 +202,9 @@ export const AudioSourcePickerLinuxSubmenu = observer(({onSelectionChange}: Audi
 		},
 		[excludeSources, onSelectionChange],
 	);
+	const defaultSourceLabel = isDeviceShare
+		? i18n._(MICROPHONE_WITH_DEVICE_DESCRIPTOR, {deviceLabel: microphoneLabel ?? i18n._(MICROPHONE_DESCRIPTOR)})
+		: i18n._(ENTIRE_SYSTEM_DESCRIPTOR);
 	const summaryLabel =
 		sourceMode === 'none'
 			? i18n._(NO_AUDIO_DESCRIPTOR)
@@ -185,7 +212,9 @@ export const AudioSourcePickerLinuxSubmenu = observer(({onSelectionChange}: Audi
 				? includeSources.length === 1
 					? (getLinuxAudioSourceDisplayName(includeSources[0]) ?? i18n._(CUSTOM_DESCRIPTOR))
 					: i18n._(APPS_DESCRIPTOR, {length: includeSources.length})
-				: i18n._(ENTIRE_SYSTEM_DESCRIPTOR);
+				: isDeviceShare
+					? i18n._(MICROPHONE_DESCRIPTOR)
+					: i18n._(ENTIRE_SYSTEM_DESCRIPTOR);
 	if (!snapshot.available && !snapshot.loading) {
 		return null;
 	}
@@ -203,7 +232,7 @@ export const AudioSourcePickerLinuxSubmenu = observer(({onSelectionChange}: Audi
 							onSelect={handlePickSystem}
 							data-flx="voice.audio-source-picker-linux.audio-source-picker-linux-submenu.menu-item-radio.pick-system"
 						>
-							<Trans>Entire system audio</Trans>
+							{isDeviceShare ? defaultSourceLabel : <Trans>Entire system audio</Trans>}
 						</MenuItemRadio>
 						<MenuItemRadio
 							selected={sourceMode === 'none'}
@@ -230,7 +259,7 @@ export const AudioSourcePickerLinuxSubmenu = observer(({onSelectionChange}: Audi
 							))}
 						</MenuGroup>
 					)}
-					{sourceMode === 'system' && snapshot.items.length > 0 && (
+					{!isDeviceShare && sourceMode === 'system' && snapshot.items.length > 0 && (
 						<MenuGroup data-flx="voice.audio-source-picker-linux.audio-source-picker-linux-submenu.menu-group--3">
 							<MenuGroupLabel data-flx="voice.audio-source-picker-linux.audio-source-picker-linux-submenu.group-label.exclude-from-system">
 								{i18n._(EXCLUDE_FROM_SYSTEM_DESCRIPTOR)}

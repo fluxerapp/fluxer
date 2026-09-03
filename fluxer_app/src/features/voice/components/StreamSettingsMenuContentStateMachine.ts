@@ -5,7 +5,12 @@ import {
 	type DisplayShareEnvironment,
 	prestartAudioToggleIsPickerOwned,
 } from '@app/features/voice/utils/ScreenShareEnvironment';
-import type {StreamSettingsShareContext} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {
+	canSelectManualAudioSources,
+	manualAudioSourcesGovernShare,
+	type ScreenShareAudioSourceMode,
+	type StreamSettingsShareContext,
+} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
 import {getInitialSnapshot, setup, transition} from 'xstate';
 
@@ -16,9 +21,7 @@ export type StreamSettingsAudioControlStateValue =
 	| 'restartRequired'
 	| 'toggle';
 export type StreamSettingsAudioControlLabelKey = 'captureAppAudio' | 'captureDesktopAudio' | 'captureDeviceAudio';
-export type StreamSettingsAudioControlHintKey = 'nativeAudioUnsupported' | 'prestartNativePicker' | 'restartRequired';
-export type StreamSettingsNativeAudioUnsupportedScope = 'process' | 'system';
-export type StreamSettingsNativePickerNoticeKey = 'browserManagedDesktopAudio' | 'systemManagedDesktopAudio';
+type StreamSettingsNativeAudioUnsupportedScope = 'process' | 'system';
 
 export interface StreamSettingsNativeAudioSignals {
 	shareContext: StreamSettingsShareContext;
@@ -32,23 +35,20 @@ export interface StreamSettingsAudioControlSignals extends StreamSettingsNativeA
 	supportsStreamAudio: boolean;
 	captureAudioEnabled: boolean;
 	hasLiveScreenShareAudioPublication: boolean;
+	manualAudioSourcesOptIn?: boolean;
+	audioSourceMode?: ScreenShareAudioSourceMode;
+	selectedAudioSourceCount?: number;
 }
 
 export interface StreamSettingsAudioControlViewState {
 	value: StreamSettingsAudioControlStateValue;
-	visible: boolean;
-	disabled: boolean;
 	checked: boolean;
 	labelKey: StreamSettingsAudioControlLabelKey;
-	hintKey: StreamSettingsAudioControlHintKey | null;
 }
 
 export interface StreamSettingsAudioMenuViewState {
 	control: StreamSettingsAudioControlViewState;
-	nativeAudioUnsupportedScope: StreamSettingsNativeAudioUnsupportedScope | null;
-	showNativePickerNotice: boolean;
-	nativePickerNoticeKey: StreamSettingsNativePickerNoticeKey | null;
-	showLinuxAudioControls: boolean;
+	showManualAudioSources: boolean;
 	showDeviceAudioMenu: boolean;
 }
 
@@ -57,7 +57,7 @@ type StreamSettingsAudioControlEvent = {
 	signals: StreamSettingsAudioControlSignals;
 };
 
-export function selectStreamSettingsNativeAudioUnsupportedScope(
+function selectStreamSettingsNativeAudioUnsupportedScope(
 	shareContext: StreamSettingsShareContext,
 ): StreamSettingsNativeAudioUnsupportedScope | null {
 	if (shareContext === 'app') return 'process';
@@ -65,7 +65,7 @@ export function selectStreamSettingsNativeAudioUnsupportedScope(
 	return null;
 }
 
-export function selectStreamSettingsNativeAudioUnsupportedOnThisOs(signals: StreamSettingsNativeAudioSignals): boolean {
+function selectStreamSettingsNativeAudioUnsupportedOnThisOs(signals: StreamSettingsNativeAudioSignals): boolean {
 	const scope = selectStreamSettingsNativeAudioUnsupportedScope(signals.shareContext);
 	return (
 		scope != null &&
@@ -154,15 +154,6 @@ function selectAudioControlLabelKey(shareContext: StreamSettingsShareContext): S
 	return 'captureDesktopAudio';
 }
 
-function selectAudioControlHintKey(
-	value: StreamSettingsAudioControlStateValue,
-): StreamSettingsAudioControlHintKey | null {
-	if (value === 'unsupported') return 'nativeAudioUnsupported';
-	if (value === 'prestartNativePickerOwned') return 'prestartNativePicker';
-	if (value === 'restartRequired') return 'restartRequired';
-	return null;
-}
-
 export function selectStreamSettingsAudioMenuState(
 	signals: StreamSettingsAudioControlSignals,
 ): StreamSettingsAudioMenuViewState {
@@ -170,20 +161,21 @@ export function selectStreamSettingsAudioMenuState(
 	return {
 		control: {
 			value,
-			visible: value === 'toggle',
-			disabled: value !== 'toggle',
 			checked: signals.captureAudioEnabled,
 			labelKey: selectAudioControlLabelKey(signals.shareContext),
-			hintKey: selectAudioControlHintKey(value),
 		},
-		nativeAudioUnsupportedScope: selectStreamSettingsNativeAudioUnsupportedScope(signals.shareContext),
-		showNativePickerNotice: false,
-		nativePickerNoticeKey: null,
-		showLinuxAudioControls:
+		showManualAudioSources:
 			signals.supportsStreamAudio &&
 			signals.captureAudioEnabled &&
-			signals.shareContext !== 'device' &&
-			signals.platform === 'linux',
+			manualAudioSourcesGovernShare(signals) &&
+			canSelectManualAudioSources({
+				platform: signals.platform,
+				shareContext: signals.shareContext,
+				nativeAudioAvailability: signals.nativeAudioAvailability,
+				manualOptIn: signals.manualAudioSourcesOptIn,
+				audioSourceMode: signals.audioSourceMode,
+				selectedSourceCount: signals.selectedAudioSourceCount,
+			}),
 		showDeviceAudioMenu: signals.shareContext === 'device' && signals.captureAudioEnabled,
 	};
 }

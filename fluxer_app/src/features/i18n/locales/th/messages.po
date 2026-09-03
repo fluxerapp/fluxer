@@ -810,7 +810,7 @@ msgid "{label} images cannot be animated. Use a static image."
 msgstr "{label} ไม่สามารถเป็นภาพเคลื่อนไหวได้ ใช้ภาพนิ่ง"
 
 #. Summary label in the Linux audio source picker when N apps are included. {length} is the integer app count.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:34
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:35
 msgid "{length} apps"
 msgstr "{length} แอป"
 
@@ -1686,7 +1686,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:100
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:101
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1761,7 +1761,7 @@ msgid "3 months"
 msgstr "3 เดือน"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:104
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:105
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1820,7 +1820,7 @@ msgid "6-digit code"
 msgstr "รหัส 6 หลัก"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:108
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:109
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2700,8 +2700,13 @@ msgstr "ต้องยืนยันตัวตนเพิ่มเติม
 msgid "Address"
 msgstr "ที่อยู่"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:147
+msgid "Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop."
+msgstr "เพิ่มตัวเลือกแหล่งเสียงแบบกำหนดเองไปยังเมนูการตั้งค่าสตรีม หากไม่มีตัวเลือกนี้ หน้าต่างที่แชร์อยู่แล้วจะจับภาพแอปนั้น และหน้าจอที่แชร์จะจับภาพเดสก์ท็อปของคุณ"
+
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:129
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "เพิ่ม H.264 สำหรับอุปกรณ์ที่หลากหลาย ใช้ทรัพยากรในการเข้ารหัสมากขึ้น"
 
@@ -2985,8 +2990,8 @@ msgstr "อนุญาตให้ทุกคนที่ดูโปรไฟ
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:188
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:90
 msgid "Allow AV1 for screen sharing"
 msgstr "อนุญาต AV1 สำหรับการแชร์หน้าจอ"
 
@@ -3039,8 +3044,8 @@ msgstr "อนุญาตสำหรับทุกชุมชน"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:187
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:192
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:94
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "อนุญาต H.265 (HEVC) สำหรับการแชร์หน้าจอ"
 
@@ -3700,6 +3705,11 @@ msgstr "เพิ่ม ┬─┬ ノ( ゜-゜ノ) ต่อท้ายข้�
 msgid "Application access revoked"
 msgstr "การเข้าถึงแอปพลิเคชันถูกยกเลิก"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:131
+msgid "Application audio"
+msgstr "เสียงของแอปพลิเคชัน"
+
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:110
@@ -4073,12 +4083,12 @@ msgid "Audio boost"
 msgstr "เพิ่มเสียง"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
 msgid "Audio device"
 msgstr "อุปกรณ์เสียง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:16
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:18
 msgid "Audio device alerts"
 msgstr "การแจ้งเตือนอุปกรณ์เสียง"
 
@@ -4168,7 +4178,7 @@ msgid "Audio send:"
 msgstr "ส่งเสียง:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
 msgid "Audio settings"
 msgstr "การตั้งค่าเสียง"
 
@@ -4178,8 +4188,13 @@ msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "การตั้งค่าเสียง"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:135
+msgid "Audio sources"
+msgstr "แหล่งเสียง"
+
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:43
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:54
 msgid "Audio sources: {summaryLabel}"
 msgstr "แหล่งเสียง: {summaryLabel}"
 
@@ -4384,9 +4399,9 @@ msgstr "คำแนะนำเติมข้อความอัตโนม
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:69
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:109
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:149
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:91
@@ -4400,13 +4415,13 @@ msgid "Automatic"
 msgstr "อัตโนมัติ"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:174
 msgid "Automatic ({codec})"
 msgstr "อัตโนมัติ ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:48
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:50
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:213
 msgid "Automatic gain control"
 msgstr "ควบคุมอัตราขยายเสียงอัตโนมัติ"
@@ -4495,12 +4510,12 @@ msgid "Autoscrolling"
 msgstr "เลื่อนอัตโนมัติ"
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:103
 msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (ต้องเปิดใช้งานก่อน)"
 
@@ -4731,7 +4746,7 @@ msgid "Badge"
 msgstr "ป้ายกำกับ"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:93
 msgid "Balanced"
 msgstr "สมดุล"
 
@@ -4949,7 +4964,7 @@ msgid "Biometrics"
 msgstr "ไบโอเมตริกซ์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:196
 msgid "Bitrate"
 msgstr "บิตเรต"
 
@@ -5301,7 +5316,7 @@ msgid "Browser locale: {format}"
 msgstr "ภาษาของเบราว์เซอร์: {format}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:64
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:66
 msgid "Browser mic gain for custom processing"
 msgstr "ระดับเสียงไมโครโฟนของเบราว์เซอร์สำหรับการประมวลผลแบบกำหนดเอง"
 
@@ -5788,19 +5803,24 @@ msgid "Captcha verification failed. Try again."
 msgstr "การยืนยันแคปต์ชาล้มเหลว โปรดลองอีกครั้ง"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:48
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
 msgid "Capture"
 msgstr "บันทึกเสียง"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:394
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:837
 msgid "Capture app audio"
 msgstr "บันทึกเสียงจากแอป"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:395
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:139
+msgid "Capture card"
+msgstr "การ์ดจับภาพ"
+
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:838
 msgid "Capture desktop audio"
 msgstr "บันทึกเสียงเดสก์ท็อป"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:393
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:836
 msgid "Capture device audio"
 msgstr "บันทึกเสียงจากอุปกรณ์"
 
@@ -6813,7 +6833,7 @@ msgid "Choose your profile accent color"
 msgstr "เลือกสีโปรไฟล์ของคุณ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:119
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7421,7 +7441,7 @@ msgid "Code:"
 msgstr "รหัส:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:76
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:78
 msgid "Codec"
 msgstr "ตัวแปลงสัญญาณ"
 
@@ -7941,7 +7961,7 @@ msgstr "โฟกัสช่องพิมพ์ข้อความ"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
 msgid "Configure"
 msgstr "กำหนดค่า"
 
@@ -8212,7 +8232,7 @@ msgid "Connection volume"
 msgstr "ระดับเสียงการเชื่อมต่อ"
 
 #. Settings search entry label. Names an advanced voice setting in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:28
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:30
 msgid "Connection volume controls"
 msgstr "การควบคุมระดับเสียงการเชื่อมต่อ"
 
@@ -8283,7 +8303,7 @@ msgid "Content filtering"
 msgstr "การกรองเนื้อหา"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:141
 msgid "Content hint"
 msgstr "คำแนะนำเนื้อหา"
 
@@ -9757,10 +9777,10 @@ msgstr "ปัจจุบัน: {mutedText}"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:30
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:31
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:88
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:89
 msgid "Custom"
 msgstr "กำหนดเอง"
 
@@ -9947,7 +9967,7 @@ msgid "Custom video backgrounds"
 msgstr "พื้นหลังวิดีโอแบบกำหนดเอง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:60
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:62
 msgid "Custom voice processing"
 msgstr "การประมวลผลเสียงแบบกำหนดเอง"
 
@@ -10913,7 +10933,7 @@ msgid "Detached banner"
 msgstr "แบนเนอร์ที่ไม่ได้ใช้งาน"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:157
 msgid "Detail"
 msgstr "รายละเอียด"
 
@@ -10988,7 +11008,7 @@ msgid "Device"
 msgstr "อุปกรณ์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:12
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:14
 msgid "Device alerts"
 msgstr "การแจ้งเตือนอุปกรณ์"
 
@@ -11001,12 +11021,12 @@ msgstr "รายละเอียดอุปกรณ์"
 msgid "Device revoked"
 msgstr "ยกเลิกอุปกรณ์แล้ว"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1028
 msgid "Device selection"
 msgstr "การเลือกอุปกรณ์"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:36
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:38
 msgid "Device volume"
 msgstr "ระดับเสียงอุปกรณ์"
 
@@ -11030,7 +11050,7 @@ msgid "Devices"
 msgstr "อุปกรณ์"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:93
 msgid "Dial in your own numbers"
 msgstr "โทรเข้าด้วยหมายเลขของคุณเอง"
 
@@ -11206,7 +11226,7 @@ msgid "Disable mobile push notifications"
 msgstr "ปิดการแจ้งเตือนบนมือถือ"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:53
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "ปิดหน้าต่างย่อยสำหรับแชร์หน้าจอ"
 
@@ -12873,18 +12893,18 @@ msgstr "เปิดใช้งานเนื้อหาสำหรับผ
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:61
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:180
 msgid "Encoder path"
 msgstr "เส้นทางตัวเข้ารหัส"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:65
 msgid "Encoder preference for new screen shares."
 msgstr "การตั้งค่าตัวเข้ารหัสสำหรับแชร์หน้าจอใหม่"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:200
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "ตัวเข้ารหัส, SVC, สตรีมสำรอง และค่าที่ตั้งไว้ล่วงหน้าสำหรับบิตเรต"
 
@@ -13221,11 +13241,11 @@ msgid "Entire screen"
 msgstr "ทั้งหน้าจอ"
 
 #. Summary label in the Linux audio source picker when capturing the whole system audio mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:39
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
 msgid "Entire system"
 msgstr "ทั้งระบบ"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:206
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:231
 msgid "Entire system audio"
 msgstr "เสียงทั้งระบบ"
 
@@ -13402,7 +13422,7 @@ msgid "exclude a user"
 msgstr "ไม่รวมผู้ใช้"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:68
 msgid "Exclude from system"
 msgstr "ไม่รวมในการบันทึกเสียงของระบบ"
 
@@ -14382,12 +14402,12 @@ msgid "Flexible text channel names"
 msgstr "ชื่อช่องข้อความที่ยืดหยุ่น"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:65
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:66
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "ภาพเคลื่อนไหวราบรื่นที่ 1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:70
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:71
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "ภาพคมชัด 720p 30 FPS"
 
@@ -14474,7 +14494,7 @@ msgstr "การตั้งค่าโฟลเดอร์"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "ติดตามเราบน {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:816
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:890
 msgid "Follow voice input"
 msgstr "ติดตามอินพุตเสียง"
 
@@ -14746,7 +14766,7 @@ msgstr "กรอบรูป"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:120
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:121
 msgid "Frame rate"
 msgstr "อัตราเฟรม"
 
@@ -14979,7 +14999,7 @@ msgid "Fully quit and restart {productName} so macOS applies this permission."
 msgstr "ปิดและรีสตาร์ท {productName} เพื่อให้ macOS ใช้สิทธิ์นี้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:52
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:54
 msgid "Gain control"
 msgstr "ควบคุมได้ดั่งใจ"
 
@@ -14993,7 +15013,7 @@ msgstr "จอยเกม"
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:61
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:62
 msgid "Gaming"
 msgstr "เกม"
 
@@ -15493,7 +15513,7 @@ msgstr "ให้สิทธิ์ {0} แล้ว"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "ให้สิทธิ์ทั้งหมดและข้ามข้อจำกัดของช่อง มีความละเอียดอ่อนสูง"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:955
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1015
 msgid "Granular selection"
 msgstr "เลือกแบบละเอียด"
 
@@ -15672,22 +15692,22 @@ msgid "Grouping"
 msgstr "การจัดกลุ่ม"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:115
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:125
 msgid "H.264 backup stream"
 msgstr "สตรีมสำรอง H.264"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:137
 msgid "H.264 simulcast backup"
 msgstr "สำรอง H.264 simulcast"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (ต้องสมัครสมาชิกก่อน)"
 
@@ -15743,7 +15763,7 @@ msgid "Hardware acceleration can cause rendering glitches with transparent windo
 msgstr "การเร่งฮาร์ดแวร์อาจทำให้เกิดข้อผิดพลาดในการแสดงผลกับหน้าต่างโปร่งใส ลองใช้ --disable-gpu หากคุณเห็นการกะพริบหรือภาพซ้อน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:188
 msgid "Hardware encoder"
 msgstr "ตัวเข้ารหัสฮาร์ดแวร์"
 
@@ -15878,12 +15898,12 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "ช่วยแปล {PRODUCT_NAME} เป็นภาษาของคุณบน <0>{I18N_WEBLATE_DOMAIN}</0>"
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:145
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "ช่วยให้เบราว์เซอร์เลือกวิธีการจัดการภาพเคลื่อนไหว รายละเอียด หรือข้อความ"
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:107
 msgid "HEVC"
 msgstr "HEVC"
 
@@ -16038,7 +16058,7 @@ msgid "Hide muted channels by default?"
 msgstr "ซ่อนช่องที่ปิดเสียงไว้เป็นค่าเริ่มต้นหรือไม่"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:57
 msgid "Hide my stream preview thumbnail"
 msgstr "ซ่อนภาพตัวอย่างสตรีมของฉัน"
 
@@ -16057,7 +16077,7 @@ msgstr "ซ่อนรหัสผ่าน"
 msgid "Hide picture-in-picture popout?"
 msgstr "ซ่อนหน้าต่างย่อย Picture-in-picture หรือไม่"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:857
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:799
 msgid "Hide preview thumbnail"
 msgstr "ซ่อนภาพตัวอย่าง"
 
@@ -16119,7 +16139,7 @@ msgid "High dynamic range display mode"
 msgstr "โหมดการแสดงผลแบบ HDR"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:85
 msgid "Higher quality can cost more CPU and latency."
 msgstr "คุณภาพที่สูงขึ้นอาจทำให้ใช้ CPU มากขึ้นและเกิดความหน่วงได้"
 
@@ -16502,11 +16522,11 @@ msgstr "ไม่สนใจ"
 msgid "Ignore friend request"
 msgstr "ไม่รับคำขอเป็นเพื่อน"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:945
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1005
 msgid "Ignore hardware devices"
 msgstr "ไม่ใช้อุปกรณ์ฮาร์ดแวร์"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:921
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:981
 msgid "Ignore input media"
 msgstr "ไม่สนใจสื่อนำเข้า"
 
@@ -16532,7 +16552,7 @@ msgstr "ไม่สนใจการแจ้งว่าเป็นสแป
 msgid "Ignore the friend request from {displayName}?"
 msgstr "ไม่สนใจคำขอเป็นเพื่อนจาก {displayName} ใช่ไหม"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:932
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:992
 msgid "Ignore virtual"
 msgstr "ไม่สนใจอุปกรณ์เสมือน"
 
@@ -16885,7 +16905,7 @@ msgid "Include all except selected"
 msgstr "รวมทั้งหมด ยกเว้นที่เลือก"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:53
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:64
 msgid "Include apps"
 msgstr "รวมแอป"
 
@@ -18071,7 +18091,7 @@ msgid "Launch at login"
 msgstr "เปิดเมื่อเข้าสู่ระบบ"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:105
 msgid "Layering for AV1 and VP9 when available."
 msgstr "การจัดเรียงลำดับสำหรับ AV1 และ VP9 เมื่อมีให้ใช้"
 
@@ -19226,7 +19246,7 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "ปกป้องเต็มที่เพื่อพื้นที่ที่เหมาะสำหรับทุกคนในครอบครัว"
 
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:99
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "อาจทำให้ผู้ชมมีปัญหาด้านความเข้ากันได้ เรากำลังปรับปรุงเรื่องนี้อยู่"
 
@@ -19900,11 +19920,18 @@ msgstr "ทดสอบไมโครโฟน"
 #. Fallback microphone label in the voice settings menu when the OS does not report a device name.
 #. Fallback microphone option label when the operating system does not report a device name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Summary label in the Linux audio source picker on a video device share, where the default is the microphone rather than the system mix.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:21
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:44
 #: src/features/voice/components/VoiceSettingsMenus.tsx:78
 #: src/features/voice/utils/SettingsDeviceOptions.ts:15
 msgid "Microphone"
 msgstr "ไมโครโฟน"
+
+#. Capture option in the Linux audio source picker on a video device share. {deviceLabel} is the selected audio input device name.
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:49
+msgid "Microphone ({deviceLabel})"
+msgstr "ไมโครโฟน ({deviceLabel})"
 
 #. Error shown when the user denies microphone access for voice message recording.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:44
@@ -19912,7 +19939,7 @@ msgid "Microphone access was denied. Enable it in your system settings and try a
 msgstr "ถูกปฏิเสธการเข้าถึงไมโครโฟน โปรดเปิดใช้งานในการตั้งค่าระบบของคุณแล้วลองอีกครั้ง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:58
 msgid "Microphone gain"
 msgstr "ระดับเสียงไมโครโฟน"
 
@@ -19925,10 +19952,6 @@ msgstr "ต้องอนุญาตการเข้าถึงไมโค
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:141
 msgid "Microphone test"
 msgstr "ทดสอบไมโครโฟน"
-
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:890
-msgid "Microphone workaround"
-msgstr "แก้ไขไมโครโฟน"
 
 #. Pre-join indicator shown beneath the Join button on a voice channel where every connected participant supports E2EE.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:317
@@ -20247,7 +20270,7 @@ msgstr "เกี่ยวข้องมากที่สุด"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:153
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -20977,7 +21000,7 @@ msgid "New messages"
 msgstr "ข้อความใหม่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:20
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:22
 msgid "New microphone"
 msgstr "ไมโครโฟนใหม่"
 
@@ -21137,7 +21160,7 @@ msgid "No assets yet"
 msgstr "ยังไม่มีเนื้อหา"
 
 #. Summary label in the Linux audio source picker when no audio sources are selected.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:26
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:27
 msgid "No audio"
 msgstr "ไม่มีเสียง"
 
@@ -21712,7 +21735,7 @@ msgstr "อิโมจิแบบไม่เคลื่อนไหว ({emo
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:213
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:238
 msgid "None"
 msgstr "ไม่มี"
 
@@ -21936,7 +21959,7 @@ msgstr "วัตถุ"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:133
 msgid "Off"
 msgstr "ปิด"
 
@@ -22063,7 +22086,7 @@ msgstr "ใช้ได้เฉพาะบนหน้าจอขนาดใ
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "รับเฉพาะบัตรเครดิตเท่านั้น ไม่สามารถใช้บัตรเดบิตและบัตรเติมเงินในการตรวจสอบเนื้อหาสำหรับผู้ใหญ่ได้"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:910
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
 msgid "Only default speakers"
 msgstr "ลำโพงเริ่มต้นเท่านั้น"
 
@@ -22111,7 +22134,7 @@ msgstr "เรียกใช้โค้ดที่นี่เฉพาะเ
 msgid "Only show message previews for DMs with unread messages"
 msgstr "แสดงตัวอย่างข้อความเฉพาะแชทส่วนตัวที่มีข้อความที่ยังไม่ได้อ่าน"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:900
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:960
 msgid "Only speakers"
 msgstr "เฉพาะผู้พูด"
 
@@ -22646,17 +22669,17 @@ msgid "Open your settings"
 msgstr "เปิดการตั้งค่า"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:123
 msgid "OpenH264 software codec on Linux"
 msgstr "โคเดกซอฟต์แวร์ OpenH264 บน Linux"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:111
 msgid "OpenH264 video codec"
 msgstr "เปิดตัวแปลงสัญญาณวิดีโอ OpenH264"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "ตัวแปลงรหัสวิดีโอ OpenH264 ให้บริการโดย Cisco Systems, Inc."
 
@@ -23100,7 +23123,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "หยุดรับคำเชิญชั่วคราว? ผู้ใช้ใหม่จะไม่สามารถเข้าร่วมผ่านลิงก์คำเชิญได้จนกว่าคุณจะเปิดใช้งานอีกครั้ง สมาชิกปัจจุบันจะไม่ได้รับผลกระทบ"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:49
 msgid "Pause my screen share preview in the background"
 msgstr "หยุดแสดงตัวอย่างการแชร์หน้าจอของฉันในพื้นหลังชั่วคราว"
 
@@ -23211,7 +23234,7 @@ msgid "Per-community profiles"
 msgstr "โปรไฟล์แยกตามแต่ละชุมชน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:32
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:34
 msgid "Per-device volume"
 msgstr "ระดับเสียงต่ออุปกรณ์"
 
@@ -23416,6 +23439,13 @@ msgstr "เลือกพจนานุกรมอย่างน้อยห
 msgid "Pick the appearance this administrator account should start with."
 msgstr "เลือกรูปลักษณ์ที่บัญชีผู้ดูแลระบบนี้ควรเริ่มต้นด้วย"
 
+#. Settings search entry label. Names an advanced screen-share audio setting in the settings UI.
+#. Switch label for the advanced opt-in that reveals a manual per-application audio source picker in the stream settings menu.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:197
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:127
+msgid "Pick the apps to capture audio from"
+msgstr "เลือกแอปที่จะจับภาพเสียง"
+
 #. Required-action modal body for choosing a verification method.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:236
 msgid "Pick the method you can complete now."
@@ -23447,7 +23477,7 @@ msgid "Picture"
 msgstr "รูปภาพ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
 msgid "Picture in picture"
 msgstr "รูปภาพในรูปภาพ"
 
@@ -23567,7 +23597,7 @@ msgid "Pins popout"
 msgstr "ป๊อปเอาต์ของหมุด"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
 msgid "PiP"
 msgstr "PiP"
 
@@ -23769,7 +23799,7 @@ msgid "Prefer @mention"
 msgstr "ต้องการ @mention"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:73
 msgid "Prefer hardware"
 msgstr "ใช้ฮาร์ดแวร์ที่ต้องการ"
 
@@ -23781,7 +23811,7 @@ msgid "Prefer no @mention"
 msgstr "ไม่ต้องการถูกกล่าวถึง"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:77
 msgid "Prefer software"
 msgstr "ใช้ซอฟต์แวร์ที่ต้องการ"
 
@@ -23801,7 +23831,7 @@ msgid "Preferences..."
 msgstr "การตั้งค่า..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:170
 msgid "Preferred screen share codec"
 msgstr "ตัวแปลงสัญญาณที่ต้องการสำหรับการแชร์หน้าจอ"
 
@@ -23975,7 +24005,7 @@ msgid "Preview sound"
 msgstr "ลองฟังเสียง"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:172
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "ดูตัวอย่าง พฤติกรรมการป็อปอัพ และพฤติกรรมของภาพขนาดย่อสตรีม"
 
@@ -24305,7 +24335,7 @@ msgid "Prompt"
 msgstr "ข้อความแจ้ง"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:24
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:26
 msgid "Prompt for new audio devices"
 msgstr "แจ้งเตือนเมื่อมีอุปกรณ์เสียงใหม่"
 
@@ -24548,7 +24578,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "การกดปุ่มเพื่อพูดจะไม่ทำให้ไมโครโฟนของคุณกลับมาทำงานขณะที่คุณปิดเสียงตัวเอง โปรดเปิดเสียงเพื่อให้สามารถพูดได้"
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
 msgid "Quality"
 msgstr "คุณภาพ"
 
@@ -24661,7 +24691,7 @@ msgid "Raw embed JSON"
 msgstr "JSON สำหรับการดีบักแบบดิบ"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:78
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "ข้อความคมชัดระดับต้นฉบับ, 15 FPS"
 
@@ -24751,7 +24781,7 @@ msgid "Ready to upgrade?"
 msgstr "พร้อมจะอัปเกรดหรือยัง?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:89
 msgid "Realtime"
 msgstr "เรียลไทม์"
 
@@ -24990,7 +25020,7 @@ msgstr "คัดลอกข้อมูลอ้างอิงแล้ว"
 msgid "Referral parameters"
 msgstr "พารามิเตอร์การแนะนำ"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:256
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:281
 msgid "Refresh audio sources"
 msgstr "รีเฟรชแหล่งเสียง"
 
@@ -26269,7 +26299,7 @@ msgstr "การปรับขนาด, การขยายสูงสุ�
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:116
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:117
 msgid "Resolution"
 msgstr "ความละเอียด"
 
@@ -26966,7 +26996,7 @@ msgstr "ต้องอนุญาตการบันทึกหน้าจ
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:75
 msgid "Screen share"
 msgstr "แชร์หน้าจอ"
 
@@ -26986,17 +27016,17 @@ msgid "Screen share audio couldn't start"
 msgstr "ไม่สามารถเริ่มเสียงแชร์หน้าจอได้"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:68
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:70
 msgid "Screen share codec"
 msgstr "ตัวแปลงสัญญาณการแชร์หน้าจอ"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:176
 msgid "Screen share encoder controls"
 msgstr "การควบคุมตัวเข้ารหัสสำหรับการแชร์หน้าจอ"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:100
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:102
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "การแชร์หน้าจอสิ้นสุดลง"
@@ -27012,12 +27042,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "การแชร์หน้าจอใช้การเข้ารหัสซอฟต์แวร์ ({codec}) คุณภาพอาจลดลงและการใช้งาน CPU อาจเพิ่มขึ้น GPU ของคุณอาจไม่รองรับการเข้ารหัสฮาร์ดแวร์สำหรับตัวแปลงสัญญาณนี้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
 msgid "Screen share preview"
 msgstr "ตัวอย่างการแชร์หน้าจอ"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
 msgid "Screen share preview behavior"
 msgstr "พฤติกรรมการแสดงตัวอย่างการแชร์หน้าจอ"
 
@@ -27078,7 +27108,7 @@ msgid "Screen sharing"
 msgstr "การแชร์หน้าจอ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:72
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:74
 msgid "Screen sharing codec"
 msgstr "ตัวแปลงสัญญาณการแชร์หน้าจอ"
 
@@ -28445,7 +28475,7 @@ msgid "Share screens and windows."
 msgstr "แชร์หน้าจอและหน้าต่าง"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
 msgid "Share stream audio"
 msgstr "แชร์เสียงสตรีม"
 
@@ -28515,7 +28545,7 @@ msgid "Sharing personal information"
 msgstr "แชร์ข้อมูลส่วนตัว"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:83
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:84
 msgid "Sharper text at 720p, 30 FPS"
 msgstr "คมชัดขึ้นที่ 720p, 30 FPS"
 
@@ -28906,7 +28936,7 @@ msgstr "แสดง Neko"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice device preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVoiceControls.tsx:11
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:8
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:10
 msgid "Show new device alerts"
 msgstr "แสดงการแจ้งเตือนอุปกรณ์ใหม่"
 
@@ -28943,7 +28973,7 @@ msgid "Show password"
 msgstr "แสดงรหัสผ่าน"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:44
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:46
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "แสดงแถบเลื่อนระดับเสียงของผู้เข้าร่วมตามอุปกรณ์ในเมนูเสียง"
 
@@ -29258,7 +29288,7 @@ msgid "Single community mode"
 msgstr "โหมดชุมชนเดียว"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:113
 msgid "Single layer"
 msgstr "เลเยอร์เดียว"
 
@@ -29567,12 +29597,12 @@ msgid "Social"
 msgstr "โซเชียล"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:184
 msgid "Software encoder"
 msgstr "ตัวเข้ารหัสซอฟต์แวร์"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:81
 msgid "Software encoder quality"
 msgstr "คุณภาพตัวเข้ารหัสซอฟต์แวร์"
 
@@ -29816,7 +29846,7 @@ msgstr "เสียง"
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:96
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
 msgid "Source"
 msgstr "ต้นฉบับ"
 
@@ -29898,7 +29928,7 @@ msgid "Spanish (Spain)"
 msgstr "สเปน (สเปน)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:121
 msgid "Spatial and temporal layers"
 msgstr "เลเยอร์เชิงพื้นที่และเชิงเวลา"
 
@@ -30550,13 +30580,13 @@ msgstr "สตรีมไม่ทัน"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:168
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "ตัวอย่างสตรีม"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
 msgid "Stream quality"
 msgstr "คุณภาพสตรีม"
 
@@ -30582,7 +30612,7 @@ msgid "Streaming"
 msgstr "กำลังสตรีม"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:112
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:113
 msgid "Streaming mode"
 msgstr "โหมดสตรีมมิง"
 
@@ -30769,12 +30799,12 @@ msgid "Suspend"
 msgstr "ระงับชั่วคราว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:192
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:101
 msgid "SVC mode"
 msgstr "โหมด SVC"
 
@@ -31036,7 +31066,7 @@ msgstr "ประกาศจากทีมงาน {productName} คุณไ
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
 msgid "System default"
 msgstr "ค่าเริ่มต้นของระบบ"
 
@@ -31216,7 +31246,7 @@ msgid "Template URL"
 msgstr "ลิงก์เทมเพลต"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:117
 msgid "Temporal layers"
 msgstr "เลเยอร์ชั่วคราว"
 
@@ -31277,7 +31307,7 @@ msgstr "ทดสอบการแสดงตัวอย่าง URL แล�
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:161
 msgid "Text"
 msgstr "ข้อความ"
 
@@ -31585,7 +31615,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "redirect_uri ที่ระบุต้องใช้ HTTP หรือ HTTPS"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:105
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:107
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "แหล่งที่มาของการแชร์หน้าจอหยุดส่งวิดีโอ ดังนั้นการแชร์หน้าจอก็จะหยุดลง"
@@ -34055,7 +34085,7 @@ msgstr "กลุ่มที่ไม่มีชื่อ"
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Unnamed input"
 msgstr "อินพุตไม่ระบุชื่อ"
 
@@ -35596,12 +35626,12 @@ msgid "Video call unavailable"
 msgstr "ไม่สามารถโทรวิดีโอได้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:80
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:82
 msgid "Video codec"
 msgstr "ตัวแปลงสัญญาณวิดีโอ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:84
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:86
 msgid "Video codec for screen sharing"
 msgstr "ตัวแปลงสัญญาณวิดีโอสำหรับการแชร์หน้าจอ"
 
@@ -35938,6 +35968,11 @@ msgid "VIP voice"
 msgstr "เสียง VIP"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:143
+msgid "Virtual microphone"
+msgstr "ไมโครโฟนเสมือน"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:39
 msgid "Visibility"
 msgstr "การมองเห็น"
@@ -36259,7 +36294,7 @@ msgid "Volume control"
 msgstr "ตัวควบคุมเสียง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:40
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:42
 msgid "Volume sliders"
 msgstr "แถบเลื่อนระดับเสียง"
 
@@ -38244,7 +38279,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "การลงทะเบียนของคุณต้องผ่านการตรวจสอบสแปมเพิ่มเติมก่อนดำเนินการต่อ"
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:111
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:113
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "การแชร์หน้าจอของคุณไม่สามารถเผยแพร่ด้วยตัวแปลงสัญญาณวิดีโอที่เข้ากันได้ จึงถูกหยุดลง ลองแชร์อีกครั้ง"
@@ -38328,7 +38363,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "URL ที่กำหนดเองของคุณถูกตั้งค่าเป็น {inviteEndpoint}/{vanitySlug} แล้ว"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:118
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "ตัวเข้ารหัสวิดีโอของคุณหยุดการเข้ารหัสเฟรม จึงหยุดการแชร์หน้าจอของคุณแล้ว ลองแชร์อีกครั้ง"

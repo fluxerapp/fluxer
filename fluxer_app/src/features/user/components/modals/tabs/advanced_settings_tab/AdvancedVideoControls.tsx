@@ -28,8 +28,11 @@ import {
 	selectAutomaticScreenShareCodec,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getGpuEncoderReportSync, loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
+import {getNativeAudioAvailabilitySnapshot} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {setOpenH264Enabled} from '@app/features/voice/utils/OpenH264Status';
 import {CODEC_DISPLAY_LABEL} from '@app/features/voice/utils/ScreenShareCodecPolicy';
+import {reapplyActiveScreenShareAudioSources} from '@app/features/voice/utils/ScreenShareStartFlow';
+import {maySupportManualScreenShareAudioSourceSelection} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {GearIcon} from '@phosphor-icons/react';
@@ -189,6 +192,11 @@ const HEVC_SCREEN_SHARE_OPT_IN_DESCRIPTOR = msg({
 	comment:
 		'Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.',
 });
+const MANUAL_SCREEN_SHARE_AUDIO_SOURCES_DESCRIPTOR = msg({
+	message: 'Pick the apps to capture audio from',
+	comment:
+		'Switch label for the advanced opt-in that reveals a manual per-application audio source picker in the stream settings menu.',
+});
 const SCREEN_SHARE_CODEC_OPTION_ORDER = ['av1', 'h265', 'h264', 'vp9', 'vp8'] as const;
 
 export const ScreenShareCodecControl = observer(() => {
@@ -257,6 +265,31 @@ export const ScreenShareHevcOptInControl = observer(() => {
 			onChange={(value) => VoiceSettingsCommands.update({screenShareHevcOptIn: value})}
 			compact
 			data-flx="user.advanced-settings-tab.switch.screen-share-hevc-opt-in"
+		/>
+	);
+});
+
+export const ManualScreenShareAudioSourcesControl = observer(() => {
+	const {i18n} = useLingui();
+	if (!isDesktop()) return null;
+	if (
+		!maySupportManualScreenShareAudioSourceSelection({
+			platform: getElectronAPI()?.platform,
+			nativeAudioAvailability: getNativeAudioAvailabilitySnapshot(),
+		})
+	) {
+		return null;
+	}
+	return (
+		<Switch
+			ariaLabel={i18n._(MANUAL_SCREEN_SHARE_AUDIO_SOURCES_DESCRIPTOR)}
+			value={VoiceSettings.getScreenShareManualAudioSourcesOptIn()}
+			onChange={(value) => {
+				VoiceSettingsCommands.update({screenShareManualAudioSourcesOptIn: value});
+				void reapplyActiveScreenShareAudioSources();
+			}}
+			compact
+			data-flx="user.advanced-settings-tab.switch.manual-screen-share-audio-sources"
 		/>
 	);
 });

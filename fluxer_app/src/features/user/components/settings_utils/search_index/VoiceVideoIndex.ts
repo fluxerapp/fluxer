@@ -3,6 +3,8 @@
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
+import {getNativeAudioAvailabilitySnapshot} from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {maySupportManualScreenShareAudioSourceSelection} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {msg} from '@lingui/core/macro';
 
 const SHOW_NEW_DEVICE_ALERTS_DESCRIPTOR = msg({
@@ -120,6 +122,31 @@ const CISCO_DESCRIPTOR = msg({
 });
 const ENABLE_OPENH264_SOFTWARE_ENCODING_AND_DECODING_ON_LINUX_DESCRIPTOR = msg({
 	message: 'OpenH264 software codec on Linux',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+const PICK_THE_APPS_TO_CAPTURE_AUDIO_FROM_DESCRIPTOR = msg({
+	message: 'Pick the apps to capture audio from',
+	comment: 'Settings search entry label. Names an advanced screen-share audio setting in the settings UI.',
+});
+const APPLICATION_AUDIO_DESCRIPTOR = msg({
+	message: 'Application audio',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const AUDIO_SOURCES_DESCRIPTOR = msg({
+	message: 'Audio sources',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const CAPTURE_CARD_DESCRIPTOR = msg({
+	message: 'Capture card',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const VIRTUAL_MICROPHONE_DESCRIPTOR = msg({
+	message: 'Virtual microphone',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const MANUAL_AUDIO_SOURCE_PICKER_NOTE_DESCRIPTOR = msg({
+	message:
+		'Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop.',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const SCREEN_SHARE_PREVIEW_BEHAVIOR_DESCRIPTOR = msg({
@@ -246,6 +273,27 @@ export const voiceVideoIndex: Array<SearchableSettingDescriptor> = [
 		audience: 'advanced',
 		tags: ['media', 'voice'],
 		isVisible: () => isDesktop() && getElectronAPI()?.platform === 'linux',
+	},
+	{
+		id: 'voice-video-manual-screen-share-audio-sources',
+		tabType: 'voice_video',
+		sectionId: 'video',
+		label: PICK_THE_APPS_TO_CAPTURE_AUDIO_FROM_DESCRIPTOR,
+		keywords: [
+			APPLICATION_AUDIO_DESCRIPTOR,
+			AUDIO_SOURCES_DESCRIPTOR,
+			CAPTURE_CARD_DESCRIPTOR,
+			VIRTUAL_MICROPHONE_DESCRIPTOR,
+		],
+		description: MANUAL_AUDIO_SOURCE_PICKER_NOTE_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['media', 'voice'],
+		isVisible: () =>
+			isDesktop() &&
+			maySupportManualScreenShareAudioSourceSelection({
+				platform: getElectronAPI()?.platform,
+				nativeAudioAvailability: getNativeAudioAvailabilitySnapshot(),
+			}),
 	},
 	{
 		id: 'voice-video-screen-share-preview-behavior',
