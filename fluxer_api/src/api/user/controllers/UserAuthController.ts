@@ -5,9 +5,11 @@ import {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
 	InboundSmsChallengeStartResponse,
+	MfaBackupCodesChallengeRegenerateRequest,
 	MfaBackupCodesChallengeResendRequest,
 	MfaBackupCodesChallengeStartResponse,
 	MfaBackupCodesChallengeVerifyRequest,
+	MfaBackupCodesChallengeVerifyResponse,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
 	PhoneSendVerificationRequest,
@@ -168,17 +170,41 @@ export function UserAuthController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'verify_backup_codes_challenge',
 			summary: 'Verify backup codes challenge code',
-			responseSchema: MfaBackupCodesResponse,
+			responseSchema: MfaBackupCodesChallengeVerifyResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Verifies the email code sent during a backup codes challenge and returns the existing backup codes. The ticket is consumed on success.',
+				'Verifies the email code sent during a backup codes challenge and returns the existing backup codes along with a proof token. The code is consumed on success and the proof token authorizes regeneration on the same ticket.',
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');
 			const body = ctx.req.valid('json');
 			return ctx.json(await ctx.get('mfaBackupCodesChallengeService').verify(user, body.ticket, body.code));
+		},
+	);
+	app.post(
+		'/users/@me/mfa/backup-codes/challenge/regenerate',
+		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_REGENERATE),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', MfaBackupCodesChallengeRegenerateRequest),
+		OpenAPI({
+			operationId: 'regenerate_backup_codes_challenge',
+			summary: 'Regenerate backup codes with a verified challenge',
+			responseSchema: MfaBackupCodesResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Replaces the account backup codes using the proof token from a verified backup codes challenge. Old codes are invalidated.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			return ctx.json(
+				await ctx.get('mfaBackupCodesChallengeService').regenerate(user, body.ticket, body.verification_proof),
+			);
 		},
 	);
 	app.post(

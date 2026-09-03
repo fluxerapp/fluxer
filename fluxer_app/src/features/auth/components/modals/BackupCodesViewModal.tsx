@@ -99,13 +99,15 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 		setSubmitting(true);
 		setCodeError(null);
 		try {
-			const backupCodes = await MfaCommands.verifyBackupCodesChallenge(ticket, code);
+			const result = await MfaCommands.verifyBackupCodesChallenge(ticket, code);
+			const challenge = {ticket, verificationProof: result.verification_proof};
 			ModalCommands.pop();
 			ModalCommands.pushWithKey(
 				modal(() => (
 					<BackupCodesModal
-						backupCodes={backupCodes}
+						backupCodes={result.backup_codes}
 						user={user}
+						challenge={challenge}
 						data-flx="auth.backup-codes-view-modal.handle-verify.backup-codes-modal"
 					/>
 				)),

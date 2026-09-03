@@ -402,6 +402,18 @@ export const MfaBackupCodesChallengeVerifyRequest = MfaBackupCodesChallengeResen
 
 export type MfaBackupCodesChallengeVerifyRequest = z.infer<typeof MfaBackupCodesChallengeVerifyRequest>;
 
+export const MfaBackupCodesChallengeVerifyResponse = MfaBackupCodesResponse.extend({
+	verification_proof: z.string().describe('Proof token authorizing backup code regeneration on this ticket'),
+});
+
+export type MfaBackupCodesChallengeVerifyResponse = z.infer<typeof MfaBackupCodesChallengeVerifyResponse>;
+
+export const MfaBackupCodesChallengeRegenerateRequest = MfaBackupCodesChallengeResendRequest.extend({
+	verification_proof: createStringType().describe('Proof token obtained from verifying the email code'),
+});
+
+export type MfaBackupCodesChallengeRegenerateRequest = z.infer<typeof MfaBackupCodesChallengeRegenerateRequest>;
+
 export const PhoneSendVerificationRequest = z.object({
 	phone: PhoneNumberType.describe('Phone number to send verification code'),
 	channel: z

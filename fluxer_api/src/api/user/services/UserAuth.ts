@@ -118,7 +118,7 @@ export async function getMfaBackupCodes(
 	return await users.listMfaBackupCodes(user.id);
 }
 
-async function regenerateMfaBackupCodes(ctx: ApiContext, user: User): Promise<Array<MfaBackupCode>> {
+export async function regenerateMfaBackupCodes(ctx: ApiContext, user: User): Promise<Array<MfaBackupCode>> {
 	const {users} = ctx.services;
 	const userId = user.id;
 	const newBackupCodes = AuthUtility.generateBackupCodes(ctx);

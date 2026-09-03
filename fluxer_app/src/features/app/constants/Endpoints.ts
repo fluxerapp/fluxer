@@ -163,6 +163,7 @@ export const Endpoints = {
 	USER_MFA_BACKUP_CODES_CHALLENGE_START: '/users/@me/mfa/backup-codes/challenge',
 	USER_MFA_BACKUP_CODES_CHALLENGE_RESEND: '/users/@me/mfa/backup-codes/challenge/resend',
 	USER_MFA_BACKUP_CODES_CHALLENGE_VERIFY: '/users/@me/mfa/backup-codes/challenge/verify',
+	USER_MFA_BACKUP_CODES_CHALLENGE_REGENERATE: '/users/@me/mfa/backup-codes/challenge/regenerate',
 	USER_MFA_TOTP_DISABLE: '/users/@me/mfa/totp/disable',
 	USER_MFA_TOTP_ENABLE: '/users/@me/mfa/totp/enable',
 	USER_AUTHORIZED_IPS: '/users/@me/authorized-ips',

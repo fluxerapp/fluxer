@@ -204,6 +204,10 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:mfa:backup_codes_challenge:verify',
 		config: {limit: 20, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_MFA_BACKUP_CODES_CHALLENGE_REGENERATE: {
+		bucket: 'user:mfa:backup_codes_challenge:regenerate',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	USER_PUSH_SUBSCRIBE: {
 		bucket: 'user:push:subscribe',
 		config: {limit: 20, windowMs: ms('1 minute')},

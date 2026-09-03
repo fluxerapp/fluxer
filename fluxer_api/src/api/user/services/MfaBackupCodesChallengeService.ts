@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomUUID} from 'node:crypto';
+import {randomUUID, timingSafeEqual} from 'node:crypto';
 import {
 	assertChangeCooldown,
 	checkChangeRateLimit,
@@ -10,17 +10,23 @@ import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import type {MfaBackupCodesResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import type {
+	MfaBackupCodesChallengeVerifyResponse,
+	MfaBackupCodesResponse,
+} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms} from 'itty-time';
 import type {ApiContext} from '../../ApiContext';
 import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
+import type {MfaBackupCode} from '../../models/MfaBackupCode';
 import type {User} from '../../models/User';
+import {regenerateMfaBackupCodes} from './UserAuth';
 
 interface MfaBackupCodesChallengeTicket {
 	user_id: string;
-	code: string;
+	code: string | null;
 	code_sent_at: number;
 	code_expires_at: number;
+	verification_proof: string | null;
 }
 
 interface StartMfaBackupCodesChallengeResult {
@@ -35,6 +41,15 @@ function getChallengeCacheKey(ticket: string): string {
 
 function normalizeVerificationCode(code: string): string {
 	return code.trim().toUpperCase().replaceAll('-', '');
+}
+
+function constantTimeEquals(a: string, b: string): boolean {
+	const bufferA = Buffer.from(a);
+	const bufferB = Buffer.from(b);
+	if (bufferA.length !== bufferB.length) {
+		return false;
+	}
+	return timingSafeEqual(bufferA, bufferB);
 }
 
 export class MfaBackupCodesChallengeService {
@@ -68,6 +83,7 @@ export class MfaBackupCodesChallengeService {
 			code,
 			code_sent_at: now,
 			code_expires_at: codeExpiresAt,
+			verification_proof: null,
 		});
 		return {
 			ticket,
@@ -97,25 +113,54 @@ export class MfaBackupCodesChallengeService {
 			code,
 			code_sent_at: now,
 			code_expires_at: codeExpiresAt,
+			verification_proof: null,
 		});
 	}
 
-	async verify(user: User, ticket: string, code: string): Promise<MfaBackupCodesResponse> {
-		const {cache, rateLimit, users} = this.apiContext.services;
+	async verify(user: User, ticket: string, code: string): Promise<MfaBackupCodesChallengeVerifyResponse> {
+		const {rateLimit, users} = this.apiContext.services;
 		const state = await this.getTicketForUser(ticket, user);
 		await checkChangeRateLimit(rateLimit, {
 			identifier: `mfa_backup_codes_challenge:verify:${ticket}`,
 			maxAttempts: 5,
 			windowMs: ms('15 minutes'),
 		});
+		if (!state.code) {
+			throw InputValidationError.fromCode('code', ValidationErrorCodes.VERIFICATION_CODE_NOT_ISSUED);
+		}
 		if (state.code_expires_at < Date.now()) {
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.VERIFICATION_CODE_EXPIRED);
 		}
 		if (normalizeVerificationCode(state.code) !== normalizeVerificationCode(code)) {
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_VERIFICATION_CODE);
 		}
-		await cache.delete(getChallengeCacheKey(ticket));
+		const verificationProof = randomUUID();
+		await this.storeTicket(ticket, {...state, code: null, verification_proof: verificationProof});
 		const backupCodes = await users.listMfaBackupCodes(user.id);
+		return {...this.toResponse(backupCodes), verification_proof: verificationProof};
+	}
+
+	async regenerate(user: User, ticket: string, verificationProof: string): Promise<MfaBackupCodesResponse> {
+		const {rateLimit} = this.apiContext.services;
+		const state = await this.getTicketForUser(ticket, user);
+		await checkChangeRateLimit(rateLimit, {
+			identifier: `mfa_backup_codes_challenge:regenerate:${ticket}`,
+			maxAttempts: 5,
+			windowMs: ms('15 minutes'),
+		});
+		if (!user.totpSecret || !user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP)) {
+			throw new MfaNotEnabledError();
+		}
+		if (!state.verification_proof) {
+			throw InputValidationError.fromCode('verification_proof', ValidationErrorCodes.INVALID_OR_EXPIRED_TICKET);
+		}
+		if (!constantTimeEquals(state.verification_proof, verificationProof)) {
+			throw InputValidationError.fromCode('verification_proof', ValidationErrorCodes.INVALID_PROOF_TOKEN);
+		}
+		return this.toResponse(await regenerateMfaBackupCodes(this.apiContext, user));
+	}
+
+	private toResponse(backupCodes: Array<MfaBackupCode>): MfaBackupCodesResponse {
 		return {
 			backup_codes: backupCodes.map((backupCode) => ({
 				code: backupCode.code,

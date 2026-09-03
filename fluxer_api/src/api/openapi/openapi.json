@@ -18400,6 +18400,79 @@
 				}
 			}
 		},
+		"/users/@me/mfa/backup-codes/challenge/regenerate": {
+			"post": {
+				"operationId": "regenerate_backup_codes_challenge",
+				"summary": "Regenerate backup codes with a verified challenge",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Regenerate backup codes with a verified challenge"}},
+				"description": "Replaces the account backup codes using the proof token from a verified backup codes challenge. Old codes are invalidated.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeRegenerateRequest"}}
+					}
+				}
+			}
+		},
 		"/users/@me/mfa/backup-codes/challenge/resend": {
 			"post": {
 				"operationId": "resend_backup_codes_challenge",
@@ -18478,7 +18551,9 @@
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesResponse"}}}
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeVerifyResponse"}}
+						}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -18533,7 +18608,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Verify backup codes challenge code"}},
-				"description": "Verifies the email code sent during a backup codes challenge and returns the existing backup codes. The ticket is consumed on success.",
+				"description": "Verifies the email code sent during a backup codes challenge and returns the existing backup codes along with a proof token. The code is consumed on success and the proof token authorizes regeneration on the same ticket.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -33526,10 +33601,40 @@
 				},
 				"required": ["ticket", "code_expires_at", "resend_available_at"]
 			},
+			"MfaBackupCodesChallengeRegenerateRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"type": "string", "description": "Backup codes challenge ticket identifier"},
+					"verification_proof": {"type": "string", "description": "Proof token obtained from verifying the email code"}
+				},
+				"required": ["ticket", "verification_proof"]
+			},
 			"MfaBackupCodesChallengeResendRequest": {
 				"type": "object",
 				"properties": {"ticket": {"type": "string", "description": "Backup codes challenge ticket identifier"}},
 				"required": ["ticket"]
+			},
+			"MfaBackupCodesChallengeVerifyResponse": {
+				"type": "object",
+				"properties": {
+					"backup_codes": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"code": {"type": "string", "description": "The backup code"},
+								"consumed": {"type": "boolean", "description": "Whether the code has been used"}
+							},
+							"required": ["code", "consumed"]
+						},
+						"description": "List of backup codes"
+					},
+					"verification_proof": {
+						"type": "string",
+						"description": "Proof token authorizing backup code regeneration on this ticket"
+					}
+				},
+				"required": ["backup_codes", "verification_proof"]
 			},
 			"MfaBackupCodesChallengeVerifyRequest": {
 				"type": "object",

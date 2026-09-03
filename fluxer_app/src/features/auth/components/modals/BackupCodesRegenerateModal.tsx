@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import type {BackupCodesChallenge} from '@app/features/auth/commands/MfaCommands';
 import * as MfaCommands from '@app/features/auth/commands/MfaCommands';
 import {BackupCodesModal} from '@app/features/auth/components/modals/BackupCodesModal';
 import {Button} from '@app/features/ui/button/Button';
@@ -9,6 +10,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
 import * as FormUtils from '@app/lib/forms';
+import type {BackupCode} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -25,21 +27,41 @@ const REGENERATE_BACKUP_CODES_DESCRIPTOR = msg({
 
 interface BackupCodesRegenerateModalProps {
 	user: User;
+	challenge?: BackupCodesChallenge;
 }
 
-export const BackupCodesRegenerateModal = observer(({user}: BackupCodesRegenerateModalProps) => {
+interface RegenerateResult {
+	backupCodes: Array<BackupCode>;
+	challenge?: BackupCodesChallenge;
+}
+
+async function regenerateBackupCodes(challenge?: BackupCodesChallenge): Promise<RegenerateResult> {
+	if (challenge) {
+		try {
+			return {backupCodes: await MfaCommands.regenerateBackupCodesWithChallenge(challenge), challenge};
+		} catch (error) {
+			if (!MfaCommands.isExpiredBackupCodesChallengeError(error)) {
+				throw error;
+			}
+		}
+	}
+	return {backupCodes: await MfaCommands.getBackupCodes(true)};
+}
+
+export const BackupCodesRegenerateModal = observer(({user, challenge}: BackupCodesRegenerateModalProps) => {
 	const {i18n} = useLingui();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const handleConfirm = async () => {
 		setIsSubmitting(true);
 		try {
-			const backupCodes = await MfaCommands.getBackupCodes(true);
+			const result = await regenerateBackupCodes(challenge);
 			ModalCommands.pop();
 			ModalCommands.update('backup-codes', () =>
 				modal(() => (
 					<BackupCodesModal
-						backupCodes={backupCodes}
+						backupCodes={result.backupCodes}
 						user={user}
+						challenge={result.challenge}
 						data-flx="auth.backup-codes-regenerate-modal.handle-confirm.backup-codes-modal"
 					/>
 				)),

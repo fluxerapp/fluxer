@@ -80,7 +80,7 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 						autoCapitalize="none"
 						autoCorrect="off"
 						enterKeyHint="done"
-						inputMode="numeric"
+						inputMode="text"
 						spellCheck={false}
 						autoFocus
 						data-step-focus="true"
