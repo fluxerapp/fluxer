@@ -16,11 +16,12 @@
 -export([override_for_large_guild/2]).
 -export([enforce_only_mentions/1]).
 -export([is_large_guild/2]).
+-export([large_guild_threshold/0]).
 -export([has_large_guild_override/1]).
 -export([get_guild_large_metadata/1]).
 -export([check_temp_muted/1]).
 
--define(LARGE_GUILD_THRESHOLD, 250).
+-define(LARGE_GUILD_THRESHOLD, 2500).
 -define(LARGE_GUILD_OVERRIDE_FEATURE, <<"LARGE_GUILD_OVERRIDE">>).
 -define(MESSAGE_NOTIFICATIONS_NULL, -1).
 -define(MESSAGE_NOTIFICATIONS_ALL, 0).
@@ -215,9 +216,13 @@ enforce_only_mentions(CurrentLevel) -> CurrentLevel.
 
 -spec is_large_guild(integer() | term(), list()) -> boolean().
 is_large_guild(Count, Features) when is_integer(Count) ->
-    Count > ?LARGE_GUILD_THRESHOLD orelse has_large_guild_override(Features);
+    Count > large_guild_threshold() orelse has_large_guild_override(Features);
 is_large_guild(_, Features) ->
     has_large_guild_override(Features).
+
+-spec large_guild_threshold() -> pos_integer().
+large_guild_threshold() ->
+    ?LARGE_GUILD_THRESHOLD.
 
 -spec has_large_guild_override(list() | term()) -> boolean().
 has_large_guild_override(Features) when is_list(Features) ->
@@ -380,10 +385,26 @@ enforce_only_mentions_test() ->
     ?assertEqual(2, enforce_only_mentions(2)).
 
 is_large_guild_test() ->
-    ?assertEqual(true, is_large_guild(300, [])),
+    ?assertEqual(true, is_large_guild(3000, [])),
+    ?assertEqual(false, is_large_guild(300, [])),
+    ?assertEqual(true, is_large_guild(?LARGE_GUILD_THRESHOLD + 1, [])),
+    ?assertEqual(false, is_large_guild(?LARGE_GUILD_THRESHOLD, [])),
     ?assertEqual(false, is_large_guild(100, [])),
     ?assertEqual(true, is_large_guild(100, [<<"LARGE_GUILD_OVERRIDE">>])),
+    ?assertEqual(true, is_large_guild(300, [<<"LARGE_GUILD_OVERRIDE">>])),
     ?assertEqual(true, is_large_guild(undefined, [<<"LARGE_GUILD_OVERRIDE">>])).
+
+large_guild_threshold_is_the_production_value_test() ->
+    ?assertEqual(2500, ?LARGE_GUILD_THRESHOLD),
+    ?assertEqual(?LARGE_GUILD_THRESHOLD, large_guild_threshold()).
+
+mid_sized_guilds_keep_all_notifications_test() ->
+    MessageData = #{<<"channel_type">> => 0},
+    Metadata = #{member_count => 1000, features => []},
+    ?assertEqual(
+        true,
+        check_muted_and_notifications(100, 200, MessageData, 0, #{}, #{}, 1, #{}, Metadata)
+    ).
 
 has_large_guild_override_test() ->
     ?assertEqual(true, has_large_guild_override([<<"LARGE_GUILD_OVERRIDE">>])),
@@ -392,7 +413,7 @@ has_large_guild_override_test() ->
 
 cached_large_guild_metadata_overrides_all_notifications_test() ->
     MessageData = #{<<"channel_type">> => 0},
-    LargeMetadata = #{member_count => 300, features => []},
+    LargeMetadata = #{member_count => 3000, features => []},
     ?assertEqual(
         false,
         check_muted_and_notifications(100, 200, MessageData, 0, #{}, #{}, 1, #{}, LargeMetadata)
@@ -403,7 +424,7 @@ cached_large_guild_metadata_keeps_mentions_allowed_test() ->
         <<"channel_type">> => 0,
         <<"mentions">> => [#{<<"id">> => <<"100">>}]
     },
-    LargeMetadata = #{member_count => 300, features => []},
+    LargeMetadata = #{member_count => 3000, features => []},
     ?assertEqual(
         true,
         check_muted_and_notifications(100, 200, MessageData, 0, #{}, #{}, 1, #{}, LargeMetadata)

@@ -112,7 +112,7 @@ switch_voice_region(GuildId, ChannelId, GuildPid) ->
 
 -spec handle_virtual_channel_access_for_move(integer(), integer(), map(), pid()) -> ok.
 handle_virtual_channel_access_for_move(UserId, ChannelId, _ConnectionsToMove, GuildPid) ->
-    case gen_server:call(GuildPid, {get_sessions}, 10000) of
+    case guild_voice_server_state:guild_state_call(GuildPid, 10000) of
         State when is_map(State) ->
             maybe_grant_move_access(UserId, ChannelId, State, GuildPid);
         _ ->
@@ -159,9 +159,9 @@ cleanup_virtual_access_on_disconnect(UserId, GuildPid) ->
 
 -spec resolve_guild_id_from_pid(pid()) -> integer() | undefined.
 resolve_guild_id_from_pid(GuildPid) ->
-    try gen_server:call(GuildPid, {get_sessions}, 5000) of
-        State when is_map(State) ->
-            maps:get(id, State, undefined);
+    try guild_voice_server_state:guild_id_call(GuildPid, 5000) of
+        GuildId when is_integer(GuildId) ->
+            GuildId;
         _ ->
             undefined
     catch

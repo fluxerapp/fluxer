@@ -561,7 +561,11 @@ maybe_retry_transient_waits_before_retry_test() ->
             fun retry_request_meck/6
         ),
         ?assertEqual(false, maybe_retry_transient(Ctx, RecordSize, 0, {error, timeout})),
-        ?assertEqual({retry_wait, ?BASE_RETRY_DELAY_MS}, receive_retry_wait()),
+        %% retry_delay/1 adds rand:uniform(Base div 4) of jitter, so the first
+        %% retry is anywhere in [Base, Base + Base div 4 - 1].
+        {retry_wait, DelayMs} = receive_retry_wait(),
+        ?assert(DelayMs >= ?BASE_RETRY_DELAY_MS),
+        ?assert(DelayMs =< ?BASE_RETRY_DELAY_MS + (?BASE_RETRY_DELAY_MS div 4) - 1),
         ?assertEqual(ok, receive_retried_push_request(Endpoint)),
         ?assert(meck:validate(gateway_retry_timer)),
         ?assert(meck:validate(push_utils)),

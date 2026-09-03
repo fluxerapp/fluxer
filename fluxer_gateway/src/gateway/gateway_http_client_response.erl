@@ -38,7 +38,7 @@ allow_circuit_request(CircuitKey, RecoveryTimeoutMs) ->
 -spec update_circuit_state_direct({atom(), binary()}, response(), pos_integer()) -> ok.
 update_circuit_state_direct(CircuitKey, Result, FailureThreshold) ->
     Now = erlang:system_time(millisecond),
-    IsFailure = is_countable_failure(Result),
+    IsFailure = is_countable_circuit_failure(CircuitKey, Result),
     record_result(CircuitKey, IsFailure, Now, FailureThreshold).
 
 -spec acquire_inflight_slot(atom(), pos_integer()) -> ok | {error, overloaded}.
@@ -185,14 +185,29 @@ retry_update_counter(Table, Key, Op) ->
         error:badarg -> {error, badarg}
     end.
 
--spec is_countable_failure(response()) -> boolean().
-is_countable_failure({error, nxdomain}) -> false;
-is_countable_failure({error, {failed_connect, _}}) -> false;
-is_countable_failure({error, timeout}) -> false;
-is_countable_failure({error, {timeout, _}}) -> false;
-is_countable_failure({error, _}) -> true;
-is_countable_failure({ok, StatusCode, _, _}) when StatusCode >= 500 -> true;
-is_countable_failure(_) -> false.
+-spec is_countable_circuit_failure({atom(), binary()}, response()) -> boolean().
+is_countable_circuit_failure({rpc, _Host}, Result) ->
+    is_countable_failure_with_transport(Result);
+is_countable_circuit_failure({_Workload, _Host}, Result) ->
+    is_countable_failure_without_transport(Result).
+
+-spec is_countable_failure_without_transport(response()) -> boolean().
+is_countable_failure_without_transport({error, nxdomain}) -> false;
+is_countable_failure_without_transport({error, {failed_connect, _}}) -> false;
+is_countable_failure_without_transport({error, timeout}) -> false;
+is_countable_failure_without_transport({error, {timeout, _}}) -> false;
+is_countable_failure_without_transport({error, _}) -> true;
+is_countable_failure_without_transport({ok, StatusCode, _, _}) when StatusCode >= 500 -> true;
+is_countable_failure_without_transport(_) -> false.
+
+-spec is_countable_failure_with_transport(response()) -> boolean().
+is_countable_failure_with_transport({error, nxdomain}) -> true;
+is_countable_failure_with_transport({error, {failed_connect, _}}) -> true;
+is_countable_failure_with_transport({error, timeout}) -> true;
+is_countable_failure_with_transport({error, {timeout, _}}) -> true;
+is_countable_failure_with_transport({error, _}) -> true;
+is_countable_failure_with_transport({ok, StatusCode, _, _}) when StatusCode >= 500 -> true;
+is_countable_failure_with_transport(_) -> false.
 
 -spec record_result({atom(), binary()}, boolean(), integer(), pos_integer()) -> ok.
 record_result(CircuitKey, IsFailure, Now, FailureThreshold) ->
@@ -314,3 +329,34 @@ safe_delete(Table, Key) ->
     catch
         error:badarg -> ok
     end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+circuit_ignores_transport_failures_for_non_rpc_workloads_test() ->
+    ?assertEqual(false, is_countable_circuit_failure({push, <<"h">>}, {error, nxdomain})),
+    ?assertEqual(
+        false, is_countable_circuit_failure({push, <<"h">>}, {error, {failed_connect, []}})
+    ),
+    ?assertEqual(false, is_countable_circuit_failure({push, <<"h">>}, {error, timeout})),
+    ?assertEqual(
+        false, is_countable_circuit_failure({push, <<"h">>}, {error, {timeout, connect}})
+    ),
+    ?assertEqual(true, is_countable_circuit_failure({push, <<"h">>}, {error, closed})),
+    ?assertEqual(true, is_countable_circuit_failure({push, <<"h">>}, {ok, 500, [], <<>>})),
+    ?assertEqual(false, is_countable_circuit_failure({push, <<"h">>}, {ok, 200, [], <<>>})).
+
+circuit_counts_transport_failures_for_rpc_test() ->
+    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, nxdomain})),
+    ?assertEqual(
+        true, is_countable_circuit_failure({rpc, <<"h">>}, {error, {failed_connect, []}})
+    ),
+    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, timeout})),
+    ?assertEqual(
+        true, is_countable_circuit_failure({rpc, <<"h">>}, {error, {timeout, connect}})
+    ),
+    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, closed})),
+    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {ok, 500, [], <<>>})),
+    ?assertEqual(false, is_countable_circuit_failure({rpc, <<"h">>}, {ok, 200, [], <<>>})).
+
+-endif.

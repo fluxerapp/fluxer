@@ -15,6 +15,7 @@
 -export_type([guild_state/0, channel_id/0, last_message_id/0, version/0, voice_state/0]).
 
 -define(PASSIVE_SYNC_INTERVAL, 30000).
+-define(LARGE_GUILD_MEMBER_COUNT, 250).
 
 -type guild_state() :: map().
 -type channel_id() :: binary().
@@ -30,40 +31,53 @@ schedule_passive_sync(State) ->
 -spec handle_passive_sync(guild_state()) -> {noreply, guild_state()}.
 handle_passive_sync(State) ->
     GuildId = maps:get(id, State),
-    Sessions = maps:get(sessions, State, #{}),
-    Data = maps:get(data, State, #{}),
-    MemberCount = maps:get(member_count, State, undefined),
-    VoiceStates = maps:get(voice_states, State, #{}),
-    _ = spawn(fun() ->
-        send_passive_updates(
-            GuildId, Sessions, passive_sync_state(State, Data, VoiceStates), MemberCount
-        )
-    end),
+    ok = maybe_spawn_passive_updates(GuildId, State),
     _ = schedule_passive_sync(State),
     {noreply, State}.
 
+%% send_passive_updates/4 keeps no session unless is_large_guild/1 holds, so for any other
+%% guild the spawned child returns without touching a session, a payload or the registry.
+-spec maybe_spawn_passive_updates(integer(), guild_state()) -> ok.
+maybe_spawn_passive_updates(GuildId, State) ->
+    case is_large_guild(maps:get(member_count, State, undefined)) of
+        false -> ok;
+        true -> spawn_passive_updates(GuildId, State)
+    end.
+
+-spec spawn_passive_updates(integer(), guild_state()) -> ok.
+spawn_passive_updates(GuildId, State) ->
+    _ = spawn(fun() -> send_passive_updates_for_state(GuildId, State) end),
+    ok.
+
 -spec send_passive_updates_to_sessions(guild_state()) -> guild_state().
 send_passive_updates_to_sessions(State) ->
-    GuildId = maps:get(id, State),
+    ok = send_passive_updates_for_state(maps:get(id, State), State),
+    State.
+
+-spec send_passive_updates_for_state(integer(), guild_state()) -> ok.
+send_passive_updates_for_state(GuildId, State) ->
     Sessions = maps:get(sessions, State, #{}),
     Data = maps:get(data, State, #{}),
     MemberCount = maps:get(member_count, State, undefined),
     VoiceStates = maps:get(voice_states, State, #{}),
     send_passive_updates(
         GuildId, Sessions, passive_sync_state(State, Data, VoiceStates), MemberCount
-    ),
-    State.
+    ).
 
 -spec passive_sync_state(guild_state(), map(), map()) -> guild_state().
 passive_sync_state(State, Data, VoiceStates) ->
     State#{data => Data, voice_states => VoiceStates}.
+
+-spec is_large_guild(term()) -> boolean().
+is_large_guild(MemberCount) ->
+    is_integer(MemberCount) andalso MemberCount > ?LARGE_GUILD_MEMBER_COUNT.
 
 -spec send_passive_updates(integer(), map(), guild_state(), non_neg_integer() | undefined) ->
     ok.
 send_passive_updates(GuildId, Sessions, State, MemberCount) ->
     Data = maps:get(data, State, #{}),
     Channels = guild_data_index:channel_list(Data),
-    IsLargeGuild = is_integer(MemberCount) andalso MemberCount > 250,
+    IsLargeGuild = is_large_guild(MemberCount),
     PassiveSessions = maps:filter(
         fun(_SessionId, SessionData) ->
             IsLargeGuild andalso session_passive:is_passive(GuildId, SessionData)
@@ -327,3 +341,129 @@ snowflake_binary(FieldName, Value) ->
         {ok, Id} -> integer_to_binary(Id);
         {error, _, _} -> undefined
     end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+is_large_guild_matches_previous_inline_threshold_test() ->
+    lists:foreach(
+        fun(MemberCount) ->
+            Expected = is_integer(MemberCount) andalso MemberCount > 250,
+            ?assertEqual(Expected, is_large_guild(MemberCount))
+        end,
+        [undefined, 0, 1, 249, 250, 251, 1000000]
+    ).
+
+skipped_spawn_drops_no_session_the_old_filter_kept_test() ->
+    GuildId = 4242,
+    lists:foreach(
+        fun({MemberCount, Sessions}) ->
+            Kept = reference_passive_sessions(GuildId, Sessions, MemberCount),
+            ?assert(is_large_guild(MemberCount) orelse map_size(Kept) =:= 0)
+        end,
+        passive_gate_cases()
+    ),
+    Large = reference_passive_sessions(GuildId, passive_test_sessions(), 251),
+    ?assertEqual(1, map_size(Large)).
+
+reference_passive_sessions(GuildId, Sessions, MemberCount) ->
+    IsLargeGuild = is_integer(MemberCount) andalso MemberCount > 250,
+    maps:filter(
+        fun(_SessionId, SessionData) ->
+            IsLargeGuild andalso session_passive:is_passive(GuildId, SessionData)
+        end,
+        Sessions
+    ).
+
+passive_gate_cases() ->
+    Sessions = passive_test_sessions(),
+    [
+        {undefined, #{}},
+        {undefined, Sessions},
+        {0, Sessions},
+        {250, Sessions},
+        {251, Sessions},
+        {251, #{}},
+        {not_a_count, Sessions}
+    ].
+
+passive_test_sessions() ->
+    passive_test_sessions(<<"passive-session">>).
+
+passive_test_sessions(SessionId) ->
+    #{
+        SessionId => #{
+            session_id => SessionId,
+            user_id => 1130650140672000000,
+            pid => self(),
+            active_guilds => sets:new(),
+            bot => false
+        }
+    }.
+
+handle_passive_sync_stays_silent_below_threshold_test() ->
+    flush_passive_dispatches(),
+    ok = passive_sync_registry:init(),
+    GuildId = 1427764661718740995,
+    SessionId = <<"small-guild-session">>,
+    State = passive_sync_test_state(GuildId, SessionId, 250),
+    ?assertMatch({noreply, State}, handle_passive_sync(State)),
+    ?assertEqual(no_dispatch, receive_passive_dispatch(200)),
+    RegState = passive_sync_registry:lookup(SessionId, GuildId),
+    ?assertEqual(#{}, maps:get(previous_passive_updates, RegState)).
+
+handle_passive_sync_still_dispatches_above_threshold_test() ->
+    flush_passive_dispatches(),
+    ok = passive_sync_registry:init(),
+    GuildId = 1427764661718740996,
+    SessionId = <<"large-guild-session">>,
+    ChannelId = passive_test_channel_id(),
+    MessageId = passive_test_message_id(),
+    State = passive_sync_test_state(GuildId, SessionId, 251),
+    ?assertMatch({noreply, State}, handle_passive_sync(State)),
+    Payload = receive_passive_dispatch(5000),
+    ?assertEqual(
+        #{integer_to_binary(ChannelId) => integer_to_binary(MessageId)},
+        maps:get(<<"channels">>, Payload)
+    ).
+
+passive_sync_test_state(GuildId, SessionId, MemberCount) ->
+    UserId = 1130650140672000000,
+    Channel = #{
+        <<"id">> => passive_test_channel_id(),
+        <<"last_message_id">> => passive_test_message_id()
+    },
+    #{
+        id => GuildId,
+        member_count => MemberCount,
+        sessions => passive_test_sessions(SessionId),
+        data => #{
+            <<"guild">> => #{<<"id">> => GuildId, <<"owner_id">> => UserId},
+            <<"channels">> => [Channel],
+            <<"members">> => [#{<<"user">> => #{<<"id">> => UserId}, <<"roles">> => []}],
+            <<"roles">> => []
+        },
+        voice_states => #{}
+    }.
+
+passive_test_channel_id() ->
+    1497639278555484216.
+
+passive_test_message_id() ->
+    1500000000000000000.
+
+receive_passive_dispatch(Timeout) ->
+    receive
+        {'$gen_cast', {dispatch, passive_updates, Payload}} when is_map(Payload) ->
+            Payload
+    after Timeout ->
+        no_dispatch
+    end.
+
+flush_passive_dispatches() ->
+    case receive_passive_dispatch(0) of
+        no_dispatch -> ok;
+        _ -> flush_passive_dispatches()
+    end.
+
+-endif.

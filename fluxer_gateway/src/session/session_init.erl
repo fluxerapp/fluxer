@@ -63,8 +63,20 @@ normalize_seq(_) -> 0.
 -spec normalize_buffer(term()) -> [map()].
 normalize_buffer(Buffer) when is_list(Buffer) ->
     lists:filtermap(fun normalize_buffer_event/1, Buffer);
+normalize_buffer(Buffer) when is_map(Buffer) ->
+    lists:filtermap(fun normalize_buffer_event/1, deque_to_list(Buffer));
 normalize_buffer(_) ->
     [].
+
+-spec deque_to_list(map()) -> [term()].
+deque_to_list(Buffer) ->
+    try limited_deque:to_list(eqwalizer:dynamic_cast(Buffer)) of
+        List when is_list(List) -> List;
+        _ -> []
+    catch
+        error:_Reason -> [];
+        exit:_Reason -> []
+    end.
 
 -spec normalize_buffer_event(term()) -> {true, map()} | false.
 normalize_buffer_event(Event) when is_map(Event) ->
@@ -75,18 +87,42 @@ normalize_buffer_event(Event) when is_map(Event) ->
 normalize_buffer_event(_) ->
     false.
 
+-spec init_buffer_bytes(term(), [map()]) -> non_neg_integer().
+init_buffer_bytes(_Raw, []) ->
+    0;
+init_buffer_bytes(Raw, Buffer) when is_map(Raw) ->
+    restored_deque_bytes(Raw, Buffer);
+init_buffer_bytes(_Raw, Buffer) ->
+    replay_buffer_bytes(Buffer).
+
+-spec restored_deque_bytes(map(), [map()]) -> non_neg_integer().
+restored_deque_bytes(Raw, Buffer) ->
+    try limited_deque:bytes(eqwalizer:dynamic_cast(Raw)) of
+        Bytes when is_integer(Bytes), Bytes >= 0 -> Bytes;
+        _ -> replay_buffer_bytes(Buffer)
+    catch
+        error:_Reason -> replay_buffer_bytes(Buffer);
+        exit:_Reason -> replay_buffer_bytes(Buffer)
+    end.
+
 -spec replay_buffer_bytes([map()]) -> non_neg_integer().
 replay_buffer_bytes(Buffer) ->
     WordSize = erlang:system_info(wordsize),
-    trunc(
-        lists:foldl(
-            fun(Event, Acc) ->
-                Acc + erts_debug:flat_size(Event) * WordSize
-            end,
-            0,
-            Buffer
-        )
+    lists:foldl(
+        fun(Event, Acc) -> Acc + erts_debug:flat_size(Event) * WordSize end,
+        0,
+        Buffer
     ).
+
+-spec replay_payload_bytes([map()]) -> non_neg_integer().
+replay_payload_bytes(Buffer) ->
+    lists:foldl(fun(Event, Acc) -> Acc + entry_payload_bytes(Event) end, 0, Buffer).
+
+-spec entry_payload_bytes(term()) -> non_neg_integer().
+entry_payload_bytes(#{data := {pre_encoded, Payload}}) when is_binary(Payload) ->
+    byte_size(Payload);
+entry_payload_bytes(_Event) ->
+    0.
 
 -spec build_ignored_events_map(term()) -> #{binary() => true}.
 build_ignored_events_map(Events) when is_list(Events) ->
@@ -193,7 +229,8 @@ extract_core_fields(
         token_hash => TokenHash,
         auth_session_id_hash => AuthSessionIdHash,
         buffer => Buffer,
-        buffer_bytes => replay_buffer_bytes(Buffer),
+        buffer_bytes => init_buffer_bytes(maps:get(buffer, D, []), Buffer),
+        replay_payload_bytes => replay_payload_bytes(Buffer),
         seq => Seq,
         ack_seq => AckSeq,
         properties => Properties,
@@ -285,7 +322,7 @@ schedule_timers(#{bot := Bot, guilds := GuildsMap}) ->
     init_prewarm_guilds(Bot, GuildIds),
     lists:foreach(fun(Gid) -> self() ! {guild_connect, Gid, 0} end, GuildIds),
     erlang:send_after(5000, self(), premature_readiness),
-    erlang:send_after(200, self(), enable_presence_updates),
+    erlang:send_after(10000, self(), enable_presence_updates),
     erlang:send_after(60000, self(), check_ack_lag),
     ok.
 
@@ -467,5 +504,69 @@ normalize_buffer_filters_invalid_entries_test() ->
     Buffer = [#{seq => 1}, #{seq => -1}, #{no_seq => true}, <<"bad">>],
     ?assertEqual([#{seq => 1}], normalize_buffer(Buffer)),
     ?assertEqual([], normalize_buffer(undefined)).
+
+normalize_buffer_accepts_deque_test() ->
+    Deque = test_deque([#{seq => 1}, #{seq => 2}]),
+    ?assertEqual([#{seq => 1}, #{seq => 2}], normalize_buffer(Deque)).
+
+normalize_buffer_filters_invalid_deque_entries_test() ->
+    Deque = test_deque([#{seq => 1}, #{seq => -1}, #{no_seq => true}, <<"bad">>]),
+    ?assertEqual([#{seq => 1}], normalize_buffer(Deque)).
+
+normalize_buffer_ignores_non_deque_map_test() ->
+    ?assertEqual([], normalize_buffer(#{seq => 1})),
+    ?assertEqual([], normalize_buffer(#{})),
+    ?assertEqual([], normalize_buffer(undefined)).
+
+build_state_preserves_transferred_deque_buffer_test() ->
+    Data = transferred_session_data(test_deque([#{seq => 13}, #{seq => 14}])),
+    State = build_state(Data),
+    ?assertEqual([#{seq => 13}, #{seq => 14}], maps:get(buffer, State)),
+    ?assertEqual(
+        replay_buffer_bytes([#{seq => 13}, #{seq => 14}]),
+        maps:get(buffer_bytes, State)
+    ),
+    ?assertEqual(14, maps:get(seq, State)),
+    ?assertEqual(12, maps:get(ack_seq, State)).
+
+build_state_reuses_deque_byte_total_test() ->
+    Events = [#{seq => 21}, #{seq => 22}],
+    Data = transferred_session_data(test_deque(Events)),
+    State = build_state(Data),
+    ?assertEqual(limited_deque:bytes(test_deque(Events)), maps:get(buffer_bytes, State)),
+    ?assertEqual(replay_buffer_bytes(Events), maps:get(buffer_bytes, State)).
+
+replay_buffer_bytes_agrees_with_deque_accounting_test() ->
+    Entries = [
+        #{seq => 1, event => message_create, data => #{<<"content">> => <<"hi">>}},
+        #{seq => 2, event => message_create, data => {pre_encoded, binary:copy(<<"x">>, 70000)}}
+    ],
+    lists:foreach(
+        fun(Entry) ->
+            ?assertEqual(
+                limited_deque:bytes(limited_deque:from_list([Entry], 4096, 0)),
+                replay_buffer_bytes([Entry])
+            )
+        end,
+        Entries
+    ).
+
+build_state_walks_list_buffer_bytes_test() ->
+    Events = [#{seq => 13}, #{seq => 14}],
+    Data = transferred_session_data(Events),
+    State = build_state(Data),
+    ?assertEqual(replay_buffer_bytes(Events), maps:get(buffer_bytes, State)).
+
+build_state_zeroes_bytes_for_non_deque_map_buffer_test() ->
+    Data = transferred_session_data(#{seq => 13}),
+    State = build_state(Data),
+    ?assertEqual([], maps:get(buffer, State)),
+    ?assertEqual(0, maps:get(buffer_bytes, State)).
+
+transferred_session_data(Buffer) ->
+    (base_session_data(#{}))#{buffer => Buffer, seq => 14, ack_seq => 12}.
+
+test_deque(Events) ->
+    limited_deque:from_list(Events, 4096, 16777216).
 
 -endif.

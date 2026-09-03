@@ -13,7 +13,9 @@
     repair_voice_state_from_guild_cache/2,
     voice_state_rpc_entries/1,
     pending_join_rpc_entries/1,
-    fetch_guild_data/1
+    fetch_guild_data/1,
+    guild_state_call/2,
+    guild_id_call/2
 ]).
 
 -export_type([
@@ -335,9 +337,36 @@ pending_join_channel_id(Metadata) when is_map(Metadata) ->
 pending_join_channel_id(_) ->
     undefined.
 
+-spec guild_state_call(pid(), timeout()) -> term().
+guild_state_call(GuildPid, Timeout) ->
+    case gen_server:call(GuildPid, {get_voice_guild_state}, Timeout) of
+        GuildState when is_map(GuildState) -> GuildState;
+        _ -> full_guild_state_call(GuildPid, Timeout)
+    end.
+
+-spec full_guild_state_call(pid(), timeout()) -> term().
+full_guild_state_call(GuildPid, Timeout) ->
+    gen_server:call(GuildPid, {get_sessions}, Timeout).
+
+-spec guild_id_call(pid(), timeout()) -> integer() | undefined.
+guild_id_call(GuildPid, Timeout) ->
+    case gen_server:call(GuildPid, {get_guild_id}, Timeout) of
+        GuildId when is_integer(GuildId) -> GuildId;
+        _ -> guild_state_id(full_guild_state_call(GuildPid, Timeout))
+    end.
+
+-spec guild_state_id(term()) -> integer() | undefined.
+guild_state_id(GuildState) when is_map(GuildState) ->
+    case maps:get(id, GuildState, undefined) of
+        GuildId when is_integer(GuildId) -> GuildId;
+        _ -> undefined
+    end;
+guild_state_id(_) ->
+    undefined.
+
 -spec fetch_guild_data(pid()) -> map().
 fetch_guild_data(GuildPid) ->
-    try gen_server:call(GuildPid, {get_sessions}, ?GUILD_CALL_TIMEOUT) of
+    try guild_state_call(GuildPid, ?GUILD_CALL_TIMEOUT) of
         GuildState when is_map(GuildState) -> GuildState;
         _ -> #{}
     catch
@@ -407,3 +436,89 @@ normalize_rpc_millisecond(Value) when is_binary(Value), byte_size(Value) > 0 ->
     end;
 normalize_rpc_millisecond(_) ->
     0.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+guild_state_call_uses_projection_test() ->
+    with_fake_guild(fun new_guild_handler/1, fun(Pid) ->
+        ?assertEqual(projected_guild_state(), guild_state_call(Pid, 1000)),
+        ?assertEqual([{get_voice_guild_state}], drain_requests())
+    end).
+
+guild_state_call_retries_get_sessions_against_old_peer_test() ->
+    with_fake_guild(fun old_guild_handler/1, fun(Pid) ->
+        ?assertEqual(full_guild_state(), guild_state_call(Pid, 1000)),
+        ?assertEqual([{get_voice_guild_state}, {get_sessions}], drain_requests())
+    end).
+
+fetch_guild_data_retries_get_sessions_against_old_peer_test() ->
+    with_fake_guild(fun old_guild_handler/1, fun(Pid) ->
+        ?assertEqual(full_guild_state(), fetch_guild_data(Pid)),
+        ?assertEqual([{get_voice_guild_state}, {get_sessions}], drain_requests())
+    end).
+
+guild_id_call_uses_get_guild_id_test() ->
+    with_fake_guild(fun new_guild_handler/1, fun(Pid) ->
+        ?assertEqual(42, guild_id_call(Pid, 1000)),
+        ?assertEqual([{get_guild_id}], drain_requests())
+    end).
+
+guild_id_call_returns_real_id_against_old_peer_test() ->
+    with_fake_guild(fun old_guild_handler/1, fun(Pid) ->
+        ?assertEqual(42, guild_id_call(Pid, 1000)),
+        ?assertEqual([{get_guild_id}, {get_sessions}], drain_requests())
+    end).
+
+guild_id_call_returns_undefined_when_peer_has_no_id_test() ->
+    with_fake_guild(fun(_) -> ok end, fun(Pid) ->
+        ?assertEqual(undefined, guild_id_call(Pid, 1000)),
+        ?assertEqual([{get_guild_id}, {get_sessions}], drain_requests())
+    end).
+
+new_guild_handler({get_voice_guild_state}) -> projected_guild_state();
+new_guild_handler({get_guild_id}) -> 42;
+new_guild_handler({get_sessions}) -> full_guild_state();
+new_guild_handler(_) -> ok.
+
+old_guild_handler({get_sessions}) -> full_guild_state();
+old_guild_handler(_) -> ok.
+
+full_guild_state() ->
+    #{
+        id => 42,
+        sessions => #{},
+        voice_states => #{},
+        data => #{<<"id">> => <<"42">>, <<"members">> => #{}}
+    }.
+
+projected_guild_state() ->
+    #{id => 42, sessions => #{}, voice_states => #{}, data => #{<<"id">> => <<"42">>}}.
+
+with_fake_guild(Handler, Fun) ->
+    _ = drain_requests(),
+    Owner = self(),
+    Pid = spawn(fun() -> fake_guild_loop(Owner, Handler) end),
+    try
+        Fun(Pid)
+    after
+        Pid ! stop
+    end.
+
+fake_guild_loop(Owner, Handler) ->
+    receive
+        {'$gen_call', From, Request} ->
+            Owner ! {fake_guild_request, Request},
+            gen_server:reply(From, Handler(Request)),
+            fake_guild_loop(Owner, Handler);
+        stop ->
+            ok
+    end.
+
+drain_requests() ->
+    receive
+        {fake_guild_request, Request} -> [Request | drain_requests()]
+    after 0 -> []
+    end.
+
+-endif.

@@ -118,6 +118,7 @@ run_broadcast_channel_list_dispatches_sync_immediately() ->
             <<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"one">>},
             <<"roles">> => []
         },
+        ok = guild_member_list_engine:bulk_load(Ref, [{1, <<"one">>, [], true}], []),
         OldState = channel_list_state(Ref, make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}]), [
             Member
         ]),
@@ -144,6 +145,9 @@ run_broadcast_channel_list_fans_out_repeated_syncs() ->
             #{<<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"one">>}},
             #{<<"user">> => #{<<"id">> => <<"2">>, <<"username">> => <<"two">>}}
         ],
+        ok = guild_member_list_engine:bulk_load(
+            Ref, [{1, <<"one">>, [], true}, {2, <<"two">>, [], true}], []
+        ),
         OldState = channel_list_state(
             Ref, make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}]), Members
         ),
@@ -408,6 +412,7 @@ presence_delta_state(Ref) ->
         <<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"one">>},
         <<"roles">> => []
     },
+    ok = guild_member_list_engine:bulk_load(Ref, [{1, <<"one">>, [], true}], []),
     channel_list_state(Ref, make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}]), [Member]).
 
 presence_map(Status, Mobile, CustomStatus) ->

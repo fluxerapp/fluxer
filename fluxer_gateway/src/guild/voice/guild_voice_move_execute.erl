@@ -256,7 +256,7 @@ member_user_id(Member) ->
 
 -spec fetch_state_and_send(integer(), integer(), map(), pid(), integer(), map()) -> ok.
 fetch_state_and_send(GuildId, ChannelId, SessionInfo, GuildPid, UserId, Member) ->
-    try gen_server:call(GuildPid, {get_sessions}, 10000) of
+    try guild_voice_server_state:guild_state_call(GuildPid, 10000) of
         StateData when is_map(StateData) ->
             request_and_broadcast(
                 GuildId, ChannelId, SessionInfo, GuildPid, UserId, Member, StateData

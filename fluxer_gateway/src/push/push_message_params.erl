@@ -7,6 +7,8 @@
 
 -export_type([context/0]).
 
+-define(MAX_GUILD_FEATURES, 64).
+
 -type context() :: #{
     message_data := map(),
     user_ids := [pos_integer()],
@@ -20,7 +22,8 @@
     role_names := map(),
     user_roles := map(),
     connected_users := map(),
-    markdown_context := map()
+    markdown_context := map(),
+    large_guild_metadata := map() | undefined
 }.
 
 -spec context(map()) -> {ok, context()} | {error, term()}.
@@ -58,8 +61,33 @@ context_from_message_data(Params, MessageData) ->
         connected_users => maps:get(connected_users, Params, #{}),
         markdown_context => markdown_context(
             MessageData, GuildId, RoleNames, maps:get(markdown_context, Params, undefined)
-        )
+        ),
+        large_guild_metadata => large_guild_metadata(Params)
     }).
+
+-spec large_guild_metadata(map()) -> map() | undefined.
+large_guild_metadata(Params) ->
+    MemberCount = maps:get(guild_member_count, Params, undefined),
+    Features = maps:get(guild_features, Params, undefined),
+    build_large_guild_metadata(MemberCount, Features).
+
+-spec build_large_guild_metadata(term(), term()) -> map() | undefined.
+build_large_guild_metadata(MemberCount, Features) when
+    is_integer(MemberCount), MemberCount >= 0, is_list(Features)
+->
+    #{member_count => MemberCount, features => bounded_features(Features, [], 0)};
+build_large_guild_metadata(_MemberCount, _Features) ->
+    undefined.
+
+-spec bounded_features(term(), [binary()], non_neg_integer()) -> [binary()].
+bounded_features(_Features, Acc, ?MAX_GUILD_FEATURES) ->
+    lists:reverse(Acc);
+bounded_features([Feature | Rest], Acc, Count) when is_binary(Feature) ->
+    bounded_features(Rest, [Feature | Acc], Count + 1);
+bounded_features([_Feature | Rest], Acc, Count) ->
+    bounded_features(Rest, Acc, Count);
+bounded_features(_Features, Acc, _Count) ->
+    lists:reverse(Acc).
 
 -spec owner_key(map()) -> term().
 owner_key(Params) ->

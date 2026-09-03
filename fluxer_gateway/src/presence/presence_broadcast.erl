@@ -30,6 +30,8 @@
 -type state() :: map().
 -type sessions() :: #{binary() => map()}.
 
+-define(CUSTOM_STATUS_EXPIRY_TIMER, custom_status_expiry_timer).
+
 -spec publish_global_if_needed({reply, term(), state()} | {noreply, state()}) ->
     {reply, term(), state()} | {noreply, state()}.
 publish_global_if_needed({reply, Reply, NewState}) ->
@@ -40,7 +42,8 @@ publish_global_if_needed({noreply, NewState}) ->
     {noreply, FinalState}.
 
 -spec publish_global_presence(sessions(), state()) -> state().
-publish_global_presence(_Sessions, State) ->
+publish_global_presence(_Sessions, State0) ->
+    State = refresh_custom_status_expiry_timer(State0),
     {Payload, CurrentExternal, ExternalStatus} = build_presence_external(State),
     LastPublished = maps:get(last_published_presence, State, undefined),
     case presence_changed(LastPublished, CurrentExternal) of
@@ -55,10 +58,32 @@ publish_global_presence(_Sessions, State) ->
     end.
 
 -spec force_publish_global_presence(state()) -> state().
-force_publish_global_presence(State) ->
+force_publish_global_presence(State0) ->
+    State = refresh_custom_status_expiry_timer(State0),
     {Payload, CurrentExternal, ExternalStatus} = build_presence_external(State),
     NewState = publish_presence_payload(State, Payload, CurrentExternal, ExternalStatus),
     presence_update:maybe_update_push_eligibility(NewState).
+
+-spec refresh_custom_status_expiry_timer(state()) -> state().
+refresh_custom_status_expiry_timer(State) ->
+    ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State, undefined)),
+    arm_expiry_timer(
+        custom_status_expiry:next_wakeup_ms(maps:get(custom_status, State, null)), State
+    ).
+
+-spec arm_expiry_timer({ok, pos_integer()} | none, state()) -> state().
+arm_expiry_timer(none, State) ->
+    maps:remove(?CUSTOM_STATUS_EXPIRY_TIMER, State);
+arm_expiry_timer({ok, DelayMs}, State) ->
+    Ref = erlang:send_after(DelayMs, self(), custom_status_expiry:reconcile_message()),
+    State#{?CUSTOM_STATUS_EXPIRY_TIMER => Ref}.
+
+-spec cancel_expiry_timer(term()) -> ok.
+cancel_expiry_timer(Ref) when is_reference(Ref) ->
+    _ = erlang:cancel_timer(Ref, [{async, true}, {info, false}]),
+    ok;
+cancel_expiry_timer(_Ref) ->
+    ok.
 
 -spec dispatch_global_presence(user_id(), map(), state()) -> {noreply, state()}.
 dispatch_global_presence(TargetId, Payload, State) ->
@@ -240,3 +265,97 @@ dispatch_global_user_update(TargetId, Payload, State) ->
 dispatch_to_sessions(Payload, State) ->
     SessionPids = presence_connect:collect_session_pids(State),
     gateway_dispatch_relay:dispatch_many(SessionPids, presence_update, Payload).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+expiry_timer_not_armed_while_disabled_test() ->
+    application:unset_env(fluxer_gateway, custom_status_expiry_enabled),
+    State = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
+    ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, State)).
+
+expiry_timer_not_armed_without_expires_at_test() ->
+    with_expiry_enabled(fun() ->
+        ?assertNot(
+            maps:is_key(
+                ?CUSTOM_STATUS_EXPIRY_TIMER,
+                refresh_custom_status_expiry_timer(#{custom_status => null})
+            )
+        ),
+        ?assertNot(
+            maps:is_key(
+                ?CUSTOM_STATUS_EXPIRY_TIMER,
+                refresh_custom_status_expiry_timer(#{
+                    custom_status => #{<<"text">> => <<"hi">>}
+                })
+            )
+        )
+    end).
+
+expiry_timer_armed_for_a_future_expiry_test() ->
+    with_expiry_enabled(fun() ->
+        State = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
+        ?assert(is_reference(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))),
+        ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))
+    end).
+
+expiry_timer_not_armed_for_an_already_expired_status_test() ->
+    with_expiry_enabled(fun() ->
+        Expired = #{<<"expires_at">> => <<"2020-01-01T00:00:00.000Z">>},
+        State = refresh_custom_status_expiry_timer(#{custom_status => Expired}),
+        ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, State))
+    end).
+
+expiry_timer_replaces_the_previous_one_test() ->
+    with_expiry_enabled(fun() ->
+        First = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
+        Second = refresh_custom_status_expiry_timer(First),
+        ?assertNotEqual(
+            maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, First),
+            maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second)
+        ),
+        ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second))
+    end).
+
+expiry_timer_is_dropped_when_the_status_is_cleared_test() ->
+    with_expiry_enabled(fun() ->
+        Armed = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
+        Cleared = refresh_custom_status_expiry_timer(Armed#{custom_status => null}),
+        ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, Cleared))
+    end).
+
+expiry_timer_delivers_a_reconcile_cast_test() ->
+    State = arm_expiry_timer({ok, 1}, #{}),
+    ?assert(is_reference(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))),
+    Expected = custom_status_expiry:reconcile_message(),
+    receive
+        Expected -> ok
+    after 1000 -> ?assert(false)
+    end.
+
+cancel_expiry_timer_ignores_non_references_test() ->
+    ?assertEqual(ok, cancel_expiry_timer(undefined)),
+    ?assertEqual(ok, cancel_expiry_timer(not_a_ref)).
+
+future_custom_status() ->
+    ExpiresAt = calendar:system_time_to_rfc3339(
+        erlang:system_time(millisecond) + 3600000, [{unit, millisecond}, {offset, "Z"}]
+    ),
+    #{<<"text">> => <<"brb">>, <<"expires_at">> => list_to_binary(ExpiresAt)}.
+
+with_expiry_enabled(Fun) ->
+    Key = custom_status_expiry_enabled,
+    Previous = application:get_env(fluxer_gateway, Key),
+    application:set_env(fluxer_gateway, Key, true),
+    try
+        Fun()
+    after
+        restore_expiry_env(Key, Previous)
+    end.
+
+restore_expiry_env(Key, undefined) ->
+    application:unset_env(fluxer_gateway, Key);
+restore_expiry_env(Key, {ok, Value}) ->
+    application:set_env(fluxer_gateway, Key, Value).
+
+-endif.

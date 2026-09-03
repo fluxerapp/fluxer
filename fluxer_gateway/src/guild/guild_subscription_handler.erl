@@ -22,6 +22,8 @@
 
 -define(LAZY_SUBSCRIBE_COALESCE_MS, 100).
 -define(MAX_BUFFERED_LAZY_SUBSCRIBE_RANGES, 10).
+-define(ENGINES_KEY, channel_member_list_engines).
+-define(DISPATCHED_KEY, lazy_subscribe_dispatched).
 
 -spec handle_call(term(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()}.
@@ -47,6 +49,73 @@ handle_info(flush_lazy_subscribe_buffer, State) ->
 
 -spec buffer_lazy_subscribe(map(), guild_state()) -> guild_state().
 buffer_lazy_subscribe(Request, State) ->
+    case dispatch_immediately(Request, State) of
+        true -> dispatch_lazy_subscribe_now(Request, State);
+        false -> enqueue_lazy_subscribe(Request, State)
+    end.
+
+-spec dispatch_immediately(map(), guild_state()) -> boolean().
+dispatch_immediately(Request, State) ->
+    maps:get(lazy_subscribe_timer, State, undefined) =:= undefined andalso
+        map_size(maps:get(lazy_subscribe_buffer, State, #{})) =:= 0 andalso
+        engine_already_built(Request, State).
+
+-spec engine_already_built(map(), guild_state()) -> boolean().
+engine_already_built(#{channel_id := ChannelId}, State) ->
+    case guild_member_list:calculate_list_id(ChannelId, State) of
+        ListId when is_binary(ListId) ->
+            maps:is_key(ListId, maps:get(?ENGINES_KEY, State, #{}));
+        _ ->
+            false
+    end;
+engine_already_built(_Request, _State) ->
+    false.
+
+%% A leading-edge dispatch still buffers its request, marked as dispatched, so a second
+%% subscribe for the same key inside the window merges into it exactly as it did before
+%% the leading edge existed. The mark only survives while nothing merges in, because every
+%% merge_lazy_subscribe_request/2 clause returns a map derived from the incoming request.
+-spec dispatch_lazy_subscribe_now(map(), guild_state()) -> guild_state().
+dispatch_lazy_subscribe_now(Request, State) ->
+    try process_lazy_subscribe(Request, State) of
+        NewState -> enqueue_lazy_subscribe(mark_lazy_subscribe_dispatched(Request), NewState)
+    catch
+        Class:Reason:Stack ->
+            log_lazy_subscribe_dispatch_error(Request, Class, Reason, Stack),
+            State
+    end.
+
+-spec mark_lazy_subscribe_dispatched(map()) -> map().
+mark_lazy_subscribe_dispatched(Request) ->
+    Request#{?DISPATCHED_KEY => true}.
+
+-spec log_lazy_subscribe_dispatch_error(map(), atom(), term(), list()) -> ok.
+log_lazy_subscribe_dispatch_error(Request, Class, Reason, Stack) ->
+    logger:warning(
+        "guild_lazy_subscribe_dispatch_failed: session_id=~p channel_id=~p error=~p:~p ~p",
+        [
+            maps:get(session_id, Request, undefined),
+            maps:get(channel_id, Request, undefined),
+            Class,
+            Reason,
+            Stack
+        ]
+    ).
+
+-spec arm_lazy_subscribe_timer(guild_state()) -> guild_state().
+arm_lazy_subscribe_timer(State) ->
+    case maps:get(lazy_subscribe_timer, State, undefined) of
+        undefined ->
+            Ref = erlang:send_after(
+                ?LAZY_SUBSCRIBE_COALESCE_MS, self(), flush_lazy_subscribe_buffer
+            ),
+            State#{lazy_subscribe_timer => Ref};
+        _ ->
+            State
+    end.
+
+-spec enqueue_lazy_subscribe(map(), guild_state()) -> guild_state().
+enqueue_lazy_subscribe(Request, State) ->
     #{session_id := SessionId, channel_id := ChannelId} = Request,
     BufferKey = {SessionId, ChannelId},
     Buffer = maps:get(lazy_subscribe_buffer, State, #{}),
@@ -59,13 +128,8 @@ buffer_lazy_subscribe(Request, State) ->
     TimerRef = maps:get(lazy_subscribe_timer, State, undefined),
     NewState = State#{lazy_subscribe_buffer => NewBuffer, lazy_subscribe_order => NewOrder},
     case TimerRef of
-        undefined ->
-            Ref = erlang:send_after(
-                ?LAZY_SUBSCRIBE_COALESCE_MS, self(), flush_lazy_subscribe_buffer
-            ),
-            NewState#{lazy_subscribe_timer => Ref};
-        _ ->
-            NewState
+        undefined -> arm_lazy_subscribe_timer(NewState);
+        _ -> NewState
     end.
 
 -spec merge_lazy_subscribe_request(map() | undefined, map()) -> map().
@@ -139,6 +203,8 @@ ordered_lazy_subscribe_keys(State, Buffer) ->
     guild_state().
 process_buffered_lazy_subscribe(BufferKey, Buffer, State) ->
     case maps:find(BufferKey, Buffer) of
+        {ok, #{?DISPATCHED_KEY := true}} ->
+            State;
         {ok, Request} ->
             process_lazy_subscribe(Request, State);
         error ->
@@ -294,13 +360,9 @@ handle_update_member_subscriptions_local(GuildId, SessionId, MemberIds, State) -
     FilteredMemberIds = filter_member_ids_for_subscription(
         GuildId, SessionUserId, MemberIds, State
     ),
-    OldSubscriptions = guild_subscriptions:get_user_ids_for_session(SessionId, MemberSubs),
-    NewMemberSubs = guild_subscriptions:update_subscriptions(
+    {NewMemberSubs, Added, Removed} = guild_subscriptions:update_subscriptions_with_delta(
         SessionId, FilteredMemberIds, MemberSubs
     ),
-    NewSubscriptions = guild_subscriptions:get_user_ids_for_session(SessionId, NewMemberSubs),
-    Added = sets:to_list(sets:subtract(NewSubscriptions, OldSubscriptions)),
-    Removed = sets:to_list(sets:subtract(OldSubscriptions, NewSubscriptions)),
     State1 = State#{member_subscriptions => NewMemberSubs},
     State2 = handle_added_subscriptions(Added, SessionId, State1),
     handle_removed_subscriptions(Removed, State2).
@@ -312,7 +374,7 @@ handle_update_member_subscriptions_local(GuildId, SessionId, MemberIds, State) -
 filter_member_ids_for_subscription(_GuildId, undefined, _MemberIds, _State) ->
     [];
 filter_member_ids_for_subscription(_GuildId, SessionUserId, MemberIds, State) ->
-    filter_member_ids_with_mutual_channels(SessionUserId, MemberIds, State).
+    guild_subscription_mutual_channels:filter_member_ids(SessionUserId, MemberIds, State).
 
 -spec handle_added_subscriptions([user_id()], session_id(), guild_state()) -> guild_state().
 handle_added_subscriptions(Added, SessionId, State) ->
@@ -332,58 +394,6 @@ handle_removed_subscriptions(Removed, State) ->
         State,
         Removed
     ).
-
--spec filter_member_ids_with_mutual_channels(
-    user_id(), [user_id()], guild_state()
-) -> [user_id()].
-filter_member_ids_with_mutual_channels(SessionUserId, MemberIds, State) ->
-    SessionMap = get_session_channel_map(SessionUserId, State),
-    lists:filtermap(
-        fun(MemberId) ->
-            has_mutual_channel(
-                MemberId, SessionUserId, SessionMap, State
-            )
-        end,
-        MemberIds
-    ).
-
--spec get_session_channel_map(user_id(), guild_state()) -> map().
-get_session_channel_map(SessionUserId, State) ->
-    case
-        guild_visibility_channels:get_cached_viewable_channel_map(
-            SessionUserId, State
-        )
-    of
-        undefined ->
-            guild_sessions:build_viewable_channel_map(
-                guild_visibility:get_user_viewable_channels(
-                    SessionUserId, State
-                )
-            );
-        M ->
-            M
-    end.
-
--spec has_mutual_channel(
-    term(), user_id(), map(), guild_state()
-) -> {true, user_id()} | false.
-has_mutual_channel(MemberId, SessionUserId, _SessionMap, _State) when
-    MemberId =:= SessionUserId; not is_integer(MemberId)
-->
-    false;
-has_mutual_channel(MemberId, _SessionUserId, SessionMap, State) ->
-    MemberChannels = guild_visibility:get_user_viewable_channels(
-        MemberId, State
-    ),
-    HasMutual = has_shared_channel(MemberChannels, SessionMap),
-    case HasMutual of
-        true -> {true, MemberId};
-        false -> false
-    end.
-
--spec has_shared_channel([integer()], map()) -> boolean().
-has_shared_channel(MemberChannels, SessionMap) ->
-    lists:any(fun(Ch) -> maps:is_key(Ch, SessionMap) end, MemberChannels).
 
 -ifdef(TEST).
 
@@ -496,5 +506,139 @@ flush_lazy_subscribe_buffer_clears_state_test() ->
     ?assertEqual(error, maps:find(lazy_subscribe_buffer, NewState)),
     ?assertEqual(error, maps:find(lazy_subscribe_order, NewState)),
     ?assertEqual(error, maps:find(lazy_subscribe_timer, NewState)).
+
+warm_list_state(ChannelId) ->
+    ListId = integer_to_binary(ChannelId),
+    #{
+        data => #{
+            <<"channel_index">> => #{
+                ChannelId => #{<<"id">> => ListId}
+            }
+        },
+        ?ENGINES_KEY => #{ListId => warm_list_state_engine_ref}
+    }.
+
+engine_already_built_detects_built_engine_test() ->
+    Request = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    ?assertEqual(true, engine_already_built(Request, warm_list_state(500))).
+
+engine_already_built_false_without_engine_test() ->
+    Request = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    State = maps:put(?ENGINES_KEY, #{}, warm_list_state(500)),
+    ?assertEqual(false, engine_already_built(Request, State)).
+
+engine_already_built_false_for_unknown_channel_test() ->
+    Request = #{session_id => <<"s1">>, channel_id => 999, ranges => [{0, 99}]},
+    ?assertEqual(false, engine_already_built(Request, warm_list_state(500))).
+
+engine_already_built_false_on_bare_state_test() ->
+    Request = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    ?assertEqual(false, engine_already_built(Request, #{})).
+
+dispatch_immediately_requires_idle_window_test() ->
+    Request = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    Warm = warm_list_state(500),
+    ?assertEqual(true, dispatch_immediately(Request, Warm)),
+    ?assertEqual(
+        false, dispatch_immediately(Request, Warm#{lazy_subscribe_timer => make_ref()})
+    ),
+    ?assertEqual(
+        false,
+        dispatch_immediately(Request, Warm#{
+            lazy_subscribe_buffer => #{{<<"s2">>, 501} => Request}
+        })
+    ).
+
+warm_subscribe_records_the_dispatched_request_test() ->
+    Request = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    NewState = buffer_lazy_subscribe(Request, warm_list_state(500)),
+    Buffer = maps:get(lazy_subscribe_buffer, NewState),
+    ?assertEqual(Request#{?DISPATCHED_KEY => true}, maps:get({<<"s1">>, 500}, Buffer)),
+    ?assertEqual([{<<"s1">>, 500}], maps:get(lazy_subscribe_order, NewState)),
+    ?assertNotEqual(undefined, maps:get(lazy_subscribe_timer, NewState, undefined)).
+
+subscribe_behind_a_warm_dispatch_is_coalesced_test() ->
+    Request1 = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    State1 = buffer_lazy_subscribe(Request1, warm_list_state(500)),
+    Request2 = #{session_id => <<"s2">>, channel_id => 500, ranges => [{0, 99}]},
+    State2 = buffer_lazy_subscribe(Request2, State1),
+    Buffer = maps:get(lazy_subscribe_buffer, State2),
+    ?assertEqual(Request2, maps:get({<<"s2">>, 500}, Buffer)),
+    ?assertEqual(Request1#{?DISPATCHED_KEY => true}, maps:get({<<"s1">>, 500}, Buffer)),
+    ?assertEqual(2, map_size(Buffer)).
+
+%% Reference oracle: what enqueue_lazy_subscribe/2 buffered for a repeated
+%% {session, channel} before the leading-edge dispatch existed.
+reference_coalesced_request(Request1, Request2) ->
+    merge_lazy_subscribe_request(Request1, Request2).
+
+repeated_warm_subscribe_merges_like_the_pre_leading_edge_path_test() ->
+    Request1 = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    Request2 = #{session_id => <<"s1">>, channel_id => 500, ranges => [{100, 199}]},
+    State1 = buffer_lazy_subscribe(Request1, warm_list_state(500)),
+    State2 = buffer_lazy_subscribe(Request2, State1),
+    Buffer = maps:get(lazy_subscribe_buffer, State2),
+    Merged = maps:get({<<"s1">>, 500}, Buffer),
+    ?assertEqual(1, map_size(Buffer)),
+    ?assertEqual(reference_coalesced_request(Request1, Request2), Merged),
+    ?assertNot(maps:is_key(?DISPATCHED_KEY, Merged)),
+    ?assertEqual([{<<"s1">>, 500}], maps:get(lazy_subscribe_order, State2)).
+
+repeated_warm_subscribe_with_empty_ranges_replaces_test() ->
+    Request1 = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    Request2 = #{session_id => <<"s1">>, channel_id => 500, ranges => []},
+    State1 = buffer_lazy_subscribe(Request1, warm_list_state(500)),
+    State2 = buffer_lazy_subscribe(Request2, State1),
+    Merged = maps:get({<<"s1">>, 500}, maps:get(lazy_subscribe_buffer, State2)),
+    ?assertEqual(reference_coalesced_request(Request1, Request2), Merged),
+    ?assertNot(maps:is_key(?DISPATCHED_KEY, Merged)).
+
+dispatched_entry_state() ->
+    Key = {<<"s1">>, 500},
+    Dispatched = #{session_id => <<"s1">>, channel_id => 500, ?DISPATCHED_KEY => true},
+    State = #{
+        lazy_subscribe_buffer => #{Key => Dispatched},
+        lazy_subscribe_order => [Key],
+        lazy_subscribe_timer => make_ref()
+    },
+    {Key, Dispatched, State}.
+
+flush_skips_an_already_dispatched_entry_test() ->
+    {_Key, _Dispatched, State} = dispatched_entry_state(),
+    NewState = flush_lazy_subscribe_buffer(State),
+    ?assertEqual(error, maps:find(lazy_subscribe_buffer, NewState)),
+    ?assertEqual(error, maps:find(lazy_subscribe_order, NewState)),
+    ?assertEqual(error, maps:find(lazy_subscribe_timer, NewState)).
+
+flush_processes_the_same_entry_once_unmarked_test() ->
+    {Key, Dispatched, State} = dispatched_entry_state(),
+    Unmarked = maps:remove(?DISPATCHED_KEY, Dispatched),
+    ?assertError(
+        {badmatch, _},
+        flush_lazy_subscribe_buffer(State#{lazy_subscribe_buffer => #{Key => Unmarked}})
+    ).
+
+failed_warm_dispatch_is_not_re_enqueued_test() ->
+    Warm = warm_list_state(500),
+    Broken = #{session_id => <<"s1">>, channel_id => 500},
+    ?assertEqual(Warm, buffer_lazy_subscribe(Broken, Warm)).
+
+failed_warm_dispatch_does_not_escape_handle_call_test() ->
+    Warm = warm_list_state(500),
+    Broken = #{session_id => <<"s1">>, channel_id => 500},
+    From = {self(), make_ref()},
+    ?assertEqual({reply, ok, Warm}, handle_call({lazy_subscribe, Broken}, From, Warm)).
+
+cold_list_still_uses_the_coalesce_buffer_test() ->
+    Request = #{session_id => <<"s1">>, channel_id => 500, ranges => [{0, 99}]},
+    State = maps:put(?ENGINES_KEY, #{}, warm_list_state(500)),
+    NewState = buffer_lazy_subscribe(Request, State),
+    Buffer = maps:get(lazy_subscribe_buffer, NewState),
+    ?assertEqual(Request, maps:get({<<"s1">>, 500}, Buffer)).
+
+arm_lazy_subscribe_timer_is_idempotent_test() ->
+    Ref = make_ref(),
+    State = #{lazy_subscribe_timer => Ref},
+    ?assertEqual(Ref, maps:get(lazy_subscribe_timer, arm_lazy_subscribe_timer(State))).
 
 -endif.

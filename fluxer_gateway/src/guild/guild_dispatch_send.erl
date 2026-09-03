@@ -10,6 +10,8 @@
     filter_visible_channels/4
 ]).
 
+-define(MAX_BULK_ENCODE_GROUPS, 1024).
+
 -type event() :: atom().
 -type event_data() :: map().
 -type guild_state() :: map().
@@ -17,6 +19,9 @@
 -type guild_id() :: integer().
 -type user_id() :: integer().
 -type session_pair() :: {session_id(), map()}.
+-type bulk_group_key() :: [term()].
+-type bulk_groups() :: #{bulk_group_key() => {[map()], [pid()]}}.
+-type bulk_acc() :: {bulk_groups(), non_neg_integer()}.
 -export_type([event/0, event_data/0, guild_state/0, user_id/0, session_pair/0]).
 
 -spec dispatch_to_sessions([session_pair()], event(), event_data(), guild_state()) ->
@@ -45,43 +50,75 @@ dispatch_bulk_update(FilteredSessions, Event, FinalData, UpdatedState) ->
         }
      || Ch <- BulkChannels
     ],
-    SuccessCount = lists:foldl(
+    {Groups, Dispatched} = lists:foldl(
         fun({_Sid, SessionData}, Acc) ->
-            dispatch_bulk_to_one_session_indexed(
+            collect_bulk_recipient(
                 SessionData, Event, FinalData, IndexedChannels, GuildId, UpdatedState, Acc
             )
         end,
-        0,
+        {#{}, 0},
         FilteredSessions
     ),
+    SuccessCount = dispatch_bulk_groups(Groups, Event, FinalData, GuildId, Dispatched),
     normalize_success(SuccessCount).
 
--spec dispatch_bulk_to_one_session_indexed(
+-spec collect_bulk_recipient(
     map(),
     event(),
     event_data(),
     [{integer() | undefined, map()}],
     guild_id(),
     guild_state(),
-    non_neg_integer()
-) -> non_neg_integer().
-dispatch_bulk_to_one_session_indexed(
-    SessionData, Event, FinalData, IndexedChannels, GuildId, UpdatedState, Acc
-) ->
+    bulk_acc()
+) -> bulk_acc().
+collect_bulk_recipient(SessionData, Event, FinalData, IndexedChannels, GuildId, State, Acc) ->
     Pid = maps:get(pid, SessionData),
-    case
-        session_passive:should_receive_event(
-            Event, FinalData, GuildId, SessionData, UpdatedState
-        )
-    of
+    Eligible =
+        is_pid(Pid) andalso
+            session_passive:should_receive_event(Event, FinalData, GuildId, SessionData, State),
+    case Eligible of
         false ->
             Acc;
         true ->
-            FilteredChannels = filter_indexed_for_session(
-                SessionData, IndexedChannels, UpdatedState
-            ),
-            dispatch_bulk_to_pid(Pid, Event, FinalData, FilteredChannels, GuildId, Acc)
+            Filtered = filter_indexed_for_session(SessionData, IndexedChannels, State),
+            add_bulk_recipient(Pid, Filtered, Event, FinalData, GuildId, Acc)
     end.
+
+-spec add_bulk_recipient(pid(), [map()], event(), event_data(), guild_id(), bulk_acc()) ->
+    bulk_acc().
+add_bulk_recipient(_Pid, [], _Event, _FinalData, _GuildId, Acc) ->
+    Acc;
+add_bulk_recipient(Pid, FilteredChannels, Event, FinalData, GuildId, {Groups, Dispatched}) ->
+    Key = bulk_group_key(FilteredChannels),
+    case Groups of
+        #{Key := {Channels, Pids}} ->
+            {Groups#{Key := {Channels, [Pid | Pids]}}, Dispatched};
+        _ when map_size(Groups) >= ?MAX_BULK_ENCODE_GROUPS ->
+            Sent = dispatch_bulk_to_pid(
+                Pid, Event, FinalData, FilteredChannels, GuildId, Dispatched
+            ),
+            {Groups, Sent};
+        _ ->
+            {Groups#{Key => {FilteredChannels, [Pid]}}, Dispatched}
+    end.
+
+-spec bulk_group_key([map()]) -> bulk_group_key().
+bulk_group_key(FilteredChannels) ->
+    [maps:get(<<"id">>, Ch, undefined) || Ch <- FilteredChannels].
+
+-spec dispatch_bulk_groups(
+    bulk_groups(), event(), event_data(), guild_id(), non_neg_integer()
+) -> non_neg_integer().
+dispatch_bulk_groups(Groups, Event, FinalData, GuildId, Dispatched) ->
+    maps:fold(
+        fun(_Key, {FilteredChannels, Pids}, Acc) ->
+            dispatch_bulk_to_pids(
+                lists:reverse(Pids), Event, FinalData, FilteredChannels, GuildId, Acc
+            )
+        end,
+        Dispatched,
+        Groups
+    ).
 
 -spec filter_indexed_for_session(map(), [{integer() | undefined, map()}], guild_state()) ->
     [map()].
@@ -128,12 +165,7 @@ is_channel_visible(Channel, UserId, Member, State) ->
 dispatch_bulk_to_pid(_, _, _, [], _GuildId, Acc) ->
     Acc;
 dispatch_bulk_to_pid(Pid, Event, FinalData, FilteredChannels, GuildId, Acc) when is_pid(Pid) ->
-    CustomData = FinalData#{<<"channels">> => FilteredChannels},
-    EncodedData =
-        {pre_encoded,
-            iolist_to_binary(
-                json:encode(guild_data_wire:payload(CustomData), fun json:encode_value/2)
-            )},
+    EncodedData = encode_bulk_payload(FinalData, FilteredChannels),
     try
         gateway_dispatch_relay:dispatch(Pid, Event, EncodedData, GuildId),
         Acc + 1
@@ -142,6 +174,28 @@ dispatch_bulk_to_pid(Pid, Event, FinalData, FilteredChannels, GuildId, Acc) when
     end;
 dispatch_bulk_to_pid(_, _, _, _, _GuildId, Acc) ->
     Acc.
+
+-spec dispatch_bulk_to_pids(
+    [pid()], event(), event_data(), [map()], guild_id(), non_neg_integer()
+) -> non_neg_integer().
+dispatch_bulk_to_pids([], _Event, _FinalData, _FilteredChannels, _GuildId, Acc) ->
+    Acc;
+dispatch_bulk_to_pids(Pids, Event, FinalData, FilteredChannels, GuildId, Acc) ->
+    EncodedData = encode_bulk_payload(FinalData, FilteredChannels),
+    try
+        gateway_dispatch_relay:dispatch_many(Pids, Event, EncodedData, GuildId),
+        Acc + length(Pids)
+    catch
+        _:_ -> Acc
+    end.
+
+-spec encode_bulk_payload(event_data(), [map()]) -> {pre_encoded, binary()}.
+encode_bulk_payload(FinalData, FilteredChannels) ->
+    CustomData = FinalData#{<<"channels">> => FilteredChannels},
+    {pre_encoded,
+        iolist_to_binary(
+            json:encode(guild_data_wire:payload(CustomData), fun json:encode_value/2)
+        )}.
 
 -spec dispatch_standard([session_pair()], event(), event_data(), guild_id(), guild_state()) ->
     non_neg_integer().
@@ -204,6 +258,8 @@ normalize_dispatched([_ | _]) -> 1.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+
+-define(OVERFLOW_CHANNEL_BITS, 11).
 
 normalize_success_test() ->
     ?assertEqual(1, normalize_success(5)),
@@ -287,6 +343,150 @@ passive_channel_update_bulk_dispatches_visible_channels_test() ->
         maps:get(<<"channels">>, Payload)
     ).
 
+grouped_bulk_encoding_matches_ungrouped_test() ->
+    flush_dispatches(),
+    Data = bulk_channel_data(),
+    State = passive_dispatch_state(),
+    Sessions = [bulk_session_pair(<<"a">>, #{100 => true})],
+    ?assertEqual(1, reference_dispatch_bulk_update(Sessions, channel_update_bulk, Data, State)),
+    Ungrouped = receive_pre_encoded_binary(channel_update_bulk),
+    ?assertEqual(1, dispatch_to_sessions(Sessions, channel_update_bulk, Data, State)),
+    ?assertEqual(Ungrouped, receive_pre_encoded_binary(channel_update_bulk)).
+
+reference_dispatch_bulk_update(FilteredSessions, Event, FinalData, UpdatedState) ->
+    GuildId = maps:get(id, UpdatedState),
+    BulkChannels = maps:get(<<"channels">>, FinalData, []),
+    IndexedChannels = [
+        {
+            guild_dispatch_decorate:parse_snowflake(
+                <<"id">>,
+                maps:get(<<"id">>, Ch, undefined)
+            ),
+            Ch
+        }
+     || Ch <- BulkChannels
+    ],
+    SuccessCount = lists:foldl(
+        fun({_Sid, SessionData}, Acc) ->
+            reference_dispatch_bulk_to_one_session_indexed(
+                SessionData, Event, FinalData, IndexedChannels, GuildId, UpdatedState, Acc
+            )
+        end,
+        0,
+        FilteredSessions
+    ),
+    normalize_success(SuccessCount).
+
+reference_dispatch_bulk_to_one_session_indexed(
+    SessionData, Event, FinalData, IndexedChannels, GuildId, UpdatedState, Acc
+) ->
+    Pid = maps:get(pid, SessionData),
+    case
+        session_passive:should_receive_event(
+            Event, FinalData, GuildId, SessionData, UpdatedState
+        )
+    of
+        false ->
+            Acc;
+        true ->
+            FilteredChannels = filter_indexed_for_session(
+                SessionData, IndexedChannels, UpdatedState
+            ),
+            dispatch_bulk_to_pid(Pid, Event, FinalData, FilteredChannels, GuildId, Acc)
+    end.
+
+grouped_bulk_encodes_once_per_visible_set_test() ->
+    flush_dispatches(),
+    Data = bulk_channel_data(),
+    State = passive_dispatch_state(),
+    Sessions = [
+        bulk_session_pair(<<"a">>, #{100 => true}),
+        bulk_session_pair(<<"b">>, #{100 => true}),
+        bulk_session_pair(<<"c">>, #{200 => true})
+    ],
+    ?assertEqual(1, dispatch_to_sessions(Sessions, channel_update_bulk, Data, State)),
+    Bins = [receive_pre_encoded_binary(channel_update_bulk) || _ <- lists:seq(1, 3)],
+    ?assertEqual(2, length(lists:usort(Bins))),
+    Sets = [maps:get(<<"channels">>, json:decode(Bin)) || Bin <- Bins],
+    ?assertEqual(2, length([S || S <- Sets, S =:= [bulk_channel(<<"100">>, <<"first">>)]])),
+    ?assertEqual(1, length([S || S <- Sets, S =:= [bulk_channel(<<"200">>, <<"second">>)]])).
+
+grouped_bulk_skips_sessions_without_visible_channels_test() ->
+    flush_dispatches(),
+    Data = bulk_channel_data(),
+    State = passive_dispatch_state(),
+    Sessions = [
+        bulk_session_pair(<<"a">>, #{}),
+        bulk_session_pair(<<"b">>, #{200 => true})
+    ],
+    ?assertEqual(1, dispatch_to_sessions(Sessions, channel_update_bulk, Data, State)),
+    ?assertEqual(
+        [bulk_channel(<<"200">>, <<"second">>)],
+        maps:get(<<"channels">>, receive_pre_encoded_payload(channel_update_bulk))
+    ),
+    ?assertEqual(ok, assert_no_further_dispatch()).
+
+grouped_bulk_dispatches_overflow_recipients_without_retaining_them_test() ->
+    flush_dispatches(),
+    Total = ?MAX_BULK_ENCODE_GROUPS + 1,
+    State = passive_dispatch_state(),
+    Data = #{
+        <<"guild_id">> => <<"42">>,
+        <<"channels">> => [
+            bulk_channel(integer_to_binary(Id), <<"c">>)
+         || Id <- lists:seq(1, ?OVERFLOW_CHANNEL_BITS)
+        ]
+    },
+    Sessions = [overflow_session_pair(N) || N <- lists:seq(1, Total)],
+    ?assertEqual(1, dispatch_to_sessions(Sessions, channel_update_bulk, Data, State)),
+    Received = collect_bulk_channel_ids(Total, []),
+    Expected = [overflow_channel_ids(N) || N <- lists:seq(1, Total)],
+    ?assertEqual(lists:sort(Expected), lists:sort(Received)),
+    ?assertEqual(ok, assert_no_further_dispatch()).
+
+overflow_session_pair(N) ->
+    Base = passive_session_data(),
+    Sid = integer_to_binary(N),
+    Viewable = maps:from_list([{Id, true} || Id <- overflow_visible_ids(N)]),
+    {Sid, Base#{session_id => Sid, viewable_channels => Viewable}}.
+
+overflow_visible_ids(N) ->
+    [Id || Id <- lists:seq(1, ?OVERFLOW_CHANNEL_BITS), (N bsr (Id - 1)) band 1 =:= 1].
+
+overflow_channel_ids(N) ->
+    [integer_to_binary(Id) || Id <- overflow_visible_ids(N)].
+
+collect_bulk_channel_ids(0, Acc) ->
+    Acc;
+collect_bulk_channel_ids(N, Acc) ->
+    Payload = receive_pre_encoded_payload(channel_update_bulk),
+    Ids = [maps:get(<<"id">>, Ch) || Ch <- maps:get(<<"channels">>, Payload)],
+    collect_bulk_channel_ids(N - 1, [Ids | Acc]).
+
+bulk_channel_data() ->
+    #{
+        <<"guild_id">> => <<"42">>,
+        <<"channels">> => [
+            bulk_channel(<<"100">>, <<"first">>),
+            bulk_channel(<<"200">>, <<"second">>)
+        ]
+    }.
+
+bulk_channel(Id, Name) ->
+    #{<<"id">> => Id, <<"name">> => Name}.
+
+bulk_session_pair(Sid, ViewableChannels) ->
+    Base = passive_session_data(),
+    {Sid, Base#{session_id => Sid, viewable_channels => ViewableChannels}}.
+
+assert_no_further_dispatch() ->
+    receive
+        {'$gen_cast', {dispatch, Event, _Payload}} ->
+            ?assert(false, {unexpected_dispatch, Event})
+    after 0 ->
+        ok
+    end.
+
 standard_dispatch_without_eligible_sessions_test() ->
     flush_dispatches(),
     Session = (passive_session_data())#{pid => undefined},
@@ -364,9 +564,12 @@ passive_dispatch_state() ->
     }.
 
 receive_pre_encoded_payload(Event) ->
+    json:decode(receive_pre_encoded_binary(Event)).
+
+receive_pre_encoded_binary(Event) ->
     receive
         {'$gen_cast', {dispatch, Event, {pre_encoded, Bin}}} ->
-            json:decode(Bin)
+            Bin
     after 1000 ->
         ?assert(false, {dispatch_not_received, Event})
     end.

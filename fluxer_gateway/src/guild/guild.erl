@@ -9,6 +9,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(HIBERNATE_TIMEOUT, 60000).
+-define(VOICE_MEMBERS_TABLE_WARNED, {?MODULE, voice_members_table_unavailable}).
 
 -type guild_state() :: map().
 -type call_reply() ::
@@ -46,6 +47,10 @@ handle_call(export_handoff_state, _From, State) ->
     {reply, {ok, guild_handoff:export_handoff_state(State)}, State};
 handle_call({get_cached_voice_state_by_connection, ConnectionId}, _From, State) ->
     handle_cached_voice_state_call(ConnectionId, State);
+handle_call({get_guild_id}, _From, State) ->
+    {reply, maps:get(id, State, undefined), State};
+handle_call({get_voice_guild_state}, _From, State) ->
+    {reply, voice_guild_state(State), State};
 handle_call({dispatch, Request}, _From, State) ->
     handle_dispatch_call(Request, State);
 handle_call({reload, NewData}, _From, State) ->
@@ -603,6 +608,112 @@ require_map(Value) when is_map(Value) ->
 require_map(Value) ->
     erlang:error({badmap, Value}).
 
+-spec voice_guild_state(guild_state()) -> map().
+voice_guild_state(State) ->
+    case maps:get(data, State, #{}) of
+        #{members_ets := Tab} = Data ->
+            case voice_members_table_healthy(Tab) of
+                true ->
+                    ok = clear_voice_members_table_warning(),
+                    project_voice_guild_state(Data, State);
+                false ->
+                    voice_members_table_unavailable(State)
+            end;
+        _ ->
+            voice_members_table_unavailable(State)
+    end.
+
+-spec voice_members_table_healthy(term()) -> boolean().
+voice_members_table_healthy(Tab) when is_reference(Tab) ->
+    try ets:info(eqwalizer:dynamic_cast(Tab), owner) of
+        Owner when is_pid(Owner) -> Owner =:= self();
+        _ -> false
+    catch
+        error:badarg -> false
+    end;
+voice_members_table_healthy(_Tab) ->
+    false.
+
+-spec project_voice_guild_state(map(), guild_state()) -> map().
+project_voice_guild_state(Data, State) ->
+    Projected = maps:with(voice_guild_state_keys(), State),
+    project_voice_sessions(Projected#{data => maps:with(voice_guild_data_keys(), Data)}).
+
+%% The sessions map keeps every key it had, so fold order over it is unchanged and the
+%% dispatch order of every voice broadcast is unchanged. Only session ENTRIES are narrowed.
+-spec project_voice_sessions(map()) -> map().
+project_voice_sessions(#{sessions := Sessions} = Projected) when is_map(Sessions) ->
+    Projected#{sessions => maps:map(fun project_voice_session/2, Sessions)};
+project_voice_sessions(Projected) ->
+    Projected.
+
+-spec project_voice_session(term(), term()) -> term().
+project_voice_session(_SessionId, Session) when is_map(Session) ->
+    maps:without(voice_session_drop_keys(), Session);
+project_voice_session(_SessionId, Session) ->
+    Session.
+
+%% Every reader reachable from the voice guild state takes only pending_connect, user_id,
+%% viewable_channels and pid out of a session entry: guild_sessions:filter_sessions_for_channel,
+%% guild_voice_broadcast and guild_virtual_channel_access. These five are read nowhere on that path.
+-spec voice_session_drop_keys() -> [atom()].
+voice_session_drop_keys() ->
+    [active_guilds, user_roles, mref, bot, is_staff].
+
+-spec voice_guild_state_keys() -> [atom() | binary()].
+voice_guild_state_keys() ->
+    [
+        id,
+        <<"id">>,
+        sessions,
+        guild_pid,
+        voice_states,
+        pending_voice_connections,
+        recently_disconnected_voice_states,
+        e2ee_room_keys,
+        virtual_channel_access,
+        virtual_channel_access_pending,
+        virtual_channel_access_preserve,
+        virtual_channel_access_move_pending,
+        test_perm_fun,
+        test_force_disconnect_fun,
+        test_livekit_fun,
+        test_permission_sync_fun
+    ].
+
+-spec voice_guild_data_keys() -> [atom() | binary()].
+voice_guild_data_keys() ->
+    [
+        <<"id">>,
+        <<"guild">>,
+        <<"roles">>,
+        <<"role_index">>,
+        role_perms_cache,
+        <<"channels">>,
+        <<"channel_index">>,
+        overwrite_perms_cache,
+        members_ets
+    ].
+
+-spec voice_members_table_unavailable(guild_state()) -> map().
+voice_members_table_unavailable(State) ->
+    ok = log_voice_members_table_unavailable(maps:get(id, State, undefined)),
+    State.
+
+-spec log_voice_members_table_unavailable(term()) -> ok.
+log_voice_members_table_unavailable(GuildId) ->
+    case erlang:put(?VOICE_MEMBERS_TABLE_WARNED, true) of
+        true ->
+            ok;
+        _ ->
+            logger:warning("guild_voice_members_table_unavailable: guild_id=~p", [GuildId])
+    end.
+
+-spec clear_voice_members_table_warning() -> ok.
+clear_voice_members_table_warning() ->
+    _ = erlang:erase(?VOICE_MEMBERS_TABLE_WARNED),
+    ok.
+
 -spec maybe_report_crash(term(), term()) -> ok.
 maybe_report_crash(normal, _) ->
     ok;
@@ -629,5 +740,350 @@ handle_non_voice_exit_other_linked_stops_guild_test() ->
         {stop, {linked_process_exit, OtherPid, boom}, State},
         handle_non_voice_exit(OtherPid, boom, State)
     ).
+
+voice_guild_state_pins_projected_key_set_test() ->
+    with_voice_projection_state(fun(Full) ->
+        Projected = voice_guild_state(Full),
+        ?assertEqual(
+            lists:sort([
+                id,
+                <<"id">>,
+                data,
+                sessions,
+                guild_pid,
+                voice_states,
+                pending_voice_connections,
+                recently_disconnected_voice_states,
+                e2ee_room_keys,
+                virtual_channel_access,
+                virtual_channel_access_pending,
+                virtual_channel_access_preserve,
+                virtual_channel_access_move_pending
+            ]),
+            lists:sort(maps:keys(Projected))
+        ),
+        ?assertEqual(
+            lists:sort([
+                <<"id">>,
+                <<"guild">>,
+                <<"roles">>,
+                <<"role_index">>,
+                role_perms_cache,
+                <<"channels">>,
+                <<"channel_index">>,
+                overwrite_perms_cache,
+                members_ets
+            ]),
+            lists:sort(maps:keys(maps:get(data, Projected)))
+        )
+    end).
+
+voice_guild_state_drops_non_voice_payload_test() ->
+    with_voice_projection_state(fun(Full) ->
+        Projected = voice_guild_state(Full),
+        ?assertNot(maps:is_key(member_list_subscriptions, Projected)),
+        ?assertNot(maps:is_key(presence_subscriptions, Projected)),
+        ?assertNot(maps:is_key(connected_user_ids, Projected)),
+        Data = maps:get(data, Projected),
+        ?assertNot(maps:is_key(<<"members">>, Data)),
+        ?assertNot(maps:is_key(members_normalized, Data)),
+        ?assertNot(maps:is_key(<<"member_role_index">>, Data)),
+        ?assertNot(maps:is_key(<<"emojis">>, Data))
+    end).
+
+voice_guild_state_preserves_member_permissions_test() ->
+    with_voice_projection_state(fun(Full) ->
+        Projected = voice_guild_state(Full),
+        Expected = guild_permissions:get_member_permissions(10, 500, Full),
+        ?assert(Expected > 0),
+        ?assert(permission_bits:has(Expected, constants:speak_permission())),
+        ?assertEqual(Expected, guild_permissions:get_member_permissions(10, 500, Projected)),
+        ?assertEqual(
+            voice_utils:compute_voice_permissions(10, 500, Full),
+            voice_utils:compute_voice_permissions(10, 500, Projected)
+        ),
+        ?assertEqual(
+            guild_permissions:find_member_by_user_id(10, Full),
+            guild_permissions:find_member_by_user_id(10, Projected)
+        ),
+        ?assertEqual(
+            guild_permissions:can_view_channel(10, 500, undefined, Full),
+            guild_permissions:can_view_channel(10, 500, undefined, Projected)
+        )
+    end).
+
+voice_guild_state_absent_member_still_resolves_to_zero_test() ->
+    with_voice_projection_state(fun(Full) ->
+        Projected = voice_guild_state(Full),
+        ?assertEqual(undefined, guild_permissions:find_member_by_user_id(11, Projected)),
+        ?assertEqual(0, guild_permissions:get_member_permissions(11, 500, Projected)),
+        ?assertEqual(
+            guild_permissions:get_member_permissions(11, 500, Full),
+            guild_permissions:get_member_permissions(11, 500, Projected)
+        )
+    end).
+
+voice_guild_state_put_member_keeps_permissions_resolvable_test() ->
+    with_voice_projection_state(fun(Full) ->
+        Projected = voice_guild_state(Full),
+        Data = maps:get(data, Projected),
+        Member = guild_permissions:find_member_by_user_id(10, Projected),
+        ?assert(is_map(Member)),
+        Rebuilt = guild_data_index:put_member(Member#{<<"mute">> => true}, Data),
+        RebuiltState = Projected#{data => Rebuilt},
+        ?assertEqual(1, map_size(maps:get(<<"members">>, Rebuilt))),
+        ?assertEqual(1, map_size(maps:get(members_normalized, Rebuilt))),
+        ?assertEqual(maps:get(members_ets, Data), maps:get(members_ets, Rebuilt)),
+        ?assertEqual(
+            guild_permissions:get_member_permissions(10, 500, Full),
+            guild_permissions:get_member_permissions(10, 500, RebuiltState)
+        ),
+        ?assertMatch(
+            #{<<"mute">> := true},
+            guild_permissions:find_member_by_user_id(10, RebuiltState)
+        ),
+        ?assertEqual(
+            guild_permissions:can_view_channel(10, 500, undefined, Full),
+            guild_permissions:can_view_channel(10, 500, undefined, RebuiltState)
+        )
+    end).
+
+voice_guild_state_without_members_table_returns_full_state_test() ->
+    with_voice_projection_state(fun(Full) ->
+        Data = maps:get(data, Full),
+        Broken = Full#{data => maps:remove(members_ets, Data)},
+        _ = erlang:erase(?VOICE_MEMBERS_TABLE_WARNED),
+        ?assertEqual(Broken, voice_guild_state(Broken)),
+        ?assertEqual(true, erlang:get(?VOICE_MEMBERS_TABLE_WARNED)),
+        _ = erlang:erase(?VOICE_MEMBERS_TABLE_WARNED)
+    end).
+
+voice_members_table_warning_rearms_after_recovery_test() ->
+    with_voice_projection_state(fun(Full) ->
+        Data = maps:get(data, Full),
+        Broken = Full#{data => maps:remove(members_ets, Data)},
+        _ = erlang:erase(?VOICE_MEMBERS_TABLE_WARNED),
+        _ = voice_guild_state(Broken),
+        ?assertEqual(true, erlang:get(?VOICE_MEMBERS_TABLE_WARNED)),
+        _ = voice_guild_state(Broken),
+        ?assertEqual(true, erlang:get(?VOICE_MEMBERS_TABLE_WARNED)),
+        _ = voice_guild_state(Full),
+        ?assertEqual(undefined, erlang:get(?VOICE_MEMBERS_TABLE_WARNED)),
+        _ = voice_guild_state(Broken),
+        ?assertEqual(true, erlang:get(?VOICE_MEMBERS_TABLE_WARNED)),
+        _ = erlang:erase(?VOICE_MEMBERS_TABLE_WARNED)
+    end).
+
+voice_guild_state_session_entries_keep_only_reader_keys_test() ->
+    with_voice_projection_state(fun(Base) ->
+        Full = Base#{sessions => voice_projection_sessions()},
+        Projected = voice_guild_state(Full),
+        Sessions = maps:get(sessions, Projected),
+        Session = maps:get(<<"s-view">>, Sessions),
+        ?assertEqual(
+            lists:sort([session_id, user_id, pid, pending_connect, viewable_channels]),
+            lists:sort(maps:keys(Session))
+        ),
+        ?assertNot(maps:is_key(active_guilds, Session)),
+        ?assertNot(maps:is_key(user_roles, Session)),
+        ?assertNot(maps:is_key(mref, Session)),
+        ?assertNot(maps:is_key(bot, Session)),
+        ?assertNot(maps:is_key(is_staff, Session))
+    end).
+
+voice_guild_state_session_projection_matches_reference_test() ->
+    with_voice_projection_state(fun(Base) ->
+        Full = Base#{sessions => voice_projection_sessions()},
+        Reference = reference_voice_guild_state(Full),
+        Projected = voice_guild_state(Full),
+        ?assertEqual(maps:remove(sessions, Reference), maps:remove(sessions, Projected)),
+        RefSessions = maps:get(sessions, Reference),
+        NewSessions = maps:get(sessions, Projected),
+        ?assertEqual(maps:keys(RefSessions), maps:keys(NewSessions)),
+        ?assertEqual(
+            maps:map(fun project_voice_session/2, RefSessions),
+            NewSessions
+        )
+    end).
+
+voice_guild_state_session_readers_see_identical_results_test() ->
+    with_voice_projection_state(fun(Base) ->
+        Full = Base#{sessions => voice_projection_sessions()},
+        Reference = reference_voice_guild_state(Full),
+        Projected = voice_guild_state(Full),
+        Expected = voice_session_reader_result(500, Reference),
+        ?assertEqual(Expected, voice_session_reader_result(500, Projected)),
+        {SessionIds, Pids} = Expected,
+        ?assertEqual([<<"s-cached">>, <<"s-perm">>, <<"s-view">>], lists:sort(SessionIds)),
+        ?assertEqual([self(), self(), self()], Pids),
+        Hidden = voice_session_reader_result(501, Reference),
+        ?assertEqual(Hidden, voice_session_reader_result(501, Projected)),
+        ?assertEqual({[<<"s-cached">>], [self()]}, Hidden)
+    end).
+
+voice_guild_state_session_projection_boundaries_test() ->
+    with_voice_projection_state(fun(Base) ->
+        Bare = #{user_id => 10, pid => self()},
+        Full = Base#{sessions => #{<<"s-bare">> => Bare, <<"s-odd">> => not_a_map}},
+        Sessions = maps:get(sessions, voice_guild_state(Full)),
+        ?assertEqual(Bare, maps:get(<<"s-bare">>, Sessions)),
+        ?assertEqual(not_a_map, maps:get(<<"s-odd">>, Sessions)),
+        NoSessions = maps:remove(sessions, Base),
+        ?assertNot(maps:is_key(sessions, voice_guild_state(NoSessions))),
+        BadSessions = Base#{sessions => not_a_map},
+        ?assertEqual(not_a_map, maps:get(sessions, voice_guild_state(BadSessions)))
+    end).
+
+voice_guild_state_preserves_session_fold_order_at_scale_test() ->
+    with_voice_projection_state(fun voice_session_fold_order_scenario/1).
+
+%% 200 entries forces the hashmap representation, where iteration order is driven by key
+%% hashes. maps:map/2 rewrites values only, so the key set and therefore the order is identical.
+voice_session_fold_order_scenario(Base) ->
+    Sessions = maps:from_list(lists:map(fun voice_scale_session/1, lists:seq(1, 200))),
+    Full = Base#{sessions => Sessions},
+    Projected = voice_guild_state(Full),
+    ?assertEqual(maps:keys(Sessions), maps:keys(maps:get(sessions, Projected))),
+    ?assertEqual(
+        voice_session_reader_result(500, reference_voice_guild_state(Full)),
+        voice_session_reader_result(500, Projected)
+    ).
+
+voice_scale_session(N) ->
+    SessionId = integer_to_binary(N),
+    {SessionId, voice_projection_session(SessionId, 10, #{500 => true}, false)}.
+
+voice_session_drop_keys_never_drops_a_reader_key_test() ->
+    Dropped = voice_session_drop_keys(),
+    Readers = [pending_connect, user_id, viewable_channels, pid],
+    ?assertEqual([], [K || K <- Readers, lists:member(K, Dropped)]).
+
+%% Reproduces the projection exactly as it was before session entries were narrowed, so the
+%% tests above compare the new path against a live oracle rather than a hand-written literal.
+reference_voice_guild_state(State) ->
+    Data = maps:get(data, State, #{}),
+    Projected = maps:with(voice_guild_state_keys(), State),
+    Projected#{data => maps:with(voice_guild_data_keys(), Data)}.
+
+%% The reader tuple is everything the voice path can observe about the sessions map: which
+%% sessions match, in which fold order, and which pids the broadcast dispatches to.
+voice_session_reader_result(ChannelId, State) ->
+    Sessions = maps:get(sessions, State, #{}),
+    Pairs = guild_sessions:filter_sessions_for_channel(Sessions, ChannelId, undefined, State),
+    {[Sid || {Sid, _S} <- Pairs], [maps:get(pid, S) || {_Sid, S} <- Pairs]}.
+
+voice_projection_sessions() ->
+    #{
+        <<"s-view">> => voice_projection_session(<<"s-view">>, 10, #{500 => true}, false),
+        <<"s-perm">> => voice_projection_session(<<"s-perm">>, 10, #{}, false),
+        <<"s-pending">> => voice_projection_session(<<"s-pending">>, 10, #{500 => true}, true),
+        <<"s-stranger">> => voice_projection_session(<<"s-stranger">>, 11, #{}, false),
+        <<"s-cached">> => voice_projection_session(<<"s-cached">>, 10, #{501 => true}, false)
+    }.
+
+voice_projection_session(SessionId, UserId, ViewableChannels, Pending) ->
+    #{
+        session_id => SessionId,
+        user_id => UserId,
+        pid => self(),
+        mref => make_ref(),
+        active_guilds => sets:from_list([42, 43, 44]),
+        user_roles => [77],
+        bot => false,
+        is_staff => false,
+        pending_connect => Pending,
+        viewable_channels => ViewableChannels
+    }.
+
+voice_members_table_warning_key_is_module_scoped_test() ->
+    ?assertEqual({?MODULE, voice_members_table_unavailable}, ?VOICE_MEMBERS_TABLE_WARNED),
+    ?assertNot(is_atom(?VOICE_MEMBERS_TABLE_WARNED)).
+
+with_voice_projection_state(Fun) ->
+    Tab = ets:new(guild_members_data, [set, public, {read_concurrency, true}]),
+    try
+        Fun(voice_projection_state(Tab))
+    after
+        ets:delete(Tab)
+    end.
+
+voice_projection_state(Tab) ->
+    Data = voice_projection_data(),
+    maps:foreach(
+        fun(UserId, Member) -> ets:insert(Tab, {UserId, Member}) end,
+        maps:get(members_normalized, Data)
+    ),
+    #{
+        id => 42,
+        <<"id">> => <<"42">>,
+        data => Data#{members_ets => Tab, <<"emojis">> => [], channels_stale => true},
+        sessions => #{},
+        guild_pid => self(),
+        voice_states => #{},
+        pending_voice_connections => #{},
+        recently_disconnected_voice_states => #{},
+        e2ee_room_keys => #{},
+        virtual_channel_access => #{},
+        virtual_channel_access_pending => #{},
+        virtual_channel_access_preserve => #{},
+        virtual_channel_access_move_pending => #{},
+        presence_subscriptions => #{},
+        member_list_subscriptions => #{},
+        connected_user_ids => sets:new(),
+        counts => #{member_count => 1}
+    }.
+
+voice_projection_data() ->
+    Everyone = #{
+        <<"id">> => <<"42">>,
+        <<"name">> => <<"@everyone">>,
+        <<"permissions">> => integer_to_binary(constants:view_channel_permission())
+    },
+    Speaker = #{
+        <<"id">> => <<"77">>,
+        <<"name">> => <<"speaker">>,
+        <<"permissions">> => integer_to_binary(
+            constants:connect_permission() bor constants:speak_permission()
+        )
+    },
+    Channel = #{
+        <<"id">> => <<"500">>,
+        <<"type">> => 2,
+        <<"name">> => <<"General">>,
+        <<"permission_overwrites">> => [
+            #{
+                <<"id">> => <<"77">>,
+                <<"type">> => 0,
+                <<"allow">> => integer_to_binary(constants:stream_permission()),
+                <<"deny">> => <<"0">>
+            }
+        ]
+    },
+    HiddenChannel = #{
+        <<"id">> => <<"501">>,
+        <<"type">> => 2,
+        <<"name">> => <<"Hidden">>,
+        <<"permission_overwrites">> => [
+            #{
+                <<"id">> => <<"42">>,
+                <<"type">> => 0,
+                <<"allow">> => <<"0">>,
+                <<"deny">> => integer_to_binary(constants:view_channel_permission())
+            }
+        ]
+    },
+    Member = #{
+        <<"user">> => #{<<"id">> => <<"10">>, <<"username">> => <<"speaker">>},
+        <<"roles">> => [<<"77">>],
+        <<"mute">> => false,
+        <<"deaf">> => false
+    },
+    guild_data_index:normalize_data(#{
+        <<"id">> => <<"42">>,
+        <<"guild">> => #{<<"id">> => <<"42">>, <<"owner_id">> => <<"9999">>},
+        <<"roles">> => [Everyone, Speaker],
+        <<"channels">> => [Channel, HiddenChannel],
+        <<"members">> => [Member]
+    }).
 
 -endif.

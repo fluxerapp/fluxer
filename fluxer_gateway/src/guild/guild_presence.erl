@@ -14,8 +14,13 @@
 -type member() :: map().
 -type user_id() :: integer().
 
--define(HEAVY_MEMBER_DATA_KEYS, [<<"members">>, members_normalized, <<"member_role_index">>]).
+%% members_sorted_ids trims with the member map it indexes: a snapshot that kept it would
+%% answer sorted_member_ids/2 with ids for members the snapshot no longer carries.
+-define(HEAVY_MEMBER_DATA_KEYS, [
+    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+]).
 -define(PRESENCE_SNAPSHOT_TRIM_MEMBER_THRESHOLD_DEFAULT, 5000).
+-define(SESSIONS_PROJECTION_CACHE, presence_snapshot_sessions_cache).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -112,12 +117,17 @@ spawn_presence_broadcast(UserId, OldPresence, PresenceMap, OldState, NewState) -
         PresenceMap
     ),
     {Pid, NewState2} = guild_broadcaster:ensure(NewState1),
-    NewSnap = build_broadcast_snapshot(NewState2),
+    {NewSnap, NewState3} = build_broadcast_snapshot_cached(NewState2),
     guild_broadcaster:cast_presence(Pid, UserId, PresenceMap, #{}, NewSnap),
-    NewState2.
+    NewState3.
 
 -spec build_broadcast_snapshot(guild_state()) -> map().
 build_broadcast_snapshot(State) ->
+    {Snapshot, _State} = build_broadcast_snapshot_cached(State),
+    Snapshot.
+
+-spec build_broadcast_snapshot_cached(guild_state()) -> {map(), guild_state()}.
+build_broadcast_snapshot_cached(State) ->
     maybe_trim_snapshot(build_base_snapshot(State), State).
 
 -spec build_base_snapshot(guild_state()) -> map().
@@ -139,11 +149,11 @@ build_base_snapshot(State) ->
         Keys
     ).
 
--spec maybe_trim_snapshot(map(), guild_state()) -> map().
+-spec maybe_trim_snapshot(map(), guild_state()) -> {map(), guild_state()}.
 maybe_trim_snapshot(Snapshot, State) ->
     case should_trim_snapshot(State) of
-        true -> trim_snapshot(Snapshot);
-        false -> Snapshot
+        true -> trim_snapshot(Snapshot, State);
+        false -> {Snapshot, State}
     end.
 
 -spec should_trim_snapshot(guild_state()) -> boolean().
@@ -179,9 +189,9 @@ presence_snapshot_trim_member_threshold() ->
         _ -> ?PRESENCE_SNAPSHOT_TRIM_MEMBER_THRESHOLD_DEFAULT
     end.
 
--spec trim_snapshot(map()) -> map().
-trim_snapshot(Snapshot) ->
-    trim_snapshot_sessions(trim_snapshot_data(Snapshot)).
+-spec trim_snapshot(map(), guild_state()) -> {map(), guild_state()}.
+trim_snapshot(Snapshot, State) ->
+    trim_snapshot_sessions(trim_snapshot_data(Snapshot), State).
 
 -spec trim_snapshot_data(map()) -> map().
 trim_snapshot_data(#{data := Data} = Snapshot) when is_map(Data) ->
@@ -189,15 +199,33 @@ trim_snapshot_data(#{data := Data} = Snapshot) when is_map(Data) ->
 trim_snapshot_data(Snapshot) ->
     Snapshot.
 
--spec trim_snapshot_sessions(map()) -> map().
-trim_snapshot_sessions(#{sessions := Sessions} = Snapshot) when is_map(Sessions) ->
-    Projected = maps:map(
+-spec trim_snapshot_sessions(map(), guild_state()) -> {map(), guild_state()}.
+trim_snapshot_sessions(#{sessions := Sessions} = Snapshot, State) when is_map(Sessions) ->
+    {Projected, NewState} = cached_projected_sessions(Sessions, State),
+    {Snapshot#{sessions => Projected}, NewState};
+trim_snapshot_sessions(Snapshot, State) ->
+    {Snapshot, State}.
+
+%% Keyed by the sessions map itself, so every writer of that map invalidates the
+%% projection without having to know this cache exists.
+-spec cached_projected_sessions(map(), guild_state()) -> {map(), guild_state()}.
+cached_projected_sessions(Sessions, State) ->
+    case maps:get(?SESSIONS_PROJECTION_CACHE, State, undefined) of
+        {Sessions, Projected} when is_map(Projected) -> {Projected, State};
+        _ -> store_projected_sessions(Sessions, State)
+    end.
+
+-spec store_projected_sessions(map(), guild_state()) -> {map(), guild_state()}.
+store_projected_sessions(Sessions, State) ->
+    Projected = project_sessions(Sessions),
+    {Projected, State#{?SESSIONS_PROJECTION_CACHE => {Sessions, Projected}}}.
+
+-spec project_sessions(map()) -> map().
+project_sessions(Sessions) ->
+    maps:map(
         fun(_SessionId, SessionData) -> project_session(SessionData) end,
         Sessions
-    ),
-    Snapshot#{sessions => Projected};
-trim_snapshot_sessions(Snapshot) ->
-    Snapshot.
+    ).
 
 -spec project_session(term()) -> term().
 project_session(SessionData) when is_map(SessionData) ->
@@ -440,6 +468,7 @@ snapshot_trim_test_state(Tab) ->
             <<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}},
             members_normalized => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}},
             <<"member_role_index">> => #{1 => []},
+            members_sorted_ids => [1],
             <<"channels">> => [],
             <<"roles">> => []
         },
@@ -463,6 +492,7 @@ build_broadcast_snapshot_trims_by_default_test() ->
         ?assertNot(maps:is_key(<<"members">>, SnapData)),
         ?assertNot(maps:is_key(members_normalized, SnapData)),
         ?assertNot(maps:is_key(<<"member_role_index">>, SnapData)),
+        ?assertNot(maps:is_key(members_sorted_ids, SnapData)),
         ?assertEqual(Tab, maps:get(members_ets, SnapData)),
         ?assert(maps:is_key(<<"channels">>, SnapData)),
         SnapSession = maps:get(<<"s1">>, maps:get(sessions, Snap)),
@@ -497,6 +527,151 @@ build_broadcast_snapshot_no_trim_below_threshold_test() ->
     after
         application:unset_env(fluxer_gateway, presence_snapshot_trim_member_threshold),
         ets:delete(Tab)
+    end.
+
+reference_project_session(SessionData) when is_map(SessionData) ->
+    maps:with([user_id, pid, viewable_channels], SessionData);
+reference_project_session(SessionData) ->
+    SessionData.
+
+reference_project_sessions(Sessions) ->
+    maps:map(
+        fun(_SessionId, SessionData) -> reference_project_session(SessionData) end,
+        Sessions
+    ).
+
+reference_trim_snapshot_sessions(#{sessions := Sessions} = Snapshot) when is_map(Sessions) ->
+    Snapshot#{sessions => reference_project_sessions(Sessions)};
+reference_trim_snapshot_sessions(Snapshot) ->
+    Snapshot.
+
+reference_maybe_trim_snapshot(true, Snapshot) ->
+    reference_trim_snapshot_sessions(trim_snapshot_data(Snapshot));
+reference_maybe_trim_snapshot(false, Snapshot) ->
+    Snapshot.
+
+reference_broadcast_snapshot(State) ->
+    reference_maybe_trim_snapshot(should_trim_snapshot(State), build_base_snapshot(State)).
+
+cache_test_session(UserId, ViewableChannels) ->
+    #{
+        user_id => UserId,
+        pid => self(),
+        viewable_channels => ViewableChannels,
+        active_guilds => [42],
+        pending_connect => false
+    }.
+
+cache_test_state(Sessions) ->
+    #{
+        id => 42,
+        member_count => 10,
+        data => #{<<"channels">> => [], <<"members">> => #{}},
+        sessions => Sessions
+    }.
+
+assert_cached_snapshot_matches_reference(Sessions, State) ->
+    NextState = State#{sessions => Sessions},
+    {Snapshot, CachedState} = build_broadcast_snapshot_cached(NextState),
+    ?assertEqual(reference_broadcast_snapshot(NextState), Snapshot),
+    ?assertNot(maps:is_key(?SESSIONS_PROJECTION_CACHE, Snapshot)),
+    CachedState.
+
+session_projection_mutation_sequence() ->
+    A = cache_test_session(1, #{100 => true}),
+    B = cache_test_session(2, #{100 => true, 200 => true}),
+    S1 = #{<<"a">> => A},
+    S2 = S1#{<<"b">> => B},
+    S3 = S2#{<<"a">> => cache_test_session(1, #{100 => true, 300 => true})},
+    S4 = maps:remove(<<"b">>, S3),
+    S5 = S4#{<<"a">> => (maps:get(<<"a">>, S4))#{pending_connect => true}},
+    S6 = S5#{<<"c">> => not_a_map},
+    [#{}, S1, S1, S2, S3, S4, S5, S6, S1, #{}].
+
+cached_projection_matches_reference_across_mutations_test() ->
+    application:set_env(fluxer_gateway, presence_snapshot_trim_member_threshold, 2),
+    try
+        lists:foldl(
+            fun assert_cached_snapshot_matches_reference/2,
+            cache_test_state(#{}),
+            session_projection_mutation_sequence()
+        )
+    after
+        application:unset_env(fluxer_gateway, presence_snapshot_trim_member_threshold)
+    end.
+
+cached_projection_is_reused_when_sessions_unchanged_test() ->
+    application:set_env(fluxer_gateway, presence_snapshot_trim_member_threshold, 2),
+    try
+        Sessions = #{<<"a">> => cache_test_session(1, #{100 => true})},
+        {Snap1, State1} = build_broadcast_snapshot_cached(cache_test_state(Sessions)),
+        {Snap2, State2} = build_broadcast_snapshot_cached(State1),
+        Projected1 = maps:get(sessions, Snap1),
+        Projected2 = maps:get(sessions, Snap2),
+        ?assertEqual(reference_project_sessions(Sessions), Projected1),
+        ?assertEqual(Projected1, Projected2),
+        ?assert(erts_debug:same(Projected1, Projected2)),
+        ?assertEqual({Sessions, Projected1}, maps:get(?SESSIONS_PROJECTION_CACHE, State2))
+    after
+        application:unset_env(fluxer_gateway, presence_snapshot_trim_member_threshold)
+    end.
+
+cached_projection_ignores_foreign_cache_entry_test() ->
+    application:set_env(fluxer_gateway, presence_snapshot_trim_member_threshold, 2),
+    try
+        Sessions = #{<<"a">> => cache_test_session(1, #{100 => true})},
+        Stale = #{<<"z">> => cache_test_session(9, #{999 => true})},
+        Foreign = {Stale, reference_project_sessions(Stale)},
+        State = (cache_test_state(Sessions))#{?SESSIONS_PROJECTION_CACHE => Foreign},
+        {Snapshot, _NewState} = build_broadcast_snapshot_cached(State),
+        ?assertEqual(reference_broadcast_snapshot(State), Snapshot),
+        ?assertEqual(reference_project_sessions(Sessions), maps:get(sessions, Snapshot))
+    after
+        application:unset_env(fluxer_gateway, presence_snapshot_trim_member_threshold)
+    end.
+
+cached_projection_ignores_corrupt_cache_entry_test() ->
+    application:set_env(fluxer_gateway, presence_snapshot_trim_member_threshold, 2),
+    try
+        Sessions = #{<<"a">> => cache_test_session(1, #{100 => true})},
+        State = (cache_test_state(Sessions))#{?SESSIONS_PROJECTION_CACHE => {Sessions, junk}},
+        {Snapshot, _NewState} = build_broadcast_snapshot_cached(State),
+        ?assertEqual(reference_project_sessions(Sessions), maps:get(sessions, Snapshot))
+    after
+        application:unset_env(fluxer_gateway, presence_snapshot_trim_member_threshold)
+    end.
+
+cached_projection_not_stored_when_trim_disabled_test() ->
+    application:set_env(fluxer_gateway, presence_snapshot_trim_enabled, false),
+    try
+        Sessions = #{<<"a">> => cache_test_session(1, #{100 => true})},
+        State = cache_test_state(Sessions),
+        {Snapshot, NewState} = build_broadcast_snapshot_cached(State),
+        ?assertEqual(reference_broadcast_snapshot(State), Snapshot),
+        ?assertEqual(Sessions, maps:get(sessions, Snapshot)),
+        ?assertNot(maps:is_key(?SESSIONS_PROJECTION_CACHE, NewState))
+    after
+        application:unset_env(fluxer_gateway, presence_snapshot_trim_enabled)
+    end.
+
+handle_bus_presence_threads_projection_cache_test() ->
+    application:set_env(fluxer_gateway, presence_snapshot_trim_member_threshold, 2),
+    Sessions = #{<<"s1">> => cache_test_session(1, #{100 => true})},
+    State = (presence_test_state())#{member_count => 10, sessions => Sessions},
+    Payload = #{
+        <<"status">> => <<"online">>,
+        <<"mobile">> => true,
+        <<"afk">> => false,
+        <<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"Alpha">>}
+    },
+    try
+        {noreply, NewState} = handle_bus_presence(1, Payload, State),
+        ?assertEqual(
+            {Sessions, reference_project_sessions(Sessions)},
+            maps:get(?SESSIONS_PROJECTION_CACHE, NewState)
+        )
+    after
+        application:unset_env(fluxer_gateway, presence_snapshot_trim_member_threshold)
     end.
 
 -endif.

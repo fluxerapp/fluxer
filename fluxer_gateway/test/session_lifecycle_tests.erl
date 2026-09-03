@@ -171,8 +171,8 @@ handle_resume_clamps_truncated_gap_in_replay_buffer_test() ->
             #{seq => 5, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
-    ?assertEqual([4, 5], [maps:get(seq, Event) || Event <- Missed]),
+    {reply, {ok, [], 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
+    ?assertEqual([4, 5], collect_dispatched_seqs(2)),
     ?assertEqual(self(), maps:get(socket_pid, State1)).
 
 handle_resume_clamps_skipped_event_hole_test() ->
@@ -183,8 +183,8 @@ handle_resume_clamps_skipped_event_hole_test() ->
             #{seq => 5, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 5}, _State1} = session_lifecycle:handle_resume(2, self(), State0),
-    ?assertEqual([3, 5], [maps:get(seq, Event) || Event <- Missed]).
+    {reply, {ok, [], 5}, _State1} = session_lifecycle:handle_resume(2, self(), State0),
+    ?assertEqual([3, 5], collect_dispatched_seqs(2)).
 
 handle_resume_rejects_seq_ahead_of_current_test() ->
     State0 = resume_test_state(#{
@@ -211,8 +211,8 @@ handle_resume_accepts_seq_at_ack_seq_test() ->
             #{seq => 10, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 10}, _State1} = session_lifecycle:handle_resume(8, self(), State0),
-    ?assertEqual([9, 10], [maps:get(seq, Event) || Event <- Missed]).
+    {reply, {ok, [], 10}, _State1} = session_lifecycle:handle_resume(8, self(), State0),
+    ?assertEqual([9, 10], collect_dispatched_seqs(2)).
 
 handle_resume_accepts_contiguous_replay_buffer_test() ->
     State0 = resume_test_state(#{
@@ -223,8 +223,8 @@ handle_resume_accepts_contiguous_replay_buffer_test() ->
             #{seq => 5, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
-    ?assertEqual([3, 4, 5], [maps:get(seq, Event) || Event <- Missed]),
+    {reply, {ok, [], 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
+    ?assertEqual([3, 4, 5], collect_dispatched_seqs(3)),
     ?assertEqual(self(), maps:get(socket_pid, State1)).
 
 handle_resume_cancels_pending_resume_timer_test() ->
@@ -444,6 +444,19 @@ resume_test_state(Overrides) ->
         },
         Overrides
     ).
+
+%% Small replay buffers are delivered inline (dispatched straight to the socket) rather
+%% than returned in the resume reply, so these tests read the missed events back off
+%% self()'s mailbox instead of the (now empty) reply list.
+collect_dispatched_seqs(Count) ->
+    lists:sort([collect_dispatched_seq() || _ <- lists:seq(1, Count)]).
+
+collect_dispatched_seq() ->
+    receive
+        {dispatch, _Event, _Payload, Seq} -> Seq
+    after 200 ->
+        ?assert(false)
+    end.
 
 fenced_terminate_releases_the_user_session_count_test() ->
     ok = session_abuse_protection:ensure_tables(),

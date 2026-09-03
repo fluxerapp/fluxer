@@ -28,6 +28,8 @@
     build_viewable_channel_map/1
 ]).
 
+-define(MAX_PERM_MEMO_ENTRIES, 8192).
+
 -type guild_state() :: map().
 -type session_id() :: binary().
 -type user_id() :: integer().
@@ -36,6 +38,8 @@
 -type session_data() :: map().
 -type sessions_map() :: #{session_id() => session_data()}.
 -type session_pair() :: {session_id(), session_data()}.
+-type perm_memo() :: #{user_id() => non_neg_integer()}.
+-type message_ctx() :: {channel_id(), binary(), session_id() | undefined, guild_state()}.
 -export_type([
     guild_state/0,
     session_id/0,
@@ -59,7 +63,116 @@ handle_session_connect(Request, Pid, State) ->
 -spec handle_session_down(reference(), guild_state()) ->
     {noreply, guild_state()} | {stop, normal, guild_state()}.
 handle_session_down(Ref, State) ->
-    guild_sessions_connect:handle_session_down(Ref, State).
+    case pending_session_by_ref(Ref, State) of
+        {ok, SessionId, Session, Sessions} ->
+            handle_pending_ref_down(SessionId, Session, Ref, Sessions, State);
+        not_found ->
+            guild_sessions_connect:handle_session_down(Ref, State)
+    end.
+
+-spec handle_pending_ref_down(
+    session_id(), session_data(), reference(), sessions_map(), guild_state()
+) -> {noreply, guild_state()} | {stop, normal, guild_state()}.
+handle_pending_ref_down(SessionId, Session, Ref, Sessions, State) ->
+    case pending_session_owns_connected_tracking(Session, Sessions, State) of
+        true -> guild_sessions_connect:handle_session_down(Ref, State);
+        false -> handle_pending_session_down(SessionId, Ref, Sessions, State)
+    end.
+
+-spec pending_session_by_ref(reference(), guild_state()) ->
+    {ok, session_id(), session_data(), sessions_map()} | not_found.
+pending_session_by_ref(Ref, State) ->
+    Sessions = maps:get(sessions, State, #{}),
+    case session_id_by_ref(Ref, Sessions, State) of
+        SessionId when is_binary(SessionId) -> pending_session_entry(SessionId, Sessions);
+        _ -> not_found
+    end.
+
+-spec pending_session_entry(session_id(), sessions_map()) ->
+    {ok, session_id(), session_data(), sessions_map()} | not_found.
+pending_session_entry(SessionId, Sessions) ->
+    case maps:get(SessionId, Sessions, undefined) of
+        #{pending_connect := true} = Session -> {ok, SessionId, Session, Sessions};
+        _ -> not_found
+    end.
+
+-spec session_id_by_ref(reference(), sessions_map(), guild_state()) -> session_id() | undefined.
+session_id_by_ref(Ref, Sessions, State) ->
+    Refs = maps:get(guild_session_refs, State, #{}),
+    case maps:get(Ref, Refs, undefined) of
+        SessionId when is_binary(SessionId) -> SessionId;
+        _ -> session_id_by_ref_scan(Ref, Sessions)
+    end.
+
+-spec session_id_by_ref_scan(reference(), sessions_map()) -> session_id() | undefined.
+session_id_by_ref_scan(Ref, Sessions) ->
+    maps:fold(
+        fun(SessionId, Session, Found) ->
+            match_session_ref(Ref, SessionId, Session, Found)
+        end,
+        undefined,
+        Sessions
+    ).
+
+-spec match_session_ref(reference(), session_id(), session_data(), session_id() | undefined) ->
+    session_id() | undefined.
+match_session_ref(Ref, SessionId, #{mref := Ref}, _Found) -> SessionId;
+match_session_ref(_Ref, _SessionId, _Session, Found) -> Found.
+
+-spec pending_session_owns_connected_tracking(session_data(), sessions_map(), guild_state()) ->
+    boolean().
+pending_session_owns_connected_tracking(Session, Sessions, State) ->
+    UserId = maps:get(user_id, Session, undefined),
+    Counts = maps:get(user_session_counts, State, #{}),
+    TrackedCount = non_negative_count(maps:get(UserId, Counts, 0)),
+    TrackedCount > active_session_count(UserId, Sessions).
+
+-spec non_negative_count(term()) -> non_neg_integer().
+non_negative_count(Count) when is_integer(Count), Count >= 0 -> Count;
+non_negative_count(_) -> 0.
+
+-spec active_session_count(user_id() | undefined, sessions_map()) -> non_neg_integer().
+active_session_count(UserId, Sessions) ->
+    maps:fold(
+        fun(_SessionId, Session, Count) ->
+            count_active_session(UserId, Session, Count)
+        end,
+        0,
+        Sessions
+    ).
+
+-spec count_active_session(user_id() | undefined, session_data(), non_neg_integer()) ->
+    non_neg_integer().
+count_active_session(UserId, #{user_id := UserId} = Session, Count) ->
+    case maps:get(pending_connect, Session, false) of
+        true -> Count;
+        false -> Count + 1
+    end;
+count_active_session(_UserId, _Session, Count) ->
+    Count.
+
+-spec handle_pending_session_down(session_id(), reference(), sessions_map(), guild_state()) ->
+    {noreply, guild_state()}.
+handle_pending_session_down(SessionId, Ref, Sessions, State) ->
+    NewSessions = maps:remove(SessionId, Sessions),
+    SessionRefs = maps:get(guild_session_refs, State, #{}),
+    State1 = State#{
+        sessions => NewSessions,
+        guild_session_refs => maps:remove(Ref, SessionRefs)
+    },
+    State2 = guild_sessions_connect_cleanup:cleanup_connect_admission_for_session(
+        SessionId, State1
+    ),
+    finish_pending_session_down(NewSessions, State2).
+
+-spec finish_pending_session_down(sessions_map(), guild_state()) -> {noreply, guild_state()}.
+finish_pending_session_down(NewSessions, State) ->
+    case map_size(NewSessions) of
+        0 ->
+            {noreply, guild_sessions_connect_cleanup:maybe_mark_auto_stop_pending(State)};
+        _ ->
+            {noreply, guild_sessions_connect_cleanup:clear_auto_stop_pending(State)}
+    end.
 
 -spec remove_session(session_id(), guild_state()) -> guild_state().
 remove_session(SessionId, State) ->
@@ -121,20 +234,67 @@ filter_sessions_for_channel(Sessions, ChannelId, SessionIdOpt, State) ->
     sessions_map(), channel_id(), binary(), session_id() | undefined, guild_state()
 ) -> [session_pair()].
 filter_sessions_for_message(Sessions, ChannelId, MessageId, SessionIdOpt, State) ->
-    filter_active_sessions(Sessions, SessionIdOpt, fun(S, _Sid) ->
-        session_can_view_channel(S, ChannelId, State) andalso
-            session_can_access_message(S, ChannelId, MessageId, State)
-    end).
+    filter_message_memo(Sessions, ChannelId, MessageId, SessionIdOpt, State).
 
--spec session_can_access_message(map(), channel_id(), binary(), guild_state()) -> boolean().
-session_can_access_message(SessionData, ChannelId, MessageId, State) ->
-    case maps:get(user_id, SessionData, undefined) of
-        UserId when is_integer(UserId) ->
-            Perms = guild_permissions:get_member_permissions(UserId, ChannelId, State),
-            guild_permissions:can_access_message_by_permissions(Perms, MessageId, State);
-        _ ->
-            false
+-spec filter_message_memo(
+    sessions_map(), channel_id(), binary(), session_id() | undefined, guild_state()
+) -> [session_pair()].
+filter_message_memo(Sessions, ChannelId, MessageId, SessionIdOpt, State) ->
+    Ctx = {ChannelId, MessageId, SessionIdOpt, State},
+    {Acc, _Memo} = maps:fold(
+        fun(Sid, S, In) -> collect_message_session(Sid, S, Ctx, In) end,
+        {[], #{}},
+        Sessions
+    ),
+    Acc.
+
+-spec collect_message_session(
+    session_id(), session_data(), message_ctx(), {[session_pair()], perm_memo()}
+) -> {[session_pair()], perm_memo()}.
+collect_message_session(Sid, S, Ctx, {Acc, Memo}) ->
+    {ChannelId, _MessageId, SessionIdOpt, State} = Ctx,
+    Visible =
+        not is_pending_or_excluded(Sid, S, SessionIdOpt) andalso
+            session_can_view_channel(S, ChannelId, State),
+    case Visible of
+        true -> memo_message_session(Sid, S, Ctx, Acc, Memo);
+        false -> {Acc, Memo}
     end.
+
+-spec memo_message_session(
+    session_id(), session_data(), message_ctx(), [session_pair()], perm_memo()
+) -> {[session_pair()], perm_memo()}.
+memo_message_session(Sid, S, {ChannelId, MessageId, _SessionIdOpt, State}, Acc, Memo) ->
+    case maps:get(user_id, S, undefined) of
+        UserId when is_integer(UserId) ->
+            {Perms, Memo1} = memo_member_permissions(UserId, ChannelId, State, Memo),
+            Ok = guild_permissions:can_access_message_by_permissions(Perms, MessageId, State),
+            {prepend_session(Ok, Sid, S, Acc), Memo1};
+        _ ->
+            {Acc, Memo}
+    end.
+
+-spec memo_member_permissions(user_id(), channel_id(), guild_state(), perm_memo()) ->
+    {non_neg_integer(), perm_memo()}.
+memo_member_permissions(UserId, ChannelId, State, Memo) ->
+    case maps:get(UserId, Memo, undefined) of
+        Perms when is_integer(Perms) ->
+            {Perms, Memo};
+        _ ->
+            Computed = guild_permissions:get_member_permissions(UserId, ChannelId, State),
+            {Computed, store_perm_memo(UserId, Computed, Memo)}
+    end.
+
+-spec store_perm_memo(user_id(), non_neg_integer(), perm_memo()) -> perm_memo().
+store_perm_memo(UserId, Perms, Memo) when map_size(Memo) < ?MAX_PERM_MEMO_ENTRIES ->
+    Memo#{UserId => Perms};
+store_perm_memo(_UserId, _Perms, Memo) ->
+    Memo.
+
+-spec prepend_session(boolean(), session_id(), session_data(), [session_pair()]) ->
+    [session_pair()].
+prepend_session(true, Sid, S, Acc) -> [{Sid, S} | Acc];
+prepend_session(false, _Sid, _S, Acc) -> Acc.
 
 -spec filter_sessions_for_manage_channels(
     sessions_map(), channel_id(), session_id() | undefined, guild_state()
@@ -340,5 +500,183 @@ filter_active_sessions_with_predicate_test() ->
     end),
     ?assertEqual(1, length(Result)),
     [{<<"b">>, _}] = Result.
+
+store_perm_memo_test() ->
+    ?assertEqual(#{7 => 42}, store_perm_memo(7, 42, #{})),
+    ?assertEqual(#{7 => 42}, store_perm_memo(7, 42, #{7 => 42})).
+
+store_perm_memo_bound_test() ->
+    Full = maps:from_list([{I, 0} || I <- lists:seq(1, ?MAX_PERM_MEMO_ENTRIES)]),
+    ?assertEqual(Full, store_perm_memo(0, 1, Full)),
+    ?assertEqual(?MAX_PERM_MEMO_ENTRIES, map_size(store_perm_memo(0, 1, Full))).
+
+memo_member_permissions_hit_test() ->
+    Memo = #{9 => 123},
+    ?assertEqual({123, Memo}, memo_member_permissions(9, 5, #{}, Memo)).
+
+memo_member_permissions_miss_test() ->
+    ?assertEqual({0, #{9 => 0}}, memo_member_permissions(9, 5, #{}, #{})).
+
+-spec reference_session_can_access_message(map(), channel_id(), binary(), guild_state()) ->
+    boolean().
+reference_session_can_access_message(SessionData, ChannelId, MessageId, State) ->
+    case maps:get(user_id, SessionData, undefined) of
+        UserId when is_integer(UserId) ->
+            Perms = guild_permissions:get_member_permissions(UserId, ChannelId, State),
+            guild_permissions:can_access_message_by_permissions(Perms, MessageId, State);
+        _ ->
+            false
+    end.
+
+-spec reference_filter_message_direct(
+    sessions_map(), channel_id(), binary(), session_id() | undefined, guild_state()
+) -> [session_pair()].
+reference_filter_message_direct(Sessions, ChannelId, MessageId, SessionIdOpt, State) ->
+    filter_active_sessions(Sessions, SessionIdOpt, fun(S, _Sid) ->
+        session_can_view_channel(S, ChannelId, State) andalso
+            reference_session_can_access_message(S, ChannelId, MessageId, State)
+    end).
+
+filter_message_memo_matches_direct_test() ->
+    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
+    Owner1 = #{user_id => 1, viewable_channels => #{5 => true}},
+    Owner2 = #{user_id => 1, viewable_channels => #{5 => true}},
+    Other = #{user_id => 2, viewable_channels => #{5 => true}},
+    Sessions = #{<<"a">> => Owner1, <<"b">> => Owner2, <<"c">> => Other},
+    Direct = reference_filter_message_direct(Sessions, 5, <<"1">>, undefined, State),
+    Memoized = filter_message_memo(Sessions, 5, <<"1">>, undefined, State),
+    ?assertEqual(Direct, Memoized),
+    ?assertEqual([<<"a">>, <<"b">>], lists:sort([Sid || {Sid, _} <- Memoized])).
+
+filter_message_memo_collects_visible_sessions_test() ->
+    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
+    Owner1 = #{user_id => 1, viewable_channels => #{5 => true}},
+    Owner2 = #{user_id => 1, viewable_channels => #{5 => true}},
+    Other = #{user_id => 2, viewable_channels => #{5 => true}},
+    Sessions = #{<<"a">> => Owner1, <<"b">> => Owner2, <<"c">> => Other},
+    Memoized = filter_message_memo(Sessions, 5, <<"1">>, undefined, State),
+    ?assertEqual([<<"a">>, <<"b">>], lists:sort([Sid || {Sid, _} <- Memoized])).
+
+filter_message_memo_skips_excluded_test() ->
+    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
+    S1 = #{user_id => 1, viewable_channels => #{5 => true}},
+    S2 = #{user_id => 1, viewable_channels => #{5 => true}, pending_connect => true},
+    Sessions = #{<<"a">> => S1, <<"b">> => S2},
+    ?assertEqual([], filter_message_memo(Sessions, 5, <<"1">>, <<"a">>, State)).
+
+filter_sessions_for_message_test() ->
+    State = #{data => #{<<"guild">> => #{<<"owner_id">> => <<"1">>}}},
+    Sessions = #{<<"a">> => #{user_id => 1, viewable_channels => #{5 => true}}},
+    ?assertEqual(
+        [{<<"a">>, maps:get(<<"a">>, Sessions)}],
+        filter_sessions_for_message(Sessions, 5, <<"1">>, undefined, State)
+    ).
+
+non_negative_count_test() ->
+    ?assertEqual(3, non_negative_count(3)),
+    ?assertEqual(0, non_negative_count(0)),
+    ?assertEqual(0, non_negative_count(-1)),
+    ?assertEqual(0, non_negative_count(undefined)).
+
+active_session_count_test() ->
+    Sessions = #{
+        <<"a">> => #{user_id => 1, pending_connect => true},
+        <<"b">> => #{user_id => 1, pending_connect => false},
+        <<"c">> => #{user_id => 1},
+        <<"d">> => #{user_id => 2}
+    },
+    ?assertEqual(2, active_session_count(1, Sessions)),
+    ?assertEqual(1, active_session_count(2, Sessions)),
+    ?assertEqual(0, active_session_count(3, Sessions)).
+
+session_id_by_ref_uses_index_test() ->
+    Ref = make_ref(),
+    Sessions = #{<<"a">> => #{mref => make_ref()}},
+    State = #{guild_session_refs => #{Ref => <<"a">>}},
+    ?assertEqual(<<"a">>, session_id_by_ref(Ref, Sessions, State)).
+
+session_id_by_ref_scan_fallback_test() ->
+    Ref = make_ref(),
+    Sessions = #{<<"a">> => #{mref => make_ref()}, <<"b">> => #{mref => Ref}},
+    ?assertEqual(<<"b">>, session_id_by_ref(Ref, Sessions, #{})),
+    ?assertEqual(undefined, session_id_by_ref(make_ref(), Sessions, #{})).
+
+pending_session_by_ref_found_test() ->
+    Ref = make_ref(),
+    Session = #{user_id => 1, mref => Ref, pending_connect => true},
+    Sessions = #{<<"a">> => Session},
+    State = #{sessions => Sessions, guild_session_refs => #{Ref => <<"a">>}},
+    ?assertEqual({ok, <<"a">>, Session, Sessions}, pending_session_by_ref(Ref, State)),
+    ?assertEqual(
+        {ok, <<"a">>, Session, Sessions},
+        pending_session_by_ref(Ref, #{sessions => Sessions})
+    ).
+
+pending_session_by_ref_not_pending_test() ->
+    Ref = make_ref(),
+    Session = #{user_id => 1, mref => Ref, pending_connect => false},
+    State = #{sessions => #{<<"a">> => Session}, guild_session_refs => #{Ref => <<"a">>}},
+    ?assertEqual(not_found, pending_session_by_ref(Ref, State)).
+
+pending_session_by_ref_unknown_ref_test() ->
+    Sessions = #{<<"a">> => #{user_id => 1, mref => make_ref(), pending_connect => true}},
+    ?assertEqual(not_found, pending_session_by_ref(make_ref(), #{sessions => Sessions})).
+
+pending_session_by_ref_stale_index_test() ->
+    Ref = make_ref(),
+    State = #{sessions => #{}, guild_session_refs => #{Ref => <<"gone">>}},
+    ?assertEqual(not_found, pending_session_by_ref(Ref, State)).
+
+pending_session_owns_connected_tracking_untracked_test() ->
+    Session = #{user_id => 1, pending_connect => true},
+    Sessions = #{<<"a">> => Session},
+    ?assertEqual(false, pending_session_owns_connected_tracking(Session, Sessions, #{})).
+
+pending_session_owns_connected_tracking_other_session_owns_test() ->
+    Session = #{user_id => 1, pending_connect => true},
+    Active = #{user_id => 1, pending_connect => false},
+    Sessions = #{<<"a">> => Session, <<"b">> => Active},
+    State = #{user_session_counts => #{1 => 1}},
+    ?assertEqual(false, pending_session_owns_connected_tracking(Session, Sessions, State)).
+
+pending_session_owns_connected_tracking_true_test() ->
+    Session = #{user_id => 1, pending_connect => true},
+    Sessions = #{<<"a">> => Session},
+    State = #{user_session_counts => #{1 => 1}},
+    ?assertEqual(true, pending_session_owns_connected_tracking(Session, Sessions, State)).
+
+handle_pending_session_down_keeps_tracking_test() ->
+    Ref = make_ref(),
+    Pending = #{session_id => <<"a">>, user_id => 1, mref => Ref, pending_connect => true},
+    Active = #{session_id => <<"b">>, user_id => 1, mref => make_ref()},
+    Sessions = #{<<"a">> => Pending, <<"b">> => Active},
+    State = #{
+        sessions => Sessions,
+        guild_session_refs => #{Ref => <<"a">>},
+        session_connect_pending => #{<<"a">> => #{}},
+        user_session_counts => #{1 => 1},
+        connected_user_ids => sets:from_list([1])
+    },
+    {noreply, NewState} = handle_pending_session_down(<<"a">>, Ref, Sessions, State),
+    ?assertEqual(#{<<"b">> => Active}, maps:get(sessions, NewState)),
+    ?assertEqual(#{}, maps:get(guild_session_refs, NewState)),
+    ?assertEqual(#{}, maps:get(session_connect_pending, NewState)),
+    ?assertEqual(#{1 => 1}, maps:get(user_session_counts, NewState)),
+    ?assertEqual([1], sets:to_list(maps:get(connected_user_ids, NewState))),
+    ?assertEqual(false, maps:is_key(auto_stop_pending, NewState)).
+
+handle_pending_session_down_last_session_test() ->
+    Ref = make_ref(),
+    Pending = #{session_id => <<"a">>, user_id => 1, mref => Ref, pending_connect => true},
+    Sessions = #{<<"a">> => Pending},
+    State = #{
+        sessions => Sessions,
+        guild_session_refs => #{Ref => <<"a">>},
+        disable_auto_stop_on_empty => true
+    },
+    {noreply, NewState} = handle_pending_session_down(<<"a">>, Ref, Sessions, State),
+    ?assertEqual(#{}, maps:get(sessions, NewState)),
+    ?assertEqual(#{}, maps:get(guild_session_refs, NewState)),
+    ?assertEqual(false, maps:is_key(auto_stop_pending, NewState)).
 
 -endif.

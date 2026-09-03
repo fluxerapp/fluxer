@@ -32,9 +32,12 @@ ensure_status_binary(Status) when is_binary(Status) -> Status;
 ensure_status_binary(_) -> <<"offline">>.
 
 -spec custom_status_for(binary(), custom_status()) -> custom_status().
-custom_status_for(<<"offline">>, _CustomStatus) -> null;
-custom_status_for(<<"invisible">>, _CustomStatus) -> null;
-custom_status_for(_StatusBin, CustomStatus) -> normalize_custom_status(CustomStatus).
+custom_status_for(<<"offline">>, _CustomStatus) ->
+    null;
+custom_status_for(<<"invisible">>, _CustomStatus) ->
+    null;
+custom_status_for(_StatusBin, CustomStatus) ->
+    custom_status_expiry:clear_if_expired(normalize_custom_status(CustomStatus)).
 
 -spec normalize_custom_status(term()) -> custom_status().
 normalize_custom_status(null) -> null;
@@ -81,16 +84,88 @@ normalize_custom_status_test() ->
     ?assertEqual(null, normalize_custom_status(123)).
 
 build_invisible_atom_normalized_to_offline_test() ->
-    User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
     CustomStatus = #{<<"text">> => <<"hello">>},
-    Result = build(User, invisible, false, false, CustomStatus),
+    Result = build(test_user(), invisible, false, false, CustomStatus),
     ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
     ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
 
 build_invisible_binary_normalized_to_offline_test() ->
-    User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
     CustomStatus = #{<<"text">> => <<"hello">>},
-    Result = build(User, <<"invisible">>, false, false, CustomStatus),
+    Result = build(test_user(), <<"invisible">>, false, false, CustomStatus),
     ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
     ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
+
+build_clears_expired_custom_status_test() ->
+    with_expiry_enabled(fun() ->
+        Result = build(test_user(), online, false, false, expired_custom_status()),
+        ?assertEqual(<<"online">>, maps:get(<<"status">>, Result)),
+        ?assertEqual(null, maps:get(<<"custom_status">>, Result))
+    end).
+
+build_coalesces_an_expired_status_with_no_status_test() ->
+    with_expiry_enabled(fun() ->
+        ?assertEqual(
+            build(test_user(), online, false, false, null),
+            build(test_user(), online, false, false, expired_custom_status())
+        )
+    end).
+
+build_keeps_unexpired_custom_status_test() ->
+    with_expiry_enabled(fun() ->
+        Live = future_custom_status(),
+        Result = build(test_user(), dnd, false, false, Live),
+        ?assertEqual(Live, maps:get(<<"custom_status">>, Result))
+    end).
+
+build_keeps_custom_status_without_expires_at_test() ->
+    with_expiry_enabled(fun() ->
+        Live = #{<<"text">> => <<"forever">>},
+        Result = build(test_user(), idle, false, false, Live),
+        ?assertEqual(Live, maps:get(<<"custom_status">>, Result))
+    end).
+
+build_keeps_malformed_expires_at_test() ->
+    with_expiry_enabled(fun() ->
+        Live = #{<<"text">> => <<"hi">>, <<"expires_at">> => <<"not-a-date">>},
+        Result = build(test_user(), online, false, false, Live),
+        ?assertEqual(Live, maps:get(<<"custom_status">>, Result))
+    end).
+
+build_leaves_expired_status_alone_while_disabled_test() ->
+    application:unset_env(fluxer_gateway, custom_status_expiry_enabled),
+    Expired = expired_custom_status(),
+    Result = build(test_user(), online, false, false, Expired),
+    ?assertEqual(Expired, maps:get(<<"custom_status">>, Result)).
+
+test_user() ->
+    #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>}.
+
+expired_custom_status() ->
+    #{
+        <<"emoji_animated">> => false,
+        <<"emoji_name">> => null,
+        <<"expires_at">> => <<"2026-05-13T13:02:27.497Z">>,
+        <<"text">> => <<"brb">>
+    }.
+
+future_custom_status() ->
+    ExpiresAt = calendar:system_time_to_rfc3339(
+        erlang:system_time(millisecond) + 3600000, [{unit, millisecond}, {offset, "Z"}]
+    ),
+    #{<<"text">> => <<"brb">>, <<"expires_at">> => list_to_binary(ExpiresAt)}.
+
+with_expiry_enabled(Fun) ->
+    Key = custom_status_expiry_enabled,
+    Previous = application:get_env(fluxer_gateway, Key),
+    application:set_env(fluxer_gateway, Key, true),
+    try
+        Fun()
+    after
+        restore_expiry_env(Key, Previous)
+    end.
+
+restore_expiry_env(Key, undefined) ->
+    application:unset_env(fluxer_gateway, Key);
+restore_expiry_env(Key, {ok, Value}) ->
+    application:set_env(fluxer_gateway, Key, Value).
 -endif.

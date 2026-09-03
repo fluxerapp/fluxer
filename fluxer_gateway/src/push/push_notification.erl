@@ -133,7 +133,7 @@ assemble_payload(
     ContentPreview,
     AuthorAvatarUrl
 ) ->
-    Data = build_data(Ctx),
+    Data = build_data(Ctx, AuthorAvatarUrl),
     Notification = build_notification_body(Ctx, Title, ContentPreview, AuthorAvatarUrl, Data),
     maps:merge(
         #{
@@ -149,19 +149,23 @@ assemble_payload(
         ImageFields
     ).
 
--spec build_data(push_ctx()) -> map().
-build_data(#{
-    channel_id := ChannelId,
-    message_id := MessageId,
-    guild_id := GuildId,
-    navigate_url := NavigateUrl,
-    badge_value := BadgeValue,
-    target_user_id := TargetUserId,
-    image_url := ImageUrl,
-    image_fields := ImageFields
-}) ->
+-spec build_data(push_ctx(), binary()) -> map().
+build_data(
+    #{
+        channel_id := ChannelId,
+        message_id := MessageId,
+        guild_id := GuildId,
+        navigate_url := NavigateUrl,
+        badge_value := BadgeValue,
+        target_user_id := TargetUserId,
+        image_url := ImageUrl,
+        image_fields := ImageFields
+    },
+    AuthorAvatarUrl
+) ->
     BaseData = #{
         <<"channel_id">> => integer_to_binary(ChannelId),
+        <<"author_avatar_url">> => AuthorAvatarUrl,
         <<"message_id">> => integer_to_binary(MessageId),
         <<"notification_tag">> => build_channel_tag(ChannelId),
         <<"guild_id">> =>
