@@ -9,6 +9,16 @@ pub const STRICT_TRANSPORT_SECURITY: &str = "max-age=31536000; includeSubDomains
 pub const REFERRER_POLICY: &str = "strict-origin-when-cross-origin";
 pub const PERMISSIONS_POLICY: &str = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
 
+pub fn parse_content_length(headers: &HeaderMap) -> Option<u64> {
+    let content_lengths = headers.get_all(header::CONTENT_LENGTH);
+    let mut values = content_lengths.iter();
+    let raw = values.next()?.to_str().ok()?;
+    if values.next().is_some() || raw.is_empty() || !raw.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+    raw.parse().ok()
+}
+
 pub fn add_security_headers(headers: &mut HeaderMap) {
     set_static_header(
         headers,
@@ -103,6 +113,212 @@ pub fn add_unsatisfiable_headers(headers: &mut HeaderMap, size: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn header_names(headers: &HeaderMap) -> Vec<String> {
+        let mut names: Vec<String> = headers
+            .keys()
+            .map(|name| name.as_str().to_owned())
+            .collect();
+        names.sort();
+        names
+    }
+
+    fn value(headers: &HeaderMap, name: &str) -> String {
+        headers
+            .get(name)
+            .unwrap_or_else(|| panic!("missing {name}"))
+            .to_str()
+            .expect("header value is ASCII")
+            .to_owned()
+    }
+
+    const MEDIA_HEADER_NAMES: [&str; 13] = [
+        "accept-ranges",
+        "access-control-allow-origin",
+        "cache-control",
+        "cdn-cache-control",
+        "content-security-policy",
+        "content-type",
+        "permissions-policy",
+        "referrer-policy",
+        "strict-transport-security",
+        "vary",
+        "x-content-type-options",
+        "x-frame-options",
+        "x-robots-tag",
+    ];
+
+    #[test]
+    fn media_headers_distinguish_streamable_content_and_ranges() {
+        let mut image_headers = HeaderMap::new();
+        add_media_headers(&mut image_headers, 100, "image/png", None);
+        assert_eq!(header_names(&image_headers), MEDIA_HEADER_NAMES.to_vec());
+        assert_eq!(
+            value(&image_headers, "cache-control"),
+            "public, max-age=31536000"
+        );
+        assert_eq!(value(&image_headers, "content-type"), "image/png");
+        assert!(image_headers.get(header::CONTENT_RANGE).is_none());
+
+        let mut video_headers = HeaderMap::new();
+        add_media_headers(
+            &mut video_headers,
+            100,
+            "video/mp4",
+            Some(ByteRange { start: 10, end: 19 }),
+        );
+        let mut ranged_names = MEDIA_HEADER_NAMES.to_vec();
+        ranged_names.push("content-range");
+        ranged_names.sort();
+        assert_eq!(header_names(&video_headers), ranged_names);
+        assert_eq!(
+            value(&video_headers, "cache-control"),
+            "public, max-age=31536000, no-transform"
+        );
+        assert_eq!(value(&video_headers, "content-range"), "bytes 10-19/100");
+
+        let mut audio_headers = HeaderMap::new();
+        add_media_headers(&mut audio_headers, 100, "audio/mpeg", None);
+        assert_eq!(
+            value(&audio_headers, "cache-control"),
+            "public, max-age=31536000, no-transform"
+        );
+    }
+
+    #[test]
+    fn media_headers_carry_the_frozen_policy_values_and_no_entity_tag() {
+        let mut headers = HeaderMap::new();
+        add_media_headers(&mut headers, 100, "image/png", None);
+        assert_eq!(value(&headers, "accept-ranges"), "bytes");
+        assert_eq!(value(&headers, "access-control-allow-origin"), "*");
+        assert_eq!(
+            value(&headers, "cdn-cache-control"),
+            "public, max-age=31536000"
+        );
+        assert_eq!(value(&headers, "content-security-policy"), MEDIA_CSP);
+        assert!(headers.get(header::EXPIRES).is_none());
+        assert!(headers.get(header::LAST_MODIFIED).is_none());
+        assert_eq!(
+            value(&headers, "strict-transport-security"),
+            STRICT_TRANSPORT_SECURITY
+        );
+        assert_eq!(value(&headers, "referrer-policy"), REFERRER_POLICY);
+        assert_eq!(value(&headers, "permissions-policy"), PERMISSIONS_POLICY);
+        assert_eq!(value(&headers, "x-frame-options"), "DENY");
+        assert_eq!(value(&headers, "x-content-type-options"), "nosniff");
+        assert_eq!(value(&headers, "x-robots-tag"), ROBOTS);
+        assert_eq!(value(&headers, "vary"), "Accept-Encoding");
+        assert!(headers.get(header::ETAG).is_none());
+    }
+
+    #[test]
+    fn media_headers_overwrite_inherited_security_values_and_fall_back_on_invalid_content_types() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_SECURITY_POLICY,
+            HeaderValue::from_static("default-src *"),
+        );
+        headers.insert(
+            header::X_CONTENT_TYPE_OPTIONS,
+            HeaderValue::from_static("sniff-everything"),
+        );
+        add_media_headers(&mut headers, 100, "image/\u{7f}png", None);
+        assert_eq!(value(&headers, "content-security-policy"), MEDIA_CSP);
+        assert_eq!(value(&headers, "x-content-type-options"), "nosniff");
+        assert_eq!(value(&headers, "content-type"), "application/octet-stream");
+        assert_eq!(
+            headers
+                .get_all(header::CONTENT_SECURITY_POLICY)
+                .iter()
+                .count(),
+            1
+        );
+    }
+
+    #[test]
+    fn shorter_cache_policies_replace_the_stored_media_policy_completely() {
+        for policy in [
+            "public, max-age=300",
+            "public, max-age=86400",
+            "no-store",
+            "private, no-store",
+        ] {
+            let mut headers = HeaderMap::new();
+            add_media_headers(&mut headers, 100, "image/png", None);
+            headers.insert(header::CACHE_CONTROL, HeaderValue::from_static(policy));
+            headers.insert("CDN-Cache-Control", HeaderValue::from_static(policy));
+            assert_eq!(headers.get_all(header::CACHE_CONTROL).iter().count(), 1);
+            assert_eq!(value(&headers, "cache-control"), policy);
+            assert_eq!(value(&headers, "cdn-cache-control"), policy);
+        }
+    }
+
+    #[test]
+    fn unsatisfiable_headers_state_the_full_size_without_a_body_representation() {
+        let mut headers = HeaderMap::new();
+        add_unsatisfiable_headers(&mut headers, 4096);
+        assert_eq!(
+            header_names(&headers),
+            vec![
+                "accept-ranges",
+                "access-control-allow-origin",
+                "content-range",
+                "content-security-policy",
+                "permissions-policy",
+                "referrer-policy",
+                "strict-transport-security",
+                "vary",
+                "x-content-type-options",
+                "x-frame-options",
+                "x-robots-tag",
+            ]
+        );
+        assert_eq!(value(&headers, "content-range"), "bytes */4096");
+        assert_eq!(value(&headers, "vary"), "Accept-Encoding");
+        assert_eq!(value(&headers, "x-robots-tag"), ROBOTS);
+        assert!(headers.get(header::CONTENT_TYPE).is_none());
+        assert!(headers.get(header::CACHE_CONTROL).is_none());
+        assert!(headers.get("CDN-Cache-Control").is_none());
+    }
+
+    #[test]
+    fn content_length_parser_requires_one_canonical_decimal_value() {
+        let mut headers = HeaderMap::new();
+        assert_eq!(parse_content_length(&headers), None);
+        headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("123"));
+        assert_eq!(parse_content_length(&headers), Some(123));
+        headers.append(header::CONTENT_LENGTH, HeaderValue::from_static("123"));
+        assert_eq!(parse_content_length(&headers), None);
+        headers.clear();
+        headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("+1"));
+        assert_eq!(parse_content_length(&headers), None);
+        headers.insert(
+            header::CONTENT_LENGTH,
+            HeaderValue::from_static("18446744073709551616"),
+        );
+        assert_eq!(parse_content_length(&headers), None);
+        for raw in ["", " 1", "1 ", "0x10", "1_0", "12.0", "-1", "1,1"] {
+            headers.clear();
+            let header_value = HeaderValue::from_str(raw).expect("visible ascii header value");
+            headers.insert(header::CONTENT_LENGTH, header_value);
+            assert_eq!(parse_content_length(&headers), None, "accepted {raw:?}");
+        }
+        headers.clear();
+        headers.insert(
+            header::CONTENT_LENGTH,
+            HeaderValue::from_bytes(&[0xC3, 0x28]).expect("opaque header value"),
+        );
+        assert_eq!(parse_content_length(&headers), None);
+        headers.clear();
+        headers.insert(
+            header::CONTENT_LENGTH,
+            HeaderValue::from_static("18446744073709551615"),
+        );
+        assert_eq!(parse_content_length(&headers), Some(u64::MAX));
+        headers.clear();
+        headers.insert(header::CONTENT_LENGTH, HeaderValue::from_static("00"));
+        assert_eq!(parse_content_length(&headers), Some(0));
+    }
 
     #[test]
     fn media_headers_always_cache_forever() {

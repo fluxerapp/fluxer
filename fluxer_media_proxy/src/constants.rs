@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
-
 pub const MAX_MEDIA_PROXY_BYTES: usize = 500 * 1024 * 1024;
 
 pub const OUTBOUND_USER_AGENT: &str =
@@ -18,45 +16,6 @@ pub const DEFAULT_IMAGE_SIZE: u32 = 128;
 pub const MAX_ANIMATED_FRAMES_DEFAULT: u32 = 20_000;
 pub const MAX_ANIMATED_TOTAL_PIXELS_DEFAULT: usize = 4 * MAX_MEDIA_IMAGE_PIXELS_DEFAULT;
 const _: () = assert!(MAX_ANIMATED_FRAMES_DEFAULT >= 20_000);
-
-static IMAGE_DIMENSION: AtomicU32 = AtomicU32::new(MAX_MEDIA_IMAGE_DIMENSION_DEFAULT);
-static IMAGE_PIXELS: AtomicUsize = AtomicUsize::new(MAX_MEDIA_IMAGE_PIXELS_DEFAULT);
-static ANIMATED_FRAMES: AtomicU32 = AtomicU32::new(MAX_ANIMATED_FRAMES_DEFAULT);
-static ANIMATED_TOTAL_PIXELS: AtomicUsize = AtomicUsize::new(MAX_ANIMATED_TOTAL_PIXELS_DEFAULT);
-
-pub struct Limits;
-
-impl Limits {
-    pub fn image_dimension() -> u32 {
-        IMAGE_DIMENSION.load(Ordering::Acquire)
-    }
-
-    pub fn image_pixels() -> usize {
-        IMAGE_PIXELS.load(Ordering::Acquire)
-    }
-
-    pub fn animated_frames() -> u32 {
-        ANIMATED_FRAMES.load(Ordering::Acquire)
-    }
-
-    pub fn animated_total_pixels() -> usize {
-        ANIMATED_TOTAL_PIXELS.load(Ordering::Acquire)
-    }
-
-    pub fn set_image_dimension(value: u32) {
-        let clamped = value.max(16);
-        IMAGE_DIMENSION.store(clamped, Ordering::Release);
-        IMAGE_PIXELS.store(clamped as usize * clamped as usize, Ordering::Release);
-    }
-
-    pub fn set_animated_frames(value: u32) {
-        ANIMATED_FRAMES.store(value.max(1), Ordering::Release);
-    }
-
-    pub fn set_animated_total_pixels(value: usize) {
-        ANIMATED_TOTAL_PIXELS.store(value.max(1024), Ordering::Release);
-    }
-}
 
 pub const IMAGE_SIZES: &[u32] = &[
     16, 20, 22, 24, 28, 32, 40, 44, 48, 56, 60, 64, 80, 96, 100, 128, 160, 240, 256, 300, 320, 480,
@@ -186,6 +145,7 @@ pub fn clamp_size(raw_target: u32, kind: AssetKind) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::media_limits::MediaLimits;
 
     fn asset_cache_key(raw: Option<&str>, kind: AssetKind) -> u32 {
         clamp_size(parse_image_size(raw), kind)
@@ -265,6 +225,9 @@ mod tests {
 
     #[test]
     fn animated_frame_default_allows_dense_short_clips() {
-        assert_eq!(MAX_ANIMATED_FRAMES_DEFAULT, Limits::animated_frames());
+        assert_eq!(
+            MAX_ANIMATED_FRAMES_DEFAULT,
+            MediaLimits::default_from_config().animated_frames()
+        );
     }
 }

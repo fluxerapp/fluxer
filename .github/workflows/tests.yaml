@@ -152,8 +152,8 @@ jobs:
             'packages/markdown_parser/rust/src/**') }}
 
   rust:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 45
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -174,11 +174,15 @@ jobs:
           cache: 'pnpm'
 
       - name: Cache cargo
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          workspaces: |
-            . -> target
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            rust-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}-
 
       - name: Install cargo-deny
         run: cargo install cargo-deny --version 0.19.6 --locked
@@ -189,6 +193,12 @@ jobs:
       - name: Check desktop native dependencies
         run: tools/ci/check-desktop-native-workspaces.sh dependencies
 
+      - name: Cache native media dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: /opt/fluxer-native
+          key: media-native-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}
+
       - name: Install native dependencies
         run: |
           sudo apt-get update
@@ -197,21 +207,34 @@ jobs:
             binutils \
             clang \
             cmake \
+            curl \
+            libaom-dev \
             libavfilter-dev \
             libclang-dev \
             libcurl4-openssl-dev \
+            libdav1d-dev \
+            libde265-dev \
             libfido2-dev \
             libheif-dev \
+            liblcms2-dev \
             libpipewire-0.3-dev \
             libspa-0.2-dev \
             libssl-dev \
             libudev-dev \
             libvips-dev \
             libwebp-dev \
+            libyuv-dev \
             meson \
+            nasm \
             ninja-build \
             pkg-config \
+            xz-utils \
+            yasm \
             zlib1g-dev
+          sudo fluxer_media_proxy/tools/install-native-deps.sh /opt/fluxer-native
+          echo "PKG_CONFIG_PATH=/opt/fluxer-native/lib/pkgconfig:/opt/fluxer-native/lib64/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=/opt/fluxer-native/lib:/opt/fluxer-native/lib64" >> "$GITHUB_ENV"
+          echo "/opt/fluxer-native/bin" >> "$GITHUB_PATH"
 
       - name: Install Node.js dependencies
         run: pnpm --filter fluxer_admin install
@@ -228,7 +251,16 @@ jobs:
       - name: Clippy (desktop native workspaces on Linux, warnings as errors)
         run: tools/ci/check-desktop-native-workspaces.sh clippy
 
+      - name: Verify the source-built ffmpeg CLI is on PATH
+        run: |
+          set -euo pipefail
+          command -v ffmpeg
+          test "$(command -v ffmpeg)" = /opt/fluxer-native/bin/ffmpeg
+          ffmpeg -hide_banner -version
+
       - name: Run tests
+        env:
+          FLUXER_REQUIRE_MEDIA_FIXTURES: "1"
         run: cargo test --workspace --all-features --locked
 
       - name: Run desktop native workspace tests on Linux

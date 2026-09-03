@@ -32,6 +32,7 @@ RUN apt-get update \
 		jq \
 		libasound2 \
 		libatk-bridge2.0-0 \
+		libaom-dev \
 		libavcodec-dev \
 		libavfilter-dev \
 		libavformat-dev \
@@ -51,9 +52,15 @@ RUN apt-get update \
 		libcurl4-openssl-dev \
 		libswresample-dev \
 		libswscale-dev \
+		libdav1d-dev \
+		libde265-dev \
+		liblcms2-dev \
 		libvips-dev \
+		libyuv-dev \
 		libwayland-dev \
 		libwebp-dev \
+		nasm \
+		yasm \
 		libssl-dev \
 		libx11-xcb1 \
 		libxcb-dri3-0 \
@@ -78,6 +85,7 @@ RUN apt-get update \
 		unzip \
 		xz-utils \
 		xdg-utils \
+		zlib1g-dev \
 		zstd \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -126,6 +134,26 @@ RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://deb.nodesour
 	&& corepack enable
 
 RUN python3 -m pip install --break-system-packages --no-cache-dir awscli
+
+COPY fluxer_media_proxy/tools/install-native-deps.sh /tmp/fluxer-install-native-deps.sh
+RUN /tmp/fluxer-install-native-deps.sh /usr/local \
+	&& rm /tmp/fluxer-install-native-deps.sh
+
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib64/pkgconfig
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+RUN printf '%s\n' \
+		'#include <libheif/heif.h>' \
+		'#include <string.h>' \
+		'#if !LIBHEIF_HAVE_VERSION(1, 23, 0)' \
+		'#error the source-built libheif headers must win the include search' \
+		'#endif' \
+		'int main(void) { return strcmp(heif_get_version(), LIBHEIF_VERSION) != 0; }' \
+		>/tmp/fluxer-heif-probe.c \
+	&& cc /tmp/fluxer-heif-probe.c $(pkg-config --cflags --libs libheif) -o /tmp/fluxer-heif-probe \
+	&& /tmp/fluxer-heif-probe \
+	&& [ "$(pkg-config --variable=prefix libheif)" = /usr/local ] \
+	&& rm /tmp/fluxer-heif-probe.c /tmp/fluxer-heif-probe
 
 COPY tools/fonts/requirements.txt /tmp/fluxer-fonts-requirements.txt
 RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/fluxer-fonts-requirements.txt \

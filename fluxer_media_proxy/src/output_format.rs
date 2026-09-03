@@ -1,6 +1,80 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::constants::{self, AssetExtension, AssetKind};
+use crate::{
+    asset_size,
+    constants::{AssetExtension, AssetKind},
+};
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum OutputFormat {
+    PNG,
+    JPEG,
+    WebP,
+    GIF,
+    APNG,
+}
+
+impl OutputFormat {
+    pub const fn from_source_extension(extension: AssetExtension) -> Option<Self> {
+        match extension {
+            AssetExtension::Png => Some(Self::PNG),
+            AssetExtension::Jpeg => Some(Self::JPEG),
+            AssetExtension::Webp => Some(Self::WebP),
+            AssetExtension::Gif => Some(Self::GIF),
+            AssetExtension::Apng => Some(Self::APNG),
+            AssetExtension::Avif
+            | AssetExtension::Heic
+            | AssetExtension::Heif
+            | AssetExtension::Jxl
+            | AssetExtension::Svg => None,
+        }
+    }
+
+    pub const fn coerce_from_extension(extension: AssetExtension) -> Self {
+        match Self::from_source_extension(extension) {
+            Some(format) => format,
+            None => Self::WebP,
+        }
+    }
+
+    pub const fn as_asset_extension(self) -> AssetExtension {
+        match self {
+            Self::PNG => AssetExtension::Png,
+            Self::JPEG => AssetExtension::Jpeg,
+            Self::WebP => AssetExtension::Webp,
+            Self::GIF => AssetExtension::Gif,
+            Self::APNG => AssetExtension::Apng,
+        }
+    }
+
+    pub const fn mime(self) -> &'static str {
+        match self {
+            Self::PNG => "image/png",
+            Self::JPEG => "image/jpeg",
+            Self::WebP => "image/webp",
+            Self::GIF => "image/gif",
+            Self::APNG => "image/apng",
+        }
+    }
+
+    pub const fn extension(self) -> &'static str {
+        match self {
+            Self::PNG => "png",
+            Self::JPEG => "jpeg",
+            Self::WebP => "webp",
+            Self::GIF => "gif",
+            Self::APNG => "apng",
+        }
+    }
+
+    pub const fn cache_serialization(self) -> &'static str {
+        self.extension()
+    }
+
+    pub const fn supports_animation(self) -> bool {
+        matches!(self, Self::WebP | Self::GIF | Self::APNG)
+    }
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct Input {
@@ -12,43 +86,27 @@ pub struct Input {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct OutputSelection {
-    pub format: AssetExtension,
+    pub format: OutputFormat,
     pub size: Option<u32>,
     pub reason: &'static str,
 }
 
 pub fn is_output_format_supported(ext: AssetExtension) -> bool {
-    !matches!(
-        ext,
-        AssetExtension::Avif
-            | AssetExtension::Heic
-            | AssetExtension::Heif
-            | AssetExtension::Jxl
-            | AssetExtension::Svg
-    )
-}
-
-pub fn can_encode_to(ext: AssetExtension) -> bool {
-    is_output_format_supported(ext)
+    OutputFormat::from_source_extension(ext).is_some()
 }
 
 pub fn coerce_unsupported_format(ext: AssetExtension) -> AssetExtension {
-    if can_encode_to(ext) {
-        ext
-    } else {
-        AssetExtension::Webp
-    }
+    OutputFormat::coerce_from_extension(ext).as_asset_extension()
 }
 
 pub fn select_url_variant(input: Input) -> OutputSelection {
     let requested = input.manual_format_override.unwrap_or(input.original);
-    let output = coerce_unsupported_format(requested);
     OutputSelection {
-        format: output,
+        format: OutputFormat::coerce_from_extension(requested),
         size: input
             .requested_size
-            .map(|size| constants::clamp_size(size, input.kind)),
-        reason: if output == requested {
+            .map(|size| asset_size::clamp_size(size, input.kind)),
+        reason: if is_output_format_supported(requested) {
             "url"
         } else {
             "url-coerced"
@@ -68,7 +126,7 @@ mod tests {
             requested_size: Some(128),
             manual_format_override: None,
         });
-        assert_eq!(AssetExtension::Png, r.format);
+        assert_eq!(OutputFormat::PNG, r.format);
         assert_eq!("url", r.reason);
     }
 
@@ -80,7 +138,7 @@ mod tests {
             requested_size: Some(128),
             manual_format_override: None,
         });
-        assert_eq!(AssetExtension::Webp, r.format);
+        assert_eq!(OutputFormat::WebP, r.format);
         assert_eq!("url-coerced", r.reason);
     }
 
@@ -92,7 +150,7 @@ mod tests {
             requested_size: Some(128),
             manual_format_override: None,
         });
-        assert_eq!(AssetExtension::Webp, r.format);
+        assert_eq!(OutputFormat::WebP, r.format);
         assert_eq!("url-coerced", r.reason);
     }
 
@@ -104,7 +162,7 @@ mod tests {
             requested_size: Some(128),
             manual_format_override: Some(AssetExtension::Png),
         });
-        assert_eq!(AssetExtension::Png, r.format);
+        assert_eq!(OutputFormat::PNG, r.format);
         assert_eq!("url", r.reason);
     }
 
@@ -116,7 +174,50 @@ mod tests {
             requested_size: Some(256),
             manual_format_override: Some(AssetExtension::Svg),
         });
-        assert_eq!(AssetExtension::Webp, r.format);
+        assert_eq!(OutputFormat::WebP, r.format);
         assert_eq!("url-coerced", r.reason);
+    }
+
+    #[test]
+    fn encodable_extensions_round_trip_through_the_output_format() {
+        for extension in [
+            AssetExtension::Png,
+            AssetExtension::Jpeg,
+            AssetExtension::Webp,
+            AssetExtension::Gif,
+            AssetExtension::Apng,
+        ] {
+            let format = OutputFormat::from_source_extension(extension).expect("encodable");
+            assert!(is_output_format_supported(extension));
+            assert_eq!(extension, format.as_asset_extension());
+            assert_eq!(extension.mime(), format.mime());
+            assert_eq!(extension.name(), format.extension());
+            assert_eq!(format.extension(), format.cache_serialization());
+            assert_eq!(extension, coerce_unsupported_format(extension));
+        }
+        for extension in [
+            AssetExtension::Avif,
+            AssetExtension::Heic,
+            AssetExtension::Heif,
+            AssetExtension::Jxl,
+            AssetExtension::Svg,
+        ] {
+            assert!(!is_output_format_supported(extension));
+            assert_eq!(None, OutputFormat::from_source_extension(extension));
+            assert_eq!(
+                OutputFormat::WebP,
+                OutputFormat::coerce_from_extension(extension)
+            );
+            assert_eq!(AssetExtension::Webp, coerce_unsupported_format(extension));
+        }
+    }
+
+    #[test]
+    fn only_the_animation_containers_support_animation() {
+        assert!(OutputFormat::WebP.supports_animation());
+        assert!(OutputFormat::GIF.supports_animation());
+        assert!(OutputFormat::APNG.supports_animation());
+        assert!(!OutputFormat::PNG.supports_animation());
+        assert!(!OutputFormat::JPEG.supports_animation());
     }
 }

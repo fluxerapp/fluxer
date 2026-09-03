@@ -4,6 +4,8 @@ use std::f64::consts::PI;
 use thiserror::Error;
 
 pub const MAX_DIM: u32 = 100;
+const OPAQUE_ASPECT_LIMIT: u32 = 7;
+const ALPHA_ASPECT_LIMIT: u32 = 5;
 
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum EncodeError {
@@ -115,6 +117,20 @@ pub fn encode_rgba(pixels: &[u8], w: u32, h: u32) -> Result<Vec<u8>, EncodeError
         append_acs(&mut out[header_bytes..], &mut idx, &a_enc.ac);
     }
     Ok(out)
+}
+
+pub fn represents_aspect_ratio(hash: &[u8], width: u32, height: u32) -> bool {
+    if hash.len() < 5 || width == 0 || height == 0 {
+        return false;
+    }
+    let limit = u64::from(if hash[2] & 0x80 != 0 {
+        ALPHA_ASPECT_LIMIT
+    } else {
+        OPAQUE_ASPECT_LIMIT
+    });
+    let width = u64::from(width);
+    let height = u64::from(height);
+    width <= height * limit && height <= width * limit
 }
 
 fn append_acs(out: &mut [u8], idx: &mut u32, acs: &[f64]) {
@@ -233,6 +249,27 @@ mod tests {
         let trans_out = encode_rgba(&translucent, 4, 4).unwrap();
         assert_eq!(0, opaque_out[2] & 0x80);
         assert_ne!(0, trans_out[2] & 0x80);
+    }
+
+    #[test]
+    fn aspect_ratio_representability_follows_the_alpha_limit() {
+        let mut opaque = [0u8; 4 * 4 * 4];
+        let mut translucent = [0u8; 4 * 4 * 4];
+        for px in opaque.chunks_exact_mut(4) {
+            px[3] = 255;
+        }
+        for px in translucent.chunks_exact_mut(4) {
+            px[3] = 64;
+        }
+        let opaque_out = encode_rgba(&opaque, 4, 4).unwrap();
+        let trans_out = encode_rgba(&translucent, 4, 4).unwrap();
+        assert!(represents_aspect_ratio(&opaque_out, 64, 64));
+        assert!(represents_aspect_ratio(&opaque_out, 700, 100));
+        assert!(!represents_aspect_ratio(&opaque_out, 800, 100));
+        assert!(represents_aspect_ratio(&trans_out, 500, 100));
+        assert!(!represents_aspect_ratio(&trans_out, 700, 100));
+        assert!(!represents_aspect_ratio(&opaque_out, 64, 0));
+        assert!(!represents_aspect_ratio(&opaque_out[..4], 64, 64));
     }
 
     #[test]

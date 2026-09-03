@@ -25,6 +25,7 @@ axum = {version = "0.8.9", default-features = false, features = ["http1", "json"
 base64 = "0.22.1"
 bytes = "1.11.1"
 clap = {version = "4.6.1", features = ["derive"]}
+futures-util = {version = "0.3.32", default-features = false, features = ["std"]}
 hex = "0.4.3"
 hmac = "0.13.0"
 http = "1.4.2"

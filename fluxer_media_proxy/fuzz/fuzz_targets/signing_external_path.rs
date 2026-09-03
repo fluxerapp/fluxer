@@ -13,8 +13,14 @@ fuzz_target!(|data: &[u8]| {
             let _ = signing::verify_signature(&path, &sig, b"fuzz-secret");
             let _ = signing::verify_signature(text, &sig, b"other-secret");
         }
+        let opaque = external_path::build_opaque_external_media_proxy_path(text);
+        let _ = external_path::reconstruct_original_url(&opaque);
+        let opaque_signature = signing::create_signature(&opaque, b"fuzz-secret");
+        let _ = signing::verify_signature(&opaque, &opaque_signature, b"fuzz-secret");
+        let _ = signing::verify_signature(&opaque, "", b"fuzz-secret");
         let _ = external_path::reconstruct_original_url(text);
         let _ = external_path::percent_decode(text, true);
         let _ = external_path::percent_decode(text, false);
+        let _ = external_path::percent_decode_string(text, true);
     }
 });
