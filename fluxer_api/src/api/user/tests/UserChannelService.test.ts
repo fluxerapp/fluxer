@@ -109,7 +109,7 @@ describe('UserChannelService', () => {
 				.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_USER')
 				.execute();
 		});
-		test('cannot create DM with blocked user', async () => {
+		test('can create DM with a user who blocked you', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
 			const guild = await createGuild(harness, user1.token, 'Test Community');
@@ -117,11 +117,16 @@ describe('UserChannelService', () => {
 			const invite = await createChannelInvite(harness, user1.token, systemChannel.id);
 			await acceptInvite(harness, user2.token, invite.code);
 			await blockUser(harness, user1, user2.userId);
-			await createBuilder(harness, user1.token)
-				.post('/users/@me/channels')
-				.body({recipient_id: user2.userId})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_MESSAGES_TO_USER')
-				.execute();
+			const channel = await createDmChannel(harness, user1.token, user2.userId);
+			expect(channel.id).toBeDefined();
+			expect(channel.type).toBe(ChannelTypes.DM);
+		});
+		test('can create DM with a user who shares no mutual community', async () => {
+			const user1 = await createTestAccount(harness);
+			const user2 = await createTestAccount(harness);
+			const channel = await createDmChannel(harness, user1.token, user2.userId);
+			expect(channel.id).toBeDefined();
+			expect(channel.type).toBe(ChannelTypes.DM);
 		});
 		test('unclaimed account cannot create DM', async () => {
 			const user1 = await createTestAccount(harness);

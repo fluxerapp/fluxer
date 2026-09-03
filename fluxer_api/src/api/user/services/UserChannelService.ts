@@ -5,7 +5,6 @@ import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_GROUP_DM_RECIPIENTS, MAX_GROUP_DMS_PER_USER} from '@fluxer/constants/src/LimitConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
 import type {GroupDmUnaddableRecipient} from '@fluxer/errors/src/domains/channel/GroupDmRecipientsNotAddableError';
 import {GroupDmRecipientsNotAddableError} from '@fluxer/errors/src/domains/channel/GroupDmRecipientsNotAddableError';
 import {MaxGroupDmRecipientsError} from '@fluxer/errors/src/domains/channel/MaxGroupDmRecipientsError';
@@ -30,7 +29,6 @@ import {
 	createMessageResponseDataService,
 	messageResponseAccessForGuild,
 } from '../../channel/services/message/MessageResponseDataService';
-import {SYSTEM_USER_ID} from '../../constants/Core';
 import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
 import type {UserCacheService} from '../../infrastructure/UserCacheService';
@@ -45,7 +43,6 @@ import type {UserPermissionUtils} from '../../utils/UserPermissionUtils';
 import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
 import type {IUserChannelRepository} from '../repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import {isBugHunterBotUser} from '../UserHelpers';
 import type {DirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
 import {createDirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
 
@@ -180,12 +177,7 @@ export class UserChannelService {
 		}
 		const targetUser = await this.userRepository.findUnique(recipientId);
 		if (!targetUser) throw new UnknownUserError();
-		if (recipientId === SYSTEM_USER_ID) {
-			return await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
-		}
-		await this.validateNewDmAllowed({sender: callingUser, recipient: targetUser});
-		const channel = await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
-		return channel;
+		return await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
 	}
 
 	async pinDmChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {
@@ -256,30 +248,6 @@ export class UserChannelService {
 
 	async getExistingDmForUsers(userId: UserID, recipientId: UserID): Promise<Channel | null> {
 		return await this.userRepository.findExistingDmState(userId, recipientId);
-	}
-
-	private async validateNewDmAllowed({sender, recipient}: {sender: User; recipient: User}): Promise<void> {
-		if (isBugHunterBotUser(sender)) {
-			return;
-		}
-		const [senderBlockedRecipient, recipientBlockedSender, friendship] = await Promise.all([
-			this.userRepository.getRelationship(sender.id, recipient.id, RelationshipTypes.BLOCKED),
-			this.userRepository.getRelationship(recipient.id, sender.id, RelationshipTypes.BLOCKED),
-			this.userRepository.getRelationship(sender.id, recipient.id, RelationshipTypes.FRIEND),
-		]);
-		if (senderBlockedRecipient || recipientBlockedSender) {
-			throw new CannotSendMessagesToUserError();
-		}
-		if (friendship) {
-			return;
-		}
-		const hasMutualGuilds = await this.userPermissionUtils.checkMutualGuildsForDmAccessAsync({
-			userId: sender.id,
-			targetId: recipient.id,
-		});
-		if (!hasMutualGuilds) {
-			throw new CannotSendMessagesToUserError();
-		}
 	}
 
 	async ensureDmOpenForBothUsers({

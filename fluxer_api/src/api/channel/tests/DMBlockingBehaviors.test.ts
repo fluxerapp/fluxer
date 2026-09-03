@@ -31,7 +31,7 @@ describe('DM Blocking Behaviors', () => {
 		await harness?.shutdown();
 	});
 	describe('DM Creation Blocking', () => {
-		it('prevents DM creation when the other user has blocked you, even with mutual guild', async () => {
+		it('allows DM creation when the other user has blocked you', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
 			const guild = await createGuild(harness, user1.token, 'Test Community');
@@ -42,10 +42,10 @@ describe('DM Blocking Behaviors', () => {
 			await createBuilder(harness, user2.token)
 				.post('/users/@me/channels')
 				.body({recipient_id: user1.userId})
-				.expect(HTTP_STATUS.BAD_REQUEST)
+				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
-		it('prevents DM creation with someone you have blocked, even with mutual guild', async () => {
+		it('allows DM creation with someone you have blocked', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
 			const guild = await createGuild(harness, user1.token, 'Test Community');
@@ -56,7 +56,7 @@ describe('DM Blocking Behaviors', () => {
 			await createBuilder(harness, user1.token)
 				.post('/users/@me/channels')
 				.body({recipient_id: user2.userId})
-				.expect(HTTP_STATUS.BAD_REQUEST)
+				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
 	});
