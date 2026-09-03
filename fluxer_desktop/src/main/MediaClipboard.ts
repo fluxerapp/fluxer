@@ -13,7 +13,7 @@ import type {
 	ClipboardWriteFileResult,
 } from '@electron/common/Types';
 import {downloadFile} from '@electron/main/FileDownloads';
-import {app, clipboard} from 'electron';
+import {app, ClipboardItem, clipboard} from 'electron';
 
 const requireModule = createRequire(import.meta.url);
 
@@ -73,6 +73,8 @@ function loadWinClipboardModule(): WinClipboardModule {
 
 const logger = createChildLogger('MediaClipboard');
 const CACHE_DIR_NAME = 'clipboard-media';
+const WINDOWS_FILE_NAME_W_FORMAT = 'electron application/osclipboard;format="FileNameW"';
+const GNOME_COPIED_FILES_FORMAT = 'electron application/osclipboard;format="x-special/gnome-copied-files"';
 const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000;
 const MAX_CACHE_ITEMS = 25;
 const CACHE_SLOW_TRIM_INTERVAL_MS = 30 * 60 * 1000;
@@ -153,7 +155,7 @@ async function writeMacFileReference(filePath: string): Promise<void> {
 		return;
 	}
 	const fileUrl = pathToFileURL(filePath).toString();
-	clipboard.writeText(fileUrl);
+	await clipboard.writeText(fileUrl);
 }
 
 async function writeWindowsFileReference(filePath: string): Promise<void> {
@@ -168,19 +170,23 @@ async function writeWindowsFileReference(filePath: string): Promise<void> {
 			logger.warn('Native win-clipboard write failed; falling back to FileNameW buffer', {error});
 		}
 	}
-	clipboard.writeBuffer('FileNameW', Buffer.concat([Buffer.from(filePath, 'ucs2'), Buffer.from([0, 0])]));
+	await clipboard.write([
+		new ClipboardItem({
+			[WINDOWS_FILE_NAME_W_FORMAT]: new Blob([Buffer.concat([Buffer.from(filePath, 'ucs2'), Buffer.from([0, 0])])]),
+		}),
+	]);
 }
 
-function writeLinuxFileReference(filePath: string): void {
+async function writeLinuxFileReference(filePath: string): Promise<void> {
 	const fileUrl = pathToFileURL(filePath).toString();
 	const desktop = `${process.env.XDG_CURRENT_DESKTOP ?? ''} ${process.env.DESKTOP_SESSION ?? ''}`.toLowerCase();
 	const isGnomeLike =
 		desktop.includes('gnome') || desktop.includes('unity') || desktop.includes('cinnamon') || desktop.includes('xfce');
 	if (isGnomeLike) {
-		clipboard.writeBuffer('x-special/gnome-copied-files', Buffer.from(`copy\n${fileUrl}\n`, 'utf8'));
+		await clipboard.write([new ClipboardItem({[GNOME_COPIED_FILES_FORMAT]: `copy\n${fileUrl}\n`})]);
 		return;
 	}
-	clipboard.writeBuffer('text/uri-list', Buffer.from(`${fileUrl}\n`, 'utf8'));
+	await clipboard.write([new ClipboardItem({'text/uri-list': `${fileUrl}\n`})]);
 }
 
 async function writeFileReferenceToClipboard(filePath: string): Promise<void> {
@@ -192,7 +198,7 @@ async function writeFileReferenceToClipboard(filePath: string): Promise<void> {
 			await writeWindowsFileReference(filePath);
 			return;
 		case 'linux':
-			writeLinuxFileReference(filePath);
+			await writeLinuxFileReference(filePath);
 			return;
 		default:
 			throw new Error(`Unsupported clipboard file platform: ${process.platform}`);

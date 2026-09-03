@@ -383,7 +383,9 @@ function buildTrayMenu(): Menu {
 			label: t('desktop.tray.copyBuildInfo'),
 			click: () => {
 				runTrayMenuAction(() => {
-					clipboard.writeText(trayState.buildInfo ?? '');
+					void clipboard.writeText(trayState.buildInfo ?? '').catch((error) => {
+						logger.error('Failed to copy build info to the clipboard', {error});
+					});
 				});
 			},
 		});

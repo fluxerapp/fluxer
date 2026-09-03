@@ -23,7 +23,7 @@ const rpmBuildIdLinkFpmArgs = [
 	'--rpm-rpmbuild-define',
 	'_missing_build_ids_terminate_build 0',
 ];
-const macOSMinimumSystemVersion = '12.0';
+const macOSMinimumSystemVersion = '13.0';
 const isLinuxBuild = process.argv.includes('--linux');
 const isMacBuild = process.argv.includes('--mac');
 const isWindowsBuild = process.argv.includes('--win');

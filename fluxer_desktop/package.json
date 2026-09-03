@@ -25,7 +25,7 @@
 	"devDependencies": {
 		"@types/node": "24.10.9",
 		"@typescript/native-preview": "7.0.0-dev.20260130.1",
-		"electron": "42.10.0",
+		"electron": "44.1.1",
 		"electron-builder": "27.0.0-alpha.7",
 		"electron-builder-squirrel-windows": "27.0.0-alpha.7",
 		"esbuild": "0.27.2",

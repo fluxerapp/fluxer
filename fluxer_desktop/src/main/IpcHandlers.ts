@@ -342,10 +342,10 @@ export function registerIpcHandlers(): void {
 		}
 		await openExternalDeduped(url);
 	});
-	ipcMain.handle('clipboard-write-text', (_event, text: string): void => {
-		clipboard.writeText(text);
+	ipcMain.handle('clipboard-write-text', async (_event, text: string): Promise<void> => {
+		await clipboard.writeText(text);
 	});
-	ipcMain.handle('clipboard-read-text', (): string => {
+	ipcMain.handle('clipboard-read-text', (): Promise<string> => {
 		return clipboard.readText();
 	});
 	ipcMain.handle('clipboard-write-file', async (event, rawOptions: unknown): Promise<ClipboardWriteFileResult> => {
