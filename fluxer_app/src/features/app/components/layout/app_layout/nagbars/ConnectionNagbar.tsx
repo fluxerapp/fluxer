@@ -93,7 +93,6 @@ export const ConnectionNagbar = observer(({isMobile, rememberedRows}: Connection
 		return (
 			<NagbarButton
 				isMobile={isMobile}
-				variant="ghost"
 				onClick={handleOpenActionUrl}
 				disabled={false}
 				submitting={false}
@@ -110,7 +109,6 @@ export const ConnectionNagbar = observer(({isMobile, rememberedRows}: Connection
 		return (
 			<NagbarButton
 				isMobile={isMobile}
-				variant="ghost"
 				onClick={handleSwitchAccount}
 				disabled={false}
 				submitting={false}
