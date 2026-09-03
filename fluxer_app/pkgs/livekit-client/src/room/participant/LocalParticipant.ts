@@ -97,7 +97,12 @@ import {
 import Participant from './Participant.ts';
 import type {ParticipantTrackPermission} from './ParticipantTrackPermission.ts';
 import {trackPermissionToProto} from './ParticipantTrackPermission.ts';
-import {computeTrackBackupEncodings, computeVideoEncodings, getDefaultDegradationPreference} from './publishUtils.ts';
+import {
+	computeTrackBackupEncodings,
+	computeVideoEncodings,
+	getDefaultDegradationPreference,
+	maxEncodingBitrate,
+} from './publishUtils.ts';
 import type RemoteParticipant from './RemoteParticipant.ts';
 
 type PendingSignalRequestValues = {
@@ -1037,12 +1042,15 @@ export default class LocalParticipant extends Participant {
 							maxbr: encodings[0]?.maxBitrate ? encodings[0].maxBitrate / 1000 : 0,
 						});
 					}
-				} else if (track.codec && isSVCCodec(track.codec) && encodings[0]?.maxBitrate) {
-					this.engine.pcManager.publisher.setTrackCodecBitrate({
-						cid: req.cid,
-						codec: track.codec,
-						maxbr: encodings[0].maxBitrate / 1000,
-					});
+				} else if (track.codec) {
+					const maxBitrate = maxEncodingBitrate(encodings);
+					if (maxBitrate > 0) {
+						this.engine.pcManager.publisher.setTrackCodecBitrate({
+							cid: req.cid,
+							codec: track.codec,
+							maxbr: maxBitrate / 1000,
+						});
+					}
 				}
 			}
 

@@ -101,6 +101,21 @@ source edits in this package.
     sender track back, including `LocalVideoTrack`'s secondary simulcast senders,
     and aggregate every cleanup failure instead of discarding it.
 
+13. **Start bitrate for every video codec** (`src/room/PCTransport.ts`,
+    `src/room/participant/LocalParticipant.ts`, `src/room/participant/publishUtils.ts`)
+    `x-google-start-bitrate` was reachable only by AV1 and VP9, gated twice: the
+    publish path registered a track bitrate only for SVC codecs, and the offer
+    munging returned early for everything else. H264, H265 and VP8 therefore
+    opened at the Chromium default and had to ramp, which showed up as a 3000 kbps
+    screen share encoding at 346 kbps twenty seconds in. The bitrate is now
+    registered for every video codec from the highest encoding
+    (`maxEncodingBitrate()`, so a simulcast ladder contributes its top layer), and
+    the offer munging applies the start bitrate whenever a max bitrate is known.
+    The dependency descriptor extension stays SVC-only.
+    `appendStartBitrateToFmtp()` holds the fmtp edit so it can be tested, and
+    `setTrackCodecBitrate()` now replaces an entry for the same cid or transceiver
+    instead of appending, since `trackBitrates` is never cleared.
+
 ## Updating from upstream
 
 1. Check the upstream changelog for the target version.

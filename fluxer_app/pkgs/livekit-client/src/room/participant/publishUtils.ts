@@ -370,6 +370,19 @@ export class ScalabilityMode {
 	}
 }
 
+export function maxEncodingBitrate(encodings: Array<RTCRtpEncodingParameters> | undefined): number {
+	if (!encodings) {
+		return 0;
+	}
+	let maxBitrate = 0;
+	for (const encoding of encodings) {
+		if (typeof encoding.maxBitrate === 'number' && encoding.maxBitrate > maxBitrate) {
+			maxBitrate = encoding.maxBitrate;
+		}
+	}
+	return maxBitrate;
+}
+
 export function getDefaultDegradationPreference(track: LocalVideoTrack): RTCDegradationPreference {
 	if (track.source === Track.Source.ScreenShare) return 'maintain-resolution';
 	if (track.constraints.height && unwrapConstraint(track.constraints.height) >= 1080) return 'maintain-resolution';

@@ -18,7 +18,7 @@ interface TrackBitrateInfo {
 	maxbr: number;
 }
 
-const startBitrateForSVC = 0.7;
+const startBitrateFraction = 0.7;
 const opusMaxAverageBitrateBps = 510000;
 const opusPacketTimeMs = 10;
 const requiredOpusFmtpParameters = {
@@ -34,6 +34,21 @@ export const PCEvents = {
 	NegotiationComplete: 'negotiationComplete',
 	RTPVideoPayloadTypes: 'rtpVideoPayloadTypes',
 } as const;
+
+export function appendStartBitrateToFmtp(media: MediaDescription, codecPayload: number, startBitrate: number): void {
+	if (startBitrate <= 0) {
+		return;
+	}
+	for (const fmtp of media.fmtp) {
+		if (fmtp.payload !== codecPayload) {
+			continue;
+		}
+		if (!fmtp.config.includes('x-google-start-bitrate')) {
+			fmtp.config += `;x-google-start-bitrate=${startBitrate}`;
+		}
+		return;
+	}
+}
 
 export default class PCTransport extends EventEmitter {
 	private _pc: RTCPeerConnection | null;
@@ -248,18 +263,10 @@ export default class PCTransport extends EventEmitter {
 						if (isSVCCodec(trackbr.codec) && !isSafari()) {
 							this.ensureVideoDDExtensionForSVC(media, sdpParsed);
 						}
-						if (!isSVCCodec(trackbr.codec)) {
+						if (trackbr.maxbr <= 0) {
 							return true;
 						}
-						const startBitrate = Math.round(trackbr.maxbr * startBitrateForSVC);
-						for (const fmtp of media.fmtp) {
-							if (fmtp.payload === codecPayload) {
-								if (!fmtp.config.includes('x-google-start-bitrate')) {
-									fmtp.config += `;x-google-start-bitrate=${startBitrate}`;
-								}
-								break;
-							}
-						}
+						appendStartBitrateToFmtp(media, codecPayload, Math.round(trackbr.maxbr * startBitrateFraction));
 						return true;
 					});
 				}
@@ -336,7 +343,16 @@ export default class PCTransport extends EventEmitter {
 	}
 
 	setTrackCodecBitrate(info: TrackBitrateInfo) {
-		this.trackBitrates.push(info);
+		const existing = this.trackBitrates.findIndex(
+			(trackbr) =>
+				(info.cid !== undefined && trackbr.cid === info.cid) ||
+				(info.transceiver !== undefined && trackbr.transceiver === info.transceiver),
+		);
+		if (existing === -1) {
+			this.trackBitrates.push(info);
+			return;
+		}
+		this.trackBitrates[existing] = info;
 	}
 
 	setConfiguration(rtcConfig: RTCConfiguration) {
