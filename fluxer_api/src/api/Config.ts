@@ -428,7 +428,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			},
 			bluesky: master.auth.bluesky as BlueskyOAuthConfig,
 		},
-		cookie: master.cookie,
 		klipy: {
 			apiKey: master.integrations.klipy.api_key,
 		},

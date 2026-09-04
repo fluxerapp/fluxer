@@ -3,7 +3,6 @@
 import {createMiddleware} from 'hono/factory';
 import {getSudoModeService} from '../auth/services/SudoModeService';
 import type {HonoEnv} from '../types/HonoEnv';
-import {getSudoCookie} from '../utils/SudoCookieUtils';
 
 export const SUDO_MODE_HEADER = 'X-Fluxer-Sudo-Mode-JWT';
 export const SudoModeMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
@@ -19,11 +18,7 @@ export const SudoModeMiddleware = createMiddleware<HonoEnv>(async (ctx, next) =>
 		await next();
 		return;
 	}
-	const sudoToken = ctx.req.header(SUDO_MODE_HEADER);
-	let tokenToVerify: string | undefined = sudoToken;
-	if (!tokenToVerify) {
-		tokenToVerify = getSudoCookie(ctx, user.id.toString());
-	}
+	const tokenToVerify = ctx.req.header(SUDO_MODE_HEADER);
 	if (!tokenToVerify) {
 		await next();
 		return;

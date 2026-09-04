@@ -181,10 +181,6 @@ function defaultConfig(): MasterConfig {
 				keys: [],
 			},
 		},
-		cookie: {
-			domain: '',
-			secure: false,
-		},
 		integrations: {
 			email: {
 				enabled: false,

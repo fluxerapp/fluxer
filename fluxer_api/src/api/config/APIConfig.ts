@@ -281,10 +281,6 @@ export interface APIConfig {
 		};
 		bluesky: BlueskyOAuthConfig;
 	};
-	cookie: {
-		domain: string;
-		secure: boolean;
-	};
 	klipy: {
 		apiKey?: string;
 	};

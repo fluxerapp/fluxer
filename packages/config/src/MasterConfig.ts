@@ -203,10 +203,6 @@ export interface MasterConfig {
 			}>;
 		};
 	};
-	cookie: {
-		domain: string;
-		secure: boolean;
-	};
 	integrations: {
 		email: {
 			enabled: boolean;

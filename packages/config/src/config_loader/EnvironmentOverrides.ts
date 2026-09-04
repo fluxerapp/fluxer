@@ -371,8 +371,6 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH: {path: ['integrations', 'push', 'fcm', 'service_account_json_path']},
 	FLUXER_PUSH_FCM_TOKEN_URI: {path: ['integrations', 'push', 'fcm', 'token_uri']},
 	FLUXER_PUSH_FCM_APPS: {path: ['integrations', 'push', 'fcm', 'apps'], parse: parseEnvValue},
-	FLUXER_COOKIE_DOMAIN: {path: ['cookie', 'domain']},
-	FLUXER_COOKIE_SECURE: {path: ['cookie', 'secure'], parse: parseEnvValue},
 	FLUXER_SELF_HOSTED: {path: ['instance', 'self_hosted'], parse: parseEnvValue},
 	FLUXER_AUTO_JOIN_INVITE_CODE: {path: ['instance', 'auto_join_invite_code']},
 	FLUXER_VISIONARIES_GUILD_ID: {path: ['instance', 'visionaries_guild_id']},

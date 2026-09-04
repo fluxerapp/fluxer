@@ -11,7 +11,6 @@ import * as AuthPassword from '../../auth/AuthPassword';
 import {SUDO_MODE_HEADER} from '../../middleware/SudoModeMiddleware';
 import type {User} from '../../models/User';
 import type {HonoEnv} from '../../types/HonoEnv';
-import {setSudoCookie} from '../../utils/SudoCookieUtils';
 import {getSudoModeService} from './SudoModeService';
 
 export interface SudoVerificationBody {
@@ -127,10 +126,6 @@ function setSudoTokenHeader(
 	const tokenToSet = result.sudoToken ?? ctx.req.header(SUDO_MODE_HEADER);
 	if (tokenToSet) {
 		ctx.header(SUDO_MODE_HEADER, tokenToSet);
-		const user = ctx.get('user');
-		if (user) {
-			setSudoCookie(ctx, tokenToSet, user.id.toString());
-		}
 	}
 }
 
