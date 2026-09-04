@@ -165,6 +165,7 @@ export function GuildStickerController(app: HonoApp) {
 	app.delete(
 		'/guilds/:guild_id/stickers/:sticker_id',
 		RateLimitMiddleware(RateLimitConfigs.GUILD_STICKER_DELETE),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_STICKER_DELETE_DAILY),
 		LoginRequired,
 		Validator('param', GuildIdStickerIdParam),
 		Validator('query', PurgeQuery),

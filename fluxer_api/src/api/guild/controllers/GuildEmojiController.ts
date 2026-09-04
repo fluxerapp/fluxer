@@ -152,6 +152,7 @@ export function GuildEmojiController(app: HonoApp) {
 	app.delete(
 		'/guilds/:guild_id/emojis/:emoji_id',
 		RateLimitMiddleware(RateLimitConfigs.GUILD_EMOJI_DELETE),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_EMOJI_DELETE_DAILY),
 		LoginRequired,
 		Validator('param', GuildIdEmojiIdParam),
 		Validator('query', PurgeQuery),

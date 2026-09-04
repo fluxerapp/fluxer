@@ -110,7 +110,7 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_EMOJI_CREATE: {
 		bucket: 'guild:emoji:create::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 10, windowMs: ms('30 seconds')},
 	} as RouteRateLimitConfig,
 	GUILD_EMOJI_BULK_CREATE: {
 		bucket: 'guild:emoji:bulk_create::guild_id',
@@ -118,7 +118,7 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_EMOJI_CLONE: {
 		bucket: 'guild:emoji:clone::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 10, windowMs: ms('30 seconds')},
 	} as RouteRateLimitConfig,
 	GUILD_EMOJI_UPDATE: {
 		bucket: 'guild:emoji:update::guild_id',
@@ -126,7 +126,11 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_EMOJI_DELETE: {
 		bucket: 'guild:emoji:delete::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 10, windowMs: ms('30 seconds')},
+	} as RouteRateLimitConfig,
+	GUILD_EMOJI_DELETE_DAILY: {
+		bucket: 'guild:emoji:delete:daily::guild_id',
+		config: {limit: 300, windowMs: ms('1 day')},
 	} as RouteRateLimitConfig,
 	GUILD_EMOJI_METADATA: {
 		bucket: 'guild:emoji:metadata::user_id',
@@ -138,7 +142,7 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_CREATE: {
 		bucket: 'guild:sticker:create::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 10, windowMs: ms('30 seconds')},
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_BULK_CREATE: {
 		bucket: 'guild:sticker:bulk_create::guild_id',
@@ -146,7 +150,7 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_CLONE: {
 		bucket: 'guild:sticker:clone::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 10, windowMs: ms('30 seconds')},
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_UPDATE: {
 		bucket: 'guild:sticker:update::guild_id',
@@ -154,7 +158,11 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_DELETE: {
 		bucket: 'guild:sticker:delete::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 10, windowMs: ms('30 seconds')},
+	} as RouteRateLimitConfig,
+	GUILD_STICKER_DELETE_DAILY: {
+		bucket: 'guild:sticker:delete:daily::guild_id',
+		config: {limit: 300, windowMs: ms('1 day')},
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_METADATA: {
 		bucket: 'guild:sticker:metadata::user_id',
