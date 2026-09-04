@@ -73,6 +73,7 @@ import {
 import {disarmVirtmic} from '@app/features/voice/utils/LinuxScreenShareAudio';
 import {
 	captureNativeAudioTrackForLinuxRouting,
+	captureNativeAudioTrackForWindowPid,
 	commitNativeAudioBridgeReplacement,
 	disarmNativeAudio,
 	reconfigureLinuxNativeAudioRouting,
@@ -778,6 +779,36 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 					logger.warn('Failed to stop rejected Linux native screen-share audio track', {error: stopError});
 				}
 			}
+			return false;
+		}
+		this.syncLocalScreenShareAudioStateInternal(participant, true);
+		this.syncPersistedScreenShareAudioPreferenceInternal(participant);
+		return true;
+	}
+
+	async ensureWindowScreenShareAudioPublication(room: Room | null, sourceId: string): Promise<boolean> {
+		const participant = room?.localParticipant;
+		if (!participant || !participant.isScreenShareEnabled) return false;
+		const targetPid = await getElectronAPI()
+			?.nativeAudio?.resolveAudioRootPidForSource(sourceId)
+			.catch((error) => {
+				logger.warn('Failed to resolve the shared window audio process', {error, sourceId});
+				return null;
+			});
+		if (targetPid == null) return false;
+		const capturedTrack = await captureNativeAudioTrackForWindowPid(targetPid);
+		if (!capturedTrack) return false;
+		let adopted = false;
+		try {
+			adopted = await this.replaceActiveScreenShareAudioTrackInternal(participant, capturedTrack);
+			if (adopted) {
+				commitNativeAudioBridgeReplacement();
+			}
+		} catch (error) {
+			logger.warn('Failed to publish mid-stream window screen-share audio track', {error, sourceId});
+		}
+		if (!adopted) {
+			stopMediaTrack(capturedTrack);
 			return false;
 		}
 		this.syncLocalScreenShareAudioStateInternal(participant, true);

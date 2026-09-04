@@ -133,32 +133,37 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 		expect(selectStreamSettingsAudioControlState(signals({displayShareEnvironment: 'web'}))).toBe('toggle');
 	});
 
-	it('hides manual audio sources for every share type until the advanced opt-in is on', () => {
+	it('offers manual audio sources on every desktop share type, window shares included', () => {
 		for (const shareContext of ['app', 'device', 'display'] as const) {
-			const displayShareEnvironment = shareContext === 'app' ? 'desktop-wayland' : 'desktop-custom';
+			for (const displayShareEnvironment of ['desktop-custom', 'desktop-wayland'] as const) {
+				expect(
+					selectStreamSettingsAudioMenuState(
+						signals({
+							shareContext,
+							displayShareEnvironment,
+							platform: 'linux',
+							captureAudioEnabled: true,
+							nativeAudioAvailability: availableNativeAudio(),
+						}),
+					).showManualAudioSources,
+				).toBe(true);
+			}
+		}
+	});
+
+	it('leaves audio source selection to the browser picker on the web', () => {
+		for (const shareContext of ['app', 'device', 'display'] as const) {
 			expect(
 				selectStreamSettingsAudioMenuState(
 					signals({
 						shareContext,
-						displayShareEnvironment,
+						displayShareEnvironment: 'web',
 						platform: 'linux',
 						captureAudioEnabled: true,
 						nativeAudioAvailability: availableNativeAudio(),
 					}),
 				).showManualAudioSources,
 			).toBe(false);
-			expect(
-				selectStreamSettingsAudioMenuState(
-					signals({
-						shareContext,
-						displayShareEnvironment,
-						platform: 'linux',
-						captureAudioEnabled: true,
-						nativeAudioAvailability: availableNativeAudio(),
-						manualAudioSourcesOptIn: true,
-					}),
-				).showManualAudioSources,
-			).toBe(true);
 		}
 	});
 
@@ -170,7 +175,6 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 						platform,
 						captureAudioEnabled: true,
 						nativeAudioAvailability: availableNativeAudio(),
-						manualAudioSourcesOptIn: true,
 					}),
 				).showManualAudioSources,
 			).toBe(false);
@@ -181,7 +185,6 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 					platform: null,
 					captureAudioEnabled: true,
 					nativeAudioAvailability: availableNativeAudio(),
-					manualAudioSourcesOptIn: true,
 				}),
 			).showManualAudioSources,
 		).toBe(false);
@@ -191,7 +194,6 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 					platform: 'linux',
 					captureAudioEnabled: true,
 					nativeAudioAvailability: availableNativeAudio({available: false, reason: 'no-pipewire'}),
-					manualAudioSourcesOptIn: true,
 				}),
 			).showManualAudioSources,
 		).toBe(false);
@@ -201,7 +203,6 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 					platform: 'linux',
 					captureAudioEnabled: true,
 					nativeAudioAvailability: null,
-					manualAudioSourcesOptIn: true,
 				}),
 			).showManualAudioSources,
 		).toBe(false);
@@ -214,7 +215,6 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 					platform: 'linux',
 					captureAudioEnabled: false,
 					nativeAudioAvailability: availableNativeAudio(),
-					manualAudioSourcesOptIn: true,
 				}),
 			).showManualAudioSources,
 		).toBe(false);
@@ -225,10 +225,74 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 					supportsStreamAudio: false,
 					captureAudioEnabled: true,
 					nativeAudioAvailability: availableNativeAudio(),
-					manualAudioSourcesOptIn: true,
 				}),
 			).showManualAudioSources,
 		).toBe(false);
+	});
+
+	it('names the real scope on a window share instead of always saying app audio', () => {
+		const common = {
+			shareContext: 'app',
+			displayShareEnvironment: 'desktop-custom',
+			platform: 'linux',
+			captureAudioEnabled: true,
+			nativeAudioAvailability: availableNativeAudio(),
+		} as const;
+
+		expect(selectStreamSettingsAudioMenuState(signals(common)).control.labelKey).toBe('captureAppAudio');
+		expect(selectStreamSettingsAudioMenuState(signals({...common, windowAudioScope: 'window'})).control.labelKey).toBe(
+			'captureAppAudio',
+		);
+		expect(selectStreamSettingsAudioMenuState(signals({...common, windowAudioScope: 'system'})).control.labelKey).toBe(
+			'captureSystemAudio',
+		);
+		expect(
+			selectStreamSettingsAudioMenuState(
+				signals({
+					...common,
+					windowAudioScope: 'system',
+					audioSourceMode: 'specific',
+					selectedAudioSourceCount: 2,
+				}),
+			).control.labelKey,
+		).toBe('captureAppAudio');
+		expect(
+			selectStreamSettingsAudioMenuState(signals({...common, windowAudioScope: 'system', audioSourceMode: 'none'}))
+				.control.labelKey,
+		).toBe('captureAppAudio');
+	});
+
+	it('keeps saying app audio on a window share whose stored display selection it does not follow', () => {
+		const common = {
+			shareContext: 'app',
+			displayShareEnvironment: 'desktop-custom',
+			platform: 'linux',
+			captureAudioEnabled: true,
+			nativeAudioAvailability: availableNativeAudio(),
+			windowAudioScope: 'window',
+		} as const;
+
+		for (const audioSourceMode of ['none', 'system', 'specific'] as const) {
+			expect(
+				selectStreamSettingsAudioMenuState(signals({...common, audioSourceMode, selectedAudioSourceCount: 2})).control
+					.labelKey,
+			).toBe('captureAppAudio');
+		}
+	});
+
+	it('never widens a Wayland window share label, because its window cannot be isolated', () => {
+		expect(
+			selectStreamSettingsAudioMenuState(
+				signals({
+					shareContext: 'app',
+					displayShareEnvironment: 'desktop-wayland',
+					platform: 'linux',
+					captureAudioEnabled: true,
+					nativeAudioAvailability: availableNativeAudio(),
+					windowAudioScope: 'window',
+				}),
+			).control.labelKey,
+		).toBe('captureSystemAudio');
 	});
 
 	it('keeps the audio device menu on a device share whether or not sources are routed', () => {
@@ -238,7 +302,6 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 				platform: 'linux',
 				captureAudioEnabled: true,
 				nativeAudioAvailability: availableNativeAudio(),
-				manualAudioSourcesOptIn: true,
 				audioSourceMode: 'specific',
 				selectedAudioSourceCount: 2,
 			}),
@@ -247,7 +310,7 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 		expect(routed.showDeviceAudioMenu).toBe(true);
 	});
 
-	it('pins the audio menu shape for every share type on every platform, opt-in off and on', () => {
+	it('pins the audio menu shape for every share type on every platform', () => {
 		const platforms = [
 			{platform: 'linux', nativeAudioAvailability: availableNativeAudio(), manualCapable: true},
 			{platform: 'win32', nativeAudioAvailability: availableNativeAudio(), manualCapable: false},
@@ -262,57 +325,35 @@ describe('StreamSettingsMenuContentStateMachine', () => {
 
 		for (const {platform, nativeAudioAvailability, manualCapable} of platforms) {
 			for (const shareContext of ['app', 'device', 'display'] as const) {
-				for (const manualAudioSourcesOptIn of [false, true]) {
-					const state = selectStreamSettingsAudioMenuState(
-						signals({
-							shareContext,
-							platform,
-							nativeAudioAvailability,
-							captureAudioEnabled: true,
-							manualAudioSourcesOptIn,
-						}),
-					);
+				const state = selectStreamSettingsAudioMenuState(
+					signals({
+						shareContext,
+						platform,
+						nativeAudioAvailability,
+						captureAudioEnabled: true,
+					}),
+				);
 
-					expect(state.control).toMatchObject({
-						value: 'toggle',
-						checked: true,
-						labelKey: expectedLabelKey[shareContext],
-					});
-					expect(state.showManualAudioSources).toBe(manualCapable && manualAudioSourcesOptIn && shareContext !== 'app');
-					expect(state.showDeviceAudioMenu).toBe(shareContext === 'device');
-				}
+				expect(state.control).toMatchObject({
+					value: 'toggle',
+					checked: true,
+					labelKey: expectedLabelKey[shareContext],
+				});
+				expect(state.showManualAudioSources).toBe(manualCapable);
+				expect(state.showDeviceAudioMenu).toBe(shareContext === 'device');
 			}
 		}
 	});
 
-	it('offers manual sources on a window share only where the capture rule decides its audio', () => {
-		const common = {
-			shareContext: 'app',
-			platform: 'linux',
-			nativeAudioAvailability: availableNativeAudio(),
-			captureAudioEnabled: true,
-			manualAudioSourcesOptIn: true,
-		} as const;
-
-		expect(
-			selectStreamSettingsAudioMenuState(signals({...common, displayShareEnvironment: 'desktop-custom'}))
-				.showManualAudioSources,
-		).toBe(false);
-		expect(
-			selectStreamSettingsAudioMenuState(signals({...common, displayShareEnvironment: 'desktop-wayland'}))
-				.showManualAudioSources,
-		).toBe(true);
-	});
-
 	it('resolves the same audio group whether the menu is pre-start or attached to a live stream', () => {
 		for (const shareContext of ['app', 'device', 'display'] as const) {
-			for (const manualAudioSourcesOptIn of [false, true]) {
+			for (const windowAudioScope of ['window', 'system'] as const) {
 				const common = {
 					shareContext,
 					platform: 'linux',
 					nativeAudioAvailability: availableNativeAudio(),
 					captureAudioEnabled: true,
-					manualAudioSourcesOptIn,
+					windowAudioScope,
 				};
 				const prestart = selectStreamSettingsAudioMenuState(signals({...common, applyToLiveStream: false}));
 				const live = selectStreamSettingsAudioMenuState(signals({...common, applyToLiveStream: true}));

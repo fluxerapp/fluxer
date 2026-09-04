@@ -8,8 +8,11 @@ import {
 import {
 	canSelectManualAudioSources,
 	manualAudioSourcesGovernShare,
+	resolveWindowShareAudioScope,
 	type ScreenShareAudioSourceMode,
 	type StreamSettingsShareContext,
+	selectAppShareAudioRoute,
+	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
 import {getInitialSnapshot, setup, transition} from 'xstate';
@@ -20,7 +23,11 @@ export type StreamSettingsAudioControlStateValue =
 	| 'prestartNativePickerOwned'
 	| 'restartRequired'
 	| 'toggle';
-export type StreamSettingsAudioControlLabelKey = 'captureAppAudio' | 'captureDesktopAudio' | 'captureDeviceAudio';
+export type StreamSettingsAudioControlLabelKey =
+	| 'captureAppAudio'
+	| 'captureDesktopAudio'
+	| 'captureDeviceAudio'
+	| 'captureSystemAudio';
 type StreamSettingsNativeAudioUnsupportedScope = 'process' | 'system';
 
 export interface StreamSettingsNativeAudioSignals {
@@ -35,9 +42,9 @@ export interface StreamSettingsAudioControlSignals extends StreamSettingsNativeA
 	supportsStreamAudio: boolean;
 	captureAudioEnabled: boolean;
 	hasLiveScreenShareAudioPublication: boolean;
-	manualAudioSourcesOptIn?: boolean;
 	audioSourceMode?: ScreenShareAudioSourceMode;
 	selectedAudioSourceCount?: number;
+	windowAudioScope?: WindowShareAudioScope;
 }
 
 export interface StreamSettingsAudioControlViewState {
@@ -148,10 +155,15 @@ export function selectStreamSettingsAudioControlState(
 	return typeof snapshot.value === 'string' ? (snapshot.value as StreamSettingsAudioControlStateValue) : 'hidden';
 }
 
-function selectAudioControlLabelKey(shareContext: StreamSettingsShareContext): StreamSettingsAudioControlLabelKey {
-	if (shareContext === 'device') return 'captureDeviceAudio';
-	if (shareContext === 'app') return 'captureAppAudio';
-	return 'captureDesktopAudio';
+function selectAudioControlLabelKey(signals: StreamSettingsAudioControlSignals): StreamSettingsAudioControlLabelKey {
+	if (signals.shareContext === 'device') return 'captureDeviceAudio';
+	if (signals.shareContext !== 'app') return 'captureDesktopAudio';
+	const route = selectAppShareAudioRoute({
+		audioSourceMode: signals.audioSourceMode,
+		selectedSourceCount: signals.selectedAudioSourceCount,
+		windowAudioScope: resolveWindowShareAudioScope(signals),
+	});
+	return route === 'system' ? 'captureSystemAudio' : 'captureAppAudio';
 }
 
 export function selectStreamSettingsAudioMenuState(
@@ -162,7 +174,7 @@ export function selectStreamSettingsAudioMenuState(
 		control: {
 			value,
 			checked: signals.captureAudioEnabled,
-			labelKey: selectAudioControlLabelKey(signals.shareContext),
+			labelKey: selectAudioControlLabelKey(signals),
 		},
 		showManualAudioSources:
 			signals.supportsStreamAudio &&
@@ -170,11 +182,7 @@ export function selectStreamSettingsAudioMenuState(
 			manualAudioSourcesGovernShare(signals) &&
 			canSelectManualAudioSources({
 				platform: signals.platform,
-				shareContext: signals.shareContext,
 				nativeAudioAvailability: signals.nativeAudioAvailability,
-				manualOptIn: signals.manualAudioSourcesOptIn,
-				audioSourceMode: signals.audioSourceMode,
-				selectedSourceCount: signals.selectedAudioSourceCount,
 			}),
 		showDeviceAudioMenu: signals.shareContext === 'device' && signals.captureAudioEnabled,
 	};

@@ -76,7 +76,6 @@ type VoiceSettingsPatch = Partial<{
 	linuxAudioCaptureIgnoreDevices: boolean;
 	linuxAudioCaptureGranularSelect: boolean;
 	linuxAudioCaptureDeviceSelect: boolean;
-	screenShareManualAudioSourcesOptIn: boolean;
 	screenShareAudioSourceMode: 'none' | 'system' | 'specific';
 	screenShareAudioIncludeSources: Array<Record<string, string>>;
 	screenShareAudioExcludeSources: Array<Record<string, string>>;

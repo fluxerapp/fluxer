@@ -67,14 +67,17 @@ import MediaEngine, {useVoiceEngineV2Model} from '@app/features/voice/engine/Med
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {selectVoiceEngineV2AppConnection} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import VoiceSettings, {
 	type LastScreenShareSource,
 	type LastScreenShareSourceKind,
 	type ScreenshareResolution,
 	type StreamingMode,
 } from '@app/features/voice/state/VoiceSettings';
+import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {getNativeAudioAvailabilityCached} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {isScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
+import {formatScreenShareAudioSummary} from '@app/features/voice/utils/ScreenShareAudioSummary';
 import {
 	getDisplayShareEnvironment,
 	shouldShowDesktopDownloadCta,
@@ -92,6 +95,7 @@ import {
 	switchConfiguredDeviceScreenShare,
 	switchConfiguredDisplayScreenShare,
 } from '@app/features/voice/utils/ScreenShareStartFlow';
+import {manualAudioSourcesGovernShare} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {
 	formatFallbackCameraLabel,
 	formatVoiceAudioDeviceLabel,
@@ -1039,6 +1043,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 				cancelled = true;
 			};
 		}, []);
+		useEffect(() => () => ActiveScreenShareSource.clearPendingWindowAudioScope(), []);
 		const platform = getElectronAPI()?.platform;
 		const displayPermission = useScreenSharePickerDisplayPermission({
 			activeTab,
@@ -1453,6 +1458,10 @@ const ScreenSharePickerModalLoadedContent = observer(
 				: activeTab === 'apps'
 					? VoiceSettings.getShareAppAudio()
 					: VoiceSettings.getShareDesktopAudio();
+		const audioSourceMode = VoiceSettings.getScreenShareAudioSourceMode();
+		const audioIncludeSources = VoiceSettings.getScreenShareAudioIncludeSources();
+		const routableAudioSourceCount = filterRoutableLinuxAudioSources(audioIncludeSources).length;
+		const windowAudioScope = ActiveScreenShareSource.getPendingWindowAudioScope();
 		const audioMenuState = selectStreamSettingsAudioMenuState({
 			applyToLiveStream: false,
 			shareContext,
@@ -1465,18 +1474,28 @@ const ScreenSharePickerModalLoadedContent = observer(
 			hasLiveScreenShareAudioPublication: false,
 			nativeAudioAvailability,
 			platform,
+			audioSourceMode,
+			selectedAudioSourceCount: routableAudioSourceCount,
+			windowAudioScope,
 		});
 		const captureAudioEnabled = audioMenuState.control.value === 'toggle' && audioMenuState.control.checked;
 		const configuredAudioDeviceId = VoiceSettings.getEffectiveScreenShareAudioDeviceId();
 		const selectedAudioDevice = inputDevices.find((device) => device.deviceId === configuredAudioDeviceId);
-		const audioSummary =
-			activeTab !== 'devices'
-				? null
-				: captureAudioEnabled
-					? selectedAudioDevice
-						? formatVoiceAudioDeviceLabel(i18n, selectedAudioDevice, i18n._(UNNAMED_INPUT_DESCRIPTOR))
-						: i18n._(SYSTEM_DEFAULT_DESCRIPTOR)
-					: i18n._(DEVICE_AUDIO_MUTED_DESCRIPTOR);
+		const microphoneLabel = selectedAudioDevice
+			? formatVoiceAudioDeviceLabel(i18n, selectedAudioDevice, i18n._(UNNAMED_INPUT_DESCRIPTOR))
+			: i18n._(SYSTEM_DEFAULT_DESCRIPTOR);
+		const audioSummary = captureAudioEnabled
+			? formatScreenShareAudioSummary(i18n, {
+					sourceMode: manualAudioSourcesGovernShare({platform, displayShareEnvironment}) ? audioSourceMode : 'system',
+					includeSources: audioIncludeSources,
+					shareContext,
+					microphoneLabel,
+					displayShareEnvironment,
+					windowAudioScope,
+				})
+			: activeTab === 'devices'
+				? i18n._(DEVICE_AUDIO_MUTED_DESCRIPTOR)
+				: null;
 		const streamSummaryDetails = [
 			activeTab === 'devices' ? deviceSelectionError : null,
 			streamSummaryDescription,

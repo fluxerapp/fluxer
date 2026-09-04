@@ -24,6 +24,12 @@ AppStorage.setItem(
 		preferredScreenShareCodec: 'av1',
 		screenShareContentHintPrefV2: 'auto',
 		screenshareResolution: 'low_240p',
+		inputDeviceId: 'headset-1',
+		screenShareAudioSourceMode: 'specific',
+		screenShareAudioIncludeSources: [{'application.name': 'mpv'}],
+		screenShareAudioExcludeSources: [{'application.name': 'Fluxer'}],
+		screenShareManualAudioSourcesOptIn: true,
+		manualScreenShareAudioSourcesOptInMigratedV1: true,
 		__mps__: {version: 1},
 	}),
 );
@@ -68,7 +74,7 @@ async function loadVoiceSettings() {
 }
 
 const VoiceSettings = await loadVoiceSettings();
-const {applyManualAudioSourcesOptInMigrationV1} = await import('./VoiceSettings');
+const {applyManualAudioSourcesOptOutResetMigrationV1} = await import('./VoiceSettings');
 
 describe('AV1/HEVC screen-share opt-in', () => {
 	it('rewrites a stored AV1 screen-share preference back to automatic on first launch', () => {
@@ -142,92 +148,100 @@ describe('AV1/HEVC screen-share opt-in', () => {
 	});
 });
 
-describe('manual screen-share audio source opt-in', () => {
-	it('defaults to off and is never stored by an unrelated patch', () => {
-		expect(VoiceSettings.screenShareManualAudioSourcesOptIn).toBe(false);
-		expect(VoiceSettings.getScreenShareManualAudioSourcesOptIn()).toBe(false);
-		VoiceSettings.updateSettings({outputDeviceId: 'default'});
-		expect(VoiceSettings.getScreenShareManualAudioSourcesOptIn()).toBe(false);
+describe('manual screen-share audio sources', () => {
+	it('hydrates a profile that still stores the removed opt-in keys without losing anything else', () => {
+		const stored = JSON.parse(storageWrites[0]);
+		expect(stored.screenShareManualAudioSourcesOptIn).toBe(true);
+		expect(stored.manualScreenShareAudioSourcesOptInMigratedV1).toBe(true);
+		expect(stored.manualAudioSourcesOptOutResetMigratedV1).toBe(true);
+		expect(VoiceSettings.inputDeviceId).toBe('headset-1');
+		expect(VoiceSettings.getScreenShareAudioIncludeSources()).toEqual([{'application.name': 'mpv'}]);
+		expect(VoiceSettings.getScreenShareAudioExcludeSources()).toEqual([{'application.name': 'Fluxer'}]);
 	});
 
-	it('leaves the manual source settings inert until the opt-in is on', () => {
+	it('keeps the reset migration out of the way of a profile that had the opt-in on', () => {
+		expect(VoiceSettings.manualAudioSourcesOptOutResetMigratedV1).toBe(true);
+		expect(VoiceSettings.getScreenShareAudioSourceMode()).toBe('specific');
+	});
+
+	it('returns a profile that switched the opt-in off to the defaults it was already getting', () => {
+		const stored: Record<string, unknown> = {
+			screenShareManualAudioSourcesOptIn: false,
+			screenShareAudioSourceMode: 'none',
+			screenShareAudioIncludeSources: [{'application.name': 'mpv'}],
+			screenShareAudioExcludeSources: [{'application.name': 'Fluxer'}],
+			inputDeviceId: 'headset-1',
+		};
+
+		expect(applyManualAudioSourcesOptOutResetMigrationV1(stored)).toBe(true);
+
+		expect(stored.screenShareAudioSourceMode).toBe('system');
+		expect(stored.screenShareAudioIncludeSources).toEqual([]);
+		expect(stored.screenShareAudioExcludeSources).toEqual([]);
+		expect(stored.inputDeviceId).toBe('headset-1');
+		expect(stored.manualAudioSourcesOptOutResetMigratedV1).toBe(true);
+	});
+
+	it('leaves every other profile untouched and never runs twice', () => {
+		const optedIn: Record<string, unknown> = {
+			screenShareManualAudioSourcesOptIn: true,
+			screenShareAudioSourceMode: 'specific',
+			screenShareAudioIncludeSources: [{'application.name': 'mpv'}],
+		};
+		expect(applyManualAudioSourcesOptOutResetMigrationV1(optedIn)).toBe(true);
+		expect(optedIn.screenShareAudioSourceMode).toBe('specific');
+		expect(optedIn.screenShareAudioIncludeSources).toEqual([{'application.name': 'mpv'}]);
+
+		const fresh: Record<string, unknown> = {};
+		expect(applyManualAudioSourcesOptOutResetMigrationV1(fresh)).toBe(true);
+		expect(fresh).toEqual({manualAudioSourcesOptOutResetMigratedV1: true});
+
+		const alreadyMigrated: Record<string, unknown> = {
+			manualAudioSourcesOptOutResetMigratedV1: true,
+			screenShareManualAudioSourcesOptIn: false,
+			screenShareAudioSourceMode: 'none',
+		};
+		expect(applyManualAudioSourcesOptOutResetMigrationV1(alreadyMigrated)).toBe(false);
+		expect(alreadyMigrated.screenShareAudioSourceMode).toBe('none');
+	});
+
+	it('hands every Linux user the stored selection with no opt-in left to satisfy', () => {
 		VoiceSettings.updateSettings({
 			screenShareAudioSourceMode: 'specific',
 			screenShareAudioIncludeSources: [{'application.name': 'mpv'}],
 			screenShareAudioExcludeSources: [{'application.name': 'Fluxer'}],
 		});
 		expect(VoiceSettings.getScreenShareAudioSourceMode()).toBe('specific');
-		expect(VoiceSettings.getEffectiveScreenShareAudioSourceMode()).toBe('system');
-		expect(VoiceSettings.getEffectiveScreenShareAudioIncludeSources()).toEqual([]);
-		expect(VoiceSettings.getEffectiveScreenShareAudioExcludeSources()).toEqual([]);
-
-		VoiceSettings.updateSettings({screenShareManualAudioSourcesOptIn: true});
 		expect(VoiceSettings.getEffectiveScreenShareAudioSourceMode()).toBe('specific');
 		expect(VoiceSettings.getEffectiveScreenShareAudioIncludeSources()).toEqual([{'application.name': 'mpv'}]);
 		expect(VoiceSettings.getEffectiveScreenShareAudioExcludeSources()).toEqual([{'application.name': 'Fluxer'}]);
 
+		VoiceSettings.updateSettings({screenShareAudioSourceMode: 'none'});
+		expect(VoiceSettings.getEffectiveScreenShareAudioSourceMode()).toBe('none');
+
 		VoiceSettings.updateSettings({
-			screenShareManualAudioSourcesOptIn: false,
-			screenShareAudioSourceMode: 'none',
+			screenShareAudioSourceMode: 'system',
+			screenShareAudioIncludeSources: [],
+			screenShareAudioExcludeSources: [],
 		});
 		expect(VoiceSettings.getEffectiveScreenShareAudioSourceMode()).toBe('system');
-		expect(VoiceSettings.getScreenShareAudioSourceMode()).toBe('none');
+		expect(VoiceSettings.getEffectiveScreenShareAudioIncludeSources()).toEqual([]);
+		expect(VoiceSettings.getEffectiveScreenShareAudioExcludeSources()).toEqual([]);
 	});
 
-	it('stores and persists the opt-in in both directions', async () => {
-		VoiceSettings.updateSettings({screenShareManualAudioSourcesOptIn: true});
-		expect(VoiceSettings.getScreenShareManualAudioSourcesOptIn()).toBe(true);
-		await vi.waitFor(() =>
-			expect(JSON.parse(storageWrites[storageWrites.length - 1]).screenShareManualAudioSourcesOptIn).toBe(true),
-		);
-		VoiceSettings.updateSettings({screenShareManualAudioSourcesOptIn: false});
-		expect(VoiceSettings.getScreenShareManualAudioSourcesOptIn()).toBe(false);
-		await vi.waitFor(() =>
-			expect(JSON.parse(storageWrites[storageWrites.length - 1]).screenShareManualAudioSourcesOptIn).toBe(false),
-		);
-	});
-
-	it('opts a fresh profile out and records the migration', () => {
-		const migrated = JSON.parse(storageWrites[0]);
-		expect(migrated.manualScreenShareAudioSourcesOptInMigratedV1).toBe(true);
-		expect(migrated.screenShareManualAudioSourcesOptIn).toBeUndefined();
-	});
-
-	it('opts in only profiles that already configured audio sources', () => {
-		const cases: Array<[Record<string, unknown>, boolean]> = [
-			[{}, false],
-			[{screenShareAudioSourceMode: 'system'}, false],
-			[{screenShareAudioIncludeSources: [], screenShareAudioExcludeSources: []}, false],
-			[{linuxDeviceShareAppAudioOptIn: true}, true],
-			[{screenShareAudioSourceMode: 'specific'}, true],
-			[{screenShareAudioSourceMode: 'none'}, true],
-			[{screenShareAudioIncludeSources: [{'application.name': 'mpv'}]}, true],
-			[{screenShareAudioExcludeSources: [{'application.name': 'mpv'}]}, true],
-			[{linuxAudioCaptureIgnoreInputMedia: true, linuxAudioCaptureOnlySpeakers: true}, false],
-			[{linuxAudioCaptureIgnoreInputMedia: false}, true],
-			[{linuxAudioCaptureOnlySpeakers: false}, true],
-			[{linuxAudioCaptureIgnoreVirtual: true}, true],
-			[{linuxAudioCaptureDeviceSelect: true}, true],
-			[{linuxAudioCaptureWorkaround: true}, false],
-		];
-		for (const [stored, expected] of cases) {
-			const before = JSON.stringify(stored);
-			expect(applyManualAudioSourcesOptInMigrationV1(stored)).toBe(true);
-			expect(stored.manualScreenShareAudioSourcesOptInMigratedV1).toBe(true);
-			expect(stored.screenShareManualAudioSourcesOptIn === true).toBe(expected);
-			delete stored.manualScreenShareAudioSourcesOptInMigratedV1;
-			delete stored.screenShareManualAudioSourcesOptIn;
-			expect(JSON.stringify(stored)).toBe(before);
-		}
-	});
-
-	it('never runs twice over the same profile', () => {
-		const stored: Record<string, unknown> = {
-			manualScreenShareAudioSourcesOptInMigratedV1: true,
+	it('drops the removed opt-in keys from storage on the next write and keeps the selection', async () => {
+		VoiceSettings.updateSettings({
 			screenShareAudioSourceMode: 'specific',
-		};
-		expect(applyManualAudioSourcesOptInMigrationV1(stored)).toBe(false);
-		expect(stored.screenShareManualAudioSourcesOptIn).toBeUndefined();
+			screenShareAudioIncludeSources: [{'application.name': 'mpv'}],
+		});
+		await vi.waitFor(() => {
+			const latest = JSON.parse(storageWrites[storageWrites.length - 1]);
+			expect(latest.screenShareManualAudioSourcesOptIn).toBeUndefined();
+			expect(latest.manualScreenShareAudioSourcesOptInMigratedV1).toBeUndefined();
+			expect(latest.manualAudioSourcesOptOutResetMigratedV1).toBe(true);
+			expect(latest.screenShareAudioSourceMode).toBe('specific');
+			expect(latest.inputDeviceId).toBe('headset-1');
+		});
 	});
 });
 

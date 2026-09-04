@@ -8,11 +8,14 @@ const voiceSettings = {
 	audioSourceMode: 'system' as 'none' | 'system' | 'specific',
 	includeSources: [] as Array<Record<string, string>>,
 	excludeSources: [] as Array<Record<string, string>>,
-	manualAudioSourcesOptIn: false,
 	audioDeviceId: 'default',
 };
 
 const activeShareContext = {current: null as 'app' | 'device' | 'display' | null};
+const activeShareSourceId = {current: null as string | null};
+const activeShareOwnWindow = {current: false};
+const activeWindowAudioScope = {current: 'window' as 'window' | 'system'};
+const pendingWindowAudioScope = {current: null as 'window' | 'system' | null};
 const activeShareVideoDeviceId = {current: ''};
 
 const nativeAudioAvailability = {
@@ -27,8 +30,10 @@ const setScreenShareEnabled = vi.fn(async () => {});
 const replaceActiveDisplayScreenShare = vi.fn(async () => true);
 const startDeviceScreenShare = vi.fn(async () => {});
 const replaceActiveDeviceScreenShare = vi.fn(async () => true);
+const disarmNativeAudio = vi.fn();
 const ensureLinuxScreenShareAudioPublication = vi.fn(async (_rule: Record<string, unknown>) => true);
 const ensureDeviceScreenShareMicPublication = vi.fn(async () => true);
+const ensureWindowScreenShareAudioPublication = vi.fn(async (_sourceId: string) => true);
 const armNativeAudioForNextCapture = vi.fn(async () => true);
 const armNativeSystemAudioForNextCapture = vi.fn(async () => true);
 const armNativeAudioForLinuxRouting = vi.fn(async (_rule: Record<string, unknown>) => true);
@@ -53,6 +58,7 @@ vi.mock('@app/features/voice/engine/MediaEngineFacade', () => ({
 		replaceActiveDeviceScreenShare,
 		ensureLinuxScreenShareAudioPublication,
 		ensureDeviceScreenShareMicPublication,
+		ensureWindowScreenShareAudioPublication,
 		getActiveScreenShareVideoDeviceId: () => activeShareVideoDeviceId.current,
 	},
 }));
@@ -66,7 +72,7 @@ vi.mock('@app/features/voice/utils/NativeAudioCaptureBridge', () => ({
 	armNativeAudioForLinuxRouting,
 	armNativeAudioForNextCapture,
 	armNativeSystemAudioForNextCapture,
-	disarmNativeAudio: vi.fn(),
+	disarmNativeAudio,
 	disarmPendingNativeAudio: vi.fn(),
 	getLastNativeAudioArmFailure: () => null,
 	getNativeAudioAvailabilityCached: async () => nativeAudioAvailability.current,
@@ -80,8 +86,14 @@ vi.mock('@app/features/voice/state/ActiveScreenShareSource', () => ({
 	default: {
 		setPublishedSource: vi.fn(),
 		clear: vi.fn(),
-		getSourceId: () => null,
+		getSourceId: () => activeShareSourceId.current,
 		getShareContext: () => activeShareContext.current,
+		isOwnWindow: () => activeShareOwnWindow.current,
+		getWindowAudioScope: () => activeWindowAudioScope.current,
+		setWindowAudioScope: vi.fn((scope: 'window' | 'system') => {
+			activeWindowAudioScope.current = scope;
+		}),
+		getPendingWindowAudioScope: () => pendingWindowAudioScope.current ?? activeWindowAudioScope.current,
 	},
 }));
 
@@ -137,13 +149,9 @@ vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 		getScreenShareAudioSourceMode: () => voiceSettings.audioSourceMode,
 		getScreenShareAudioIncludeSources: () => voiceSettings.includeSources,
 		getScreenShareAudioExcludeSources: () => voiceSettings.excludeSources,
-		getScreenShareManualAudioSourcesOptIn: () => voiceSettings.manualAudioSourcesOptIn,
-		getEffectiveScreenShareAudioSourceMode: () =>
-			voiceSettings.manualAudioSourcesOptIn ? voiceSettings.audioSourceMode : 'system',
-		getEffectiveScreenShareAudioIncludeSources: () =>
-			voiceSettings.manualAudioSourcesOptIn ? voiceSettings.includeSources : [],
-		getEffectiveScreenShareAudioExcludeSources: () =>
-			voiceSettings.manualAudioSourcesOptIn ? voiceSettings.excludeSources : [],
+		getEffectiveScreenShareAudioSourceMode: () => voiceSettings.audioSourceMode,
+		getEffectiveScreenShareAudioIncludeSources: () => voiceSettings.includeSources,
+		getEffectiveScreenShareAudioExcludeSources: () => voiceSettings.excludeSources,
 		getLinuxAudioCaptureIgnoreInputMedia: () => true,
 		getLinuxAudioCaptureIgnoreVirtual: () => false,
 		getLinuxAudioCaptureIgnoreDevices: () => true,
@@ -153,8 +161,9 @@ vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 }));
 
 const {
-	reapplyActiveScreenShareAudioSources,
+	applyLiveScreenShareAudioSourceChange,
 	reconfigureActiveDeviceShareAudio,
+	reconfigureActiveLinuxAppShareAudio,
 	startConfiguredDeviceScreenShare,
 	startConfiguredDisplayScreenShare,
 	switchConfiguredDeviceScreenShare,
@@ -168,9 +177,12 @@ beforeEach(() => {
 	voiceSettings.audioSourceMode = 'system';
 	voiceSettings.includeSources = [];
 	voiceSettings.excludeSources = [];
-	voiceSettings.manualAudioSourcesOptIn = false;
 	voiceSettings.audioDeviceId = 'default';
 	activeShareContext.current = null;
+	activeShareSourceId.current = null;
+	activeShareOwnWindow.current = false;
+	activeWindowAudioScope.current = 'window';
+	pendingWindowAudioScope.current = null;
 	activeShareVideoDeviceId.current = '';
 	nativeAudioAvailability.current = {
 		available: true,
@@ -183,6 +195,7 @@ beforeEach(() => {
 	replaceActiveDeviceScreenShare.mockResolvedValue(true);
 	ensureLinuxScreenShareAudioPublication.mockResolvedValue(true);
 	ensureDeviceScreenShareMicPublication.mockResolvedValue(true);
+	ensureWindowScreenShareAudioPublication.mockResolvedValue(true);
 	enumerateDevices.mockResolvedValue([]);
 });
 
@@ -203,20 +216,8 @@ describe('sharing a video device', () => {
 		}
 	});
 
-	test('keeps the microphone and ignores a stored source selection while the opt-in is off', async () => {
+	test('opens no microphone and links the selected applications', async () => {
 		platform.current = 'linux';
-		voiceSettings.audioSourceMode = 'specific';
-		voiceSettings.includeSources = [{'application.name': 'mpv'}];
-
-		expect(await startConfiguredDeviceScreenShare('camera-1')).toBe(true);
-
-		expect(deviceShareAudioDeviceId(startDeviceScreenShare.mock.calls[0])).toBe('mic-1');
-		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
-	});
-
-	test('opens no microphone and links the selected applications once the opt-in is on', async () => {
-		platform.current = 'linux';
-		voiceSettings.manualAudioSourcesOptIn = true;
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 
@@ -226,9 +227,31 @@ describe('sharing a video device', () => {
 		expect(ensureLinuxScreenShareAudioPublication).toHaveBeenCalledTimes(1);
 	});
 
-	test('keeps the microphone while the opt-in is on but no application is selected', async () => {
+	test('keeps the microphone while no application is selected', async () => {
 		platform.current = 'linux';
-		voiceSettings.manualAudioSourcesOptIn = true;
+
+		expect(await startConfiguredDeviceScreenShare('camera-1')).toBe(true);
+
+		expect(deviceShareAudioDeviceId(startDeviceScreenShare.mock.calls[0])).toBe('mic-1');
+		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
+	});
+
+	test('keeps the microphone on a device share whose stored source mode says none', async () => {
+		platform.current = 'linux';
+		voiceSettings.audioSourceMode = 'none';
+
+		expect(await startConfiguredDeviceScreenShare('camera-1')).toBe(true);
+		expect(deviceShareAudioDeviceId(startDeviceScreenShare.mock.calls[0])).toBe('mic-1');
+
+		expect(await reconfigureActiveDeviceShareAudio()).toBe(true);
+		expect(ensureDeviceScreenShareMicPublication).toHaveBeenCalledWith('mic-1');
+		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
+	});
+
+	test('keeps the microphone when the picked applications cannot be routed', async () => {
+		platform.current = 'linux';
+		voiceSettings.audioSourceMode = 'specific';
+		voiceSettings.includeSources = [{'fluxer.display.name': 'mpv'}];
 
 		expect(await startConfiguredDeviceScreenShare('camera-1')).toBe(true);
 
@@ -237,7 +260,6 @@ describe('sharing a video device', () => {
 	});
 
 	test('never routes application audio into a device share off Linux', async () => {
-		voiceSettings.manualAudioSourcesOptIn = true;
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 
@@ -250,7 +272,6 @@ describe('sharing a video device', () => {
 	test('never routes application audio when the capture layer cannot express a selection', async () => {
 		platform.current = 'linux';
 		nativeAudioAvailability.current = {available: false, backend: 'linux-pipewire'};
-		voiceSettings.manualAudioSourcesOptIn = true;
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 
@@ -301,7 +322,6 @@ describe('sharing a video device', () => {
 
 	test('relinks the selected applications after switching the capture device', async () => {
 		platform.current = 'linux';
-		voiceSettings.manualAudioSourcesOptIn = true;
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 
@@ -313,7 +333,6 @@ describe('sharing a video device', () => {
 
 	test('does not relink application audio when the device switch fails', async () => {
 		platform.current = 'linux';
-		voiceSettings.manualAudioSourcesOptIn = true;
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 		replaceActiveDeviceScreenShare.mockResolvedValue(false);
@@ -325,7 +344,6 @@ describe('sharing a video device', () => {
 
 	test('swaps a live device share between the microphone and the selected applications', async () => {
 		platform.current = 'linux';
-		voiceSettings.manualAudioSourcesOptIn = true;
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 
@@ -360,10 +378,8 @@ describe('sharing a video device', () => {
 });
 
 describe('sharing a whole display', () => {
-	test('captures the desktop mix without Fluxer on Linux, whatever is stored while opted out', async () => {
+	test('captures the desktop mix without Fluxer on Linux when nothing is selected', async () => {
 		platform.current = 'linux';
-		voiceSettings.audioSourceMode = 'specific';
-		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 		voiceSettings.excludeSources = [{'application.name': 'Discord'}];
 
 		expect(await startConfiguredDisplayScreenShare('screen:1')).toBe(true);
@@ -371,26 +387,26 @@ describe('sharing a whole display', () => {
 		expect(armNativeAudioForLinuxRouting).toHaveBeenCalledTimes(1);
 		expect(armNativeAudioForLinuxRouting.mock.calls[0][0]).toMatchObject({
 			include: [],
-			exclude: [],
+			exclude: [{'application.name': 'Discord'}],
 			ignoreInputMedia: true,
 			onlySpeakers: true,
 			onlyDefaultSpeakers: true,
 		});
 	});
 
-	test('still publishes the desktop mix when a stored no-audio selection is opted out of', async () => {
+	test('publishes no audio at all when the stored selection asks for none', async () => {
 		platform.current = 'linux';
 		voiceSettings.audioSourceMode = 'none';
 
 		expect(await startConfiguredDisplayScreenShare('screen:1')).toBe(true);
 
-		expect(armNativeAudioForLinuxRouting).toHaveBeenCalledTimes(1);
-		expect(armNativeAudioForLinuxRouting.mock.calls[0][0]).toMatchObject({include: []});
+		expect(armNativeAudioForLinuxRouting).not.toHaveBeenCalled();
+		const call = setScreenShareEnabled.mock.calls[0] as unknown as [boolean, {audio: boolean}, unknown];
+		expect(call[1].audio).toBe(false);
 	});
 
-	test('honours the stored include and exclude lists once the opt-in is on', async () => {
+	test('honours the stored include list', async () => {
 		platform.current = 'linux';
-		voiceSettings.manualAudioSourcesOptIn = true;
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
 
@@ -447,6 +463,206 @@ describe('sharing another application window while app audio is enabled', () => 
 		expect(armNativeAudioForNextCapture).toHaveBeenCalledWith('window:42:0');
 		expect(setScreenShareEnabled).not.toHaveBeenCalled();
 	});
+
+	test('takes the shared window own audio by default on Linux, never the whole system mix', async () => {
+		platform.current = 'linux';
+		voiceSettings.excludeSources = [{'application.name': 'Discord'}];
+
+		expect(await startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'})).toBe(true);
+
+		expect(armNativeAudioForNextCapture).toHaveBeenCalledWith('window:42:0');
+		expect(armNativeAudioForLinuxRouting).not.toHaveBeenCalled();
+	});
+
+	test('widens a Linux window share to the system mix minus the stored exclusions on request', async () => {
+		platform.current = 'linux';
+		pendingWindowAudioScope.current = 'system';
+		voiceSettings.excludeSources = [{'application.name': 'Discord'}];
+
+		expect(await startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'})).toBe(true);
+
+		expect(armNativeAudioForNextCapture).not.toHaveBeenCalled();
+		expect(armNativeAudioForLinuxRouting).toHaveBeenCalledTimes(1);
+		expect(armNativeAudioForLinuxRouting.mock.calls[0][0]).toMatchObject({
+			include: [],
+			exclude: [{'application.name': 'Discord'}],
+			onlySpeakers: true,
+			onlyDefaultSpeakers: true,
+		});
+	});
+
+	test('ignores a stored display-share selection until the window scope is widened', async () => {
+		for (const audioSourceMode of ['none', 'specific'] as const) {
+			vi.clearAllMocks();
+			platform.current = 'linux';
+			voiceSettings.audioSourceMode = audioSourceMode;
+			voiceSettings.includeSources = [{'application.name': 'mpv'}];
+
+			expect(await startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'})).toBe(true);
+
+			expect(armNativeAudioForNextCapture).toHaveBeenCalledWith('window:42:0');
+			expect(armNativeAudioForLinuxRouting).not.toHaveBeenCalled();
+		}
+	});
+
+	test('routes the picked applications once the window share was widened to the system', async () => {
+		platform.current = 'linux';
+		pendingWindowAudioScope.current = 'system';
+		voiceSettings.audioSourceMode = 'specific';
+		voiceSettings.includeSources = [{'application.name': 'mpv'}];
+
+		expect(await startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'})).toBe(true);
+
+		expect(armNativeAudioForNextCapture).not.toHaveBeenCalled();
+		expect(armNativeAudioForLinuxRouting.mock.calls[0][0]).toMatchObject({
+			include: [{'application.name': 'mpv'}],
+		});
+	});
+
+	test('captures the shared window rather than the whole desktop when the picked apps cannot be routed', async () => {
+		platform.current = 'linux';
+		voiceSettings.audioSourceMode = 'specific';
+		voiceSettings.includeSources = [{'fluxer.display.name': 'mpv'}];
+
+		expect(await startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'})).toBe(true);
+
+		expect(armNativeAudioForNextCapture).toHaveBeenCalledWith('window:42:0');
+		expect(armNativeAudioForLinuxRouting).not.toHaveBeenCalled();
+	});
+
+	test('publishes no audio at all on a widened Linux window share asked for none', async () => {
+		platform.current = 'linux';
+		pendingWindowAudioScope.current = 'system';
+		voiceSettings.audioSourceMode = 'none';
+
+		expect(await startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'})).toBe(true);
+
+		expect(armNativeAudioForNextCapture).not.toHaveBeenCalled();
+		expect(armNativeAudioForLinuxRouting).not.toHaveBeenCalled();
+		const call = setScreenShareEnabled.mock.calls[0] as unknown as [boolean, {audio: boolean}, unknown];
+		expect(call[1].audio).toBe(false);
+	});
+
+	test('commits the scope it armed to the running share', async () => {
+		platform.current = 'linux';
+		pendingWindowAudioScope.current = 'system';
+
+		expect(await startConfiguredDisplayScreenShare('window:42:0', {preferredDisplaySurface: 'window'})).toBe(true);
+
+		expect(ActiveScreenShareSource.setWindowAudioScope).toHaveBeenCalledWith('system');
+	});
+
+	test('never carries a window scope over into a display share', async () => {
+		platform.current = 'linux';
+		pendingWindowAudioScope.current = 'system';
+
+		expect(await startConfiguredDisplayScreenShare('screen:1')).toBe(true);
+
+		expect(ActiveScreenShareSource.setWindowAudioScope).toHaveBeenCalledWith('window');
+	});
+});
+
+describe('changing the audio sources of a live window share', () => {
+	test('re-publishes the shared window own audio while the scope is the window', async () => {
+		platform.current = 'linux';
+		activeShareSourceId.current = 'window:42:0';
+
+		expect(await reconfigureActiveLinuxAppShareAudio()).toBe(true);
+
+		expect(ensureWindowScreenShareAudioPublication).toHaveBeenCalledWith('window:42:0');
+		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
+	});
+
+	test('relinks a widened window share through the manual rule instead', async () => {
+		platform.current = 'linux';
+		activeShareSourceId.current = 'window:42:0';
+		activeWindowAudioScope.current = 'system';
+		voiceSettings.excludeSources = [{'application.name': 'Discord'}];
+
+		expect(await reconfigureActiveLinuxAppShareAudio()).toBe(true);
+
+		expect(ensureWindowScreenShareAudioPublication).not.toHaveBeenCalled();
+		expect(ensureLinuxScreenShareAudioPublication.mock.calls[0][0]).toMatchObject({
+			include: [],
+			exclude: [{'application.name': 'Discord'}],
+		});
+	});
+
+	test('relinks the picked applications on a live window share that was widened', async () => {
+		platform.current = 'linux';
+		activeShareSourceId.current = 'window:42:0';
+		activeWindowAudioScope.current = 'system';
+		voiceSettings.audioSourceMode = 'specific';
+		voiceSettings.includeSources = [{'application.name': 'mpv'}];
+
+		expect(await reconfigureActiveLinuxAppShareAudio()).toBe(true);
+
+		expect(ensureWindowScreenShareAudioPublication).not.toHaveBeenCalled();
+		expect(ensureLinuxScreenShareAudioPublication.mock.calls[0][0]).toMatchObject({
+			include: [{'application.name': 'mpv'}],
+		});
+	});
+
+	test('leaves a window share alone off Linux, and drops its audio when no window source is published', async () => {
+		platform.current = 'darwin';
+		activeShareSourceId.current = 'window:42:0';
+		expect(await reconfigureActiveLinuxAppShareAudio()).toBe(false);
+		expect(disarmNativeAudio).not.toHaveBeenCalled();
+
+		platform.current = 'linux';
+		activeShareSourceId.current = null;
+		expect(await reconfigureActiveLinuxAppShareAudio()).toBe(false);
+		expect(disarmNativeAudio).toHaveBeenCalledTimes(1);
+
+		expect(ensureWindowScreenShareAudioPublication).not.toHaveBeenCalled();
+		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
+	});
+
+	test('drops the audio rather than keeping the system mix live when narrowing back to the window fails', async () => {
+		platform.current = 'linux';
+		activeShareSourceId.current = 'window:42:0';
+		activeWindowAudioScope.current = 'system';
+		ensureWindowScreenShareAudioPublication.mockResolvedValue(false);
+
+		expect(await applyLiveScreenShareAudioSourceChange('app', 'window')).toBe(false);
+
+		expect(ensureWindowScreenShareAudioPublication).toHaveBeenCalledWith('window:42:0');
+		expect(disarmNativeAudio).toHaveBeenCalledTimes(1);
+		expect(ActiveScreenShareSource.getWindowAudioScope()).toBe('system');
+	});
+
+	test('drops the audio rather than keeping the system mix live when the window publication throws', async () => {
+		platform.current = 'linux';
+		activeShareSourceId.current = 'window:42:0';
+		activeWindowAudioScope.current = 'system';
+		ensureWindowScreenShareAudioPublication.mockRejectedValue(new Error('window vanished'));
+
+		expect(await applyLiveScreenShareAudioSourceChange('app', 'window')).toBe(false);
+
+		expect(disarmNativeAudio).toHaveBeenCalledTimes(1);
+		expect(ActiveScreenShareSource.getWindowAudioScope()).toBe('system');
+	});
+
+	test('commits the narrowed scope only once the window audio is actually publishing', async () => {
+		platform.current = 'linux';
+		activeShareSourceId.current = 'window:42:0';
+		activeWindowAudioScope.current = 'system';
+
+		expect(await applyLiveScreenShareAudioSourceChange('app', 'window')).toBe(true);
+
+		expect(ActiveScreenShareSource.getWindowAudioScope()).toBe('window');
+	});
+
+	test('never routes audio into a Fluxer-owned window share', async () => {
+		platform.current = 'linux';
+		activeShareSourceId.current = 'window:99:0';
+		activeShareOwnWindow.current = true;
+
+		expect(await reconfigureActiveLinuxAppShareAudio()).toBe(false);
+
+		expect(ensureWindowScreenShareAudioPublication).not.toHaveBeenCalled();
+		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
+	});
 });
 
 describe('switching the display source', () => {
@@ -468,97 +684,5 @@ describe('switching the display source', () => {
 		expect(switched).toBe(true);
 		expect(ActiveScreenShareSource.setPublishedSource).toHaveBeenCalledWith('app', 'window:7:0', {isOwnWindow: false});
 		expect(ActiveScreenShareSource.clear).not.toHaveBeenCalled();
-	});
-});
-
-describe('turning the advanced audio source opt-in off mid-share', () => {
-	test('relinks a live display share back to the desktop mix instead of leaving the selection running', async () => {
-		platform.current = 'linux';
-		activeShareContext.current = 'display';
-		voiceSettings.manualAudioSourcesOptIn = true;
-		voiceSettings.audioSourceMode = 'specific';
-		voiceSettings.includeSources = [{'application.name': 'mpv'}];
-
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(true);
-		expect(ensureLinuxScreenShareAudioPublication.mock.calls[0][0]).toMatchObject({
-			include: [{'application.name': 'mpv'}],
-		});
-
-		voiceSettings.manualAudioSourcesOptIn = false;
-
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(true);
-		expect(ensureLinuxScreenShareAudioPublication.mock.calls[1][0]).toMatchObject({
-			include: [],
-			exclude: [],
-			onlySpeakers: true,
-			onlyDefaultSpeakers: true,
-		});
-	});
-
-	test('gives a live device share its microphone back instead of leaving the applications routed', async () => {
-		platform.current = 'linux';
-		activeShareContext.current = 'device';
-		voiceSettings.manualAudioSourcesOptIn = true;
-		voiceSettings.audioSourceMode = 'specific';
-		voiceSettings.includeSources = [{'application.name': 'mpv'}];
-
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(true);
-		expect(ensureDeviceScreenShareMicPublication).not.toHaveBeenCalled();
-
-		voiceSettings.manualAudioSourcesOptIn = false;
-
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(true);
-		expect(ensureDeviceScreenShareMicPublication).toHaveBeenCalledWith('mic-1');
-	});
-
-	test('leaves a share alone when nothing was ever selected, on every share type', async () => {
-		platform.current = 'linux';
-		for (const shareContext of ['app', 'device', 'display'] as const) {
-			vi.clearAllMocks();
-			activeShareContext.current = shareContext;
-			voiceSettings.manualAudioSourcesOptIn = true;
-			voiceSettings.audioSourceMode = 'system';
-			voiceSettings.includeSources = [];
-			voiceSettings.excludeSources = [];
-
-			expect(await reapplyActiveScreenShareAudioSources()).toBe(false);
-			expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
-			expect(ensureDeviceScreenShareMicPublication).not.toHaveBeenCalled();
-		}
-	});
-
-	test('leaves a window share captured by process alone instead of swapping it for the desktop mix', async () => {
-		platform.current = 'linux';
-		activeShareContext.current = 'app';
-		voiceSettings.manualAudioSourcesOptIn = true;
-		voiceSettings.audioSourceMode = 'specific';
-		voiceSettings.includeSources = [{'application.name': 'mpv'}];
-
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(false);
-
-		voiceSettings.manualAudioSourcesOptIn = false;
-
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(false);
-		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
-	});
-
-	test('leaves a video-only share, an idle client and an incapable host alone', async () => {
-		platform.current = 'linux';
-		voiceSettings.audioSourceMode = 'specific';
-		voiceSettings.includeSources = [{'application.name': 'mpv'}];
-
-		activeShareContext.current = null;
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(false);
-
-		activeShareContext.current = 'display';
-		nativeAudioAvailability.current = {available: false, backend: 'linux-pipewire'};
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(false);
-
-		nativeAudioAvailability.current = {available: true, capabilities: {process: true, system: true}};
-		platform.current = 'win32';
-		expect(await reapplyActiveScreenShareAudioSources()).toBe(false);
-
-		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
-		expect(ensureDeviceScreenShareMicPublication).not.toHaveBeenCalled();
 	});
 });

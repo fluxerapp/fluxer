@@ -119,7 +119,6 @@ type VoiceSettingsUpdate = Partial<{
 	linuxAudioCaptureIgnoreDevices: boolean;
 	linuxAudioCaptureGranularSelect: boolean;
 	linuxAudioCaptureDeviceSelect: boolean;
-	screenShareManualAudioSourcesOptIn: boolean;
 	screenShareAudioSourceMode: 'none' | 'system' | 'specific';
 	screenShareAudioIncludeSources: Array<Record<string, string>>;
 	screenShareAudioExcludeSources: Array<Record<string, string>>;
@@ -236,35 +235,16 @@ function applyScreenShareAudioDefaultOnMigrationV1(parsed: Record<string, unknow
 	return true;
 }
 
-const MANUAL_AUDIO_SOURCE_TUNING_DEFAULTS: Record<string, boolean> = {
-	linuxAudioCaptureOnlySpeakers: true,
-	linuxAudioCaptureOnlyDefaultSpeakers: true,
-	linuxAudioCaptureIgnoreInputMedia: true,
-	linuxAudioCaptureIgnoreVirtual: false,
-	linuxAudioCaptureIgnoreDevices: true,
-	linuxAudioCaptureGranularSelect: false,
-	linuxAudioCaptureDeviceSelect: false,
-};
-
-export function applyManualAudioSourcesOptInMigrationV1(parsed: Record<string, unknown>): boolean {
-	if (parsed.manualScreenShareAudioSourcesOptInMigratedV1 === true) {
+export function applyManualAudioSourcesOptOutResetMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.manualAudioSourcesOptOutResetMigratedV1 === true) {
 		return false;
 	}
-	const storedMode = parsed.screenShareAudioSourceMode;
-	const includeSources = parsed.screenShareAudioIncludeSources;
-	const excludeSources = parsed.screenShareAudioExcludeSources;
-	const hadManualSelection =
-		parsed.linuxDeviceShareAppAudioOptIn === true ||
-		(typeof storedMode === 'string' && storedMode !== 'system') ||
-		(Array.isArray(includeSources) && includeSources.length > 0) ||
-		(Array.isArray(excludeSources) && excludeSources.length > 0) ||
-		Object.entries(MANUAL_AUDIO_SOURCE_TUNING_DEFAULTS).some(
-			([key, fallback]) => typeof parsed[key] === 'boolean' && parsed[key] !== fallback,
-		);
-	if (hadManualSelection) {
-		parsed.screenShareManualAudioSourcesOptIn = true;
+	if (parsed.screenShareManualAudioSourcesOptIn === false) {
+		parsed.screenShareAudioSourceMode = 'system';
+		parsed.screenShareAudioIncludeSources = [];
+		parsed.screenShareAudioExcludeSources = [];
 	}
-	parsed.manualScreenShareAudioSourcesOptInMigratedV1 = true;
+	parsed.manualAudioSourcesOptOutResetMigratedV1 = true;
 	return true;
 }
 
@@ -450,8 +430,7 @@ class VoiceSettings {
 	linuxAudioCaptureIgnoreDevices = true;
 	linuxAudioCaptureGranularSelect = false;
 	linuxAudioCaptureDeviceSelect = false;
-	screenShareManualAudioSourcesOptIn = false;
-	manualScreenShareAudioSourcesOptInMigratedV1 = false;
+	manualAudioSourcesOptOutResetMigratedV1 = false;
 	screenShareAudioSourceMode: 'none' | 'system' | 'specific' = 'system';
 	screenShareAudioIncludeSources: Array<Record<string, string>> = [];
 	screenShareAudioExcludeSources: Array<Record<string, string>> = [];
@@ -525,7 +504,6 @@ class VoiceSettings {
 				getLinuxAudioCaptureIgnoreDevices: false,
 				getLinuxAudioCaptureGranularSelect: false,
 				getLinuxAudioCaptureDeviceSelect: false,
-				getScreenShareManualAudioSourcesOptIn: false,
 				getEffectiveScreenShareAudioSourceMode: false,
 				getEffectiveScreenShareAudioIncludeSources: false,
 				getEffectiveScreenShareAudioExcludeSources: false,
@@ -556,7 +534,7 @@ class VoiceSettings {
 			changed = applyScreenShareAudioConsentMigrationV1(parsed) || changed;
 			changed = applyScreenShareAudioDefaultOnMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
-			changed = applyManualAudioSourcesOptInMigrationV1(parsed) || changed;
+			changed = applyManualAudioSourcesOptOutResetMigrationV1(parsed) || changed;
 			changed = applyScreenShareContentHintDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
 			changed = applyNoiseSuppressionStandardDefaultMigrationV1(parsed) || changed;
@@ -569,6 +547,7 @@ class VoiceSettings {
 			this.outputVolumeRecalibratedV1 = parsed.outputVolumeRecalibratedV1 === true;
 			this.screenShareAv1OptOutMigratedV1 = parsed.screenShareAv1OptOutMigratedV1 === true;
 			this.screenShareHevcOptOutMigratedV1 = parsed.screenShareHevcOptOutMigratedV1 === true;
+			this.manualAudioSourcesOptOutResetMigratedV1 = parsed.manualAudioSourcesOptOutResetMigratedV1 === true;
 		} catch (error) {
 			logger.warn('Failed to migrate persisted voice settings:', error);
 		}
@@ -640,8 +619,7 @@ class VoiceSettings {
 			'linuxAudioCaptureIgnoreDevices',
 			'linuxAudioCaptureGranularSelect',
 			'linuxAudioCaptureDeviceSelect',
-			'screenShareManualAudioSourcesOptIn',
-			'manualScreenShareAudioSourcesOptInMigratedV1',
+			'manualAudioSourcesOptOutResetMigratedV1',
 			'screenShareAudioSourceMode',
 			'screenShareAudioIncludeSources',
 			'screenShareAudioExcludeSources',
@@ -1018,10 +996,6 @@ class VoiceSettings {
 		return this.linuxAudioCaptureDeviceSelect;
 	}
 
-	getScreenShareManualAudioSourcesOptIn(): boolean {
-		return this.screenShareManualAudioSourcesOptIn;
-	}
-
 	getScreenShareAudioSourceMode(): 'none' | 'system' | 'specific' {
 		return this.screenShareAudioSourceMode;
 	}
@@ -1035,15 +1009,15 @@ class VoiceSettings {
 	}
 
 	getEffectiveScreenShareAudioSourceMode(): 'none' | 'system' | 'specific' {
-		return this.screenShareManualAudioSourcesOptIn ? this.screenShareAudioSourceMode : 'system';
+		return this.getScreenShareAudioSourceMode();
 	}
 
 	getEffectiveScreenShareAudioIncludeSources(): Array<Record<string, string>> {
-		return this.screenShareManualAudioSourcesOptIn ? this.screenShareAudioIncludeSources : [];
+		return this.getScreenShareAudioIncludeSources();
 	}
 
 	getEffectiveScreenShareAudioExcludeSources(): Array<Record<string, string>> {
-		return this.screenShareManualAudioSourcesOptIn ? this.screenShareAudioExcludeSources : [];
+		return this.getScreenShareAudioExcludeSources();
 	}
 
 	getOpenH264Enabled(): boolean {
@@ -1146,8 +1120,6 @@ class VoiceSettings {
 			this.linuxAudioCaptureGranularSelect = validated.linuxAudioCaptureGranularSelect;
 		if (validated.linuxAudioCaptureDeviceSelect !== undefined)
 			this.linuxAudioCaptureDeviceSelect = validated.linuxAudioCaptureDeviceSelect;
-		if (validated.screenShareManualAudioSourcesOptIn !== undefined)
-			this.screenShareManualAudioSourcesOptIn = validated.screenShareManualAudioSourcesOptIn;
 		if (validated.screenShareAudioSourceMode !== undefined)
 			this.screenShareAudioSourceMode = validated.screenShareAudioSourceMode;
 		if (validated.screenShareAudioIncludeSources !== undefined)
@@ -1278,8 +1250,6 @@ class VoiceSettings {
 			linuxAudioCaptureIgnoreDevices: data.linuxAudioCaptureIgnoreDevices ?? this.linuxAudioCaptureIgnoreDevices,
 			linuxAudioCaptureGranularSelect: data.linuxAudioCaptureGranularSelect ?? this.linuxAudioCaptureGranularSelect,
 			linuxAudioCaptureDeviceSelect: data.linuxAudioCaptureDeviceSelect ?? this.linuxAudioCaptureDeviceSelect,
-			screenShareManualAudioSourcesOptIn:
-				data.screenShareManualAudioSourcesOptIn ?? this.screenShareManualAudioSourcesOptIn,
 			screenShareAudioSourceMode: validateAudioSourceMode(
 				data.screenShareAudioSourceMode ?? this.screenShareAudioSourceMode,
 			),

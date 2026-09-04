@@ -13,6 +13,7 @@ import {
 	type ScreenShareContentSource,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {
+	filterRoutableLinuxAudioSources,
 	LINUX_AUDIO_TARGET_OBJECTS_PATTERN_KEY,
 	toNativeLinuxAudioPatterns,
 } from '@app/features/voice/utils/LinuxAudioSourceRules';
@@ -48,10 +49,12 @@ import {
 } from '@app/features/voice/utils/ScreenSharePortalUnavailableError';
 import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
 import {
-	canSelectManualAudioSources,
+	type AppShareAudioRoute,
+	resolveWindowShareAudioScope,
 	routesManualAudioSources,
 	type StreamSettingsShareContext,
-	supportsManualScreenShareAudioSourceSelection,
+	selectAppShareAudioRoute,
+	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import type {NativeAudioStartOptions, VirtmicNode} from '@app/types/electron.d';
@@ -151,14 +154,9 @@ async function getManualAudioSourceSelectionInput(shareContext: StreamSettingsSh
 		platform,
 		shareContext,
 		nativeAudioAvailability: platform === 'linux' ? await getNativeAudioAvailabilityCached() : null,
-		manualOptIn: VoiceSettings.getScreenShareManualAudioSourcesOptIn(),
 		audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
-		selectedSourceCount: VoiceSettings.getScreenShareAudioIncludeSources().length,
+		selectedSourceCount: countRoutableAudioSources(),
 	};
-}
-
-export async function canSelectManualAudioSourcesForShare(shareContext: StreamSettingsShareContext): Promise<boolean> {
-	return canSelectManualAudioSources(await getManualAudioSourceSelectionInput(shareContext));
 }
 
 export async function shouldRouteManualAudioSourcesForShare(
@@ -167,40 +165,77 @@ export async function shouldRouteManualAudioSourcesForShare(
 	return routesManualAudioSources(await getManualAudioSourceSelectionInput(shareContext));
 }
 
-function hasStoredManualAudioSourceSelection(): boolean {
-	return (
-		VoiceSettings.getScreenShareAudioSourceMode() !== 'system' ||
-		VoiceSettings.getScreenShareAudioIncludeSources().length > 0 ||
-		VoiceSettings.getScreenShareAudioExcludeSources().length > 0
+function appShareAudioRouteToSourceMode(route: AppShareAudioRoute | null): 'none' | 'system' | 'specific' | null {
+	if (route === 'none') return 'none';
+	if (route === 'apps') return 'specific';
+	if (route === 'system') return 'system';
+	return null;
+}
+
+function countRoutableAudioSources(): number {
+	return filterRoutableLinuxAudioSources(VoiceSettings.getScreenShareAudioIncludeSources()).length;
+}
+
+async function resolveAppShareAudioScope(requestedScope: WindowShareAudioScope): Promise<WindowShareAudioScope> {
+	return resolveWindowShareAudioScope({
+		shareContext: 'app',
+		displayShareEnvironment: await getDisplayShareEnvironment(),
+		windowAudioScope: requestedScope,
+	});
+}
+
+function selectAppShareAudioRouteForScope(scope: WindowShareAudioScope): AppShareAudioRoute {
+	return selectAppShareAudioRoute({
+		audioSourceMode: VoiceSettings.getEffectiveScreenShareAudioSourceMode(),
+		selectedSourceCount: countRoutableAudioSources(),
+		windowAudioScope: scope,
+	});
+}
+
+export async function reconfigureActiveLinuxAppShareAudio(
+	requestedWindowAudioScope?: WindowShareAudioScope,
+): Promise<boolean> {
+	const electronApi = getElectronAPI();
+	if (!electronApi || electronApi.platform !== 'linux') return false;
+	if (ActiveScreenShareSource.isOwnWindow()) {
+		logger.warn('Refusing to route audio into a Fluxer-owned window share');
+		await stopActiveLinuxScreenShareAudioLink();
+		return false;
+	}
+	const scope = await resolveAppShareAudioScope(
+		requestedWindowAudioScope ?? ActiveScreenShareSource.getWindowAudioScope(),
 	);
+	if (selectAppShareAudioRouteForScope(scope) !== 'window') {
+		return reconfigureActiveLinuxScreenShareAudioLink();
+	}
+	const sourceId = ActiveScreenShareSource.getSourceId();
+	if (sourceId == null) {
+		logger.warn('Cannot route the shared window own audio without a published window source');
+		disarmNativeAudio();
+		return false;
+	}
+	if (await MediaEngine.ensureWindowScreenShareAudioPublication(sourceId).catch(() => false)) {
+		return true;
+	}
+	logger.warn('Failed to narrow the live share back to the shared window own audio; dropping its audio instead', {
+		sourceId,
+	});
+	disarmNativeAudio();
+	return false;
 }
 
-function captureAudioEnabledForShare(shareContext: StreamSettingsShareContext): boolean {
-	if (shareContext === 'app') return VoiceSettings.getShareAppAudio();
-	if (shareContext === 'device') return VoiceSettings.getShareDeviceAudio();
-	return VoiceSettings.getShareDesktopAudio();
-}
-
-export async function reapplyActiveScreenShareAudioSources(): Promise<boolean> {
-	const shareContext = ActiveScreenShareSource.getShareContext();
-	if (shareContext === null) return false;
-	if (shareContext === 'app') return false;
-	if (!hasStoredManualAudioSourceSelection()) return false;
-	if (!captureAudioEnabledForShare(shareContext)) return false;
-	const selectionInput = await getManualAudioSourceSelectionInput(shareContext);
-	if (!supportsManualScreenShareAudioSourceSelection(selectionInput)) return false;
-	const applied = await (shareContext === 'device'
-		? reconfigureActiveDeviceShareAudio()
-		: reconfigureActiveLinuxScreenShareAudioLink()
-	).catch((error) => {
-		logger.warn('Failed to reapply the active screen share audio sources', {shareContext, error});
+export async function applyLiveScreenShareAudioSourceChange(
+	shareContext: StreamSettingsShareContext,
+	requestedWindowAudioScope?: WindowShareAudioScope,
+): Promise<boolean> {
+	if (shareContext === 'device') return reconfigureActiveDeviceShareAudio();
+	if (shareContext !== 'app') return reconfigureActiveLinuxScreenShareAudioLink();
+	const applied = await reconfigureActiveLinuxAppShareAudio(requestedWindowAudioScope).catch((error) => {
+		logger.warn('Failed to apply the window share audio scope', {error, requestedWindowAudioScope});
 		return false;
 	});
-	if (!applied) {
-		logger.warn('Active screen share audio sources could not be reapplied', {
-			shareContext,
-			sourceMode: VoiceSettings.getEffectiveScreenShareAudioSourceMode(),
-		});
+	if (applied && requestedWindowAudioScope != null) {
+		ActiveScreenShareSource.setWindowAudioScope(requestedWindowAudioScope);
 	}
 	return applied;
 }
@@ -426,11 +461,16 @@ async function runConfiguredDisplayScreenShare(
 			(electronApi.platform === 'darwin' || electronApi.platform === 'win32') &&
 			sourceId?.startsWith('screen:');
 		const requestedNativePickerAudioOnLinux = requestedAudio && electronApi.platform === 'linux' && useWaylandPortal;
-		const linuxDesktopAudioSourceMode =
-			electronApi.platform === 'linux' && (requestedDesktopAudio || requestedNativePickerAudioOnLinux)
+		const appShareAudioScope = requestedAppAudioOnLinux
+			? await resolveAppShareAudioScope(ActiveScreenShareSource.getPendingWindowAudioScope())
+			: null;
+		const appShareAudioRoute = appShareAudioScope == null ? null : selectAppShareAudioRouteForScope(appShareAudioScope);
+		const linuxAudioSourceMode = requestedAppAudioOnLinux
+			? appShareAudioRouteToSourceMode(appShareAudioRoute)
+			: electronApi.platform === 'linux' && (requestedDesktopAudio || requestedNativePickerAudioOnLinux)
 				? VoiceSettings.getEffectiveScreenShareAudioSourceMode()
 				: null;
-		if (requestedAppAudioOnLinux) {
+		if (requestedAppAudioOnLinux && appShareAudioRoute === 'window') {
 			try {
 				nativeAudioArmed = await armNativeAudioForNextCapture(sourceId ?? '');
 			} catch (error) {
@@ -467,10 +507,10 @@ async function runConfiguredDisplayScreenShare(
 				logger.warn('Desktop audio unavailable; aborting screen share because audio was requested', debugInfo);
 				failRequestedAudioCapture(debugInfo);
 			}
-		} else if (linuxDesktopAudioSourceMode === 'none') {
+		} else if (linuxAudioSourceMode === 'none') {
 			removeAudioFromCaptureOptions(captureOptions);
-		} else if ((requestedDesktopAudio || requestedNativePickerAudioOnLinux) && electronApi.platform === 'linux') {
-			const sourceMode = linuxDesktopAudioSourceMode ?? 'system';
+		} else if (linuxAudioSourceMode !== null && electronApi.platform === 'linux') {
+			const sourceMode = linuxAudioSourceMode;
 			const userIncludeSources = VoiceSettings.getEffectiveScreenShareAudioIncludeSources().map((entry) => ({
 				...entry,
 			}));
@@ -496,6 +536,7 @@ async function runConfiguredDisplayScreenShare(
 			if (!nativeAudioArmed) {
 				failRequestedAudioCapture(
 					buildAudioCaptureFailureDebug({
+						sourceId,
 						sourceMode,
 						reason: getLastNativeAudioArmFailure()?.reason ?? 'linux-system-audio-route-unavailable',
 					}),
@@ -579,6 +620,7 @@ async function runConfiguredDisplayScreenShare(
 				ActiveScreenShareSource.setPublishedSource(sourceId.startsWith('window:') ? 'app' : 'display', sourceId, {
 					isOwnWindow: isOwnWindowShare,
 				});
+				ActiveScreenShareSource.setWindowAudioScope(appShareAudioScope ?? 'window');
 			}
 			if (captured && useWaylandPortal) {
 				ActiveScreenShareSource.setPublishedSource('wayland', null);
@@ -594,8 +636,8 @@ async function runConfiguredDisplayScreenShare(
 				captured &&
 				requestedAudio &&
 				electronApi.platform === 'linux' &&
-				linuxDesktopAudioSourceMode !== null &&
-				linuxDesktopAudioSourceMode !== 'none'
+				linuxAudioSourceMode !== null &&
+				linuxAudioSourceMode !== 'none'
 			) {
 				const audioRelinked = await reconfigureActiveLinuxScreenShareAudioLink().catch((error) => {
 					logger.warn('Failed to link Linux screen-share audio after capture start', {mode, error});
@@ -603,7 +645,7 @@ async function runConfiguredDisplayScreenShare(
 				});
 				if (!audioRelinked) {
 					const debugInfo = buildAudioCaptureFailureDebug({
-						sourceMode: linuxDesktopAudioSourceMode,
+						sourceMode: linuxAudioSourceMode,
 						platform: electronApi.platform,
 						reason: getLastNativeAudioArmFailure()?.reason ?? 'linux-system-audio-route-unavailable',
 					});

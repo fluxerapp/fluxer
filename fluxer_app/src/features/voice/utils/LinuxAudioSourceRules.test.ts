@@ -3,6 +3,7 @@
 import type {VirtmicNode} from '@app/types/electron.d';
 import {describe, expect, it} from 'vitest';
 import {
+	filterRoutableLinuxAudioSources,
 	getLinuxAudioSourceDisplayName,
 	LINUX_AUDIO_DISPLAY_NAME_PATTERN_KEY,
 	LINUX_AUDIO_PRESERVE_VOLATILE_IDENTITY_PATTERN_KEY,
@@ -135,6 +136,16 @@ describe('LinuxAudioSourceRules', () => {
 				[LINUX_AUDIO_TARGET_OBJECTS_PATTERN_KEY]: '42',
 			}),
 		).toBe('Built-in speakers');
+	});
+	it('keeps only the selections the capture layer can still match on', () => {
+		const routable = {'application.name': 'Firefox'};
+		const displayOnly = {[LINUX_AUDIO_DISPLAY_NAME_PATTERN_KEY]: 'Firefox'};
+		const volatileOnly = {'application.process.id': '1234'};
+		expect(filterRoutableLinuxAudioSources([routable, displayOnly, volatileOnly])).toEqual([routable, volatileOnly]);
+		expect(filterRoutableLinuxAudioSources([{...routable, [LINUX_AUDIO_DISPLAY_NAME_PATTERN_KEY]: 'Firefox'}])).toEqual(
+			[{...routable, [LINUX_AUDIO_DISPLAY_NAME_PATTERN_KEY]: 'Firefox'}],
+		);
+		expect(filterRoutableLinuxAudioSources([])).toEqual([]);
 	});
 	it('deduplicates identical item values without hiding same-named different selectors', () => {
 		const duplicate = {name: 'Firefox', value: {'application.name': 'Firefox'}};

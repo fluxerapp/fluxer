@@ -20,8 +20,10 @@ import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/Med
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import VoiceSettings, {type ScreenshareResolution, type StreamingMode} from '@app/features/voice/state/VoiceSettings';
 import {resolveScreenShareContentHintForContext} from '@app/features/voice/utils/CodecCapabilityDetector';
+import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {
 	getNativeAudioAvailabilityCached,
 	getNativeAudioAvailabilitySnapshot,
@@ -42,7 +44,9 @@ import {
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {
+	applyLiveScreenShareAudioSourceChange,
 	reconfigureActiveDeviceShareAudio,
+	reconfigureActiveLinuxAppShareAudio,
 	reconfigureActiveLinuxScreenShareAudioLink,
 	stopActiveLinuxScreenShareAudioLink,
 } from '@app/features/voice/utils/ScreenShareStartFlow';
@@ -51,6 +55,7 @@ import {
 	isLinuxDesktopAudioShare,
 	type StreamSettingsShareContext,
 	shouldReconfigureAudioForActiveStreamSettings,
+	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {hasHigherVideoQuality as resolveHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {formatVoiceAudioDeviceLabel} from '@app/features/voice/utils/VoiceMessageDescriptors';
@@ -148,6 +153,11 @@ const STREAM_QUALITY_DESCRIPTOR = msg({
 const SHARE_STREAM_AUDIO_DESCRIPTOR = msg({
 	message: 'Share stream audio',
 	comment: 'Toggle label for sharing audio with an active stream.',
+});
+const CAPTURE_ENTIRE_SYSTEM_AUDIO_DESCRIPTOR = msg({
+	message: 'Capture entire system audio',
+	comment:
+		'Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.',
 });
 const logger = new Logger('StreamSettingsMenuContent');
 const SCREEN_SHARE_AUDIO_SOURCE = VoiceTrackSource.ScreenShareAudio as Track.Source;
@@ -291,6 +301,8 @@ export async function pushActiveStreamSettings(
 				audioLinkUpdated = await stopActiveLinuxScreenShareAudioLink();
 			} else if (shareContext === 'device') {
 				audioLinkUpdated = await reconfigureActiveDeviceShareAudio();
+			} else if (shareContext === 'app') {
+				audioLinkUpdated = await reconfigureActiveLinuxAppShareAudio();
 			} else {
 				audioLinkUpdated = await reconfigureActiveLinuxScreenShareAudioLink();
 			}
@@ -374,9 +386,13 @@ export const StreamSettingsMenuContent = observer(
 			};
 		}, []);
 		const platform = getElectronAPI()?.platform;
-		const manualAudioSourcesOptIn = VoiceSettings.getScreenShareManualAudioSourcesOptIn();
 		const audioSourceMode = VoiceSettings.getScreenShareAudioSourceMode();
-		const selectedAudioSourceCount = VoiceSettings.getScreenShareAudioIncludeSources().length;
+		const selectedAudioSourceCount = filterRoutableLinuxAudioSources(
+			VoiceSettings.getScreenShareAudioIncludeSources(),
+		).length;
+		const windowAudioScope = applyToLiveStream
+			? ActiveScreenShareSource.getWindowAudioScope()
+			: ActiveScreenShareSource.getPendingWindowAudioScope();
 		const audioMenuState = useMemo(
 			() =>
 				selectStreamSettingsAudioMenuState({
@@ -388,9 +404,9 @@ export const StreamSettingsMenuContent = observer(
 					hasLiveScreenShareAudioPublication,
 					nativeAudioAvailability,
 					platform,
-					manualAudioSourcesOptIn,
 					audioSourceMode,
 					selectedAudioSourceCount,
+					windowAudioScope,
 				}),
 			[
 				applyToLiveStream,
@@ -398,12 +414,12 @@ export const StreamSettingsMenuContent = observer(
 				captureAudioEnabled,
 				displayShareEnvironment,
 				hasLiveScreenShareAudioPublication,
-				manualAudioSourcesOptIn,
 				nativeAudioAvailability,
 				platform,
 				selectedAudioSourceCount,
 				shareContext,
 				supportsStreamAudio,
+				windowAudioScope,
 			],
 		);
 		const modeOptions: Array<Option<StreamingMode>> = useMemo(() => {
@@ -474,14 +490,28 @@ export const StreamSettingsMenuContent = observer(
 			},
 			[applyToLiveStream, displayShareEnvironment, hasHigherVideoQuality, shareContext],
 		);
-		const applyAudioSourceChange = useCallback(() => {
-			if (!applyToLiveStream) return;
-			const applied =
-				shareContext === 'device' ? reconfigureActiveDeviceShareAudio() : reconfigureActiveLinuxScreenShareAudioLink();
-			void applied.catch((error) => {
-				logger.warn('Failed to apply the screen share audio source change', error);
-			});
-		}, [applyToLiveStream, shareContext]);
+		const applyAudioSourceChange = useCallback(
+			(nextWindowAudioScope?: WindowShareAudioScope) => {
+				if (!applyToLiveStream) {
+					if (nextWindowAudioScope != null) {
+						ActiveScreenShareSource.setPendingWindowAudioScope(nextWindowAudioScope);
+					}
+					return;
+				}
+				void applyLiveScreenShareAudioSourceChange(shareContext, nextWindowAudioScope)
+					.then((applied) => {
+						if (applied) return;
+						logger.warn('The screen share audio source change did not take; the share is running without audio', {
+							shareContext,
+							nextWindowAudioScope,
+						});
+					})
+					.catch((error) => {
+						logger.warn('Failed to apply the screen share audio source change', error);
+					});
+			},
+			[applyToLiveStream, shareContext],
+		);
 		const handleModeSelect = useCallback(
 			(option: Option<StreamingMode>) => {
 				if (option.isPremium && !hasHigherVideoQuality) {
@@ -673,6 +703,8 @@ export const StreamSettingsMenuContent = observer(
 					<StreamSettingsAudioGroup
 						audioMenuState={audioMenuState}
 						shareContext={shareContext}
+						displayShareEnvironment={displayShareEnvironment}
+						windowAudioScope={windowAudioScope}
 						compact={true}
 						audioDeviceOptions={audioDeviceOptions}
 						currentAudioDeviceId={currentAudioDeviceId}
@@ -787,6 +819,8 @@ export const StreamSettingsMenuContent = observer(
 					<StreamSettingsAudioGroup
 						audioMenuState={audioMenuState}
 						shareContext={shareContext}
+						displayShareEnvironment={displayShareEnvironment}
+						windowAudioScope={windowAudioScope}
 						compact={false}
 						audioDeviceOptions={audioDeviceOptions}
 						currentAudioDeviceId={currentAudioDeviceId}
@@ -814,12 +848,14 @@ StreamSettingsMenuContent.displayName = 'StreamSettingsMenuContent';
 interface StreamSettingsAudioGroupProps {
 	audioMenuState: StreamSettingsAudioMenuViewState;
 	shareContext: StreamSettingsShareContext;
+	displayShareEnvironment: DisplayShareEnvironment;
+	windowAudioScope: WindowShareAudioScope;
 	compact: boolean;
 	audioDeviceOptions: Array<MediaDeviceInfo>;
 	currentAudioDeviceId: string;
 	selectedAudioDeviceLabel: string;
 	onCaptureAudioToggle: (checked: boolean) => void;
-	onAudioSourceChange: () => void;
+	onAudioSourceChange: (nextWindowAudioScope?: WindowShareAudioScope) => void;
 	onAudioDeviceSelect: (deviceId: string) => void;
 }
 
@@ -827,6 +863,8 @@ const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps)
 	const {
 		audioMenuState,
 		shareContext,
+		displayShareEnvironment,
+		windowAudioScope,
 		compact,
 		audioDeviceOptions,
 		currentAudioDeviceId,
@@ -840,6 +878,7 @@ const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps)
 		if (compact) return i18n._(SHARE_STREAM_AUDIO_DESCRIPTOR);
 		if (audioMenuState.control.labelKey === 'captureDeviceAudio') return <Trans>Capture device audio</Trans>;
 		if (audioMenuState.control.labelKey === 'captureAppAudio') return <Trans>Capture app audio</Trans>;
+		if (audioMenuState.control.labelKey === 'captureSystemAudio') return i18n._(CAPTURE_ENTIRE_SYSTEM_AUDIO_DESCRIPTOR);
 		return <Trans>Capture desktop audio</Trans>;
 	};
 	return (
@@ -858,6 +897,8 @@ const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps)
 					<AudioSourcePickerLinuxSubmenu
 						onSelectionChange={onAudioSourceChange}
 						shareContext={shareContext}
+						displayShareEnvironment={displayShareEnvironment}
+						windowAudioScope={windowAudioScope}
 						microphoneLabel={selectedAudioDeviceLabel}
 						data-flx="voice.stream-settings-menu-content.audio-group.audio-source-picker-submenu"
 					/>
