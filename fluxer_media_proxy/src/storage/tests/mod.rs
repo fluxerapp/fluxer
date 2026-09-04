@@ -31,6 +31,7 @@ fn test_config(root: &Path) -> Config {
         bind_host: "127.0.0.1".to_owned(),
         port: 0,
         secret_key: SecretString::new("secret".to_owned()),
+        public_endpoint: None,
         mode: DeploymentMode::Mp,
         read_only: false,
         shutdown_grace_ms: 0,

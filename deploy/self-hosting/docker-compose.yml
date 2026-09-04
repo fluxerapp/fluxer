@@ -434,6 +434,7 @@ services:
       FLUXER_MEDIA_PROXY_PORT: "8080"
       FLUXER_MEDIA_PROXY_MODE: upload
       FLUXER_MEDIA_PROXY_STORAGE_BACKEND: s3
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
     depends_on:
       seaweedfs-init: {condition: service_completed_successfully}
       nats: {condition: service_healthy}

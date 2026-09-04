@@ -121,6 +121,10 @@ impl UnfurlShard {
     ) -> anyhow::Result<UnfurlResult> {
         let parsed = Url::parse(url_str)?;
 
+        if self.media_proxy.is_own_url(parsed.as_str()) {
+            return Ok(self.resolve_own_media(&parsed, nsfw_mode).await);
+        }
+
         let (fetch_url, matched_resolver_idx) = self.find_transform(&parsed);
 
         let ctx = ResolveContext {
@@ -175,6 +179,25 @@ impl UnfurlShard {
             embeds: Vec::new(),
             cache_ttl_seconds: None,
         })
+    }
+
+    async fn resolve_own_media(&self, url: &Url, nsfw_mode: NsfwMode) -> UnfurlResult {
+        match resolvers::media::build_own_media_embed(&self.media_proxy, url, nsfw_mode).await {
+            Ok(Some(embed)) => self.finalize_result(ResolverResult {
+                embeds: vec![embed],
+            }),
+            Ok(None) => UnfurlResult {
+                embeds: Vec::new(),
+                cache_ttl_seconds: None,
+            },
+            Err(err) => {
+                tracing::warn!(error = %err, url = %url, "own media unfurl failed");
+                UnfurlResult {
+                    embeds: Vec::new(),
+                    cache_ttl_seconds: None,
+                }
+            }
+        }
     }
 
     fn find_transform(&self, url: &Url) -> (Url, Option<usize>) {

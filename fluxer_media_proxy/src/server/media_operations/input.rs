@@ -3,8 +3,14 @@
 use super::failure::MediaFailure;
 use crate::{
     byte_budget::BudgetedBytes,
-    constants,
-    server::{external::fetch_external, params::url_filename, state::AppState},
+    constants::{self, AssetExtension},
+    server::{
+        external::fetch_external,
+        params::url_filename,
+        self_origin::{self, SelfOrigin},
+        state::AppState,
+    },
+    storage::StorageError,
 };
 use base64::{Engine as _, engine::general_purpose};
 use bytes::Bytes;
@@ -112,17 +118,61 @@ pub(in crate::server) async fn load_media_input(
                 filename: filename.unwrap_or(key),
             })
         }
-        MediaInput::External { url, filename } => {
-            let (fetched_url, data) = fetch_external(app, &url).await.map_err(|err| {
-                let failure = MediaFailure::from(err);
-                warn!(reason = failure.code(), url = url.as_str(), ?err);
-                failure
-            })?;
-            Ok(LoadedMediaInput {
-                data: retained_input_bytes(data),
-                filename: filename.unwrap_or_else(|| url_filename(&fetched_url)),
-            })
+        MediaInput::External { url, filename } => match self_origin::resolve(app, &url) {
+            Some(SelfOrigin::Stored {
+                bucket,
+                key,
+                fallback_ext,
+            }) => {
+                let data = read_own_object(app, &bucket, &key, fallback_ext)
+                    .await
+                    .map_err(|err| {
+                        let failure = MediaFailure::MetadataS3Read;
+                        warn!(reason = failure.code(), bucket = bucket.as_str(), key = key.as_str(), %err);
+                        failure
+                    })?;
+                Ok(LoadedMediaInput {
+                    data,
+                    filename: filename.unwrap_or_else(|| url_filename(&url)),
+                })
+            }
+            Some(SelfOrigin::External { url: target }) => {
+                load_external_url(app, &target, filename).await
+            }
+            None => load_external_url(app, &url, filename).await,
+        },
+    }
+}
+
+async fn load_external_url(
+    app: &AppState,
+    url: &str,
+    filename: Option<String>,
+) -> Result<LoadedMediaInput, MediaFailure> {
+    let (fetched_url, data) = fetch_external(app, url).await.map_err(|err| {
+        let failure = MediaFailure::from(err);
+        warn!(reason = failure.code(), url, ?err);
+        failure
+    })?;
+    Ok(LoadedMediaInput {
+        data: retained_input_bytes(data),
+        filename: filename.unwrap_or_else(|| url_filename(&fetched_url)),
+    })
+}
+
+async fn read_own_object(
+    app: &AppState,
+    bucket: &str,
+    key: &str,
+    fallback_ext: Option<AssetExtension>,
+) -> Result<Bytes, StorageError> {
+    match app.store.read_object(bucket, key).await {
+        Err(StorageError::NotFound) => {
+            let fallback_ext = fallback_ext.ok_or(StorageError::NotFound)?;
+            let fallback_key = format!("{key}.{}", fallback_ext.name());
+            Ok(app.store.read_object(bucket, &fallback_key).await?.data)
         }
+        other => Ok(other?.data),
     }
 }
 

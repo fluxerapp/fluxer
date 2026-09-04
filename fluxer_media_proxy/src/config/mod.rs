@@ -85,6 +85,7 @@ pub struct Config {
     pub bind_host: String,
     pub port: u16,
     pub(crate) secret_key: SecretString,
+    pub public_endpoint: Option<String>,
     pub mode: DeploymentMode,
     pub read_only: bool,
     pub shutdown_grace_ms: u64,
@@ -134,6 +135,8 @@ impl Config {
                 8080,
             )?,
             secret_key,
+            public_endpoint: non_empty(env.get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT"))
+                .map(|endpoint| endpoint.trim_end_matches('/').to_owned()),
             mode,
             read_only: parse_bool(
                 "FLUXER_MEDIA_PROXY_READ_ONLY",
