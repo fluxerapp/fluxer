@@ -280,7 +280,6 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
     );
     let mut entries = collect_files(&assets_dir)?
         .into_iter()
-        .filter(|path| !is_source_map_asset(path))
         .map(|path| {
             path.strip_prefix(dist)
                 .with_context(|| format!("Failed to relativize {}", path.display()))
@@ -289,12 +288,6 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
         .collect::<Result<Vec<_>>>()?;
     entries.sort();
     Ok(entries)
-}
-
-fn is_source_map_asset(path: &Path) -> bool {
-    path.extension()
-        .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("map"))
 }
 
 async fn upload_assets_step() -> Result<()> {
@@ -824,7 +817,12 @@ mod tests {
 
         assert_eq!(
             asset_manifest_entries(&dist).unwrap(),
-            vec!["assets/chunks/a.js", "assets/z.js"]
+            vec![
+                "assets/chunks/a.js",
+                "assets/chunks/a.js.map",
+                "assets/z.js",
+                "assets/z.js.map"
+            ]
         );
     }
 
