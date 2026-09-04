@@ -209,6 +209,7 @@
 }
 
 .messageFailed {
+	--markup-link-color: var(--status-danger);
 	color: var(--status-danger);
 }
 
@@ -217,7 +218,6 @@
 	opacity: 1;
 }
 
-.messageFailed .link,
 .messageFailed a {
 	color: var(--status-danger) !important;
 }

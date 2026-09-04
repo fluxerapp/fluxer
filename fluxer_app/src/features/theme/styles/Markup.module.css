@@ -111,7 +111,7 @@
 }
 
 .markup .link {
-	color: var(--text-link) !important;
+	color: var(--markup-link-color, var(--text-link)) !important;
 	text-decoration: var(--link-decoration, none);
 	transition:
 		color var(--transition-fast),
@@ -124,12 +124,12 @@
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.markup
 	.link:hover {
-	color: var(--text-link) !important;
+	color: var(--markup-link-color, var(--text-link)) !important;
 	text-decoration: underline;
 }
 
 .markup .link[data-context-menu-open='true'] {
-	color: var(--text-link) !important;
+	color: var(--markup-link-color, var(--text-link)) !important;
 	text-decoration: underline;
 }
 
