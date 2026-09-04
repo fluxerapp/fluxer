@@ -33,7 +33,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ca-certificates pkg-config build-essential \
         libcurl4-openssl-dev libvips-dev libwebp-dev \
         liblcms2-dev libyuv-dev libde265-dev libdav1d-dev libaom-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /usr/lib/*/libheif.so.1* \
+    && ldconfig \
+    && [ "$(ldconfig -p | grep -c 'libheif\.so\.1 ')" -eq 1 ] \
+    && ldconfig -p | grep -q 'libheif\.so\.1 .* => /usr/local/lib/libheif\.so\.1$'
 
 COPY . .
 

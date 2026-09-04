@@ -217,7 +217,7 @@ ffmpeg_listing() {
 require_listed() {
     local listing="$1" kind="$2" names="$3" name
     for name in $names; do
-        printf '%s\n' "$listing" | grep -qE "^[[:space:]]*[A-Z.]+[[:space:]]+${name}([[:space:]]|\$)" \
+        grep -qE "^[[:space:]]*[A-Z.]+[[:space:]]+${name}([[:space:]]|\$)" <<<"$listing" \
             || die "FFmpeg ${FFMPEG_VERSION} under ${PREFIX} is missing the ${name} ${kind}"
     done
 }

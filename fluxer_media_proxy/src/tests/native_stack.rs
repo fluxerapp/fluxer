@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 
 use super::provisioning::{
-    dockerfile_stage, installs_package, linux_region, repository_file, shell_function,
+    ci_workflow, dockerfile_stage, installs_package, linux_region, repository_file, shell_function,
     shell_variable, workflow_step,
 };
 
@@ -217,10 +217,11 @@ fn every_command_the_linux_installer_runs_is_installed_before_it_runs() {
         "fetch_source downloads every pinned tarball with curl"
     );
     let native = dockerfile_stage(&repository_file("Dockerfile"), "native");
-    let step = workflow_step(
-        &repository_file("../.github/workflows/tests.yaml"),
-        "Install native dependencies",
-    );
+    let Some(workflow) = ci_workflow() else {
+        eprintln!("skipping: the CI workflow is outside this build context");
+        return;
+    };
+    let step = workflow_step(&workflow, "Install native dependencies");
     let devcontainer = repository_file("../.devcontainer/Dockerfile");
     for command in commands {
         let package = LINUX_INSTALLER_COMMAND_PACKAGES
