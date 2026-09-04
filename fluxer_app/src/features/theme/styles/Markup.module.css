@@ -537,7 +537,7 @@
 	margin: 0;
 	font-weight: 500;
 	unicode-bidi: plaintext;
-	color: var(--mention-color) !important;
+	color: var(--markup-mention-color, var(--mention-color)) !important;
 	background-color: var(--markup-mention-fill);
 	border: 0;
 	box-shadow: none;
@@ -585,7 +585,7 @@
 .markup .mention.interactive.mentionActive,
 .inlineFormat .mention.interactive.mentionActive {
 	background-color: var(--markup-interactive-hover-fill);
-	color: var(--text-link) !important;
+	color: var(--markup-mention-color, var(--text-link)) !important;
 	text-decoration: none;
 }
 
