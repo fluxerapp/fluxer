@@ -25,7 +25,7 @@ fn serve_frozen_file(
         return (None, debug_header);
     }
 
-    if let Some(snapshot) = &config.snapshot
+    if let Some(snapshot) = config.snapshot
         && let Some((bytes, content_type)) = pick(snapshot)
     {
         let mut response = bytes.to_vec().into_response();

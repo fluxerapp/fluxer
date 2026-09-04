@@ -31,7 +31,7 @@ pub struct FrozenSnapshot {
 pub struct TimeFreezeConfig {
     pub enabled: bool,
     pub release_channel: ReleaseChannel,
-    pub snapshot: Option<FrozenSnapshot>,
+    pub snapshot: Option<&'static FrozenSnapshot>,
     pub client_exempt: bool,
 }
 
@@ -87,7 +87,7 @@ pub fn load_time_freeze_config_for_index_source(
         };
     }
 
-    let snapshot: Option<FrozenSnapshot> = load_frozen_snapshot(release_channel);
+    let snapshot: Option<&'static FrozenSnapshot> = load_frozen_snapshot(release_channel);
 
     TimeFreezeConfig {
         enabled,
@@ -98,26 +98,26 @@ pub fn load_time_freeze_config_for_index_source(
 }
 
 #[cfg(feature = "time-freeze")]
-fn load_frozen_snapshot(release_channel: ReleaseChannel) -> Option<FrozenSnapshot> {
+fn load_frozen_snapshot(release_channel: ReleaseChannel) -> Option<&'static FrozenSnapshot> {
     match release_channel {
-        ReleaseChannel::Stable => Some(crate::frozen_snapshots::STABLE_SNAPSHOT.clone()),
+        ReleaseChannel::Stable => Some(&crate::frozen_snapshots::STABLE_SNAPSHOT),
         ReleaseChannel::Canary => None,
     }
 }
 
 #[cfg(not(feature = "time-freeze"))]
-fn load_frozen_snapshot(_release_channel: ReleaseChannel) -> Option<FrozenSnapshot> {
+fn load_frozen_snapshot(_release_channel: ReleaseChannel) -> Option<&'static FrozenSnapshot> {
     None
 }
 
-pub fn should_serve_frozen(config: &TimeFreezeConfig) -> Option<&FrozenSnapshot> {
+pub fn should_serve_frozen(config: &TimeFreezeConfig) -> Option<&'static FrozenSnapshot> {
     if !config.enabled {
         return None;
     }
     if config.client_exempt {
         return None;
     }
-    config.snapshot.as_ref()
+    config.snapshot
 }
 
 pub fn describe_decision(config: &TimeFreezeConfig) -> TimeFreezeDebug {
@@ -276,6 +276,7 @@ pub fn format_debug_header(debug: &TimeFreezeDebug) -> String {
 mod tests {
     use super::*;
     use axum::http::{HeaderMap, HeaderValue};
+    use std::sync::LazyLock;
 
     #[cfg(feature = "time-freeze")]
     #[test]
@@ -361,17 +362,19 @@ mod tests {
         assert!(debug.snapshot_sha.is_none());
     }
 
+    static TEST_SNAPSHOT: LazyLock<FrozenSnapshot> = LazyLock::new(|| FrozenSnapshot {
+        sha: "deadbeef".to_owned(),
+        index_html: vec![],
+        sw_js: vec![],
+        version_json: vec![],
+    });
+
     #[test]
     fn describe_decision_frozen() {
         let config = TimeFreezeConfig {
             enabled: true,
             release_channel: ReleaseChannel::Stable,
-            snapshot: Some(FrozenSnapshot {
-                sha: "deadbeef".to_owned(),
-                index_html: vec![],
-                sw_js: vec![],
-                version_json: vec![],
-            }),
+            snapshot: Some(&TEST_SNAPSHOT),
             client_exempt: false,
         };
         let debug = describe_decision(&config);
