@@ -59,6 +59,42 @@ fn video_thumbnail_accepts_bt470bg_pal_primaries() {
 }
 
 #[test]
+fn a_bt709_thumbnail_keeps_the_source_shadow_luminance() {
+    let Some(video) = ffmpeg_gen_media(
+        "shadow.mkv",
+        &[
+            "-f",
+            "lavfi",
+            "-i",
+            "color=c=0x181818:size=320x240:rate=10:duration=1",
+            "-vf",
+            "setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:v",
+            "mpeg4",
+            "-f",
+            "matroska",
+        ],
+    ) else {
+        eprintln!("skipping: ffmpeg CLI not available");
+        return;
+    };
+    let thumb = extract_video_thumbnail(&video, OutputFormat::PNG, &test_media_limits())
+        .expect("bt709 shadow video should thumbnail");
+    let (_, _, pixels) = decode_rgba(&thumb.bytes);
+    let luma: Vec<f64> = pixels
+        .chunks_exact(4)
+        .map(|p| 0.2126 * f64::from(p[0]) + 0.7152 * f64::from(p[1]) + 0.0722 * f64::from(p[2]))
+        .collect();
+    let mean = luma.iter().sum::<f64>() / luma.len() as f64;
+    assert!(
+        (mean - 24.0).abs() <= 8.0,
+        "a bt709 source must not be lifted by a transfer conversion: mean luminance {mean}"
+    );
+}
+
+#[test]
 fn video_thumbnail_accepts_every_widened_sdr_transfer() {
     let transfers = ["smpte240m", "linear", "iec61966-2-1", "bt470m", "bt470bg"];
     let Some(first) = color_tagged_video("bt709", transfers[0], "bt709") else {

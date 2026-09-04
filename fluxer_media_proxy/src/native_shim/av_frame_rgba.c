@@ -4,11 +4,9 @@
 
 enum ff_sdr_transfer {
     FF_SDR_TRANSFER_SRGB = 0,
-    FF_SDR_TRANSFER_BT709 = 1,
-    FF_SDR_TRANSFER_LINEAR = 2,
+    FF_SDR_TRANSFER_LINEAR = 1,
 };
 
-static uint8_t ff_bt709_to_srgb_lut[256];
 static uint8_t ff_linear_to_srgb_lut[256];
 static pthread_once_t ff_transfer_lut_once = PTHREAD_ONCE_INIT;
 
@@ -25,18 +23,12 @@ static uint8_t ff_encode_srgb_byte(double linear) {
 static void ff_initialize_transfer_luts(void) {
     for (int index = 0; index < 256; index++) {
         double encoded = (double)index / 255.0;
-        double linear = encoded < 0.081
-                      ? encoded / 4.5
-                      : pow((encoded + 0.099) / 1.099, 1.0 / 0.45);
-        ff_bt709_to_srgb_lut[index] = ff_encode_srgb_byte(linear);
         ff_linear_to_srgb_lut[index] = ff_encode_srgb_byte(encoded);
     }
 }
 
 static const uint8_t *ff_transfer_to_srgb_lut(enum ff_sdr_transfer transfer) {
     switch (transfer) {
-        case FF_SDR_TRANSFER_BT709:
-            return ff_bt709_to_srgb_lut;
         case FF_SDR_TRANSFER_LINEAR:
             return ff_linear_to_srgb_lut;
         default:
@@ -89,7 +81,7 @@ static int ff_frame_sdr_transfer(
         case AVCOL_TRC_BT709:
         case AVCOL_TRC_SMPTE170M:
         case AVCOL_TRC_SMPTE240M:
-            *out_transfer = FF_SDR_TRANSFER_BT709;
+            *out_transfer = FF_SDR_TRANSFER_SRGB;
             return 0;
         case AVCOL_TRC_LINEAR:
             *out_transfer = FF_SDR_TRANSFER_LINEAR;
