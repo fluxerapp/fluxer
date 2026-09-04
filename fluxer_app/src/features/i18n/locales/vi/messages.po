@@ -399,8 +399,8 @@ msgstr "{count, plural, one {# thành viên} other {# thành viên}}"
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {# cộng đồng chung} other {# cộng đồng chung}}"
 
-#: src/features/messaging/utils/MessageReactionUtils.ts:54
-#: src/features/messaging/utils/ReactionUtils.ts:55
+#: src/features/messaging/utils/MessageReactionUtils.ts:53
+#: src/features/messaging/utils/ReactionUtils.ts:54
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# người khác} other {# người khác}}"
 
@@ -802,8 +802,8 @@ msgstr "Tệp {label} quá lớn. Vui lòng chọn tệp nhỏ hơn {maxSizeLabe
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "Không thể sử dụng ảnh động cho {label}. Vui lòng sử dụng ảnh tĩnh."
 
-#. Summary label in the Linux audio source picker when N apps are included. {length} is the integer app count.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:35
+#. Screen-share audio summary listing how many apps are captured. {length} is the integer app count.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:28
 msgid "{length} apps"
 msgstr "{length} ứng dụng"
 
@@ -1686,7 +1686,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:104
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:109
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1761,7 +1761,7 @@ msgid "3 months"
 msgstr "3 tháng"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:108
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:113
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1820,7 +1820,7 @@ msgid "6-digit code"
 msgstr "Mã gồm 6 chữ số"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:112
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:117
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2700,13 +2700,8 @@ msgstr "Cần xác minh bổ sung"
 msgid "Address"
 msgstr "Địa chỉ"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:147
-msgid "Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop."
-msgstr "Thêm tùy chọn chọn nguồn âm thanh thủ công vào menu cài đặt luồng. Nếu không có tùy chọn này, một cửa sổ được chia sẻ sẽ tự động ghi lại ứng dụng đó và một màn hình được chia sẻ sẽ ghi lại màn hình máy tính của bạn."
-
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "Thêm H.264 cho các thiết bị hỗn hợp. Tốn nhiều tài nguyên xử lý hơn."
 
@@ -2990,8 +2985,8 @@ msgstr "Cho phép bất kỳ ai có thể xem hồ sơ đầy đủ của bạn 
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:90
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "Cho phép AV1 khi chia sẻ màn hình"
 
@@ -3044,8 +3039,8 @@ msgstr "Cho phép tất cả cộng đồng"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:190
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:94
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:187
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "Cho phép H.265 (HEVC) để chia sẻ màn hình"
 
@@ -3664,7 +3659,7 @@ msgid "App state"
 msgstr "Trạng thái ứng dụng"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:141
 msgid "App window"
 msgstr "Cửa sổ ứng dụng"
 
@@ -3704,11 +3699,6 @@ msgstr "Thêm ┬─┬ ノ( ゜-゜ノ) vào tin nhắn của bạn."
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:70
 msgid "Application access revoked"
 msgstr "Quyền truy cập ứng dụng đã bị thu hồi"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:131
-msgid "Application audio"
-msgstr "Âm thanh ứng dụng"
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
@@ -3762,7 +3752,7 @@ msgstr "Đã cập nhật ứng dụng thành công"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
 msgid "Applications"
 msgstr "Ứng dụng"
 
@@ -4083,12 +4073,12 @@ msgid "Audio boost"
 msgstr "Tăng âm lượng"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Audio device"
 msgstr "Thiết bị âm thanh"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:16
 msgid "Audio device alerts"
 msgstr "Thông báo về thiết bị âm thanh"
 
@@ -4103,7 +4093,7 @@ msgid "Audio level"
 msgstr "Mức âm thanh"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
 msgid "Audio muted"
 msgstr "Âm thanh bị tắt tiếng"
 
@@ -4178,7 +4168,7 @@ msgid "Audio send:"
 msgstr "Gửi âm thanh:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
 msgid "Audio settings"
 msgstr "Cài đặt âm thanh"
 
@@ -4188,13 +4178,8 @@ msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "Cài đặt âm thanh"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:135
-msgid "Audio sources"
-msgstr "Nguồn âm thanh"
-
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:54
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:43
 msgid "Audio sources: {summaryLabel}"
 msgstr "Nguồn âm thanh: {summaryLabel}"
 
@@ -4399,9 +4384,9 @@ msgstr "Gợi ý tự động hoàn tất: {label}, {selectedOptionPosition} tr�
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:91
@@ -4415,13 +4400,13 @@ msgid "Automatic"
 msgstr "Tự động"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
 msgid "Automatic ({codec})"
 msgstr "Tự động ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:48
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:213
 msgid "Automatic gain control"
 msgstr "Tự động điều chỉnh độ lợi"
@@ -4510,12 +4495,12 @@ msgid "Autoscrolling"
 msgstr "Tự động cuộn"
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:103
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
 msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (yêu cầu bật tùy chọn)"
 
@@ -4746,7 +4731,7 @@ msgid "Badge"
 msgstr "Huy hiệu"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Balanced"
 msgstr "Cân bằng"
 
@@ -4964,7 +4949,7 @@ msgid "Biometrics"
 msgstr "Sinh trắc học"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:196
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Bitrate"
 msgstr "Tốc độ bit"
 
@@ -5316,7 +5301,7 @@ msgid "Browser locale: {format}"
 msgstr "Ngôn ngữ trình duyệt: {format}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:66
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:64
 msgid "Browser mic gain for custom processing"
 msgstr "Điều chỉnh âm lượng micrô của trình duyệt để xử lý tùy chỉnh"
 
@@ -5541,12 +5526,12 @@ msgid "Camera"
 msgstr "Camera"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
 msgid "Camera access is needed for device previews"
 msgstr "Cần quyền truy cập máy ảnh để xem trước thiết bị"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "Không cấp quyền truy cập máy ảnh. Hãy cập nhật quyền máy ảnh rồi thử lại."
 
@@ -5804,26 +5789,26 @@ msgid "Captcha verification failed. Try again."
 msgstr "Xác minh mã bảo mật không thành công. Vui lòng thử lại."
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:48
 msgid "Capture"
 msgstr "Ghi âm"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:842
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
 msgid "Capture app audio"
 msgstr "Thu âm thanh ứng dụng"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:139
-msgid "Capture card"
-msgstr "Thẻ ghi"
-
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:843
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:882
 msgid "Capture desktop audio"
 msgstr "Thu âm thanh từ máy tính"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:841
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:879
 msgid "Capture device audio"
 msgstr "Thu âm thanh thiết bị"
+
+#. Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+msgid "Capture entire system audio"
+msgstr "Thu âm toàn bộ âm thanh hệ thống"
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:100
 msgid "Card alignment"
@@ -6087,7 +6072,7 @@ msgid "Change stream"
 msgstr "Thay đổi luồng"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Change stream source"
 msgstr "Đổi nguồn phát trực tiếp"
 
@@ -6726,7 +6711,7 @@ msgid "Choose payment method"
 msgstr "Chọn phương thức thanh toán"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
 msgid "Choose something to share"
 msgstr "Chọn nội dung để chia sẻ"
 
@@ -6834,7 +6819,7 @@ msgid "Choose your profile accent color"
 msgstr "Chọn màu nhấn cho hồ sơ của bạn"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:119
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7128,7 +7113,7 @@ msgid "Cleared the topic."
 msgstr "Đã xoá chủ đề."
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
 msgid "Clearer text"
 msgstr "Văn bản rõ ràng hơn"
 
@@ -7442,7 +7427,7 @@ msgid "Code:"
 msgstr "Mã:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:76
 msgid "Codec"
 msgstr "Bộ mã hóa/giải mã"
 
@@ -7962,7 +7947,7 @@ msgstr "Tập trung vào trình soạn thảo"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Configure"
 msgstr "Cấu hình"
 
@@ -8109,7 +8094,7 @@ msgstr "Kết nối máy ảnh và thử lại."
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "Kết nối camera hoặc thiết bị ghi hình ảo, rồi thử lại."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
 msgid "Connect a display, then try again."
 msgstr "Kết nối một màn hình, rồi thử lại."
 
@@ -8233,7 +8218,7 @@ msgid "Connection volume"
 msgstr "Âm lượng kết nối"
 
 #. Settings search entry label. Names an advanced voice setting in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:30
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:28
 msgid "Connection volume controls"
 msgstr "Điều khiển âm lượng kết nối"
 
@@ -8304,7 +8289,7 @@ msgid "Content filtering"
 msgstr "Lọc nội dung"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 msgid "Content hint"
 msgstr "Gợi ý nội dung"
 
@@ -9770,18 +9755,18 @@ msgid "Currently: {mutedText}"
 msgstr "Hiện tại: {mutedText}"
 
 #. Footer summary label for custom screen-share quality settings.
+#. Screen-share audio summary shown when one audio source is selected but it has no readable name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the voice tab. Keep it concise.
 #. Streaming preset label in the stream settings menu. Lets user pick resolution and frame rate manually.
-#. Summary label in the Linux audio source picker when a custom subset of apps is selected.
 #. Voice processing profile option label (mobile voice settings). User configures processing manually.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:31
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:24
 msgid "Custom"
 msgstr "Tùy chỉnh"
 
@@ -9968,7 +9953,7 @@ msgid "Custom video backgrounds"
 msgstr "Hình nền video tùy chỉnh"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:60
 msgid "Custom voice processing"
 msgstr "Xử lý giọng nói tùy chỉnh"
 
@@ -10329,7 +10314,7 @@ msgid "Default"
 msgstr "Mặc định"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
 msgid "Default camera"
 msgstr "Camera mặc định"
 
@@ -10934,7 +10919,7 @@ msgid "Detached banner"
 msgstr "Đã gỡ biểu ngữ"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "Chi tiết"
 
@@ -11009,7 +10994,7 @@ msgid "Device"
 msgstr "Thiết bị"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:14
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:12
 msgid "Device alerts"
 msgstr "Thông báo thiết bị"
 
@@ -11022,12 +11007,12 @@ msgstr "Chi tiết thiết bị"
 msgid "Device revoked"
 msgstr "Thiết bị đã bị thu hồi"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1033
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1074
 msgid "Device selection"
 msgstr "Chọn thiết bị"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:38
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:36
 msgid "Device volume"
 msgstr "Âm lượng thiết bị"
 
@@ -11046,12 +11031,12 @@ msgstr "Thiết bị:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
 msgid "Devices"
 msgstr "Thiết bị"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:96
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:101
 msgid "Dial in your own numbers"
 msgstr "Quay số đến số của bạn"
 
@@ -11154,7 +11139,7 @@ msgstr "Đang tải lên trực tiếp"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Disable"
 msgstr "Tắt"
 
@@ -11227,7 +11212,7 @@ msgid "Disable mobile push notifications"
 msgstr "Tắt thông báo đẩy trên di động"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Tắt chế độ hình trong hình cho chia sẻ màn hình"
 
@@ -11353,7 +11338,7 @@ msgid "Disabled value"
 msgstr "Giá trị bị tắt"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:316
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:320
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "Việc tắt tính năng xem trước sẽ ngăn chặn việc tải lên các bản xem trước trong tương lai. Các hình ảnh xem trước hiện có có thể vẫn hiển thị cho đến khi luồng kết thúc hoặc bản xem trước được làm mới."
 
@@ -11497,7 +11482,7 @@ msgstr "Bỏ qua nhắc đến"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:12
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:12
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:146
 msgid "Display"
 msgstr "Hiển thị"
 
@@ -12666,7 +12651,7 @@ msgid "Enable browser notifications"
 msgstr "Bật thông báo trên trình duyệt"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "Cho phép truy cập máy ảnh để xem trước máy ảnh và thiết bị ghi trước khi chọn một thiết bị để truyền phát."
 
@@ -12777,7 +12762,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "Bật hoặc tắt trình dịch tích hợp. Trình dịch đã bật sẽ xuất hiện trong menu ngữ cảnh tin nhắn khi bạn chọn văn bản."
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
 msgid "Enable previews"
 msgstr "Bật xem trước"
 
@@ -12894,18 +12879,18 @@ msgstr "Đã bật nội dung nhạy cảm."
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:180
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 msgid "Encoder path"
 msgstr "Đường dẫn bộ mã hóa"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Encoder preference for new screen shares."
 msgstr "Ưu tiên bộ mã hóa cho các lần chia sẻ màn hình mới."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:200
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "Bộ mã hóa, SVC, luồng dự phòng và cài đặt tốc độ bit."
 
@@ -13238,16 +13223,16 @@ msgid "Entertainment"
 msgstr "Giải trí"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
 msgid "Entire screen"
 msgstr "Toàn bộ màn hình"
 
-#. Summary label in the Linux audio source picker when capturing the whole system audio mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
+#. Screen-share audio summary shown when the whole system audio mix is captured.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:32
 msgid "Entire system"
 msgstr "Toàn bộ hệ thống"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:235
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:249
 msgid "Entire system audio"
 msgstr "Toàn bộ âm thanh hệ thống"
 
@@ -13424,7 +13409,7 @@ msgid "exclude a user"
 msgstr "loại trừ một người dùng"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:68
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
 msgid "Exclude from system"
 msgstr "Loại trừ khỏi hệ thống"
 
@@ -13851,7 +13836,7 @@ msgid "Failed to load invites. Try again."
 msgstr "Không tải được lời mời. Vui lòng thử lại."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "Failed to load shareable sources."
 msgstr "Không thể tải nguồn có thể chia sẻ."
 
@@ -14404,12 +14389,12 @@ msgid "Flexible text channel names"
 msgstr "Tên kênh văn bản linh hoạt"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:69
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "Chuyển động mượt mà ở 1440p 60 FPS"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "Chuyển động mượt mà ở 720p 30 FPS"
 
@@ -14496,7 +14481,7 @@ msgstr "Cài đặt thư mục"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Theo dõi chúng tôi trên {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:895
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:936
 msgid "Follow voice input"
 msgstr "Theo dõi giọng nói"
 
@@ -14768,7 +14753,7 @@ msgstr "Khung"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
 msgid "Frame rate"
 msgstr "Tốc độ khung hình"
 
@@ -15001,7 +14986,7 @@ msgid "Fully quit and restart {productName} so macOS applies this permission."
 msgstr "Tắt hoàn toàn và khởi động lại {productName} để macOS áp dụng quyền này."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:52
 msgid "Gain control"
 msgstr "Kiểm soát"
 
@@ -15014,8 +14999,8 @@ msgstr "Tay cầm chơi game"
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:65
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:70
 msgid "Gaming"
 msgstr "Trò chơi"
 
@@ -15515,7 +15500,7 @@ msgstr "Đã cấp {0}."
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Cấp tất cả quyền và bỏ qua các hạn chế kênh. Rất nhạy cảm."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1020
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1061
 msgid "Granular selection"
 msgstr "Chọn chi tiết"
 
@@ -15694,22 +15679,22 @@ msgid "Grouping"
 msgstr "Nhóm"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:115
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "H.264 backup stream"
 msgstr "Luồng dự phòng H.264"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
 msgid "H.264 simulcast backup"
 msgstr "Dự phòng H.264 simulcast"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (yêu cầu bật tùy chọn)"
 
@@ -15765,7 +15750,7 @@ msgid "Hardware acceleration can cause rendering glitches with transparent windo
 msgstr "Tăng tốc phần cứng có thể gây ra lỗi hiển thị với cửa sổ trong suốt. Hãy thử --disable-gpu nếu bạn thấy hiện tượng nhấp nháy hoặc nhòe."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:188
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Hardware encoder"
 msgstr "Bộ mã hóa phần cứng"
 
@@ -15900,12 +15885,12 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "Giúp dịch {PRODUCT_NAME} sang ngôn ngữ của bạn trên <0>{I18N_WEBLATE_DOMAIN}</0>."
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "Giúp trình duyệt chọn cách xử lý chuyển động, chi tiết hoặc văn bản."
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:107
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
 msgid "HEVC"
 msgstr "HEVC"
 
@@ -16060,7 +16045,7 @@ msgid "Hide muted channels by default?"
 msgstr "Ẩn các kênh đã tắt tiếng theo mặc định?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
 msgid "Hide my stream preview thumbnail"
 msgstr "Ẩn hình thu nhỏ xem trước luồng của tôi"
 
@@ -16079,7 +16064,7 @@ msgstr "Ẩn mật khẩu"
 msgid "Hide picture-in-picture popout?"
 msgstr "Ẩn cửa sổ hình trong hình?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:804
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:838
 msgid "Hide preview thumbnail"
 msgstr "Ẩn hình thu nhỏ xem trước"
 
@@ -16141,7 +16126,7 @@ msgid "High dynamic range display mode"
 msgstr "Chế độ hiển thị dải tương phản động rộng"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Higher quality can cost more CPU and latency."
 msgstr "Chất lượng cao hơn có thể tốn nhiều CPU và gây ra độ trễ hơn."
 
@@ -16524,11 +16509,11 @@ msgstr "Bỏ qua"
 msgid "Ignore friend request"
 msgstr "Bỏ qua lời mời kết bạn"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1010
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1051
 msgid "Ignore hardware devices"
 msgstr "Bỏ qua thiết bị phần cứng"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1027
 msgid "Ignore input media"
 msgstr "Bỏ qua phương tiện đầu vào"
 
@@ -16554,7 +16539,7 @@ msgstr "Bỏ qua báo cáo spam"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Bỏ qua lời mời kết bạn từ {displayName}?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1038
 msgid "Ignore virtual"
 msgstr "Bỏ qua thiết bị ảo"
 
@@ -16907,7 +16892,7 @@ msgid "Include all except selected"
 msgstr "Bao gồm tất cả trừ những mục đã chọn"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:64
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:53
 msgid "Include apps"
 msgstr "Bao gồm ứng dụng"
 
@@ -18095,12 +18080,12 @@ msgid "Launch at login"
 msgstr "Khởi chạy khi đăng nhập"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Áp dụng nhiều lớp cho AV1 và VP9 khi có sẵn."
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Learn about screen share previews"
 msgstr "Tìm hiểu thêm về bản xem trước khi chia sẻ màn hình"
 
@@ -19250,7 +19235,7 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "Bảo vệ tối đa cho không gian thân thiện với gia đình"
 
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:99
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "Có thể gây ra sự cố tương thích cho người xem. Chúng tôi đang nỗ lực cải thiện điều này."
 
@@ -19923,17 +19908,17 @@ msgstr "Kiểm tra mic"
 
 #. Fallback microphone label in the voice settings menu when the OS does not report a device name.
 #. Fallback microphone option label when the operating system does not report a device name.
+#. Screen-share audio summary on a video device share whose audio comes from an unnamed microphone.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Summary label in the Linux audio source picker on a video device share, where the default is the microphone rather than the system mix.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:21
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:44
 #: src/features/voice/components/VoiceSettingsMenus.tsx:78
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:40
 #: src/features/voice/utils/SettingsDeviceOptions.ts:15
 msgid "Microphone"
 msgstr "Micrô"
 
-#. Capture option in the Linux audio source picker on a video device share. {deviceLabel} is the selected audio input device name.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:49
+#. Screen-share audio summary on a video device share. {deviceLabel} is the name of the selected audio input device.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:44
 msgid "Microphone ({deviceLabel})"
 msgstr "Microphone ({deviceLabel})"
 
@@ -19943,7 +19928,7 @@ msgid "Microphone access was denied. Enable it in your system settings and try a
 msgstr "Quyền truy cập micrô đã bị từ chối. Bật quyền này trong cài đặt hệ thống của bạn và thử lại."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:56
 msgid "Microphone gain"
 msgstr "Độ lợi của micro"
 
@@ -20274,7 +20259,7 @@ msgstr "Phù hợp nhất"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -21004,7 +20989,7 @@ msgid "New messages"
 msgstr "Tin nhắn mới"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:20
 msgid "New microphone"
 msgstr "Micro mới"
 
@@ -21150,7 +21135,7 @@ msgstr "Không tìm thấy cài đặt nâng cao nào"
 msgid "No AFK channel"
 msgstr "Không có kênh AFK"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
 msgid "No application windows found"
 msgstr "Không tìm thấy cửa sổ ứng dụng nào"
 
@@ -21163,8 +21148,8 @@ msgstr "Chưa có ứng dụng nào"
 msgid "No assets yet"
 msgstr "Chưa có tài nguyên nào"
 
-#. Summary label in the Linux audio source picker when no audio sources are selected.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:27
+#. Screen-share audio summary shown when the share publishes no audio at all.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:20
 msgid "No audio"
 msgstr "Không có âm thanh"
 
@@ -21299,7 +21284,7 @@ msgstr "Không có mô tả."
 msgid "No desktop update is available."
 msgstr "Không có bản cập nhật máy tính để bàn nào."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:126
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "No displays found"
 msgstr "Không tìm thấy màn hình nào"
 
@@ -21739,7 +21724,7 @@ msgstr "Biểu tượng cảm xúc tĩnh ({emojiCount})"
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:242
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
 msgid "None"
 msgstr "Không"
 
@@ -21963,7 +21948,7 @@ msgstr "Vật thể"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 msgid "Off"
 msgstr "Tắt"
 
@@ -22090,7 +22075,7 @@ msgstr "Chỉ áp dụng trên màn hình rộng."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Chỉ chấp nhận thẻ tín dụng. Không thể dùng thẻ ghi nợ và thẻ trả trước để kiểm tra nội dung người lớn."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:975
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1016
 msgid "Only default speakers"
 msgstr "Chỉ loa mặc định"
 
@@ -22138,7 +22123,7 @@ msgstr "Chỉ chạy mã ở đây nếu bạn hiểu chính xác mã đó làm 
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Chỉ hiện bản xem trước tin nhắn cho các tin nhắn trực tiếp chưa đọc"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:965
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
 msgid "Only speakers"
 msgstr "Chỉ người nói"
 
@@ -22247,7 +22232,7 @@ msgstr "Mở @{displayName}"
 msgid "Open advanced media settings"
 msgstr "Mở cài đặt phương tiện nâng cao"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:123
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
 msgid "Open an application window, then try again."
 msgstr "Mở một cửa sổ ứng dụng, rồi thử lại."
 
@@ -22310,7 +22295,7 @@ msgid "Open browser"
 msgstr "Mở trình duyệt"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:207
 msgid "Open browser picker"
 msgstr "Mở trình chọn trình duyệt"
 
@@ -22578,7 +22563,7 @@ msgid "Open system DM"
 msgstr "Mở tin nhắn trực tiếp của hệ thống"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
 msgid "Open system picker"
 msgstr "Mở trình chọn của hệ thống"
 
@@ -22673,17 +22658,17 @@ msgid "Open your settings"
 msgstr "Mở cài đặt của bạn"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:123
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "OpenH264 software codec on Linux"
 msgstr "Mở codec phần mềm OpenH264 trên Linux"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:111
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
 msgid "OpenH264 video codec"
 msgstr "Mở bộ giải mã video OpenH264"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:42
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "Bộ mã hóa video OpenH264 được cung cấp bởi Cisco Systems, Inc."
 
@@ -23127,7 +23112,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Tạm dừng lời mời? Người dùng mới sẽ không thể tham gia qua liên kết mời cho đến khi bạn bật lại. Thành viên hiện tại sẽ không bị ảnh hưởng."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Pause my screen share preview in the background"
 msgstr "Tạm dừng xem trước chia sẻ màn hình của tôi trong nền"
 
@@ -23238,7 +23223,7 @@ msgid "Per-community profiles"
 msgstr "Hồ sơ riêng cho từng cộng đồng"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:34
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:32
 msgid "Per-device volume"
 msgstr "Âm lượng trên mỗi thiết bị"
 
@@ -23443,13 +23428,6 @@ msgstr "Chọn một hoặc nhiều từ điển. Các từ trong bất kỳ t�
 msgid "Pick the appearance this administrator account should start with."
 msgstr "Chọn giao diện mà tài khoản quản trị viên này nên bắt đầu."
 
-#. Settings search entry label. Names an advanced screen-share audio setting in the settings UI.
-#. Switch label for the advanced opt-in that reveals a manual per-application audio source picker in the stream settings menu.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:127
-msgid "Pick the apps to capture audio from"
-msgstr "Chọn ứng dụng để thu âm thanh"
-
 #. Required-action modal body for choosing a verification method.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:236
 msgid "Pick the method you can complete now."
@@ -23481,7 +23459,7 @@ msgid "Picture"
 msgstr "Ảnh"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "Picture in picture"
 msgstr "Ảnh trong ảnh"
 
@@ -23601,7 +23579,7 @@ msgid "Pins popout"
 msgstr "Ghim bật lên"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "PiP"
 msgstr "Ảnh trong ảnh"
 
@@ -23803,7 +23781,7 @@ msgid "Prefer @mention"
 msgstr "Ưu tiên nhắc đến"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "Prefer hardware"
 msgstr "Ưu tiên phần cứng"
 
@@ -23815,7 +23793,7 @@ msgid "Prefer no @mention"
 msgstr "Không ưu tiên nhắc đến"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Prefer software"
 msgstr "Ưu tiên phần mềm"
 
@@ -23835,7 +23813,7 @@ msgid "Preferences..."
 msgstr "Tùy chọn..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
 msgid "Preferred screen share codec"
 msgstr "Codec chia sẻ màn hình ưu tiên"
 
@@ -23982,17 +23960,17 @@ msgid "Preview hidden"
 msgstr "Bản xem trước bị ẩn"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:310
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:314
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "Hình ảnh xem trước được lưu trữ tạm thời bởi {productName} để hiển thị và không được mã hóa đầu cuối. Tắt tính năng xem trước nếu bạn không muốn các khung hình chia sẻ màn hình được tải lên để tạo hình thu nhỏ."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:304
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:308
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "Hình ảnh xem trước được lưu trữ tạm thời bởi {productName} để hiển thị và không được mã hóa đầu cuối. Những người trong nhóm trò chuyện này không cần phải đang xem luồng của bạn để thấy hình thu nhỏ."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:298
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:302
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "Hình ảnh xem trước được lưu trữ tạm thời bởi {productName} để hiển thị và không được mã hóa hoàn toàn. Mọi người vẫn cần quyền để kết nối, nhưng họ không cần phải chủ động xem luồng của bạn."
 
@@ -24009,7 +23987,7 @@ msgid "Preview sound"
 msgstr "Nghe thử âm thanh"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:172
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "Xem trước, mở rộng và hành vi của hình thu nhỏ luồng phát"
 
@@ -24339,7 +24317,7 @@ msgid "Prompt"
 msgstr "Lời nhắc"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:24
 msgid "Prompt for new audio devices"
 msgstr "Yêu cầu thiết bị âm thanh mới"
 
@@ -24582,7 +24560,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Tính năng nhấn để nói sẽ không bật mic của bạn khi bạn đang tắt tiếng. Hãy bật lại âm thanh để có thể nói."
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Quality"
 msgstr "Chất lượng"
 
@@ -24695,7 +24673,7 @@ msgid "Raw embed JSON"
 msgstr "JSON thô cho trình gỡ lỗi nhúng"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:82
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "Văn bản sắc nét ở độ phân giải gốc, 15 FPS"
 
@@ -24785,7 +24763,7 @@ msgid "Ready to upgrade?"
 msgstr "Sẵn sàng nâng cấp?"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Realtime"
 msgstr "Thời gian thực"
 
@@ -25024,7 +25002,7 @@ msgstr "Đã sao chép liên kết."
 msgid "Referral parameters"
 msgstr "Thông số giới thiệu"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:285
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:301
 msgid "Refresh audio sources"
 msgstr "Làm mới nguồn âm thanh"
 
@@ -26305,7 +26283,7 @@ msgstr "Thay đổi kích thước, phóng to và gắn cửa sổ phụ thuộc
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:120
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
 msgid "Resolution"
 msgstr "Độ phân giải"
 
@@ -27002,7 +26980,7 @@ msgstr "Cần quyền ghi màn hình"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:78
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:83
 msgid "Screen share"
 msgstr "Chia sẻ màn hình"
 
@@ -27017,22 +26995,22 @@ msgid "Screen share audio boost"
 msgstr "Tăng âm lượng chia sẻ màn hình"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
 msgid "Screen share audio couldn't start"
 msgstr "Âm thanh chia sẻ màn hình không thể bắt đầu"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:68
 msgid "Screen share codec"
 msgstr "Codec chia sẻ màn hình"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:176
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "Screen share encoder controls"
 msgstr "Điều khiển bộ mã hóa chia sẻ màn hình"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:102
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:104
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Chia sẻ màn hình đã kết thúc"
@@ -27048,27 +27026,27 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "Chia sẻ màn hình đang dùng mã hóa phần mềm ({codec}). Chất lượng có thể giảm và mức sử dụng CPU tăng. GPU của bạn có thể không hỗ trợ mã hóa phần cứng cho codec này."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Screen share preview"
 msgstr "Xem trước chia sẻ màn hình"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "Screen share preview behavior"
 msgstr "Hành vi xem trước khi chia sẻ màn hình"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "Screen share previews"
 msgstr "Xem trước tính năng chia sẻ màn hình"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Screen share previews are disabled."
 msgstr "Việc chia sẻ bản xem trước màn hình đã bị tắt."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
 msgid "Screen share previews are enabled."
 msgstr "Các bản xem trước khi chia sẻ màn hình đã được bật."
 
@@ -27114,7 +27092,7 @@ msgid "Screen sharing"
 msgstr "Chia sẻ màn hình"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:72
 msgid "Screen sharing codec"
 msgstr "Bộ mã hóa chia sẻ màn hình"
 
@@ -27149,7 +27127,7 @@ msgid "Screen sharing quality"
 msgstr "Chất lượng chia sẻ màn hình"
 
 #. Footer summary label for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
 msgid "Screenshare"
 msgstr "Chia sẻ màn hình"
 
@@ -27621,7 +27599,7 @@ msgstr "Xem trước"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
 msgid "Select"
 msgstr "Chọn"
 
@@ -28471,7 +28449,7 @@ msgid "Share gift"
 msgstr "Chia sẻ quà"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
 msgid "Share screen"
 msgstr "Chia sẻ màn hình"
 
@@ -28481,7 +28459,7 @@ msgid "Share screens and windows."
 msgstr "Chia sẻ màn hình và cửa sổ."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
 msgid "Share stream audio"
 msgstr "Chia sẻ âm thanh luồng"
 
@@ -28540,6 +28518,16 @@ msgstr "Chia sẻ hoạt động thoại của bạn với bạn bè"
 msgid "Shared theme"
 msgstr "Chủ đề được chia sẻ"
 
+#. Screen-share audio summary shown when a window share captures only the audio of the window it shares.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:36
+msgid "Shared window"
+msgstr "Cửa sổ đã chia sẻ"
+
+#. Capture option in the Linux audio source picker on a window share. Captures only the audio of the window being shared.
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:38
+msgid "Shared window audio"
+msgstr "Âm thanh cửa sổ được chia sẻ"
+
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:323
 msgid "Shares personal info, stalks users, or coordinates privacy abuse."
@@ -28551,7 +28539,7 @@ msgid "Sharing personal information"
 msgstr "Chia sẻ thông tin cá nhân"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
 msgid "Sharper text at 720p, 30 FPS"
 msgstr "Chữ sắc nét hơn ở 720p, 30 FPS"
 
@@ -28942,7 +28930,7 @@ msgstr "Hiện Neko"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice device preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVoiceControls.tsx:11
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:10
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:8
 msgid "Show new device alerts"
 msgstr "Hiển thị cảnh báo thiết bị mới"
 
@@ -28979,7 +28967,7 @@ msgid "Show password"
 msgstr "Hiện mật khẩu"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:44
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Hiển thị thanh trượt âm lượng người tham gia theo từng thiết bị trong menu thoại"
 
@@ -29294,7 +29282,7 @@ msgid "Single community mode"
 msgstr "Chế độ cộng đồng duy nhất"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 msgid "Single layer"
 msgstr "Một lớp"
 
@@ -29574,7 +29562,7 @@ msgid "Smooth scrolling"
 msgstr "Cuộn mượt"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
 msgid "Smoother video"
 msgstr "Video mượt hơn"
 
@@ -29603,12 +29591,12 @@ msgid "Social"
 msgstr "Mạng xã hội"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:184
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Software encoder"
 msgstr "Bộ mã hóa phần mềm"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 msgid "Software encoder quality"
 msgstr "Chất lượng bộ mã hóa phần mềm"
 
@@ -29851,8 +29839,8 @@ msgstr "Âm thanh"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:100
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:105
 msgid "Source"
 msgstr "Nguồn"
 
@@ -29934,7 +29922,7 @@ msgid "Spanish (Spain)"
 msgstr "Tiếng Tây Ban Nha (Tây Ban Nha)"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Spatial and temporal layers"
 msgstr "Các lớp không gian và thời gian"
 
@@ -30558,7 +30546,7 @@ msgstr "Ngăn loa của bạn lặp lại vào micrô."
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:235
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
 msgid "Stream"
 msgstr "Phát trực tiếp"
 
@@ -30586,18 +30574,18 @@ msgstr "Luồng không theo kịp"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:168
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "Xem trước luồng"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:149
 msgid "Stream quality"
 msgstr "Chất lượng luồng"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
 msgid "Stream settings"
 msgstr "Cài đặt truyền phát"
 
@@ -30618,7 +30606,7 @@ msgid "Streaming"
 msgstr "Đang phát trực tiếp"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:116
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:121
 msgid "Streaming mode"
 msgstr "Chế độ phát trực tiếp"
 
@@ -30805,12 +30793,12 @@ msgid "Suspend"
 msgstr "Tạm dừng"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:192
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
 msgid "SVC mode"
 msgstr "Chế độ SVC"
 
@@ -31071,8 +31059,8 @@ msgstr "Thông báo hệ thống từ đội ngũ {productName}. Bạn không th
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
 msgid "System default"
 msgstr "Mặc định hệ thống"
 
@@ -31252,7 +31240,7 @@ msgid "Template URL"
 msgstr "URL mẫu"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Temporal layers"
 msgstr "Lớp thời gian"
 
@@ -31313,7 +31301,7 @@ msgstr "Kiểm tra URL unfurl và nhúng đã hiển thị"
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
 msgid "Text"
 msgstr "Văn bản"
 
@@ -31523,7 +31511,7 @@ msgid "The bot has been added."
 msgstr "Bot đã được thêm."
 
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "Xem trước camera vẫn đang dừng. Vui lòng thử truyền phát lại sau."
 
@@ -31621,7 +31609,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "redirect_uri được cung cấp phải dùng HTTP hoặc HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:107
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:109
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Nguồn chia sẻ màn hình đã ngừng gửi video, vì vậy quá trình chia sẻ màn hình của bạn đã dừng."
@@ -32359,7 +32347,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "Số điện thoại này đã được sử dụng. Hãy thử số khác hoặc liên hệ bộ phận hỗ trợ."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:132
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:136
 msgid "This picker is only available in the desktop app."
 msgstr "Trình chọn này chỉ có trên ứng dụng máy tính."
 
@@ -33304,7 +33292,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Tắt bất kỳ tính năng nào bạn không muốn. Một số tính năng có thể ngừng hoạt động."
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Tắt chia sẻ âm thanh cho nguồn này hoặc thử lại sau."
 
@@ -34097,8 +34085,8 @@ msgstr "Nhóm chưa đặt tên"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
 msgid "Unnamed input"
 msgstr "Đầu vào không tên"
 
@@ -34564,7 +34552,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "Tải lên biểu tượng cảm xúc và nhãn dán mới, đồng thời quản lý các nội dung bạn đã tạo."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:322
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:326
 msgid "Upload preview frames for screen shares."
 msgstr "Tải lên các khung hình xem trước cho tính năng chia sẻ màn hình."
 
@@ -35637,12 +35625,12 @@ msgid "Video call unavailable"
 msgstr "Cuộc gọi video không khả dụng"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:80
 msgid "Video codec"
 msgstr "Bộ mã hóa video"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:84
 msgid "Video codec for screen sharing"
 msgstr "Codec video để chia sẻ màn hình"
 
@@ -35979,11 +35967,6 @@ msgid "VIP voice"
 msgstr "Thoại VIP"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:143
-msgid "Virtual microphone"
-msgstr "Micro ảo"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:39
 msgid "Visibility"
 msgstr "Hiển thị"
@@ -36305,7 +36288,7 @@ msgid "Volume control"
 msgstr "Điều khiển âm lượng"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:42
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:40
 msgid "Volume sliders"
 msgstr "Thanh trượt âm lượng"
 
@@ -36866,17 +36849,17 @@ msgid "When posted as links to chat"
 msgstr "Khi đăng dưới dạng liên kết vào cuộc trò chuyện"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:290
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "Khi bật tính năng xem trước, {productName} sẽ tải lên định kỳ các khung hình JPEG từ nội dung bạn đang chia sẻ để những người khác trong cuộc trò chuyện nhóm này có thể xem ảnh thu nhỏ trước khi xem."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:284
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "Khi bật tính năng xem trước, {productName} sẽ tải lên định kỳ các khung hình JPEG từ nội dung bạn chia sẻ để những người có quyền truy cập vào kênh thoại này có thể xem ảnh thu nhỏ trước khi xem."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:292
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:296
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "Khi bật tính năng xem trước, {productName} sẽ tải lên định kỳ các khung hình JPEG từ nội dung bạn chia sẻ để người kia trong cuộc trò chuyện riêng này có thể xem ảnh thu nhỏ trước khi xem."
 
@@ -38294,7 +38277,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "Đăng ký của bạn cần một bước kiểm tra chống spam bổ sung trước khi tiếp tục."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:113
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Không thể xuất sẻ màn hình của bạn với codec video tương thích, vì vậy chúng tôi đã dừng sẻ màn hình. Hãy thử sẻ lại."
@@ -38378,7 +38361,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "URL tùy chỉnh của bạn đã được đặt thành {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:122
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Bộ mã hóa video của bạn đã ngừng mã hóa khung hình, vì vậy lượt chia sẻ màn hình của bạn đã bị dừng. Hãy thử chia sẻ lại."

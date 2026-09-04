@@ -399,8 +399,8 @@ msgstr "{count, plural, one {#人のメンバー} other {#人のメンバー}}"
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {#つの共通コミュニティ} other {#つの共通コミュニティ}}"
 
-#: src/features/messaging/utils/MessageReactionUtils.ts:54
-#: src/features/messaging/utils/ReactionUtils.ts:55
+#: src/features/messaging/utils/MessageReactionUtils.ts:53
+#: src/features/messaging/utils/ReactionUtils.ts:54
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {#人} other {#人}}"
 
@@ -802,8 +802,8 @@ msgstr "「{label}」のファイルサイズが大きすぎます。{maxSizeLab
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "{label} 画像はアニメーションにできません。静止画像を使用してください。"
 
-#. Summary label in the Linux audio source picker when N apps are included. {length} is the integer app count.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:35
+#. Screen-share audio summary listing how many apps are captured. {length} is the integer app count.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:28
 msgid "{length} apps"
 msgstr "{length}個のアプリ"
 
@@ -1686,7 +1686,7 @@ msgid "1440p"
 msgstr "1440p"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:104
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:109
 msgid "15 FPS"
 msgstr "15 FPS"
 
@@ -1761,7 +1761,7 @@ msgid "3 months"
 msgstr "3ヶ月"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:108
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:113
 msgid "30 FPS"
 msgstr "30 FPS"
 
@@ -1820,7 +1820,7 @@ msgid "6-digit code"
 msgstr "6桁のコード"
 
 #. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:112
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:117
 msgid "60 FPS"
 msgstr "60 FPS"
 
@@ -2700,13 +2700,8 @@ msgstr "追加認証が必要です"
 msgid "Address"
 msgstr "住所"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:147
-msgid "Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop."
-msgstr "これにより、ストリーム設定メニューに手動のオーディオソースピッカーが追加されます。これがない場合、共有ウィンドウは既にそのアプリをキャプチャし、共有画面はデスクトップをキャプチャします。"
-
 #. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:127
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
 msgid "Adds H.264 for mixed clients. Uses more encode work."
 msgstr "H.264 を追加して、さまざまなクライアントに対応します。エンコード処理が増加します。"
 
@@ -2990,8 +2985,8 @@ msgstr "プロフィールを閲覧できるすべてのユーザーに、あな
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:186
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:90
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "画面共有でAV1を許可する"
 
@@ -3044,8 +3039,8 @@ msgstr "すべてのコミュニティを許可"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:190
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:94
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:187
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "H.265 (HEVC) による画面共有を許可"
 
@@ -3664,7 +3659,7 @@ msgid "App state"
 msgstr "アプリの状態"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:141
 msgid "App window"
 msgstr "アプリウィンドウ"
 
@@ -3704,11 +3699,6 @@ msgstr "メッセージに ┬─┬ ノ( ゜-゜ノ) を追加します。"
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:70
 msgid "Application access revoked"
 msgstr "アプリケーションアクセスを取り消しました"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:131
-msgid "Application audio"
-msgstr "アプリケーションの音声"
 
 #. Settings content title shown while a developer application detail page is loading.
 #. Settings content title shown while a developer application detail page is loading.
@@ -3762,7 +3752,7 @@ msgstr "アプリを更新しました"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
 msgid "Applications"
 msgstr "アプリ"
 
@@ -4083,12 +4073,12 @@ msgid "Audio boost"
 msgstr "音声ブースト"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Audio device"
 msgstr "オーディオデバイス"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:16
 msgid "Audio device alerts"
 msgstr "オーディオデバイスの通知"
 
@@ -4103,7 +4093,7 @@ msgid "Audio level"
 msgstr "音声レベル"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
 msgid "Audio muted"
 msgstr "音声がミュートされています"
 
@@ -4178,7 +4168,7 @@ msgid "Audio send:"
 msgstr "音声送信:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
 msgid "Audio settings"
 msgstr "オーディオ設定"
 
@@ -4188,13 +4178,8 @@ msgctxt "voice-control-button"
 msgid "Audio settings"
 msgstr "オーディオ設定"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:135
-msgid "Audio sources"
-msgstr "音声ソース"
-
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:54
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:43
 msgid "Audio sources: {summaryLabel}"
 msgstr "音声ソース: {summaryLabel}"
 
@@ -4399,9 +4384,9 @@ msgstr "入力候補: {label}、{resultCount}件中{selectedOptionPosition}番�
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:107
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:263
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:91
@@ -4415,13 +4400,13 @@ msgid "Automatic"
 msgstr "自動"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:172
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
 msgid "Automatic ({codec})"
 msgstr "自動 ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:48
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:213
 msgid "Automatic gain control"
 msgstr "自動音量調整"
@@ -4510,12 +4495,12 @@ msgid "Autoscrolling"
 msgstr "自動スクロール"
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:103
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
 msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:176
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
 msgid "AV1 (requires opt-in)"
 msgstr "AV1（オプトインが必要です）"
 
@@ -4746,7 +4731,7 @@ msgid "Badge"
 msgstr "バッジ"
 
 #. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Balanced"
 msgstr "バランス"
 
@@ -4964,7 +4949,7 @@ msgid "Biometrics"
 msgstr "生体認証"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:196
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
 msgid "Bitrate"
 msgstr "ビットレート"
 
@@ -5316,7 +5301,7 @@ msgid "Browser locale: {format}"
 msgstr "ブラウザのロケール: {format}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:66
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:64
 msgid "Browser mic gain for custom processing"
 msgstr "カスタム処理用のブラウザマイクゲイン"
 
@@ -5541,12 +5526,12 @@ msgid "Camera"
 msgstr "カメラ"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
 msgid "Camera access is needed for device previews"
 msgstr "デバイスプレビューにはカメラへのアクセスが必要です"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "カメラへのアクセスが許可されていません。カメラのアクセス許可を更新してから、もう一度お試しください。"
 
@@ -5804,26 +5789,26 @@ msgid "Captcha verification failed. Try again."
 msgstr "画像認証に失敗しました。もう一度お試しください。"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:48
 msgid "Capture"
 msgstr "キャプチャ"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:842
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
 msgid "Capture app audio"
 msgstr "アプリの音声をキャプチャ"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:139
-msgid "Capture card"
-msgstr "キャプチャカード"
-
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:843
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:882
 msgid "Capture desktop audio"
 msgstr "デスクトップ音声をキャプチャ"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:841
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:879
 msgid "Capture device audio"
 msgstr "デバイスの音声をキャプチャ"
+
+#. Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+msgid "Capture entire system audio"
+msgstr "システム全体の音声をキャプチャ"
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:100
 msgid "Card alignment"
@@ -6087,7 +6072,7 @@ msgid "Change stream"
 msgstr "ストリームを変更"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
 msgid "Change stream source"
 msgstr "配信元を変更"
 
@@ -6726,7 +6711,7 @@ msgid "Choose payment method"
 msgstr "支払い方法を選択"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:216
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
 msgid "Choose something to share"
 msgstr "共有するものを選んでください"
 
@@ -6834,7 +6819,7 @@ msgid "Choose your profile accent color"
 msgstr "プロフィールアクセントカラーを選択"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:119
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
 msgid "Cisco"
 msgstr "Cisco"
 
@@ -7128,7 +7113,7 @@ msgid "Cleared the topic."
 msgstr "トピックをクリアしました."
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
 msgid "Clearer text"
 msgstr "テキストをクリア"
 
@@ -7442,7 +7427,7 @@ msgid "Code:"
 msgstr "コード:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:76
 msgid "Codec"
 msgstr "コーデック"
 
@@ -7962,7 +7947,7 @@ msgstr "入力欄のフォーカス"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:163
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Configure"
 msgstr "設定"
 
@@ -8109,7 +8094,7 @@ msgstr "カメラを接続して、もう一度お試しください。"
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "カメラまたは仮想キャプチャデバイスを接続してから、もう一度お試しください。"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
 msgid "Connect a display, then try again."
 msgstr "ディスプレイを接続してから、もう一度お試しください。"
 
@@ -8233,7 +8218,7 @@ msgid "Connection volume"
 msgstr "接続音量"
 
 #. Settings search entry label. Names an advanced voice setting in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:30
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:28
 msgid "Connection volume controls"
 msgstr "接続音量コントロール"
 
@@ -8304,7 +8289,7 @@ msgid "Content filtering"
 msgstr "コンテンツフィルター"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:139
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 msgid "Content hint"
 msgstr "コンテンツヒント"
 
@@ -9770,18 +9755,18 @@ msgid "Currently: {mutedText}"
 msgstr "現在: {mutedText}"
 
 #. Footer summary label for custom screen-share quality settings.
+#. Screen-share audio summary shown when one audio source is selected but it has no readable name.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the voice tab. Keep it concise.
 #. Streaming preset label in the stream settings menu. Lets user pick resolution and frame rate manually.
-#. Summary label in the Linux audio source picker when a custom subset of apps is selected.
 #. Voice processing profile option label (mobile voice settings). User configures processing manually.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:180
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:77
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:31
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:44
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:24
 msgid "Custom"
 msgstr "カスタム"
 
@@ -9968,7 +9953,7 @@ msgid "Custom video backgrounds"
 msgstr "カスタムビデオ背景"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:60
 msgid "Custom voice processing"
 msgstr "カスタム音声処理"
 
@@ -10329,7 +10314,7 @@ msgid "Default"
 msgstr "デフォルト"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:151
 msgid "Default camera"
 msgstr "デフォルトカメラ"
 
@@ -10934,7 +10919,7 @@ msgid "Detached banner"
 msgstr "バナーを削除しました"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:155
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "詳細"
 
@@ -11009,7 +10994,7 @@ msgid "Device"
 msgstr "デバイス"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:14
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:12
 msgid "Device alerts"
 msgstr "デバイスの通知"
 
@@ -11022,12 +11007,12 @@ msgstr "デバイスの詳細"
 msgid "Device revoked"
 msgstr "デバイスを削除しました"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1033
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1074
 msgid "Device selection"
 msgstr "デバイス選択"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:38
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:36
 msgid "Device volume"
 msgstr "デバイスの音量"
 
@@ -11046,12 +11031,12 @@ msgstr "デバイス:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
 msgid "Devices"
 msgstr "デバイス"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:96
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:101
 msgid "Dial in your own numbers"
 msgstr "電話番号で参加"
 
@@ -11154,7 +11139,7 @@ msgstr "直接アップロードが有効です"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Disable"
 msgstr "無効にする"
 
@@ -11227,7 +11212,7 @@ msgid "Disable mobile push notifications"
 msgstr "モバイルプッシュ通知をオフにする"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "画面共有のピクチャーインピクチャーポップアウトを無効にする"
 
@@ -11353,7 +11338,7 @@ msgid "Disabled value"
 msgstr "無効な値"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:316
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:320
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "プレビューを無効にすると、今後のプレビューのアップロードは停止します。既存のプレビュー画像は、ストリームが終了するか、プレビューが更新されるまで表示されたままになる場合があります。"
 
@@ -11497,7 +11482,7 @@ msgstr "メンションを非表示"
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:12
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:12
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:146
 msgid "Display"
 msgstr "表示"
 
@@ -12666,7 +12651,7 @@ msgid "Enable browser notifications"
 msgstr "ブラウザ通知を有効にする"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:155
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:159
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "ストリーミングするカメラやキャプチャデバイスを選択する前に、カメラへのアクセスを有効にしてプレビューを表示します。"
 
@@ -12777,7 +12762,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "内蔵翻訳ツールの有効/無効を切り替えます。有効にすると、テキスト選択時のメッセージのコンテキストメニューに表示されます。"
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:163
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
 msgid "Enable previews"
 msgstr "プレビューを有効にする"
 
@@ -12894,18 +12879,18 @@ msgstr "成人向けコンテンツを有効にしました。"
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:180
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 msgid "Encoder path"
 msgstr "エンコーダーパス"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Encoder preference for new screen shares."
 msgstr "新しい画面共有のエンコーダー設定"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:200
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
 msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "エンコーダー、SVC、バックアップストリーム、およびビットレートプリセット"
 
@@ -13238,16 +13223,16 @@ msgid "Entertainment"
 msgstr "エンタメ"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:183
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:187
 msgid "Entire screen"
 msgstr "画面全体"
 
-#. Summary label in the Linux audio source picker when capturing the whole system audio mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
+#. Screen-share audio summary shown when the whole system audio mix is captured.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:32
 msgid "Entire system"
 msgstr "システム全体"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:235
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:249
 msgid "Entire system audio"
 msgstr "システム全体の音声"
 
@@ -13424,7 +13409,7 @@ msgid "exclude a user"
 msgstr "ユーザーを除外"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:68
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
 msgid "Exclude from system"
 msgstr "システムから除外"
 
@@ -13851,7 +13836,7 @@ msgid "Failed to load invites. Try again."
 msgstr "招待の読み込みに失敗しました。もう一度お試しください。"
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
 msgid "Failed to load shareable sources."
 msgstr "共有可能なソースの読み込みに失敗しました。"
 
@@ -14404,12 +14389,12 @@ msgid "Flexible text channel names"
 msgstr "テキストチャンネル名を自由に設定"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:69
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
 msgid "Fluid motion at 1440p 60 FPS"
 msgstr "1440p 60 FPSでなめらかな動き"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
 msgid "Fluid motion at 720p 30 FPS"
 msgstr "720p 30 FPSでなめらかな動き"
 
@@ -14496,7 +14481,7 @@ msgstr "フォルダー設定"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "{blueskyProviderName}でフォローする"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:895
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:936
 msgid "Follow voice input"
 msgstr "音声入力に従う"
 
@@ -14768,7 +14753,7 @@ msgstr "フレーム"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:310
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:225
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
 msgid "Frame rate"
 msgstr "フレームレート"
 
@@ -15001,7 +14986,7 @@ msgid "Fully quit and restart {productName} so macOS applies this permission."
 msgstr "macOS でこの権限を適用するには、{productName} を完全に終了して再起動してください。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:52
 msgid "Gain control"
 msgstr "コントロールする"
 
@@ -15014,8 +14999,8 @@ msgstr "ゲームコントローラー"
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:65
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:70
 msgid "Gaming"
 msgstr "ゲーム"
 
@@ -15515,7 +15500,7 @@ msgstr "{0}を付与しました。"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "すべての権限を付与し、チャンネル制限をバイパスします。機密性の高い操作です。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1020
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1061
 msgid "Granular selection"
 msgstr "詳細選択"
 
@@ -15694,22 +15679,22 @@ msgid "Grouping"
 msgstr "グループ化"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:115
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
 msgid "H.264"
 msgstr "H.264"
 
 #. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "H.264 backup stream"
 msgstr "H.264 バックアップストリーム"
 
 #. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:135
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
 msgid "H.264 simulcast backup"
 msgstr "H.264 サイマルキャストバックアップ"
 
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:181
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
 msgid "H.265 (requires opt-in)"
 msgstr "H.265（オプトインが必要です）"
 
@@ -15765,7 +15750,7 @@ msgid "Hardware acceleration can cause rendering glitches with transparent windo
 msgstr "ハードウェアアクセラレーションは、透過ウィンドウでレンダリングの不具合を引き起こす可能性があります。ちらつきやにじみが見られる場合は、「--disable-gpu」をお試しください。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:188
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
 msgid "Hardware encoder"
 msgstr "ハードウェアエンコーダー"
 
@@ -15900,12 +15885,12 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "{PRODUCT_NAME} をあなたの言語に翻訳するお手伝いをしてください。 <0>{I18N_WEBLATE_DOMAIN}</0>"
 
 #. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
 msgid "Helps the browser choose motion, detail, or text handling."
 msgstr "ブラウザが動き、詳細、またはテキストの処理方法を選択するのに役立ちます。"
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:107
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
 msgid "HEVC"
 msgstr "HEVC"
 
@@ -16060,7 +16045,7 @@ msgid "Hide muted channels by default?"
 msgstr "ミュート中のチャンネルをデフォルトで非表示にしますか？"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
 msgid "Hide my stream preview thumbnail"
 msgstr "ストリームプレビューのサムネイルを非表示にする"
 
@@ -16079,7 +16064,7 @@ msgstr "パスワードを非表示"
 msgid "Hide picture-in-picture popout?"
 msgstr "ピクチャーインピクチャーを非表示にしますか？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:804
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:838
 msgid "Hide preview thumbnail"
 msgstr "プレビューサムネイルを非表示"
 
@@ -16141,7 +16126,7 @@ msgid "High dynamic range display mode"
 msgstr "HDR表示モード"
 
 #. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Higher quality can cost more CPU and latency."
 msgstr "品質を上げると、CPUと遅延が増加する可能性があります。"
 
@@ -16524,11 +16509,11 @@ msgstr "無視"
 msgid "Ignore friend request"
 msgstr "フレンド申請を無視"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1010
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1051
 msgid "Ignore hardware devices"
 msgstr "ハードウェアデバイスを無視"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:986
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1027
 msgid "Ignore input media"
 msgstr "入力メディアを無視"
 
@@ -16554,7 +16539,7 @@ msgstr "スパム報告を無視"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "{displayName}からの友達リクエストを無視しますか？"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:997
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1038
 msgid "Ignore virtual"
 msgstr "バーチャル背景を無視"
 
@@ -16907,7 +16892,7 @@ msgid "Include all except selected"
 msgstr "選択したものを除くすべてを含める"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:64
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:53
 msgid "Include apps"
 msgstr "アプリを含める"
 
@@ -18095,12 +18080,12 @@ msgid "Launch at login"
 msgstr "ログイン時に起動"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:103
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
 msgid "Layering for AV1 and VP9 when available."
 msgstr "利用可能な場合に、AV1 と VP9 をレイヤー化します。"
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Learn about screen share previews"
 msgstr "画面共有プレビューについて"
 
@@ -19250,7 +19235,7 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "ファミリー向けスペースを最大限保護"
 
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:99
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "視聴者に互換性の問題が発生する可能性があります。現在改善に取り組んでいます。"
 
@@ -19923,17 +19908,17 @@ msgstr "マイクテスト"
 
 #. Fallback microphone label in the voice settings menu when the OS does not report a device name.
 #. Fallback microphone option label when the operating system does not report a device name.
+#. Screen-share audio summary on a video device share whose audio comes from an unnamed microphone.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Summary label in the Linux audio source picker on a video device share, where the default is the microphone rather than the system mix.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:21
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:44
 #: src/features/voice/components/VoiceSettingsMenus.tsx:78
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:40
 #: src/features/voice/utils/SettingsDeviceOptions.ts:15
 msgid "Microphone"
 msgstr "マイク"
 
-#. Capture option in the Linux audio source picker on a video device share. {deviceLabel} is the selected audio input device name.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:49
+#. Screen-share audio summary on a video device share. {deviceLabel} is the name of the selected audio input device.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:44
 msgid "Microphone ({deviceLabel})"
 msgstr "マイク ({deviceLabel})"
 
@@ -19943,7 +19928,7 @@ msgid "Microphone access was denied. Enable it in your system settings and try a
 msgstr "マイクへのアクセスが拒否されました。システム設定で有効にしてから、もう一度お試しください。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:56
 msgid "Microphone gain"
 msgstr "マイクの音量"
 
@@ -20274,7 +20259,7 @@ msgstr "関連度が高い順"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:98
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:151
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -21004,7 +20989,7 @@ msgid "New messages"
 msgstr "新着メッセージ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:20
 msgid "New microphone"
 msgstr "新しいマイク"
 
@@ -21150,7 +21135,7 @@ msgstr "高度な設定が見つかりませんでした"
 msgid "No AFK channel"
 msgstr "AFKチャンネルなし"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
 msgid "No application windows found"
 msgstr "アプリケーションウィンドウが見つかりません"
 
@@ -21163,8 +21148,8 @@ msgstr "まだアプリはありません"
 msgid "No assets yet"
 msgstr "まだアセットがありません"
 
-#. Summary label in the Linux audio source picker when no audio sources are selected.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:27
+#. Screen-share audio summary shown when the share publishes no audio at all.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:20
 msgid "No audio"
 msgstr "音声なし"
 
@@ -21299,7 +21284,7 @@ msgstr "説明なし."
 msgid "No desktop update is available."
 msgstr "デスクトップ版のアップデートはありません。"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:126
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
 msgid "No displays found"
 msgstr "ディスプレイが見つかりません"
 
@@ -21739,7 +21724,7 @@ msgstr "非アニメーション絵文字 ({emojiCount})"
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:242
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
 msgid "None"
 msgstr "なし"
 
@@ -21963,7 +21948,7 @@ msgstr "物"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 msgid "Off"
 msgstr "オフ"
 
@@ -22090,7 +22075,7 @@ msgstr "ワイド画面にのみ適用されます。"
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "クレジットカードのみご利用いただけます。デビットカードやプリペイドカードは、成人向けコンテンツの確認にはご利用いただけません。"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:975
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1016
 msgid "Only default speakers"
 msgstr "デフォルトスピーカーのみ"
 
@@ -22138,7 +22123,7 @@ msgstr "何をするか正確に理解している場合にのみ、ここにコ
 msgid "Only show message previews for DMs with unread messages"
 msgstr "未読メッセージがあるDMのメッセージプレビューのみ表示"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:965
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
 msgid "Only speakers"
 msgstr "発言者のみ"
 
@@ -22247,7 +22232,7 @@ msgstr "@{displayName}を開く"
 msgid "Open advanced media settings"
 msgstr "高度なメディア設定を開く"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:123
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
 msgid "Open an application window, then try again."
 msgstr "アプリケーションウィンドウを開いてから、もう一度お試しください。"
 
@@ -22310,7 +22295,7 @@ msgid "Open browser"
 msgstr "ブラウザを開く"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:207
 msgid "Open browser picker"
 msgstr "ブラウザ選択を開く"
 
@@ -22578,7 +22563,7 @@ msgid "Open system DM"
 msgstr "システムDMを開く"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:212
 msgid "Open system picker"
 msgstr "システムピッカーを開く"
 
@@ -22673,17 +22658,17 @@ msgid "Open your settings"
 msgstr "設定を開く"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:123
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
 msgid "OpenH264 software codec on Linux"
 msgstr "OpenH264ソフトウェアコーデック（Linux）"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:111
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
 msgid "OpenH264 video codec"
 msgstr "OpenH264 ビデオコーデック"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:42
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "Cisco Systems, Inc. が提供する OpenH264 ビデオコーデック."
 
@@ -23127,7 +23112,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "招待を一時停止しますか？再開するまで、新しいユーザーは招待リンクから参加できなくなります。既存のメンバーには影響しません。"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Pause my screen share preview in the background"
 msgstr "バックグラウンドで画面共有プレビューを一時停止する"
 
@@ -23238,7 +23223,7 @@ msgid "Per-community profiles"
 msgstr "コミュニティごとのプロフィール"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:34
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:32
 msgid "Per-device volume"
 msgstr "デバイスごとの音量"
 
@@ -23443,13 +23428,6 @@ msgstr "辞書を1つ以上選択してください。選択した辞書に含�
 msgid "Pick the appearance this administrator account should start with."
 msgstr "この管理者アカウントの初期の外観を選択してください。"
 
-#. Settings search entry label. Names an advanced screen-share audio setting in the settings UI.
-#. Switch label for the advanced opt-in that reveals a manual per-application audio source picker in the stream settings menu.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:195
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:127
-msgid "Pick the apps to capture audio from"
-msgstr "キャプチャするアプリのオーディオを選択"
-
 #. Required-action modal body for choosing a verification method.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:236
 msgid "Pick the method you can complete now."
@@ -23481,7 +23459,7 @@ msgid "Picture"
 msgstr "写真"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:160
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
 msgid "Picture in picture"
 msgstr "ピクチャーインピクチャー"
 
@@ -23601,7 +23579,7 @@ msgid "Pins popout"
 msgstr "ピンのポップアウト"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
 msgid "PiP"
 msgstr "ピクチャーインピクチャー"
 
@@ -23803,7 +23781,7 @@ msgid "Prefer @mention"
 msgstr "メンション設定"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "Prefer hardware"
 msgstr "ハードウェアを優先"
 
@@ -23815,7 +23793,7 @@ msgid "Prefer no @mention"
 msgstr "メンションしない"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Prefer software"
 msgstr "ソフトウェアを優先"
 
@@ -23835,7 +23813,7 @@ msgid "Preferences..."
 msgstr "環境設定..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:168
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
 msgid "Preferred screen share codec"
 msgstr "画面共有の優先コーデック"
 
@@ -23982,17 +23960,17 @@ msgid "Preview hidden"
 msgstr "プレビュー非表示"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:310
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:314
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "プレビュー画像は、{productName}によって一時的に保存され、配信されます。エンドツーエンドで暗号化されることはありません。サムネイル用に画面共有フレームをアップロードしたくない場合は、プレビューを無効にしてください。"
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:304
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:308
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "プレビュー画像は、{productName}によって一時的に保存され、配信されます。エンドツーエンドで暗号化されることはありません。このグループDMの参加者は、ストリームを積極的に視聴していなくても、サムネイルを見ることができます。"
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:298
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:302
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "プレビュー画像は、{productName}によって一時的に保存され、配信されます。エンドツーエンドで暗号化されることはありません。人々は接続するための許可を必要としますが、必ずしもあなたのストリームを積極的に見ている必要はありません。"
 
@@ -24009,7 +23987,7 @@ msgid "Preview sound"
 msgstr "サウンドをプレビュー"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:172
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "プレビュー、ポップアウト、およびストリーミングサムネイルの動作"
 
@@ -24339,7 +24317,7 @@ msgid "Prompt"
 msgstr "プロンプト"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:24
 msgid "Prompt for new audio devices"
 msgstr "新しいオーディオデバイスを要求する"
 
@@ -24582,7 +24560,7 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "プッシュ・トゥ・トークは、ミュート状態のときにマイクを解除しません。ミュートを解除して話してください。"
 
 #. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Quality"
 msgstr "品質"
 
@@ -24695,7 +24673,7 @@ msgid "Raw embed JSON"
 msgstr "生の埋め込み JSON"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:82
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
 msgid "Razor-sharp text at native source, 15 FPS"
 msgstr "ネイティブソースでくっきりしたテキスト、15 FPS"
 
@@ -24785,7 +24763,7 @@ msgid "Ready to upgrade?"
 msgstr "アップグレードしますか？"
 
 #. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Realtime"
 msgstr "リアルタイム"
 
@@ -25024,7 +25002,7 @@ msgstr "参照をコピーしました。"
 msgid "Referral parameters"
 msgstr "紹介パラメーター"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:285
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:301
 msgid "Refresh audio sources"
 msgstr "音声ソースを更新"
 
@@ -26305,7 +26283,7 @@ msgstr "ウィンドウのリサイズ、最大化、スナップはコンポジ
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:201
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:120
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
 msgid "Resolution"
 msgstr "解像度"
 
@@ -27002,7 +26980,7 @@ msgstr "画面収録の許可が必要です"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:217
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:78
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:83
 msgid "Screen share"
 msgstr "画面共有"
 
@@ -27017,22 +26995,22 @@ msgid "Screen share audio boost"
 msgstr "画面共有の音量ブースト"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
 msgid "Screen share audio couldn't start"
 msgstr "画面共有の音声を開始できませんでした"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:68
 msgid "Screen share codec"
 msgstr "画面共有コーデック"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:176
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
 msgid "Screen share encoder controls"
 msgstr "画面共有エンコーダー設定"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:102
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:104
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "画面共有が終了しました"
@@ -27048,27 +27026,27 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "画面共有でソフトウェアエンコード（{codec}）を使用しています。画質が低下し、CPU使用率が増加する可能性があります。お使いのGPUは、このコーデックのハードウェアエンコードに対応していない可能性があります。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
 msgid "Screen share preview"
 msgstr "画面共有プレビュー"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
 msgid "Screen share preview behavior"
 msgstr "画面共有プレビューの動作"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "Screen share previews"
 msgstr "画面共有プレビュー"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Screen share previews are disabled."
 msgstr "画面共有のプレビューは無効になっています。"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
 msgid "Screen share previews are enabled."
 msgstr "画面共有のプレビューが有効になっています。"
 
@@ -27114,7 +27092,7 @@ msgid "Screen sharing"
 msgstr "画面共有"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:72
 msgid "Screen sharing codec"
 msgstr "画面共有コーデック"
 
@@ -27149,7 +27127,7 @@ msgid "Screen sharing quality"
 msgstr "画面共有の品質"
 
 #. Footer summary label for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:228
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:232
 msgid "Screenshare"
 msgstr "画面共有"
 
@@ -27621,7 +27599,7 @@ msgstr "プレビューを表示"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
 msgid "Select"
 msgstr "選択"
 
@@ -28471,7 +28449,7 @@ msgid "Share gift"
 msgstr "ギフトを贈る"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:191
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:195
 msgid "Share screen"
 msgstr "画面を共有"
 
@@ -28481,7 +28459,7 @@ msgid "Share screens and windows."
 msgstr "画面とウィンドウを共有します。"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
 msgid "Share stream audio"
 msgstr "ストリームの音声共有"
 
@@ -28540,6 +28518,16 @@ msgstr "音声アクティビティを友達と共有する"
 msgid "Shared theme"
 msgstr "共有テーマ"
 
+#. Screen-share audio summary shown when a window share captures only the audio of the window it shares.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:36
+msgid "Shared window"
+msgstr "共有ウィンドウ"
+
+#. Capture option in the Linux audio source picker on a window share. Captures only the audio of the window being shared.
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:38
+msgid "Shared window audio"
+msgstr "共有ウィンドウの音声"
+
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:323
 msgid "Shares personal info, stalks users, or coordinates privacy abuse."
@@ -28551,7 +28539,7 @@ msgid "Sharing personal information"
 msgstr "個人情報の共有"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
 msgid "Sharper text at 720p, 30 FPS"
 msgstr "720p、30 FPSでより鮮明なテキスト"
 
@@ -28942,7 +28930,7 @@ msgstr "ネコを表示"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice device preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVoiceControls.tsx:11
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:10
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:8
 msgid "Show new device alerts"
 msgstr "新しいデバイスの通知を表示"
 
@@ -28979,7 +28967,7 @@ msgid "Show password"
 msgstr "パスワードを表示"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:44
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "デバイスごとの参加者の音量スライダーを音声メニューに表示"
 
@@ -29294,7 +29282,7 @@ msgid "Single community mode"
 msgstr "単一コミュニティモード"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:111
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 msgid "Single layer"
 msgstr "シングルレイヤー"
 
@@ -29574,7 +29562,7 @@ msgid "Smooth scrolling"
 msgstr "スムーズスクロール"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:236
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:240
 msgid "Smoother video"
 msgstr "よりスムーズなビデオ"
 
@@ -29603,12 +29591,12 @@ msgid "Social"
 msgstr "ソーシャル"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:184
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
 msgid "Software encoder"
 msgstr "ソフトウェアエンコーダー"
 
 #. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
 msgid "Software encoder quality"
 msgstr "ソフトウェアエンコーダーの品質"
 
@@ -29851,8 +29839,8 @@ msgstr "サウンド"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:100
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:248
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:105
 msgid "Source"
 msgstr "ソース"
 
@@ -29934,7 +29922,7 @@ msgid "Spanish (Spain)"
 msgstr "スペイン語（スペイン）"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:119
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Spatial and temporal layers"
 msgstr "空間的および時間的レイヤー"
 
@@ -30558,7 +30546,7 @@ msgstr "スピーカーの音がマイクに入り込むのを防ぎます。"
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:235
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:199
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:203
 msgid "Stream"
 msgstr "ストリーム"
 
@@ -30586,18 +30574,18 @@ msgstr "ストリームが追いついていません"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:168
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "ストリームプレビュー"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:149
 msgid "Stream quality"
 msgstr "ストリームの画質"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:220
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:224
 msgid "Stream settings"
 msgstr "配信設定"
 
@@ -30618,7 +30606,7 @@ msgid "Streaming"
 msgstr "配信中"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:116
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:121
 msgid "Streaming mode"
 msgstr "配信モード"
 
@@ -30805,12 +30793,12 @@ msgid "Suspend"
 msgstr "一時停止"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:192
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
 msgid "SVC mode"
 msgstr "SVCモード"
 
@@ -31071,8 +31059,8 @@ msgstr "{productName}スタッフからのシステムアナウンスです。�
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:252
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
 msgid "System default"
 msgstr "システムのデフォルト"
 
@@ -31252,7 +31240,7 @@ msgid "Template URL"
 msgstr "テンプレートURL"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:115
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Temporal layers"
 msgstr "時間的レイヤー"
 
@@ -31313,7 +31301,7 @@ msgstr "URLのアンファールと埋め込みのレンダリングをテスト
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
 #: src/features/channel/utils/ChannelUtils.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:159
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
 msgid "Text"
 msgstr "テキスト"
 
@@ -31523,7 +31511,7 @@ msgid "The bot has been added."
 msgstr "ボットが追加されました。"
 
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:167
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:171
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "カメラのプレビューがまだ停止中です。しばらくしてから、もう一度ストリーミングを試してください。"
 
@@ -31621,7 +31609,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "指定されたredirect_uriはHTTPまたはHTTPSを使用する必要があります。"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:107
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:109
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "画面共有のソースがビデオの送信を停止したため、画面共有は停止されました。"
@@ -32359,7 +32347,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "この電話番号はすでに使用されています。別の番号を試すか、サポートにお問い合わせください。"
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:132
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:136
 msgid "This picker is only available in the desktop app."
 msgstr "このピッカーはデスクトップ版アプリでのみ利用できます。"
 
@@ -33304,7 +33292,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "同意できない項目はオフにしてください。一部の機能が利用できなくなる場合があります。"
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:175
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:179
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "このソースのオーディオ共有をオフにするか、しばらくしてからもう一度お試しください。"
 
@@ -34097,8 +34085,8 @@ msgstr "名前のないグループ"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
 msgid "Unnamed input"
 msgstr "名前のない入力"
 
@@ -34564,7 +34552,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "新しい絵文字やスタンプをアップロードしたり、自分で作成したものを管理できます。"
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:322
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:326
 msgid "Upload preview frames for screen shares."
 msgstr "スクリーン共有のプレビューフレームをアップロードします。"
 
@@ -35637,12 +35625,12 @@ msgid "Video call unavailable"
 msgstr "ビデオ通話は利用できません"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:80
 msgid "Video codec"
 msgstr "ビデオコーデック"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:84
 msgid "Video codec for screen sharing"
 msgstr "画面共有のビデオコーデック"
 
@@ -35979,11 +35967,6 @@ msgid "VIP voice"
 msgstr "VIPボイス"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:143
-msgid "Virtual microphone"
-msgstr "仮想マイク"
-
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:39
 msgid "Visibility"
 msgstr "公開設定"
@@ -36305,7 +36288,7 @@ msgid "Volume control"
 msgstr "音量調節"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:42
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:40
 msgid "Volume sliders"
 msgstr "音量スライダー"
 
@@ -36866,17 +36849,17 @@ msgid "When posted as links to chat"
 msgstr "チャットにリンクとして投稿する際"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:290
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "プレビューが有効になっている場合、{productName}は画面共有から時々JPEG形式のフレームをアップロードし、このグループDM内の他のユーザーが視聴する前にサムネイルを見ることができるようにします。"
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:284
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "プレビューが有効になっている場合、{productName}は画面共有から時々JPEG形式のフレームをアップロードし、このボイスチャンネルに接続する権限を持つユーザーが、動画を見る前にサムネイルを確認できるようにします。"
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:292
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:296
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "プレビューが有効になっている場合、{productName}は画面共有から時折JPEG形式のフレームをアップロードし、このDM内の相手にサムネイルを表示して、ビデオを見る前に確認できるようにします。"
 
@@ -38294,7 +38277,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "引き続きご利用いただくには、追加のスパム対策認証が必要です。"
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:113
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "互換性のあるビデオコーデックで画面共有を公開できなかったため、停止しました。もう一度共有してみてください。"
@@ -38378,7 +38361,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "バニティURLを {inviteEndpoint}/{vanitySlug} に設定しました"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:122
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "動画エンコーダーがフレームのエンコードを停止したため、画面共有が停止しました。もう一度共有してみてください。"
