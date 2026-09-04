@@ -135,6 +135,9 @@ pub(in crate::server) fn same_format_loaded_image_request_can_use_original_with_
     ) {
         return true;
     }
+    if sniffed.animated && !request.animated {
+        return false;
+    }
     if !same_format_image_request_base_allows_original(
         source_ext,
         request.explicit_out_ext,
@@ -541,8 +544,9 @@ mod tests {
     }
 
     #[test]
-    fn still_requests_for_animation_capable_sources_use_original_bytes() {
+    fn still_requests_reuse_original_bytes_only_when_the_source_is_still() {
         let gif_header = b"GIF89a\x2c\x01\xe1\x00";
+        assert!(!mime::sniff(gif_header).animated);
         assert!(
             same_format_loaded_image_request_can_use_original_with_sniff(
                 mime::sniff(gif_header),
@@ -561,7 +565,7 @@ mod tests {
         let animated_webp = animated_vp8x_webp(300, 225);
         assert!(mime::sniff(&animated_webp).animated);
         assert!(
-            same_format_loaded_image_request_can_use_original_with_sniff(
+            !same_format_loaded_image_request_can_use_original_with_sniff(
                 mime::sniff(&animated_webp),
                 OriginalImageRequest {
                     source_ext: Some(AssetExtension::Webp),
@@ -572,6 +576,36 @@ mod tests {
                     has_quality: false,
                     effort: None,
                     animated: false,
+                }
+            )
+        );
+        assert!(
+            !same_format_loaded_image_request_can_use_original_with_sniff(
+                mime::sniff(&animated_webp),
+                OriginalImageRequest {
+                    source_ext: Some(AssetExtension::Webp),
+                    explicit_out_ext: Some(AssetExtension::Webp),
+                    out_ext: OutputFormat::WebP,
+                    width: None,
+                    height: None,
+                    has_quality: false,
+                    effort: None,
+                    animated: false,
+                }
+            )
+        );
+        assert!(
+            same_format_loaded_image_request_can_use_original_with_sniff(
+                mime::sniff(&animated_webp),
+                OriginalImageRequest {
+                    source_ext: Some(AssetExtension::Webp),
+                    explicit_out_ext: Some(AssetExtension::Webp),
+                    out_ext: OutputFormat::WebP,
+                    width: None,
+                    height: None,
+                    has_quality: false,
+                    effort: None,
+                    animated: true,
                 }
             )
         );
