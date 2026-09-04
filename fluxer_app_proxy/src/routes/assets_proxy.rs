@@ -436,8 +436,8 @@ mod tests {
     use axum::http::header::HeaderName;
     use fluxer_common::config::GeoipSourceConfig;
     use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
+    use std::sync::Arc;
     use std::sync::atomic::{AtomicU64, Ordering};
-    use std::sync::{Arc, OnceLock};
     use tower::ServiceExt;
 
     async fn spawn_upstream(status: StatusCode, cache_control: &'static str) -> String {
@@ -491,7 +491,6 @@ mod tests {
                 trust_client_ip_header: false,
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
-            invite_meta: Arc::new(OnceLock::new()),
             index_html: None,
             budgets: crate::state::AppProxyBudgets::default(),
         }

@@ -5,9 +5,6 @@ use crate::config::HttpEndpoint;
 use crate::csp::{RuntimeCspSources, generate_nonce};
 use crate::discovery_cache::{DiscoveryResponse, discovery_endpoint};
 use crate::geoip::build_geoip_response;
-use crate::invite_meta::{
-    InviteMetaEndpoints, InvitePageMeta, inject_invite_meta, invite_code_from_path,
-};
 use crate::state::{
     AppProxyBudgets, AppState, MAX_RENDERED_SPA_INDEX_BYTES, MAX_SPA_INDEX_BYTES,
     read_bounded_text_file,
@@ -60,7 +57,7 @@ pub async fn spa_catch_all(
         .await;
     }
 
-    serve_spa_index(&state, &headers, request_path).await
+    serve_spa_index(&state, &headers).await
 }
 
 const CRAWL_CONTROL_CACHE_CONTROL: &str = "public, max-age=300, must-revalidate";
@@ -144,7 +141,7 @@ async fn serve_static_file(
     response
 }
 
-async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &str) -> Response {
+async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
     let time_freeze = load_time_freeze_config_for_request(&state.config, headers);
     let debug_header = time_freeze_debug_header(&time_freeze);
     let should_bust_dev_assets = state.config.index_upstream_url.is_some();
@@ -159,7 +156,6 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
 
     let nonce = generate_nonce();
     let runtime_csp_sources = build_runtime_csp_sources(state, &discovery);
-    let invite_meta = resolve_invite_meta(state, request_path, &runtime_csp_sources).await;
     let static_cdn_endpoint = runtime_csp_sources
         .static_cdn_endpoint
         .as_ref()
@@ -188,7 +184,6 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
         &script_tag,
         static_cdn_endpoint,
         media_endpoint,
-        invite_meta.as_ref(),
         dev_buster.as_deref(),
     ) {
         Ok(html) => html,
@@ -233,7 +228,6 @@ fn render_spa_document(
     script_tag: &str,
     static_cdn_endpoint: &str,
     media_endpoint: &str,
-    invite_meta: Option<&InvitePageMeta>,
     dev_asset_cache_buster: Option<&str>,
 ) -> Result<String, SpaDocumentSizeLimitError> {
     let mut document = bounded_document(inject_bootstrap(
@@ -243,9 +237,6 @@ fn render_spa_document(
         static_cdn_endpoint,
         media_endpoint,
     ))?;
-    if let Some(meta) = invite_meta {
-        document = bounded_document(inject_invite_meta(&document, meta))?;
-    }
     if let Some(buster) = dev_asset_cache_buster {
         document = bounded_document(append_dev_asset_cache_buster(&document, buster))?;
     }
@@ -257,33 +248,6 @@ async fn refresh_discovery_for_spa(state: &AppState) -> Option<DiscoveryResponse
         .discovery_cache
         .get_or_cold_start(&state.http_client, &state.config.discovery_upstream_url)
         .await
-}
-
-async fn resolve_invite_meta(
-    state: &AppState,
-    request_path: &str,
-    runtime_csp_sources: &RuntimeCspSources,
-) -> Option<InvitePageMeta> {
-    let code = invite_code_from_path(request_path)?;
-    let resolver = state.invite_meta.get()?;
-    let endpoints = InviteMetaEndpoints {
-        media_endpoint: runtime_csp_sources
-            .media_endpoint
-            .as_ref()
-            .map(|endpoint| endpoint.as_str().to_owned()),
-        static_cdn_endpoint: runtime_csp_sources
-            .static_cdn_endpoint
-            .as_ref()
-            .map(|endpoint| endpoint.as_str().to_owned()),
-    };
-
-    match resolver.resolve(code, &endpoints).await {
-        Ok(meta) => meta,
-        Err(err) => {
-            tracing::warn!(%err, code, "failed to resolve invite metadata");
-            None
-        }
-    }
 }
 
 fn build_runtime_csp_sources(state: &AppState, discovery: &DiscoveryResponse) -> RuntimeCspSources {
@@ -625,7 +589,7 @@ mod tests {
     use axum::body::Body;
     use fluxer_common::config::GeoipSourceConfig;
     use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
-    use std::sync::{Arc, OnceLock};
+    use std::sync::Arc;
 
     #[test]
     fn dev_asset_cache_buster_rewrites_script_and_link_assets() {
@@ -677,14 +641,6 @@ mod tests {
 
     const SHELL_WITH_A_NONCE_HOLE: &str = r#"<!doctype html><html><head><title>Fluxer</title><script nonce="{{CSP_NONCE_PLACEHOLDER}}"></script><script src="/assets/app.js"></script></head><body></body></html>"#;
 
-    fn sample_invite_meta() -> InvitePageMeta {
-        InvitePageMeta {
-            title: "Join Sample Space".to_owned(),
-            description: "A sample invite".to_owned(),
-            image_url: None,
-        }
-    }
-
     #[test]
     fn the_rendered_document_always_carries_the_bootstrap_and_a_real_nonce() {
         let rendered = render_spa_document(
@@ -693,7 +649,6 @@ mod tests {
             "<script>booted</script>",
             "https://static.example.test",
             "",
-            None,
             None,
         )
         .expect("test SPA document must render within its size limit");
@@ -704,36 +659,6 @@ mod tests {
     }
 
     #[test]
-    fn invite_metadata_reaches_the_rendered_document_only_when_resolved() {
-        let meta = sample_invite_meta();
-        let with_meta = render_spa_document(
-            SHELL_WITH_A_NONCE_HOLE,
-            "reqnonce",
-            "<script>booted</script>",
-            "",
-            "",
-            Some(&meta),
-            None,
-        )
-        .expect("test SPA document must render within its size limit");
-        let without_meta = render_spa_document(
-            SHELL_WITH_A_NONCE_HOLE,
-            "reqnonce",
-            "<script>booted</script>",
-            "",
-            "",
-            None,
-            None,
-        )
-        .expect("test SPA document must render within its size limit");
-
-        assert!(with_meta.contains("Join Sample Space"));
-        assert!(with_meta.contains("og:title"));
-        assert!(!without_meta.contains("Join Sample Space"));
-        assert!(!without_meta.contains("og:title"));
-    }
-
-    #[test]
     fn the_dev_cache_buster_reaches_the_rendered_document_only_when_supplied() {
         let busted = render_spa_document(
             SHELL_WITH_A_NONCE_HOLE,
@@ -741,7 +666,6 @@ mod tests {
             "<script>booted</script>",
             "",
             "",
-            None,
             Some("9911"),
         )
         .expect("test SPA document must render within its size limit");
@@ -751,7 +675,6 @@ mod tests {
             "<script>booted</script>",
             "",
             "",
-            None,
             None,
         )
         .expect("test SPA document must render within its size limit");
@@ -777,7 +700,6 @@ mod tests {
             "<script>frozenboot</script>",
             "https://fluxerstatic.com",
             "",
-            None,
             None,
         )
         .expect("test SPA document must render within its size limit");
@@ -809,7 +731,6 @@ mod tests {
             "<script>booted</script>",
             "https://cdn.example.test/",
             "https://media.example.test",
-            None,
             None,
         )
         .expect("test SPA document must render within its size limit");
@@ -844,7 +765,6 @@ mod tests {
             "https://cdn.example.test",
             "https://media.example.test/",
             None,
-            None,
         )
         .expect("test SPA document must render within its size limit");
         assert!(
@@ -860,7 +780,6 @@ mod tests {
             "<script>booted</script>",
             "https://cdn.example.test",
             "https://cdn.example.test",
-            None,
             None,
         )
         .expect("test SPA document must render within its size limit");
@@ -967,7 +886,6 @@ mod tests {
                 trust_client_ip_header: false,
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
-            invite_meta: Arc::new(OnceLock::new()),
             index_html: cached_shell.map(Arc::from),
             budgets: crate::state::AppProxyBudgets::default(),
         }
@@ -1002,7 +920,7 @@ mod tests {
         let state =
             spa_state_serving(ReleaseChannel::Canary, Some(SHELL_WITH_ENDPOINT_HOLES)).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_eq!(response.status(), StatusCode::OK);
         let granted_nonce = nonce_granted_by(&response);
         let served = read_document(response).await;
@@ -1062,7 +980,7 @@ mod tests {
 
         let state = spa_state_serving(ReleaseChannel::Stable, None).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_eq!(response.status(), StatusCode::OK);
         let served = read_document(response).await;
 
@@ -1099,7 +1017,7 @@ mod tests {
 
         let state = spa_state_serving(ReleaseChannel::Stable, None).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_eq!(response.status(), StatusCode::OK);
         let granted_nonce = nonce_granted_by(&response);
         let served = read_document(response).await;
@@ -1122,7 +1040,7 @@ mod tests {
             "the primary hosted path shipped without a bootstrap script the browser will run"
         );
 
-        let second = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let second = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_ne!(
             nonce_granted_by(&second),
             granted_nonce,
@@ -1134,7 +1052,7 @@ mod tests {
     #[tokio::test]
     async fn every_branch_announces_which_snapshot_decision_it_took() {
         let frozen_state = spa_state_serving(ReleaseChannel::Stable, None).await;
-        let frozen = serve_spa_index(&frozen_state, &HeaderMap::new(), "/channels/@me").await;
+        let frozen = serve_spa_index(&frozen_state, &HeaderMap::new()).await;
         assert_eq!(
             frozen
                 .headers()
@@ -1151,7 +1069,7 @@ mod tests {
 
         let live_state =
             spa_state_serving(ReleaseChannel::Canary, Some(SHELL_WITH_ENDPOINT_HOLES)).await;
-        let live = serve_spa_index(&live_state, &HeaderMap::new(), "/channels/@me").await;
+        let live = serve_spa_index(&live_state, &HeaderMap::new()).await;
         assert_eq!(
             live.headers()
                 .get("x-time-freeze")
@@ -1168,7 +1086,7 @@ mod tests {
     async fn the_frozen_shell_is_never_served_with_the_asset_lifetime() {
         let state = spa_state_serving(ReleaseChannel::Stable, None).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
 
         assert_eq!(
             response
@@ -1247,7 +1165,7 @@ mod tests {
         let state =
             spa_state_serving(ReleaseChannel::Canary, Some(SHELL_WITH_ENDPOINT_HOLES)).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
 
         let cache_control = response
             .headers()
@@ -1270,7 +1188,7 @@ mod tests {
         let index_upstream_url = spawn_local_origin(SHELL_WITH_ENDPOINT_HOLES, "text/html").await;
         let state = spa_state_reading_its_shell_from(index_upstream_url).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response
@@ -1304,7 +1222,7 @@ mod tests {
         let state =
             spa_state_without_discovered_endpoints(Some("https://fallbackcdn.example.test")).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_eq!(response.status(), StatusCode::OK);
         let served = read_document(response).await;
 
@@ -1334,7 +1252,7 @@ mod tests {
     async fn an_endpoint_neither_discovered_nor_configured_warms_no_socket_at_all() {
         let state = spa_state_without_discovered_endpoints(None).await;
 
-        let response = serve_spa_index(&state, &HeaderMap::new(), "/channels/@me").await;
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_eq!(response.status(), StatusCode::OK);
         let served = read_document(response).await;
 

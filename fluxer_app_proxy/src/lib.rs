@@ -7,7 +7,6 @@ pub mod discovery_cache;
 #[cfg(feature = "time-freeze")]
 pub mod frozen_snapshots;
 pub mod geoip;
-pub mod invite_meta;
 pub mod routes;
 pub mod state;
 pub mod time_freeze;

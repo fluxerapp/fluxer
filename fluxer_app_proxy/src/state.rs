@@ -3,9 +3,8 @@
 use crate::config::AppProxyConfig;
 use crate::csp::CompiledCspPolicy;
 use crate::discovery_cache::DiscoveryCache;
-use crate::invite_meta::InviteMetaResolver;
 use fluxer_common::geoip::GeoipResolver;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::sync::Semaphore;
@@ -44,7 +43,6 @@ pub struct AppState {
     pub http_client: reqwest::Client,
     pub discovery_cache: Arc<DiscoveryCache>,
     pub geoip: Arc<GeoipResolver>,
-    pub invite_meta: Arc<OnceLock<InviteMetaResolver>>,
     pub index_html: Option<Arc<str>>,
     pub budgets: AppProxyBudgets,
 }

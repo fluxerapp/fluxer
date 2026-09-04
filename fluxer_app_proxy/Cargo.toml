@@ -10,12 +10,9 @@ anyhow = "1.0.104"
 axum = { version = "0.8.9", features = ["macros"] }
 base64 = "0.22"
 fluxer_common = { path = "../fluxer_common" }
-fluxer-svc = { path = "../fluxer_svc" }
 hex = "0.4"
-moka = { version = "0.12.15", features = ["future"] }
 rand = "0.10"
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls", "stream", "gzip", "brotli", "deflate"] }
-scylla = { version = "1.6.0", features = ["chrono-04"], optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
 tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal", "time", "fs"] }
@@ -27,5 +24,4 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 [features]
 default = ["time-freeze"]
-scylla = ["dep:scylla", "fluxer-svc/scylla"]
 time-freeze = []

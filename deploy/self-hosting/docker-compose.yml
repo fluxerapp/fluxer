@@ -460,7 +460,6 @@ services:
         limits:
           memory: ${FLUXER_APP_PROXY_MEMORY_LIMIT:-256mb}
     environment:
-      <<: *fluxer-postgres-env
       FLUXER_APP_PROXY_HOST: 0.0.0.0
       FLUXER_APP_PROXY_PORT: "8080"
       DISCOVERY_UPSTREAM_URL: http://caddy:8088/api/.well-known/fluxer
@@ -477,11 +476,9 @@ services:
       FLUXER_CSP_EXTRA_WORKER_SRC: ${FLUXER_CSP_EXTRA_WORKER_SRC:-}
       FLUXER_CSP_EXTRA_MANIFEST_SRC: ${FLUXER_CSP_EXTRA_MANIFEST_SRC:-}
       FLUXER_CSP_REPORT_URI: ${FLUXER_CSP_REPORT_URI:-}
-      FLUXER_POSTGRES_MAX_CONNECTIONS: "5"
     depends_on:
       api: {condition: service_healthy}
       caddy: {condition: service_healthy}
-      postgres: {condition: service_healthy}
 
   snowflakes:
     <<: *fluxer-service

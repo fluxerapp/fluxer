@@ -118,14 +118,12 @@ WORKDIR /usr/src/app
 COPY Cargo.lock ./
 COPY fluxer_common/ fluxer_common/
 COPY fluxer_app_proxy/ fluxer_app_proxy/
-COPY fluxer_svc/ fluxer_svc/
 
 RUN printf '%s\n' \
 	'[workspace]' \
 	'members = [' \
 	'    "fluxer_app_proxy",' \
 	'    "fluxer_common",' \
-	'    "fluxer_svc",' \
 	']' \
 	'resolver = "2"' \
 	'' \
