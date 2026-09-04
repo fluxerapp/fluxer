@@ -1,3 +1,5 @@
+name: fluxer-dev
+
 services:
   workspace:
     build:
