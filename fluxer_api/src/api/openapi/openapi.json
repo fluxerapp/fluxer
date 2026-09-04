@@ -27925,9 +27925,13 @@
 						"description": "The unique identifier for this emoji"
 					},
 					"name": {"type": "string", "description": "The name of the emoji"},
-					"animated": {"type": "boolean", "description": "Whether this emoji is animated"}
+					"animated": {"type": "boolean", "description": "Whether this emoji is animated"},
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					}
 				},
-				"required": ["id", "name", "animated"]
+				"required": ["id", "name", "animated", "nsfw"]
 			},
 			"GuildStickerResponse": {
 				"type": "object",
@@ -27945,9 +27949,13 @@
 						"maxItems": 100,
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
-					"animated": {"type": "boolean", "description": "Whether this sticker is animated"}
+					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					}
 				},
-				"required": ["id", "name", "description", "tags", "animated"]
+				"required": ["id", "name", "description", "tags", "animated", "nsfw"]
 			},
 			"GuildCreateRequest": {
 				"type": "object",
@@ -28931,9 +28939,13 @@
 					},
 					"name": {"type": "string", "description": "The name of the emoji"},
 					"animated": {"type": "boolean", "description": "Whether this emoji is animated"},
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					},
 					"user": {"$ref": "#/components/schemas/UserPartialResponse"}
 				},
-				"required": ["id", "name", "animated", "user"]
+				"required": ["id", "name", "animated", "nsfw", "user"]
 			},
 			"GuildEmojiBulkCreateResponse": {
 				"type": "object",
@@ -29430,9 +29442,13 @@
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
 					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					},
 					"user": {"$ref": "#/components/schemas/UserPartialResponse"}
 				},
-				"required": ["id", "name", "description", "tags", "animated", "user"]
+				"required": ["id", "name", "description", "tags", "animated", "nsfw", "user"]
 			},
 			"GuildStickerBulkCreateResponse": {
 				"type": "object",
