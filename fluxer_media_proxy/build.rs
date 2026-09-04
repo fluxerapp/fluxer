@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::{collections::HashSet, path::PathBuf, process::Command};
+use std::{collections::HashSet, path::Path, path::PathBuf, process::Command};
+
+fn is_distribution_lib_dir(path: &Path) -> bool {
+    let Some(path) = path.to_str() else {
+        return false;
+    };
+    path.starts_with("/usr/lib") || path.starts_with("/lib")
+}
 
 const NATIVE_SHIM_SOURCES: [&str; 16] = [
     "src/webp_animation.c",
@@ -131,8 +138,16 @@ fn main() {
 
     shim.compile("fluxer_vips_shim");
 
+    let (source_built_link_paths, distribution_link_paths): (Vec<PathBuf>, Vec<PathBuf>) =
+        link_paths
+            .into_iter()
+            .partition(|path| !is_distribution_lib_dir(path));
+
     let mut emitted_link_paths: HashSet<PathBuf> = HashSet::new();
-    for path in link_paths {
+    for path in source_built_link_paths
+        .into_iter()
+        .chain(distribution_link_paths)
+    {
         if !emitted_link_paths.insert(path.clone()) {
             continue;
         }
