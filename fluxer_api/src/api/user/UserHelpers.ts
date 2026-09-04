@@ -275,7 +275,7 @@ export function createPremiumClearPatch(): Partial<UserRow> {
 	return mapExpiredPremiumFields(() => null) as Partial<UserRow>;
 }
 
-const PROFILE_SUBSTRING_EXEMPT_FLAGS = UserFlags.STAFF | UserFlags.CTP_MEMBER;
+const PROFILE_SUBSTRING_EXEMPT_FLAGS = UserFlags.STAFF;
 
 export function isProfileSubstringExempt(user: Pick<PremiumCheckable, 'flags'>): boolean {
 	return (user.flags & PROFILE_SUBSTRING_EXEMPT_FLAGS) !== 0n;

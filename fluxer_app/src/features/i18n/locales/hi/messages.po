@@ -951,7 +951,7 @@ msgid "{pixPaymentMethod} can skip the card verification step when {paymentProvi
 msgstr "{pixPaymentMethod} कार्ड सत्यापन चरण को छोड़ सकता है, जब {paymentProviderName} आपके चेकआउट के लिए आवर्ती {pixPaymentMethod2} प्रदान करता है।"
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:56
+#: src/features/user/components/popouts/UserProfileBadges.tsx:51
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "{premiumProductFullName} के सदस्य हैं {premiumSinceFormatted} से"
 
@@ -1023,7 +1023,7 @@ msgid "{productName} avoids sending push notifications to your mobile devices wh
 msgstr "{productName} आपके कंप्यूटर पर होने पर आपके मोबाइल डिवाइस पर पुश सूचनाएं भेजने से बचता है। चुनें कि आपको डेस्कटॉप पर निष्क्रिय रहने के लिए कितने समय की आवश्यकता है, जिसके बाद आपको पुश सूचनाएं प्राप्त हों।"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:41
+#: src/features/user/components/popouts/UserProfileBadges.tsx:36
 msgid "{productName} Bug Hunter"
 msgstr "{productName} बग हंटर"
 
@@ -1055,11 +1055,6 @@ msgstr "{productName} इस ऐप के ऑडियो के लिए स�
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:36
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
 msgstr "{productName} हार्डवेयर एन्कोडर का उपयोग नहीं कर सकता है, इसलिए यह आपके सीपीयू का उपयोग करेगा।"
-
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:31
-msgid "{productName} Community Team"
-msgstr "{productName} कम्युनिटी टीम"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:108
@@ -1127,7 +1122,7 @@ msgid "{productName} needs screen recording access. Allow screen recording in yo
 msgstr "{productName} को स्क्रीन रिकॉर्डिंग की अनुमति चाहिए। अपने ऑपरेटिंग सिस्टम की गोपनीयता सेटिंग्स में स्क्रीन रिकॉर्डिंग की अनुमति दें और ऐप को पुनः आरंभ करें।"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:36
+#: src/features/user/components/popouts/UserProfileBadges.tsx:31
 msgid "{productName} Partner"
 msgstr "{productName} पार्टनर"
 
@@ -1162,12 +1157,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "{productName} मोबाइल PWA के रूप में इंस्टॉल होने पर पुश नोटिफ़िकेशन का उपयोग करता है। रजिस्टर करने से यह सुनिश्चित होता है कि ऐप बैकग्राउंड में होने पर भी गेटवे आपके डिवाइस तक पहुँच सकता है।"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:51
+#: src/features/user/components/popouts/UserProfileBadges.tsx:46
 msgid "{productName} Visionary"
 msgstr "{productName} विजनरी"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:46
+#: src/features/user/components/popouts/UserProfileBadges.tsx:41
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} विजनरी, {premiumSinceFormatted} से"
 
@@ -36003,7 +35998,7 @@ msgid "Visionary badge ID"
 msgstr "दूरदर्शी बैज आईडी"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:61
+#: src/features/user/components/popouts/UserProfileBadges.tsx:56
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "दूरदर्शी आईडी {visionaryIdLabel}"
 

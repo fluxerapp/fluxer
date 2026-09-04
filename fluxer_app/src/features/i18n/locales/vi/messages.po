@@ -951,7 +951,7 @@ msgid "{pixPaymentMethod} can skip the card verification step when {paymentProvi
 msgstr "{pixPaymentMethod} có thể bỏ qua bước xác minh thẻ khi {paymentProviderName} cung cấp {pixPaymentMethod2} định kỳ cho giao dịch thanh toán của bạn."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:56
+#: src/features/user/components/popouts/UserProfileBadges.tsx:51
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "Người đăng ký {premiumProductFullName} từ {premiumSinceFormatted}"
 
@@ -1023,7 +1023,7 @@ msgid "{productName} avoids sending push notifications to your mobile devices wh
 msgstr "{productName} sẽ không gửi thông báo đẩy đến thiết bị di động của bạn khi bạn đang sử dụng máy tính. Chọn khoảng thời gian bạn cần không hoạt động trên máy tính trước khi nhận được thông báo đẩy."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:41
+#: src/features/user/components/popouts/UserProfileBadges.tsx:36
 msgid "{productName} Bug Hunter"
 msgstr "Người tìm lỗi {productName}"
 
@@ -1055,11 +1055,6 @@ msgstr "{productName} không thể bắt đầu một tuyến đường cô lậ
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:36
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
 msgstr "{productName} không thể sử dụng bộ mã hóa phần cứng cho việc này, vì vậy ứng dụng sẽ sử dụng CPU của bạn."
-
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:31
-msgid "{productName} Community Team"
-msgstr "Nhóm cộng đồng {productName}"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:108
@@ -1127,7 +1122,7 @@ msgid "{productName} needs screen recording access. Allow screen recording in yo
 msgstr "{productName} cần quyền truy cập ghi màn hình. Hãy cho phép ghi màn hình trong cài đặt quyền riêng tư của hệ điều hành và khởi động lại ứng dụng."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:36
+#: src/features/user/components/popouts/UserProfileBadges.tsx:31
 msgid "{productName} Partner"
 msgstr "Đối tác {productName}"
 
@@ -1162,12 +1157,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "{productName} sử dụng thông báo đẩy khi được cài đặt dưới dạng PWA di động. Việc đăng ký đảm bảo cổng có thể tiếp cận thiết bị của bạn ngay cả khi ứng dụng chạy nền."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:51
+#: src/features/user/components/popouts/UserProfileBadges.tsx:46
 msgid "{productName} Visionary"
 msgstr "Người có tầm nhìn xa của {productName}"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:46
+#: src/features/user/components/popouts/UserProfileBadges.tsx:41
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "Người dùng {productName} Visionary từ {premiumSinceFormatted}"
 
@@ -36003,7 +35998,7 @@ msgid "Visionary badge ID"
 msgstr "ID huy hiệu Visionary"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:61
+#: src/features/user/components/popouts/UserProfileBadges.tsx:56
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "ID nhà sáng lập {visionaryIdLabel}"
 

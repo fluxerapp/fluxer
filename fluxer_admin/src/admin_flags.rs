@@ -12,7 +12,6 @@ pub struct I32Flag {
 
 pub mod user_flag_bits {
     pub const STAFF: u64 = 1 << 0;
-    pub const CTP_MEMBER: u64 = 1 << 1;
     pub const PARTNER: u64 = 1 << 2;
     pub const BUG_HUNTER: u64 = 1 << 3;
     pub const FRIENDLY_BOT: u64 = 1 << 4;
@@ -39,10 +38,6 @@ pub const USER_FLAGS: &[U64Flag] = &[
     U64Flag {
         name: "STAFF",
         value: user_flag_bits::STAFF,
-    },
-    U64Flag {
-        name: "CTP_MEMBER",
-        value: user_flag_bits::CTP_MEMBER,
     },
     U64Flag {
         name: "PARTNER",

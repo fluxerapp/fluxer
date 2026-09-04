@@ -951,7 +951,7 @@ msgid "{pixPaymentMethod} can skip the card verification step when {paymentProvi
 msgstr "{pixPaymentMethod} može preskočiti korak provjere kartice kada {paymentProviderName} nudi ponavljajuće plaćanje putem {pixPaymentMethod2} za vašu naplatu."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:56
+#: src/features/user/components/popouts/UserProfileBadges.tsx:51
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "Pretplatnik na {premiumProductFullName} od {premiumSinceFormatted}"
 
@@ -1023,7 +1023,7 @@ msgid "{productName} avoids sending push notifications to your mobile devices wh
 msgstr "{productName} sprječava slanje obavijesti na vaš mobilni uređaj kada ste za računalom. Odaberite koliko dugo trebate biti neaktivan/na računalu prije nego što počnete primati obavijesti."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:41
+#: src/features/user/components/popouts/UserProfileBadges.tsx:36
 msgid "{productName} Bug Hunter"
 msgstr "Lovac na bugove {productName}"
 
@@ -1055,11 +1055,6 @@ msgstr "{productName} ne može pokrenuti sigurnu izoliranu rutu za zvuk ove apli
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:36
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
 msgstr "{productName} ne može koristiti hardverski enkoder za ovo, pa će umjesto toga koristiti vaš procesor."
-
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:31
-msgid "{productName} Community Team"
-msgstr "Tim zajednice {productName}"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:108
@@ -1127,7 +1122,7 @@ msgid "{productName} needs screen recording access. Allow screen recording in yo
 msgstr "{productName} treba pristup snimanju zaslona. Dopustite snimanje zaslona u postavkama privatnosti vašeg operativnog sustava i ponovno pokrenite aplikaciju."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:36
+#: src/features/user/components/popouts/UserProfileBadges.tsx:31
 msgid "{productName} Partner"
 msgstr "Partner {productName}"
 
@@ -1162,12 +1157,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "{productName} koristi push obavijesti kada je instaliran kao mobilna PWA. Registracija osigurava da pristupnik može doći do vašeg uređaja čak i kada je aplikacija u pozadini."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:51
+#: src/features/user/components/popouts/UserProfileBadges.tsx:46
 msgid "{productName} Visionary"
 msgstr "{productName} vizionar"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:46
+#: src/features/user/components/popouts/UserProfileBadges.tsx:41
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} vizionar od {premiumSinceFormatted}"
 
@@ -36003,7 +35998,7 @@ msgid "Visionary badge ID"
 msgstr "ID značke vizionara"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:61
+#: src/features/user/components/popouts/UserProfileBadges.tsx:56
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "Vizionar ID {visionaryIdLabel}"
 

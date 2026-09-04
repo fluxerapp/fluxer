@@ -24076,7 +24076,6 @@
 				"maximum": 2147483647,
 				"x-bitflagValues": [
 					{"name": "STAFF", "value": "1", "description": "User is a staff member"},
-					{"name": "CTP_MEMBER", "value": "2", "description": "User is a CTP member"},
 					{"name": "PARTNER", "value": "4", "description": "User is a partner"},
 					{"name": "BUG_HUNTER", "value": "8", "description": "User is a bug hunter"},
 					{"name": "FRIENDLY_BOT", "value": "16", "description": "Bot accepts friend requests from users"},

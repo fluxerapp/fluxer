@@ -443,8 +443,7 @@ export class MessageMentionService {
 			return validUserIds;
 		}
 		const authorHasStaffFlag = (author.flags & UserFlags.STAFF) === UserFlags.STAFF;
-		const authorHasCtpFlag = (author.flags & UserFlags.CTP_MEMBER) === UserFlags.CTP_MEMBER;
-		if (authorHasStaffFlag || authorHasCtpFlag) {
+		if (authorHasStaffFlag) {
 			return validUserIds;
 		}
 		const staffTargets = validUsers.filter((user) => (user.flags & UserFlags.STAFF) === UserFlags.STAFF);

@@ -52,10 +52,6 @@ const PATCHABLE_USER_FLAGS: &[UserFlag] = &[
         value: 1 << 0,
     },
     UserFlag {
-        name: "CTP_MEMBER",
-        value: 1 << 1,
-    },
-    UserFlag {
         name: "PARTNER",
         value: 1 << 2,
     },

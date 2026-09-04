@@ -85,12 +85,6 @@ describe('User flags in responses', () => {
 		const {json} = await fetchUserMe(harness, account.token);
 		expect(json.flags & PublicUserFlags.SPAMMER).toBe(PublicUserFlags.SPAMMER);
 	});
-	test('GET /users/@me includes CTP_MEMBER when set', async () => {
-		const account = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.CTP_MEMBER);
-		const {json} = await fetchUserMe(harness, account.token);
-		expect(json.flags & PublicUserFlags.CTP_MEMBER).toBe(PublicUserFlags.CTP_MEMBER);
-	});
 	test('PATCH /users/@me does not leak internal flags', async () => {
 		const account = await createTestAccount(harness);
 		await setUserFlags(harness, account.userId, UserFlags.STAFF | UserFlags.SPAMMER | UserFlags.HIGH_GLOBAL_RATE_LIMIT);

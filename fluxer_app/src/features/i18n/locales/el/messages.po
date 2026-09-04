@@ -951,7 +951,7 @@ msgid "{pixPaymentMethod} can skip the card verification step when {paymentProvi
 msgstr "Η μέθοδος πληρωμής {pixPaymentMethod} μπορεί να παρακάμψει το βήμα επαλήθευσης κάρτας, όταν ο {paymentProviderName} προσφέρει επαναλαμβανόμενες πληρωμές {pixPaymentMethod2} για την ολοκλήρωση της αγοράς σας."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:56
+#: src/features/user/components/popouts/UserProfileBadges.tsx:51
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "Συνδρομητής {premiumProductFullName} από {premiumSinceFormatted}"
 
@@ -1023,7 +1023,7 @@ msgid "{productName} avoids sending push notifications to your mobile devices wh
 msgstr "Το {productName} αποφεύγει την αποστολή ειδοποιήσεων μέσω push στις κινητές σας συσκευές όταν βρίσκεστε στον υπολογιστή σας. Επιλέξτε για πόσο καιρό πρέπει να είστε ανενεργός στην επιφάνεια εργασίας πριν λάβετε ειδοποιήσεις μέσω push."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:41
+#: src/features/user/components/popouts/UserProfileBadges.tsx:36
 msgid "{productName} Bug Hunter"
 msgstr "Κυνηγός σφαλμάτων {productName}"
 
@@ -1055,11 +1055,6 @@ msgstr "Το {productName} δεν μπορεί να ξεκινήσει μια α
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:36
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
 msgstr "Το {productName} δεν μπορεί να χρησιμοποιήσει έναν επιταχυντή κωδικοποίησης υλικού για αυτό, επομένως θα χρησιμοποιήσει την CPU σας."
-
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:31
-msgid "{productName} Community Team"
-msgstr "Ομάδα κοινότητας {productName}"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:108
@@ -1127,7 +1122,7 @@ msgid "{productName} needs screen recording access. Allow screen recording in yo
 msgstr "Το {productName} χρειάζεται πρόσβαση στην εγγραφή οθόνης. Επιτρέψτε την εγγραφή οθόνης στις ρυθμίσεις απορρήτου του λειτουργικού σας συστήματος και επανεκκινήστε την εφαρμογή."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:36
+#: src/features/user/components/popouts/UserProfileBadges.tsx:31
 msgid "{productName} Partner"
 msgstr "Συνεργάτης {productName}"
 
@@ -1162,12 +1157,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "Το {productName} χρησιμοποιεί ειδοποιήσεις push όταν είναι εγκατεστημένο ως PWA για κινητά. Η εγγραφή διασφαλίζει ότι η πύλη μπορεί να προσεγγίσει τη συσκευή σας ακόμα και όταν η εφαρμογή βρίσκεται στο παρασκήνιο."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:51
+#: src/features/user/components/popouts/UserProfileBadges.tsx:46
 msgid "{productName} Visionary"
 msgstr "Οραματιστής {productName}"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:46
+#: src/features/user/components/popouts/UserProfileBadges.tsx:41
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "Οραματιστής {productName} από {premiumSinceFormatted}"
 
@@ -36003,7 +35998,7 @@ msgid "Visionary badge ID"
 msgstr "Αναγνωριστικό σήματος Visionary"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:61
+#: src/features/user/components/popouts/UserProfileBadges.tsx:56
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "Αναγνωριστικό οραματιστή {visionaryIdLabel}"
 
