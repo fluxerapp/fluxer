@@ -26,8 +26,13 @@ const DLQ_SUBJECT_PREFIX = 'dlq.';
 const DLQ_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const STREAM_MAX_MSGS = 2_000_000;
 const STREAM_MAX_BYTES = 8 * 1024 * 1024 * 1024;
+const STREAM_MIN_BYTES = 64 * 1024 * 1024;
 const STREAM_MAX_MSGS_PER_SUBJECT = 250_000;
-const STREAM_STORE_ERR_CODE = 10077;
+const DLQ_MAX_BYTES = 64 * 1024 * 1024;
+const DLQ_MIN_BYTES = 8 * 1024 * 1024;
+const STREAM_FULL_ERR_CODES = new Set([10023, 10077]);
+const STREAM_NO_STORAGE_ERR_CODE = 10047;
+const STREAM_NAME_IN_USE_ERR_CODE = 10058;
 
 const STREAM_LIMITS = {
 	max_msgs: STREAM_MAX_MSGS,
@@ -37,12 +42,19 @@ const STREAM_LIMITS = {
 	discard_new_per_subject: true,
 } satisfies Partial<StreamConfig>;
 
+function jsErrorCode(error: unknown): number | null {
+	if (!(error instanceof NatsError)) {
+		return null;
+	}
+	return error.jsError()?.err_code ?? null;
+}
+
 function describeStreamRejection(error: unknown): string | null {
 	if (!(error instanceof NatsError)) {
 		return null;
 	}
 	const apiError = error.jsError();
-	if (apiError?.err_code !== STREAM_STORE_ERR_CODE) {
+	if (apiError === null || !STREAM_FULL_ERR_CODES.has(apiError.err_code ?? 0)) {
 		return null;
 	}
 	return apiError.description ?? 'stream rejected the publish';
@@ -63,45 +75,116 @@ export class JetStreamWorkerQueue {
 			return;
 		}
 		const jsm = await this.connectionManager.getJetStreamManager();
-		let existingConfig: StreamConfig | null = null;
-		try {
-			existingConfig = (await jsm.streams.info(STREAM_NAME)).config;
-		} catch {
-			existingConfig = null;
-		}
+		const existingConfig = await this.readStreamConfig(jsm, STREAM_NAME);
 		if (existingConfig === null) {
-			await jsm.streams.add({
-				name: STREAM_NAME,
-				subjects: [`${SUBJECT_PREFIX}>`],
-				retention: RetentionPolicy.Workqueue,
-				storage: StorageType.File,
-				max_age: nanos(MAX_AGE_MS),
-				duplicate_window: nanos(2 * 60 * 1000),
-				num_replicas: 1,
-				...STREAM_LIMITS,
-			});
+			await this.addStream(jsm);
 		} else if (!this.hasStreamLimits(existingConfig)) {
-			await this.applyStreamLimits(jsm);
+			await this.applyStreamLimits(jsm, existingConfig);
 		}
 		this.streamReady = true;
+	}
+
+	private async readStreamConfig(jsm: JetStreamManager, name: string): Promise<StreamConfig | null> {
+		try {
+			return (await jsm.streams.info(name)).config;
+		} catch {
+			return null;
+		}
+	}
+
+	private async fitToStorageBudget(
+		startBytes: number,
+		minBytes: number,
+		apply: (maxBytes: number) => Promise<unknown>,
+	): Promise<number> {
+		let maxBytes = startBytes;
+		for (;;) {
+			try {
+				await apply(maxBytes);
+				return maxBytes;
+			} catch (error) {
+				if (jsErrorCode(error) !== STREAM_NO_STORAGE_ERR_CODE || maxBytes <= minBytes) {
+					throw error;
+				}
+				maxBytes = Math.floor(maxBytes / 2);
+			}
+		}
+	}
+
+	private async adoptConcurrentStream(jsm: JetStreamManager, name: string, error: unknown): Promise<boolean> {
+		if (jsErrorCode(error) !== STREAM_NAME_IN_USE_ERR_CODE) {
+			return false;
+		}
+		const config = await this.readStreamConfig(jsm, name);
+		if (config === null) {
+			return false;
+		}
+		Logger.info({stream: name, max_bytes: config.max_bytes}, 'Stream was created concurrently, adopting it');
+		return true;
+	}
+
+	private async addStream(jsm: JetStreamManager): Promise<void> {
+		let maxBytes: number;
+		try {
+			maxBytes = await this.fitToStorageBudget(STREAM_MAX_BYTES, STREAM_MIN_BYTES, (bytes) =>
+				jsm.streams.add({
+					name: STREAM_NAME,
+					subjects: [`${SUBJECT_PREFIX}>`],
+					retention: RetentionPolicy.Workqueue,
+					storage: StorageType.File,
+					max_age: nanos(MAX_AGE_MS),
+					duplicate_window: nanos(2 * 60 * 1000),
+					num_replicas: 1,
+					...STREAM_LIMITS,
+					max_bytes: bytes,
+				}),
+			);
+		} catch (error) {
+			if (await this.adoptConcurrentStream(jsm, STREAM_NAME, error)) {
+				return;
+			}
+			if (jsErrorCode(error) === STREAM_NO_STORAGE_ERR_CODE) {
+				Logger.error(
+					{err: error, stream: STREAM_NAME, max_bytes: STREAM_MIN_BYTES},
+					'Jobs stream does not fit the JetStream storage budget at its smallest size, free disk space on the NATS store',
+				);
+			}
+			throw error;
+		}
+		if (maxBytes !== STREAM_MAX_BYTES) {
+			Logger.warn(
+				{stream: STREAM_NAME, max_bytes: maxBytes},
+				'Created the jobs stream below its target size to fit the JetStream storage budget',
+			);
+		}
 	}
 
 	private hasStreamLimits(config: StreamConfig): boolean {
 		return (
 			config.max_msgs === STREAM_MAX_MSGS &&
-			config.max_bytes === STREAM_MAX_BYTES &&
+			config.max_bytes > 0 &&
 			config.max_msgs_per_subject === STREAM_MAX_MSGS_PER_SUBJECT &&
 			config.discard === DiscardPolicy.New &&
 			config.discard_new_per_subject
 		);
 	}
 
-	private async applyStreamLimits(jsm: JetStreamManager): Promise<void> {
+	private async applyStreamLimits(jsm: JetStreamManager, existingConfig: StreamConfig): Promise<void> {
+		const startBytes = existingConfig.max_bytes > 0 ? existingConfig.max_bytes : STREAM_MAX_BYTES;
 		try {
-			await jsm.streams.update(STREAM_NAME, {...STREAM_LIMITS});
-			Logger.info({stream: STREAM_NAME, ...STREAM_LIMITS}, 'Applied jobs stream limits');
+			const maxBytes = await this.fitToStorageBudget(startBytes, STREAM_MIN_BYTES, (bytes) =>
+				jsm.streams.update(STREAM_NAME, {...STREAM_LIMITS, max_bytes: bytes}),
+			);
+			Logger.info({stream: STREAM_NAME, ...STREAM_LIMITS, max_bytes: maxBytes}, 'Applied jobs stream limits');
 		} catch (error) {
-			Logger.error({err: error, stream: STREAM_NAME}, 'Failed to apply jobs stream limits, stream stays unbounded');
+			if (jsErrorCode(error) !== STREAM_NO_STORAGE_ERR_CODE) {
+				Logger.error({err: error, stream: STREAM_NAME}, 'Failed to apply jobs stream limits');
+				return;
+			}
+			Logger.warn(
+				{err: error, stream: STREAM_NAME, max_bytes: existingConfig.max_bytes},
+				'JetStream has no room to bound the jobs stream, it keeps the limits it already has',
+			);
 		}
 	}
 
@@ -110,19 +193,43 @@ export class JetStreamWorkerQueue {
 			return;
 		}
 		const jsm = await this.connectionManager.getJetStreamManager();
-		try {
-			await jsm.streams.info(DLQ_STREAM_NAME);
-		} catch {
-			await jsm.streams.add({
-				name: DLQ_STREAM_NAME,
-				subjects: [`${DLQ_SUBJECT_PREFIX}>`],
-				retention: RetentionPolicy.Limits,
-				storage: StorageType.File,
-				max_age: nanos(DLQ_MAX_AGE_MS),
-				num_replicas: 1,
-			});
+		if ((await this.readStreamConfig(jsm, DLQ_STREAM_NAME)) === null) {
+			if (!(await this.addDlqStream(jsm))) {
+				return;
+			}
 		}
 		this.dlqStreamReady = true;
+	}
+
+	private async addDlqStream(jsm: JetStreamManager): Promise<boolean> {
+		try {
+			const maxBytes = await this.fitToStorageBudget(DLQ_MAX_BYTES, DLQ_MIN_BYTES, (bytes) =>
+				jsm.streams.add({
+					name: DLQ_STREAM_NAME,
+					subjects: [`${DLQ_SUBJECT_PREFIX}>`],
+					retention: RetentionPolicy.Limits,
+					storage: StorageType.File,
+					max_age: nanos(DLQ_MAX_AGE_MS),
+					num_replicas: 1,
+					max_bytes: bytes,
+					discard: DiscardPolicy.Old,
+				}),
+			);
+			Logger.info({stream: DLQ_STREAM_NAME, max_bytes: maxBytes}, 'Dead-letter stream created');
+			return true;
+		} catch (error) {
+			if (await this.adoptConcurrentStream(jsm, DLQ_STREAM_NAME, error)) {
+				return true;
+			}
+			if (jsErrorCode(error) !== STREAM_NO_STORAGE_ERR_CODE) {
+				throw error;
+			}
+			Logger.warn(
+				{err: error, stream: DLQ_STREAM_NAME},
+				'JetStream has no room for the dead-letter stream, failed jobs stay in the jobs stream until they expire',
+			);
+			return false;
+		}
 	}
 
 	async ensureConsumers(lanes: ReadonlyArray<WorkerLaneDefinition>): Promise<void> {
