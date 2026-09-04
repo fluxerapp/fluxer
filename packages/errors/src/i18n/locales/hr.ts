@@ -249,7 +249,6 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Ovaj sadržaj je već poslan NCMEC-u.",
 	"content_and_safety.ncmec_submission_failed": "Nismo mogli poslati izvješće NCMEC-u. Pokušaj ponovno kasnije.",
 	"content_and_safety.nsfw_age_restricted": "NSFW sadržaj je dobno ograničen.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Ovaj emoji ili naljepnica klasificiran je kao NSFW i ne može se koristiti u ovom kontekstu.",
 	"discovery.already_applied": "Ova zajednica je već podnijela zahtjev za vidljivost.",
 	"discovery.application_already_reviewed": "Ova prijava za otkrivanje već je pregledana.",
 	"discovery.application_not_found": "Prijava za otkrivanje nije pronađena.",

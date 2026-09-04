@@ -25,7 +25,7 @@ msgid "(edited)"
 msgstr "(已編輯)"
 
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
 msgid "(failed to load)"
 msgstr "(載入失敗)"
 
@@ -413,7 +413,7 @@ msgid "{count, plural, one {# potential spammer message} other {# potential spam
 msgstr "{count, plural, one {# 則可能的垃圾訊息} other {# 則可能的垃圾訊息}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:149
+#: src/features/channel/components/MessageReactions.tsx:145
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {# 個心情} other {# 個心情}}"
 
@@ -744,7 +744,7 @@ msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/ChannelListContent.tsx:83
+#: src/features/app/components/layout/ChannelListContent.tsx:84
 msgid "{guildName} channels"
 msgstr "{guildName} 頻道"
 
@@ -5896,7 +5896,7 @@ msgid "Category deleted"
 msgstr "類別已刪除"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:74
+#: src/features/app/components/layout/ChannelListContent.tsx:75
 msgid "Category full"
 msgstr "類別已滿"
 
@@ -14147,7 +14147,7 @@ msgstr "功能暫時停用"
 msgid "Features"
 msgstr "功能"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:232
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
 msgid "Fetch a URL and inspect the embed payload the chat renderer receives."
 msgstr "擷取一個網址，並檢查聊天渲染器接收到的嵌入酬載。"
 
@@ -19485,7 +19485,7 @@ msgid "Members without the {readMessageHistoryPermissionLabel} permission can vi
 msgstr "沒有「{readMessageHistoryPermissionLabel}」權限的成員，可以查看此日期之後傳送的訊息。"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:87
+#: src/features/app/components/layout/ChannelListContent.tsx:88
 msgid "Members, selected"
 msgstr "已選取成員"
 
@@ -20983,7 +20983,7 @@ msgstr "新訊息"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:91
+#: src/features/app/components/layout/ChannelListContent.tsx:92
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "新訊息"
@@ -21292,7 +21292,7 @@ msgstr "找不到顯示器"
 msgid "No email address set"
 msgstr "未設定電子郵件地址"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:285
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:284
 msgid "No embeds returned"
 msgstr "未傳回任何嵌入內容"
 
@@ -23932,7 +23932,7 @@ msgstr "在一段時間內，禁止成員傳送訊息、心情回應和加入語
 
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:16
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:277
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
 msgstr "預覽"
 
@@ -24668,7 +24668,7 @@ msgstr "評分"
 msgid "Rate limited"
 msgstr "頻率限制"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:293
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:292
 msgid "Raw embed JSON"
 msgstr "原始嵌入 JSON"
 
@@ -26377,11 +26377,6 @@ msgstr "返回登入"
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:62
 msgid "Reveal"
 msgstr "顯示"
-
-#. Accessible label for a blurred emoji button. Activating it reveals the emoji when allowed.
-#: src/features/app/components/shared/MatureEmojiWrapper.tsx:13
-msgid "Reveal sensitive emoji"
-msgstr "顯示敏感表情符號"
 
 #. Short label in the shared app spoiler overlay.
 #: src/features/app/components/shared/SpoilerOverlay.tsx:11
@@ -31863,7 +31858,7 @@ msgid "This card does not match your billing country, so it cannot be used for t
 msgstr "此卡片與您的帳單國家/地區不符，因此無法用於此當地貨幣。請使用當地卡片、選擇其他付款方式，或返回 {productName} 並切換為標準價格。"
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
-#: src/features/app/components/layout/ChannelListContent.tsx:78
+#: src/features/app/components/layout/ChannelListContent.tsx:79
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
 msgstr "此類別已包含最多 {maxChannelsPerCategory} 個頻道。"
 
@@ -33758,7 +33753,7 @@ msgid "Unfurl"
 msgstr "展開連結"
 
 #. Settings section label for the embed debugger URL input.
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:230
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Unfurl debugger"
 msgstr "嵌入偵錯工具網址"
@@ -33777,7 +33772,7 @@ msgstr "通用備用。畫質最低，但隨處可用。"
 #. Fallback version label when the installed desktop version is unknown.
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx:585
+#: src/features/emoji/components/emojis/EmojiListItem.tsx:584
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
@@ -38167,11 +38162,6 @@ msgstr "您的 IP 已被封鎖"
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:187
 msgid "Your last purchase is outside the refund window. Contact support for billing issues."
 msgstr "您的上次購買已超出退款期限。如需處理帳務問題，請聯絡客服。"
-
-#. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:77
-msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
-msgstr "您的訊息無法傳送，因為它包含此情境中不允許的成人表情符號或貼圖。"
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx:72

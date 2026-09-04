@@ -249,7 +249,6 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Bu içerik zaten NCMEC'e gönderildi.",
 	"content_and_safety.ncmec_submission_failed": "Raporu NCMEC'e gönderemedik. Lütfen daha sonra tekrar dene.",
 	"content_and_safety.nsfw_age_restricted": "NSFW içerik yaş sınırına tabidir.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Bu emoji veya çıkartma NSFW olarak sınıflandırılmış ve bu bağlamda kullanılamaz.",
 	"discovery.already_applied": "Bu topluluk zaten keşif için başvurdu.",
 	"discovery.application_already_reviewed": "Bu keşif başvurusu zaten incelendi.",
 	"discovery.application_not_found": "Keşif başvurusu bulunamadı.",

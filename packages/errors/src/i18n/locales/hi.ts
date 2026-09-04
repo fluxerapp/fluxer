@@ -249,7 +249,6 @@ const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "यह कंटेंट पहले ही NCMEC को भेजा जा चुका है।",
 	"content_and_safety.ncmec_submission_failed": "हम NCMEC को रिपोर्ट भेज नहीं पाए। कृपया बाद में पुनः प्रयास करें।",
 	"content_and_safety.nsfw_age_restricted": "NSFW कंटेंट उम्र के हिसाब से प्रतिबंधित है।",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "यह इमोजी या स्टीकर NSFW के तौर पर मार्क किया गया है और यहां इस्तेमाल नहीं किया जा सकता।",
 	"discovery.already_applied": "यह कम्युनिटी पहले ही डिस्कवरी के लिए अप्लाई कर दी गई है।",
 	"discovery.application_already_reviewed": "इस डिस्कवरी एप्लिकेशन की पहले ही समीक्षा हो चुकी है।",
 	"discovery.application_not_found": "डिस्कवरी एप्लिकेशन नहीं मिला।",

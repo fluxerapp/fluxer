@@ -249,7 +249,6 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "تم إرسال هذا المحتوى بالفعل إلى NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "تعذر إرسال التقرير إلى NCMEC. حاول مجددًا لاحقًا.",
 	"content_and_safety.nsfw_age_restricted": "المحتوى NSFW مقيد عمريًا.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "هذا الإيموجي أو الملصق مصنف على أنه NSFW ولا يمكن استخدامه في هذا السياق.",
 	"discovery.already_applied": "لقد تقدم هذا المجتمع بالفعل بطلب الاكتشاف.",
 	"discovery.application_already_reviewed": "تمت مراجعة طلب الاكتشاف هذا بالفعل.",
 	"discovery.application_not_found": "لم يتم العثور على طلب الاكتشاف.",

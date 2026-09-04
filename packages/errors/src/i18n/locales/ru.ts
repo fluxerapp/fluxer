@@ -249,7 +249,6 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Этот контент уже был отправлен в NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Не удалось отправить жалобу в NCMEC. Попробуй ещё раз позже.",
 	"content_and_safety.nsfw_age_restricted": "Контент NSFW имеет возрастное ограничение.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Этот эмодзи или стикер отнесён к NSFW и не может использоваться в этом контексте.",
 	"discovery.already_applied": "Это сообщество уже подало заявку на участие в каталоге.",
 	"discovery.application_already_reviewed": "Эта заявка на добавление в каталог уже рассмотрена.",
 	"discovery.application_not_found": "Заявка на добавление в каталог не найдена.",

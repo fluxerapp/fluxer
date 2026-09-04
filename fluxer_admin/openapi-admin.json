@@ -9034,7 +9034,6 @@
 					"NOT_FRIENDS_WITH_USER",
 					"NOT_OWNER_OF_ADMIN_API_KEY",
 					"NSFW_CONTENT_AGE_RESTRICTED",
-					"NSFW_EMOJI_STICKER_BLOCKED",
 					"PASSKEY_AUTHENTICATION_FAILED",
 					"PASSKEYS_DISABLED",
 					"PHONE_ADD_NOT_ELIGIBLE",
@@ -12283,11 +12282,6 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/MessageStickerResponse"}
 					},
-					"nsfw_emojis": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "IDs of custom emojis in this message that are classified as NSFW"
-					},
 					"reactions": {
 						"description": "The reactions on the message",
 						"nullable": true,
@@ -12430,11 +12424,6 @@
 								"nullable": true,
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/MessageStickerResponse"}
-							},
-							"nsfw_emojis": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/SnowflakeType"},
-								"description": "IDs of custom emojis in this message that are classified as NSFW"
 							},
 							"reactions": {
 								"description": "The reactions on the message",
@@ -12881,8 +12870,7 @@
 						"description": "The unique identifier of the sticker"
 					},
 					"name": {"type": "string", "description": "The name of the sticker"},
-					"animated": {"type": "boolean", "description": "Whether the sticker is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this sticker is classified as NSFW"}
+					"animated": {"type": "boolean", "description": "Whether the sticker is animated"}
 				},
 				"required": ["id", "name", "animated"]
 			},

@@ -28,7 +28,7 @@ describe('assertNoUndefinedParams', () => {
 				created_at: new Date(0),
 				blob: Buffer.from('x'),
 				mention_users: [1n, 2n, 3n],
-				nsfw_emojis: new Set(['a', 'b']),
+				mention_roles: new Set(['a', 'b']),
 				reactions: new Map([['a', 1]]),
 				embeds: {title: 'a', fields: [{name: 'n', value: 'v'}], footer: {text: null}},
 			}),
@@ -44,7 +44,7 @@ describe('assertNoUndefinedParams', () => {
 	});
 
 	it('reports the dotted path of an undefined set member', () => {
-		expect(guardError({nsfw_emojis: new Set(['a', undefined])})).toBe(messageFor(':nsfw_emojis{set:1}'));
+		expect(guardError({mention_roles: new Set(['a', undefined])})).toBe(messageFor(':mention_roles{set:1}'));
 	});
 
 	it('reports the dotted path of an undefined map key', () => {

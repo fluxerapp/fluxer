@@ -249,7 +249,6 @@ const ERROR_I18N_ID_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Konten ini sudah dilaporkan ke NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Laporan tidak bisa dikirim ke NCMEC. Coba lagi nanti.",
 	"content_and_safety.nsfw_age_restricted": "Konten NSFW dibatasi usia.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Emoji atau stiker ini diklasifikasikan sebagai NSFW dan tidak bisa digunakan di sini.",
 	"discovery.already_applied": "Komunitas ini sudah mendaftar untuk ditemukan.",
 	"discovery.application_already_reviewed": "Komunitas ini sudah ditinjau untuk discovery.",
 	"discovery.application_not_found": "Discovery tidak ditemukan.",

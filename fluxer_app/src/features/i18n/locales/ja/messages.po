@@ -25,7 +25,7 @@ msgid "(edited)"
 msgstr "(編集済み)"
 
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
 msgid "(failed to load)"
 msgstr "(読み込み失敗)"
 
@@ -413,7 +413,7 @@ msgid "{count, plural, one {# potential spammer message} other {# potential spam
 msgstr "{count, plural, one {# 件のスパムの可能性があるメッセージ} other {# 件のスパムの可能性があるメッセージ}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:149
+#: src/features/channel/components/MessageReactions.tsx:145
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {#リアクション} other {#リアクション}}"
 
@@ -744,7 +744,7 @@ msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/ChannelListContent.tsx:83
+#: src/features/app/components/layout/ChannelListContent.tsx:84
 msgid "{guildName} channels"
 msgstr "{guildName}のチャンネル"
 
@@ -5896,7 +5896,7 @@ msgid "Category deleted"
 msgstr "カテゴリを削除しました"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:74
+#: src/features/app/components/layout/ChannelListContent.tsx:75
 msgid "Category full"
 msgstr "カテゴリの上限に達しました"
 
@@ -14147,7 +14147,7 @@ msgstr "この機能は一時的に利用できません"
 msgid "Features"
 msgstr "機能"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:232
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
 msgid "Fetch a URL and inspect the embed payload the chat renderer receives."
 msgstr "URLを取得して、チャットレンダラーが受信する埋め込みペイロードを検査します。"
 
@@ -19485,7 +19485,7 @@ msgid "Members without the {readMessageHistoryPermissionLabel} permission can vi
 msgstr "{readMessageHistoryPermissionLabel}の権限がないメンバーは、この日付以降に送信されたメッセージを閲覧できます。"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:87
+#: src/features/app/components/layout/ChannelListContent.tsx:88
 msgid "Members, selected"
 msgstr "メンバー、選択済み"
 
@@ -20983,7 +20983,7 @@ msgstr "新着メッセージ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:91
+#: src/features/app/components/layout/ChannelListContent.tsx:92
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "新着メッセージ"
@@ -21292,7 +21292,7 @@ msgstr "ディスプレイが見つかりません"
 msgid "No email address set"
 msgstr "メールアドレスが未設定です"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:285
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:284
 msgid "No embeds returned"
 msgstr "埋め込みが返されませんでした"
 
@@ -23932,7 +23932,7 @@ msgstr "メンバーのメッセージ送信、リアクション、音声通話
 
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:16
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:277
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
 msgstr "プレビュー"
 
@@ -24668,7 +24668,7 @@ msgstr "評価"
 msgid "Rate limited"
 msgstr "レート制限中"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:293
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:292
 msgid "Raw embed JSON"
 msgstr "生の埋め込み JSON"
 
@@ -26377,11 +26377,6 @@ msgstr "サインイン画面に戻る"
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:62
 msgid "Reveal"
 msgstr "表示"
-
-#. Accessible label for a blurred emoji button. Activating it reveals the emoji when allowed.
-#: src/features/app/components/shared/MatureEmojiWrapper.tsx:13
-msgid "Reveal sensitive emoji"
-msgstr "不適切な絵文字を表示"
 
 #. Short label in the shared app spoiler overlay.
 #: src/features/app/components/shared/SpoilerOverlay.tsx:11
@@ -31863,7 +31858,7 @@ msgid "This card does not match your billing country, so it cannot be used for t
 msgstr "このカードは請求先の国と一致しないため、この地域の通貨には使用できません。現地のカードを使用するか、別の支払い方法を選択するか、{productName}に戻って通常料金に切り替えてください。"
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
-#: src/features/app/components/layout/ChannelListContent.tsx:78
+#: src/features/app/components/layout/ChannelListContent.tsx:79
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
 msgstr "このカテゴリにはすでにチャンネルが{maxChannelsPerCategory}個あり、上限に達しています。"
 
@@ -33758,7 +33753,7 @@ msgid "Unfurl"
 msgstr "展開"
 
 #. Settings section label for the embed debugger URL input.
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:230
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Unfurl debugger"
 msgstr "埋め込みデバッガー URL の設定セクションラベル"
@@ -33777,7 +33772,7 @@ msgstr "汎用フォールバック。音質は最低ですが、どこでも動
 #. Fallback version label when the installed desktop version is unknown.
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx:585
+#: src/features/emoji/components/emojis/EmojiListItem.tsx:584
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
@@ -38167,11 +38162,6 @@ msgstr "IPアドレスがBANされました"
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:187
 msgid "Your last purchase is outside the refund window. Contact support for billing issues."
 msgstr "前回の購入は返金期間を過ぎています。請求に関する問題については、サポートにお問い合わせください。"
-
-#. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:77
-msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
-msgstr "成人向け絵文字またはスタンプが含まれているため、メッセージを配信できませんでした。"
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx:72

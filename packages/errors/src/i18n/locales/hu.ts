@@ -249,7 +249,6 @@ const ERROR_I18N_HU_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Ezt a tartalmat már beküldtük az NCMEC-nek.",
 	"content_and_safety.ncmec_submission_failed": "Nem sikerült beküldeni a bejelentést az NCMEC-nek. Próbáld meg újra később.",
 	"content_and_safety.nsfw_age_restricted": "Az NSFW tartalom korhatáros.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Ez az emoji vagy matrica NSFW besorolású, és nem használható ebben a környezetben.",
 	"discovery.already_applied": "Ez a közösség már kérte a felfedezhetőséget.",
 	"discovery.application_already_reviewed": "Ezt a felfedezési kérelmet már elbírálták.",
 	"discovery.application_not_found": "A felfedezési kérelem nem található.",

@@ -249,7 +249,6 @@ const ERROR_I18N_PL_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Tę treść już zgłoszono do NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Nie mogliśmy przesłać zgłoszenia do NCMEC. Spróbuj ponownie później.",
 	"content_and_safety.nsfw_age_restricted": "Treści dla dorosłych są objęte ograniczeniem wiekowym.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Tego emoji lub naklejki nie można użyć w tym kontekście, ponieważ jest oznaczone jako treści dla dorosłych.",
 	"discovery.already_applied": "Ta społeczność już zgłosiła się do funkcji wykrywania.",
 	"discovery.application_already_reviewed": "Ta społeczność została już zweryfikowana do odkrywania.",
 	"discovery.application_not_found": "Nie znaleziono zgłoszenia społeczności do odkrywania.",

@@ -23552,7 +23552,6 @@
 					"NOT_FRIENDS_WITH_USER",
 					"NOT_OWNER_OF_ADMIN_API_KEY",
 					"NSFW_CONTENT_AGE_RESTRICTED",
-					"NSFW_EMOJI_STICKER_BLOCKED",
 					"PASSKEY_AUTHENTICATION_FAILED",
 					"PASSKEYS_DISABLED",
 					"PHONE_ADD_NOT_ELIGIBLE",
@@ -23861,7 +23860,6 @@
 					"You're not friends with this user.",
 					"You don't have permission to modify this admin API key.",
 					"NSFW content is age restricted.",
-					"This emoji or sticker is classified as NSFW and cannot be used in this context.",
 					"Passkey authentication failed.",
 					"Passkeys are disabled.",
 					"You are not eligible to add a phone number to your account.",
@@ -24812,11 +24810,6 @@
 						],
 						"description": "The stickers sent with the message"
 					},
-					"nsfw_emojis": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "IDs of custom emojis in this message that are classified as NSFW"
-					},
 					"reactions": {
 						"anyOf": [
 							{"type": "array", "items": {"$ref": "#/components/schemas/MessageReactionResponse"}},
@@ -24989,11 +24982,6 @@
 											{"type": "null"}
 										],
 										"description": "The stickers sent with the message"
-									},
-									"nsfw_emojis": {
-										"type": "array",
-										"items": {"$ref": "#/components/schemas/SnowflakeType"},
-										"description": "IDs of custom emojis in this message that are classified as NSFW"
 									},
 									"reactions": {
 										"anyOf": [
@@ -25484,8 +25472,7 @@
 						"description": "The unique identifier of the sticker"
 					},
 					"name": {"type": "string", "description": "The name of the sticker"},
-					"animated": {"type": "boolean", "description": "Whether the sticker is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this sticker is classified as NSFW"}
+					"animated": {"type": "boolean", "description": "Whether the sticker is animated"}
 				},
 				"required": ["id", "name", "animated"]
 			},
@@ -27050,11 +27037,6 @@
 								],
 								"description": "The stickers sent with the message"
 							},
-							"nsfw_emojis": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/SnowflakeType"},
-								"description": "IDs of custom emojis in this message that are classified as NSFW"
-							},
 							"message_reference": {
 								"anyOf": [
 									{
@@ -27943,10 +27925,9 @@
 						"description": "The unique identifier for this emoji"
 					},
 					"name": {"type": "string", "description": "The name of the emoji"},
-					"animated": {"type": "boolean", "description": "Whether this emoji is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this emoji is classified as NSFW"}
+					"animated": {"type": "boolean", "description": "Whether this emoji is animated"}
 				},
-				"required": ["id", "name", "animated", "nsfw"]
+				"required": ["id", "name", "animated"]
 			},
 			"GuildStickerResponse": {
 				"type": "object",
@@ -27964,10 +27945,9 @@
 						"maxItems": 100,
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
-					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this sticker is classified as NSFW"}
+					"animated": {"type": "boolean", "description": "Whether this sticker is animated"}
 				},
-				"required": ["id", "name", "description", "tags", "animated", "nsfw"]
+				"required": ["id", "name", "description", "tags", "animated"]
 			},
 			"GuildCreateRequest": {
 				"type": "object",
@@ -28951,10 +28931,9 @@
 					},
 					"name": {"type": "string", "description": "The name of the emoji"},
 					"animated": {"type": "boolean", "description": "Whether this emoji is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this emoji is classified as NSFW"},
 					"user": {"$ref": "#/components/schemas/UserPartialResponse"}
 				},
-				"required": ["id", "name", "animated", "nsfw", "user"]
+				"required": ["id", "name", "animated", "user"]
 			},
 			"GuildEmojiBulkCreateResponse": {
 				"type": "object",
@@ -29451,10 +29430,9 @@
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
 					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this sticker is classified as NSFW"},
 					"user": {"$ref": "#/components/schemas/UserPartialResponse"}
 				},
-				"required": ["id", "name", "description", "tags", "animated", "nsfw", "user"]
+				"required": ["id", "name", "description", "tags", "animated", "user"]
 			},
 			"GuildStickerBulkCreateResponse": {
 				"type": "object",
@@ -31503,11 +31481,6 @@
 										{"type": "null"}
 									],
 									"description": "The stickers sent with the message"
-								},
-								"nsfw_emojis": {
-									"type": "array",
-									"items": {"$ref": "#/components/schemas/SnowflakeType"},
-									"description": "IDs of custom emojis in this message that are classified as NSFW"
 								},
 								"reactions": {
 									"anyOf": [

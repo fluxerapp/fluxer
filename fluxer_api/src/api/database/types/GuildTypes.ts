@@ -240,7 +240,6 @@ export interface GuildEmojiRow {
 	name: string;
 	creator_id: UserID;
 	animated: boolean;
-	nsfw: boolean | null;
 	version: number;
 }
 
@@ -250,7 +249,6 @@ export const GUILD_EMOJI_COLUMNS = [
 	'name',
 	'creator_id',
 	'animated',
-	'nsfw',
 	'version',
 ] as const satisfies ReadonlyArray<keyof GuildEmojiRow>;
 export const GUILD_EMOJI_BY_EMOJI_ID_COLUMNS = [
@@ -259,7 +257,6 @@ export const GUILD_EMOJI_BY_EMOJI_ID_COLUMNS = [
 	'name',
 	'creator_id',
 	'animated',
-	'nsfw',
 ] as const satisfies ReadonlyArray<keyof GuildEmojiRow>;
 
 export interface GuildStickerRow {
@@ -268,7 +265,6 @@ export interface GuildStickerRow {
 	name: string;
 	description: Nullish<string>;
 	animated: boolean;
-	nsfw: boolean | null;
 	tags: Nullish<Array<string>>;
 	creator_id: UserID;
 	version: number;
@@ -280,7 +276,6 @@ export const GUILD_STICKER_COLUMNS = [
 	'name',
 	'description',
 	'animated',
-	'nsfw',
 	'tags',
 	'creator_id',
 	'version',
@@ -291,7 +286,6 @@ export const GUILD_STICKER_BY_STICKER_ID_COLUMNS = [
 	'name',
 	'description',
 	'animated',
-	'nsfw',
 	'tags',
 	'creator_id',
 ] as const satisfies ReadonlyArray<keyof GuildStickerRow>;

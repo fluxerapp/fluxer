@@ -96,7 +96,6 @@ function makeMessage(messageId: bigint = 2n, content: string = '', channelId: bi
 		message_reference: null,
 		message_snapshots: null,
 		call: null,
-		nsfw_emojis: null,
 		has_reaction: null,
 		version: 1,
 	});

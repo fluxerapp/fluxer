@@ -1,12 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.matureBlurContainer {
-	position: relative;
-	display: inline-block;
-	overflow: hidden;
-	border-radius: 0.25rem;
-}
-
 .matureBlurred {
 	filter: blur(0.625rem);
 	cursor: pointer;

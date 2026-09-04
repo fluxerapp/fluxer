@@ -245,7 +245,6 @@
 	"content_and_safety.ncmec_already_submitted": "This content has already been submitted to NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "We couldn't submit the report to NCMEC. Please try again later.",
 	"content_and_safety.nsfw_age_restricted": "NSFW content is age restricted.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "This emoji or sticker is classified as NSFW and cannot be used in this context.",
 	"discovery.already_applied": "This community has already applied for discovery.",
 	"discovery.application_already_reviewed": "This discovery application has already been reviewed.",
 	"discovery.application_not_found": "Discovery application wasn't found.",

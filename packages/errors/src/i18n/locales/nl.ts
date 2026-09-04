@@ -249,7 +249,6 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Deze melding is al ingediend bij NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "We konden de melding niet indienen bij NCMEC. Probeer het later opnieuw.",
 	"content_and_safety.nsfw_age_restricted": "NSFW-inhoud is leeftijdsbeperkt.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Deze emoji of sticker is geclassificeerd als NSFW en kan niet in deze context worden gebruikt.",
 	"discovery.already_applied": "Deze community heeft zich al aangemeld voor discovery.",
 	"discovery.application_already_reviewed": "Deze discovery-aanvraag is al beoordeeld.",
 	"discovery.application_not_found": "Discovery-aanvraag niet gevonden.",

@@ -25,7 +25,7 @@ msgid "(edited)"
 msgstr "(แก้ไขแล้ว)"
 
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
 msgid "(failed to load)"
 msgstr "(โหลดไม่สำเร็จ)"
 
@@ -413,7 +413,7 @@ msgid "{count, plural, one {# potential spammer message} other {# potential spam
 msgstr "{count, plural, one {# ข้อความสแปมที่อาจเป็นอันตราย} other {# ข้อความสแปมที่อาจเป็นอันตราย}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:149
+#: src/features/channel/components/MessageReactions.tsx:145
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {# รีแอ็กชัน} other {# รีแอ็กชัน}}"
 
@@ -744,7 +744,7 @@ msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/ChannelListContent.tsx:83
+#: src/features/app/components/layout/ChannelListContent.tsx:84
 msgid "{guildName} channels"
 msgstr "ช่องของ {guildName}"
 
@@ -5896,7 +5896,7 @@ msgid "Category deleted"
 msgstr "ลบหมวดหมู่แล้ว"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:74
+#: src/features/app/components/layout/ChannelListContent.tsx:75
 msgid "Category full"
 msgstr "เต็มหมวดหมู่"
 
@@ -14147,7 +14147,7 @@ msgstr "ปิดใช้งานฟีเจอร์ชั่วคราว
 msgid "Features"
 msgstr "คุณสมบัติ"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:232
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
 msgid "Fetch a URL and inspect the embed payload the chat renderer receives."
 msgstr "ดึงข้อมูลจาก URL และตรวจสอบเนื้อหาที่ส่งไปยังส่วนแสดงผลการแชท"
 
@@ -19485,7 +19485,7 @@ msgid "Members without the {readMessageHistoryPermissionLabel} permission can vi
 msgstr "สมาชิกที่ไม่มีสิทธิ์ {readMessageHistoryPermissionLabel} จะสามารถดูข้อความที่ส่งหลังจากวันที่นี้ได้"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:87
+#: src/features/app/components/layout/ChannelListContent.tsx:88
 msgid "Members, selected"
 msgstr "สมาชิกที่เลือก"
 
@@ -20983,7 +20983,7 @@ msgstr "ข้อความใหม่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:91
+#: src/features/app/components/layout/ChannelListContent.tsx:92
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "ข้อความใหม่"
@@ -21292,7 +21292,7 @@ msgstr "ไม่พบการแสดงผล"
 msgid "No email address set"
 msgstr "ยังไม่ได้ตั้งค่าอีเมล"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:285
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:284
 msgid "No embeds returned"
 msgstr "ไม่พบการฝัง"
 
@@ -23932,7 +23932,7 @@ msgstr "ป้องกันสมาชิกจากการส่งข้
 
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:16
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:277
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
 msgstr "ตัวอย่าง"
 
@@ -24668,7 +24668,7 @@ msgstr "ให้คะแนน"
 msgid "Rate limited"
 msgstr "ถูกจำกัดอัตรา"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:293
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:292
 msgid "Raw embed JSON"
 msgstr "JSON สำหรับการดีบักแบบดิบ"
 
@@ -26377,11 +26377,6 @@ msgstr "กลับสู่หน้าลงชื่อเข้าใช้
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:62
 msgid "Reveal"
 msgstr "แสดง"
-
-#. Accessible label for a blurred emoji button. Activating it reveals the emoji when allowed.
-#: src/features/app/components/shared/MatureEmojiWrapper.tsx:13
-msgid "Reveal sensitive emoji"
-msgstr "แสดงอิโมจิที่ละเอียดอ่อน"
 
 #. Short label in the shared app spoiler overlay.
 #: src/features/app/components/shared/SpoilerOverlay.tsx:11
@@ -31863,7 +31858,7 @@ msgid "This card does not match your billing country, so it cannot be used for t
 msgstr "บัตรนี้ไม่ตรงกับประเทศที่เรียกเก็บเงินของคุณ จึงไม่สามารถใช้กับสกุลเงินท้องถิ่นนี้ได้ โปรดใช้บัตรในประเทศ เลือกวิธีการชำระเงินอื่น หรือกลับไปที่ {productName} และเปลี่ยนไปใช้ราคามาตรฐาน"
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
-#: src/features/app/components/layout/ChannelListContent.tsx:78
+#: src/features/app/components/layout/ChannelListContent.tsx:79
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
 msgstr "หมวดหมู่นี้มีช่องครบตามจำนวนสูงสุดที่ {maxChannelsPerCategory} ช่องแล้ว"
 
@@ -33758,7 +33753,7 @@ msgid "Unfurl"
 msgstr "แสดงตัวอย่างลิงก์"
 
 #. Settings section label for the embed debugger URL input.
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:230
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Unfurl debugger"
 msgstr "URL สำหรับการดีบักการแสดงผลข้อความ"
@@ -33777,7 +33772,7 @@ msgstr "ตัวเลือกสำรองแบบครอบคลุม
 #. Fallback version label when the installed desktop version is unknown.
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx:585
+#: src/features/emoji/components/emojis/EmojiListItem.tsx:584
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
@@ -38167,11 +38162,6 @@ msgstr "IP ของคุณถูกแบน"
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:187
 msgid "Your last purchase is outside the refund window. Contact support for billing issues."
 msgstr "การซื้อครั้งล่าสุดของคุณอยู่นอกช่วงเวลาการคืนเงิน โปรดติดต่อฝ่ายสนับสนุนสำหรับปัญหาการเรียกเก็บเงิน"
-
-#. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:77
-msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
-msgstr "ไม่สามารถส่งข้อความของคุณได้ เนื่องจากมีอิโมจิหรือสติกเกอร์สำหรับผู้ใหญ่ที่ไม่ได้รับอนุญาตในบริบทนี้"
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx:72

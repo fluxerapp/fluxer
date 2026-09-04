@@ -461,8 +461,7 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 	});
 	const stickerRecord = Sticker.getStickerById(sticker.id);
 	const guild = stickerRecord?.guildId ? Guilds.getGuild(stickerRecord.guildId) : null;
-	const isMature = !!stickerRecord?.nsfw || !!sticker.nsfw;
-	const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(isMature, message.channelId);
+	const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(false, message.channelId);
 	const tooltipContent = () => (
 		<div className={styles.stickerTooltip} data-flx="channel.message-attachments.tooltip-content.sticker-tooltip">
 			<span className={styles.stickerName} data-flx="channel.message-attachments.tooltip-content.sticker-name">
@@ -502,7 +501,6 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 			tags: [],
 			url: stickerUrl,
 			animated: sticker.animated,
-			nsfw: Boolean(sticker.nsfw),
 			user: undefined,
 		};
 		ContextMenuCommands.openFromEvent(e, ({onClose}) => (

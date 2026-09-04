@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
-import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {
-	GuildExplicitContentFilterTypes,
-	GuildFeatures,
-	GuildNSFWLevel,
-	GuildOperations,
-} from '@fluxer/constants/src/GuildConstants';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_REACTIONS_PER_MESSAGE, MAX_USERS_PER_MESSAGE_REACTION} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -17,10 +12,7 @@ import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMes
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {NsfwEmojiStickerBlockedError} from '@fluxer/errors/src/domains/moderation/NsfwEmojiStickerBlockedError';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
@@ -225,21 +217,6 @@ export class MessageReactionService extends MessageInteractionBase {
 				userId,
 				hasPermission: channel.guildId ? hasPermission : undefined,
 			});
-		}
-		if (parsedEmoji.id) {
-			const reactionEmojiId = createEmojiID(BigInt(parsedEmoji.id));
-			const emojiObj = await this.guildRepository.getEmojiById(reactionEmojiId);
-			if (emojiObj?.isNsfw) {
-				const isNSFWAllowed = this.isNSFWContentAllowedForReaction({
-					channel,
-					guild,
-					member: authChannel.member,
-					isBot: requestingUser?.isBot,
-				});
-				if (!isNSFWAllowed) {
-					throw new NsfwEmojiStickerBlockedError();
-				}
-			}
 		}
 		if (reactionCount >= maxUsersPerReaction) {
 			throw new MaxUsersPerMessageReactionError(maxUsersPerReaction);
@@ -547,43 +524,5 @@ export class MessageReactionService extends MessageInteractionBase {
 				message_id: params.messageId.toString(),
 			},
 		});
-	}
-
-	private isNSFWContentAllowedForReaction(params: {
-		channel: Channel;
-		guild: GuildResponse | null;
-		member: GuildMemberResponse | null;
-		isBot?: boolean;
-	}): boolean {
-		const {channel, guild, member, isBot} = params;
-		if (isBot) {
-			return true;
-		}
-		if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && channel.isNsfw) {
-			return true;
-		}
-		if (channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
-			return true;
-		}
-		if (!guild) {
-			return false;
-		}
-		const guildMarkedNsfw = guild.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
-		if (guildMarkedNsfw) {
-			return true;
-		}
-		const features = new Set(guild.features ?? []);
-		if (features.has(GuildFeatures.DISCOVERABLE)) {
-			return false;
-		}
-		const explicitContentFilter = guild.explicit_content_filter;
-		if (explicitContentFilter === GuildExplicitContentFilterTypes.DISABLED) {
-			return true;
-		}
-		if (explicitContentFilter === GuildExplicitContentFilterTypes.MEMBERS_WITHOUT_ROLES) {
-			const hasRoles = member && member.roles.length > 0;
-			return !!hasRoles;
-		}
-		return false;
 	}
 }

@@ -249,7 +249,6 @@ const ERROR_I18N_SV_SE_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Det här innehållet har redan skickats till NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Vi kunde inte skicka rapporten till NCMEC. Försök igen senare.",
 	"content_and_safety.nsfw_age_restricted": "NSFW-innehåll är åldersbegränsat.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Den här emojin eller stickern är klassificerad som NSFW och kan inte användas i det här sammanhanget.",
 	"discovery.already_applied": "Den här communityn har redan ansökt om att bli upptäckbar.",
 	"discovery.application_already_reviewed": "Den här discovery-ansökan har redan granskats.",
 	"discovery.application_not_found": "Discovery-ansökan hittades inte.",

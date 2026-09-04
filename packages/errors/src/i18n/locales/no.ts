@@ -249,7 +249,6 @@ const ERROR_I18N_NO_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Dette innholdet er allerede rapportert til NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Klarte ikke å sende rapporten til NCMEC. Prøv igjen senere.",
 	"content_and_safety.nsfw_age_restricted": "NSFW-innhold har aldersgrense.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Denne emojien eller stickeren er NSFW-klassifisert og kan ikke brukes her.",
 	"discovery.already_applied": "Dette communityet har allerede søkt om oppdagelse.",
 	"discovery.application_already_reviewed": "Denne discovery-søknaden er allerede vurdert.",
 	"discovery.application_not_found": "Discovery-søknaden ble ikke funnet.",

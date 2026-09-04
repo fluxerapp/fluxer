@@ -316,7 +316,6 @@ export async function processUserDeletion(
 				message_reference: null,
 				message_snapshots: null,
 				call: null,
-				nsfw_emojis: null,
 				has_reaction: false,
 				version: 1,
 			});

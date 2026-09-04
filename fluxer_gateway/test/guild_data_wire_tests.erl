@@ -79,7 +79,6 @@ payload_stringifies_rpc_atom_keys_and_schema_id_lists_test() ->
         ringing => [400, <<"500">>],
         recipients => [600, <<"700">>],
         mention_roles => [800],
-        nsfw_emojis => [900],
         pinned_dms => [1000],
         permissions => 8
     }),
@@ -91,7 +90,6 @@ payload_stringifies_rpc_atom_keys_and_schema_id_lists_test() ->
     ?assertEqual([<<"400">>, <<"500">>], maps:get(<<"ringing">>, Payload)),
     ?assertEqual([<<"600">>, <<"700">>], maps:get(<<"recipients">>, Payload)),
     ?assertEqual([<<"800">>], maps:get(<<"mention_roles">>, Payload)),
-    ?assertEqual([<<"900">>], maps:get(<<"nsfw_emojis">>, Payload)),
     ?assertEqual([<<"1000">>], maps:get(<<"pinned_dms">>, Payload)),
     ?assertEqual(<<"8">>, maps:get(<<"permissions">>, Payload)).
 

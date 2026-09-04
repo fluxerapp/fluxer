@@ -6,7 +6,6 @@ import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConsta
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {NsfwEmojiStickerBlockedError} from '@fluxer/errors/src/domains/moderation/NsfwEmojiStickerBlockedError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
@@ -15,8 +14,8 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
-import type {ChannelID, EmojiID, GuildID, MessageID, RoleID, StickerID, UserID, WebhookID} from '../../../BrandedTypes';
-import {createAttachmentID, createEmojiID, createGuildID} from '../../../BrandedTypes';
+import type {ChannelID, GuildID, MessageID, RoleID, StickerID, UserID, WebhookID} from '../../../BrandedTypes';
+import {createAttachmentID, createGuildID} from '../../../BrandedTypes';
 import {Config} from '../../../Config';
 import {getContentMessage} from '../../../content_i18n/ContentI18n';
 import type {
@@ -121,7 +120,7 @@ export class MessagePersistenceService {
 	constructor(
 		private channelRepository: IChannelRepositoryAggregate,
 		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		guildRepository: IGuildRepositoryAggregate,
 		private embedService: EmbedService,
 		private readonly storageService: IStorageService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
@@ -168,18 +167,10 @@ export class MessagePersistenceService {
 			isBot,
 			dmNsfwContext: params.dmNsfwContext,
 		});
-		let nsfwEmojiIds = new Set<EmojiID>();
-		if (params.content) {
-			if (!isNSFWAllowed) {
-				await this.enforceNsfwEmojiRestrictions(params.content);
-			} else {
-				nsfwEmojiIds = await this.collectNsfwEmojiIds(params.content);
-			}
-		}
 		const [sanitizedContent, attachmentResult, processedStickers] = await Promise.all([
 			this.sanitizeContentIfNeeded(params, authorId),
 			this.processAttachments(params, isNSFWAllowed ? 'allow' : 'block'),
-			this.processStickers(params, authorId, isNSFWAllowed),
+			this.processStickers(params, authorId),
 		]);
 		let messageContent = sanitizedContent;
 		let processedAttachments: Array<MessageAttachment> = params.processedAttachments
@@ -242,7 +233,6 @@ export class MessagePersistenceService {
 					? params.messageSnapshots.map((snapshot) => snapshot.toMessageSnapshot())
 					: null,
 			call: null,
-			nsfw_emojis: nsfwEmojiIds.size > 0 ? nsfwEmojiIds : null,
 			has_reaction: false,
 			version: 1,
 		};
@@ -305,7 +295,6 @@ export class MessagePersistenceService {
 	private async processStickers(
 		params: CreateMessageParams,
 		authorId: UserID | null,
-		isNSFWAllowed?: boolean,
 	): Promise<Array<MessageStickerItem>> {
 		if (!params.stickerIds || params.stickerIds.length === 0) {
 			return [];
@@ -315,35 +304,7 @@ export class MessagePersistenceService {
 			userId: authorId,
 			guildId: params.guildId,
 			hasPermission: params.hasPermission,
-			isNSFWAllowed: isNSFWAllowed ?? true,
 		});
-	}
-
-	private async enforceNsfwEmojiRestrictions(content: string): Promise<void> {
-		const nsfwIds = await this.collectNsfwEmojiIds(content);
-		if (nsfwIds.size > 0) {
-			throw new NsfwEmojiStickerBlockedError();
-		}
-	}
-
-	private async collectNsfwEmojiIds(content: string): Promise<Set<EmojiID>> {
-		const CUSTOM_EMOJI_REGEX = /<a?:[^:]+:(\d+)>/g;
-		const emojiIds = new Set<EmojiID>();
-		let match: RegExpExecArray | null;
-		while ((match = CUSTOM_EMOJI_REGEX.exec(content)) !== null) {
-			emojiIds.add(createEmojiID(BigInt(match[1])));
-		}
-		if (emojiIds.size === 0) {
-			return new Set();
-		}
-		const lookups = await Promise.all([...emojiIds].map((id) => this.guildRepository.getEmojiById(id)));
-		const nsfwEmojiIds = new Set<EmojiID>();
-		for (const emoji of lookups) {
-			if (emoji?.isNsfw) {
-				nsfwEmojiIds.add(emoji.id);
-			}
-		}
-		return nsfwEmojiIds;
 	}
 
 	private async runPostPersistenceOperations(context: {
@@ -431,9 +392,6 @@ export class MessagePersistenceService {
 		if (data.content !== undefined && data.content !== message.content) {
 			let sanitizedContent = data.content && hasVisibleContent(data.content) ? data.content : '';
 			if (sanitizedContent) {
-				if (!isNSFWAllowed) {
-					await this.enforceNsfwEmojiRestrictions(sanitizedContent);
-				}
 				sanitizedContent = await this.contentService.sanitizeCustomEmojis({
 					content: sanitizedContent,
 					userId: message.authorId ?? null,

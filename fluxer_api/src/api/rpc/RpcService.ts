@@ -307,7 +307,6 @@ export class RpcService {
 					name: sticker.name,
 					description: sticker.description,
 					animated,
-					nsfw: sticker.isNsfw,
 					tags: sticker.tags,
 					creator_id: sticker.creatorId,
 					version: sticker.version,

@@ -84,7 +84,6 @@ describe('MessageSearchSerializer', () => {
 			message_reference: null,
 			message_snapshots: [],
 			call: null,
-			nsfw_emojis: null,
 			has_reaction: null,
 			version: 1,
 		};
@@ -176,7 +175,6 @@ describe('MessageSearchSerializer', () => {
 				},
 			],
 			call: null,
-			nsfw_emojis: null,
 			has_reaction: null,
 			version: 1,
 		};
@@ -255,7 +253,6 @@ describe('MessageSearchSerializer', () => {
 				},
 			],
 			call: null,
-			nsfw_emojis: null,
 			has_reaction: null,
 			version: 1,
 		};

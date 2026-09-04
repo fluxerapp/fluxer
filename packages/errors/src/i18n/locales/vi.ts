@@ -249,7 +249,6 @@ const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Nội dung này đã được gửi đến NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Không thể gửi báo cáo đến NCMEC. Hãy thử lại sau.",
 	"content_and_safety.nsfw_age_restricted": "Nội dung NSFW bị giới hạn độ tuổi.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Emoji hoặc sticker này được phân loại là NSFW và không thể sử dụng trong ngữ cảnh này.",
 	"discovery.already_applied": "Cộng đồng này đã nộp đơn xin khám phá.",
 	"discovery.application_already_reviewed": "Ứng dụng khám phá này đã được duyệt.",
 	"discovery.application_not_found": "Không tìm thấy ứng dụng khám phá.",

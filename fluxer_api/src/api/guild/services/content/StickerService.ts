@@ -126,11 +126,7 @@ export class StickerService {
 		if (stickerCount >= maxStickers) {
 			throw new MaxGuildStickersStaticError(maxStickers);
 		}
-		const {
-			animated,
-			imageBuffer,
-			nsfw: isNsfw,
-		} = await this.avatarService.processSticker({
+		const {animated, imageBuffer} = await this.avatarService.processSticker({
 			errorPath: 'image',
 			base64Image: image,
 		});
@@ -142,7 +138,6 @@ export class StickerService {
 			name,
 			description: description ?? null,
 			animated,
-			nsfw: isNsfw,
 			tags,
 			creator_id: user.id,
 			version: 1,
@@ -198,7 +193,6 @@ export class StickerService {
 			name: sourceSticker.name,
 			description: sourceSticker.description,
 			animated: sourceSticker.animated,
-			nsfw: sourceSticker.hasNsfwClassification ? sourceSticker.isNsfw : null,
 			tags: sourceSticker.tags,
 			creator_id: user.id,
 			version: 1,
@@ -275,11 +269,7 @@ export class StickerService {
 				contentModerationService.scanText(stickerData.name, bulkStickerModCtx);
 				contentModerationService.scanText(stickerData.description, bulkStickerModCtx);
 				contentModerationService.scanText(stickerData.tags.join(' '), bulkStickerModCtx);
-				const {
-					animated,
-					imageBuffer,
-					nsfw: isNsfw,
-				} = await this.avatarService.processSticker({
+				const {animated, imageBuffer} = await this.avatarService.processSticker({
 					errorPath: `stickers[${success.length + failed.length}].image`,
 					base64Image: stickerData.image,
 				});
@@ -292,7 +282,6 @@ export class StickerService {
 					description: stickerData.description ?? null,
 					tags: stickerData.tags,
 					animated,
-					nsfw: isNsfw,
 					creator_id: user.id,
 					version: 1,
 				});

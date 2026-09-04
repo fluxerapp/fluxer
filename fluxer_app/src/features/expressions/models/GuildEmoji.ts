@@ -12,7 +12,6 @@ export class GuildEmoji {
 	readonly allNamesString: string;
 	readonly url: string;
 	readonly animated: boolean;
-	readonly nsfw: boolean;
 	readonly user?: UserPartial;
 
 	constructor(guildId: string, data: WireGuildEmoji) {
@@ -23,7 +22,6 @@ export class GuildEmoji {
 		this.allNamesString = `:${data.name}:`;
 		this.url = buildCustomEmojiURL({id: data.id, animated: data.animated});
 		this.animated = data.animated;
-		this.nsfw = data.nsfw;
 		this.user = data.user;
 	}
 
@@ -32,7 +30,6 @@ export class GuildEmoji {
 			id: updates.id ?? this.id,
 			name: updates.name ?? this.name,
 			animated: updates.animated ?? this.animated,
-			nsfw: updates.nsfw ?? this.nsfw,
 			user: updates.user ?? this.user,
 		});
 	}
@@ -43,7 +40,6 @@ export class GuildEmoji {
 			this.guildId === other.guildId &&
 			this.name === other.name &&
 			this.animated === other.animated &&
-			this.nsfw === other.nsfw &&
 			this.user?.id === other.user?.id
 		);
 	}
@@ -53,7 +49,6 @@ export class GuildEmoji {
 			id: this.id,
 			name: this.name,
 			animated: this.animated,
-			nsfw: this.nsfw,
 			user: this.user,
 		};
 	}

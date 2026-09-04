@@ -25,7 +25,7 @@ msgid "(edited)"
 msgstr "(upraveno)"
 
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
 msgid "(failed to load)"
 msgstr "(načtení se nezdařilo)"
 
@@ -413,7 +413,7 @@ msgid "{count, plural, one {# potential spammer message} other {# potential spam
 msgstr "{count, plural, one {# potenciální spamová zpráva} few {# potenciální spamové zprávy} many {# potenciálních spamových zpráv} other {# potenciálních spamových zpráv}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:149
+#: src/features/channel/components/MessageReactions.tsx:145
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {# reakce} few {# reakce} many {# reakcí} other {# reakcí}}"
 
@@ -744,7 +744,7 @@ msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/ChannelListContent.tsx:83
+#: src/features/app/components/layout/ChannelListContent.tsx:84
 msgid "{guildName} channels"
 msgstr "Kanály {guildName}"
 
@@ -5896,7 +5896,7 @@ msgid "Category deleted"
 msgstr "Kategorie smazána"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:74
+#: src/features/app/components/layout/ChannelListContent.tsx:75
 msgid "Category full"
 msgstr "Kategorie plná"
 
@@ -14147,7 +14147,7 @@ msgstr "Funkce dočasně vypnuta"
 msgid "Features"
 msgstr "Funkce"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:232
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
 msgid "Fetch a URL and inspect the embed payload the chat renderer receives."
 msgstr "Načtěte adresu URL a prozkoumejte vložený obsah, který obdrží vykreslovací modul chatu."
 
@@ -19485,7 +19485,7 @@ msgid "Members without the {readMessageHistoryPermissionLabel} permission can vi
 msgstr "Členové bez oprávnění {readMessageHistoryPermissionLabel} si mohou prohlížet zprávy odeslané po tomto datu."
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:87
+#: src/features/app/components/layout/ChannelListContent.tsx:88
 msgid "Members, selected"
 msgstr "Členové, vybráno"
 
@@ -20983,7 +20983,7 @@ msgstr "Nová zpráva"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:91
+#: src/features/app/components/layout/ChannelListContent.tsx:92
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "Nové zprávy"
@@ -21292,7 +21292,7 @@ msgstr "Nenalezena žádná zobrazení"
 msgid "No email address set"
 msgstr "E-mailová adresa nenastavena"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:285
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:284
 msgid "No embeds returned"
 msgstr "Nebyly vráceny žádné vložené prvky"
 
@@ -23932,7 +23932,7 @@ msgstr "Zabránit členům v odesílání zpráv, reagování a připojování s
 
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:16
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:277
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
 msgstr "Náhled"
 
@@ -24668,7 +24668,7 @@ msgstr "Ohodnotit"
 msgid "Rate limited"
 msgstr "Omezená frekvence"
 
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:293
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:292
 msgid "Raw embed JSON"
 msgstr "Hrubý výstup JSON pro vložení"
 
@@ -26377,11 +26377,6 @@ msgstr "Zpět na přihlášení"
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:62
 msgid "Reveal"
 msgstr "Zobrazit"
-
-#. Accessible label for a blurred emoji button. Activating it reveals the emoji when allowed.
-#: src/features/app/components/shared/MatureEmojiWrapper.tsx:13
-msgid "Reveal sensitive emoji"
-msgstr "Zobrazit citlivé emoji"
 
 #. Short label in the shared app spoiler overlay.
 #: src/features/app/components/shared/SpoilerOverlay.tsx:11
@@ -31863,7 +31858,7 @@ msgid "This card does not match your billing country, so it cannot be used for t
 msgstr "Tato karta neodpovídá zemi vaší fakturace, takže ji nelze použít pro tuto lokalizovanou měnu. Použijte místní kartu, zvolte jinou platební metodu, nebo se vraťte do {productName} a přepněte na standardní cenu."
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
-#: src/features/app/components/layout/ChannelListContent.tsx:78
+#: src/features/app/components/layout/ChannelListContent.tsx:79
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
 msgstr "Tato kategorie již obsahuje maximální počet {maxChannelsPerCategory} kanálů."
 
@@ -33758,7 +33753,7 @@ msgid "Unfurl"
 msgstr "Rozbalit"
 
 #. Settings section label for the embed debugger URL input.
-#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:231
+#: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:230
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:62
 msgid "Unfurl debugger"
 msgstr "Ladící nástroj pro vkládání odkazů"
@@ -33777,7 +33772,7 @@ msgstr "Univerzální záložní. Nejnižší kvalita, ale funguje všude."
 #. Fallback version label when the installed desktop version is unknown.
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
-#: src/features/emoji/components/emojis/EmojiListItem.tsx:585
+#: src/features/emoji/components/emojis/EmojiListItem.tsx:584
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
@@ -38167,11 +38162,6 @@ msgstr "Vaše IP adresa je zablokovaná"
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:187
 msgid "Your last purchase is outside the refund window. Contact support for billing issues."
 msgstr "Váš poslední nákup je mimo lhůtu pro vrácení peněz. V případě problémů s fakturací kontaktujte podporu."
-
-#. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:77
-msgid "Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context."
-msgstr "Vaši zprávu nebylo možné doručit, protože obsahuje emoji nebo nálepky pro dospělé, které v tomto kontextu nejsou povoleny."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx:72

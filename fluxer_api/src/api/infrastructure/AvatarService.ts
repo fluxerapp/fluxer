@@ -204,8 +204,6 @@ export class AvatarService {
 		animated: boolean;
 		format: string;
 		contentType: string;
-		nsfw: boolean;
-		nsfwProbability?: number;
 	}> {
 		const {errorPath, base64Image} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
@@ -226,7 +224,7 @@ export class AvatarService {
 				type: 'base64',
 				base64: base64Data,
 				version: 2,
-				nsfw: 'flag',
+				nsfw: 'allow',
 			}),
 			kind: 'emoji',
 			errorPath,
@@ -237,8 +235,6 @@ export class AvatarService {
 			animated,
 			format: metadata.format,
 			contentType: metadata.content_type,
-			nsfw: metadata.nsfw,
-			nsfwProbability: metadata.nsfw_probability,
 		};
 	}
 
@@ -275,8 +271,6 @@ export class AvatarService {
 		animated: boolean;
 		format: string;
 		contentType: string;
-		nsfw: boolean;
-		nsfwProbability?: number;
 	}> {
 		const {errorPath, base64Image} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
@@ -297,7 +291,7 @@ export class AvatarService {
 				type: 'base64',
 				base64: base64Data,
 				version: 2,
-				nsfw: 'flag',
+				nsfw: 'allow',
 			}),
 			kind: 'sticker',
 			errorPath,
@@ -308,8 +302,6 @@ export class AvatarService {
 			animated,
 			format: metadata.format,
 			contentType: metadata.content_type,
-			nsfw: metadata.nsfw,
-			nsfwProbability: metadata.nsfw_probability,
 		};
 	}
 
@@ -348,7 +340,7 @@ export class AvatarService {
 				bucket: Config.s3.buckets.cdn,
 				key: `stickers/${stickerId}`,
 				version: 2,
-				nsfw: 'block',
+				nsfw: 'allow',
 			});
 			return metadata?.animated ?? null;
 		} catch (_error) {

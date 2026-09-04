@@ -249,7 +249,6 @@ const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Tento obsah již byl odeslán NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Nepodařilo se odeslat hlášení NCMEC. Zkus to znovu později.",
 	"content_and_safety.nsfw_age_restricted": "Obsah NSFW je věkově omezený.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Toto emoji nebo tato samolepka je označeno jako NSFW a nelze použít v tomto kontextu.",
 	"discovery.already_applied": "Tato komunita již požádala o objevení.",
 	"discovery.application_already_reviewed": "Tato žádost o zařazení do Objevování už byla zkontrolována.",
 	"discovery.application_not_found": "Žádost o zařazení do Objevování nebyla nalezena.",

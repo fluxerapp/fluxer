@@ -136,11 +136,7 @@ const MessageReactionItem = observer(
 		};
 		const emojiName = getEmojiName(reaction.emoji);
 		const emojiUrl = useEmojiURL({emoji: reaction.emoji, isHovering: isHovering || tooltipHovering});
-		const isMature = !!emojiRecord?.nsfw;
-		const {shouldBlur: reactionShouldBlur, shouldBlock: reactionShouldBlock} = useMatureMedia(
-			isMature,
-			message.channelId,
-		);
+		const {shouldBlur: reactionShouldBlur, shouldBlock: reactionShouldBlock} = useMatureMedia(false, message.channelId);
 		const variants = {
 			up: {y: -20, opacity: 0},
 			down: {y: 20, opacity: 0},

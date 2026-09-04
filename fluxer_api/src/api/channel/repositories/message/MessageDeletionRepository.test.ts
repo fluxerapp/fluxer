@@ -60,7 +60,6 @@ function buildMessageRow(messageId: MessageID, hasReaction: boolean | null): Mes
 		message_reference: null,
 		message_snapshots: null,
 		call: null,
-		nsfw_emojis: null,
 		has_reaction: hasReaction,
 		version: 1,
 	};

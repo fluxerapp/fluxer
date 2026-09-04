@@ -18,7 +18,7 @@ import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/F
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {SlowmodeRateLimitError} from '@fluxer/errors/src/domains/core/SlowmodeRateLimitError';
-import {NsfwEmojiStickerBlockedError} from '@fluxer/errors/src/domains/moderation/NsfwEmojiStickerBlockedError';
+import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
@@ -845,7 +845,7 @@ export class MessageSendService {
 			const guildNsfw = guild != null && guild.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
 			const destAllowsNsfw = channel.isNsfw || guildNsfw;
 			if (!destAllowsNsfw) {
-				throw new NsfwEmojiStickerBlockedError();
+				throw new NsfwContentRequiresAgeVerificationError();
 			}
 		}
 		if (data.message_reference && guild && !isForwardMessage) {

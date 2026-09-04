@@ -249,7 +249,6 @@ const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "このコンテンツは既にNCMECに提出されています。",
 	"content_and_safety.ncmec_submission_failed": "NCMECへの報告を送信できませんでした。後ほどもう一度お試しください。",
 	"content_and_safety.nsfw_age_restricted": "NSFWコンテンツは年齢制限があります。",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "この絵文字またはスタンプはNSFWに分類されており、このコンテキストでは使用できません。",
 	"discovery.already_applied": "このコミュニティは既に検出機能に申請しています。",
 	"discovery.application_already_reviewed": "この発見機能の申請はすでに確認済みです。",
 	"discovery.application_not_found": "発見機能の申請が見つかりませんでした。",

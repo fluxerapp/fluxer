@@ -249,7 +249,6 @@ const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "이 콘텐츠는 이미 NCMEC에 제출된 상태예요.",
 	"content_and_safety.ncmec_submission_failed": "NCMEC에 신고 제출에 실패했어요. 나중에 다시 시도해 주세요.",
 	"content_and_safety.nsfw_age_restricted": "NSFW 콘텐츠는 연령 제한 콘텐츠예요.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "이 이모지 또는 스티커는 NSFW로 분류되어 이 컨텍스트에서는 사용할 수 없어요.",
 	"discovery.already_applied": "이 커뮤니티는 이미 탐색 신청을 했어요.",
 	"discovery.application_already_reviewed": "이 발견 신청서는 이미 검토되었어요.",
 	"discovery.application_not_found": "발견 신청서를 찾을 수 없어요.",

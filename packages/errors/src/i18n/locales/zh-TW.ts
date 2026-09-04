@@ -249,7 +249,6 @@ const ERROR_I18N_ZH_TW_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "此內容已提交至 NCMEC。",
 	"content_and_safety.ncmec_submission_failed": "我們無法將檢舉提交至 NCMEC。請稍後再試。",
 	"content_and_safety.nsfw_age_restricted": "NSFW 內容設有年齡限制。",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "此表情符號或貼圖被歸類為 NSFW，無法在此處使用。",
 	"discovery.already_applied": "此社群已申請探索功能。",
 	"discovery.application_already_reviewed": "此探索申請已審核完成。",
 	"discovery.application_not_found": "找不到探索申請。",

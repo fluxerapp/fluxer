@@ -249,7 +249,6 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Tämä sisältö on jo toimitettu NCMEC:lle.",
 	"content_and_safety.ncmec_submission_failed": "Ilmiannon lähettäminen NCMEC:lle epäonnistui. Yritä uudelleen myöhemmin.",
 	"content_and_safety.nsfw_age_restricted": "NSFW-sisällöllä on ikärajoitus.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Tämä emoji tai tarra on NSFW-sisältöä, eikä sitä voi käyttää tässä yhteydessä.",
 	"discovery.already_applied": "Tämä yhteisö on jo hakenut löydettäväksi.",
 	"discovery.application_already_reviewed": "Tämä Discovery-hakemus on jo käsitelty.",
 	"discovery.application_not_found": "Discovery-hakemusta ei löytynyt.",

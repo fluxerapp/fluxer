@@ -249,7 +249,6 @@ const ERROR_I18N_IT_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Questo contenuto è già stato inviato a NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Impossibile inviare la segnalazione a NCMEC. Riprova più tardi.",
 	"content_and_safety.nsfw_age_restricted": "Il contenuto NSFW ha restrizioni di età.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Questo emoji o sticker è classificato come NSFW e non può essere utilizzato in questo contesto.",
 	"discovery.already_applied": "Questa comunità ha già richiesto l'inserimento nella scoperta.",
 	"discovery.application_already_reviewed": "Questa richiesta di scoperta è già stata esaminata.",
 	"discovery.application_not_found": "La richiesta di scoperta non è stata trovata.",

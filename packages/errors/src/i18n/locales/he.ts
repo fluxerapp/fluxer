@@ -249,7 +249,6 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "תוכן זה כבר הוגש ל-NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "לא הצלחנו להגיש את הדיווח ל-NCMEC. ניתן לנסות שוב מאוחר יותר.",
 	"content_and_safety.nsfw_age_restricted": "תוכן NSFW מוגבל מבחינת גיל.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "אימוג'י או סטיקר זה מסווג כ-NSFW ולא ניתן לשימוש בהקשר זה.",
 	"discovery.already_applied": "קהילה זו כבר הגישה בקשה לגילוי.",
 	"discovery.application_already_reviewed": "בקשת הגילוי הזו כבר נבדקה.",
 	"discovery.application_not_found": "בקשת הגילוי לא נמצאה.",

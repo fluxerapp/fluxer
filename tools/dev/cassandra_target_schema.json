@@ -581,10 +581,6 @@
 				{
 					"name": "animated",
 					"type": "boolean"
-				},
-				{
-					"name": "nsfw",
-					"type": "boolean"
 				}
 			]
 		},
@@ -5255,10 +5251,6 @@
 				{
 					"name": "version",
 					"type": "int"
-				},
-				{
-					"name": "nsfw",
-					"type": "boolean"
 				}
 			],
 			"primary_key": "((guild_id), emoji_id)",
@@ -5285,10 +5277,6 @@
 				},
 				{
 					"name": "animated",
-					"type": "boolean"
-				},
-				{
-					"name": "nsfw",
 					"type": "boolean"
 				}
 			],
@@ -5517,10 +5505,6 @@
 				{
 					"name": "version",
 					"type": "int"
-				},
-				{
-					"name": "nsfw",
-					"type": "boolean"
 				}
 			],
 			"primary_key": "((guild_id), sticker_id)",
@@ -5555,10 +5539,6 @@
 				},
 				{
 					"name": "animated",
-					"type": "boolean"
-				},
-				{
-					"name": "nsfw",
 					"type": "boolean"
 				}
 			],
@@ -6494,10 +6474,6 @@
 				{
 					"name": "version",
 					"type": "int"
-				},
-				{
-					"name": "nsfw_emojis",
-					"type": "set<bigint>"
 				}
 			],
 			"primary_key": "((channel_id, bucket), message_id)",

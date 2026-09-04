@@ -74,11 +74,6 @@ const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR = msg({
 		'Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support.',
 	comment: 'Label in the message queue state.',
 });
-const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_2_DESCRIPTOR = msg({
-	message:
-		'Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context.',
-	comment: 'Label in the message queue state.',
-});
 const logger = new Logger('MessageQueue');
 const DEFAULT_MAX_SIZE = 5;
 const DEV_MESSAGE_DELAY = 3000;
@@ -1279,14 +1274,6 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			const systemMessage = createSystemMessage(
 				channelId,
 				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR),
-			);
-			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
-			return;
-		}
-		if (getApiErrorBody(error)?.code === APIErrorCodes.NSFW_EMOJI_STICKER_BLOCKED) {
-			const systemMessage = createSystemMessage(
-				channelId,
-				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_2_DESCRIPTOR),
 			);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			return;

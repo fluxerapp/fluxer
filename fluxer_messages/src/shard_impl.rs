@@ -78,7 +78,7 @@ const MESSAGE_COLUMNS: &str = "\
     webhook_id, webhook_name, webhook_avatar_hash, \
     content, edited_timestamp, pinned_timestamp, flags, mention_everyone, \
     mention_users, mention_roles, mention_channels, \
-    has_reaction, version, nsfw_emojis, \
+    has_reaction, version, \
     attachments, embeds, sticker_items, message_reference, call, message_snapshots";
 
 pub struct MessagesShard<T> {
@@ -141,7 +141,6 @@ struct MessageDbRow {
     mention_channels: Option<std::collections::HashSet<i64>>,
     has_reaction: Option<bool>,
     version: Option<i32>,
-    nsfw_emojis: Option<std::collections::HashSet<i64>>,
     attachments: Option<Vec<udt::AttachmentUdt>>,
     embeds: Option<Vec<udt::EmbedUdt>>,
     sticker_items: Option<Vec<udt::StickerItemUdt>>,
@@ -1134,13 +1133,6 @@ impl<T: Transport> MessagesShard<T> {
             embeds,
             attachments,
             stickers,
-            nsfw_emojis: (!message.nsfw_emojis.is_empty()).then(|| {
-                message
-                    .nsfw_emojis
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect()
-            }),
             reactions: context.reactions.get(&message.message_id).cloned(),
             message_reference: message
                 .message_reference
@@ -2812,7 +2804,6 @@ fn map_sticker(sticker: &MessageStickerItem) -> Option<ApiMessageStickerResponse
         id: sticker.sticker_id?.to_string(),
         name: sticker.name.clone().unwrap_or_default(),
         animated: sticker.animated.unwrap_or(false),
-        nsfw: sticker.nsfw.filter(|nsfw| *nsfw),
     })
 }
 
@@ -2988,7 +2979,6 @@ fn convert_sticker_item(s: udt::StickerItemUdt) -> MessageStickerItem {
         name: s.name,
         format_type: s.format_type,
         animated: s.animated,
-        nsfw: s.nsfw,
     }
 }
 
@@ -3076,10 +3066,6 @@ impl From<MessageDbRow> for Message {
                 .unwrap_or_default(),
             has_reaction: row.has_reaction,
             version: row.version.unwrap_or_default(),
-            nsfw_emojis: row
-                .nsfw_emojis
-                .map(|s| s.into_iter().collect())
-                .unwrap_or_default(),
             attachments: row
                 .attachments
                 .map(|v| v.into_iter().map(convert_attachment).collect()),
@@ -3207,7 +3193,6 @@ mod tests {
             ]},
             "mention_roles": {"__fluxer_type": "set", "value": []},
             "mention_channels": {"__fluxer_type": "set", "value": []},
-            "nsfw_emojis": {"__fluxer_type": "set", "value": []},
             "attachments": [{
                 "attachment_id": {"__fluxer_type": "bigint", "value": "1509197195776110593"},
                 "filename": "a.png",

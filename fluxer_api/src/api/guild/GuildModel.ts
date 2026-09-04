@@ -116,7 +116,6 @@ export function mapGuildEmojiToResponse(emoji: GuildEmoji): z.infer<typeof Guild
 		id,
 		name: emoji.name,
 		animated: emoji.isAnimated,
-		nsfw: emoji.isNsfw,
 	};
 }
 
@@ -128,7 +127,6 @@ export function mapGuildStickerToResponse(sticker: GuildSticker): z.infer<typeof
 		description: sticker.description ?? '',
 		tags: sticker.tags,
 		animated: sticker.animated,
-		nsfw: sticker.isNsfw,
 	};
 }
 
@@ -180,7 +178,6 @@ function mapEmojiWithUser(
 		id,
 		name: emoji.name,
 		animated: emoji.isAnimated,
-		nsfw: emoji.isNsfw,
 		user: userPartial,
 	};
 }
@@ -207,7 +204,6 @@ function mapStickerWithUser(
 		description: sticker.description ?? '',
 		tags: sticker.tags,
 		animated: sticker.animated,
-		nsfw: sticker.isNsfw,
 		user: userPartial,
 	};
 }

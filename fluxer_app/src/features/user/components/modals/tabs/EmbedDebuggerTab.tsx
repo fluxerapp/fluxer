@@ -142,7 +142,6 @@ function createPreviewMessage(url: string, embeds: ReadonlyArray<MessageEmbedRes
 			embeds: embeds as Array<MessageEmbed>,
 			attachments: [],
 			stickers: [],
-			nsfw_emojis: [],
 			reactions: [],
 		},
 		{skipUserCache: true},

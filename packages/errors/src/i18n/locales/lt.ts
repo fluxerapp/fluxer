@@ -249,7 +249,6 @@ const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Šis turinys jau išsiųstas NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Nepavyko išsiųsti pranešimo NCMEC. Pabandyk dar kartą vėliau.",
 	"content_and_safety.nsfw_age_restricted": "NSFW turinys yra skirtas tik suaugusiems.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Šis emoji arba lipdukas yra NSFW turinys ir negali būti naudojamas šiame kontekste.",
 	"discovery.already_applied": "Ši bendruomenė jau pateikė paraišką, kad būtų atrasta.",
 	"discovery.application_already_reviewed": "Ši atradimo užklausa jau buvo įvertinta.",
 	"discovery.application_not_found": "Atradimo užklausa nerasta.",

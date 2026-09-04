@@ -205,7 +205,6 @@ export class CallService {
 				participant_ids: new Set(allRecipients),
 				ended_timestamp: null,
 			},
-			nsfw_emojis: null,
 			has_reaction: false,
 			version: 1,
 		});

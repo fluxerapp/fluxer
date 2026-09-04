@@ -249,7 +249,6 @@ const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Αυτό το περιεχόμενο έχει ήδη σταλεί στο NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Δεν μπορέσαμε να στείλουμε την αναφορά στο NCMEC. Δοκίμασε ξανά αργότερα.",
 	"content_and_safety.nsfw_age_restricted": "Το NSFW περιεχόμενο περιορίζεται ηλικιακά.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Αυτό το emoji ή sticker θεωρείται NSFW και δεν μπορεί να χρησιμοποιηθεί σε αυτό το πλαίσιο.",
 	"discovery.already_applied": "Αυτή η κοινότητα έχει ήδη αιτηθεί για ανακάλυψη.",
 	"discovery.application_already_reviewed": "Αυτή η αίτηση ανακάλυψης έχει ήδη ελεγχθεί.",
 	"discovery.application_not_found": "Η αίτηση ανακάλυψης δεν υπάρχει.",

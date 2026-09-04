@@ -255,7 +255,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			embeds: this.mapEmbeds(message.embeds, message),
 			attachments: await this.mapAttachments(message.attachments, message),
 			stickers: this.mapStickers(message.stickers),
-			nsfw_emojis: message.nsfwEmojis.size > 0 ? [...message.nsfwEmojis].map((id) => id.toString()) : undefined,
 			reactions,
 			message_reference: message.reference
 				? {
@@ -481,7 +480,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			id: sticker.id.toString(),
 			name: sticker.name,
 			animated: sticker.animated,
-			nsfw: sticker.nsfw,
 		}));
 	}
 

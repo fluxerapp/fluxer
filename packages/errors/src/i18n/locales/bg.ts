@@ -249,7 +249,6 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Това съдържание вече е изпратено до NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Не успяхме да изпратим доклада до NCMEC. Опитай отново по-късно.",
 	"content_and_safety.nsfw_age_restricted": "NSFW съдържанието е с възрастово ограничение.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Това емоджи или стикер е класифициран като NSFW и не може да се използва в този контекст.",
 	"discovery.already_applied": "Тази общност вече е кандидатствала за откриване.",
 	"discovery.application_already_reviewed": "Тази общност вече е прегледана за откриване.",
 	"discovery.application_not_found": "Общността не е намерена в откриването.",

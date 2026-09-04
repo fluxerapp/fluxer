@@ -146,7 +146,6 @@ named_key_kind(<<"target_id">>) -> scalar;
 named_key_kind(<<"mention_roles">>) -> scalar_list;
 named_key_kind(<<"participants">>) -> scalar_list;
 named_key_kind(<<"ringing">>) -> scalar_list;
-named_key_kind(<<"nsfw_emojis">>) -> scalar_list;
 named_key_kind(<<"pinned_dms">>) -> scalar_list;
 named_key_kind(<<"restricted_guilds">>) -> scalar_list;
 named_key_kind(<<"bot_restricted_guilds">>) -> scalar_list;
@@ -261,7 +260,6 @@ sample_keys() ->
         <<"ringing">>,
         <<"mention_roles">>,
         <<"participants">>,
-        <<"nsfw_emojis">>,
         <<"pinned_dms">>,
         <<"restricted_guilds">>,
         <<"bot_restricted_guilds">>,
@@ -459,8 +457,6 @@ reference_is_snowflake_list_key(<<"mention_roles">>, _Value) ->
 reference_is_snowflake_list_key(<<"participants">>, _Value) ->
     true;
 reference_is_snowflake_list_key(<<"ringing">>, _Value) ->
-    true;
-reference_is_snowflake_list_key(<<"nsfw_emojis">>, _Value) ->
     true;
 reference_is_snowflake_list_key(<<"pinned_dms">>, _Value) ->
     true;

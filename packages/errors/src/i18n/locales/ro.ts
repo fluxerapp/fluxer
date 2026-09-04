@@ -249,7 +249,6 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Acest conținut a fost deja trimis la NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Nu am putut trimite raportul către NCMEC. Încearcă din nou mai târziu.",
 	"content_and_safety.nsfw_age_restricted": "Conținutul NSFW este restricționat pe bază de vârstă.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Acest emoji sau sticker este clasificat ca NSFW și nu poate fi folosit în acest context.",
 	"discovery.already_applied": "Această comunitate a aplicat deja pentru descoperire.",
 	"discovery.application_already_reviewed": "Această aplicație de descoperire a fost deja verificată.",
 	"discovery.application_not_found": "Aplicația de descoperire nu s-a găsit.",

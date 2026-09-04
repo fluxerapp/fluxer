@@ -257,7 +257,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.NOT_IMPLEMENTED]: 'http.not_implemented',
 	[APIErrorCodes.NOT_OWNER_OF_ADMIN_API_KEY]: 'permissions.not_owner_of_admin_api_key',
 	[APIErrorCodes.NSFW_CONTENT_AGE_RESTRICTED]: 'content_and_safety.nsfw_age_restricted',
-	[APIErrorCodes.NSFW_EMOJI_STICKER_BLOCKED]: 'content_and_safety.nsfw_emoji_sticker_blocked',
 	[APIErrorCodes.PASSKEY_AUTHENTICATION_FAILED]: 'mfa_and_passkeys.passkey_authentication_failed',
 	[APIErrorCodes.PASSKEYS_DISABLED]: 'mfa_and_passkeys.passkeys_disabled',
 	[APIErrorCodes.PHONE_ADD_NOT_ELIGIBLE]: 'phone.add_not_eligible',

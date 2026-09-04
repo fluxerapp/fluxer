@@ -249,7 +249,6 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"content_and_safety.ncmec_already_submitted": "Цей вміст уже надіслано до NCMEC.",
 	"content_and_safety.ncmec_submission_failed": "Не вдалося надіслати звіт до NCMEC. Спробуй пізніше.",
 	"content_and_safety.nsfw_age_restricted": "Контент NSFW має вікові обмеження.",
-	"content_and_safety.nsfw_emoji_sticker_blocked": "Це емодзі або стікер класифіковано як NSFW, і його не можна використовувати в цьому контексті.",
 	"discovery.already_applied": "Ця спільнота вже подала заявку на потрапляння до каталогу.",
 	"discovery.application_already_reviewed": "Цю заявку на пошук уже розглянуто.",
 	"discovery.application_not_found": "Заявку на пошук не знайдено.",

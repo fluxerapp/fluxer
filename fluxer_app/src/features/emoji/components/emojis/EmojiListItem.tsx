@@ -437,7 +437,6 @@ export const EmojiListItem: React.FC<{
 		allNamesString: `:${emoji.name}:`,
 		url: emojiUrl,
 		animated: emoji.animated,
-		nsfw: emoji.nsfw,
 		user: emoji.user,
 	};
 	const handleContextMenu = (event: React.MouseEvent) => {
