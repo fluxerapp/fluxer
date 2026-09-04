@@ -997,6 +997,11 @@
 	white-space: nowrap;
 }
 
+.repliedTextContent,
+.repliedTextContent * {
+	white-space: nowrap !important;
+}
+
 .repliedMessage .repliedTextPreview .repliedTextContent {
 	color: inherit;
 	font-size: inherit;
