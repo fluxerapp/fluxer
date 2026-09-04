@@ -168,7 +168,7 @@ LABEL app.fluxer.build-version="${BUILD_VERSION}"
 WORKDIR /srv/app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-	ca-certificates curl \
+	ca-certificates curl libjemalloc2 \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=rust-builder /usr/local/bin/fluxer-app-proxy /usr/local/bin/fluxer-app-proxy
@@ -177,6 +177,8 @@ COPY --from=app-static /assets ./static/
 ENV BUILD_VERSION="${BUILD_VERSION}"
 ENV FLUXER_APP_PROXY_HOST="0.0.0.0"
 ENV FLUXER_APP_PROXY_PORT="8080"
+ENV LD_PRELOAD=libjemalloc.so.2
+ENV MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:5000,muzzy_decay_ms:5000"
 
 USER 65532:65532
 
