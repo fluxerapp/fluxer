@@ -10,7 +10,7 @@ use crate::invite_meta::{
 };
 use crate::state::{
     AppProxyBudgets, AppState, MAX_RENDERED_SPA_INDEX_BYTES, MAX_SPA_INDEX_BYTES,
-    SPA_DOCUMENT_RENDER_RESERVATION_BYTES, read_bounded_text_file,
+    read_bounded_text_file,
 };
 use crate::time_freeze::{
     load_time_freeze_config_for_request, should_serve_frozen, time_freeze_debug_header,
@@ -23,7 +23,6 @@ use axum::{
 };
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::sync::{OwnedSemaphorePermit, TryAcquireError};
 
 use super::assets_proxy::serve_local_asset;
 use super::file_stream::stream_file;
@@ -182,19 +181,6 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
         }
     };
 
-    let mut document_budget = match state
-        .budgets
-        .spa_document_memory
-        .clone()
-        .try_acquire_many_owned(SPA_DOCUMENT_RENDER_RESERVATION_BYTES)
-    {
-        Ok(permit) => permit,
-        Err(TryAcquireError::NoPermits) => return super::capacity_refused_response(),
-        Err(TryAcquireError::Closed) => {
-            panic!("SPA document memory budget semaphore closed unexpectedly")
-        }
-    };
-
     let dev_buster = should_bust_dev_assets.then(current_dev_asset_cache_buster);
     let html = match render_spa_document(
         &raw_html,
@@ -212,26 +198,7 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &s
         }
     };
     let html = html.into_boxed_str();
-    let retained_bytes = u32::try_from(html.len()).expect("bounded SPA document size must fit u32");
-    let released_bytes = SPA_DOCUMENT_RENDER_RESERVATION_BYTES
-        .checked_sub(retained_bytes)
-        .expect("rendered SPA document must fit its memory reservation");
-    if released_bytes > 0 {
-        let released_permits =
-            usize::try_from(released_bytes).expect("SPA document permit count must fit usize");
-        drop(
-            document_budget
-                .split(released_permits)
-                .expect("SPA document memory reservation must contain its unused permits"),
-        );
-    }
-    build_spa_response(
-        html,
-        csp,
-        debug_header.as_deref(),
-        should_bust_dev_assets,
-        document_budget,
-    )
+    build_spa_response(html, csp, debug_header.as_deref(), should_bust_dev_assets)
 }
 
 #[derive(Debug)]
@@ -438,7 +405,6 @@ async fn load_spa_index_html(state: &AppState) -> Result<String, Response> {
 
 struct SpaDocumentBody {
     html: Box<str>,
-    _budget: OwnedSemaphorePermit,
 }
 
 impl AsRef<[u8]> for SpaDocumentBody {
@@ -452,12 +418,8 @@ fn build_spa_response(
     csp: HeaderValue,
     time_freeze_header: Option<&str>,
     dev_no_store: bool,
-    document_budget: OwnedSemaphorePermit,
 ) -> Response {
-    let body = Bytes::from_owner(SpaDocumentBody {
-        html,
-        _budget: document_budget,
-    });
+    let body = Bytes::from_owner(SpaDocumentBody { html });
     let mut response = Response::new(Body::from(body));
     let headers = response.headers_mut();
 
