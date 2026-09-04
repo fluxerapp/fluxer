@@ -16,6 +16,7 @@ import {NullSpaceDropIndicator} from '@app/features/app/components/layout/NullSp
 import {ScrollIndicatorOverlay} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
 import {type DragItem, DragItemType, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
 import {
+	shouldShowCategoryWhenHidingMutedChannels,
 	shouldShowChannelInCollapsedCategory,
 	shouldShowChannelWhenHidingMutedChannels,
 } from '@app/features/app/components/layout/utils/ChannelListVisibility';
@@ -471,8 +472,10 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		if (
 			hideMutedChannels &&
 			group.category &&
-			filteredTextChannels.length === 0 &&
-			filteredVoiceChannels.length === 0
+			!shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: group.textChannels.length > 0 || group.voiceChannels.length > 0,
+				hasVisibleChannels: filteredTextChannels.length > 0 || filteredVoiceChannels.length > 0,
+			})
 		) {
 			continue;
 		}

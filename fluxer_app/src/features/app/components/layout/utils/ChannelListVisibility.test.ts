@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {describe, expect, it} from 'vitest';
-import {shouldShowChannelInCollapsedCategory, shouldShowChannelWhenHidingMutedChannels} from './ChannelListVisibility';
+import {
+	shouldShowCategoryWhenHidingMutedChannels,
+	shouldShowChannelInCollapsedCategory,
+	shouldShowChannelWhenHidingMutedChannels,
+} from './ChannelListVisibility';
 
 describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('keeps muted channels with visible unread state so mentions are findable', () => {
@@ -52,6 +56,35 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: false,
+			}),
+		).toBe(true);
+	});
+});
+
+describe('shouldShowCategoryWhenHidingMutedChannels', () => {
+	it('keeps a category that has no channels at all', () => {
+		expect(
+			shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: false,
+				hasVisibleChannels: false,
+			}),
+		).toBe(true);
+	});
+
+	it('hides a category whose channels were all filtered out as muted', () => {
+		expect(
+			shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: true,
+				hasVisibleChannels: false,
+			}),
+		).toBe(false);
+	});
+
+	it('keeps a category that still has visible channels', () => {
+		expect(
+			shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: true,
+				hasVisibleChannels: true,
 			}),
 		).toBe(true);
 	});
