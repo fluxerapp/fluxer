@@ -81,3 +81,9 @@ export const DeleteAllUserMessagesResponse = z.object({
 });
 
 export type DeleteAllUserMessagesResponse = z.infer<typeof DeleteAllUserMessagesResponse>;
+
+export const BulkDeleteUserMessagesRequest = z.object({
+	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs whose messages will be deleted'),
+});
+
+export type BulkDeleteUserMessagesRequest = z.infer<typeof BulkDeleteUserMessagesRequest>;

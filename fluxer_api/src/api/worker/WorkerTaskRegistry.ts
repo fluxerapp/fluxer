@@ -4,6 +4,7 @@ import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import applicationProcessDeletion from './tasks/ApplicationProcessDeletion';
 import bulkAddGuildMembers from './tasks/admin_bulk/BulkAddGuildMembers';
 import bulkBanFileShas from './tasks/admin_bulk/BulkBanFileShas';
+import bulkDeleteMessagesForUsers from './tasks/admin_bulk/BulkDeleteMessagesForUsers';
 import bulkScheduleUserDeletion from './tasks/admin_bulk/BulkScheduleUserDeletion';
 import bulkUpdateGuildFeatures from './tasks/admin_bulk/BulkUpdateGuildFeatures';
 import bulkUpdateSuspiciousActivityFlags from './tasks/admin_bulk/BulkUpdateSuspiciousActivityFlags';
@@ -49,6 +50,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	batchGuildAuditLogMessageDeletes,
 	bulkAddGuildMembers: bulkAddGuildMembers,
 	bulkBanFileShas: bulkBanFileShas,
+	bulkDeleteMessagesForUsers: bulkDeleteMessagesForUsers,
 	bulkDeleteSelfMessagesImmediate,
 	bulkDeleteUserMessages,
 	bulkDeleteUserMessagesScoped,

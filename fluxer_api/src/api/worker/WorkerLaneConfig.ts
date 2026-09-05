@@ -56,6 +56,7 @@ const LANE_CONFIG = {
 			'bulkUpdateGuildFeatures',
 			'bulkAddGuildMembers',
 			'bulkBanFileShas',
+			'bulkDeleteMessagesForUsers',
 		] as const,
 		retiredTasks: ['sendScheduledMessage'],
 		concurrency: 8,

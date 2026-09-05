@@ -201,6 +201,9 @@ pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &
             @if acl::has_permission(admin_acls, acl::BULK_DELETE_USERS) {
                 (bulk_schedule_deletion_section(base, csrf_token))
             }
+            @if acl::has_permission(admin_acls, acl::BULK_DELETE_USER_MESSAGES) {
+                (bulk_delete_user_messages_section(base, csrf_token))
+            }
         }
     };
     admin_layout(config, auth, "Bulk Actions", "bulk-actions", None, content)
@@ -378,6 +381,27 @@ fn bulk_schedule_deletion_section(base: &str, csrf_token: &str) -> Markup {
                     (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
                     (form_actions(html! {
                         (danger_button("Schedule Deletion"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn bulk_delete_user_messages_section(base: &str, csrf_token: &str) -> Markup {
+    section_card_simple(
+        "Bulk Delete User Messages",
+        html! {
+            form method="post" action={(base) "/bulk-actions?action=bulk-delete-user-messages"} {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    p class="text-neutral-500 text-sm" {
+                        "Deletes every message authored by each user across all channels. This cannot be undone."
+                    }
+                    (textarea_input("user_ids", "User IDs (one per line)", "123456789\n987654321", "", 5, true))
+                    (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
+                    (form_actions(html! {
+                        (danger_button("Delete All Messages"))
                     }))
                 }
             }

@@ -43,6 +43,7 @@ pub const BAN_PROFILE_SUBSTRING_CHECK: &str = "ban:profile_substring:check";
 pub const BAN_PROFILE_SUBSTRING_REMOVE: &str = "ban:profile_substring:remove";
 pub const BULK_ADD_GUILD_MEMBERS: &str = "bulk:add:guild_members";
 pub const BULK_DELETE_USERS: &str = "bulk:delete:users";
+pub const BULK_DELETE_USER_MESSAGES: &str = "bulk:delete:user_messages";
 pub const BULK_UPDATE_GUILD_FEATURES: &str = "bulk:update:guild_features";
 pub const BULK_UPDATE_SUSPICIOUS_ACTIVITY: &str = "bulk:update:suspicious_activity";
 pub const BULK_UPDATE_USER_FLAGS: &str = "bulk:update:user_flags";
@@ -154,6 +155,7 @@ pub const ALL_ACLS: &[&str] = &[
     BAN_PROFILE_SUBSTRING_REMOVE,
     BULK_ADD_GUILD_MEMBERS,
     BULK_DELETE_USERS,
+    BULK_DELETE_USER_MESSAGES,
     BULK_UPDATE_GUILD_FEATURES,
     BULK_UPDATE_SUSPICIOUS_ACTIVITY,
     BULK_UPDATE_USER_FLAGS,

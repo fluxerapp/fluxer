@@ -72,6 +72,18 @@ impl AdminApiClient {
             .await
     }
 
+    pub async fn bulk_delete_user_messages(
+        &self,
+        user_ids: &[String],
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<BulkJobResponse> {
+        let body = generated_types::BulkDeleteUserMessagesRequest {
+            user_ids: snowflakes(user_ids),
+        };
+        self.post_typed_with_reason("/admin/bulk/delete-user-messages", &body, audit_log_reason)
+            .await
+    }
+
     pub async fn bulk_schedule_user_deletion(
         &self,
         user_ids: &[String],

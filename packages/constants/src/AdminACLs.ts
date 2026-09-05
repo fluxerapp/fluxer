@@ -44,6 +44,7 @@ export const AdminACLs = {
 	BAN_PROFILE_SUBSTRING_REMOVE: 'ban:profile_substring:remove',
 	BULK_ADD_GUILD_MEMBERS: 'bulk:add:guild_members',
 	BULK_DELETE_USERS: 'bulk:delete:users',
+	BULK_DELETE_USER_MESSAGES: 'bulk:delete:user_messages',
 	BULK_UPDATE_GUILD_FEATURES: 'bulk:update:guild_features',
 	BULK_UPDATE_SUSPICIOUS_ACTIVITY: 'bulk:update:suspicious_activity',
 	BULK_UPDATE_USER_FLAGS: 'bulk:update:user_flags',

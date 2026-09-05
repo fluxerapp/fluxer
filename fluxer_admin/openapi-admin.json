@@ -2335,6 +2335,63 @@
 				}
 			}
 		},
+		"/admin/bulk/delete-user-messages": {
+			"post": {
+				"operationId": "bulk_delete_user_messages",
+				"summary": "Bulk delete user messages",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BulkJobResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Enqueue a background job that deletes every message authored by each of the given users across all channels. Returns a job_id immediately; observe progress at /admin/jobs/:job_id.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BulkDeleteUserMessagesRequest"}}}
+				}
+			}
+		},
 		"/admin/bulk/schedule-user-deletion": {
 			"post": {
 				"operationId": "schedule_bulk_user_deletion",
@@ -8808,7 +8865,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 111,
+						"maxItems": 112,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -9162,7 +9219,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 111,
+						"maxItems": 112,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -9192,7 +9249,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 111,
+						"maxItems": 112,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -9891,6 +9948,18 @@
 					}
 				},
 				"required": ["guild_id", "user_ids"]
+			},
+			"BulkDeleteUserMessagesRequest": {
+				"type": "object",
+				"properties": {
+					"user_ids": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"maxItems": 1000,
+						"description": "List of user IDs whose messages will be deleted"
+					}
+				},
+				"required": ["user_ids"]
 			},
 			"BulkScheduleUserDeletionRequest": {
 				"type": "object",
@@ -13581,7 +13650,7 @@
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
 					"deletion_reason_code": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"deletion_public_reason": {"nullable": true, "type": "string"},
-					"acls": {"type": "array", "items": {"type": "string"}, "maxItems": 111},
+					"acls": {"type": "array", "items": {"type": "string"}, "maxItems": 112},
 					"traits": {"type": "array", "items": {"type": "string"}, "maxItems": 100},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}, "maxItems": 10},
@@ -14149,7 +14218,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 111,
+						"maxItems": 112,
 						"description": "List of access control permissions to assign"
 					}
 				},

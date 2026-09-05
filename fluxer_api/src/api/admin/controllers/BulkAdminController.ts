@@ -5,6 +5,7 @@ import {
 	BulkAddGuildMembersRequest,
 	BulkUpdateGuildFeaturesRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
+import {BulkDeleteUserMessagesRequest} from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
 import {BulkJobResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
 	BulkScheduleUserDeletionRequest,
@@ -177,6 +178,37 @@ export function BulkAdminController(app: HonoApp) {
 					reason_code: body.reason_code,
 					days_until_deletion: body.days_until_deletion,
 					public_reason: body.public_reason ?? null,
+					admin_user_id: adminUserId.toString(),
+					audit_log_reason: auditLogReason,
+				},
+				{requestedByUserId: adminUserId, ...(auditLogReason && {auditLogReason})},
+			);
+			return ctx.json({job_id: jobId.toString()});
+		},
+	);
+	app.post(
+		'/admin/bulk/delete-user-messages',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_BULK_OPERATION),
+		requireAdminACL(AdminACLs.BULK_DELETE_USER_MESSAGES),
+		Validator('json', BulkDeleteUserMessagesRequest),
+		OpenAPI({
+			operationId: 'bulk_delete_user_messages',
+			summary: 'Bulk delete user messages',
+			description:
+				'Enqueue a background job that deletes every message authored by each of the given users across all channels. Returns a job_id immediately; observe progress at /admin/jobs/:job_id.',
+			responseSchema: BulkJobResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
+			const body = ctx.req.valid('json');
+			const jobId = await getWorkerService().addJob(
+				'bulkDeleteMessagesForUsers',
+				{
+					user_ids: body.user_ids.map((id) => id.toString()),
 					admin_user_id: adminUserId.toString(),
 					audit_log_reason: auditLogReason,
 				},

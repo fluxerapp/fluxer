@@ -262,6 +262,12 @@ pub(crate) async fn bulk_actions_post(
                 )
                 .await
         }
+        "bulk-delete-user-messages" => {
+            let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
+            client
+                .bulk_delete_user_messages(&user_ids, audit_log_reason.as_deref())
+                .await
+        }
         "bulk_delete_users" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
             client
