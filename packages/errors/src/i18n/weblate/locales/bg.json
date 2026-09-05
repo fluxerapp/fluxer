@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "Изисква се потвърждение за общността.",
 	"account.ip_authorization_required": "Необходимо е IP удостоверяване.",
 	"account.locked_suspicious_activity": "Акаунтът ти е заключен поради подозрителна активност.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Трябва да добавиш телефонен номер, за да изпращаш съобщения в тази общност.",
 	"account.scheduled_for_deletion": "Този акаунт е планиран за изтриване.",
 	"account.session_timeout": "Сесията изтече. Опресни страницата и влез отново.",

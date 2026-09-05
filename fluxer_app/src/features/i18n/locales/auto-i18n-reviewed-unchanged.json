@@ -1471,6 +1471,9 @@
         "msgid": "Duplicate role"
       },
       {
+        "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
+      },
+      {
         "msgid": "Emulate decode codec (testing)"
       },
       {
@@ -1555,6 +1558,9 @@
         "msgid": "How much of the member's recent message history to delete."
       },
       {
+        "msgid": "If you can't verify by SMS"
+      },
+      {
         "msgid": "Image assets"
       },
       {
@@ -1580,6 +1586,12 @@
       },
       {
         "msgid": "Klipy GIFs"
+      },
+      {
+        "msgid": "Leave and set aside"
+      },
+      {
+        "msgid": "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
       },
       {
         "msgid": "Let people link their Bluesky account to their profile."
@@ -1846,6 +1858,12 @@
         "msgid": "Serial send"
       },
       {
+        "msgid": "Set this check aside"
+      },
+      {
+        "msgid": "Set this check aside?"
+      },
+      {
         "msgid": "Set up {productName}"
       },
       {
@@ -1948,6 +1966,9 @@
         "msgid": "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
       },
       {
+        "msgid": "That did not finish. Some communities may already have been left, and your account is still locked. Press Set this check aside again to finish."
+      },
+      {
         "msgid": "That image could not be used. Try a different file."
       },
       {
@@ -1967,6 +1988,9 @@
       },
       {
         "msgid": "This instance has no accounts yet. The first account you create automatically becomes the administrator. Create it now, then return here to finish setup."
+      },
+      {
+        "msgid": "This is not available on your account right now. Email {supportEmail} and a person will review it."
       },
       {
         "msgid": "This option is required. Please provide a value."
@@ -2023,7 +2047,19 @@
         "msgid": "Wordmark"
       },
       {
+        "msgid": "You can still email {supportEmail} for a human review at any time."
+      },
+      {
+        "msgid": "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
+      },
+      {
         "msgid": "YouTube enrichment"
+      },
+      {
+        "msgid": "Your account is back to normal."
+      },
+      {
+        "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
       },
       {
         "msgid": "Your new nickname, or leave blank to reset it."

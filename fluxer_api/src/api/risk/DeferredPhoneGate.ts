@@ -5,6 +5,7 @@ import {
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	NEVER_DEFERRABLE_PHONE_FLAGS,
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
 } from '@fluxer/constants/src/UserConstants';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
@@ -22,16 +23,20 @@ export interface DeferredPhoneGateConfig {
 
 export const DEFAULT_PHONE_GATE_MEMBER_THRESHOLD = 50;
 
+export const PHONE_GATE_ESCAPE_MAX_GUILDS = 25;
+
 const DISABLED_CONFIG: DeferredPhoneGateConfig = {
 	enabled: false,
 	windowMs: Number.POSITIVE_INFINITY,
 	memberThreshold: Number.POSITIVE_INFINITY,
 };
 
-type DeferredPhoneGateConfigResult =
-	| {status: 'ok'; config: DeferredPhoneGateConfig}
-	| {status: 'disabled'; config: DeferredPhoneGateConfig}
-	| {status: 'unreadable'; config: DeferredPhoneGateConfig};
+export type DeferredPhoneGateStatus = 'ok' | 'disabled' | 'unreadable';
+
+interface DeferredPhoneGateConfigResult {
+	status: DeferredPhoneGateStatus;
+	config: DeferredPhoneGateConfig;
+}
 
 export async function getDeferredPhoneGateConfig(): Promise<DeferredPhoneGateConfigResult> {
 	try {
@@ -64,6 +69,30 @@ export async function deferPhoneFlagsUntilCommunityJoin(flagBits: number): Promi
 	return flagBits | DEFERRED_PHONE_ON_COMMUNITY_JOIN;
 }
 
+export function restorePhoneGateDeferral(flagBits: number): number {
+	return (flagBits | DEFERRED_PHONE_ON_COMMUNITY_JOIN) & ~PHONE_GATE_PROMOTED_FROM_DEFERRAL;
+}
+
+export function canEscapePhoneGate(user: User, gateStatus: DeferredPhoneGateStatus): boolean {
+	if (gateStatus !== 'ok') {
+		return false;
+	}
+	if (user.hasVerifiedPhone) {
+		return false;
+	}
+	const flagBits = user.suspiciousActivityFlags ?? 0;
+	if ((flagBits & DEFERRABLE_PHONE_FLAGS) === 0) {
+		return false;
+	}
+	if ((flagBits & NEVER_DEFERRABLE_PHONE_FLAGS) !== 0) {
+		return false;
+	}
+	if ((flagBits & DEFERRED_PHONE_ON_COMMUNITY_JOIN) !== 0) {
+		return false;
+	}
+	return (flagBits & PHONE_GATE_PROMOTED_FROM_DEFERRAL) !== 0;
+}
+
 export function guildTriggersPhoneGate(guild: Guild, memberThreshold: number): boolean {
 	return guild.features.has(GuildFeatures.DISCOVERABLE) || guild.memberCount > memberThreshold;
 }
@@ -90,5 +119,9 @@ export function evaluateDeferredPhoneGate(
 	if (now - snowflakeToDate(BigInt(user.id)).getTime() >= config.windowMs) {
 		return {applies: false, reason: 'outside_window'};
 	}
-	return {applies: true, flags: (user.suspiciousActivityFlags ?? 0) & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN};
+	return {
+		applies: true,
+		flags:
+			((user.suspiciousActivityFlags ?? 0) & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN) | PHONE_GATE_PROMOTED_FROM_DEFERRAL,
+	};
 }

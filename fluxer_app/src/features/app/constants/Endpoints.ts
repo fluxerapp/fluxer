@@ -173,6 +173,7 @@ export const Endpoints = {
 	USER_PHONE_SEND_VERIFICATION: '/users/@me/phone/send-verification',
 	USER_PHONE_INBOUND_CHALLENGE: '/users/@me/phone/inbound-challenge',
 	USER_PHONE_VERIFY: '/users/@me/phone/verify',
+	USER_REQUIRED_ACTION_PHONE_GATE_ESCAPE: '/users/@me/required-actions/phone-gate-escape',
 	USER_EMAIL_CHANGE_START: '/users/@me/email-change/start',
 	USER_EMAIL_CHANGE_RESEND_ORIGINAL: '/users/@me/email-change/resend-original',
 	USER_EMAIL_CHANGE_VERIFY_ORIGINAL: '/users/@me/email-change/verify-original',

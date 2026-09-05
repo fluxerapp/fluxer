@@ -10,6 +10,7 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "التحقق من المجتمع ضروري.",
 	"account.ip_authorization_required": "إذن IP مطلوب.",
 	"account.locked_suspicious_activity": "حسابك مغلق بسبب نشاط مشبوه.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "يجب إضافة رقم هاتف لإرسال الرسائل في هذا المجتمع.",
 	"account.scheduled_for_deletion": "هذا الحساب مجدول للحذف.",
 	"account.session_timeout": "انتهت صلاحية الجلسة. حدّث الصفحة وسجّل الدخول مرة أخرى.",

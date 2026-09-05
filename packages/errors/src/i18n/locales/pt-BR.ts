@@ -10,6 +10,7 @@ const ERROR_I18N_PT_BR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "A verificação da comunidade é necessária.",
 	"account.ip_authorization_required": "A autorização de IP é necessária.",
 	"account.locked_suspicious_activity": "Sua conta está bloqueada devido a atividades suspeitas.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Você precisa adicionar um número de telefone para enviar mensagens nesta comunidade.",
 	"account.scheduled_for_deletion": "Esta conta está programada para exclusão.",
 	"account.session_timeout": "A sessão expirou. Atualize a página e entre novamente.",

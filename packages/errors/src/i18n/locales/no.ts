@@ -10,6 +10,7 @@ const ERROR_I18N_NO_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Community-verifisering er nødvendig.",
 	"account.ip_authorization_required": "IP-autorisasjon er nødvendig.",
 	"account.locked_suspicious_activity": "Kontoen din er låst på grunn av mistenkelig aktivitet.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Du må legge til et telefonnummer for å sende meldinger i dette communityet.",
 	"account.scheduled_for_deletion": "Denne kontoen er planlagt for sletting.",
 	"account.session_timeout": "Økten din er utløpt. Oppdater siden og logg inn på nytt.",

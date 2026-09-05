@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "Verifikasi komunitas diperlukan.",
 	"account.ip_authorization_required": "Otorisasi IP diperlukan.",
 	"account.locked_suspicious_activity": "Akunmu terkunci karena aktivitas mencurigakan.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Kamu perlu tambah nomor telepon untuk mengirim pesan di komunitas ini.",
 	"account.scheduled_for_deletion": "Akun ini akan dihapus.",
 	"account.session_timeout": "Sesi berakhir. Muat ulang halaman dan Masuk lagi.",

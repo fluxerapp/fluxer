@@ -10,6 +10,7 @@ const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "ต้องมีการยืนยันคอมมูนิตี้",
 	"account.ip_authorization_required": "ต้องมีการอนุญาต IP",
 	"account.locked_suspicious_activity": "บัญชีของคุณถูกล็อกเนื่องจากกิจกรรมที่น่าสงสัย",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "คุณต้องเพิ่มหมายเลขโทรศัพท์เพื่อส่งข้อความในคอมมูนิตี้นี้",
 	"account.scheduled_for_deletion": "บัญชีนี้มีกำหนดลบ",
 	"account.session_timeout": "เซสชันหมดเวลา กรุณารีเฟรชหน้าใหม่และเข้าสู่ระบบอีกครั้ง",

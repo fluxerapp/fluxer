@@ -8,6 +8,7 @@ import {
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	imposePhoneRequirements,
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
 	SuspiciousActivityFlags,
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
@@ -464,7 +465,13 @@ export class AdminUserSecurityService {
 			(currentFlags & DEFERRED_PHONE_ON_COMMUNITY_JOIN) !== 0 &&
 			(data.flags & DEFERRABLE_PHONE_FLAGS) !== 0 &&
 			(data.flags & DEFERRABLE_PHONE_FLAGS) === (currentFlags & DEFERRABLE_PHONE_FLAGS);
-		const newFlags = keepsDeferral ? data.flags | DEFERRED_PHONE_ON_COMMUNITY_JOIN : data.flags;
+		const keepsPromotion =
+			(currentFlags & PHONE_GATE_PROMOTED_FROM_DEFERRAL) !== 0 &&
+			(data.flags & DEFERRABLE_PHONE_FLAGS) !== 0 &&
+			(data.flags & DEFERRABLE_PHONE_FLAGS) === (currentFlags & DEFERRABLE_PHONE_FLAGS);
+		const newFlags =
+			(keepsDeferral ? data.flags | DEFERRED_PHONE_ON_COMMUNITY_JOIN : data.flags) |
+			(keepsPromotion ? PHONE_GATE_PROMOTED_FROM_DEFERRAL : 0);
 		const updatedUser = await userRepository.patchUpsert(
 			userId,
 			{

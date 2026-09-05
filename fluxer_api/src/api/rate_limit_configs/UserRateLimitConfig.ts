@@ -84,6 +84,14 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:account:delete',
 		config: {limit: 5, windowMs: ms('1 hour')},
 	} as RouteRateLimitConfig,
+	USER_PHONE_GATE_ESCAPE_PREVIEW: {
+		bucket: 'user:phone_gate_escape:preview',
+		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PHONE_GATE_ESCAPE: {
+		bucket: 'user:phone_gate_escape:execute',
+		config: {limit: 5, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
 	USER_DATA_HARVEST: {
 		bucket: 'user:data:harvest',
 		config: {limit: 5, windowMs: ms('30 minutes')},

@@ -10,6 +10,7 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Требуется подтверждение сообщества.",
 	"account.ip_authorization_required": "Требуется авторизация по IP.",
 	"account.locked_suspicious_activity": "Твой аккаунт заблокирован из-за подозрительной активности.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Тебе нужно добавить номер телефона, чтобы отправлять сообщения в этом сообществе.",
 	"account.scheduled_for_deletion": "Для этого аккаунта запланировано удаление.",
 	"account.session_timeout": "Время сессии истекло. Обнови страницу и войди снова.",

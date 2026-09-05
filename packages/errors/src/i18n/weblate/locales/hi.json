@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "कम्युनिटी वेरिफिकेशन ज़रूरी है।",
 	"account.ip_authorization_required": "IP ऑथराइज़ेशन ज़रूरी है।",
 	"account.locked_suspicious_activity": "संदिग्ध एक्टिविटी के कारण आपका अकाउंट लॉक कर दिया गया है.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "इस कम्युनिटी में मैसेज भेजने के लिए आपको एक फ़ोन नंबर जोड़ना होगा.",
 	"account.scheduled_for_deletion": "यह अकाउंट डिलीट किया जाना है।",
 	"account.session_timeout": "सेशन टाइमआउट हो गया है. पेज रिफ़्रेश करें और दोबारा लॉगिन करें।",

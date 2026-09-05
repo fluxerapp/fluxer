@@ -10,6 +10,7 @@ const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Reikalingas bendruomenės patvirtinimas.",
 	"account.ip_authorization_required": "Reikalingas IP įgaliojimas.",
 	"account.locked_suspicious_activity": "Tavo paskyra užrakinta dėl įtartinos veiklos.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Kad galėtum siųsti žinutes šioje bendruomenėje, turi pridėti telefono numerį.",
 	"account.scheduled_for_deletion": "Ši paskyra numatyta ištrinti.",
 	"account.session_timeout": "Sesijos laikas baigėsi. Atnaujink puslapį ir prisijunk dar kartą.",

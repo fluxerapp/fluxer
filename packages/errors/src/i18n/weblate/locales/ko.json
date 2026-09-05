@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "커뮤니티 인증이 필요해요.",
 	"account.ip_authorization_required": "IP 인증이 필요해요.",
 	"account.locked_suspicious_activity": "의심스러운 활동으로 계정이 잠겼어요.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "이 커뮤니티에서 메시지를 보내려면 전화번호를 추가해야 해요.",
 	"account.scheduled_for_deletion": "계정이 삭제될 예정이에요.",
 	"account.session_timeout": "세션이 만료되었어요. 페이지를 새로고침하고 다시 로그인해 주세요.",

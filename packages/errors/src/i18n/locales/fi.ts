@@ -10,6 +10,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Yhteisön vahvistus vaaditaan.",
 	"account.ip_authorization_required": "IP-osoitteen valtuutus vaaditaan.",
 	"account.locked_suspicious_activity": "Tilisi on lukittu epäilyttävän toiminnan vuoksi.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Sinun on lisättävä puhelinnumero lähettääksesi viestejä tässä yhteisössä.",
 	"account.scheduled_for_deletion": "Tämä tili on ajoitettu poistettavaksi.",
 	"account.session_timeout": "Istunto aikakatkesi. Päivitä sivu ja kirjaudu sisään uudelleen.",

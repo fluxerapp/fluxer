@@ -10,6 +10,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Topluluk doğrulaması gerekli.",
 	"account.ip_authorization_required": "IP yetkilendirmesi gerekli.",
 	"account.locked_suspicious_activity": "Hesabın şüpheli etkinlik nedeniyle kilitlendi.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Bu toplulukta mesaj göndermek için bir telefon numarası eklemen gerekiyor.",
 	"account.scheduled_for_deletion": "Bu hesap silinmek üzere planlandı.",
 	"account.session_timeout": "Oturum zaman aşımına uğradı. Sayfayı yenile ve tekrar giriş yap.",

@@ -671,3 +671,20 @@ export const BulkIgnoreFriendRequestsResponse = z.object({
 });
 
 export type BulkIgnoreFriendRequestsResponse = z.infer<typeof BulkIgnoreFriendRequestsResponse>;
+
+const PhoneGateEscapeGuildResponse = z.object({
+	id: SnowflakeStringType.describe('The unique identifier (snowflake) for the community'),
+	name: z.string().describe('The community name'),
+});
+
+export const PhoneGateEscapePreviewResponse = z.object({
+	available: z.boolean().describe('Whether this account can set the deferred phone verification check aside right now'),
+	guilds: z
+		.array(PhoneGateEscapeGuildResponse)
+		.describe('Communities that trigger the phone check and will be left when the escape runs'),
+	owned_guilds: z
+		.array(PhoneGateEscapeGuildResponse)
+		.describe('Communities that trigger the phone check but are owned by this user, so they are kept'),
+});
+
+export type PhoneGateEscapePreviewResponse = z.infer<typeof PhoneGateEscapePreviewResponse>;

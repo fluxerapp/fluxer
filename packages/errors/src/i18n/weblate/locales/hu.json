@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "Közösségi ellenőrzés szükséges.",
 	"account.ip_authorization_required": "IP engedélyezés szükséges.",
 	"account.locked_suspicious_activity": "Fiókod gyanús tevékenység miatt zárolva van.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Telefonszámot kell hozzáadnod, hogy üzeneteket küldhess ebben a közösségben.",
 	"account.scheduled_for_deletion": "Ez a fiók törlésre vár.",
 	"account.session_timeout": "A munkamenet lejárt. Frissítsd az oldalt, és jelentkezz be újra.",

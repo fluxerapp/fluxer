@@ -21048,6 +21048,142 @@
 				}
 			}
 		},
+		"/users/@me/required-actions/phone-gate-escape": {
+			"get": {
+				"operationId": "get_phone_gate_escape",
+				"summary": "Preview setting the deferred phone check aside",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneGateEscapePreviewResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Preview setting the deferred phone check aside"}},
+				"description": "Reports whether this account can set a deferred phone verification requirement aside, and which communities would be left if it did. Returns available false with empty lists for any account outside that state.",
+				"security": [{"sessionToken": []}]
+			},
+			"post": {
+				"operationId": "execute_phone_gate_escape",
+				"summary": "Set the deferred phone check aside",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserPrivateResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Set the deferred phone check aside"}},
+				"description": "Leaves the communities that trigger the deferred phone verification check and restores the deferral, so the account works normally again. Communities the user owns are kept, and a run that hits the per-call community limit leaves what it can and can be repeated. Returns the updated private user object.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EmptyBodyRequest"}}}
+				}
+			}
+		},
 		"/users/@me/saved-messages": {
 			"get": {
 				"operationId": "list_saved_messages",
@@ -23556,6 +23692,7 @@
 					"PASSKEYS_DISABLED",
 					"PHONE_ADD_NOT_ELIGIBLE",
 					"PHONE_ALREADY_USED",
+					"PHONE_GATE_ESCAPE_UNAVAILABLE",
 					"PHONE_RATE_LIMIT_EXCEEDED",
 					"PHONE_VERIFICATION_REQUIRED",
 					"PREMIUM_PURCHASE_BLOCKED",
@@ -23864,6 +24001,7 @@
 					"Passkeys are disabled.",
 					"You are not eligible to add a phone number to your account.",
 					"Phone number is already in use.",
+					"Setting the phone verification check aside is not available for this account.",
 					"Phone rate limit exceeded.",
 					"Phone verification is required.",
 					"No active subscription.",
@@ -34159,6 +34297,48 @@
 					}
 				},
 				"required": ["nickname"]
+			},
+			"PhoneGateEscapePreviewResponse": {
+				"type": "object",
+				"properties": {
+					"available": {
+						"type": "boolean",
+						"description": "Whether this account can set the deferred phone verification check aside right now"
+					},
+					"guilds": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"type": "string",
+									"pattern": "^(0|[1-9][0-9]*)$",
+									"description": "The unique identifier (snowflake) for the community"
+								},
+								"name": {"type": "string", "description": "The community name"}
+							},
+							"required": ["id", "name"]
+						},
+						"description": "Communities that trigger the phone check and will be left when the escape runs"
+					},
+					"owned_guilds": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"type": "string",
+									"pattern": "^(0|[1-9][0-9]*)$",
+									"description": "The unique identifier (snowflake) for the community"
+								},
+								"name": {"type": "string", "description": "The community name"}
+							},
+							"required": ["id", "name"]
+						},
+						"description": "Communities that trigger the phone check but are owned by this user, so they are kept"
+					}
+				},
+				"required": ["available", "guilds", "owned_guilds"]
 			},
 			"SavedMessageEntryListResponse": {
 				"type": "array",

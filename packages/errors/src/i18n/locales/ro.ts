@@ -10,6 +10,7 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Este necesară verificarea comunității.",
 	"account.ip_authorization_required": "Este necesară autorizarea IP.",
 	"account.locked_suspicious_activity": "Contul tău este blocat din cauza activității suspecte.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Trebuie să adaugi un număr de telefon pentru a trimite mesaje în această comunitate.",
 	"account.scheduled_for_deletion": "Acest cont este programat pentru ștergere.",
 	"account.session_timeout": "Sesiunea a expirat. Reîmprospătează pagina și Conectează-te din nou.",

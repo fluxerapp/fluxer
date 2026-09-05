@@ -1830,7 +1830,7 @@ msgid "7 days"
 msgstr "7日間"
 
 #. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:426
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:525
 msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 msgstr "電話番号認証の前にブラウザチェックが必要です。サインインページからやり直すか、サポートにお問い合わせください。"
 
@@ -2354,7 +2354,7 @@ msgid "Add a word…"
 msgstr "単語を追加…"
 
 #. Required-action modal carousel step title for replacing a bounced email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:268
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:367
 msgid "Add a working email"
 msgstr "有効なメールアドレスを追加"
 
@@ -7390,7 +7390,7 @@ msgstr "コールテーマ"
 #. Label for an inbound phone verification code shown in the required-action modal.
 #: src/features/auth/components/modals/MfaTotpDisableModal.tsx:26
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:346
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:445
 #: src/features/invite/components/InviteListItem.tsx:75
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
 msgid "Code"
@@ -12366,7 +12366,7 @@ msgid "Email unavailable"
 msgstr "メールアドレスを利用できません"
 
 #. Required-action error shown when email update cannot continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:402
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:501
 msgid "Email update is unavailable right now. Try again later or contact support."
 msgstr "現在、メールアドレスの更新はできません。しばらくしてからもう一度お試しいただくか、サポートにお問い合わせください。"
 
@@ -12374,6 +12374,11 @@ msgstr "現在、メールアドレスの更新はできません。しばらく
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:12
 msgid "Email update required"
 msgstr "メールアドレスの更新が必要です"
+
+#. Body of the human-review option in the required-action modal, rendered directly above the Contact support link. Sets the expectation that a reply takes time.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:273
+msgid "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
+msgstr "メールでご連絡ください。担当者がアカウントを確認します。SMSでの本人確認ができない旨をお伝えいただければ、その後の対応をいたします。返信はメールで行われるため、すぐには対応できません。"
 
 #. Developer control label for the email-verification banner.
 #: src/features/devtools/components/NagbarControls.ts:31
@@ -13017,7 +13022,7 @@ msgstr "有効な{theOtherPlatform}テンプレートURLまたはコードを入
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
 #. Required-action form error for an invalid email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:390
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:489
 #: src/features/moderation/components/pages/ReportPage.tsx:59
 msgid "Enter a valid email address."
 msgstr "有効なメールアドレスを入力してください。"
@@ -13028,7 +13033,7 @@ msgid "Enter a valid message link."
 msgstr "有効なメッセージリンクを入力してください。"
 
 #. Required-action form error for an invalid phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:406
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:505
 msgid "Enter a valid mobile phone number."
 msgstr "有効な携帯電話番号を入力してください。"
 
@@ -13045,7 +13050,7 @@ msgid "Enter a valid username ({exampleFluxerTagFull})."
 msgstr "有効なユーザー名を入力してください（{exampleFluxerTagFull}）。"
 
 #. Required-action modal body for entering a replacement email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:272
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:371
 msgid "Enter an email you can open. We will send a code there."
 msgstr "開くことができるメールアドレスを入力してください。確認コードをお送りします。"
 
@@ -13069,7 +13074,7 @@ msgid "Enter gift code…"
 msgstr "ギフトコードを入力…"
 
 #. Required-action modal carousel step title for changing to a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:276
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "新しいメールアドレスを入力"
 
@@ -13104,7 +13109,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "認証アプリに表示された{digitCount}桁のコードを入力してください。"
 
 #. Required-action modal body for entering an SMS code. digitCount and phoneNumber are inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:310
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:409
 msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "{phoneNumber}に送信された{digitCount}桁のコードを入力してください。"
 
@@ -13123,7 +13128,7 @@ msgid "Enter the code from your authenticator app."
 msgstr "認証アプリのコードを入力してください。"
 
 #. Required-action modal body for entering a code sent to a new email address. emailAddress is inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:288
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:387
 msgid "Enter the code sent to {emailAddress}."
 msgstr "{emailAddress}に送信されたコードを入力してください。"
 
@@ -13154,7 +13159,7 @@ msgid "Enter the code with {MFA_CODE_DIGIT_COUNT} digits sent to {0}."
 msgstr "{0}に送信された{MFA_CODE_DIGIT_COUNT}桁のコードを入力してください。"
 
 #. Required-action modal carousel step title for entering an email verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:383
 msgid "Enter the email code"
 msgstr "メールコードを入力"
 
@@ -13172,7 +13177,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "セキュリティキーのPINを入力して続行してください。"
 
 #. Required-action modal carousel step title for entering a phone SMS verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:306
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:405
 msgid "Enter the SMS code"
 msgstr "SMSコードを入力"
 
@@ -13208,7 +13213,7 @@ msgid "Enter your password."
 msgstr "パスワードを入力してください。"
 
 #. Required-action modal carousel step title for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:293
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:392
 msgid "Enter your phone number"
 msgstr "電話番号を入力"
 
@@ -14555,7 +14560,7 @@ msgid "For me"
 msgstr "自分用"
 
 #. Required-action modal body for starting an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:318
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:417
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "この確認では、お客様から当社にテキストメッセージを送信していただきます。当社からお客様に送信することはありません。"
 
@@ -16437,6 +16442,11 @@ msgstr "特定のメッセージに関する報告の場合は、そのメッセ
 msgid "If this report is about specific messages, report the most relevant message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if reporting a message would not capture the broader issue."
 msgstr "特定のメッセージに関する報告の場合は、最も関連性の高いメッセージを報告してください。メッセージを報告していただくと、安全チームが状況をより正確に把握できます。コメントで詳細を追加すると、より迅速に確認できます。メッセージの報告では問題の全体像を伝えきれない場合にのみ、ユーザー全体を報告する手続きに進んでください。"
 
+#. Heading of the alternative-routes block in the required-action modal. Introduces human review and the option to set the phone check aside. Must read as a real supported route, not fine print.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:268
+msgid "If you can't verify by SMS"
+msgstr "SMSで確認できない場合"
+
 #. Required-action modal body when the user must contact support for account recovery.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:260
 msgid "If you cannot use any verification method, contact support for help."
@@ -18093,6 +18103,16 @@ msgstr "詳細はこちら"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:443
 msgid "Leave"
 msgstr "退出"
+
+#. Confirmation dialog title in the required-action modal when communities will be left. count is inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:300
+msgid "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
+msgstr "{count, plural, one {# コミュニティ} other {# コミュニティ}}を退出し、このチェックを保留しますか？"
+
+#. Primary button of the set-aside confirmation in the required-action modal when communities will be left. Uses the destructive button style.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:336
+msgid "Leave and set aside"
+msgstr "退会して保留にする"
 
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:63
@@ -22634,12 +22654,12 @@ msgid "Open your browser, sign in, then enter the code below to link your accoun
 msgstr "ブラウザを開いてサインインし、以下のコードを入力してアカウントをリンクしてください。"
 
 #. Required-action modal carousel step title for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:330
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:429
 msgid "Open your messages"
 msgstr "メッセージを開く"
 
 #. Required-action modal body for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:334
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:433
 msgid "Open your phone messaging app and start a new text message."
 msgstr "スマートフォンのメッセージアプリを開き、新しいテキストメッセージを作成してください。"
 
@@ -23347,7 +23367,7 @@ msgid "Phone number is required"
 msgstr "電話番号は必須です"
 
 #. Toast shown after phone verification succeeds.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:366
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:465
 #: src/features/user/components/modals/PhoneAddModal.tsx:179
 #: src/features/user/components/modals/PhoneAddModal.tsx:184
 msgid "Phone number verified"
@@ -23364,7 +23384,7 @@ msgid "Phone step"
 msgstr "電話番号認証ステップ"
 
 #. Required-action error when the account is not eligible to add phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:422
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:521
 msgid "Phone verification is not available for this account. Use another method or contact support."
 msgstr "このアカウントでは電話番号認証をご利用いただけません。別の方法を使用するか、サポートにお問い合わせください。"
 
@@ -25782,7 +25802,7 @@ msgid "reposts"
 msgstr "再投稿"
 
 #. Required-action form error when the user submits before a code exists.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:378
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:477
 msgid "Request a new code first."
 msgstr "まず新しいコードをリクエストしてください。"
 
@@ -27960,12 +27980,12 @@ msgid "Send the code <0>{0}</0> to <1>{1}</1>"
 msgstr "コード <0>{0}</0> を <1>{1}</1> に送信"
 
 #. Required-action modal body for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:342
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:441
 msgid "Send the code to the phone number below."
 msgstr "以下の電話番号にコードを送信してください。"
 
 #. Required-action modal carousel step title for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:338
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:437
 msgid "Send this code"
 msgstr "このコードを送信"
 
@@ -27975,7 +27995,7 @@ msgid "Send this pin back in time?"
 msgstr "このピンを過去に戻しますか？"
 
 #. Label for the destination phone number in an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:350
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:449
 msgid "Send to"
 msgstr "送信先"
 
@@ -28003,7 +28023,7 @@ msgid "Send:"
 msgstr "送信:"
 
 #. Required-action modal explanation for an inbound phone verification challenge due to SMS cost.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:322
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:421
 msgid "Sending an SMS to this number is expensive, so we need you to text us instead."
 msgstr "この電話番号へのSMS送信は費用がかかるため、代わりにテキストメッセージを送信してください。"
 
@@ -28310,6 +28330,18 @@ msgstr "ユーザー上限を{0}に設定."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:333
 msgid "Set the vanity URL to {0}."
 msgstr "カスタムURLを{0}に設定しました。"
+
+#. Primary button of the set-aside confirmation in the required-action modal when nothing will be left. Uses the normal button style, not the destructive one.
+#. Secondary button in the required-action modal that restores the deferred phone check instead of verifying a number. Must not read as skipping or circumventing, and must not use back or undo wording, which collides with the modal back button.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:279
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:331
+msgid "Set this check aside"
+msgstr "このチェックを後回しにする"
+
+#. Confirmation dialog title in the required-action modal when nothing will be left.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:296
+msgid "Set this check aside?"
+msgstr "このチェックをスキップしますか？"
 
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:71
@@ -29557,7 +29589,7 @@ msgid "Smoother video"
 msgstr "よりスムーズなビデオ"
 
 #. Required-action error when the SMS provider cannot send or verify a code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:418
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:517
 msgid "SMS verification is unavailable right now. Try again later or contact support."
 msgstr "現在、SMS認証をご利用いただけません。しばらくしてからもう一度お試しいただくか、サポートにお問い合わせください。"
 
@@ -29762,7 +29794,7 @@ msgstr "問題が発生しました。後でもう一度お試しください。
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:430
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:529
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "問題が発生しました。もう一度お試しください。"
@@ -30116,7 +30148,7 @@ msgid "Standard {baseCurrencyLabel} pricing"
 msgstr "標準の{baseCurrencyLabel}価格"
 
 #. Required-action modal notice for inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:362
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
 msgstr "ご利用の携帯電話会社によっては、通常のメッセージ料金がかかる場合があります。"
 
@@ -31357,7 +31389,7 @@ msgid "Text to speech"
 msgstr "テキスト読み上げ"
 
 #. Required-action modal carousel step title for starting inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:314
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:413
 msgid "Text us from your phone"
 msgstr "お使いの携帯電話からSMSを送信してください"
 
@@ -31421,14 +31453,24 @@ msgid "Thank you for helping keep {productName} safe. We'll review your report a
 msgstr "{productName}を安全に保つためのご協力ありがとうございます。できるだけ早くご報告内容を確認いたします。"
 
 #. Required-action form error for an invalid verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:370
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:469
 msgid "That code didn't work. Check it and try again."
 msgstr "コードが正しくありません。確認してもう一度お試しください。"
 
 #. Required-action form error for an expired verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:374
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:473
 msgid "That code expired. Request a new code."
 msgstr "コードの有効期限が切れました。新しいコードをリクエストしてください。"
+
+#. Shown in the required-action modal when setting the check aside failed part way through leaving communities. Retrying is safe and continues from where it stopped. Names the button so the reader knows what to press.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:361
+msgid "That did not finish. Some communities may already have been left, and your account is still locked. Press Set this check aside again to finish."
+msgstr "完了しませんでした。一部のコミュニティからはすでに退出済みで、アカウントはまだロックされています。「このチェックを後で実行」をもう一度押して、完了してください。"
+
+#. Shown in the required-action modal when setting the check aside failed and the user was in no community that would have been left, so nothing can have been lost.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:356
+msgid "That did not go through. Nothing changed. Try again."
+msgstr "処理できませんでした。何も変更されていません。もう一度お試しください。"
 
 #: src/features/ui/components/form/ColorPickerField.tsx:301
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
@@ -31439,7 +31481,7 @@ msgid "That doesn't look like a valid URL."
 msgstr "有効なURLではないようです。"
 
 #. Required-action form error when a new email is already used by another account.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:394
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:493
 msgid "That email is already in use."
 msgstr "そのメールアドレスは既に使用されています。"
 
@@ -31587,6 +31629,11 @@ msgstr "新しいボイスチャンネルには、<0>{channelLabel}</0>の権限
 #: src/features/app/components/pages/NotFoundPage.tsx:22
 msgid "The page you're looking for doesn't exist or has been moved."
 msgstr "お探しのページは見つかりませんでした。移動または削除された可能性があります。"
+
+#. Success toast after the phone check is set aside while an email requirement remains, so the modal stays open on the email step. Never tell someone they are done while a modal is still in front of them.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:346
+msgid "The phone check is set aside. One email step is left."
+msgstr "電話番号の確認は保留されました。メールでの確認が1つ残っています。"
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
@@ -32199,6 +32246,11 @@ msgstr "無効です"
 msgid "This is how messages appear"
 msgstr "メッセージの表示例"
 
+#. Shown in the required-action modal when setting the check aside is refused, and when it reported success but the phone requirement is still in force. supportEmail is inserted by code, and the address is named in full because the support link may have scrolled out of view.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:351
+msgid "This is not available on your account right now. Email {supportEmail} and a person will review it."
+msgstr "この機能は現在お客様のアカウントではご利用いただけません。{supportEmail}までメールにてお問い合わせください。担当者が確認いたします。"
+
 #: src/features/channel/components/ChannelLayout.tsx:45
 msgid "This is not the channel you're looking for."
 msgstr "お探しのチャンネルではありません。"
@@ -32302,7 +32354,7 @@ msgid "This nickname will only be visible in this community"
 msgstr "このニックネームはこのコミュニティ内でのみ表示されます"
 
 #. Required-action modal explanation for an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:326
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:425
 msgid "This number needs text-in verification instead of an SMS from us."
 msgstr "この電話番号は、SMSではなくテキスト入力による認証が必要です。"
 
@@ -32327,12 +32379,12 @@ msgid "This participant was deafened by moderators"
 msgstr "この参加者はモデレーターによってミュートされました"
 
 #. Required-action form error when the backend rejects a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:410
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:509
 msgid "This phone number cannot be used. Try another mobile number or contact support."
 msgstr "この電話番号は使用できません。別の携帯電話番号を試すか、サポートにお問い合わせください。"
 
 #. Required-action form error when the backend rejects a reused phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:414
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:513
 msgid "This phone number has already been used. Try another number or contact support."
 msgstr "この電話番号はすでに使用されています。別の番号を試すか、サポートにお問い合わせください。"
 
@@ -32484,7 +32536,7 @@ msgid "This verification session expired. Return to {productName} and start chec
 msgstr "認証セッションの有効期限が切れました。{productName}に戻り、もう一度チェックアウトを開始してください。"
 
 #. Required-action form error when an email-change ticket or proof is invalid or expired.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:382
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:481
 msgid "This verification session expired. Start again."
 msgstr "この認証セッションは期限切れです。もう一度やり直してください。"
 
@@ -32583,7 +32635,7 @@ msgid "This will trust all external links and skip the warning for every domain.
 msgstr "すべての外部リンクを信頼し、ドメインごとの警告をスキップします。既存の信頼済みドメインは上書きされます。セキュリティが低下します。"
 
 #. Required-action modal body after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:358
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:457
 msgid "This window updates automatically after we receive your message."
 msgstr "メッセージを受信すると、このウィンドウは自動的に更新されます。"
 
@@ -32900,7 +32952,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "HDR画像を標準範囲にトーンマップし、ピーク輝度を下げます。"
 
 #. Required-action error shown for rate limits.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:386
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:485
 msgid "Too many attempts. Wait a bit, then try again."
 msgstr "試行回数が多すぎます。しばらく待ってから、もう一度お試しください。"
 
@@ -34730,12 +34782,12 @@ msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "認証アプリを使用して2段階認証コードを生成する"
 
 #. Required-action form error when the new email matches the current account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:398
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:497
 msgid "Use an email that is different from your current one."
 msgstr "現在登録されているメールアドレスとは異なるものを使用してください。"
 
 #. Required-action modal body for entering a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:280
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:379
 msgid "Use an email you can open. We will send a code there."
 msgstr "開くことができるメールアドレスを使用してください。そこにコードを送信します。"
 
@@ -36297,7 +36349,7 @@ msgid "Wait between messages. \"{bypassSlowmodePermissionLabel}\" can bypass it.
 msgstr "メッセージ間の待機時間。\"{bypassSlowmodePermissionLabel}\" はそれをバイパスできます。"
 
 #. Required-action modal carousel step title after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:354
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:453
 msgid "Wait here"
 msgstr "そのままお待ちください"
 
@@ -36486,7 +36538,7 @@ msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "ブラウザでサインイン画面が開いたら、{prefillEmail}を自動入力します。"
 
 #. Required-action modal body for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:297
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:396
 msgid "We will send an SMS code when available."
 msgstr "SMSコードが利用可能になり次第、送信します。"
 
@@ -37255,6 +37307,11 @@ msgstr "いつでもサインインし直せます。"
 msgid "You can still create an account or sign in. If invites are re-enabled later, you can use this same link to join."
 msgstr "アカウントを作成したり、サインインしたりすることは可能です。招待が後で再度有効になった場合は、この同じリンクを使って参加できます。"
 
+#. Last line of the set-aside confirmation in the required-action modal. supportEmail is inserted by code. The self-serve route never closes the support route.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:326
+msgid "You can still email {supportEmail} for a human review at any time."
+msgstr "いつでも {supportEmail} にメールして、人間によるレビューを依頼できます。"
+
 #: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:62
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "お気に入りに登録したGIFは、URLとして保存するか、保存済みメディアにアップロードできます。用途に合わせて選択してください。設定は{mediaSettingsPath}でいつでも変更できます。"
@@ -37699,6 +37756,11 @@ msgstr "このコミュニティでメッセージを送信するには、メー
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "あなた、または追加しようとしているメンバーの誰かが、グループDMを最大数まで開いています。どれか1つを閉じてから、もう一度お試しください。"
 
+#. Confirmation line in the required-action modal explaining that communities the user owns are kept rather than left. ownedNames is a comma-separated list inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:316
+msgid "You stay in {ownedNames}. Owners cannot leave their own community."
+msgstr "{ownedNames} に残ります。コミュニティのオーナーは、自身のコミュニティから脱退することはできません。"
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:61
 msgid "You were deafened by moderators"
@@ -37709,9 +37771,24 @@ msgstr "モデレーターによってミュートされました"
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "認証後、{redirectHostname}に移動します。"
 
+#. Hint under the set-aside button in the required-action modal when the user is in communities that trigger the check. count is inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:290
+msgid "You will leave {count, plural, one {# community} other {# communities}} that this check applies to, and your account works normally again."
+msgstr "このチェックが適用されるコミュニティを {count, plural, one {# 件} other {# 件}} 退会すると、アカウントは通常どおり機能するようになります。"
+
+#. Confirmation line in the required-action modal, shown only when the user is in communities that trigger the check. guildNames is a comma-separated list inserted by code. Both reassurances answer fears people actually have.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:311
+msgid "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
+msgstr "{guildNames}から退出します。投稿した内容は削除されず、後で再度参加できます。"
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:59
 msgid "You will not be able to delete your sent messages after your account is deleted"
 msgstr "アカウント削除後、送信済みのメッセージを削除することはできません"
+
+#. Confirmation line in the required-action modal when an email requirement remains alongside the phone check, so the modal stays open afterwards.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:321
+msgid "You will still need to finish the email step."
+msgstr "メールでの確認も完了させる必要があります。"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:94
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
@@ -37993,9 +38070,19 @@ msgstr "{productName}のセッションの有効期限が切れました。こ�
 msgid "Your account"
 msgstr "アカウント"
 
+#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:305
+msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back."
+msgstr "アカウントはすぐに元通りになり、電話番号は不要になります。これは恒久的な免除ではありません。大規模または公開コミュニティに参加すると、このチェックが再度表示される場合があります。"
+
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "アカウントの連携が完了しました。このタブを閉じてアプリに戻ることができます。"
+
+#. Success toast after the phone check is set aside and no verification steps remain. Deliberately count-free, because any communities that were left already disappear from the sidebar.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:341
+msgid "Your account is back to normal."
+msgstr "アカウントが元に戻りました。"
 
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
@@ -38013,6 +38100,11 @@ msgstr "アカウント申請は承認待ちです。管理者が承認すると
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:180
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "アカウントで多要素認証が必須ですが、このデバイスではサポートされている方法が設定されていません。認証アプリまたはセキュリティキーが設定されているデバイスでサインインするか、サポートにお問い合わせください。"
+
+#. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284
+msgid "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+msgstr "アカウントはすぐに通常通りに戻り、何も削除されません。このチェックは後で再度依頼できます。"
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
 #: src/features/auth/components/ContentBlockedHandler.tsx:14
@@ -38209,7 +38301,7 @@ msgid "Your new nickname, or leave blank to reset it."
 msgstr "新しいニックネーム。空白のままにするとリセットされます。"
 
 #. Required-action modal privacy note for phone verification. limit and duration are inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:301
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:400
 msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for at most {limit} verifications in about {duration} days."
 msgstr "お使いの電話番号はアカウントにリンクされていません。ユーザーIDを含まない暗号化されたマーカーのみを保持し、約{duration}日間で最大{limit}回の認証を行います。"
 

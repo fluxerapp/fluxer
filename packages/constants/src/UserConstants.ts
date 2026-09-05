@@ -195,6 +195,7 @@ export const ALL_SUSPICIOUS_ACTIVITY_FLAGS = Object.values(SuspiciousActivityFla
 	0,
 );
 export const DEFERRED_PHONE_ON_COMMUNITY_JOIN = 1 << 16;
+export const PHONE_GATE_PROMOTED_FROM_DEFERRAL = 1 << 17;
 export const DEFERRABLE_PHONE_FLAGS =
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE;
 export const NEVER_DEFERRABLE_PHONE_FLAGS = SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
@@ -204,14 +205,16 @@ export function imposePhoneRequirements(currentFlags: number, addedFlags: number
 	if ((addedFlags & DEFERRABLE_PHONE_FLAGS) === 0) {
 		return nextFlags;
 	}
-	return nextFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
+	return nextFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN & ~PHONE_GATE_PROMOTED_FROM_DEFERRAL;
 }
 export const ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS =
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
 export const PHONE_ADD_CLEARABLE_FLAGS =
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE |

@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "Απαιτείται επαλήθευση κοινότητας.",
 	"account.ip_authorization_required": "Απαιτείται εξουσιοδότηση IP.",
 	"account.locked_suspicious_activity": "Ο λογαριασμός σου είναι κλειδωμένος λόγω ύποπτης δραστηριότητας.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Πρέπει να προσθέσεις έναν αριθμό τηλεφώνου για να στείλεις μηνύματα σε αυτήν την κοινότητα.",
 	"account.scheduled_for_deletion": "Αυτός ο λογαριασμός έχει προγραμματιστεί για διαγραφή.",
 	"account.session_timeout": "Η σύνδεση έληξε. Ανανέωσε τη σελίδα και συνδέσου ξανά.",

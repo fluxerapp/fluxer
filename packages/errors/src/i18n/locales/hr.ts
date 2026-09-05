@@ -10,6 +10,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Potrebna je provjera zajednice.",
 	"account.ip_authorization_required": "Potrebna je IP provjera.",
 	"account.locked_suspicious_activity": "Tvoj je račun zaključan zbog sumnjive aktivnosti.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Moraš dodati telefonski broj kako bi slao poruke u ovoj zajednici.",
 	"account.scheduled_for_deletion": "Ovaj je račun predviđen za brisanje.",
 	"account.session_timeout": "Sesija je istekla. Osvježi stranicu i prijavi se ponovno.",

@@ -261,6 +261,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.PASSKEYS_DISABLED]: 'mfa_and_passkeys.passkeys_disabled',
 	[APIErrorCodes.PHONE_ADD_NOT_ELIGIBLE]: 'phone.add_not_eligible',
 	[APIErrorCodes.PHONE_ALREADY_USED]: 'phone.number_already_used',
+	[APIErrorCodes.PHONE_GATE_ESCAPE_UNAVAILABLE]: 'account.phone_gate_escape_unavailable',
 	[APIErrorCodes.PHONE_RATE_LIMIT_EXCEEDED]: 'rate_limits.phone_rate_limit_exceeded',
 	[APIErrorCodes.PHONE_VERIFICATION_REQUIRED]: 'phone.verification_required',
 	[APIErrorCodes.PREMIUM_PURCHASE_BLOCKED]: 'premium_and_plans.no_active_subscription',

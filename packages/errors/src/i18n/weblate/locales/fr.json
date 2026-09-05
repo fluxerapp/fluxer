@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "La vérification de la communauté est requise.",
 	"account.ip_authorization_required": "L'autorisation IP est requise.",
 	"account.locked_suspicious_activity": "Ton compte est bloqué en raison d'une activité suspecte.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Tu dois ajouter un numéro de téléphone pour envoyer des messages dans cette communauté.",
 	"account.scheduled_for_deletion": "Ce compte est programmé pour être supprimé.",
 	"account.session_timeout": "La session a expiré. Actualise la page et connecte-toi à nouveau.",

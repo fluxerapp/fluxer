@@ -1830,7 +1830,7 @@ msgid "7 days"
 msgstr "7 днів"
 
 #. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:426
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:525
 msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 msgstr "Перед підтвердженням номера телефону потрібна перевірка в браузері. Спробуйте ще раз зі сторінки входу або зверніться до служби підтримки."
 
@@ -2354,7 +2354,7 @@ msgid "Add a word…"
 msgstr "Додати слово…"
 
 #. Required-action modal carousel step title for replacing a bounced email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:268
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:367
 msgid "Add a working email"
 msgstr "Додайте робочу електронну пошту"
 
@@ -7390,7 +7390,7 @@ msgstr "Тема \"Вугілля\""
 #. Label for an inbound phone verification code shown in the required-action modal.
 #: src/features/auth/components/modals/MfaTotpDisableModal.tsx:26
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:346
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:445
 #: src/features/invite/components/InviteListItem.tsx:75
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
 msgid "Code"
@@ -12366,7 +12366,7 @@ msgid "Email unavailable"
 msgstr "Електронна пошта недоступна"
 
 #. Required-action error shown when email update cannot continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:402
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:501
 msgid "Email update is unavailable right now. Try again later or contact support."
 msgstr "Оновлення електронної пошти зараз недоступне. Спробуйте пізніше або зверніться до служби підтримки."
 
@@ -12374,6 +12374,11 @@ msgstr "Оновлення електронної пошти зараз недо
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:12
 msgid "Email update required"
 msgstr "Потрібно оновити електронну пошту"
+
+#. Body of the human-review option in the required-action modal, rendered directly above the Contact support link. Sets the expectation that a reply takes time.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:273
+msgid "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
+msgstr "Напишіть нам на електронну пошту, і людина перегляне ваш обліковий запис. Повідомте нам, що ви не можете пройти перевірку за допомогою SMS, і ми розберемося. Відповіді надходять електронною поштою, тому це не миттєво."
 
 #. Developer control label for the email-verification banner.
 #: src/features/devtools/components/NagbarControls.ts:31
@@ -13017,7 +13022,7 @@ msgstr "Введіть дійсний URL-адресу або код шабло�
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
 #. Required-action form error for an invalid email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:390
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:489
 #: src/features/moderation/components/pages/ReportPage.tsx:59
 msgid "Enter a valid email address."
 msgstr "Введіть дійсну адресу електронної пошти."
@@ -13028,7 +13033,7 @@ msgid "Enter a valid message link."
 msgstr "Введіть дійсне посилання на повідомлення."
 
 #. Required-action form error for an invalid phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:406
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:505
 msgid "Enter a valid mobile phone number."
 msgstr "Введіть дійсний номер мобільного телефону."
 
@@ -13045,7 +13050,7 @@ msgid "Enter a valid username ({exampleFluxerTagFull})."
 msgstr "Введіть дійсне ім'я користувача ({exampleFluxerTagFull})."
 
 #. Required-action modal body for entering a replacement email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:272
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:371
 msgid "Enter an email you can open. We will send a code there."
 msgstr "Введіть електронну пошту, до якої маєте доступ. Ми надішлемо туди код."
 
@@ -13069,7 +13074,7 @@ msgid "Enter gift code…"
 msgstr "Введіть код подарунка…"
 
 #. Required-action modal carousel step title for changing to a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:276
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "Введіть нову електронну пошту"
 
@@ -13104,7 +13109,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "Введіть {digitCount}-значний код із програми автентифікації."
 
 #. Required-action modal body for entering an SMS code. digitCount and phoneNumber are inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:310
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:409
 msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "Введіть {digitCount}-значний код, надісланий на номер {phoneNumber}."
 
@@ -13123,7 +13128,7 @@ msgid "Enter the code from your authenticator app."
 msgstr "Введіть код із програми для автентифікації."
 
 #. Required-action modal body for entering a code sent to a new email address. emailAddress is inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:288
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:387
 msgid "Enter the code sent to {emailAddress}."
 msgstr "Введіть код, надісланий на {emailAddress}."
 
@@ -13154,7 +13159,7 @@ msgid "Enter the code with {MFA_CODE_DIGIT_COUNT} digits sent to {0}."
 msgstr "Введіть {MFA_CODE_DIGIT_COUNT}-значний код, надісланий на номер {0}."
 
 #. Required-action modal carousel step title for entering an email verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:383
 msgid "Enter the email code"
 msgstr "Введіть код з електронної пошти"
 
@@ -13172,7 +13177,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "Введіть PIN-код вашого ключа безпеки, щоб продовжити."
 
 #. Required-action modal carousel step title for entering a phone SMS verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:306
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:405
 msgid "Enter the SMS code"
 msgstr "Введіть SMS-код"
 
@@ -13208,7 +13213,7 @@ msgid "Enter your password."
 msgstr "Введіть свій пароль."
 
 #. Required-action modal carousel step title for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:293
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:392
 msgid "Enter your phone number"
 msgstr "Введіть свій номер телефону"
 
@@ -14555,7 +14560,7 @@ msgid "For me"
 msgstr "Для мене"
 
 #. Required-action modal body for starting an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:318
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:417
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "Для цієї перевірки ви надсилаєте нам текстове повідомлення, а не отримуєте його від нас."
 
@@ -16437,6 +16442,11 @@ msgstr "Якщо скарга стосується конкретного пов
 msgid "If this report is about specific messages, report the most relevant message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if reporting a message would not capture the broader issue."
 msgstr "Якщо скарга стосується конкретних повідомлень, надішліть скаргу на найрелевантніше повідомлення. Скарга на повідомлення надає нашій команді безпеки найчіткіший контекст, а додавання деталей у коментарях може пришвидшити розгляд. Продовжуйте скаржитися на користувача в цілому, лише якщо скарга на повідомлення не охоплює ширшої проблеми."
 
+#. Heading of the alternative-routes block in the required-action modal. Introduces human review and the option to set the phone check aside. Must read as a real supported route, not fine print.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:268
+msgid "If you can't verify by SMS"
+msgstr "Якщо ви не можете підтвердити за допомогою SMS"
+
 #. Required-action modal body when the user must contact support for account recovery.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:260
 msgid "If you cannot use any verification method, contact support for help."
@@ -18093,6 +18103,16 @@ msgstr "Докладніше"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:443
 msgid "Leave"
 msgstr "Вийти"
+
+#. Confirmation dialog title in the required-action modal when communities will be left. count is inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:300
+msgid "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
+msgstr "Покинути {count, plural, one {# спільноту} other {# спільнот}} і відкласти цю перевірку?"
+
+#. Primary button of the set-aside confirmation in the required-action modal when communities will be left. Uses the destructive button style.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:336
+msgid "Leave and set aside"
+msgstr "Вийти та відкласти"
 
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:63
@@ -22634,12 +22654,12 @@ msgid "Open your browser, sign in, then enter the code below to link your accoun
 msgstr "Відкрийте браузер, увійдіть, а потім введіть код нижче, щоб зв'язати свій обліковий запис."
 
 #. Required-action modal carousel step title for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:330
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:429
 msgid "Open your messages"
 msgstr "Відкрийте повідомлення"
 
 #. Required-action modal body for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:334
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:433
 msgid "Open your phone messaging app and start a new text message."
 msgstr "Відкрийте програму для обміну повідомленнями на телефоні та почніть нове текстове повідомлення."
 
@@ -23347,7 +23367,7 @@ msgid "Phone number is required"
 msgstr "Потрібен номер телефону"
 
 #. Toast shown after phone verification succeeds.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:366
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:465
 #: src/features/user/components/modals/PhoneAddModal.tsx:179
 #: src/features/user/components/modals/PhoneAddModal.tsx:184
 msgid "Phone number verified"
@@ -23364,7 +23384,7 @@ msgid "Phone step"
 msgstr "Крок телефону"
 
 #. Required-action error when the account is not eligible to add phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:422
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:521
 msgid "Phone verification is not available for this account. Use another method or contact support."
 msgstr "Підтвердження номера телефону недоступне для цього облікового запису. Скористайтеся іншим способом або зверніться до служби підтримки."
 
@@ -25782,7 +25802,7 @@ msgid "reposts"
 msgstr "репости"
 
 #. Required-action form error when the user submits before a code exists.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:378
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:477
 msgid "Request a new code first."
 msgstr "Спершу запитайте новий код."
 
@@ -27960,12 +27980,12 @@ msgid "Send the code <0>{0}</0> to <1>{1}</1>"
 msgstr "Надіслати код <0>{0}</0> на <1>{1}</1>"
 
 #. Required-action modal body for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:342
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:441
 msgid "Send the code to the phone number below."
 msgstr "Надішліть код на вказаний нижче номер телефону."
 
 #. Required-action modal carousel step title for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:338
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:437
 msgid "Send this code"
 msgstr "Надіслати цей код"
 
@@ -27975,7 +27995,7 @@ msgid "Send this pin back in time?"
 msgstr "Відправити це закріплення назад у часі?"
 
 #. Label for the destination phone number in an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:350
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:449
 msgid "Send to"
 msgstr "Надіслати на"
 
@@ -28003,7 +28023,7 @@ msgid "Send:"
 msgstr "Надсилання:"
 
 #. Required-action modal explanation for an inbound phone verification challenge due to SMS cost.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:322
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:421
 msgid "Sending an SMS to this number is expensive, so we need you to text us instead."
 msgstr "Надсилання SMS на цей номер є дорогим, тому нам потрібно, щоб ви надіслали нам повідомлення."
 
@@ -28310,6 +28330,18 @@ msgstr "Встановіть ліміт користувачів на {0}."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:333
 msgid "Set the vanity URL to {0}."
 msgstr "Встановлено URL-адресу запрошення на {0}."
+
+#. Primary button of the set-aside confirmation in the required-action modal when nothing will be left. Uses the normal button style, not the destructive one.
+#. Secondary button in the required-action modal that restores the deferred phone check instead of verifying a number. Must not read as skipping or circumventing, and must not use back or undo wording, which collides with the modal back button.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:279
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:331
+msgid "Set this check aside"
+msgstr "Відкласти цю перевірку"
+
+#. Confirmation dialog title in the required-action modal when nothing will be left.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:296
+msgid "Set this check aside?"
+msgstr "Відкласти цю перевірку?"
 
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:71
@@ -29557,7 +29589,7 @@ msgid "Smoother video"
 msgstr "Плавніше відео"
 
 #. Required-action error when the SMS provider cannot send or verify a code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:418
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:517
 msgid "SMS verification is unavailable right now. Try again later or contact support."
 msgstr "SMS-перевірка наразі недоступна. Спробуйте пізніше або зверніться до служби підтримки."
 
@@ -29762,7 +29794,7 @@ msgstr "Щось пішло не так. Спробуйте пізніше."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:430
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:529
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Щось пішло не так. Спробуйте ще раз."
@@ -30116,7 +30148,7 @@ msgid "Standard {baseCurrencyLabel} pricing"
 msgstr "Стандартні ціни в {baseCurrencyLabel}"
 
 #. Required-action modal notice for inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:362
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
 msgstr "Може стягуватися стандартна плата за повідомлення від вашого оператора."
 
@@ -31357,7 +31389,7 @@ msgid "Text to speech"
 msgstr "Текст в мовлення"
 
 #. Required-action modal carousel step title for starting inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:314
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:413
 msgid "Text us from your phone"
 msgstr "Надішліть нам повідомлення зі свого телефону"
 
@@ -31421,14 +31453,24 @@ msgid "Thank you for helping keep {productName} safe. We'll review your report a
 msgstr "Дякуємо, що допомагаєте зробити {productName} безпечним. Ми розглянемо ваш звіт якомога швидше."
 
 #. Required-action form error for an invalid verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:370
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:469
 msgid "That code didn't work. Check it and try again."
 msgstr "Цей код не спрацював. Перевірте його та спробуйте ще раз."
 
 #. Required-action form error for an expired verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:374
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:473
 msgid "That code expired. Request a new code."
 msgstr "Термін дії цього коду закінчився. Запитайте новий код."
+
+#. Shown in the required-action modal when setting the check aside failed part way through leaving communities. Retrying is safe and continues from where it stopped. Names the button so the reader knows what to press.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:361
+msgid "That did not finish. Some communities may already have been left, and your account is still locked. Press Set this check aside again to finish."
+msgstr "Це не завершилося. Деякі спільноти могли бути вже залишені, а ваш обліковий запис досі заблоковано. Натисніть «Відкласти цю перевірку» ще раз, щоб завершити."
+
+#. Shown in the required-action modal when setting the check aside failed and the user was in no community that would have been left, so nothing can have been lost.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:356
+msgid "That did not go through. Nothing changed. Try again."
+msgstr "Не вдалося. Нічого не змінилося. Спробуйте ще раз."
 
 #: src/features/ui/components/form/ColorPickerField.tsx:301
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
@@ -31439,7 +31481,7 @@ msgid "That doesn't look like a valid URL."
 msgstr "Це не схоже на дійсну URL-адресу."
 
 #. Required-action form error when a new email is already used by another account.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:394
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:493
 msgid "That email is already in use."
 msgstr "Ця електронна пошта вже використовується."
 
@@ -31587,6 +31629,11 @@ msgstr "Новий голосовий канал повторно викорис
 #: src/features/app/components/pages/NotFoundPage.tsx:22
 msgid "The page you're looking for doesn't exist or has been moved."
 msgstr "Сторінка, яку ви шукаєте, не існує або була переміщена."
+
+#. Success toast after the phone check is set aside while an email requirement remains, so the modal stays open on the email step. Never tell someone they are done while a modal is still in front of them.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:346
+msgid "The phone check is set aside. One email step is left."
+msgstr "Перевірку телефону відкладено. Залишився один крок з електронною поштою."
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
@@ -32199,6 +32246,11 @@ msgstr "Вимкнено"
 msgid "This is how messages appear"
 msgstr "Так виглядають повідомлення"
 
+#. Shown in the required-action modal when setting the check aside is refused, and when it reported success but the phone requirement is still in force. supportEmail is inserted by code, and the address is named in full because the support link may have scrolled out of view.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:351
+msgid "This is not available on your account right now. Email {supportEmail} and a person will review it."
+msgstr "Зараз це недоступно для вашого облікового запису. Напишіть на {supportEmail}, і людина розгляне це."
+
 #: src/features/channel/components/ChannelLayout.tsx:45
 msgid "This is not the channel you're looking for."
 msgstr "Це не той канал, який ви шукаєте."
@@ -32302,7 +32354,7 @@ msgid "This nickname will only be visible in this community"
 msgstr "Цей псевдонім буде видно лише в цій спільноті"
 
 #. Required-action modal explanation for an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:326
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:425
 msgid "This number needs text-in verification instead of an SMS from us."
 msgstr "Цей номер потребує верифікації текстом, а не SMS від нас."
 
@@ -32327,12 +32379,12 @@ msgid "This participant was deafened by moderators"
 msgstr "Цього учасника заглушили модератори"
 
 #. Required-action form error when the backend rejects a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:410
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:509
 msgid "This phone number cannot be used. Try another mobile number or contact support."
 msgstr "Цей номер телефону не можна використовувати. Спробуйте інший мобільний номер або зверніться до служби підтримки."
 
 #. Required-action form error when the backend rejects a reused phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:414
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:513
 msgid "This phone number has already been used. Try another number or contact support."
 msgstr "Цей номер телефону вже використовувався. Спробуйте інший номер або зверніться до служби підтримки."
 
@@ -32484,7 +32536,7 @@ msgid "This verification session expired. Return to {productName} and start chec
 msgstr "Термін дії сеансу перевірки вичерпано. Поверніться до {productName} і почніть оформлення замовлення знову."
 
 #. Required-action form error when an email-change ticket or proof is invalid or expired.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:382
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:481
 msgid "This verification session expired. Start again."
 msgstr "Термін дії цієї сесії перевірки закінчився. Почніть знову."
 
@@ -32583,7 +32635,7 @@ msgid "This will trust all external links and skip the warning for every domain.
 msgstr "Це дозволить довіряти всім зовнішнім посиланням і пропускати попередження для кожного домену. Ваші наявні довірені домени буде замінено. Це менш безпечно."
 
 #. Required-action modal body after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:358
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:457
 msgid "This window updates automatically after we receive your message."
 msgstr "Це вікно автоматично оновиться після отримання вашого повідомлення."
 
@@ -32900,7 +32952,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "Тонування HDR-зображень до стандартного діапазону, зменшуючи пікову яскравість."
 
 #. Required-action error shown for rate limits.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:386
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:485
 msgid "Too many attempts. Wait a bit, then try again."
 msgstr "Забагато спроб. Зачекайте трохи, потім спробуйте ще раз."
 
@@ -34730,12 +34782,12 @@ msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Використовуйте програму-автентифікатор для генерації кодів двофакторної автентифікації"
 
 #. Required-action form error when the new email matches the current account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:398
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:497
 msgid "Use an email that is different from your current one."
 msgstr "Використовуйте електронну пошту, яка відрізняється від поточної."
 
 #. Required-action modal body for entering a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:280
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:379
 msgid "Use an email you can open. We will send a code there."
 msgstr "Використовуйте електронну пошту, яку ви можете відкрити. Ми надішлемо туди код."
 
@@ -36297,7 +36349,7 @@ msgid "Wait between messages. \"{bypassSlowmodePermissionLabel}\" can bypass it.
 msgstr "Час між повідомленнями. «{bypassSlowmodePermissionLabel}» може це обійти."
 
 #. Required-action modal carousel step title after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:354
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:453
 msgid "Wait here"
 msgstr "Зачекайте тут"
 
@@ -36486,7 +36538,7 @@ msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Ми попередньо заповнимо {prefillEmail}, щойно відкриється вхід у браузері."
 
 #. Required-action modal body for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:297
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:396
 msgid "We will send an SMS code when available."
 msgstr "Ми надішлемо SMS-код, коли він буде доступний."
 
@@ -37255,6 +37307,11 @@ msgstr "Ви можете ввійти знову в будь-який час."
 msgid "You can still create an account or sign in. If invites are re-enabled later, you can use this same link to join."
 msgstr "Ви все ще можете створити обліковий запис або ввійти. Якщо запрошення буде знову ввімкнено пізніше, ви зможете використати це саме посилання, щоб приєднатися."
 
+#. Last line of the set-aside confirmation in the required-action modal. supportEmail is inserted by code. The self-serve route never closes the support route.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:326
+msgid "You can still email {supportEmail} for a human review at any time."
+msgstr "Ви все ще можете написати на {supportEmail} для перегляду людиною будь-коли."
+
 #: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:62
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "Ви можете зберігати позначені GIF як вибране лише за посиланням або завантажувати їх у збережені медіафайли. Виберіть той варіант, який вам найбільше підходить. Ви можете змінити це будь-коли в {mediaSettingsPath}."
@@ -37699,6 +37756,11 @@ msgstr "Щоб надсилати повідомлення в цій спіль�
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "У вас або в одного з учасників уже відкрито максимальну кількість групових приватних чатів. Залиште один і спробуйте ще раз."
 
+#. Confirmation line in the required-action modal explaining that communities the user owns are kept rather than left. ownedNames is a comma-separated list inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:316
+msgid "You stay in {ownedNames}. Owners cannot leave their own community."
+msgstr "Ви залишаєтеся у спільноті {ownedNames}. Власники не можуть покинути власну спільноту."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:61
 msgid "You were deafened by moderators"
@@ -37709,9 +37771,24 @@ msgstr "Модератори вимкнули вам звук"
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Після авторизації вас буде перенаправлено на {redirectHostname}."
 
+#. Hint under the set-aside button in the required-action modal when the user is in communities that trigger the check. count is inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:290
+msgid "You will leave {count, plural, one {# community} other {# communities}} that this check applies to, and your account works normally again."
+msgstr "Ви покинете {count, plural, one {# спільноту} few {# спільноти} many {# спільнот} other {# спільнот}}, до яких застосовується ця перевірка, і ваш обліковий запис знову працюватиме нормально."
+
+#. Confirmation line in the required-action modal, shown only when the user is in communities that trigger the check. guildNames is a comma-separated list inserted by code. Both reassurances answer fears people actually have.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:311
+msgid "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
+msgstr "Ви покинете {guildNames}. Усі ваші дописи залишаться, і ви зможете приєднатися пізніше."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:59
 msgid "You will not be able to delete your sent messages after your account is deleted"
 msgstr "Ви не зможете видалити надіслані повідомлення після видалення облікового запису"
+
+#. Confirmation line in the required-action modal when an email requirement remains alongside the phone check, so the modal stays open afterwards.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:321
+msgid "You will still need to finish the email step."
+msgstr "Вам все ще потрібно буде завершити крок з електронною поштою."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:94
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
@@ -37993,9 +38070,19 @@ msgstr "Термін дії вашої сесії {productName} закінчив
 msgid "Your account"
 msgstr "Ваш обліковий запис"
 
+#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:305
+msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back."
+msgstr "Ваш обліковий запис одразу повернеться до норми, і телефонний номер вам більше не знадобиться. Це не постійне звільнення. Приєднання до великої або публічної спільноти може знову викликати цю перевірку."
+
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "Ваш обліковий запис успішно прив'язано. Тепер ви можете закрити цю вкладку та повернутися до застосунку."
+
+#. Success toast after the phone check is set aside and no verification steps remain. Deliberately count-free, because any communities that were left already disappear from the sidebar.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:341
+msgid "Your account is back to normal."
+msgstr "Ваш обліковий запис відновлено."
 
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
@@ -38013,6 +38100,11 @@ msgstr "Ваш запит на обліковий запис очікує схв
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:180
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Ваш обліковий запис вимагає багатофакторної автентифікації, але на цьому пристрої не налаштовано жодного підтримуваного методу. Увійдіть на пристрої з програмою-автентифікатором або ключем безпеки, або зверніться до служби підтримки."
+
+#. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284
+msgid "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+msgstr "Ваш обліковий запис знову працюватиме одразу, і нічого не буде видалено. Ми можемо попросити повторити цю перевірку пізніше."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
 #: src/features/auth/components/ContentBlockedHandler.tsx:14
@@ -38209,7 +38301,7 @@ msgid "Your new nickname, or leave blank to reset it."
 msgstr "Ваш новий нікнейм або залиште порожнім, щоб скинути його."
 
 #. Required-action modal privacy note for phone verification. limit and duration are inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:301
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:400
 msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for at most {limit} verifications in about {duration} days."
 msgstr "Ваш номер не прив'язаний до облікового запису. Ми зберігаємо лише зашифрований маркер без ідентифікатора користувача, максимум для {limit} перевірок протягом приблизно {duration} днів."
 

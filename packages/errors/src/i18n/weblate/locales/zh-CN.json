@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "需要社区验证。",
 	"account.ip_authorization_required": "需要 IP 授权。",
 	"account.locked_suspicious_activity": "你的账号因可疑活动已被锁定。",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "你需要添加手机号才能在此社区发送消息。",
 	"account.scheduled_for_deletion": "此账号已安排删除。",
 	"account.session_timeout": "会话超时。刷新页面后重新登录。",

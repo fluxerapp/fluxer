@@ -1830,7 +1830,7 @@ msgid "7 days"
 msgstr "7 dagen"
 
 #. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:426
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:525
 msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 msgstr "Een browsercontrole is vereist voordat je je telefoon kunt verifiëren. Probeer het opnieuw vanaf de aanmeldpagina of neem contact op met de ondersteuning."
 
@@ -2354,7 +2354,7 @@ msgid "Add a word…"
 msgstr "Een woord toevoegen…"
 
 #. Required-action modal carousel step title for replacing a bounced email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:268
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:367
 msgid "Add a working email"
 msgstr "Voeg een werkend e-mailadres toe"
 
@@ -7390,7 +7390,7 @@ msgstr "Thema Kolenzwart"
 #. Label for an inbound phone verification code shown in the required-action modal.
 #: src/features/auth/components/modals/MfaTotpDisableModal.tsx:26
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:346
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:445
 #: src/features/invite/components/InviteListItem.tsx:75
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
 msgid "Code"
@@ -12366,7 +12366,7 @@ msgid "Email unavailable"
 msgstr "E-mailadres niet beschikbaar"
 
 #. Required-action error shown when email update cannot continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:402
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:501
 msgid "Email update is unavailable right now. Try again later or contact support."
 msgstr "E-mailadres bijwerken is nu niet beschikbaar. Probeer het later opnieuw of neem contact op met de ondersteuning."
 
@@ -12374,6 +12374,11 @@ msgstr "E-mailadres bijwerken is nu niet beschikbaar. Probeer het later opnieuw 
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:12
 msgid "Email update required"
 msgstr "E-mailadres bijwerken vereist"
+
+#. Body of the human-review option in the required-action modal, rendered directly above the Contact support link. Sets the expectation that a reply takes time.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:273
+msgid "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
+msgstr "E-mail ons en een medewerker zal je account beoordelen. Geef aan dat je niet via sms kunt verifiëren en wij regelen de rest. Antwoorden komen per e-mail, dus dit is niet direct."
 
 #. Developer control label for the email-verification banner.
 #: src/features/devtools/components/NagbarControls.ts:31
@@ -13017,7 +13022,7 @@ msgstr "Voer een geldige {theOtherPlatform} template-URL of code in."
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
 #. Required-action form error for an invalid email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:390
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:489
 #: src/features/moderation/components/pages/ReportPage.tsx:59
 msgid "Enter a valid email address."
 msgstr "Voer een geldig e-mailadres in."
@@ -13028,7 +13033,7 @@ msgid "Enter a valid message link."
 msgstr "Voer een geldige berichtlink in."
 
 #. Required-action form error for an invalid phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:406
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:505
 msgid "Enter a valid mobile phone number."
 msgstr "Voer een geldig mobiel telefoonnummer in."
 
@@ -13045,7 +13050,7 @@ msgid "Enter a valid username ({exampleFluxerTagFull})."
 msgstr "Voer een geldige gebruikersnaam in ({exampleFluxerTagFull})."
 
 #. Required-action modal body for entering a replacement email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:272
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:371
 msgid "Enter an email you can open. We will send a code there."
 msgstr "Voer een e-mailadres in dat je kunt openen. We sturen daar een code naartoe."
 
@@ -13069,7 +13074,7 @@ msgid "Enter gift code…"
 msgstr "Cadeaucode invoeren…"
 
 #. Required-action modal carousel step title for changing to a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:276
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "Nieuw e-mailadres invoeren"
 
@@ -13104,7 +13109,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "Voer de code van {digitCount} cijfers in vanuit je authenticator-app."
 
 #. Required-action modal body for entering an SMS code. digitCount and phoneNumber are inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:310
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:409
 msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "Voer de {digitCount}-cijferige code in die is verzonden naar {phoneNumber}."
 
@@ -13123,7 +13128,7 @@ msgid "Enter the code from your authenticator app."
 msgstr "Voer de code van je authenticator-app in."
 
 #. Required-action modal body for entering a code sent to a new email address. emailAddress is inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:288
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:387
 msgid "Enter the code sent to {emailAddress}."
 msgstr "Voer de code in die is verzonden naar {emailAddress}."
 
@@ -13154,7 +13159,7 @@ msgid "Enter the code with {MFA_CODE_DIGIT_COUNT} digits sent to {0}."
 msgstr "Voer de code van {MFA_CODE_DIGIT_COUNT} cijfers in die is verzonden naar {0}."
 
 #. Required-action modal carousel step title for entering an email verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:383
 msgid "Enter the email code"
 msgstr "Voer de e-mailcode in"
 
@@ -13172,7 +13177,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "Voer de pincode van uw beveiligingssleutel in om verder te gaan."
 
 #. Required-action modal carousel step title for entering a phone SMS verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:306
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:405
 msgid "Enter the SMS code"
 msgstr "Voer de sms-code in"
 
@@ -13208,7 +13213,7 @@ msgid "Enter your password."
 msgstr "Voer je wachtwoord in."
 
 #. Required-action modal carousel step title for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:293
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:392
 msgid "Enter your phone number"
 msgstr "Voer je telefoonnummer in"
 
@@ -14555,7 +14560,7 @@ msgid "For me"
 msgstr "Voor mij"
 
 #. Required-action modal body for starting an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:318
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:417
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "Voor deze controle stuur je ons een sms in plaats van er een van ons te ontvangen."
 
@@ -16437,6 +16442,11 @@ msgstr "Als dit rapport over een specifiek bericht gaat, rapporteer dan dat beri
 msgid "If this report is about specific messages, report the most relevant message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if reporting a message would not capture the broader issue."
 msgstr "Als dit rapport over specifieke berichten gaat, rapporteer dan het meest relevante bericht. Berichtenrapporten geven ons veiligheidsteam de duidelijkste context, en het toevoegen van details in de opmerkingen kan ons helpen het sneller te beoordelen. Ga alleen door met het rapporteren van de gebruiker als geheel als het rapporteren van een bericht het bredere probleem niet zou omvatten."
 
+#. Heading of the alternative-routes block in the required-action modal. Introduces human review and the option to set the phone check aside. Must read as a real supported route, not fine print.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:268
+msgid "If you can't verify by SMS"
+msgstr "Als je niet kunt verifiëren via sms"
+
 #. Required-action modal body when the user must contact support for account recovery.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:260
 msgid "If you cannot use any verification method, contact support for help."
@@ -18093,6 +18103,16 @@ msgstr "Meer informatie"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:443
 msgid "Leave"
 msgstr "Verlaten"
+
+#. Confirmation dialog title in the required-action modal when communities will be left. count is inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:300
+msgid "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
+msgstr "Verlaat {count, plural, one {# community} other {# communities}} en zet deze controle opzij?"
+
+#. Primary button of the set-aside confirmation in the required-action modal when communities will be left. Uses the destructive button style.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:336
+msgid "Leave and set aside"
+msgstr "Verlaten en opzij zetten"
 
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:63
@@ -22634,12 +22654,12 @@ msgid "Open your browser, sign in, then enter the code below to link your accoun
 msgstr "Open je browser, meld je aan en voer de onderstaande code in om je account te koppelen."
 
 #. Required-action modal carousel step title for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:330
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:429
 msgid "Open your messages"
 msgstr "Open je berichten"
 
 #. Required-action modal body for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:334
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:433
 msgid "Open your phone messaging app and start a new text message."
 msgstr "Open de berichtenapp op je telefoon en start een nieuw sms-bericht."
 
@@ -23347,7 +23367,7 @@ msgid "Phone number is required"
 msgstr "Telefoonnummer is verplicht"
 
 #. Toast shown after phone verification succeeds.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:366
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:465
 #: src/features/user/components/modals/PhoneAddModal.tsx:179
 #: src/features/user/components/modals/PhoneAddModal.tsx:184
 msgid "Phone number verified"
@@ -23364,7 +23384,7 @@ msgid "Phone step"
 msgstr "Telefoonstap"
 
 #. Required-action error when the account is not eligible to add phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:422
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:521
 msgid "Phone verification is not available for this account. Use another method or contact support."
 msgstr "Telefoonverificatie is niet beschikbaar voor dit account. Gebruik een andere methode of neem contact op met de ondersteuning."
 
@@ -25782,7 +25802,7 @@ msgid "reposts"
 msgstr "reposts"
 
 #. Required-action form error when the user submits before a code exists.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:378
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:477
 msgid "Request a new code first."
 msgstr "Vraag eerst een nieuwe code aan."
 
@@ -27960,12 +27980,12 @@ msgid "Send the code <0>{0}</0> to <1>{1}</1>"
 msgstr "Stuur de code <0>{0}</0> naar <1>{1}</1>"
 
 #. Required-action modal body for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:342
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:441
 msgid "Send the code to the phone number below."
 msgstr "Stuur de code naar het onderstaande telefoonnummer."
 
 #. Required-action modal carousel step title for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:338
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:437
 msgid "Send this code"
 msgstr "Verstuur deze code"
 
@@ -27975,7 +27995,7 @@ msgid "Send this pin back in time?"
 msgstr "Deze pin terug in de tijd sturen?"
 
 #. Label for the destination phone number in an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:350
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:449
 msgid "Send to"
 msgstr "Verzenden naar"
 
@@ -28003,7 +28023,7 @@ msgid "Send:"
 msgstr "Verzenden:"
 
 #. Required-action modal explanation for an inbound phone verification challenge due to SMS cost.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:322
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:421
 msgid "Sending an SMS to this number is expensive, so we need you to text us instead."
 msgstr "Het versturen van een sms naar dit nummer is duur, dus we vragen je om ons in plaats daarvan een bericht te sturen."
 
@@ -28310,6 +28330,18 @@ msgstr "Gebruikerslimiet ingesteld op {0}."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:333
 msgid "Set the vanity URL to {0}."
 msgstr "Stelde de vanity-URL in op {0}."
+
+#. Primary button of the set-aside confirmation in the required-action modal when nothing will be left. Uses the normal button style, not the destructive one.
+#. Secondary button in the required-action modal that restores the deferred phone check instead of verifying a number. Must not read as skipping or circumventing, and must not use back or undo wording, which collides with the modal back button.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:279
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:331
+msgid "Set this check aside"
+msgstr "Stel deze controle uit"
+
+#. Confirmation dialog title in the required-action modal when nothing will be left.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:296
+msgid "Set this check aside?"
+msgstr "Zet deze controle opzij?"
 
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:71
@@ -29557,7 +29589,7 @@ msgid "Smoother video"
 msgstr "Vloeiendere video"
 
 #. Required-action error when the SMS provider cannot send or verify a code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:418
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:517
 msgid "SMS verification is unavailable right now. Try again later or contact support."
 msgstr "Sms-verificatie is momenteel niet beschikbaar. Probeer het later opnieuw of neem contact op met de ondersteuning."
 
@@ -29762,7 +29794,7 @@ msgstr "Er is iets misgegaan. Probeer het later opnieuw."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:430
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:529
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Er is iets misgegaan. Probeer het opnieuw."
@@ -30116,7 +30148,7 @@ msgid "Standard {baseCurrencyLabel} pricing"
 msgstr "Standaard {baseCurrencyLabel}-prijzen"
 
 #. Required-action modal notice for inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:362
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
 msgstr "Standaard sms-tarieven van je provider kunnen van toepassing zijn."
 
@@ -31357,7 +31389,7 @@ msgid "Text to speech"
 msgstr "Tekst naar spraak"
 
 #. Required-action modal carousel step title for starting inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:314
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:413
 msgid "Text us from your phone"
 msgstr "Sms ons vanaf je telefoon"
 
@@ -31421,14 +31453,24 @@ msgid "Thank you for helping keep {productName} safe. We'll review your report a
 msgstr "Bedankt dat je helpt om {productName} veilig te houden. We bekijken je melding zo snel mogelijk."
 
 #. Required-action form error for an invalid verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:370
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:469
 msgid "That code didn't work. Check it and try again."
 msgstr "Die code werkte niet. Controleer de code en probeer het opnieuw."
 
 #. Required-action form error for an expired verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:374
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:473
 msgid "That code expired. Request a new code."
 msgstr "Die code is verlopen. Vraag een nieuwe code aan."
+
+#. Shown in the required-action modal when setting the check aside failed part way through leaving communities. Retrying is safe and continues from where it stopped. Names the button so the reader knows what to press.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:361
+msgid "That did not finish. Some communities may already have been left, and your account is still locked. Press Set this check aside again to finish."
+msgstr "Dat is niet voltooid. Sommige communities zijn mogelijk al verlaten en uw account is nog steeds vergrendeld. Druk nogmaals op 'Deze controle terzijde schuiven' om te voltooien."
+
+#. Shown in the required-action modal when setting the check aside failed and the user was in no community that would have been left, so nothing can have been lost.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:356
+msgid "That did not go through. Nothing changed. Try again."
+msgstr "Dat is niet gelukt. Er is niets veranderd. Probeer het opnieuw."
 
 #: src/features/ui/components/form/ColorPickerField.tsx:301
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
@@ -31439,7 +31481,7 @@ msgid "That doesn't look like a valid URL."
 msgstr "Dat lijkt geen geldige URL."
 
 #. Required-action form error when a new email is already used by another account.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:394
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:493
 msgid "That email is already in use."
 msgstr "Dat e-mailadres is al in gebruik."
 
@@ -31587,6 +31629,11 @@ msgstr "Het nieuwe spraakkanaal gebruikt de machtigingen, gebruikerslimiet en bi
 #: src/features/app/components/pages/NotFoundPage.tsx:22
 msgid "The page you're looking for doesn't exist or has been moved."
 msgstr "De pagina die je zoekt bestaat niet of is verplaatst."
+
+#. Success toast after the phone check is set aside while an email requirement remains, so the modal stays open on the email step. Never tell someone they are done while a modal is still in front of them.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:346
+msgid "The phone check is set aside. One email step is left."
+msgstr "De telefooncontrole is terzijde geschoven. Er is nog één e-mailstap over."
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
@@ -32199,6 +32246,11 @@ msgstr "Dit is uitgeschakeld"
 msgid "This is how messages appear"
 msgstr "Zo worden berichten weergegeven"
 
+#. Shown in the required-action modal when setting the check aside is refused, and when it reported success but the phone requirement is still in force. supportEmail is inserted by code, and the address is named in full because the support link may have scrolled out of view.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:351
+msgid "This is not available on your account right now. Email {supportEmail} and a person will review it."
+msgstr "Dit is momenteel niet beschikbaar voor uw account. E-mail {supportEmail} en een medewerker zal het beoordelen."
+
 #: src/features/channel/components/ChannelLayout.tsx:45
 msgid "This is not the channel you're looking for."
 msgstr "Dit is niet het kanaal dat je zoekt."
@@ -32302,7 +32354,7 @@ msgid "This nickname will only be visible in this community"
 msgstr "Deze bijnaam is alleen zichtbaar in deze community"
 
 #. Required-action modal explanation for an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:326
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:425
 msgid "This number needs text-in verification instead of an SMS from us."
 msgstr "Dit nummer moet worden geverifieerd via een sms-bericht in plaats van een sms van ons."
 
@@ -32327,12 +32379,12 @@ msgid "This participant was deafened by moderators"
 msgstr "Deze deelnemer is gedempt door moderators"
 
 #. Required-action form error when the backend rejects a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:410
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:509
 msgid "This phone number cannot be used. Try another mobile number or contact support."
 msgstr "Dit telefoonnummer kan niet worden gebruikt. Probeer een ander mobiel nummer of neem contact op met de ondersteuning."
 
 #. Required-action form error when the backend rejects a reused phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:414
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:513
 msgid "This phone number has already been used. Try another number or contact support."
 msgstr "Dit telefoonnummer is al gebruikt. Probeer een ander nummer of neem contact op met support."
 
@@ -32484,7 +32536,7 @@ msgid "This verification session expired. Return to {productName} and start chec
 msgstr "Deze verificatiesessie is verlopen. Ga terug naar {productName} en start het afrekenen opnieuw."
 
 #. Required-action form error when an email-change ticket or proof is invalid or expired.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:382
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:481
 msgid "This verification session expired. Start again."
 msgstr "Deze verificatiesessie is verlopen. Begin opnieuw."
 
@@ -32583,7 +32635,7 @@ msgid "This will trust all external links and skip the warning for every domain.
 msgstr "Hiermee worden alle externe links vertrouwd en wordt de waarschuwing voor elk domein overgeslagen. Je bestaande vertrouwde domeinen worden vervangen. Dit is minder veilig."
 
 #. Required-action modal body after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:358
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:457
 msgid "This window updates automatically after we receive your message."
 msgstr "Dit venster wordt automatisch bijgewerkt nadat we je bericht hebben ontvangen."
 
@@ -32900,7 +32952,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "HDR-afbeeldingen omzetten naar standaardbereik, waardoor de piekhelderheid wordt verminderd."
 
 #. Required-action error shown for rate limits.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:386
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:485
 msgid "Too many attempts. Wait a bit, then try again."
 msgstr "Te veel pogingen. Wacht even en probeer het dan opnieuw."
 
@@ -34730,12 +34782,12 @@ msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Gebruik een authenticator-app om codes te genereren voor tweestapsverificatie"
 
 #. Required-action form error when the new email matches the current account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:398
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:497
 msgid "Use an email that is different from your current one."
 msgstr "Gebruik een ander e-mailadres dan je huidige."
 
 #. Required-action modal body for entering a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:280
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:379
 msgid "Use an email you can open. We will send a code there."
 msgstr "Gebruik een e-mailadres dat je kunt openen. We sturen daar een code naartoe."
 
@@ -36297,7 +36349,7 @@ msgid "Wait between messages. \"{bypassSlowmodePermissionLabel}\" can bypass it.
 msgstr "Wachttijd tussen berichten. \"{bypassSlowmodePermissionLabel}\" kan dit omzeilen."
 
 #. Required-action modal carousel step title after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:354
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:453
 msgid "Wait here"
 msgstr "Even wachten"
 
@@ -36486,7 +36538,7 @@ msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "We vullen {prefillEmail} alvast in zodra het inlogscherm in je browser opent."
 
 #. Required-action modal body for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:297
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:396
 msgid "We will send an SMS code when available."
 msgstr "We sturen een sms-code wanneer deze beschikbaar is."
 
@@ -37255,6 +37307,11 @@ msgstr "Je kunt op elk moment weer inloggen."
 msgid "You can still create an account or sign in. If invites are re-enabled later, you can use this same link to join."
 msgstr "Je kunt nog steeds een account aanmaken of inloggen. Als uitnodigingen later opnieuw worden ingeschakeld, kun je dezelfde link gebruiken om deel te nemen."
 
+#. Last line of the set-aside confirmation in the required-action modal. supportEmail is inserted by code. The self-serve route never closes the support route.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:326
+msgid "You can still email {supportEmail} for a human review at any time."
+msgstr "Je kunt op elk moment een e-mail sturen naar {supportEmail} voor een beoordeling door een mens."
+
 #: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:62
 msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
 msgstr "Je kunt \"starred\" GIF's opslaan als favorieten (alleen URL) of uploaden naar je opgeslagen media. Kies de optie die het beste bij je past. Je kunt dit op elk moment wijzigen via {mediaSettingsPath}."
@@ -37699,6 +37756,11 @@ msgstr "Je moet je e-mailadres verifiëren om berichten te kunnen versturen in d
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "Jij of iemand die je toevoegt heeft al het maximale aantal groeps-DM's openstaan. Verlaat er een en probeer het opnieuw."
 
+#. Confirmation line in the required-action modal explaining that communities the user owns are kept rather than left. ownedNames is a comma-separated list inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:316
+msgid "You stay in {ownedNames}. Owners cannot leave their own community."
+msgstr "Je blijft in {ownedNames}. Eigenaren kunnen hun eigen community niet verlaten."
+
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:61
 msgid "You were deafened by moderators"
@@ -37709,9 +37771,24 @@ msgstr "Je bent gedempt door moderators"
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Je wordt doorgestuurd naar {redirectHostname} na autorisatie."
 
+#. Hint under the set-aside button in the required-action modal when the user is in communities that trigger the check. count is inserted by code.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:290
+msgid "You will leave {count, plural, one {# community} other {# communities}} that this check applies to, and your account works normally again."
+msgstr "Je verlaat {count, plural, one {# community} other {# communities}} waarvoor deze controle geldt, en je account werkt weer normaal."
+
+#. Confirmation line in the required-action modal, shown only when the user is in communities that trigger the check. guildNames is a comma-separated list inserted by code. Both reassurances answer fears people actually have.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:311
+msgid "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
+msgstr "Je verlaat {guildNames}. Niets wat je hebt geplaatst wordt verwijderd en je kunt later opnieuw lid worden."
+
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:59
 msgid "You will not be able to delete your sent messages after your account is deleted"
 msgstr "Verzonden berichten kunnen niet meer worden verwijderd nadat je account is verwijderd"
+
+#. Confirmation line in the required-action modal when an email requirement remains alongside the phone check, so the modal stays open afterwards.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:321
+msgid "You will still need to finish the email step."
+msgstr "Je moet de e-mailstap nog steeds afronden."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:94
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
@@ -37993,9 +38070,19 @@ msgstr "Je {productName}-sessie is verlopen. Meld je opnieuw aan om door te gaan
 msgid "Your account"
 msgstr "Je account"
 
+#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:305
+msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back."
+msgstr "Je account wordt direct weer normaal en je hebt nu geen telefoonnummer nodig. Dit is geen permanente uitzondering. Lid worden van een grote of openbare community kan deze controle opnieuw activeren."
+
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "Je account is gekoppeld. Je kunt dit tabblad nu sluiten en teruggaan naar de app."
+
+#. Success toast after the phone check is set aside and no verification steps remain. Deliberately count-free, because any communities that were left already disappear from the sidebar.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:341
+msgid "Your account is back to normal."
+msgstr "Je account is weer normaal."
 
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
@@ -38013,6 +38100,11 @@ msgstr "Je accountaanvraag wacht op goedkeuring. Je kunt inloggen nadat een behe
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:180
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Je account vereist meervoudige authenticatie, maar er zijn geen ondersteunde methoden ingesteld op dit apparaat. Meld je aan op een apparaat met je authenticator-app of beveiligingssleutel, of neem contact op met de ondersteuning."
+
+#. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284
+msgid "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+msgstr "Je account werkt direct weer normaal en er wordt niets verwijderd. We kunnen later opnieuw om deze controle vragen."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
 #: src/features/auth/components/ContentBlockedHandler.tsx:14
@@ -38209,7 +38301,7 @@ msgid "Your new nickname, or leave blank to reset it."
 msgstr "Je nieuwe bijnaam, of laat leeg om deze te resetten."
 
 #. Required-action modal privacy note for phone verification. limit and duration are inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:301
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:400
 msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for at most {limit} verifications in about {duration} days."
 msgstr "Je nummer is niet gekoppeld aan je account. We bewaren alleen een versleutelde markering, zonder gebruikers-ID, voor maximaal {limit} verificaties in ongeveer {duration} dagen."
 

@@ -10,6 +10,7 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Community-bevestiging is vereist.",
 	"account.ip_authorization_required": "IP-autorisatie is vereist.",
 	"account.locked_suspicious_activity": "Je account is vergrendeld vanwege verdachte activiteit.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Je moet een telefoonnummer toevoegen om berichten te kunnen versturen in deze community.",
 	"account.scheduled_for_deletion": "Dit account staat gepland voor verwijdering.",
 	"account.session_timeout": "Sessie is verlopen. Vernieuw de pagina en log opnieuw in.",

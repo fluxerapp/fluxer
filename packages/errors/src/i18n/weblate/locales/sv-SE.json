@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "Community-verifiering är obligatorisk.",
 	"account.ip_authorization_required": "IP-auktorisering är obligatorisk.",
 	"account.locked_suspicious_activity": "Ditt konto är låst på grund av misstänkt aktivitet.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Du måste lägga till ett telefonnummer för att skicka meddelanden i denna community.",
 	"account.scheduled_for_deletion": "Detta konto är schemalagt för radering.",
 	"account.session_timeout": "Sessionen har löpt ut. Uppdatera sidan och logga in igen...",

@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "Yêu cầu xác minh cộng đồng.",
 	"account.ip_authorization_required": "Yêu cầu ủy quyền IP.",
 	"account.locked_suspicious_activity": "Tài khoản đã bị khóa do hoạt động đáng ngờ.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Cần thêm số điện thoại để gửi tin nhắn trong cộng đồng này.",
 	"account.scheduled_for_deletion": "Tài khoản này đã được lên lịch để xóa.",
 	"account.session_timeout": "Phiên đã hết thời gian. làm mới trang và đăng nhập lại.",

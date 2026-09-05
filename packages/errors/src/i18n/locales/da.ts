@@ -10,6 +10,7 @@ const ERROR_I18N_DA_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Community-bekræftelse er påkrævet.",
 	"account.ip_authorization_required": "IP-autorisation er påkrævet.",
 	"account.locked_suspicious_activity": "Din konto er låst på grund af mistænkelig aktivitet.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Du skal tilføje et telefonnummer for at sende beskeder i dette community.",
 	"account.scheduled_for_deletion": "Denne konto skal slettes.",
 	"account.session_timeout": "Sessionen er udløbet. Opdater siden, og log ind igen.",

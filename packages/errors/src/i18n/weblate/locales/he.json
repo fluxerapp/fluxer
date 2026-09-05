@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "אימות קהילה נדרש.",
 	"account.ip_authorization_required": "הרשאת IP נדרשת.",
 	"account.locked_suspicious_activity": "החשבון שלך ננעל בגלל פעילות חשודה.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "נדרש להוסיף מספר טלפון כדי לשלוח הודעות בקהילה זו.",
 	"account.scheduled_for_deletion": "החשבון הזה מתוזמן למחיקה.",
 	"account.session_timeout": "הסשן פג. יש לרענן את הדף ולהתחבר שוב.",

@@ -6,6 +6,7 @@
 	"account.guild_verification_required": "コミュニティ認証が必要です。",
 	"account.ip_authorization_required": "IPアドレスの認証が必要です。",
 	"account.locked_suspicious_activity": "不審なアクティビティのため、アカウントはロックされています。",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "このコミュニティでメッセージを送信するには、電話番号を追加する必要があります。",
 	"account.scheduled_for_deletion": "このアカウントは削除予定です。",
 	"account.session_timeout": "セッションがタイムアウトしました。ページを更新して、もう一度ログインしてください。",

@@ -10,6 +10,7 @@ const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.guild_verification_required": "Vyžaduje se ověření komunity.",
 	"account.ip_authorization_required": "Vyžaduje se autorizace IP adresy.",
 	"account.locked_suspicious_activity": "Tvůj účet je uzamčen kvůli podezřelé aktivitě.",
+	"account.phone_gate_escape_unavailable": "Setting the phone verification check aside is not available for this account.",
 	"account.phone_required_for_guild": "Pro odesílání zpráv v této komunitě musíš přidat telefonní číslo.",
 	"account.scheduled_for_deletion": "Smazání tohoto účtu je naplánováno.",
 	"account.session_timeout": "Relace vypršela. Obnov stránku a přihlas se znovu.",
