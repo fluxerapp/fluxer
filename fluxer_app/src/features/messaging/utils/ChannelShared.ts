@@ -20,28 +20,15 @@ export function pickDefaultGuildChannelId({
 	guildId,
 	channels,
 	selectedChannelId,
-	systemChannelId,
-	rulesChannelId,
 }: {
 	guildId: string;
 	channels: ReadonlyArray<MinimalChannel>;
 	selectedChannelId?: string | null;
-	systemChannelId?: string | null;
-	rulesChannelId?: string | null;
 }): string | null {
-	if (!channels.length) return null;
-	const channelById = new Map(channels.map((channel) => [channel.id, channel]));
-	const isChannelInGuild = (channelId?: string | null) =>
-		channelId ? channelById.get(channelId)?.guildId === guildId : false;
-	if (isChannelInGuild(selectedChannelId)) {
-		return selectedChannelId!;
+	const viewable = filterViewableChannels(channels.filter((channel) => channel.guildId === guildId));
+	if (!viewable.length) return null;
+	if (selectedChannelId && viewable.some((channel) => channel.id === selectedChannelId)) {
+		return selectedChannelId;
 	}
-	if (isChannelInGuild(systemChannelId)) {
-		return systemChannelId!;
-	}
-	if (isChannelInGuild(rulesChannelId)) {
-		return rulesChannelId!;
-	}
-	const viewable = [...filterViewableChannels(channels)].sort(compareChannelPosition);
-	return viewable[0]?.id ?? null;
+	return viewable.sort(compareChannelPosition)[0].id;
 }
