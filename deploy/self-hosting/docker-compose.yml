@@ -260,10 +260,11 @@ services:
     volumes:
       - seaweedfs-data:/data
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
       interval: 10s
       timeout: 5s
       retries: 20
+      start_period: 60s
 
   seaweedfs-init:
     image: chrislusf/seaweedfs:4.34
