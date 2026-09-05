@@ -7,7 +7,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -15,7 +15,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -23,7 +23,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -31,7 +31,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -39,7 +39,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -47,7 +47,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -55,7 +55,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -63,7 +63,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B, U+2500-254B, U+2550-2573;
+	unicode-range: U+0020-007E, U+00A0, U+00A4-00A5, U+00A8-00A9, U+00AE, U+00B0-00B1, U+00B7, U+00D7, U+00E0-00E1, U+00E8-00EA, U+00EC-00ED, U+00F2-00F3, U+00F7, U+00F9-00FA, U+00FC, U+0101, U+0113, U+011B, U+012B, U+0144, U+0148, U+014D, U+016B, U+01CE, U+01D0, U+01D2, U+01D4, U+01D6, U+01D8, U+01DA, U+01DC, U+01F9, U+0251, U+0261, U+02C6-02C7, U+02C9-02CB, U+02D9, U+02DC, U+0300-0301, U+0332, U+0336, U+0391-03A1, U+03A3-03A9, U+03B1-03C1, U+03C3-03C9, U+0401, U+0410-044F, U+0451, U+1E3F, U+2003, U+2010-2011, U+2013-2016, U+2018-2019, U+201C-201D, U+2022, U+2025-2026, U+2030, U+2032-2033, U+2035, U+203B, U+205D, U+20AC, U+2103, U+2105, U+2109, U+2116, U+2121-2122, U+2160-216B, U+2170-2179, U+2190-2199, U+21A9-21AA, U+21B0-21B3, U+21B6-21B7, U+21BA-21BB, U+21C4, U+21C6, U+2208, U+220F, U+2211, U+2215, U+221A, U+221D-2220, U+2223, U+2225, U+2227-222B, U+222E, U+2234-2237, U+223C-223D, U+2248, U+224C, U+2252, U+2260-2261, U+2264-2267, U+226E-226F, U+2295, U+2299, U+22A5, U+22BF, U+2312, U+2329, U+2460-2469, U+2474-249B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -71,7 +71,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -79,7 +79,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -87,7 +87,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -95,7 +95,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -103,7 +103,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -111,7 +111,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -119,7 +119,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -127,7 +127,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5, U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F;
+	unicode-range: U+2500-254B, U+2550-2573, U+2581-258F, U+2593-2595, U+25A0-25A1, U+25B2-25B3, U+25BC-25BD, U+25C6-25C7, U+25CB, U+25CE-25CF, U+25E2-25E5, U+2605-2606, U+2609, U+2640, U+2642, U+2B0E-2B11, U+2E80-2E99, U+2E9B-2EF3, U+2F00-2FD5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -135,7 +135,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -143,7 +143,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -151,7 +151,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -159,7 +159,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -167,7 +167,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -175,7 +175,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -183,7 +183,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -191,7 +191,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+3041-3096, U+309B-309E, U+30A1-30FE, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
+	unicode-range: U+2FF0-2FFB, U+3000-3003, U+3005-3017, U+301C-301E, U+3021-3029, U+3033-3035, U+3038-303A, U+303E-303F, U+3105-312C, U+31A0-31B7, U+3220-3229, U+3231, U+32A3, U+338E-338F, U+339C-339E, U+33A1, U+33C4, U+33CE, U+33D1-33D2, U+33D5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1223,7 +1223,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1231,7 +1231,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1239,7 +1239,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1247,7 +1247,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1255,7 +1255,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1263,7 +1263,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1271,7 +1271,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1279,7 +1279,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4E00-4FAB;
+	unicode-range: U+4E00-4FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1287,7 +1287,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1295,7 +1295,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1303,7 +1303,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1311,7 +1311,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1319,7 +1319,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1327,7 +1327,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1335,7 +1335,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1343,7 +1343,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+4FAC-5157;
+	unicode-range: U+4FA4-5147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1351,7 +1351,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1359,7 +1359,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1367,7 +1367,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1375,7 +1375,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1383,7 +1383,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1391,7 +1391,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1399,7 +1399,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1407,7 +1407,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5158-5303;
+	unicode-range: U+5148-52EB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1415,7 +1415,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1423,7 +1423,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1431,7 +1431,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1439,7 +1439,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1447,7 +1447,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1455,7 +1455,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1463,7 +1463,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1471,7 +1471,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5304-54AF;
+	unicode-range: U+52EC-548F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1479,7 +1479,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1487,7 +1487,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1495,7 +1495,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1503,7 +1503,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1511,7 +1511,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1519,7 +1519,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1527,7 +1527,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1535,7 +1535,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+54B0-565B;
+	unicode-range: U+5490-5633;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1543,7 +1543,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1551,7 +1551,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1559,7 +1559,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1567,7 +1567,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1575,7 +1575,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1583,7 +1583,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1591,7 +1591,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1599,7 +1599,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+565C-5807;
+	unicode-range: U+5634-57D7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1607,7 +1607,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1615,7 +1615,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1623,7 +1623,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1631,7 +1631,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1639,7 +1639,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1647,7 +1647,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1655,7 +1655,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1663,7 +1663,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5808-59B3;
+	unicode-range: U+57D8-597B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1671,7 +1671,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1679,7 +1679,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1687,7 +1687,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1695,7 +1695,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1703,7 +1703,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1711,7 +1711,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1719,7 +1719,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1727,7 +1727,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+59B4-5B5F;
+	unicode-range: U+597C-5B1F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1735,7 +1735,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1743,7 +1743,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1751,7 +1751,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1759,7 +1759,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1767,7 +1767,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1775,7 +1775,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1783,7 +1783,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1791,7 +1791,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5B60-5D0B;
+	unicode-range: U+5B20-5CC3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1799,7 +1799,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1807,7 +1807,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1815,7 +1815,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1823,7 +1823,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1831,7 +1831,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1839,7 +1839,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1847,7 +1847,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1855,7 +1855,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5D0C-5EB7;
+	unicode-range: U+5CC4-5E67;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1863,7 +1863,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1871,7 +1871,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1879,7 +1879,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1887,7 +1887,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1895,7 +1895,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1903,7 +1903,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1911,7 +1911,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1919,7 +1919,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+5EB8-6063;
+	unicode-range: U+5E68-600B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1927,7 +1927,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1935,7 +1935,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1943,7 +1943,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1951,7 +1951,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1959,7 +1959,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1967,7 +1967,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1975,7 +1975,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1983,7 +1983,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6064-620F;
+	unicode-range: U+600C-61AF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1991,7 +1991,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -1999,7 +1999,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2007,7 +2007,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2015,7 +2015,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2023,7 +2023,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2031,7 +2031,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2039,7 +2039,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2047,7 +2047,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6210-63BB;
+	unicode-range: U+61B0-6353;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2055,7 +2055,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2063,7 +2063,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2071,7 +2071,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2079,7 +2079,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2087,7 +2087,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2095,7 +2095,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2103,7 +2103,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2111,7 +2111,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+63BC-6567;
+	unicode-range: U+6354-64F7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2119,7 +2119,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2127,7 +2127,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2135,7 +2135,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2143,7 +2143,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2151,7 +2151,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2159,7 +2159,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2167,7 +2167,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2175,7 +2175,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6568-6713;
+	unicode-range: U+64F8-669B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2183,7 +2183,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2191,7 +2191,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2199,7 +2199,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2207,7 +2207,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2215,7 +2215,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2223,7 +2223,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2231,7 +2231,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2239,7 +2239,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6714-68BF;
+	unicode-range: U+669C-683F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2247,7 +2247,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2255,7 +2255,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2263,7 +2263,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2271,7 +2271,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2279,7 +2279,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2287,7 +2287,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2295,7 +2295,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2303,7 +2303,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+68C0-6A6B;
+	unicode-range: U+6840-69E3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2311,7 +2311,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2319,7 +2319,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2327,7 +2327,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2335,7 +2335,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2343,7 +2343,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2351,7 +2351,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2359,7 +2359,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2367,7 +2367,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6A6C-6C17;
+	unicode-range: U+69E4-6B87;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2375,7 +2375,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2383,7 +2383,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2391,7 +2391,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2399,7 +2399,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2407,7 +2407,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2415,7 +2415,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2423,7 +2423,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2431,7 +2431,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6C18-6DC3;
+	unicode-range: U+6B88-6D2B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2439,7 +2439,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2447,7 +2447,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2455,7 +2455,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2463,7 +2463,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2471,7 +2471,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2479,7 +2479,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2487,7 +2487,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2495,7 +2495,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6DC4-6F6F;
+	unicode-range: U+6D2C-6ECF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2503,7 +2503,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2511,7 +2511,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2519,7 +2519,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2527,7 +2527,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2535,7 +2535,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2543,7 +2543,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2551,7 +2551,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2559,7 +2559,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+6F70-711B;
+	unicode-range: U+6ED0-7073;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2567,7 +2567,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2575,7 +2575,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2583,7 +2583,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2591,7 +2591,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2599,7 +2599,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2607,7 +2607,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2615,7 +2615,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2623,7 +2623,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+711C-72C7;
+	unicode-range: U+7074-7217;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2631,7 +2631,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2639,7 +2639,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2647,7 +2647,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2655,7 +2655,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2663,7 +2663,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2671,7 +2671,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2679,7 +2679,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2687,7 +2687,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+72C8-7473;
+	unicode-range: U+7218-73BB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2695,7 +2695,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2703,7 +2703,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2711,7 +2711,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2719,7 +2719,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2727,7 +2727,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2735,7 +2735,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2743,7 +2743,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2751,7 +2751,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7474-761F;
+	unicode-range: U+73BC-755F;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2759,7 +2759,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2767,7 +2767,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2775,7 +2775,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2783,7 +2783,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2791,7 +2791,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2799,7 +2799,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2807,7 +2807,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2815,7 +2815,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7620-77CB;
+	unicode-range: U+7560-7703;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2823,7 +2823,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2831,7 +2831,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2839,7 +2839,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2847,7 +2847,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2855,7 +2855,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2863,7 +2863,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2871,7 +2871,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2879,7 +2879,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+77CC-7977;
+	unicode-range: U+7704-78A7;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2887,7 +2887,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2895,7 +2895,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2903,7 +2903,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2911,7 +2911,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2919,7 +2919,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2927,7 +2927,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2935,7 +2935,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2943,7 +2943,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7978-7B23;
+	unicode-range: U+78A8-7A4B;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2951,7 +2951,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2959,7 +2959,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2967,7 +2967,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2975,7 +2975,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2983,7 +2983,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2991,7 +2991,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -2999,7 +2999,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3007,7 +3007,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7B24-7CCF;
+	unicode-range: U+7A4C-7BEF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3015,7 +3015,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3023,7 +3023,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3031,7 +3031,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3039,7 +3039,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3047,7 +3047,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3055,7 +3055,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3063,7 +3063,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3071,7 +3071,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7CD0-7E7B;
+	unicode-range: U+7BF0-7D93;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3079,7 +3079,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3087,7 +3087,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3095,7 +3095,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3103,7 +3103,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3111,7 +3111,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3119,7 +3119,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3127,7 +3127,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3135,7 +3135,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+7E7C-8027;
+	unicode-range: U+7D94-7F37;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3143,7 +3143,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3151,7 +3151,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3159,7 +3159,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3167,7 +3167,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3175,7 +3175,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3183,7 +3183,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3191,7 +3191,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3199,7 +3199,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8028-81D3;
+	unicode-range: U+7F38-80DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3207,7 +3207,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3215,7 +3215,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3223,7 +3223,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3231,7 +3231,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3239,7 +3239,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3247,7 +3247,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3255,7 +3255,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3263,7 +3263,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+81D4-8277, U+8279-8380;
+	unicode-range: U+80DC-8277, U+8279-8280;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3271,7 +3271,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3279,7 +3279,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3287,7 +3287,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3295,7 +3295,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3303,7 +3303,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3311,7 +3311,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3319,7 +3319,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3327,7 +3327,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8381-852C;
+	unicode-range: U+8281-8424;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3335,7 +3335,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3343,7 +3343,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3351,7 +3351,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3359,7 +3359,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3367,7 +3367,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3375,7 +3375,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3383,7 +3383,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3391,7 +3391,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+852D-86D8;
+	unicode-range: U+8425-85C8;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3399,7 +3399,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3407,7 +3407,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3415,7 +3415,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3423,7 +3423,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3431,7 +3431,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3439,7 +3439,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3447,7 +3447,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3455,7 +3455,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+86D9-8884;
+	unicode-range: U+85C9-876C;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3463,7 +3463,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3471,7 +3471,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3479,7 +3479,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3487,7 +3487,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3495,7 +3495,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3503,7 +3503,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3511,7 +3511,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3519,7 +3519,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8885-898A, U+898C-8A31;
+	unicode-range: U+876D-8910;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3527,7 +3527,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3535,7 +3535,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3543,7 +3543,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3551,7 +3551,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3559,7 +3559,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3567,7 +3567,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3575,7 +3575,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3583,7 +3583,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8A32-8BDD;
+	unicode-range: U+8911-898A, U+898C-8AB5;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3591,7 +3591,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3599,7 +3599,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3607,7 +3607,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3615,7 +3615,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3623,7 +3623,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3631,7 +3631,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3639,7 +3639,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3647,7 +3647,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8BDE-8C9C, U+8C9E-8D8A;
+	unicode-range: U+8AB6-8C59;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3655,7 +3655,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3663,7 +3663,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3671,7 +3671,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3679,7 +3679,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3687,7 +3687,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3695,7 +3695,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3703,7 +3703,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3711,7 +3711,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8D8B-8EC9, U+8ECB-8F37;
+	unicode-range: U+8C5A-8C9C, U+8C9E-8DFE;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3719,7 +3719,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3727,7 +3727,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3735,7 +3735,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3743,7 +3743,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3751,7 +3751,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3759,7 +3759,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3767,7 +3767,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3775,7 +3775,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+8F38-90E3;
+	unicode-range: U+8DFF-8EC9, U+8ECB-8FA3;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3783,7 +3783,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3791,7 +3791,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3799,7 +3799,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3807,7 +3807,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3815,7 +3815,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3823,7 +3823,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3831,7 +3831,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3839,7 +3839,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+90E4-91C5, U+91C7-9290;
+	unicode-range: U+8FA4-9147;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3847,7 +3847,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3855,7 +3855,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3863,7 +3863,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3871,7 +3871,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3879,7 +3879,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3887,7 +3887,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3895,7 +3895,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3903,7 +3903,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9291-943C;
+	unicode-range: U+9148-91C5, U+91C7-92EC;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3911,7 +3911,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3919,7 +3919,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3927,7 +3927,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3935,7 +3935,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3943,7 +3943,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3951,7 +3951,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3959,7 +3959,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3967,7 +3967,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+943D-9576, U+9578-957F, U+9581-95EA;
+	unicode-range: U+92ED-9490;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3975,7 +3975,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3983,7 +3983,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3991,7 +3991,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -3999,7 +3999,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4007,7 +4007,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4015,7 +4015,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9751, U+9753-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4023,7 +4023,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4031,7 +4031,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+95EB-9796;
+	unicode-range: U+9491-9576, U+9578-957F, U+9581-9636;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4039,7 +4039,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4047,7 +4047,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4055,7 +4055,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4063,7 +4063,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4071,7 +4071,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4079,7 +4079,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-9751, U+9753-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4087,7 +4087,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4095,7 +4095,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9797-97CA, U+97CC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9946;
+	unicode-range: U+9637-97CA, U+97CC-97DB;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4103,7 +4103,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4111,7 +4111,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4119,7 +4119,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4127,7 +4127,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4135,7 +4135,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4143,7 +4143,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4151,7 +4151,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4159,7 +4159,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9947-99AB, U+99AD-9AF3;
+	unicode-range: U+97DC-9800, U+9802-98A7, U+98A9-98DA, U+98DC-9982;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4167,7 +4167,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4175,7 +4175,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4183,7 +4183,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4191,7 +4191,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4199,7 +4199,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4207,7 +4207,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4215,7 +4215,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4223,7 +4223,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9AF4-9B24, U+9B26-9B59, U+9B5B-9CA1;
+	unicode-range: U+9983-99AB, U+99AD-9B24, U+9B26-9B28;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4231,7 +4231,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4239,7 +4239,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4247,7 +4247,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4255,7 +4255,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4263,7 +4263,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4271,7 +4271,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4279,7 +4279,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4287,7 +4287,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9CA2-9E4D;
+	unicode-range: U+9B29-9B59, U+9B5B-9CCD;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4295,7 +4295,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4303,7 +4303,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4311,7 +4311,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4319,7 +4319,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4327,7 +4327,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4335,7 +4335,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4343,7 +4343,7 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4351,7 +4351,7 @@
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+9E4E-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+	unicode-range: U+9CCE-9E71;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4359,7 +4359,7 @@
 	font-weight: 100;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4367,7 +4367,7 @@
 	font-weight: 200;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4375,7 +4375,7 @@
 	font-weight: 300;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4383,7 +4383,7 @@
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4391,7 +4391,7 @@
 	font-weight: 450;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4399,7 +4399,7 @@
 	font-weight: 500;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
@@ -4407,11 +4407,75 @@
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
-	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
 }
 @font-face {
 	font-family: 'Fluxer Sans SC';
 	src: url('../files/FluxerSansSC/FluxerSansSC-Bold.068.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+9E72-9E74, U+9E76-9EA4, U+9EA6-9EFC, U+9EFE-9F49, U+9F4B-9F51, U+9F53-9F8C, U+9F8E-9F9B, U+9F9D-9FFF;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-Thin.069.woff2') format('woff2');
+	font-weight: 100;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-ExtraLight.069.woff2') format('woff2');
+	font-weight: 200;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-Light.069.woff2') format('woff2');
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-Regular.069.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-Text.069.woff2') format('woff2');
+	font-weight: 450;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-Medium.069.woff2') format('woff2');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-SemiBold.069.woff2') format('woff2');
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+E78D-E795, U+E7C7-E7C8, U+E7E7-E7F3, U+E815-E864, U+F92C, U+F979, U+FA0C-FA0F, U+FA11, U+FA13-FA14, U+FA18, U+FA1F-FA21, U+FA23-FA24, U+FA27-FA29, U+FE10-FE18, U+FE30-FE31, U+FE33-FE44, U+FE47-FE52, U+FE54-FE57, U+FE59-FE66, U+FE68-FE6B, U+FF01-FF5E, U+FFE0-FFE5, U+20087, U+20089, U+200CC, U+20164, U+20509, U+20676, U+2099D, U+20CD0, U+2139A, U+21413, U+215D7, U+2298F, U+235CB, U+23C97-23C98, U+23E23, U+241FE, U+249DB, U+24A7D, U+24AC9, U+25532, U+25562, U+255A8, U+25ED7, U+26221, U+2648D, U+26676, U+2677C, U+26B5C, U+26C21, U+27FF9, U+28408, U+28678, U+28695, U+287E0, U+28B49, U+28C47, U+28C4F, U+28C51, U+28C54, U+28E99, U+29F7E, U+29F83, U+29F8C, U+2A7DD, U+2A8FB, U+2A917, U+2AA30, U+2AA36, U+2AA58, U+2AFA2, U+2B127-2B128, U+2B137-2B138, U+2B1ED, U+2B300, U+2B363, U+2B36F, U+2B372, U+2B37D, U+2B404, U+2B410, U+2B413, U+2B461, U+2B4E7, U+2B4EF, U+2B4F6, U+2B4F9, U+2B50D-2B50E, U+2B536, U+2B5AE-2B5AF, U+2B5B3, U+2B5E7, U+2B5F4, U+2B61C-2B61D, U+2B626-2B628, U+2B62A, U+2B62C, U+2B695-2B696, U+2B6AD, U+2B6ED, U+2B7A9, U+2B7C5, U+2B7E6, U+2B7F9, U+2B7FC, U+2B806, U+2B80A, U+2B81C, U+2B8B8, U+2BAC7, U+2BB5F, U+2BB62, U+2BB7C, U+2BB83, U+2BC1B, U+2BD77, U+2BD87, U+2BDF7, U+2BE29, U+2C029-2C02A, U+2C0A9, U+2C0CA, U+2C1D5, U+2C1D9, U+2C1F9, U+2C27C, U+2C288, U+2C2A4, U+2C317, U+2C35B, U+2C361, U+2C364, U+2C488, U+2C494, U+2C497, U+2C542, U+2C613, U+2C618, U+2C621, U+2C629, U+2C62B-2C62D, U+2C62F, U+2C642, U+2C64A-2C64B, U+2C72C, U+2C72F, U+2C79F, U+2C7C1, U+2C7FD, U+2C8D9, U+2C8DE, U+2C8E1, U+2C8F3, U+2C907, U+2C90A, U+2C91D, U+2CA02, U+2CA0E, U+2CA7D, U+2CAA9, U+2CB29, U+2CB2D-2CB2E, U+2CB31, U+2CB38-2CB39, U+2CB3B, U+2CB3F, U+2CB41, U+2CB4A, U+2CB4E, U+2CB5A-2CB5B, U+2CB64, U+2CB69, U+2CB6C, U+2CB6F, U+2CB73, U+2CB76, U+2CB78, U+2CB7C, U+2CBB1, U+2CBBF-2CBC0, U+2CBCE, U+2CC56, U+2CC5F, U+2CCF5-2CCF6, U+2CCFD, U+2CCFF, U+2CD02-2CD03, U+2CD0A, U+2CD8B, U+2CD8D, U+2CD8F-2CD90, U+2CD9F-2CDA0, U+2CDA8, U+2CDAD-2CDAE, U+2CDD5, U+2CE18, U+2CE1A, U+2CE23, U+2CE26, U+2CE2A, U+2CE7C, U+2CE88, U+2CE93;
+}
+@font-face {
+	font-family: 'Fluxer Sans SC';
+	src: url('../files/FluxerSansSC/FluxerSansSC-Bold.069.woff2') format('woff2');
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
