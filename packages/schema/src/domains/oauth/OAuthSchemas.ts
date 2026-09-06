@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ApplicationFlags, BotFlags, BotFlagsDescriptions} from '@fluxer/constants/src/BotConstants';
-import {AVATAR_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
+import {AVATAR_MAX_SIZE, MAX_APPLICATION_REDIRECT_URIS} from '@fluxer/constants/src/LimitConstants';
 import {
 	PublicUserFlags,
 	PublicUserFlagsDescriptions,
@@ -176,7 +176,10 @@ const ApplicationBotResponse = z
 export const ApplicationResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier of the application'),
 	name: z.string().describe('The name of the application'),
-	redirect_uris: z.array(z.string()).max(20).describe('The registered redirect URIs for OAuth2'),
+	redirect_uris: z
+		.array(z.string())
+		.max(MAX_APPLICATION_REDIRECT_URIS)
+		.describe('The registered redirect URIs for OAuth2'),
 	bot_public: z.boolean().describe('Whether the bot can be invited by anyone'),
 	bot_require_code_grant: z.boolean().describe('Whether the bot requires OAuth2 code grant'),
 	client_secret: z.string().optional().describe('The client secret for OAuth2 authentication'),
@@ -295,10 +298,16 @@ export const ApplicationPublicResponse = z.object({
 	name: z.string().describe('The name of the application'),
 	icon: z.string().nullable().describe('The icon hash of the application'),
 	description: z.string().nullable().describe('The description of the application'),
-	redirect_uris: z.array(z.string()).max(20).describe('The registered redirect URIs for OAuth2'),
+	redirect_uris: z
+		.array(z.string())
+		.max(MAX_APPLICATION_REDIRECT_URIS)
+		.describe('The registered redirect URIs for OAuth2'),
 	scopes: z.array(z.string()).max(50).describe('The available OAuth2 scopes'),
 	bot_public: z.boolean().describe('Whether the bot can be invited by anyone'),
-	bot: ApplicationBotResponse.nullable().describe('The bot user associated with the application'),
+	bot: ApplicationBotResponse.omit({mfa_enabled: true, authenticator_types: true})
+		.describe('Detailed bot user metadata')
+		.nullable()
+		.describe('The bot user associated with the application'),
 	current_user: UserPartialResponse.nullable()
 		.optional()
 		.describe('Partial user data for the authenticated requester, when a session token is present'),
@@ -316,7 +325,11 @@ export const ApplicationsMeResponse = z.object({
 	verify_key: z.string().describe('Compatibility placeholder for AppInfo clients until keys are persisted'),
 	owner: UserPartialResponse.describe('The owner of the application'),
 	bot: ApplicationBotResponse.optional().describe('The bot user associated with the application'),
-	redirect_uris: z.array(z.string()).max(20).optional().describe('The registered redirect URIs for OAuth2'),
+	redirect_uris: z
+		.array(z.string())
+		.max(MAX_APPLICATION_REDIRECT_URIS)
+		.optional()
+		.describe('The registered redirect URIs for OAuth2'),
 });
 
 export type ApplicationsMeResponse = z.infer<typeof ApplicationsMeResponse>;
@@ -406,7 +419,7 @@ export const ApplicationCreateRequest = z.object({
 	name: createStringType(1, 100).describe('The name of the application'),
 	redirect_uris: z
 		.array(OAuth2RedirectURICreateType)
-		.max(10, 'Maximum of 10 redirect URIs allowed')
+		.max(MAX_APPLICATION_REDIRECT_URIS, `Maximum of ${MAX_APPLICATION_REDIRECT_URIS} redirect URIs allowed`)
 		.optional()
 		.nullable()
 		.transform((value) => value ?? [])
@@ -421,7 +434,7 @@ export const ApplicationUpdateRequest = z.object({
 	name: createStringType(1, 100).optional().describe('The name of the application'),
 	redirect_uris: z
 		.array(OAuth2RedirectURIUpdateType)
-		.max(10, 'Maximum of 10 redirect URIs allowed')
+		.max(MAX_APPLICATION_REDIRECT_URIS, `Maximum of ${MAX_APPLICATION_REDIRECT_URIS} redirect URIs allowed`)
 		.optional()
 		.nullable()
 		.transform((value) => (value === undefined ? undefined : (value ?? [])))

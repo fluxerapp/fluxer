@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MAX_GROUP_DM_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
 import {
 	ChannelOverwriteResponse,
 	ChannelPartialResponse,
@@ -103,6 +104,22 @@ describe('ChannelResponse', () => {
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.data.permission_overwrites).toHaveLength(2);
+		}
+	});
+	it('accepts more permission_overwrites than the old response ceiling', () => {
+		const channel = {
+			...validChannel,
+			permission_overwrites: Array.from({length: 501}, (_, index) => ({
+				id: String(100000000000000000n + BigInt(index)),
+				type: 0,
+				allow: '8',
+				deny: '0',
+			})),
+		};
+		const result = ChannelResponse.safeParse(channel);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.permission_overwrites).toHaveLength(501);
 		}
 	});
 	it('accepts voice channel properties', () => {
@@ -220,5 +237,24 @@ describe('ChannelPartialResponse', () => {
 			type: 0,
 		});
 		expect(result.success).toBe(true);
+	});
+	it('accepts a full group DM with every recipient listed', () => {
+		const result = ChannelPartialResponse.safeParse({
+			id: '123456789012345678',
+			type: 3,
+			recipients: Array.from({length: MAX_GROUP_DM_RECIPIENTS}, (_, index) => ({username: `user${index}`})),
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.recipients).toHaveLength(MAX_GROUP_DM_RECIPIENTS);
+		}
+	});
+	it('rejects more recipients than a group DM can hold', () => {
+		const result = ChannelPartialResponse.safeParse({
+			id: '123456789012345678',
+			type: 3,
+			recipients: Array.from({length: MAX_GROUP_DM_RECIPIENTS + 1}, (_, index) => ({username: `user${index}`})),
+		});
+		expect(result.success).toBe(false);
 	});
 });
