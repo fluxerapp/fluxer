@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {InvalidStreamKeyFormatError} from '@fluxer/errors/src/domains/channel/InvalidStreamKeyFormatError';
 import {InvalidStreamThumbnailPayloadError} from '@fluxer/errors/src/domains/channel/InvalidStreamThumbnailPayloadError';
 import {StreamKeyChannelMismatchError} from '@fluxer/errors/src/domains/channel/StreamKeyChannelMismatchError';
@@ -90,6 +91,9 @@ export class StreamService {
 			if (params.parsedKey.guildId !== channel.guildId.toString()) {
 				throw new StreamKeyScopeMismatchError();
 			}
+			if (channel.type !== ChannelTypes.GUILD_VOICE) {
+				throw new InvalidChannelTypeError();
+			}
 			const hasConnect = await this.gatewayService.checkPermission({
 				guildId: channel.guildId,
 				channelId: params.channelId,
@@ -99,8 +103,13 @@ export class StreamService {
 			if (!hasConnect) {
 				throw new MissingPermissionsError();
 			}
-		} else if (params.parsedKey.scope !== 'dm') {
-			throw new StreamKeyScopeMismatchError();
+		} else {
+			if (params.parsedKey.scope !== 'dm') {
+				throw new StreamKeyScopeMismatchError();
+			}
+			if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
+				throw new InvalidChannelTypeError();
+			}
 		}
 		if (params.parsedKey.channelId !== params.channelId.toString()) {
 			throw new StreamKeyChannelMismatchError();
@@ -166,10 +175,7 @@ export class StreamService {
 			channelId,
 			parsedKey,
 		});
-		const preview = await this.streamPreviewService.getPreview(params.streamKey);
-		if (preview) {
-		}
-		return preview;
+		return this.streamPreviewService.getPreview(params.streamKey);
 	}
 
 	async uploadPreview(params: {
