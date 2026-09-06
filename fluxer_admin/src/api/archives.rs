@@ -2,7 +2,7 @@
 
 use crate::api::generated::types as generated_types;
 
-use super::client::{AdminApiClient, ApiResult};
+use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{Archive, ArchiveDownloadUrlResponse, ListArchivesResponse};
 
 impl AdminApiClient {
@@ -45,16 +45,31 @@ impl AdminApiClient {
         include_expired: bool,
         requested_by: Option<&str>,
     ) -> ApiResult<ListArchivesResponse> {
-        let query_params = [
-            ("subject_type", subject_type),
-            ("subject_id", subject_id.unwrap_or_default()),
-            ("requested_by", requested_by.unwrap_or_default()),
-            (
-                "include_expired",
-                if include_expired { "true" } else { "false" },
-            ),
-        ];
-        self.get("/admin/archives", Some(&query_params)).await
+        let subject_id = subject_id.filter(|id| !id.is_empty());
+        let search_every_subject_type = subject_type == "all" && subject_id.is_some();
+        let subject_types: &[&str] = if search_every_subject_type {
+            &["user", "guild"]
+        } else {
+            std::slice::from_ref(&subject_type)
+        };
+        let mut archives = Vec::new();
+        for &subject_type in subject_types {
+            let query_params = [
+                ("subject_type", subject_type),
+                ("subject_id", subject_id.unwrap_or_default()),
+                ("requested_by", requested_by.unwrap_or_default()),
+                (
+                    "include_expired",
+                    if include_expired { "true" } else { "false" },
+                ),
+            ];
+            match self.get("/admin/archives", Some(&query_params)).await {
+                Ok(ListArchivesResponse { archives: page }) => archives.extend(page),
+                Err(ApiError::Http { status: 403, .. }) if search_every_subject_type => {}
+                Err(error) => return Err(error),
+            }
+        }
+        Ok(ListArchivesResponse { archives })
     }
 
     pub async fn get_archive_download_url(

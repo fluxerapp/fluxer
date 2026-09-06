@@ -30,6 +30,19 @@ function requireArchiveSubjectAccess(adminAcls: Set<string>, subjectType: 'user'
 	throw new MissingACLError(subjectType === 'user' ? AdminACLs.ARCHIVE_TRIGGER_USER : AdminACLs.ARCHIVE_TRIGGER_GUILD);
 }
 
+function resolveListSubjectType(adminAcls: Set<string>, requested: 'all' | 'user' | 'guild'): 'all' | 'user' | 'guild' {
+	if (requested !== 'all') {
+		requireArchiveSubjectAccess(adminAcls, requested);
+		return requested;
+	}
+	const viewUser = canViewArchive(adminAcls, 'user');
+	const viewGuild = canViewArchive(adminAcls, 'guild');
+	if (viewUser && viewGuild) return 'all';
+	if (viewUser) return 'user';
+	if (viewGuild) return 'guild';
+	throw new MissingACLError(AdminACLs.ARCHIVE_VIEW_ALL);
+}
+
 export function ArchiveAdminController(app: HonoApp) {
 	app.post(
 		'/admin/users/:user_id/archives',
@@ -104,18 +117,8 @@ export function ArchiveAdminController(app: HonoApp) {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminAcls = ctx.get('adminUserAcls');
 			const query = ctx.req.valid('query');
-			if (
-				query.subject_type === 'all' &&
-				!adminAcls.has(AdminACLs.ARCHIVE_VIEW_ALL) &&
-				!adminAcls.has(AdminACLs.WILDCARD)
-			) {
-				throw new MissingACLError(AdminACLs.ARCHIVE_VIEW_ALL);
-			}
-			if (query.subject_type !== 'all') {
-				requireArchiveSubjectAccess(adminAcls, query.subject_type);
-			}
 			const result = await adminArchiveService.listArchives({
-				subjectType: query.subject_type,
+				subjectType: resolveListSubjectType(adminAcls, query.subject_type),
 				subjectId: query.subject_id ?? undefined,
 				requestedBy: query.requested_by ?? undefined,
 				limit: query.limit,
