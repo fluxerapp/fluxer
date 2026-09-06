@@ -12,19 +12,18 @@ An unsuccessful response body is an English reason phrase under the content type
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 400 | `Bad Request` | An invalid storage key, dimension, format, or external path, an unparsable relay `partNumber`, a failed attachment or external transformation, or a relay upload the endpoint could not take<sup>1</sup> |
-| 401 | `Unauthorized` | An invalid signed external path signature, a missing, malformed, or expired relay capability, or a missing or invalid internal bearer token |
-| 403 | `origin not in bunny allowlist` | The media access allowlist rejected the client address |
-| 403 | `Forbidden` | A relay capability presented for another bucket, key, method, `uploadId`, or `partNumber` |
-| 403 | `FORBIDDEN` | `/_metrics` requested from a non-loopback address |
-| 404 | `Not Found` | A `GET` or `HEAD` of an unrouted path, an object that does not exist, or a relay `PUT` outside `upload` mode |
-| 405 | `Method Not Allowed`<sup>2</sup> | A method other than `GET` or `HEAD` on a read route or on an unrouted path |
-| 413 | `Payload Too Large` | A stored object, external body, upload body, or internal request body beyond its bound |
-| 500 | `Transcode Failed` | An image asset transcode failed and the source is not directly displayable |
-| 500 | `Internal Server Error` | A relay spool write to the endpoint's own disk failed |
-| 502 | `Bad Gateway` | An object store read or write failed, an external origin could not be used, or an outbound socket deadline or a relay object storage write deadline expired |
-| 503 | `Service Unavailable` | The upload relay spool budget is exhausted, an external buffer reservation or allocation failed, or an external origin answered `/_metadata` with 429<sup>3</sup> |
-| 504 | `Gateway Timeout` | A transformation admission slot was unavailable or the transformation deadline expired |
+| 400 | Bad request | An invalid storage key, dimension, format, or external path, an unparsable relay `partNumber`, a failed attachment or external transformation, or a relay upload the endpoint could not take<sup>1</sup> |
+| 401 | Unauthorized | An invalid signed external path signature, a missing, malformed, or expired relay capability, or a missing or invalid internal bearer token |
+| 403 | Media access denied | The media access allowlist rejected the client address |
+| 403 | Forbidden | A relay capability presented for another bucket, key, method, `uploadId`, or `partNumber`, or `/_metrics` requested from a non-loopback address |
+| 404 | Not found | A `GET` or `HEAD` of an unrouted path, an object that does not exist, or a relay `PUT` outside `upload` mode |
+| 405 | Method not allowed<sup>2</sup> | A method other than `GET` or `HEAD` on a read route or on an unrouted path |
+| 413 | Payload too large | A stored object, external body, upload body, or internal request body beyond its bound |
+| 500 | Transcode failed | An image asset transcode failed and the source is not directly displayable |
+| 500 | Internal server error | A relay spool write to the endpoint's own disk failed |
+| 502 | Bad gateway | An object store read or write failed, an external origin could not be used, or an outbound socket deadline or a relay object storage write deadline expired |
+| 503 | Service unavailable | The upload relay spool budget is exhausted, an external buffer reservation or allocation failed, or an external origin answered `/_metadata` with 429<sup>3</sup> |
+| 504 | Gateway timeout | A transformation admission slot was unavailable or the transformation deadline expired |
 
 <sup>1</sup> The relay also answers 400 when the client connection fails part way through the body
 
@@ -32,7 +31,7 @@ An unsuccessful response body is an English reason phrase under the content type
 
 <sup>3</sup> `/_metadata` is the only endpoint that remaps an origin 429. The signed external read route retains 429 as 429
 
-A retained external origin status uses the body `Upstream fetch failed` on the signed external read route and the canonical reason phrase of its status on `/_metadata`. An object store error that maps to no case above uses the canonical reason phrase of its status.
+A retained external origin status reaches the client as an upstream fetch failure on the signed external read route and as the canonical reason phrase of its status on `/_metadata`. An object store error that maps to no case above uses the canonical reason phrase of its status.
 
 Every error a route produces uses `Cache-Control: no-store` and the standard [security headers](/media-proxy/overview/#representation-headers). Three failures have the security headers and set no cache policy, and [Cache policies](#cache-policies) names them. No plain-text error has CORS headers unless it came from the [upload relay](/media-proxy/upload-relay/), and no error has `Retry-After` or a request identifier.
 
@@ -61,17 +60,17 @@ Every `HEAD` response has an empty body, so the Body column describes `GET`, `PU
 | 503 | [Media error response](#media-error-response) | Upload spool capacity is exhausted, an external buffer reservation or allocation failed, or an external origin answered `/_metadata` with 429<sup>5</sup> |
 | 504 | [Media error response](#media-error-response) | Transformation capacity was unavailable or a transformation deadline expired |
 
-<sup>1</sup> Four [internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) answer 200 with a non-media body. `/_metadata` and `/_frames` answer with JSON, `/_health` with the plain text `OK`, and `/_metrics` with the Prometheus text exposition
+<sup>1</sup> Four [internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) answer 200 with a non-media body. `/_metadata` and `/_frames` answer with JSON, `/_health` with plain text, and `/_metrics` with the Prometheus text exposition
 
-<sup>2</sup> A path served by the read fallback answers with the body `Method Not Allowed`. Each registered path answers with an empty body, no `Content-Type`, and an `Allow` header
+<sup>2</sup> A path served by the read fallback answers with the [media error response](#media-error-response). Each registered path answers with an empty body, no `Content-Type`, and an `Allow` header
 
 <sup>3</sup> A retained external origin status is the only source of these statuses
 
 <sup>4</sup> A locally unsatisfiable range answers with an empty body, `Content-Range: bytes */{size}`, and `Accept-Ranges: bytes`, and has no `Content-Type` and no cache policy
 
-<sup>5</sup> The remap produces the body `Service Unavailable`, which is indistinguishable from a budget exhaustion 503
+<sup>5</sup> The remap produces a service unavailable response, which is indistinguishable from a budget exhaustion 503
 
-An external origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged, with the body `Upstream fetch failed`. The origin response body and headers are not forwarded. Any other unsuccessful origin status becomes 502.
+An external origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged as an upstream fetch failure. The origin response body and headers are not forwarded. Any other unsuccessful origin status becomes 502.
 
 The Media Proxy evaluates no conditional request header and never redirects a noncanonical target, so it returns no 304 and no 308.
 
@@ -91,7 +90,7 @@ Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixel
 
 The upload relay limits a body to the smaller of the capability's declared maximum and the endpoint's configured body limit, which defaults to the same 500 MiB ceiling and can be configured from 1 byte through 5 GiB. A request that declares no `Content-Length` is spooled to disk first, and spooled bodies share an 8 GiB endpoint budget by default.
 
-An internal `/_metadata`, `/_thumbnail`, or `/_frames` request body is limited to the base64 expansion of the 500 MiB media bound plus 1 MiB. All three answer a larger body with 413 and the body `Payload Too Large`.
+An internal `/_metadata`, `/_thumbnail`, or `/_frames` request body is limited to the base64 expansion of the 500 MiB media bound plus 1 MiB. All three answer a larger body with 413.
 
 ## Work admission
 

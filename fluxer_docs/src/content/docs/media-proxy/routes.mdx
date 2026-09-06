@@ -20,11 +20,11 @@ Every media read route can produce these statuses in addition to the ones in its
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 403 | `origin not in bunny allowlist` | The request address is not permitted by the instance media access policy |
-| 404 | `Not Found` | The path is not a media route or the object does not exist |
-| 405 | `Method Not Allowed` | The method is neither `GET` nor `HEAD` |
-| 413 | `Payload Too Large` | The stored object exceeds the 500 MiB media bound |
-| 502 | `Bad Gateway` | The object store could not be read |
+| 403 | Media access denied | The request address is not permitted by the instance media access policy |
+| 404 | Not found | The path is not a media route or the object does not exist |
+| 405 | Method not allowed | The method is neither `GET` nor `HEAD` |
+| 413 | Payload too large | The stored object exceeds the 500 MiB media bound |
+| 502 | Bad gateway | The object store could not be read |
 
 ## Get attachment
 
@@ -72,10 +72,10 @@ A video source requires an explicit image `format`. Another transformation param
 | --- | --- | --- |
 | 200 | Complete media representation | The object and selected representation are available |
 | 206 | Selected media bytes | One range is satisfiable |
-| 400 | `Bad Request` | The decoded key, a dimension, the format, or the transformation request is invalid, or the transformation failed |
-| 404 | `Not Found` | The attachment object does not exist |
+| 400 | Bad request | The decoded key, a dimension, the format, or the transformation request is invalid, or the transformation failed |
+| 404 | Not found | The attachment object does not exist |
 | 416 | empty | The range is unsatisfiable |
-| 504 | `Gateway Timeout` | Transformation capacity was unavailable or the transformation exceeded its deadline |
+| 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
 The [common responses](#common-responses) also apply.
 
@@ -143,17 +143,17 @@ A video target requires an explicit image `format` to produce a thumbnail. Witho
 | --- | --- | --- |
 | 200 | Complete external representation | The validated origin returned a complete representation |
 | 206<sup>1</sup> | Selected external bytes | The origin answered a forwarded range, or a range over buffered or transformed bytes is satisfiable |
-| 400 | `Bad Request` | The path shape, decoded URL, redirect target, transformation request, or transformation is invalid or prohibited |
-| 401 | `Unauthorized` | The path signature is invalid |
-| 413 | `Payload Too Large` | The origin declared or delivered more than 500 MiB |
+| 400 | Bad request | The path shape, decoded URL, redirect target, transformation request, or transformation is invalid or prohibited |
+| 401 | Unauthorized | The path signature is invalid |
+| 413 | Payload too large | The origin declared or delivered more than 500 MiB |
 | 416 | empty | A local range is unsatisfiable |
-| 502 | `Bad Gateway` | The origin could not be reached, exceeded the redirect bound, or returned a status outside the retained set |
-| 503 | `Service Unavailable` | The external buffer budget cannot cover the body, or the buffer allocation failed |
-| 504 | `Gateway Timeout` | Transformation capacity was unavailable or the transformation exceeded its deadline |
+| 502 | Bad gateway | The origin could not be reached, exceeded the redirect bound, or returned a status outside the retained set |
+| 503 | Service unavailable | The external buffer budget cannot cover the body, or the buffer allocation failed |
+| 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
 <sup>1</sup> A forwarded range relays the origin `Content-Range` and `Content-Length` unchanged and omits either header the origin did not send, so a chunked origin 206 produces a 206 with no `Content-Length`. A local range over buffered or transformed bytes always has both
 
-An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged, with the body `Upstream fetch failed`. The origin body and headers are not returned. Any other unsuccessful origin status becomes 502. The [common responses](#common-responses) also apply.
+An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged as an upstream fetch failure. The origin body and headers are not returned. Any other unsuccessful origin status becomes 502. The [common responses](#common-responses) also apply.
 
 ### Side effects
 
@@ -181,7 +181,7 @@ The route selects no representation and accepts a `Range`.
 | --- | --- | --- |
 | 200 | Complete CSS representation | The theme object is available |
 | 206 | Selected CSS bytes | One range is satisfiable |
-| 400 | `Bad Request` | The decoded theme key is invalid |
+| 400 | Bad request | The decoded theme key is invalid |
 | 416 | empty | The range is unsatisfiable |
 
 The [common responses](#common-responses) also apply. A path that does not end in `.css` is not a theme path and falls through to 404.
@@ -259,11 +259,11 @@ An owner segment of the literal `.` or `..` parses as an asset path but produces
 | --- | --- | --- |
 | 200 | Complete asset representation | The original or transformed asset is available |
 | 206 | Selected asset bytes | One range is satisfiable |
-| 400 | `Bad Request` | An owner segment of `.` or `..`, or a hash of `a_` on a prefix-stripping path, makes the storage key unsafe |
-| 404 | `Not Found` | The path is not a valid asset path or the asset does not exist |
+| 400 | Bad request | An owner segment of `.` or `..`, or a hash of `a_` on a prefix-stripping path, makes the storage key unsafe |
+| 404 | Not found | The path is not a valid asset path or the asset does not exist |
 | 416 | empty | The range is unsatisfiable |
-| 500<sup>1</sup> | `Transcode Failed` | A required transcode failed and the source is not directly displayable |
-| 504 | `Gateway Timeout` | Transformation capacity was unavailable or the transformation exceeded its deadline |
+| 500<sup>1</sup> | Transcode failed | A required transcode failed and the source is not directly displayable |
+| 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
 <sup>1</sup> A failed transcode whose stored media type begins with `image/` and is not `image/avif`, `image/heic`, `image/heif`, or SVG instead returns 200 with the original stored bytes and media type but without `Content-Disposition`
 
@@ -481,7 +481,7 @@ The complete request path is the storage key after percent-decoding. The route a
 | --- | --- | --- |
 | 200 | Complete object | The object is available |
 | 206 | Selected bytes | One range is satisfiable |
-| 400 | `Bad Request` | The decoded key is invalid |
+| 400 | Bad request | The decoded key is invalid |
 | 416 | empty | The range is unsatisfiable |
 
 The [common responses](#common-responses) also apply.
@@ -492,10 +492,10 @@ These paths are not part of the public API surface. They are exempt from the med
 
 | Path | Method | Description |
 | --- | --- | --- |
-| `/_health` | GET | Returns 200 with the body `OK` |
-| `/_metrics` | GET | Returns the Prometheus text exposition of the process. A request from a non-loopback address returns 403 with the body `FORBIDDEN` |
+| `/_health` | GET | Returns 200 while the process is running |
+| `/_metrics` | GET | Returns the Prometheus text exposition of the process. Only a loopback address is served, and any other address returns 403 |
 | `/_metadata` | POST | Extracts media metadata, a placeholder, and an optional NSFW verdict for the HTTP API |
 | `/_thumbnail` | POST | Produces a WebP thumbnail of a staged upload for the HTTP API |
 | `/_frames` | POST | Extracts one JPEG video frame for the HTTP API |
 
-`/_metadata`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 with the body `Unauthorized` without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413 with the body `Payload Too Large` on all three.
+`/_metadata`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413 on all three.

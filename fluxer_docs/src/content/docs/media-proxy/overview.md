@@ -59,9 +59,9 @@ Which published base URL serves which mode is a deployment choice. The reference
 
 ## Methods
 
-Every read route accepts `GET` and `HEAD`. HEAD returns the same status and representation headers as GET with an empty body, and a `Range` on HEAD still selects 206 or 416. Any other method on a read path returns 405 with the body `Method Not Allowed`.
+Every read route accepts `GET` and `HEAD`. HEAD returns the same status and representation headers as GET with an empty body, and a `Range` on HEAD still selects 206 or 416. Any other method on a read path returns 405.
 
-The relay path accepts `PUT`. Any other method there returns 405 with an `Allow` header. An unknown path returns 404 with the body `Not Found`.
+The relay path accepts `PUT`. Any other method there returns 405 with an `Allow` header. An unknown path returns 404.
 
 The [signed external route](/media-proxy/routes/#get-signed-external-media) is the one place a HEAD can answer differently from the matching GET. A HEAD with no range and no transformation is served from an origin HEAD when that origin returns 200, declares a length within the [500 MiB media bound](/media-proxy/responses-and-limits/#request-and-media-limits), and names a non-SVG media type.
 
@@ -90,7 +90,7 @@ The Media Proxy reads no `If-None-Match`, `If-Modified-Since`, `If-Range`, `If-M
 
 An operator MAY gate public reads on a CDN edge address allowlist. The gate is disabled by default. When it is enabled, the process fetches the Bunny edge address list at startup and refreshes it every 3600 seconds by default, and a process whose first fetch fails does not start.
 
-A request from an address outside the list returns 403 with the body `origin not in bunny allowlist`. `/_health`, `/_metrics`, `/_metadata`, `/_thumbnail`, `/_frames`, and every path below `/v1/relay/` are exempt.
+A request from an address outside the list returns 403. `/_health`, `/_metrics`, `/_metadata`, `/_thumbnail`, `/_frames`, and every path below `/v1/relay/` are exempt.
 
 When the peer address is a configured trusted proxy, the client address is the rightmost `X-Forwarded-For` hop that is not itself a trusted proxy. Otherwise the Media Proxy uses the peer address and ignores `X-Forwarded-For`. It does the same when there is no `X-Forwarded-For`, or when every hop in it is unparseable or is itself a trusted proxy.
 

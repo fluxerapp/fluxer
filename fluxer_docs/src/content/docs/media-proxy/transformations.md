@@ -170,6 +170,6 @@ Animated WebP and animated APNG output is bounded again at encode time, and exce
 
 The overall transformation deadline defaults to 15,000 ms and can be configured from 1,000 through 120,000 ms. An animated WebP or APNG encode stops 3,000 ms before that deadline so it has time to flush what it has already encoded. Animated GIF output has no such headroom, and a GIF resize that reaches the deadline fails.
 
-An attachment or signed external transformation failure returns 400 with the body `Bad Request`. An image asset transformation failure returns 500 with the body `Transcode Failed` when the source is not directly displayable, and otherwise returns 200 with the original stored bytes and no `Content-Disposition`.
+An attachment or signed external transformation failure returns 400. An image asset transformation failure returns 500 when the source is not directly displayable, and otherwise returns 200 with the original stored bytes and no `Content-Disposition`.
 
 A transformation refused admission returns 504, and so does one that exceeds its deadline. [Responses and limits](/media-proxy/responses-and-limits/) defines the admission capacity and the deadlines.
