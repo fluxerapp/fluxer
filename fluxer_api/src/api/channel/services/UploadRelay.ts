@@ -33,12 +33,6 @@ function base64UrlEncode(buf: Buffer): string {
 	return buf.toString('base64url');
 }
 
-function assertRelaySecretConfigured(relayConfig: UploadRelayConfig): void {
-	if (relayConfig.relaySecretBase64.length === 0) {
-		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for relayed uploads');
-	}
-}
-
 function decodeRelaySecret(relaySecretBase64: string): Buffer {
 	const decoded = Buffer.from(relaySecretBase64, 'base64');
 	if (decoded.length < 32) {
@@ -100,7 +94,6 @@ function buildRelayUrl({bucket, key, uploadId, partNumber, contentType, maxBytes
 export async function resolveUploadRelayDecision(clientIp: string | undefined | null): Promise<UploadRelayDecision> {
 	const relayConfig = Config.mediaProxy.uploadRelay;
 	if (!clientIp) {
-		assertRelaySecretConfigured(relayConfig);
 		return relayConfig;
 	}
 	let countryCode: string | null = null;
@@ -109,14 +102,12 @@ export async function resolveUploadRelayDecision(clientIp: string | undefined | 
 		countryCode = geo.countryCode;
 	} catch (error) {
 		logger.warn({clientIp, error}, 'geoip lookup failed for upload relay decision; using upload relay');
-		assertRelaySecretConfigured(relayConfig);
 		return relayConfig;
 	}
 	const keepDirectCountries = new Set(relayConfig.keepDirectCountries.map((code) => code.toUpperCase()));
 	if (countryCode && keepDirectCountries.has(countryCode.toUpperCase())) {
 		return null;
 	}
-	assertRelaySecretConfigured(relayConfig);
 	return relayConfig;
 }
 

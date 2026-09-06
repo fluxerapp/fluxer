@@ -16,6 +16,7 @@ import {PhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/Ph
 import {SmsVerificationUnavailableError} from '@fluxer/errors/src/domains/auth/SmsVerificationUnavailableError';
 import {CaptchaVerificationRequiredError} from '@fluxer/errors/src/domains/core/CaptchaVerificationRequiredError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {PHONE_E164_REGEX} from '@fluxer/schema/src/primitives/UserValidators';
 import type {RateLimitResult, RateLimitScope} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -74,15 +75,16 @@ function reuseStoreFor(ctx: ApiContext): PhoneVerificationReuseStore {
 
 export async function startInboundPhoneChallenge(ctx: ApiContext, userId: UserID): Promise<IssuedChallenge> {
 	const {inboundSmsChallenge, users, config} = ctx.services;
-	if (!inboundSmsChallenge) {
-		throw new Error('Inbound SMS challenge flow is not configured on this instance');
-	}
 	const ourNumber = config.sms.inboundChallengeNumber;
-	if (!ourNumber) {
-		throw new Error('Config.sms.inboundChallengeNumber is required for the inbound SMS challenge flow');
+	if (!inboundSmsChallenge || !ourNumber) {
+		Logger.warn(
+			{userId: String(userId)},
+			'Inbound SMS challenge requested but FLUXER_SMS_INBOUND_CHALLENGE_NUMBER is unset',
+		);
+		throw new SmsVerificationUnavailableError();
 	}
 	const user = await users.findUnique(userId);
-	if (!user) throw new Error('User not found');
+	if (!user) throw new UnknownUserError();
 	assertNonBotUser(user);
 	return inboundSmsChallenge.issueChallenge({userId, ourNumber});
 }

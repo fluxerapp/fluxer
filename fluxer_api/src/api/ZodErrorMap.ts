@@ -54,12 +54,7 @@ function fluxerZodErrorMap(issue: FluxerZodErrorMapIssue): FluxerZodErrorMapResu
 			break;
 		}
 		case 'too_small': {
-			const origin = 'origin' in issue ? String(issue.origin) : undefined;
-			if (origin === 'date') {
-				errorCode = ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT;
-			} else {
-				errorCode = ValidationErrorCodes.INVALID_FORMAT;
-			}
+			errorCode = ValidationErrorCodes.INVALID_FORMAT;
 			break;
 		}
 		case 'too_big': {

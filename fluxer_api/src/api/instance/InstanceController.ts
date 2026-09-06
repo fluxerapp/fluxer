@@ -8,7 +8,6 @@ import type {Hono} from 'hono';
 import {Config} from '../Config';
 import type {GifService} from '../gif/GifService';
 import type {IGifProvider} from '../gif/IGifProvider';
-import type {LimitConfigService} from '../limits/LimitConfigService';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '../RateLimitConfig';
@@ -96,8 +95,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 		async (ctx) => {
 			ctx.header('Access-Control-Allow-Origin', '*');
 			const gifService = ctx.get('gifService') as GifService | undefined;
-			const limitConfigService = ctx.get('limitConfigService') as LimitConfigService | undefined;
-			const limits = limitConfigService?.getConfigWireFormat();
+			const limits = ctx.get('limitConfigService').getConfigWireFormat();
 			const sso = await ctx.get('ssoService').getPublicStatus();
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
 			const [registration, community, services, appPublicConfig, captcha, email] = await Promise.all([
@@ -108,9 +106,6 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instanceConfigRepository.getEffectiveCaptchaConfig(),
 				instanceConfigRepository.getEffectiveEmailConfig(),
 			]);
-			if (!limits) {
-				throw new Error('limit_config_service is not bound');
-			}
 			const response = buildDiscoveryResponse(
 				buildDiscoveryStaticInput(
 					gifService,

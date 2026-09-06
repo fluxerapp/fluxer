@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
 	ChannelUpdateRequest,
@@ -131,7 +132,7 @@ export function ChannelController(app: HonoApp) {
 			pre: async (raw: unknown, ctx: Context<HonoEnv>) => {
 				const channelType = ctx.get('channelUpdateType');
 				if (channelType === undefined) {
-					throw new Error('Missing channel type for update validation');
+					throw new UnknownChannelError();
 				}
 				const body = isPlainObject(raw) ? raw : {};
 				return {...body, type: channelType};
