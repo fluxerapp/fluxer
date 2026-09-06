@@ -748,7 +748,7 @@ msgstr "{fps} FPS"
 msgid "{guildName} channels"
 msgstr "{guildName} 頻道"
 
-#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:673
+#: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:674
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{hiddenConnectionCount, plural, one {展開 # 個其他裝置} other {展開 # 個其他裝置}}"
 
@@ -866,7 +866,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {位成員} other {位成員}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
 msgid "{mentionCount} mentions"
 msgstr "{mentionCount}則提及"
 
@@ -2110,7 +2110,7 @@ msgstr "帳號太新"
 #. Required-action modal title shown when an account-level verification step is required to proceed.
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:8
-#: src/features/invite/commands/InviteCommands.tsx:35
+#: src/features/invite/commands/InviteCommands.tsx:34
 msgid "Account verification required"
 msgstr "需要驗證帳號"
 
@@ -2222,7 +2222,7 @@ msgstr "活躍的月度訂閱者（已排定取消）"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -2386,7 +2386,7 @@ msgid "Add an account to continue."
 msgstr "新增帳號以繼續。"
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:40
+#: src/features/invite/commands/InviteCommands.tsx:39
 msgid "Add an email and password to your account first."
 msgstr "請先為你的帳號新增電子郵件和密碼。"
 
@@ -3353,7 +3353,7 @@ msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "動畫化頭像 ({animatedAvatarFormats}) 需要 {premiumProductName}。"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
 msgid "Animated avatars & profile banners"
 msgstr "動態大頭貼和個人檔案封面"
 
@@ -3664,7 +3664,7 @@ msgid "App zoom"
 msgstr "App 縮放"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
 msgid "App zoom level"
 msgstr "App 縮放等級"
 
@@ -5106,7 +5106,7 @@ msgid "Bookmark messages to save them for later."
 msgstr "將訊息加入書籤，以便稍後查看。"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:51
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:47
 msgid "Bookmarked messages"
 msgstr "已加星號的訊息"
 
@@ -5512,7 +5512,7 @@ msgstr "通話"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:157
 #: src/features/voice/utils/SettingsDeviceOptions.ts:23
@@ -5572,7 +5572,7 @@ msgstr "相機關閉"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "相機已開啟"
@@ -6204,7 +6204,7 @@ msgid "Channel actions"
 msgstr "頻道功能"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
 msgid "Channel added to favorites"
 msgstr "已將頻道加到我的最愛"
 
@@ -6232,7 +6232,7 @@ msgstr "頻道偵錯"
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 msgid "Channel deleted"
 msgstr "頻道已刪除"
 
@@ -6337,7 +6337,7 @@ msgid "Channel record"
 msgstr "頻道紀錄"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
 msgid "Channel removed from favorites"
 msgstr "已將頻道從我的最愛移除"
 
@@ -7665,7 +7665,7 @@ msgid "Community debug"
 msgstr "社群偵錯"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
 msgid "Community default"
 msgstr "社群預設"
 
@@ -8330,7 +8330,7 @@ msgstr "按一下左鍵（在按鈕上）或按一下右鍵（在其他元素上
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
@@ -8541,7 +8541,7 @@ msgid "Copy code"
 msgstr "複製代碼"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
 msgid "Copy community ID"
 msgstr "複製社群 ID"
 
@@ -8639,7 +8639,7 @@ msgid "Copy invite URL"
 msgstr "複製邀請連結"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -8672,7 +8672,7 @@ msgstr "複製訊息"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "複製訊息 ID"
@@ -8748,7 +8748,7 @@ msgid "Copy user ID"
 msgstr "複製使用者 ID"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
 msgid "Copy username"
 msgstr "複製使用者名稱"
 
@@ -9185,7 +9185,7 @@ msgid "Couldn't send invite"
 msgstr "無法傳送邀請"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
 msgid "Couldn't send invite. Try again."
 msgstr "無法傳送邀請。請再試一次。"
 
@@ -9913,7 +9913,7 @@ msgid "Custom tags"
 msgstr "自訂標籤"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
 msgid "Custom themes"
 msgstr "自訂主題"
 
@@ -9943,7 +9943,7 @@ msgid "Custom value"
 msgstr "自訂值"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:39
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:35
 msgid "Custom video backgrounds"
 msgstr "自訂視訊背景"
 
@@ -9960,7 +9960,7 @@ msgid "Custom warning text"
 msgstr "自訂警告文字"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
 msgid "Custom…"
 msgstr "自訂…"
 
@@ -10140,11 +10140,6 @@ msgstr "資料匯出"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:286
 msgid "Date"
 msgstr "日期"
-
-#. Field label for the date and time picker in the schedule-message modal. The ampersand is intentional.
-#: src/features/messaging/components/modals/ScheduleMessageModal.tsx:23
-msgid "Date & time"
-msgstr "日期和時間"
 
 #. Form field label for a date and time value.
 #: src/features/ui/components/form/DateTimePickerField.tsx:22
@@ -10472,7 +10467,7 @@ msgid "Delete application"
 msgstr "刪除應用程式"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
 msgid "Delete attachment"
 msgstr "刪除附件"
 
@@ -11676,7 +11671,7 @@ msgstr "不會封鎖。您可以稍後再重新開啟。"
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "網域"
@@ -12045,7 +12040,7 @@ msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "例如：YubiKey、iPhone、公司電腦"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:79
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
 msgid "Early access to new features"
 msgstr "搶先體驗新功能"
 
@@ -12189,7 +12184,7 @@ msgstr "編輯媒體"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "編輯訊息"
@@ -12736,7 +12731,7 @@ msgstr "開啟行動裝置推播通知"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "開啟通知"
@@ -12967,7 +12962,7 @@ msgstr "英文（美國）"
 #. Generic radio / dropdown option label for an "enhanced" tier.
 #. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #. Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:85
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Enhanced"
@@ -13275,7 +13270,7 @@ msgid "Entrance sound volume"
 msgstr "入場音效音量"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:43
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:39
 msgid "Entrance sounds"
 msgstr "進場音效"
 
@@ -13652,7 +13647,7 @@ msgid "Expression autocomplete"
 msgstr "表情符號自動完成"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
 msgid "Expression picker categories"
 msgstr "表情符號選取器類別"
 
@@ -14131,7 +14126,7 @@ msgstr "已加到我的最愛"
 msgid "Favorites"
 msgstr "我的最愛"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:177
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:172
 msgid "Feature"
 msgstr "功能"
 
@@ -14206,7 +14201,7 @@ msgid "File upload"
 msgstr "上傳檔案"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:55
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:51
 msgid "File upload size"
 msgstr "檔案上傳大小"
 
@@ -14767,7 +14762,7 @@ msgstr "高於 30 FPS 的影格速率需要 {premiumProductName}"
 msgid "France"
 msgstr "法國"
 
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:182
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:177
 msgid "Free"
 msgstr "免費"
 
@@ -15062,7 +15057,7 @@ msgid "Germany"
 msgstr "德國"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
 msgid "Get {premiumProductName}"
 msgstr "取得 {premiumProductName}"
 
@@ -15333,7 +15328,7 @@ msgid "Glad you're here, {username}!"
 msgstr "{username}，很高興你在這裡！"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
 msgid "Global emoji & sticker access"
 msgstr "全球表情符號和貼圖存取權"
 
@@ -15997,7 +15992,7 @@ msgid "Hide expiry footnotes"
 msgstr "隱藏到期註腳"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
 msgid "Hide favorites"
 msgstr "隱藏我的最愛"
 
@@ -17472,7 +17467,7 @@ msgstr "邀請者："
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
 msgid "Invites"
 msgstr "邀請"
 
@@ -17660,7 +17655,7 @@ msgid "Join call"
 msgstr "加入通話"
 
 #. Generic action label that accepts a community invite / joins a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:675
 msgid "Join community"
 msgstr "加入社群"
 
@@ -17972,7 +17967,7 @@ msgid "Kick a member from this community."
 msgstr "將成員從此社群中踢除。"
 
 #. Moderation action label that removes a member from a community without banning.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:675
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:671
 msgid "Kick member"
 msgstr "踢出成員"
 
@@ -18125,7 +18120,7 @@ msgid "Leave call"
 msgstr "離開通話"
 
 #. Destructive action label that removes the current user from a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:671
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:667
 msgid "Leave community"
 msgstr "離開社群"
 
@@ -18987,7 +18982,7 @@ msgstr "標示為劇透"
 
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:667
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:663
 #: src/features/input/state/input_keybind/shared.ts:33
 msgid "Mark as unread"
 msgstr "標示為未讀"
@@ -19658,7 +19653,7 @@ msgid "Message buttons"
 msgstr "訊息按鈕"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:47
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:43
 msgid "Message character limit"
 msgstr "訊息字數限制"
 
@@ -19807,11 +19802,6 @@ msgstr "DM 清單中的訊息預覽"
 #: src/features/devtools/components/debug/MessageDebugModal.tsx:15
 msgid "Message record"
 msgstr "訊息記錄"
-
-#. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:31
-msgid "Message scheduling"
-msgstr "訊息排程"
 
 #. Short label in the buttons tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:77
@@ -20513,7 +20503,7 @@ msgid "Mute entrance sound"
 msgstr "將加入音效設為靜音"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
 msgid "Mute favourites"
 msgstr "將最愛設為靜音"
 
@@ -21060,7 +21050,7 @@ msgstr "最新優先"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:79
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 msgid "Next"
 msgstr "下一步"
 
@@ -21281,11 +21271,6 @@ msgstr "沒有符合搜尋條件的自訂快捷鍵。"
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:180
 msgid "No custom shortcuts yet."
 msgstr "尚未設定自訂快捷鍵。"
-
-#. Generic short empty-state body shown when an entity has no description set.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:651
-msgid "No description provided."
-msgstr "沒有提供說明。"
 
 #. Empty-state text in the discovery guild card.
 #. Empty-state text shown in the Discovery community preview modal when a community has no description.
@@ -21893,7 +21878,7 @@ msgstr "通知音量"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -23413,11 +23398,6 @@ msgstr "選擇以圖搜圖服務供應商"
 msgid "Pick a theme on the left to edit its name, metadata, and CSS. Or import a new one."
 msgstr "在左側選擇一個主題，編輯其名稱、中繼資料和 CSS。或匯入新主題。"
 
-#. Helper text in the schedule-message modal explaining the action.
-#: src/features/messaging/components/modals/ScheduleMessageModal.tsx:19
-msgid "Pick a time when this message should be posted."
-msgstr "選擇此訊息的傳送時間。"
-
 #. Title of the picker modal when choosing a translation provider.
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:23
 msgid "Pick a translation provider"
@@ -23554,7 +23534,7 @@ msgid "pinned"
 msgstr "已釘選"
 
 #. Generic short toast / status label confirming a DM was pinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:655
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:651
 msgid "Pinned DM"
 msgstr "釘選的私訊"
 
@@ -24135,7 +24115,7 @@ msgid "Privacy policy"
 msgstr "隱私權政策"
 
 #. Generic section heading / button label for the privacy settings area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:663
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:659
 msgid "Privacy settings"
 msgstr "隱私設定"
 
@@ -24201,7 +24181,7 @@ msgid "Profile"
 msgstr "個人檔案"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:35
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:31
 msgid "Profile badge"
 msgstr "個人檔案徽章"
 
@@ -24719,7 +24699,7 @@ msgstr "心情回應「{emojiShortcode}」"
 
 #. Generic short section / tab / aria label for emoji reactions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:659
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:655
 #: src/features/messaging/components/modals/MessageReactionsModal.tsx:144
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:10
 msgid "Reactions"
@@ -25928,11 +25908,6 @@ msgstr "需要已驗證的電話號碼。"
 msgid "Requires everything in medium, plus being a member of the community for at least 10 minutes."
 msgstr "除了中等安全等級的所有要求外，還必須成為社群成員至少 10 分鐘。"
 
-#. Title of the confirmation alert shown when editing a scheduled message to change the scheduled time.
-#: src/features/channel/components/channel_textarea/shared.ts:24
-msgid "Reschedule message"
-msgstr "重新安排訊息"
-
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:200
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:240
 #: src/features/user/components/modals/EmailChangeModal.tsx:296
@@ -26887,7 +26862,7 @@ msgstr "已儲存"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:55
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:63
 msgid "Saved media"
 msgstr "已儲存的媒體"
@@ -26930,25 +26905,10 @@ msgstr "詐騙、惡意軟體或不實資訊"
 msgid "Scan the QR code with your authenticator app."
 msgstr "使用您的驗證器應用程式掃描 QR 碼。"
 
-#. Confirm button label in the schedule-message modal that saves the scheduled send.
-#: src/features/messaging/components/modals/ScheduleMessageModal.tsx:36
-msgid "Schedule"
-msgstr "排程"
-
-#. Title of the schedule-message modal.
-#: src/features/messaging/components/modals/ScheduleMessageModal.tsx:15
-msgid "Schedule message"
-msgstr "排程訊息"
-
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.
 #: src/features/devtools/components/NagbarControls.ts:22
 msgid "Scheduled maintenance nagbar"
 msgstr "排程維護通知列"
-
-#. Inline validation message in the schedule-message modal when the picked time is more than 30 days away. Keep tone plain.
-#: src/features/messaging/components/modals/ScheduleMessageModal.tsx:31
-msgid "Scheduled messages can be at most 30 days in the future."
-msgstr "訊息最多只能排定在 30 天內傳送。"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:92
@@ -28075,7 +28035,7 @@ msgid "Sensitive media"
 msgstr "敏感內容"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
 msgid "Sent"
 msgstr "已傳送"
 
@@ -29851,7 +29811,7 @@ msgstr "音量"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:807
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "音效"
@@ -32588,11 +32548,6 @@ msgstr "這會隱藏所有與「我的最愛」相關的 UI 元素，包括按�
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "這會讓您現有的備用碼失效，並產生新的備用碼。"
 
-#. Body of the reschedule scheduled-message alert clarifying that the update modifies the scheduled message instead of sending it now.
-#: src/features/channel/components/channel_textarea/shared.ts:32
-msgid "This will modify the existing scheduled message rather than sending immediately."
-msgstr "這會修改現有的排程訊息，而不是立即傳送。"
-
 #. Warning text before notifying every member in the current channel.
 #: src/features/channel/components/MentionEveryonePopout.tsx:93
 msgid "This will notify <0>{memberCount}</0> members in this channel. Are you sure you want to do this?"
@@ -32783,9 +32738,7 @@ msgstr "時間戳記或關聯性"
 msgid "Timestamps"
 msgstr "時間戳記"
 
-#. Field label for the timezone picker in the schedule-message modal.
 #. Field label in profile settings for choosing the timezone used to show local time on the profile.
-#: src/features/messaging/components/modals/ScheduleMessageModal.tsx:27
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:19
 msgid "Timezone"
 msgstr "時區"
@@ -33835,7 +33788,7 @@ msgstr "通用備用。畫質最低，但隨處可用。"
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -34102,7 +34055,7 @@ msgid "Unmute DMs"
 msgstr "解除訊息靜音"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
 msgid "Unmute favourites"
 msgstr "取消最愛通知靜音"
 
@@ -34351,14 +34304,9 @@ msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They sho
 msgstr "最多可設定 {DISCOVERY_MAX_TAGS} 個標籤，讓大家更容易找到你的社群。這些標籤會顯示在探索搜尋結果中。"
 
 #. Feature comparison table value label. Shown in the restricted or stock column for a text-valued perk. Format includes a resolution token (4K) and a framerate token that should not be translated.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:87
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
 msgid "Up to 4K/60fps"
 msgstr "最高 4K/60fps"
-
-#. Confirm button label on the reschedule scheduled-message alert.
-#: src/features/channel/components/channel_textarea/shared.ts:28
-msgid "Update"
-msgstr "更新"
 
 #. Message placeholder shown when the app cannot render a newer message type.
 #: src/features/channel/components/UnknownMessage.tsx:23
@@ -34807,7 +34755,7 @@ msgid "Use an email you can open. We will send a code there."
 msgstr "請使用您可以開啟的電子郵件。我們會將驗證碼傳送至該信箱。"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
 msgid "Use animated emojis"
 msgstr "使用動態表情符號"
 
@@ -35721,7 +35669,7 @@ msgid "Video progress"
 msgstr "影片進度"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:71
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:67
 msgid "Video quality"
 msgstr "視訊畫質"
 
