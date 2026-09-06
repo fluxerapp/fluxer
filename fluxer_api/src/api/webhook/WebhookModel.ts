@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
 import type {z} from 'zod';
+import {createUserID} from '../BrandedTypes';
 import type {UserCacheService} from '../infrastructure/UserCacheService';
 import type {RequestCache} from '../middleware/RequestCacheMiddleware';
 import type {Webhook} from '../models/Webhook';
@@ -28,13 +30,10 @@ export async function mapWebhookToResponseWithCache({
 	requestCache: RequestCache;
 }): Promise<z.infer<typeof WebhookResponse>> {
 	const creatorPartial = await getCachedUserPartialResponse({
-		userId: webhook.creatorId!,
+		userId: webhook.creatorId ?? createUserID(DELETED_USER_ID),
 		userCacheService,
 		requestCache,
 	});
-	if (!creatorPartial) {
-		throw new Error(`Creator user ${webhook.creatorId} not found for webhook`);
-	}
 	return {
 		...mapWebhookToTokenResponse(webhook),
 		user: creatorPartial,

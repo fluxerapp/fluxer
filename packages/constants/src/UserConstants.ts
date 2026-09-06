@@ -152,6 +152,7 @@ export const PUBLIC_USER_FLAGS =
 export const DELETED_USER_USERNAME = 'DeletedUser';
 export const DELETED_USER_GLOBAL_NAME = 'Deleted User';
 export const DELETED_USER_DISCRIMINATOR = 0;
+export const DELETED_USER_ID = 1n;
 export const PublicUserFlags = {
 	STAFF: Number(UserFlags.STAFF),
 	PARTNER: Number(UserFlags.PARTNER),

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
 import {createUserID, type UserID} from '../../../../BrandedTypes';
 import {fetchMany, fetchOne, fetchPage, upsertOne} from '../../../../database/CassandraQueryExecution';
@@ -16,7 +17,6 @@ import {User} from '../../../../models/User';
 import {Users} from '../../../../Tables';
 
 const FLUXER_BOT_USER_ID = 0n;
-const DELETED_USER_ID = 1n;
 const FETCH_USERS_BY_IDS_CQL = Users.selectCql({
 	where: Users.where.in('user_id', 'user_ids'),
 });
@@ -73,7 +73,11 @@ export class UserDataRepository {
 	}
 
 	async findUniqueAssert(userId: UserID): Promise<User> {
-		return (await this.findUnique(userId))!;
+		const user = await this.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		return user;
 	}
 
 	async listAllUsersPaginated(limit: number, lastUserId?: UserID): Promise<Array<User>> {

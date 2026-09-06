@@ -98,10 +98,14 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		const authSession = await AuthSession.getAuthSessionByToken(apiContext, token);
 		if (authSession) {
 			void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
-			const user = await apiContext.services.users.findUniqueAssert(authSession.userId);
-			ctx.set('authSession', authSession);
-			ctx.set('authTokenType', 'session');
-			setUserInContext(ctx, user, true);
+			const user = await apiContext.services.users.findUnique(authSession.userId);
+			if (user) {
+				ctx.set('authSession', authSession);
+				ctx.set('authTokenType', 'session');
+				setUserInContext(ctx, user, true);
+			} else {
+				recordAbuseSignal(resolvedClientIp, 'auth_failure:session', {tokenHash});
+			}
 		} else {
 			recordAbuseSignal(resolvedClientIp, 'auth_failure:session', {tokenHash});
 		}

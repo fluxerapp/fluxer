@@ -152,14 +152,7 @@ export class AdminReportService {
 		publicComment: string;
 	}): Promise<void> {
 		const {users: userRepository} = this.deps.apiContext.services;
-		const systemUser = await userRepository.findUnique(SYSTEM_USER_ID);
-		if (!systemUser) {
-			Logger.warn(
-				{reportId: reportId.toString(), reporterId: reporter.id.toString()},
-				'Skipping report review system DM because system user does not exist',
-			);
-			return;
-		}
+		const systemUser = await userRepository.findUniqueAssert(SYSTEM_USER_ID);
 		const template = getEmailTemplate('report_resolved', reporter.locale, {
 			username: reporter.username,
 			reportId: reportId.toString(),
