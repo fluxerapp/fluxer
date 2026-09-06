@@ -2,9 +2,9 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {MAX_CONNECTIONS_PER_USER} from '@fluxer/constants/src/ConnectionConstants';
-import {ThrottledError} from '@fluxer/errors/src/domains/core/ThrottledError';
+import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 
-export class ConnectionLimitReachedError extends ThrottledError {
+export class ConnectionLimitReachedError extends BadRequestError {
 	constructor(limit: number = MAX_CONNECTIONS_PER_USER) {
 		super({
 			code: APIErrorCodes.CONNECTION_LIMIT_REACHED,
