@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {TrackSource} from 'livekit-server-sdk';
 import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
 import type {VoiceRegionMetadata, VoiceServerRecord} from '../voice/VoiceModel';
 
@@ -53,27 +52,6 @@ interface DisconnectParticipantParams {
 	connectionId: string;
 	regionId: string;
 	serverId: string;
-}
-
-interface MuteParticipantTrackParams {
-	userId: UserID;
-	guildId?: GuildID;
-	channelId: ChannelID;
-	connectionId: string;
-	regionId: string;
-	serverId: string;
-	trackSid: string;
-	muted: boolean;
-}
-
-interface RevokeParticipantPublishSourceParams {
-	userId: UserID;
-	guildId?: GuildID;
-	channelId: ChannelID;
-	connectionId: string;
-	regionId: string;
-	serverId: string;
-	source: TrackSource;
 }
 
 interface ListParticipantsParams {
@@ -130,10 +108,6 @@ export abstract class ILiveKitService {
 	abstract updateParticipantPermissions(params: UpdateParticipantPermissionsParams): Promise<void>;
 
 	abstract disconnectParticipant(params: DisconnectParticipantParams): Promise<void>;
-
-	abstract muteParticipantTrack(params: MuteParticipantTrackParams): Promise<boolean>;
-
-	abstract revokeParticipantPublishSource(params: RevokeParticipantPublishSourceParams): Promise<boolean>;
 
 	abstract listParticipants(params: ListParticipantsParams): Promise<ListParticipantsResult>;
 

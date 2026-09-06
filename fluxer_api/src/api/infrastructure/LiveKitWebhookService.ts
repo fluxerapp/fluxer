@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {WebhookEvent} from 'livekit-server-sdk';
-import {TrackSource, WebhookReceiver} from 'livekit-server-sdk';
+import {WebhookReceiver} from 'livekit-server-sdk';
 import type {ChannelID, GuildID} from '../BrandedTypes';
-import {Config} from '../Config';
 import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {IUserRepository} from '../user/IUserRepository';
 import type {VoiceTopology} from '../voice/VoiceTopology';
 import type {IGatewayService} from './IGatewayService';
 import type {ILiveKitService} from './ILiveKitService';
 import type {IVoiceRoomStore} from './IVoiceRoomStore';
-import {isDMRoom, parseParticipantIdentity, parseParticipantMetadataWithRaw, parseRoomName} from './VoiceRoomContext';
+import {isDMRoom, parseParticipantMetadataWithRaw, parseRoomName} from './VoiceRoomContext';
 
 interface VoiceWebhookParticipantContext {
 	readonly type: 'dm' | 'guild';
@@ -34,10 +29,8 @@ export class LiveKitWebhookService {
 	constructor(
 		private voiceRoomStore: IVoiceRoomStore,
 		private gatewayService: IGatewayService,
-		private userRepository: IUserRepository,
 		private liveKitService: ILiveKitService,
 		private voiceTopology: VoiceTopology,
-		private limitConfigService: LimitConfigService,
 	) {
 		this.receivers = new Map();
 		this.serverMap = new Map();
@@ -466,176 +459,6 @@ export class LiveKitWebhookService {
 		}
 	}
 
-	async handleTrackPublished(event: WebhookEvent, apiKey: string): Promise<void> {
-		if (event.event !== 'track_published') {
-			return;
-		}
-		const {room, participant, track} = event;
-		if (!room || !participant || !track) {
-			Logger.debug('Track published without required data, skipping');
-			return;
-		}
-		Logger.debug(
-			{
-				apiKey,
-				roomName: room.name,
-				participantIdentity: participant.identity,
-				trackType: track.type,
-				width: track.width,
-				height: track.height,
-			},
-			'Processing LiveKit track_published event',
-		);
-		if (track.type !== 1) {
-			return;
-		}
-		if (track.source !== TrackSource.CAMERA && track.source !== TrackSource.SCREEN_SHARE) {
-			return;
-		}
-		const trackSourceLabel = track.source === TrackSource.SCREEN_SHARE ? 'screen_share' : 'camera';
-		try {
-			const identity = parseParticipantIdentity(participant.identity);
-			if (!identity) {
-				Logger.warn({identity: participant.identity}, 'Unexpected participant identity format');
-				return;
-			}
-			const {userId, connectionId} = identity;
-			const user = await this.userRepository.findUnique(userId);
-			if (!user) {
-				Logger.warn({userId: userId.toString()}, 'User not found for track_published event');
-				return;
-			}
-			if (Config.instance.selfHosted) {
-				return;
-			}
-			const ctx = createLimitMatchContext({user});
-			const hasHigherQuality = resolveLimitSafe(
-				this.limitConfigService.getConfigSnapshot(),
-				ctx,
-				'feature_higher_video_quality',
-				0,
-			);
-			const canUseHigherQuality = hasHigherQuality > 0 && !user.isBot;
-			if (canUseHigherQuality) {
-				return;
-			}
-			const FREE_MAX_WIDTH = 1280;
-			const FREE_MAX_HEIGHT = 720;
-			const exceedsResolution = track.width > FREE_MAX_WIDTH || track.height > FREE_MAX_HEIGHT;
-			if (!exceedsResolution) {
-				return;
-			}
-			Logger.warn(
-				{
-					userId: userId.toString(),
-					isBot: user.isBot,
-					width: track.width,
-					height: track.height,
-					trackSource: trackSourceLabel,
-				},
-				'User without higher video quality entitlement published video exceeding free tier limits - muting track and revoking source',
-			);
-			if (!track.sid) {
-				Logger.warn(
-					{userId: userId.toString(), roomName: room.name, trackSource: trackSourceLabel},
-					'Track published without a sid, cannot enforce free tier video limits',
-				);
-				return;
-			}
-			const roomContext = parseRoomName(room.name);
-			if (!roomContext) {
-				Logger.warn({roomName: room.name}, 'Unknown room name format, cannot enforce free tier video limits');
-				return;
-			}
-			let regionId: string | undefined;
-			let serverId: string | undefined;
-			if (participant.metadata) {
-				const parsed = parseParticipantMetadataWithRaw(participant.metadata);
-				if (parsed) {
-					regionId = parsed.raw.region_id;
-					serverId = parsed.raw.server_id;
-				}
-			}
-			if (!regionId || !serverId) {
-				const serverInfo = this.serverMap.get(apiKey);
-				if (serverInfo) {
-					regionId = serverInfo.regionId;
-					serverId = serverInfo.serverId;
-				}
-			}
-			if (!regionId || !serverId) {
-				const guildId = isDMRoom(roomContext) ? undefined : roomContext.guildId;
-				const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, roomContext.channelId);
-				if (pinnedServer) {
-					regionId = pinnedServer.regionId;
-					serverId = pinnedServer.serverId;
-				}
-			}
-			if (!regionId || !serverId) {
-				Logger.warn(
-					{participantId: participant.identity, roomName: room.name, apiKey},
-					'Missing region or server info, cannot enforce free tier video limits',
-				);
-				return;
-			}
-			const guildId = isDMRoom(roomContext) ? undefined : roomContext.guildId;
-			Logger.debug(
-				{
-					userId: userId.toString(),
-					type: roomContext.type,
-					guildId: guildId?.toString(),
-					channelId: roomContext.channelId.toString(),
-					regionId,
-					serverId,
-					isBot: user.isBot,
-					width: track.width,
-					height: track.height,
-					trackSource: trackSourceLabel,
-				},
-				'Muting oversized track and revoking its publish source for user without higher video quality entitlement',
-			);
-			const muted = await this.liveKitService.muteParticipantTrack({
-				userId,
-				guildId,
-				channelId: roomContext.channelId,
-				connectionId,
-				regionId,
-				serverId,
-				trackSid: track.sid,
-				muted: true,
-			});
-			const revoked = await this.liveKitService.revokeParticipantPublishSource({
-				userId,
-				guildId,
-				channelId: roomContext.channelId,
-				connectionId,
-				regionId,
-				serverId,
-				source: track.source,
-			});
-			Logger.info(
-				{
-					userId: userId.toString(),
-					type: roomContext.type,
-					guildId: guildId?.toString(),
-					channelId: roomContext.channelId.toString(),
-					isBot: user.isBot,
-					width: track.width,
-					height: track.height,
-					trackSource: trackSourceLabel,
-					trackSid: track.sid,
-					muted,
-					revoked,
-				},
-				muted || revoked
-					? 'Enforced free tier video limits on user without higher video quality entitlement'
-					: 'Failed to enforce free tier video limits on user without higher video quality entitlement',
-			);
-		} catch (error) {
-			Logger.error({error}, 'Error processing track_published event');
-		}
-	}
-
 	async processEvent(data: {event: WebhookEvent; apiKey: string}): Promise<void> {
 		const {event, apiKey} = data;
 		Logger.debug({event: event.event, apiKey}, 'Dispatching LiveKit webhook event');
@@ -649,9 +472,6 @@ export class LiveKitWebhookService {
 				break;
 			case 'room_finished':
 				await this.handleRoomFinished(event, apiKey);
-				break;
-			case 'track_published':
-				await this.handleTrackPublished(event, apiKey);
 				break;
 			default:
 				Logger.debug({event: event.event}, 'Ignoring LiveKit webhook event');

@@ -331,10 +331,8 @@ function getLiveKitWebhookService(): LiveKitWebhookService | null {
 			_liveKitWebhookService = new LiveKitWebhookService(
 				voiceRoomStore,
 				getGatewayService(),
-				getUserRepository(),
 				liveKitService,
 				voiceTopology,
-				getLimitConfigService(),
 			);
 		}
 	}
