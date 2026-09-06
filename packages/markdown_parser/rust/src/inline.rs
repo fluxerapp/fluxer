@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ast::{EmojiKind, Node, ParserFlags, ParserResult};
-use crate::constants::{MAX_INLINE_DEPTH, MAX_LINE_LENGTH};
+use crate::constants::{CODE_FENCE_LENGTH, MAX_INLINE_DEPTH, MAX_LINE_LENGTH};
 use crate::links;
 use crate::normalize::{
     combine_adjacent_text, compact_empty_text_nodes, flatten_top_level_formatting,
@@ -124,6 +124,14 @@ fn parse_inline_with_context(
                 accumulated.extend_from_slice(emoji.raw.as_bytes());
                 position += 1 + emoji.len;
                 continue;
+            }
+            if next == b'`' {
+                let run = backtick_run_length(text, position + 1);
+                if run >= CODE_FENCE_LENGTH {
+                    accumulated.extend(std::iter::repeat_n(b'`', run));
+                    position += 1 + run;
+                    continue;
+                }
             }
             if is_escapable_character(next)
                 || is_ordered_list_marker_dot_escape(text, position)
@@ -347,6 +355,14 @@ fn regional_indicator_letter(ch: char) -> Option<char> {
         return None;
     }
     char::from_u32(u32::from(b'a') + codepoint - 0x1f1e6)
+}
+
+fn backtick_run_length(text: &str, start: usize) -> usize {
+    let mut run = 0usize;
+    while start + run < text.len() && byte_at(text, start + run) == b'`' {
+        run += 1;
+    }
+    run
 }
 
 fn is_ordered_list_marker_dot_escape(text: &str, backslash_position: usize) -> bool {
