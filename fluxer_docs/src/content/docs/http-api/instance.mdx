@@ -57,7 +57,7 @@ Each value is an absolute URL supplied by the operator. A value can be a bare or
 | gift | string | Gift link base URL |
 | webapp | string | Web application base URL |
 
-<sup>1</sup> Both fields are the same configured client API endpoint, while `api_public` is the separately configured public API endpoint
+<sup>1</sup> Both fields are the same configured client API endpoint, which the first-party web application reads. `api_public` is the separately configured public API endpoint, which a bot, a library, or any other third-party client reads. A deployment can point the two at one origin, and the instance Fluxer hosts does not
 
 <sup>2</sup> The value is the configured Gateway endpoint and its scheme is `ws` or `wss` as the operator configured it
 

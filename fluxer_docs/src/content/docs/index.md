@@ -43,9 +43,11 @@ A client that knows only a Fluxer origin reads endpoint discovery first. `GET /.
 GET https://example.com/.well-known/fluxer
 ```
 
+The instance Fluxer hosts answers discovery at `https://fluxer.app/.well-known/fluxer`. That origin is the one thing a client is given. Every base URL below it still comes from the response.
+
 It returns the [instance discovery object](/http-api/instance/#instance-discovery-object). Every base URL a client uses comes from the [instance endpoints object](/http-api/instance/#instance-endpoints-object) inside it. A client MUST read every base URL from that response, and it MUST NOT derive one from the origin it was given or assume an official Fluxer domain.
 
-Take `endpoints.api` from that response, then send a credential in the `Authorization` header.
+Take the base URL for the kind of client being built, then send a credential in the `Authorization` header. A bot, a library, or any other third-party client takes `endpoints.api_public`. `endpoints.api_client` is the endpoint the first-party web application uses, and `endpoints.api` repeats it.
 
 ```text
 GET https://api.example.com/v1/users/@me

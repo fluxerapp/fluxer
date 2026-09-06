@@ -4,7 +4,7 @@ title: HTTP API
 description: Request format, body representations, shared headers, cross-origin policy, and the error objects.
 ---
 
-The Fluxer HTTP API is the set of routes a client calls to read and change data. Every route is published under `/v1`, and `/v1` is the only version. The base URL comes from `endpoints.api` in the [instance discovery document](/http-api/instance/#get-instance-discovery), which is served unversioned at `/.well-known/fluxer`.
+The Fluxer HTTP API is the set of routes a client calls to read and change data. Every route is published under `/v1`, and `/v1` is the only version. The base URL comes from the [instance discovery document](/http-api/instance/#get-instance-discovery), which is served unversioned at `/.well-known/fluxer`. A third-party client reads `endpoints.api_public` there, and the first-party web application reads `endpoints.api_client`.
 
 Every route is also mounted at the root, so a path resolves with or without the prefix. A client MUST use the `/v1` form. [Download stored object](/http-api/downloads/#download-stored-object) is the one exception, and it resolves at the root alone.
 
