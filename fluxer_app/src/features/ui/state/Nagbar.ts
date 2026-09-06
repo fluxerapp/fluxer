@@ -20,7 +20,7 @@ export interface NagbarSettings {
 	guildMembershipCtaDismissed: boolean;
 	visionaryMfaDismissed: boolean;
 	claimAccountModalShownThisSession: boolean;
-	forceOffline: boolean;
+	forceConnectionNotice: boolean;
 	forceEmailVerification: boolean;
 	forceIOSInstall: boolean;
 	forcePWAInstall: boolean;
@@ -40,7 +40,7 @@ export interface NagbarSettings {
 	forceScheduledMaintenance: boolean;
 	forceVoiceSessionRestore: boolean;
 	forceGuildMfaRequirement: boolean;
-	forceHideOffline: boolean;
+	forceHideConnectionNotice: boolean;
 	forceHideEmailVerification: boolean;
 	forceHideIOSInstall: boolean;
 	forceHidePWAInstall: boolean;
@@ -203,8 +203,8 @@ export class Nagbar implements NagbarSettings {
 		return this.pushNotificationDismissed;
 	}
 
-	getForceOffline(): boolean {
-		return this.forceOffline;
+	getForceConnectionNotice(): boolean {
+		return this.forceConnectionNotice;
 	}
 
 	getForceEmailVerification(): boolean {
@@ -239,8 +239,8 @@ export class Nagbar implements NagbarSettings {
 		return this.forceInvitesDisabled;
 	}
 
-	getForceHideOffline(): boolean {
-		return this.forceHideOffline;
+	getForceHideConnectionNotice(): boolean {
+		return this.forceHideConnectionNotice;
 	}
 
 	getForceHideEmailVerification(): boolean {

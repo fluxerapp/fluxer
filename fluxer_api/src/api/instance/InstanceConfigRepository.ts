@@ -58,6 +58,8 @@ export interface InstanceBrandingConfig {
 	wordmark_url: string | null;
 	favicon_url: string | null;
 	theme_color: string | null;
+	status_page_url: string | null;
+	status_page_incident_history_url: string | null;
 }
 
 interface InstanceAppPublicConfig {
@@ -348,6 +350,10 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			wordmark_url: normalizePublicString(Config.instance.branding.wordmarkUrl),
 			favicon_url: normalizePublicString(Config.instance.branding.faviconUrl),
 			theme_color: normalizePublicString(Config.instance.branding.themeColor),
+			status_page_url: normalizePublicString(Config.instance.branding.statusPageUrl),
+			status_page_incident_history_url: normalizePublicString(
+				Config.instance.branding.statusPageIncidentHistoryUrl,
+			),
 		},
 		setup: {
 			configured: !Config.instance.selfHosted || Config.instance.setup.configured,
@@ -380,6 +386,12 @@ function normalizeAppPublicConfig(value: unknown): InstanceAppPublicConfig {
 			wordmark_url: normalizeOptionalPublicString(branding, 'wordmark_url', defaults.branding.wordmark_url),
 			favicon_url: normalizeOptionalPublicString(branding, 'favicon_url', defaults.branding.favicon_url),
 			theme_color: normalizeOptionalPublicString(branding, 'theme_color', defaults.branding.theme_color),
+			status_page_url: normalizeOptionalPublicString(branding, 'status_page_url', defaults.branding.status_page_url),
+			status_page_incident_history_url: normalizeOptionalPublicString(
+				branding,
+				'status_page_incident_history_url',
+				defaults.branding.status_page_incident_history_url,
+			),
 		},
 		setup: {
 			configured: typeof setup.configured === 'boolean' ? setup.configured : defaults.setup.configured,

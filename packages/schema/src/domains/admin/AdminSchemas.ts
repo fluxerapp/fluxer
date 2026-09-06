@@ -478,6 +478,8 @@ const AppPublicConfigResponse = z.object({
 		wordmark_url: z.string().nullable(),
 		favicon_url: z.string().nullable(),
 		theme_color: z.string().nullable(),
+		status_page_url: z.string().nullable(),
+		status_page_incident_history_url: z.string().nullable(),
 	}),
 	setup: z.object({
 		configured: z.boolean(),
@@ -501,6 +503,8 @@ const AppPublicConfigUpdateRequest = z.object({
 			wordmark_url: z.string().trim().max(2048).nullish(),
 			favicon_url: z.string().trim().max(2048).nullish(),
 			theme_color: z.string().trim().max(64).nullish(),
+			status_page_url: z.string().trim().max(2048).nullish(),
+			status_page_incident_history_url: z.string().trim().max(2048).nullish(),
 		})
 		.nullish(),
 	setup: z

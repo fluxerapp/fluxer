@@ -453,6 +453,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				wordmarkUrl: master.instance.branding.wordmark_url,
 				faviconUrl: master.instance.branding.favicon_url,
 				themeColor: master.instance.branding.theme_color,
+				statusPageUrl: master.instance.branding.status_page_url,
+				statusPageIncidentHistoryUrl: master.instance.branding.status_page_incident_history_url,
 			},
 			setup: {
 				configured: master.instance.setup.configured,
