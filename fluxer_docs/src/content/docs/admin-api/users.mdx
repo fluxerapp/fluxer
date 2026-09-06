@@ -1838,12 +1838,16 @@ There is no operation that revokes one session. The account's Admin API keys, bo
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | empty<sup>2</sup> | Active sessions were terminated |
+| 200<sup>1</sup> | [terminate sessions response](#terminate-sessions-response) | Active sessions were terminated |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-<sup>1</sup> An account with no live session is accepted and still records the audit entry
+<sup>1</sup> An account with no live session is accepted, returns `terminated_count` 0, and still records the audit entry
 
-<sup>2</sup> The handler emits no body at all, so a client MUST NOT read the `terminated_count` member the spec declares
+#### Terminate sessions response
+
+| Field | Type | Description |
+| --- | --- | --- |
+| terminated_count | integer | The number of sessions that were terminated |
 
 :::caution[A terminated session cannot be restored]
 The tombstone stays visible through [List user sessions](#list-user-sessions), but the session itself is gone.

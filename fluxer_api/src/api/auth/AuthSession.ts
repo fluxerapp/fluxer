@@ -178,18 +178,19 @@ export async function logoutAuthSessions(
 	});
 }
 
-export async function terminateAllUserSessions(ctx: ApiContext, userId: UserID): Promise<void> {
+export async function terminateAllUserSessions(ctx: ApiContext, userId: UserID): Promise<number> {
 	const {users, gateway} = ctx.services;
 	const authSessions = await users.listAuthSessions(userId);
 	await users.deleteAllPushSubscriptions(userId);
 	await gateway.invalidatePushSubscriptions({userId});
-	if (authSessions.length === 0) return;
+	if (authSessions.length === 0) return 0;
 	const hashes = authSessions.map((s) => s.sessionIdHash);
 	await users.deleteAuthSessions(userId, hashes);
 	await gateway.terminateSession({
 		userId,
 		sessionIdHashes: authSessions.map((s) => Buffer.from(s.sessionIdHash).toString('base64url')),
 	});
+	return authSessions.length;
 }
 
 export async function replaceCurrentAuthSession(

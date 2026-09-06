@@ -41,8 +41,6 @@ const STREAMED_RESPONSE_ROUTES = new Map([
 	['POST /admin/system/heap-snapshots', "'Content-Type': 'application/octet-stream'"],
 ]);
 
-const EMPTY_RESPONSE_ROUTES = new Map([['DELETE /admin/users/{}/sessions', 'terminated_count']]);
-
 const MERGED_SCHEMA_ROUTES = new Map([
 	['POST /auth/sessions/logout', "Validator('json', LogoutAuthSessionsRequest.merge(SudoVerificationSchema))"],
 	[
@@ -513,7 +511,7 @@ for (const file of await walk(DOCS_ROOT)) {
 			const resolvedTarget = resolveRef(spec, target);
 			const responseIsUnion =
 				resolvedTarget != null && ((resolvedTarget.oneOf ?? []).length > 0 || (resolvedTarget.anyOf ?? []).length > 0);
-			if (!STREAMED_RESPONSE_ROUTES.has(key) && !EMPTY_RESPONSE_ROUTES.has(key)) {
+			if (!STREAMED_RESPONSE_ROUTES.has(key)) {
 				const referencedTypes = new Map<string, string>();
 				for (const anchor of referenced) {
 					for (const [field, type] of anchorTypes.get(anchor) ?? []) {
@@ -542,12 +540,7 @@ for (const file of await walk(DOCS_ROOT)) {
 					});
 				}
 			}
-			if (
-				responseProperties.size > 0 &&
-				!responseIsUnion &&
-				!STREAMED_RESPONSE_ROUTES.has(key) &&
-				!EMPTY_RESPONSE_ROUTES.has(key)
-			) {
+			if (responseProperties.size > 0 && !responseIsUnion && !STREAMED_RESPONSE_ROUTES.has(key)) {
 				responsesChecked += 1;
 				for (const field of responseProperties) {
 					if (pageFields.has(field) || referencedFields.has(field)) {
@@ -707,15 +700,6 @@ for (const [route, anchor] of STREAMED_RESPONSE_ROUTES) {
 		staleExemptions.push(`${route}: no longer streams a file, drop this exemption`);
 	}
 }
-const adminUserSecuritySource = await readFile(
-	path.join(REPO_ROOT, 'fluxer_api/src/api/admin/services/AdminUserSecurityService.ts'),
-	'utf8',
-);
-for (const [route, marker] of EMPTY_RESPONSE_ROUTES) {
-	if (adminUserSecuritySource.includes(marker)) {
-		staleExemptions.push(`${route}: the handler now emits ${marker}, drop this exemption`);
-	}
-}
 for (const [route, anchor] of MERGED_SCHEMA_ROUTES) {
 	const present = authSource.includes(anchor) || guildSource.includes(anchor);
 	if (!present) {
@@ -742,9 +726,6 @@ console.log(`query parameter tables checked: ${checkedQueries.toString()}`);
 console.log(`success response schemas checked: ${responsesChecked.toString()}`);
 console.log(
 	`streamed-response exemptions active: ${STREAMED_RESPONSE_ROUTES.size.toString()} (the spec declares JSON, the implementation streams a file)`,
-);
-console.log(
-	`empty-response exemptions active: ${EMPTY_RESPONSE_ROUTES.size.toString()} (the spec declares a body, the handler returns none)`,
 );
 console.log(`response fields found documented on the page: ${responseFieldsFound.toString()}`);
 console.log(`request body field types compared: ${typesCompared.toString()}`);

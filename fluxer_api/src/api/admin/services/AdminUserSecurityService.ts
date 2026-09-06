@@ -315,7 +315,7 @@ export class AdminUserSecurityService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
+		const terminatedCount = await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -324,6 +324,7 @@ export class AdminUserSecurityService {
 			auditLogReason,
 			metadata: new Map(),
 		});
+		return {terminated_count: terminatedCount};
 	}
 
 	async setUserAcls(
