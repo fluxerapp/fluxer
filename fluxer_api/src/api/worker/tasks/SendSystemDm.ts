@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {JobCancelledError, type WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
 import {createUserID, type UserID} from '../../BrandedTypes';
 import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
@@ -16,10 +16,7 @@ const PayloadSchema = z.object({
 export async function sendSystemDm(payload: unknown, helpers: WorkerTaskHelpers): Promise<void> {
 	const {content, user_ids} = PayloadSchema.parse(payload);
 	const deps = getWorkerDependencies();
-	const systemUser = await deps.userRepository.findUnique(SYSTEM_USER_ID);
-	if (!systemUser) {
-		throw new Error('System user (id=0) not found');
-	}
+	const systemUser = await deps.userRepository.findUniqueAssert(SYSTEM_USER_ID);
 	const userChannelService = new UserChannelService(
 		deps.userRepository,
 		deps.channelService,
@@ -38,7 +35,8 @@ export async function sendSystemDm(payload: unknown, helpers: WorkerTaskHelpers)
 				{sent, failed, remaining: user_ids.length - sent - failed},
 				'System DM job cancelled mid-flight',
 			);
-			break;
+			requestCache.clear();
+			throw new JobCancelledError();
 		}
 		const recipientId = createUserID(BigInt(raw));
 		try {

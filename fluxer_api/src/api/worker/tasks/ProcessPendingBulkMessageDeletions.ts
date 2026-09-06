@@ -8,6 +8,19 @@ import {getWorkerDependencies} from '../WorkerContext';
 const processPendingBulkMessageDeletions: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.debug('Processing pending bulk message deletions');
 	const {bulkMessageDeletionQueueService, userRepository, workerService} = getWorkerDependencies();
+	if (await bulkMessageDeletionQueueService.needsRebuild()) {
+		Logger.info('Bulk message deletion queue needs rebuild, acquiring lock');
+		const lockToken = await bulkMessageDeletionQueueService.acquireRebuildLock();
+		if (!lockToken) {
+			Logger.info('Another worker is rebuilding the bulk message deletion queue, skipping this run');
+			return;
+		}
+		try {
+			await bulkMessageDeletionQueueService.rebuildState();
+		} finally {
+			await bulkMessageDeletionQueueService.releaseRebuildLock(lockToken);
+		}
+	}
 	const nowMs = Date.now();
 	const pendingDeletions = await bulkMessageDeletionQueueService.getReadyDeletions(nowMs, 100);
 	Logger.debug({count: pendingDeletions.length}, 'Pending bulk message deletions found');

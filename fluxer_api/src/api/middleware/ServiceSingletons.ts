@@ -218,7 +218,7 @@ let bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService | null = null;
 export function getKVBulkMessageDeletionQueue(): KVBulkMessageDeletionQueueService {
 	const kvClient = getKVClient();
 	if (!bulkMessageDeletionQueue || bulkMessageDeletionQueueClient !== kvClient) {
-		bulkMessageDeletionQueue = new KVBulkMessageDeletionQueueService(kvClient);
+		bulkMessageDeletionQueue = new KVBulkMessageDeletionQueueService(kvClient, getUserRepository());
 		bulkMessageDeletionQueueClient = kvClient;
 	}
 	return bulkMessageDeletionQueue;
