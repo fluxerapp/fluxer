@@ -81,15 +81,17 @@ describe('Admin guild routes', () => {
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 			.execute();
 	});
-	test('PATCH /admin/guilds/{guild_id} rejects an empty patch without the wildcard ACL', async () => {
+	test('PATCH /admin/guilds/{guild_id} applies no change for an empty patch', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:update:name']);
-		const guild = await createGuild(harness, admin.token, `Empty Patch Guild ${Date.now()}`);
-		await createBuilder(harness, `${admin.token}`)
+		const name = `Empty Patch Guild ${Date.now()}`;
+		const guild = await createGuild(harness, admin.token, name);
+		const result = await createBuilder<AdminGuildUpdate>(harness, `${admin.token}`)
 			.patch(`/admin/guilds/${guild.id}`)
 			.body({})
-			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
+			.expect(HTTP_STATUS.OK)
 			.execute();
+		expect(result.guild.name).toBe(name);
 	});
 	test('guild member add, ban and removal use the member and ban sub-resources', async () => {
 		const admin = await createTestAccount(harness);

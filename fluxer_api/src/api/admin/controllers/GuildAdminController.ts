@@ -72,7 +72,10 @@ function selectGuildUpdateACLs(body: UpdateGuildRequest): Array<string> {
 	if (body.new_owner_id !== undefined) {
 		required.push(AdminACLs.GUILD_TRANSFER_OWNERSHIP);
 	}
-	return required.length > 0 ? required : [AdminACLs.WILDCARD];
+	if (required.length > 0) {
+		return required;
+	}
+	return Object.keys(body).length === 0 ? [] : [AdminACLs.WILDCARD];
 }
 
 function requireAllAdminACLs(granted: ReadonlySet<string>, required: ReadonlyArray<string>): void {
@@ -148,7 +151,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'update_admin_guild',
 			summary: 'Update guild',
 			description:
-				'Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body carrying no field requires the wildcard permission. Every applied change is logged to the audit log.',
+				'Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body with no fields applies no change. Every applied change is logged to the audit log.',
 			responseSchema: GuildUpdateResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

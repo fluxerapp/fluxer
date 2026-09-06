@@ -314,7 +314,7 @@ Fluxer evaluates authorisation in two stages and reads the body between them. Th
 - `guild:update:vanity` is selected by `vanity_url_code`.
 - `guild:transfer_ownership` is selected by `new_owner_id`.
 
-A body with no field at all selects `*`, so an account without the wildcard cannot send an empty patch.
+A body with no field at all selects nothing, so an empty patch applies no change.
 
 ### Path parameters
 

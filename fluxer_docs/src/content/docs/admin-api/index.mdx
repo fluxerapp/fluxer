@@ -36,7 +36,7 @@ The effective ACL set of a session or an Admin OAuth2 bearer credential is the s
 
 Two operations derive their required ACLs from the validated request body.
 
-[Update guild](/admin-api/guilds/#update-guild) maps each present body field to one ACL and requires every ACL in that set. `name` maps to `guild:update:name`, `vanity_url_code` maps to `guild:update:vanity`, `new_owner_id` maps to `guild:transfer_ownership`, `add_features` and `remove_features` map to `guild:update:features`, and `fields` together with every remaining setting maps to `guild:update:settings`. A body with none of those fields resolves to `*`, so only a wildcard holder is admitted. The route also names those five ACLs as an ordinary any-of requirement, evaluated before the body is read.
+[Update guild](/admin-api/guilds/#update-guild) maps each present body field to one ACL and requires every ACL in that set. `name` maps to `guild:update:name`, `vanity_url_code` maps to `guild:update:vanity`, `new_owner_id` maps to `guild:transfer_ownership`, `add_features` and `remove_features` map to `guild:update:features`, and `fields` together with every remaining setting maps to `guild:update:settings`. A body with none of those fields resolves to no ACL at all and applies no change. The route also names those five ACLs as an ordinary any-of requirement, evaluated before the body is read.
 
 [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job) maps its `task` discriminator to one ACL and requires that one. `update_user_flags` maps to `bulk:update:user_flags`, `update_suspicious_activity_flags` maps to `bulk:update:suspicious_activity`, `update_guild_features` maps to `bulk:update:guild_features`, `add_guild_members` maps to `bulk:add:guild_members`, and `schedule_user_deletion` maps to `bulk:delete:users`.
 
@@ -45,7 +45,7 @@ Fluxer bounds every grant separately. [Set user ACLs](/admin-api/users/#set-user
 [Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 111 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
 
 :::caution[`*` satisfies every present and future ACL]
-It admits the wildcard-only shapes such as an empty [Update guild](/admin-api/guilds/#update-guild) body, lifts the per-key owner check, and lifts the escalation bound on every grant its holder makes.
+It lifts the per-key owner check and lifts the escalation bound on every grant its holder makes.
 :::
 
 The [ACL registry](#acl-registry) below lists every value the instance recognises.
