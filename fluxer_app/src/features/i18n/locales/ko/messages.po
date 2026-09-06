@@ -2088,7 +2088,7 @@ msgid "Account data"
 msgstr "계정 데이터"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:279
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:253
 msgid "Account exists to spam, scam, or abuse the platform."
 msgstr "스팸, 사기 또는 플랫폼 악용을 목적으로 생성된 계정입니다."
 
@@ -3551,7 +3551,7 @@ msgid "Another checkbox"
 msgstr "다른 체크박스"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:383
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:357
 msgid "Another clear rule violation"
 msgstr "명백한 규칙 위반"
 
@@ -4583,7 +4583,7 @@ msgstr "지금은 부재중"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:354
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:375
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:395
-#: src/features/moderation/components/report_modal/IARModal.tsx:89
+#: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/user/components/modals/PhoneAddModal.tsx:411
 #: src/features/user/components/modals/PhoneAddModal.tsx:430
@@ -4732,7 +4732,7 @@ msgstr "균형"
 
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:155
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:129
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts:5
 msgid "Ban"
 msgstr "차단"
@@ -4778,7 +4778,7 @@ msgid "Ban members"
 msgstr "멤버 차단"
 
 #. IAR modal: quick-action card title for banning the reported user (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:147
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:121
 msgid "Ban this user"
 msgstr "이 사용자 차단"
 
@@ -4788,7 +4788,7 @@ msgid "Bandwidth"
 msgstr "대역폭"
 
 #. IAR modal: disabled-state label on the ban card after the user is banned from this community.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:159
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:133
 msgid "Banned"
 msgstr "차단됨"
 
@@ -5003,7 +5003,7 @@ msgid "Block spoiler"
 msgstr "스포일러 차단"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:407
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:381
 msgid "Block this user"
 msgstr "이 사용자 차단"
 
@@ -5371,12 +5371,12 @@ msgid "Bulk delete"
 msgstr "일괄 삭제"
 
 #. IAR modal: rule description for a message report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:171
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:145
 msgid "Bullying, repeated unwanted contact, stalking, or targeted abuse."
 msgstr "괴롭힘, 반복적인 원치 않는 연락, 스토킹 또는 표적 학대."
 
 #. IAR modal: rule-category description for the targeted-harm group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:62
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:44
 msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
 msgstr "괴롭힘, 협박, 혐오, 폭력, 레이드 또는 자해를 조장하는 콘텐츠."
 
@@ -5464,7 +5464,7 @@ msgid "Call"
 msgstr "통화"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:459
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:433
 msgid "Call & group chat settings"
 msgstr "통화 및 그룹 채팅 설정"
 
@@ -6092,12 +6092,12 @@ msgid "Change what users without \"{readMessageHistoryPermissionLabel}\" can see
 msgstr "\"{readMessageHistoryPermissionLabel}\" 권한이 없는 사용자가 볼 수 있는 항목 변경"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:463
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:437
 msgid "Change who can call or add you."
 msgstr "나에게 전화하거나 나를 추가할 수 있는 사람 변경."
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:451
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:425
 msgid "Change who can reach you."
 msgstr "나에게 연락할 수 있는 사람 변경."
 
@@ -6524,12 +6524,12 @@ msgid "Child safety concerns"
 msgstr "아동 안전 문제"
 
 #. IAR modal: child-safety rule label (message and guild reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:98
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:80
 msgid "Child safety or exploitation of minors"
 msgstr "아동 안전 또는 미성년자 착취"
 
 #. IAR modal: rule-category label grouping child-safety and mature-content reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:66
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:48
 msgid "Child safety or mature content"
 msgstr "아동 안전 또는 성인 콘텐츠"
 
@@ -6852,7 +6852,7 @@ msgid "Claim your account"
 msgstr "계정 등록하기"
 
 #. IAR modal: body of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:45
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:27
 msgid "Claim your account and verify your email to send reports."
 msgstr "계정을 등록하고 이메일을 인증해야 신고를 보낼 수 있습니다."
 
@@ -6940,7 +6940,7 @@ msgid "Claim your gift to activate your {premiumProductName} subscription!"
 msgstr "{premiumProductName} 구독을 활성화하려면 선물을 받으세요!"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:339
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:313
 msgid "Claiming to be another person, brand, or organization."
 msgstr "다른 사람, 브랜드 또는 기관을 사칭하는 행위."
 
@@ -7297,7 +7297,7 @@ msgid "Close popout"
 msgstr "PIP 닫기"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:427
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:401
 msgid "Close this DM"
 msgstr "DM 닫기"
 
@@ -7324,7 +7324,7 @@ msgid "Close window"
 msgstr "창 닫기"
 
 #. Confirmation copy in the IAR modal for the Close DM quick action. Reassures the user the action is not destructive.
-#: src/features/moderation/components/report_modal/IARModal.tsx:68
+#: src/features/moderation/components/report_modal/IARModal.tsx:65
 msgid "Close your current DM with {dmDisplayName}. This does not block the user, and you can reopen the DM later."
 msgstr "{dmDisplayName}님과의 현재 DM을 닫습니다. 이 작업은 사용자를 차단하지 않으며, 나중에 DM을 다시 열 수 있습니다."
 
@@ -7680,12 +7680,12 @@ msgid "Community DM"
 msgstr "커뮤니티 DM"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:283
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:257
 msgid "Community exists to spam, scam, or abuse the platform."
 msgstr "커뮤니티는 스팸, 사기 또는 플랫폼 남용을 위해 존재합니다."
 
 #. IAR modal: rule description for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:187
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:161
 msgid "Community facilitates pile-ons or targeted abuse."
 msgstr "커뮤니티는 집단 공격 또는 표적 학대를 조장합니다."
 
@@ -8425,7 +8425,7 @@ msgid "Converts incoming content to speech, regardless of whether it came from /
 msgstr "/tts 명령어로 보냈는지 여부와 관계없이 수신된 콘텐츠를 음성으로 변환합니다."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:363
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:337
 msgid "Coordinates raids, brigading, or harassment against people or communities."
 msgstr "특정인 또는 커뮤니티에 대한 공격, 집단 괴롭힘, 또는 희롱을 조장합니다."
 
@@ -8461,7 +8461,7 @@ msgstr "URL이 클립보드에 복사되었습니다"
 #: src/features/app/components/dialogs/shared/CopyLinkSection.tsx:11
 #: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:423
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:397
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:71
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
@@ -8682,7 +8682,7 @@ msgstr "메시지 ID 복사"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:518
 #: src/features/input/state/input_keybind/shared.ts:273
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:415
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:389
 msgid "Copy message link"
 msgstr "메시지 링크 복사"
 
@@ -9190,7 +9190,7 @@ msgid "Couldn't send invite. Try again."
 msgstr "초대장을 보낼 수 없습니다. 다시 시도해 주세요."
 
 #. Error toast in the IAR modal when the report submission fails. Keep tone plain and short.
-#: src/features/moderation/components/report_modal/IARModal.tsx:81
+#: src/features/moderation/components/report_modal/IARModal.tsx:78
 msgid "Couldn't send it. Try again."
 msgstr "보낼 수 없습니다. 다시 시도해 주세요."
 
@@ -9605,7 +9605,7 @@ msgid "Credentials"
 msgstr "자격 증명"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:211
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:185
 msgid "Credible threats, graphic violence, or glorification of violence."
 msgstr "신뢰할 수 있는 위협, 노골적인 폭력 또는 폭력 미화."
 
@@ -10396,7 +10396,7 @@ msgstr "배터리 수명 및 데이터 사용량 보존을 위해 모바일에�
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
 #: src/features/messaging/commands/MessageCommands.tsx:77
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:135
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
@@ -10623,7 +10623,7 @@ msgid "Delete this invite? Can't be undone."
 msgstr "초대를 삭제할까요? 이 작업은 되돌릴 수 없습니다."
 
 #. IAR modal: quick-action card title for deleting the reported message (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:127
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:101
 msgid "Delete this message"
 msgstr "이 메시지 삭제"
 
@@ -10663,7 +10663,7 @@ msgid "Delete your messages in this conversation?"
 msgstr "이 대화에서 내 메시지를 삭제하시겠어요?"
 
 #. IAR modal: disabled-state label on the delete card after the message has been deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:139
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:113
 msgid "Deleted"
 msgstr "삭제됨"
 
@@ -11529,7 +11529,7 @@ msgid "Display scaling"
 msgstr "화면 배율"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:303
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:277
 msgid "Distributes malware, credential theft, or harmful files."
 msgstr "멀웨어, 개인 정보 도용 또는 유해 파일을 배포합니다."
 
@@ -11539,7 +11539,7 @@ msgid "DM"
 msgstr "DM"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:447
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:421
 msgid "DM & friend request settings"
 msgstr "DM 및 친구 요청 설정"
 
@@ -11665,7 +11665,7 @@ msgid "Doesn't allow being added to group DMs"
 msgstr "그룹 DM에 추가될 수 없음"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:431
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:405
 msgid "Doesn't block. You can reopen later."
 msgstr "차단하지 않습니다. 나중에 다시 열 수 있습니다."
 
@@ -11736,7 +11736,7 @@ msgstr "{deviceName} 다시 추천 안 함"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:54
 #: src/features/input/components/KeybindRecorder.tsx:470
-#: src/features/moderation/components/report_modal/IARModal.tsx:97
+#: src/features/moderation/components/report_modal/IARModal.tsx:94
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
 #: src/features/search/components/search/HasFilterSheet.tsx:206
@@ -11879,12 +11879,12 @@ msgid "Downloading desktop update…"
 msgstr "데스크톱 업데이트 다운로드 중…"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:311
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:285
 msgid "Doxxing, exposed private info, or stalking."
 msgstr "신상 털기, 개인 정보 노출, 스토킹."
 
 #. IAR modal: rule-category description for the privacy / impersonation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:78
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:60
 msgid "Doxxing, stalking, pretending to be someone, or an inappropriate profile."
 msgstr "개인 정보 유출, 스토킹, 사칭 또는 부적절한 프로필."
 
@@ -12890,12 +12890,12 @@ msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "인코더, SVC, 백업 스트림 및 비트 전송률 사전 설정"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:375
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:349
 msgid "Encourages self-harm"
 msgstr "자해 권유"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:379
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:353
 msgid "Encourages suicide, self-harm, or eating disorders."
 msgstr "자살, 자해 또는 섭식 장애 조장."
 
@@ -12933,7 +12933,7 @@ msgid "End-to-end encryption is unavailable because an unsupported participant i
 msgstr "지원되지 않는 참여자가 이 음성 채널에 있어 종단 간 암호화를 사용할 수 없습니다."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:255
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:229
 msgid "Endangers minors or hosts child-exploitation content."
 msgstr "미성년자를 위험에 빠뜨리거나 아동 착취 콘텐츠를 호스팅합니다."
 
@@ -14042,7 +14042,7 @@ msgid "Failed to upload emojis. Try again."
 msgstr "이모티콘 업로드에 실패했습니다. 다시 시도해 주세요."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:263
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:237
 msgid "False claims likely to cause real-world harm."
 msgstr "실제 피해를 야기할 수 있는 허위 주장."
 
@@ -14326,12 +14326,12 @@ msgid "Fingerprint"
 msgstr "지문"
 
 #. Button label in the IAR modal that opens the account-setup flow.
-#: src/features/moderation/components/report_modal/IARModal.tsx:85
+#: src/features/moderation/components/report_modal/IARModal.tsx:82
 msgid "Finish account setup"
 msgstr "계정 설정 완료"
 
 #. IAR modal: title of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:41
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:23
 msgid "Finish account setup first"
 msgstr "먼저 계정 설정을 완료하세요"
 
@@ -15536,7 +15536,7 @@ msgid "Grid view"
 msgstr "격자 보기"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:247
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:221
 msgid "Grooming or child-exploitation content."
 msgstr "그루밍 또는 아동 착취 콘텐츠입니다."
 
@@ -15706,7 +15706,7 @@ msgid "Harassment"
 msgstr "괴롭힘"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:231
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:205
 msgid "Harassment involving mature content"
 msgstr "성인 콘텐츠 관련 괴롭힘"
 
@@ -15716,17 +15716,17 @@ msgid "Harassment or bullying"
 msgstr "괴롭힘 또는 따돌림"
 
 #. IAR modal: rule label for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:175
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:149
 msgid "Harassment or stalking"
 msgstr "괴롭힘 또는 스토킹"
 
 #. IAR modal: rule label for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:183
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:157
 msgid "Harassment or targeted abuse"
 msgstr "괴롭힘 또는 표적 학대"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:167
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:141
 msgid "Harassment or threats"
 msgstr "괴롭힘 또는 위협"
 
@@ -15760,7 +15760,7 @@ msgid "Hardware-accelerated on most Windows and macOS systems. Reliable for olde
 msgstr "대부분의 Windows 및 macOS 기기에서 하드웨어 가속을 지원합니다. 구형 기기에서도 안정적입니다."
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:259
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:233
 msgid "Harmful misinformation"
 msgstr "유해한 허위 정보"
 
@@ -15785,7 +15785,7 @@ msgstr "구매 이력 재정의"
 
 #. IAR modal: rule label.
 #. Report category label for hate speech. Keep tone plain and neutral.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:191
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:165
 #: src/features/moderation/components/report/OptionDescriptors.ts:28
 msgid "Hate speech"
 msgstr "혐오 발언"
@@ -16311,21 +16311,6 @@ msgstr "툴팁입니다"
 msgid "I changed my mind"
 msgstr "마음이 바뀌었어요"
 
-#. IAR modal: preference path option label for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:32
-msgid "I don't like this community"
-msgstr "이 커뮤니티가 마음에 들지 않습니다"
-
-#. IAR modal: preference path option label for a message report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:24
-msgid "I don't like this content"
-msgstr "이 콘텐츠가 마음에 들지 않습니다"
-
-#. IAR modal: preference path option label for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:28
-msgid "I don't like this user"
-msgstr "이 사용자가 마음에 들지 않습니다"
-
 #. Secondary button in the required-action modal. Opens recovery options for the current verification step.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:166
 msgid "I need another way"
@@ -16388,7 +16373,7 @@ msgid "If {pixPaymentMethod} is unavailable or you prefer standard pricing, you 
 msgstr "{pixPaymentMethod}를 사용할 수 없거나 일반 요금을 선호하는 경우 언제든지 USD로 전환할 수 있습니다."
 
 #. IAR modal: inline routing hint shown under reasons that overlap with child safety.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:106
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:88
 msgid "If a minor is involved, use \"{childSafetyReasonName}\" instead."
 msgstr "미성년자가 관련된 경우, 대신 \"{childSafetyReasonName}\"을(를) 사용하세요."
 
@@ -16398,7 +16383,7 @@ msgid "If recurring {upiPaymentMethod} is unavailable or you prefer standard pri
 msgstr "반복 {upiPaymentMethod}를 사용할 수 없거나 일반 요금을 선호하는 경우 언제든지 USD로 전환할 수 있습니다."
 
 #. IAR modal: inline safety note for self-harm reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:395
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:369
 msgid "If someone may be in immediate danger, contact local emergency services if you can do so safely."
 msgstr "누군가 즉각적인 위험에 처해 있다면, 안전하게 조치할 수 있는 경우 현지 응급 서비스에 연락하세요."
 
@@ -16408,17 +16393,17 @@ msgid "If someone told you to paste something here, it is a scam that can hand t
 msgstr "누군가 여기에 복사하라고 말하면, 이는 귀하의 {productName} 계정을 탈취할 수 있는 사기입니다."
 
 #. IAR modal: inline safety note shown for child-safety reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:391
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:365
 msgid "If this involves CSAM or exploitation of a minor, send it now and don't reshare the material."
 msgstr "아동 성착취물 또는 미성년자 착취와 관련된 경우, 지금 바로 신고하고 해당 자료를 다시 공유하지 마세요."
 
 #. IAR modal: inline safety note for violence reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:399
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:373
 msgid "If this is a credible imminent threat, contact local emergency services too."
 msgstr "긴급한 위협이라고 판단되면 현지 응급 서비스에도 연락하세요."
 
 #. IAR modal: inline safety note for terrorism reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:403
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:377
 msgid "If this is an imminent terrorist threat, contact local emergency services too."
 msgstr "이것이 임박한 테러 위협이라면, 지역 응급 서비스에도 연락하세요."
 
@@ -16545,23 +16530,23 @@ msgstr "가상 배경 무시"
 
 #. IAR modal: rule label.
 #. Report category label for content describing or coordinating illegal activity. Keep tone plain.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:351
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:325
 #: src/features/moderation/components/report/OptionDescriptors.ts:44
 msgid "Illegal activity"
 msgstr "불법 활동"
 
 #. IAR modal: rule-category label grouping illegal activity and the catch-all "Other" option.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:90
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:72
 msgid "Illegal activity or something else"
 msgstr "불법 활동 또는 기타"
 
 #. IAR modal: rule-category description for the illegal / other group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:94
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:76
 msgid "Illegal sales, criminal facilitation, or a clear rule violation that doesn't fit above."
 msgstr "불법 판매, 범죄 조장 또는 위에 해당하지 않는 명확한 규칙 위반."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:355
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:329
 msgid "Illegal sales, criminal facilitation, or unlawful activity."
 msgstr "불법 판매, 범죄 조장 또는 불법 활동."
 
@@ -16660,13 +16645,13 @@ msgstr "클립보드에서 붙여넣은 이미지는 첨부파일로 전송됩�
 
 #. IAR modal: rule label.
 #. Report category label for a user impersonating another person or brand.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:327
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:301
 #: src/features/moderation/components/report/OptionDescriptors.ts:66
 msgid "Impersonation"
 msgstr "사칭"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:331
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:305
 msgid "Impersonation or deceptive media"
 msgstr "사칭 또는 기만적인 미디어"
 
@@ -18095,7 +18080,7 @@ msgid "Learn more"
 msgstr "자세히 알아보기"
 
 #. IAR modal: quick-action card button label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:443
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:417
 msgid "Leave"
 msgstr "나가기"
 
@@ -18140,7 +18125,7 @@ msgid "Leave silently"
 msgstr "알림 없이 나가기"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:435
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:409
 msgid "Leave the community"
 msgstr "커뮤니티 나가기"
 
@@ -18805,18 +18790,18 @@ msgstr "몰타"
 
 #. IAR modal: rule label.
 #. Report category label for a community distributing malware or malicious software.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:299
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:273
 #: src/features/moderation/components/report/OptionDescriptors.ts:103
 msgid "Malware distribution"
 msgstr "악성코드 유포"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:287
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:261
 msgid "Malware or dangerous links"
 msgstr "악성코드 또는 위험한 링크"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:291
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:265
 msgid "Malware, credential theft, or harmful files."
 msgstr "악성코드, 개인 정보 도용 또는 유해 파일."
 
@@ -19088,7 +19073,7 @@ msgid "Mask Visionary as subscription"
 msgstr "Visionary 구독 마스크"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:271
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:245
 msgid "Mass spam, fraud, fake giveaways, or account abuse."
 msgstr "대량 스팸, 사기, 가짜 경품 또는 계정 남용."
 
@@ -19170,12 +19155,12 @@ msgid "Mature content not allowed"
 msgstr "성인 콘텐츠는 허용되지 않습니다"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:223
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:197
 msgid "Mature content or harassment"
 msgstr "성인 콘텐츠 또는 괴롭힘"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:239
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:213
 msgid "Mature content or unsafe gating"
 msgstr "성인 콘텐츠 또는 안전하지 않은 콘텐츠 차단"
 
@@ -19190,7 +19175,7 @@ msgid "Mature content policy violation"
 msgstr "성인 콘텐츠 정책 위반"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:243
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:217
 msgid "Mature content without proper gating."
 msgstr "적절한 제한이 없는 성인용 콘텐츠입니다."
 
@@ -20000,7 +19985,7 @@ msgid "Minimum lifetime (days)"
 msgstr "최소 수명(일)"
 
 #. IAR modal: rule-category description for the child-safety / mature-content group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:70
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:52
 msgid "Minors at risk, mature content in the wrong place, or unwanted conduct."
 msgstr "미성년자 위험 노출, 부적절한 성인 콘텐츠, 원치 않는 행위."
 
@@ -22172,7 +22157,7 @@ msgstr "불투명도"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
 #: src/features/app/components/setup/SetupWizardSteps.tsx:154
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:455
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:429
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
 msgstr "열기"
@@ -22572,7 +22557,7 @@ msgid "Open template JSON"
 msgstr "템플릿 JSON 열기"
 
 #. IAR modal: quick-action card description for banning the reported user.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:151
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:125
 msgid "Open the ban dialog for this community."
 msgstr "이 커뮤니티의 차단 대화 상자를 엽니다."
 
@@ -22816,7 +22801,7 @@ msgid "Our phone number check is down right now. This is on us, not your number.
 msgstr "전화번호 확인 시스템에 일시적으로 문제가 발생했습니다. 고객님의 번호가 아닌 저희 시스템 문제입니다. 몇 분 후에 같은 번호로 다시 시도해 주세요."
 
 #. IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:122
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:96
 msgid "Our safety team is reviewing it. We'll send you a DM and email once we've reached a verdict."
 msgstr "안전팀에서 검토 중입니다. 결정이 내려지면 DM과 이메일로 알려드릴게요."
 
@@ -23331,7 +23316,7 @@ msgid "PgUp"
 msgstr "Page Up"
 
 #. IAR modal: rule-category description for the scams / malware / misinformation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:86
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:68
 msgid "Phishing, fraud, malicious links, or false claims likely to cause real-world harm."
 msgstr "피싱, 사기, 악성 링크 또는 실제 피해를 유발할 수 있는 허위 주장."
 
@@ -23409,7 +23394,7 @@ msgid "Pick a web search provider"
 msgstr "웹 검색 공급자 선택"
 
 #. Validation hint in the IAR modal when the user tries to advance without picking a radio option.
-#: src/features/moderation/components/report_modal/IARModal.tsx:73
+#: src/features/moderation/components/report_modal/IARModal.tsx:70
 msgid "Pick an option to continue."
 msgstr "계속하려면 옵션을 선택하세요."
 
@@ -23434,7 +23419,7 @@ msgid "Pick the method you can complete now."
 msgstr "지금 완료할 수 있는 방법을 선택하세요."
 
 #. Validation hint in the IAR modal on the rule selection step.
-#: src/features/moderation/components/report_modal/IARModal.tsx:77
+#: src/features/moderation/components/report_modal/IARModal.tsx:74
 msgid "Pick the rule to review."
 msgstr "검토할 규칙을 선택하세요."
 
@@ -23913,7 +23898,7 @@ msgid "press to remove reaction"
 msgstr "눌러서 반응 삭제"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:335
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:309
 msgid "Pretending to be someone else, including deceptive AI-generated content."
 msgstr "다른 사람을 사칭하거나 기만적인 AI 생성 콘텐츠를 사용하는 행위."
 
@@ -24105,7 +24090,7 @@ msgid "Privacy"
 msgstr "개인정보 보호"
 
 #. IAR modal: rule-category label grouping privacy violations and impersonation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:74
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:56
 msgid "Privacy or impersonation"
 msgstr "개인 정보 또는 사칭"
 
@@ -24125,17 +24110,17 @@ msgid "Privacy URL"
 msgstr "개인정보처리방침 URL"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:307
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:281
 msgid "Privacy violation"
 msgstr "개인정보 침해"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:319
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:293
 msgid "Privacy violation or doxxing"
 msgstr "개인 정보 침해 또는 신상 털이"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:315
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:289
 msgid "Privacy violation or stalking"
 msgstr "사생활 침해 또는 스토킹"
 
@@ -24292,22 +24277,22 @@ msgid "Profile updated"
 msgstr "프로필 업데이트 완료"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:343
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:317
 msgid "Profile, username, or avatar violation"
 msgstr "프로필, 사용자 이름 또는 아바타 위반"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:203
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:177
 msgid "Promotes hatred against protected groups."
 msgstr "보호 대상 집단에 대한 증오 조장."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:219
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:193
 msgid "Promotes, recruits for, or coordinates violent extremist activity."
 msgstr "폭력적인 극단주의 활동을 조장, 모집 또는 조정합니다."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:371
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:345
 msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "자해 또는 섭식 장애를 조장하거나 지시하는 내용."
 
@@ -24653,7 +24638,7 @@ msgstr "라디오 그룹"
 
 #. IAR modal: rule label.
 #. Report category label for a community coordinating raids (mass harassment of other communities or users). "Raid" is product jargon.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:359
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:333
 #: src/features/moderation/components/report/OptionDescriptors.ts:94
 msgid "Raid coordination"
 msgstr "레이드 조율"
@@ -25354,7 +25339,7 @@ msgid "Remove icon"
 msgstr "아이콘 삭제"
 
 #. IAR modal: quick-action card description for deleting the reported message.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:131
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:105
 msgid "Remove it from the channel for everyone."
 msgstr "모든 사람에게서 채널에서 제거합니다."
 
@@ -25708,13 +25693,8 @@ msgstr "커뮤니티 신고"
 msgid "Report a message"
 msgstr "메시지 신고하기"
 
-#. IAR modal: primary path label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:110
-msgid "Report a platform rule violation"
-msgstr "플랫폼 정책 위반 신고"
-
 #. IAR modal: screen-reader description for the whole modal.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:467
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:441
 msgid "Report a rule violation, or find tools to manage contact and preferences."
 msgstr "규칙 위반을 신고하거나 연락처 및 환경설정 관리 도구를 찾아보세요."
 
@@ -25751,15 +25731,10 @@ msgid "Report message"
 msgstr "메시지 신고"
 
 #. IAR modal: title on the success step shown after a platform report is submitted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:118
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:92
 #: src/features/moderation/components/report/ReportStepComplete.tsx:31
 msgid "Report sent"
 msgstr "신고 완료"
-
-#. IAR modal: community-mod path label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:114
-msgid "Report to the moderators of this community"
-msgstr "이 커뮤니티의 관리자에게 신고"
 
 #. Button or menu action label in the moderation report step selection. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepSelection.tsx:11
@@ -26897,7 +26872,7 @@ msgid "Scale"
 msgstr "크기"
 
 #. IAR modal: rule-category label grouping spam/scams, malware, and harmful misinformation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:82
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:64
 msgid "Scams, malware, or misinformation"
 msgstr "사기, 멀웨어 또는 잘못된 정보"
 
@@ -27765,7 +27740,7 @@ msgstr "선택 항목"
 
 #. IAR modal: rule label.
 #. Report category label for content that promotes or depicts self-harm or suicide. Keep tone calm and respectful; this is a safety surface.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:367
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:341
 #: src/features/moderation/components/report/OptionDescriptors.ts:52
 msgid "Self-harm or suicide"
 msgstr "자해 또는 자살"
@@ -27915,7 +27890,7 @@ msgid "Send messages disabled"
 msgstr "메시지 전송 비활성화됨"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
-#: src/features/moderation/components/report_modal/IARModal.tsx:93
+#: src/features/moderation/components/report_modal/IARModal.tsx:90
 msgid "Send report"
 msgstr "보고서 보내기"
 
@@ -27997,7 +27972,7 @@ msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, 
 msgstr "{PRODUCT_NAME}에서 이 전화번호로 SMS를 보내는 비용이 너무 비싸서, 대신 고객님께서 저희에게 SMS를 보내주셔야 합니다. 불편하시겠지만, <0>{SUPPORT_EMAIL}</0>로 문의하여 이 요구 사항을 해제할 수도 있습니다."
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:295
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:269
 msgid "Sending malware or dangerous links"
 msgstr "악성 코드 또는 위험한 링크 전송"
 
@@ -28473,7 +28448,7 @@ msgid "Share with a friend"
 msgstr "친구에게 공유하기"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:419
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:393
 msgid "Share with community mods."
 msgstr "커뮤니티 운영진과 공유."
 
@@ -28516,7 +28491,7 @@ msgid "Shared window audio"
 msgstr "공유된 창 오디오"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:323
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:297
 msgid "Shares personal info, stalks users, or coordinates privacy abuse."
 msgstr "개인 정보를 공유하거나, 다른 사용자를 스토킹하거나, 개인 정보 침해를 조장합니다."
 
@@ -29489,7 +29464,7 @@ msgid "Slowmode time remaining"
 msgstr "슬로우 모드 남은 시간"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:195
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:169
 msgid "Slurs, dehumanizing language, or attacks on protected groups."
 msgstr "욕설, 비인간적인 언어, 보호 대상 집단에 대한 공격."
 
@@ -29889,12 +29864,12 @@ msgid "Spam or scam community"
 msgstr "스팸 또는 사기성 커뮤니티"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:275
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:249
 msgid "Spam, scam, or phishing account"
 msgstr "스팸, 사기 또는 피싱 계정"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:267
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:241
 msgid "Spam, scams, or phishing"
 msgstr "스팸, 사기 또는 피싱"
 
@@ -30467,7 +30442,7 @@ msgid "Stop hiding muted channels by default?"
 msgstr "기본적으로 숨겨진 채널 표시를 중단할까요?"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:411
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:385
 msgid "Stop messages and friend requests."
 msgstr "메시지 및 친구 요청 중단."
 
@@ -30482,7 +30457,7 @@ msgid "Stop ringing"
 msgstr "벨 울림 중지"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:439
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:413
 msgid "Stop seeing its content and members."
 msgstr "해당 콘텐츠 및 멤버를 더 이상 보지 않습니다."
 
@@ -31191,7 +31166,7 @@ msgid "Tap to add a note"
 msgstr "메모를 추가하려면 탭하세요"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:199
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:173
 msgid "Targets people by protected characteristics."
 msgstr "보호 특성별로 사람들을 타겟팅합니다."
 
@@ -31271,7 +31246,7 @@ msgid "Terms URL"
 msgstr "이용 약관 URL"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:215
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:189
 msgid "Terrorism or violent extremism"
 msgstr "테러 또는 폭력적 극단주의"
 
@@ -32309,7 +32284,7 @@ msgid "This member isn't connected to voice anymore."
 msgstr "이 멤버는 더 이상 음성 채팅에 연결되어 있지 않습니다."
 
 #. IAR modal: tooltip on the delete card when the reported message is already deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:143
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:117
 msgid "This message has already been deleted."
 msgstr "이 메시지는 이미 삭제되었습니다."
 
@@ -32482,7 +32457,7 @@ msgid "This user has no roles in this community."
 msgstr "이 사용자는 이 커뮤니티에서 역할이 없습니다."
 
 #. IAR modal: tooltip on the ban card when the reported user is already banned.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:163
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:137
 msgid "This user is already banned from the community."
 msgstr "이 사용자는 이미 커뮤니티에서 차단되었습니다."
 
@@ -32610,12 +32585,12 @@ msgid "This window updates automatically after we receive your message."
 msgstr "메시지를 받으면 이 창이 자동으로 업데이트됩니다."
 
 #. IAR modal: rule description for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:179
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:153
 msgid "Threats, following across spaces, or unwanted contact."
 msgstr "위협, 다른 공간에서 따라다니기 또는 원치 않는 연락."
 
 #. IAR modal: rule-category label grouping harassment, hate, violence, terrorism, raids, and self-harm content.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:57
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:39
 msgid "Threats, harassment, or harm"
 msgstr "위협, 괴롭힘 또는 피해"
 
@@ -33677,7 +33652,7 @@ msgid "Undeafen yourself"
 msgstr "음소거 해제"
 
 #. IAR modal: child-safety rule label (user reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:102
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:84
 msgid "Underage or child-safety concern"
 msgstr "미성년자 또는 아동 안전 관련 우려"
 
@@ -34290,12 +34265,12 @@ msgid "Unverified email"
 msgstr "인증되지 않은 이메일"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:227
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:201
 msgid "Unwanted conduct or mature content in the wrong place."
 msgstr "부적절한 행동 또는 부적절한 장소에 있는 성인용 콘텐츠입니다."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:235
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:209
 msgid "Unwanted mature conduct, comments, or requests."
 msgstr "원치 않는 성인용 행동, 댓글 또는 요청."
 
@@ -34902,7 +34877,7 @@ msgid "Use native title bar"
 msgstr "기본 제목 표시줄 사용"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:387
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:361
 msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
 msgstr "{productName}의 규칙을 명확히 위반하고 위에 해당하지 않는 경우에만 사용하세요."
 
@@ -35058,7 +35033,7 @@ msgid "User"
 msgstr "사용자"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:251
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:225
 msgid "User appears underage, or is involved in grooming or child exploitation."
 msgstr "사용자가 미성년자로 보이거나, 그루밍 또는 아동 착취와 관련되어 있습니다."
 
@@ -35952,12 +35927,12 @@ msgid "Violation category"
 msgstr "위반 카테고리"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:347
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:321
 msgid "Violation is in the user's profile, not a specific message."
 msgstr "위반 사항이 특정 메시지가 아닌 사용자 프로필에 있습니다."
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:207
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:181
 msgid "Violence or violent threats"
 msgstr "폭력 또는 폭력 위협"
 
@@ -36796,13 +36771,8 @@ msgstr "{username}님, 환영합니다! 여기서 새로운 대화를 시작해 
 msgid "Welcome, {username}. We're happy to have you here."
 msgstr "{username}님, 환영합니다! 함께하게 되어 기쁩니다."
 
-#. IAR modal: accessible label (aria-label only — not shown visually) for the primary-path radio group on step 1.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:36
-msgid "What do you need?"
-msgstr "무엇을 도와드릴까요?"
-
 #. IAR modal: category-step title for the platform-report path. User picks a broad area before drilling in.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:49
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:31
 msgid "What kind of rule was broken?"
 msgstr "어떤 규칙을 위반했나요?"
 
@@ -36909,7 +36879,7 @@ msgid "Which conversations"
 msgstr "대화 선택"
 
 #. IAR modal: reason-step title for the platform-report path after a category has been picked.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:53
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:35
 msgid "Which rule was broken?"
 msgstr "어떤 규칙을 위반했나요?"
 

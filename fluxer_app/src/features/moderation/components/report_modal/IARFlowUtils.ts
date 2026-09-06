@@ -7,7 +7,6 @@ import type {
 } from '@fluxer/schema/src/domains/report/ReportSchemas';
 
 export type IARReportContextType = 'message' | 'user' | 'guild';
-export type IARPrimaryPath = 'platform' | 'community' | 'preference';
 export type IARRuleReasonId =
 	| 'harassment'
 	| 'hate'

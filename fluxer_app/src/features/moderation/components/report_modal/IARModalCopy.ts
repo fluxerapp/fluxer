@@ -3,7 +3,6 @@
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {
-	type IARPrimaryPath,
 	type IARReportContextType,
 	type IARRuleCategoryId,
 	type IARRuleReasonId,
@@ -21,23 +20,6 @@ import {BLOCK_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessage
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-const I_DON_T_LIKE_THIS_CONTENT_DESCRIPTOR = msg({
-	message: "I don't like this content",
-	comment: 'IAR modal: preference path option label for a message report.',
-});
-const I_DON_T_LIKE_THIS_USER_DESCRIPTOR = msg({
-	message: "I don't like this user",
-	comment: 'IAR modal: preference path option label for a user report.',
-});
-const I_DON_T_LIKE_THIS_COMMUNITY_DESCRIPTOR = msg({
-	message: "I don't like this community",
-	comment: 'IAR modal: preference path option label for a community report.',
-});
-const WHAT_DO_YOU_NEED_DESCRIPTOR = msg({
-	message: 'What do you need?',
-	comment:
-		'IAR modal: accessible label (aria-label only — not shown visually) for the primary-path radio group on step 1.',
-});
 const FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR = msg({
 	message: 'Finish account setup first',
 	comment: 'IAR modal: title of the account-not-ready notice.',
@@ -106,14 +88,6 @@ const CHILD_SAFETY_USER_DESCRIPTOR = msg({
 const USE_CHILD_SAFETY_INSTEAD_DESCRIPTOR = msg({
 	message: 'If a minor is involved, use "{childSafetyReasonName}" instead.',
 	comment: 'IAR modal: inline routing hint shown under reasons that overlap with child safety.',
-});
-const REPORT_A_PLATFORM_RULE_VIOLATION_DESCRIPTOR = msg({
-	message: 'Report a platform rule violation',
-	comment: 'IAR modal: primary path label.',
-});
-const REPORT_TO_COMMUNITY_MODS_PATH_DESCRIPTOR = msg({
-	message: 'Report to the moderators of this community',
-	comment: 'IAR modal: community-mod path label.',
 });
 const REPORT_SENT_TITLE_DESCRIPTOR = msg({
 	message: 'Report sent',
@@ -473,23 +447,8 @@ function shouldShowContactSettings(context: IARContext): boolean {
 	return context.type !== 'guild';
 }
 
-function getPreferenceOptionName(i18n: I18n, context: IARContext): string {
-	switch (context.type) {
-		case 'message':
-			return i18n._(I_DON_T_LIKE_THIS_CONTENT_DESCRIPTOR);
-		case 'user':
-			return i18n._(I_DON_T_LIKE_THIS_USER_DESCRIPTOR);
-		case 'guild':
-			return i18n._(I_DON_T_LIKE_THIS_COMMUNITY_DESCRIPTOR);
-	}
-}
-
 export function getIARModalDescription(i18n: I18n): string {
 	return i18n._(MODAL_DESCRIPTION_DESCRIPTOR);
-}
-
-export function getIARPathTitle(i18n: I18n): string {
-	return i18n._(WHAT_DO_YOU_NEED_DESCRIPTOR);
 }
 
 export function getIARReportEligibilityCopy(i18n: I18n): IARCopyBlock {
@@ -577,30 +536,6 @@ export function getIARChildSafetyRoutingNote(
 		case 'raid_coordination':
 			return null;
 	}
-}
-
-export function getIARPrimaryOptions(
-	i18n: I18n,
-	context: IARContext,
-	resolvedContext: IARResolvedContext,
-): Array<IARRadioOption<IARPrimaryPath>> {
-	const options: Array<IARRadioOption<IARPrimaryPath>> = [
-		{
-			value: 'platform',
-			name: i18n._(REPORT_A_PLATFORM_RULE_VIOLATION_DESCRIPTOR),
-		},
-	];
-	if (resolvedContext.hasCommunityContext) {
-		options.push({
-			value: 'community',
-			name: i18n._(REPORT_TO_COMMUNITY_MODS_PATH_DESCRIPTOR),
-		});
-	}
-	options.push({
-		value: 'preference',
-		name: getPreferenceOptionName(i18n, context),
-	});
-	return options;
 }
 
 function getMessageRuleReasonOptions(i18n: I18n): Array<IARRadioOption<IARRuleReasonId>> {
@@ -781,7 +716,6 @@ export function getIARSpecialSafetyNote(i18n: I18n, selectedReason: IARRuleReaso
 export interface IARActionCardsOptions {
 	isMessageDeleted?: boolean;
 	isUserBanned?: boolean;
-	includeModerationActions?: boolean;
 }
 
 export function getIARActionCards(
@@ -792,7 +726,7 @@ export function getIARActionCards(
 	options: IARActionCardsOptions = {},
 ): Array<IARActionCardConfig> {
 	const cards: Array<IARActionCardConfig> = [];
-	const {isMessageDeleted = false, isUserBanned = false, includeModerationActions = true} = options;
+	const {isMessageDeleted = false, isUserBanned = false} = options;
 	if (!resolvedContext.isReportedUserBlocked && resolvedContext.reportedUser !== null) {
 		cards.push({
 			id: 'block-user',
@@ -833,7 +767,7 @@ export function getIARActionCards(
 			onClick: handlers.onLeaveCommunity,
 		});
 	}
-	if (includeModerationActions && resolvedContext.canDeleteReportedMessage) {
+	if (resolvedContext.canDeleteReportedMessage) {
 		const deleteDisabled = isMessageDeleted;
 		cards.push({
 			id: 'delete-message',
@@ -846,7 +780,7 @@ export function getIARActionCards(
 			disabledTooltip: deleteDisabled ? i18n._(ALREADY_DELETED_TOOLTIP_DESCRIPTOR) : undefined,
 		});
 	}
-	if (includeModerationActions && resolvedContext.canBanReportedUser) {
+	if (resolvedContext.canBanReportedUser) {
 		const banDisabled = isUserBanned;
 		cards.push({
 			id: 'ban-user',

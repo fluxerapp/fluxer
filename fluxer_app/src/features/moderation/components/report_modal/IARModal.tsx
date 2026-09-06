@@ -22,7 +22,6 @@ import {BanMemberModal} from '@app/features/moderation/components/modals/BanMemb
 import {IARActionCards} from '@app/features/moderation/components/report_modal/IARActionCards';
 import {
 	getReportCategoryForReason,
-	type IARPrimaryPath,
 	type IARRuleCategoryId,
 	type IARRuleReasonId,
 } from '@app/features/moderation/components/report_modal/IARFlowUtils';
@@ -33,8 +32,6 @@ import {
 	getIARCategoryTitle,
 	getIARChildSafetyRoutingNote,
 	getIARModalDescription,
-	getIARPathTitle,
-	getIARPrimaryOptions,
 	getIARReasonTitle,
 	getIARReportEligibilityCopy,
 	getIARRuleCategoryOptions,
@@ -104,18 +101,16 @@ interface IARModalProps {
 }
 
 const logger = new Logger('IARModal');
-const STEP_ORDER: ReadonlyArray<IARStep> = ['path', 'category', 'reason', 'guidance', 'success'];
+const STEP_ORDER: ReadonlyArray<IARStep> = ['category', 'reason', 'success'];
 export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 	const {i18n} = useLingui();
 	const leaveGuild = useLeaveGuild();
-	const [step, setStep] = useState<IARStep>('path');
-	const [selectedPath, setSelectedPath] = useState<IARPrimaryPath | null>(null);
+	const [step, setStep] = useState<IARStep>('category');
 	const [selectedCategory, setSelectedCategory] = useState<IARRuleCategoryId | null>(null);
 	const [selectedReason, setSelectedReason] = useState<IARRuleReasonId | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const canSubmitPlatformReport = canSubmitReport();
 	const resolvedContext = resolveIARModalContext(i18n, context);
-	const primaryOptions = getIARPrimaryOptions(i18n, context, resolvedContext);
 	const ruleCategoryOptions = getIARRuleCategoryOptions(i18n);
 	const ruleReasonOptions = getIARRuleReasonOptions(i18n, context.type, selectedCategory);
 	const childSafetyRoutingNote = getIARChildSafetyRoutingNote(i18n, context.type, selectedReason);
@@ -241,67 +236,38 @@ export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 		onDeleteMessage: handleDeleteMessage,
 		onBanUser: handleBanUser,
 	};
-	const guidanceActionCards = getIARActionCards(i18n, context, resolvedContext, actionHandlers, {
-		includeModerationActions: false,
-	});
 	const successActionCards = getIARActionCards(i18n, context, resolvedContext, actionHandlers, {
 		isMessageDeleted,
 		isUserBanned: isUserKnownBanned,
-		includeModerationActions: true,
 	});
 	const handleBack = useCallback(() => {
 		switch (step) {
-			case 'path':
-				closeModal();
-				return;
 			case 'category':
-			case 'guidance':
-				setStep('path');
+			case 'success':
+				closeModal();
 				return;
 			case 'reason':
 				setSelectedReason(null);
 				setStep('category');
 				return;
-			case 'success':
-				closeModal();
-				return;
 		}
 	}, [closeModal, step]);
 	const handleContinue = useCallback(() => {
-		if (step === 'path') {
-			if (selectedPath === null) {
-				showModerationErrorModal(
-					i18n,
-					() => i18n._(PICK_AN_OPTION_TO_CONTINUE_DESCRIPTOR),
-					'moderation.iar-modal.path-required-error-modal',
-				);
-				return;
-			}
-			if (selectedPath === 'platform') {
-				if (!canSubmitPlatformReport) {
-					showReportRestrictionDialog();
-					return;
-				}
-				setStep('category');
-				return;
-			}
-			setStep('guidance');
+		if (selectedCategory === null) {
+			showModerationErrorModal(
+				i18n,
+				() => i18n._(PICK_AN_OPTION_TO_CONTINUE_DESCRIPTOR),
+				'moderation.iar-modal.category-required-error-modal',
+			);
 			return;
 		}
-		if (step === 'category') {
-			if (selectedCategory === null) {
-				showModerationErrorModal(
-					i18n,
-					() => i18n._(PICK_AN_OPTION_TO_CONTINUE_DESCRIPTOR),
-					'moderation.iar-modal.category-required-error-modal',
-				);
-				return;
-			}
-			setSelectedReason(null);
-			setStep('reason');
+		if (!canSubmitPlatformReport) {
+			showReportRestrictionDialog();
 			return;
 		}
-	}, [canSubmitPlatformReport, i18n, selectedCategory, selectedPath, step]);
+		setSelectedReason(null);
+		setStep('reason');
+	}, [canSubmitPlatformReport, i18n, selectedCategory]);
 	const handleSubmit = useCallback(async () => {
 		if (!canSubmitPlatformReport) {
 			showReportRestrictionDialog();
@@ -336,49 +302,6 @@ export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 			setSubmitting(false);
 		}
 	}, [canSubmitPlatformReport, context, i18n, reportCategory, selectedReason]);
-	const renderPathStep = () => (
-		<div className={styles.step} data-flx="moderation.iar-modal.render-path-step.step">
-			<IARModalPreview
-				context={context}
-				currentChannel={resolvedContext.currentChannel}
-				data-flx="moderation.iar-modal.render-path-step.iar-modal-preview"
-			/>
-			{!canSubmitPlatformReport && (
-				<div className={styles.notice} data-flx="moderation.iar-modal.render-path-step.notice">
-					<div
-						className={styles.noticeTitle}
-						data-flx="moderation.report-modal.iar-modal.render-path-step.notice-title"
-					>
-						{reportEligibilityCopy.title}
-					</div>
-					<div className={styles.noticeText} data-flx="moderation.report-modal.iar-modal.render-path-step.notice-text">
-						{reportEligibilityCopy.body}
-					</div>
-					<div
-						className={styles.noticeActions}
-						data-flx="moderation.report-modal.iar-modal.render-path-step.notice-actions"
-					>
-						<Button
-							variant="secondary"
-							small
-							fitContent
-							onClick={handleOpenReportEligibility}
-							data-flx="moderation.iar-modal.render-path-step.button.open-report-eligibility"
-						>
-							{i18n._(FINISH_ACCOUNT_SETUP_DESCRIPTOR)}
-						</Button>
-					</div>
-				</div>
-			)}
-			<RadioGroup<IARPrimaryPath>
-				options={primaryOptions}
-				value={selectedPath}
-				onChange={setSelectedPath}
-				aria-label={getIARPathTitle(i18n)}
-				data-flx="moderation.iar-modal.render-path-step.radio-group.set-selected-path"
-			/>
-		</div>
-	);
 	const renderCategoryStep = () => (
 		<div className={styles.step} data-flx="moderation.iar-modal.render-category-step.step">
 			<h2 className={styles.stepTitle} data-flx="moderation.iar-modal.render-category-step.step-title">
@@ -389,6 +312,36 @@ export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 				currentChannel={resolvedContext.currentChannel}
 				data-flx="moderation.iar-modal.render-category-step.iar-modal-preview"
 			/>
+			{!canSubmitPlatformReport && (
+				<div className={styles.notice} data-flx="moderation.iar-modal.render-category-step.notice">
+					<div
+						className={styles.noticeTitle}
+						data-flx="moderation.report-modal.iar-modal.render-category-step.notice-title"
+					>
+						{reportEligibilityCopy.title}
+					</div>
+					<div
+						className={styles.noticeText}
+						data-flx="moderation.report-modal.iar-modal.render-category-step.notice-text"
+					>
+						{reportEligibilityCopy.body}
+					</div>
+					<div
+						className={styles.noticeActions}
+						data-flx="moderation.report-modal.iar-modal.render-category-step.notice-actions"
+					>
+						<Button
+							variant="secondary"
+							small
+							fitContent
+							onClick={handleOpenReportEligibility}
+							data-flx="moderation.iar-modal.render-category-step.button.open-report-eligibility"
+						>
+							{i18n._(FINISH_ACCOUNT_SETUP_DESCRIPTOR)}
+						</Button>
+					</div>
+				</div>
+			)}
 			<RadioGroup<IARRuleCategoryId>
 				options={ruleCategoryOptions}
 				value={selectedCategory}
@@ -427,17 +380,6 @@ export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 			)}
 		</div>
 	);
-	const renderGuidanceStep = () => {
-		if (selectedPath === null || selectedPath === 'platform') return null;
-		return (
-			<div className={styles.step} data-flx="moderation.iar-modal.render-guidance-step.step">
-				<IARActionCards
-					cards={guidanceActionCards}
-					data-flx="moderation.iar-modal.render-guidance-step.iar-action-cards"
-				/>
-			</div>
-		);
-	};
 	const renderSuccessStep = () => {
 		const successCopy = getIARSuccessCopy(i18n);
 		return (
@@ -457,40 +399,26 @@ export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 	};
 	const renderStep = (): React.ReactNode => {
 		switch (step) {
-			case 'path':
-				return renderPathStep();
 			case 'category':
 				return renderCategoryStep();
 			case 'reason':
 				return renderReasonStep();
-			case 'guidance':
-				return renderGuidanceStep();
 			case 'success':
 				return renderSuccessStep();
 		}
 	};
 	const getSecondaryFooterLabel = (): string => {
-		return step === 'path' ? i18n._(CANCEL_DESCRIPTOR) : i18n._(BACK_DESCRIPTOR);
+		return step === 'category' ? i18n._(CANCEL_DESCRIPTOR) : i18n._(BACK_DESCRIPTOR);
 	};
 	const showSecondaryFooterButton = step !== 'success';
 	const renderPrimaryFooterButton = () => {
 		switch (step) {
-			case 'path':
-				return (
-					<Button
-						onClick={handleContinue}
-						disabled={selectedPath === null || submitting}
-						data-flx="moderation.iar-modal.render-primary-footer-button.button.continue"
-					>
-						{i18n._(CONTINUE_DESCRIPTOR)}
-					</Button>
-				);
 			case 'category':
 				return (
 					<Button
 						onClick={handleContinue}
 						disabled={selectedCategory === null || submitting}
-						data-flx="moderation.iar-modal.render-primary-footer-button.button.continue-category"
+						data-flx="moderation.iar-modal.render-primary-footer-button.button.continue"
 					>
 						{i18n._(CONTINUE_DESCRIPTOR)}
 					</Button>
@@ -506,7 +434,6 @@ export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 						{i18n._(SEND_REPORT_DESCRIPTOR)}
 					</Button>
 				);
-			case 'guidance':
 			case 'success':
 				return (
 					<Button

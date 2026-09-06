@@ -2088,7 +2088,7 @@ msgid "Account data"
 msgstr "Kontodata"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:279
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:253
 msgid "Account exists to spam, scam, or abuse the platform."
 msgstr "Kontot finns för att skräpposta, lura eller missbruka plattformen."
 
@@ -3551,7 +3551,7 @@ msgid "Another checkbox"
 msgstr "Ännu en kryssruta"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:383
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:357
 msgid "Another clear rule violation"
 msgstr "Ännu en tydlig regelöverträdelse"
 
@@ -4583,7 +4583,7 @@ msgstr "Borta just nu"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:354
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:375
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:395
-#: src/features/moderation/components/report_modal/IARModal.tsx:89
+#: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/user/components/modals/PhoneAddModal.tsx:411
 #: src/features/user/components/modals/PhoneAddModal.tsx:430
@@ -4732,7 +4732,7 @@ msgstr "Balanserad"
 
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:155
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:129
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts:5
 msgid "Ban"
 msgstr "Banna"
@@ -4778,7 +4778,7 @@ msgid "Ban members"
 msgstr "Banna medlemmar"
 
 #. IAR modal: quick-action card title for banning the reported user (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:147
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:121
 msgid "Ban this user"
 msgstr "Banna den här användaren"
 
@@ -4788,7 +4788,7 @@ msgid "Bandwidth"
 msgstr "Bandbredd"
 
 #. IAR modal: disabled-state label on the ban card after the user is banned from this community.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:159
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:133
 msgid "Banned"
 msgstr "Bannad"
 
@@ -5003,7 +5003,7 @@ msgid "Block spoiler"
 msgstr "Blockera spoiler"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:407
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:381
 msgid "Block this user"
 msgstr "Blockera den här användaren"
 
@@ -5371,12 +5371,12 @@ msgid "Bulk delete"
 msgstr "Massradera"
 
 #. IAR modal: rule description for a message report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:171
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:145
 msgid "Bullying, repeated unwanted contact, stalking, or targeted abuse."
 msgstr "Mobbning, upprepad oönskad kontakt, förföljelse eller riktade trakasserier."
 
 #. IAR modal: rule-category description for the targeted-harm group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:62
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:44
 msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
 msgstr "Mobbning, hot, hat, våld, raider eller innehåll som uppmuntrar till självskadebeteende."
 
@@ -5464,7 +5464,7 @@ msgid "Call"
 msgstr "Samtal"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:459
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:433
 msgid "Call & group chat settings"
 msgstr "Samtals- och gruppchattinställningar"
 
@@ -6092,12 +6092,12 @@ msgid "Change what users without \"{readMessageHistoryPermissionLabel}\" can see
 msgstr "Ändra vad användare utan \"{readMessageHistoryPermissionLabel}\" kan se"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:463
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:437
 msgid "Change who can call or add you."
 msgstr "Ändra vem som kan ringa eller lägga till dig."
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:451
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:425
 msgid "Change who can reach you."
 msgstr "Ändra vem som kan nå dig."
 
@@ -6524,12 +6524,12 @@ msgid "Child safety concerns"
 msgstr "Oro för barns säkerhet"
 
 #. IAR modal: child-safety rule label (message and guild reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:98
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:80
 msgid "Child safety or exploitation of minors"
 msgstr "Barnsäkerhet eller exploatering av minderåriga"
 
 #. IAR modal: rule-category label grouping child-safety and mature-content reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:66
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:48
 msgid "Child safety or mature content"
 msgstr "Barnsäkerhet eller vuxeninnehåll"
 
@@ -6852,7 +6852,7 @@ msgid "Claim your account"
 msgstr "Gör anspråk på ditt konto"
 
 #. IAR modal: body of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:45
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:27
 msgid "Claim your account and verify your email to send reports."
 msgstr "Gör anspråk på ditt konto och verifiera din e-postadress för att skicka rapporter."
 
@@ -6940,7 +6940,7 @@ msgid "Claim your gift to activate your {premiumProductName} subscription!"
 msgstr "Aktivera din gåva för att få tillgång till ditt {premiumProductName}-abonnemang!"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:339
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:313
 msgid "Claiming to be another person, brand, or organization."
 msgstr "Utger sig för att vara en annan person, ett varumärke eller en organisation."
 
@@ -7297,7 +7297,7 @@ msgid "Close popout"
 msgstr "Stäng minispelaren"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:427
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:401
 msgid "Close this DM"
 msgstr "Stäng den här chatten"
 
@@ -7324,7 +7324,7 @@ msgid "Close window"
 msgstr "Stäng fönstret"
 
 #. Confirmation copy in the IAR modal for the Close DM quick action. Reassures the user the action is not destructive.
-#: src/features/moderation/components/report_modal/IARModal.tsx:68
+#: src/features/moderation/components/report_modal/IARModal.tsx:65
 msgid "Close your current DM with {dmDisplayName}. This does not block the user, and you can reopen the DM later."
 msgstr "Stäng ditt nuvarande DM med {dmDisplayName}. Detta blockerar inte användaren, och du kan öppna DM:et igen senare."
 
@@ -7680,12 +7680,12 @@ msgid "Community DM"
 msgstr "DM för community"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:283
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:257
 msgid "Community exists to spam, scam, or abuse the platform."
 msgstr "Gruppen finns för att spamma, lura eller missbruka plattformen."
 
 #. IAR modal: rule description for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:187
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:161
 msgid "Community facilitates pile-ons or targeted abuse."
 msgstr "Gemenskapen underlättar påhopp eller riktade trakasserier."
 
@@ -8425,7 +8425,7 @@ msgid "Converts incoming content to speech, regardless of whether it came from /
 msgstr "Konverterar inkommande innehåll till tal, oavsett om det kom från /tts."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:363
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:337
 msgid "Coordinates raids, brigading, or harassment against people or communities."
 msgstr "Koordinerar räder, brigader eller trakasserier mot personer eller grupper."
 
@@ -8461,7 +8461,7 @@ msgstr "URL kopierad till urklipp"
 #: src/features/app/components/dialogs/shared/CopyLinkSection.tsx:11
 #: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:423
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:397
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:71
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
@@ -8682,7 +8682,7 @@ msgstr "Kopiera meddelande-ID"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:518
 #: src/features/input/state/input_keybind/shared.ts:273
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:415
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:389
 msgid "Copy message link"
 msgstr "Kopiera meddelandelänk"
 
@@ -9190,7 +9190,7 @@ msgid "Couldn't send invite. Try again."
 msgstr "Kunde inte skicka inbjudan. Försök igen."
 
 #. Error toast in the IAR modal when the report submission fails. Keep tone plain and short.
-#: src/features/moderation/components/report_modal/IARModal.tsx:81
+#: src/features/moderation/components/report_modal/IARModal.tsx:78
 msgid "Couldn't send it. Try again."
 msgstr "Kunde inte skicka. Försök igen."
 
@@ -9605,7 +9605,7 @@ msgid "Credentials"
 msgstr "Inloggningsuppgifter"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:211
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:185
 msgid "Credible threats, graphic violence, or glorification of violence."
 msgstr "Trovärdiga hot, grafiskt våld eller förhärligande av våld."
 
@@ -10396,7 +10396,7 @@ msgstr "Standardinställningen är av på mobila enheter för att spara batteri 
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
 #: src/features/messaging/commands/MessageCommands.tsx:77
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:135
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
@@ -10623,7 +10623,7 @@ msgid "Delete this invite? Can't be undone."
 msgstr "Ta bort den här inbjudan? Det går inte att ångra."
 
 #. IAR modal: quick-action card title for deleting the reported message (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:127
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:101
 msgid "Delete this message"
 msgstr "Ta bort det här meddelandet"
 
@@ -10663,7 +10663,7 @@ msgid "Delete your messages in this conversation?"
 msgstr "Ta bort dina meddelanden i den här konversationen?"
 
 #. IAR modal: disabled-state label on the delete card after the message has been deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:139
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:113
 msgid "Deleted"
 msgstr "Borttagen"
 
@@ -11529,7 +11529,7 @@ msgid "Display scaling"
 msgstr "Skärmskalning"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:303
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:277
 msgid "Distributes malware, credential theft, or harmful files."
 msgstr "Sprider skadlig programvara, stjäl inloggningsuppgifter eller skadliga filer."
 
@@ -11539,7 +11539,7 @@ msgid "DM"
 msgstr "DM"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:447
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:421
 msgid "DM & friend request settings"
 msgstr "Inställningar för DM och vänförfrågningar"
 
@@ -11665,7 +11665,7 @@ msgid "Doesn't allow being added to group DMs"
 msgstr "Kan inte läggas till i grupp-DM"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:431
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:405
 msgid "Doesn't block. You can reopen later."
 msgstr "Blockerar inte. Du kan öppna igen senare."
 
@@ -11736,7 +11736,7 @@ msgstr "Föreslå inte {deviceName} igen"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:54
 #: src/features/input/components/KeybindRecorder.tsx:470
-#: src/features/moderation/components/report_modal/IARModal.tsx:97
+#: src/features/moderation/components/report_modal/IARModal.tsx:94
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
 #: src/features/search/components/search/HasFilterSheet.tsx:206
@@ -11879,12 +11879,12 @@ msgid "Downloading desktop update…"
 msgstr "Laddar ner skrivbordsuppdatering…"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:311
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:285
 msgid "Doxxing, exposed private info, or stalking."
 msgstr "Doxning, utlämnad privat information eller förföljelse."
 
 #. IAR modal: rule-category description for the privacy / impersonation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:78
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:60
 msgid "Doxxing, stalking, pretending to be someone, or an inappropriate profile."
 msgstr "Doxning, förföljelse, utge sig för att vara någon annan eller en olämplig profil."
 
@@ -12890,12 +12890,12 @@ msgid "Encoder, SVC, backup stream, and bitrate presets"
 msgstr "Kodare, SVC, reservström och förinställningar för bithastighet"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:375
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:349
 msgid "Encourages self-harm"
 msgstr "Uppmuntrar till självskadebeteende"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:379
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:353
 msgid "Encourages suicide, self-harm, or eating disorders."
 msgstr "Uppmuntrar till självmord, självskadebeteende eller ätstörningar."
 
@@ -12933,7 +12933,7 @@ msgid "End-to-end encryption is unavailable because an unsupported participant i
 msgstr "End-to-end-kryptering är inte tillgänglig eftersom en deltagare som inte stöds är med i röstkanalen."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:255
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:229
 msgid "Endangers minors or hosts child-exploitation content."
 msgstr "Utsätter minderåriga för fara eller innehåller barnexploaterande innehåll."
 
@@ -14042,7 +14042,7 @@ msgid "Failed to upload emojis. Try again."
 msgstr "Det gick inte att ladda upp emojier. Försök igen."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:263
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:237
 msgid "False claims likely to cause real-world harm."
 msgstr "Falska påståenden som sannolikt orsakar verklig skada."
 
@@ -14326,12 +14326,12 @@ msgid "Fingerprint"
 msgstr "Fingeravtryck"
 
 #. Button label in the IAR modal that opens the account-setup flow.
-#: src/features/moderation/components/report_modal/IARModal.tsx:85
+#: src/features/moderation/components/report_modal/IARModal.tsx:82
 msgid "Finish account setup"
 msgstr "Slutför kontoinställningarna"
 
 #. IAR modal: title of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:41
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:23
 msgid "Finish account setup first"
 msgstr "Slutför kontoinställningen först"
 
@@ -15536,7 +15536,7 @@ msgid "Grid view"
 msgstr "Rutnätsvy"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:247
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:221
 msgid "Grooming or child-exploitation content."
 msgstr "Grooming eller innehåll som utnyttjar barn."
 
@@ -15706,7 +15706,7 @@ msgid "Harassment"
 msgstr "Trakasserier"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:231
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:205
 msgid "Harassment involving mature content"
 msgstr "Trakasserier som involverar vuxet innehåll"
 
@@ -15716,17 +15716,17 @@ msgid "Harassment or bullying"
 msgstr "Trakasserier eller mobbning"
 
 #. IAR modal: rule label for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:175
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:149
 msgid "Harassment or stalking"
 msgstr "Trakasserier eller förföljelse"
 
 #. IAR modal: rule label for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:183
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:157
 msgid "Harassment or targeted abuse"
 msgstr "Trakasserier eller riktade övergrepp"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:167
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:141
 msgid "Harassment or threats"
 msgstr "Trakasserier eller hot"
 
@@ -15760,7 +15760,7 @@ msgid "Hardware-accelerated on most Windows and macOS systems. Reliable for olde
 msgstr "Maskinvaruaccelererat på de flesta Windows- och macOS-system. Pålitligt för äldre enheter."
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:259
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:233
 msgid "Harmful misinformation"
 msgstr "Skadlig desinformation"
 
@@ -15785,7 +15785,7 @@ msgstr "Har någonsin köpt åsidosättning"
 
 #. IAR modal: rule label.
 #. Report category label for hate speech. Keep tone plain and neutral.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:191
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:165
 #: src/features/moderation/components/report/OptionDescriptors.ts:28
 msgid "Hate speech"
 msgstr "Hatret"
@@ -16311,21 +16311,6 @@ msgstr "Jag är en knappbeskrivning"
 msgid "I changed my mind"
 msgstr "Jag ångrade mig"
 
-#. IAR modal: preference path option label for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:32
-msgid "I don't like this community"
-msgstr "Jag gillar inte den här communityn"
-
-#. IAR modal: preference path option label for a message report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:24
-msgid "I don't like this content"
-msgstr "Jag gillar inte det här innehållet"
-
-#. IAR modal: preference path option label for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:28
-msgid "I don't like this user"
-msgstr "Jag gillar inte den här användaren"
-
 #. Secondary button in the required-action modal. Opens recovery options for the current verification step.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:166
 msgid "I need another way"
@@ -16388,7 +16373,7 @@ msgid "If {pixPaymentMethod} is unavailable or you prefer standard pricing, you 
 msgstr "Om {pixPaymentMethod} inte är tillgängligt eller om du föredrar standardprissättning kan du när som helst byta till USD."
 
 #. IAR modal: inline routing hint shown under reasons that overlap with child safety.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:106
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:88
 msgid "If a minor is involved, use \"{childSafetyReasonName}\" instead."
 msgstr "Om en minderårig är inblandad, använd \"{childSafetyReasonName}\" istället."
 
@@ -16398,7 +16383,7 @@ msgid "If recurring {upiPaymentMethod} is unavailable or you prefer standard pri
 msgstr "Om återkommande {upiPaymentMethod} inte är tillgängligt eller om du föredrar standardpriser kan du när som helst byta till USD."
 
 #. IAR modal: inline safety note for self-harm reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:395
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:369
 msgid "If someone may be in immediate danger, contact local emergency services if you can do so safely."
 msgstr "Om någon kan vara i omedelbar fara, kontakta lokala räddningstjänster om du kan göra det på ett säkert sätt."
 
@@ -16408,17 +16393,17 @@ msgid "If someone told you to paste something here, it is a scam that can hand t
 msgstr "Om någon ber dig att klistra in något här är det en bluff som kan ge dem tillgång till ditt {productName}-konto."
 
 #. IAR modal: inline safety note shown for child-safety reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:391
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:365
 msgid "If this involves CSAM or exploitation of a minor, send it now and don't reshare the material."
 msgstr "Om detta involverar CSAM eller exploatering av en minderårig, skicka det nu och dela inte materialet igen."
 
 #. IAR modal: inline safety note for violence reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:399
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:373
 msgid "If this is a credible imminent threat, contact local emergency services too."
 msgstr "Om detta är ett trovärdigt omedelbart hot, kontakta även lokal räddningstjänst."
 
 #. IAR modal: inline safety note for terrorism reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:403
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:377
 msgid "If this is an imminent terrorist threat, contact local emergency services too."
 msgstr "Om det här är ett överhängande terrorhot, kontakta även lokala räddningstjänster."
 
@@ -16545,23 +16530,23 @@ msgstr "Ignorera virtuella"
 
 #. IAR modal: rule label.
 #. Report category label for content describing or coordinating illegal activity. Keep tone plain.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:351
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:325
 #: src/features/moderation/components/report/OptionDescriptors.ts:44
 msgid "Illegal activity"
 msgstr "Olaglig aktivitet"
 
 #. IAR modal: rule-category label grouping illegal activity and the catch-all "Other" option.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:90
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:72
 msgid "Illegal activity or something else"
 msgstr "Olaglig aktivitet eller något annat"
 
 #. IAR modal: rule-category description for the illegal / other group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:94
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:76
 msgid "Illegal sales, criminal facilitation, or a clear rule violation that doesn't fit above."
 msgstr "Olaga försäljning, medhjälp till brott eller en tydlig regelöverträdelse som inte passar in ovan."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:355
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:329
 msgid "Illegal sales, criminal facilitation, or unlawful activity."
 msgstr "Olaga försäljning, medhjälp till brott eller olaglig verksamhet."
 
@@ -16660,13 +16645,13 @@ msgstr "Bilder som klistras in från urklipp skickas som bilagor, och du har int
 
 #. IAR modal: rule label.
 #. Report category label for a user impersonating another person or brand.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:327
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:301
 #: src/features/moderation/components/report/OptionDescriptors.ts:66
 msgid "Impersonation"
 msgstr "Imitation"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:331
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:305
 msgid "Impersonation or deceptive media"
 msgstr "Imitation eller vilseledande media"
 
@@ -18095,7 +18080,7 @@ msgid "Learn more"
 msgstr "Läs mer"
 
 #. IAR modal: quick-action card button label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:443
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:417
 msgid "Leave"
 msgstr "Lämna"
 
@@ -18140,7 +18125,7 @@ msgid "Leave silently"
 msgstr "Lämna tyst"
 
 #. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:435
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:409
 msgid "Leave the community"
 msgstr "Lämna communityn"
 
@@ -18805,18 +18790,18 @@ msgstr "Malta"
 
 #. IAR modal: rule label.
 #. Report category label for a community distributing malware or malicious software.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:299
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:273
 #: src/features/moderation/components/report/OptionDescriptors.ts:103
 msgid "Malware distribution"
 msgstr "Distribution av skadlig programvara"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:287
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:261
 msgid "Malware or dangerous links"
 msgstr "Skadlig programvara eller farliga länkar"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:291
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:265
 msgid "Malware, credential theft, or harmful files."
 msgstr "Skadlig programvara, stöld av inloggningsuppgifter eller skadliga filer."
 
@@ -19088,7 +19073,7 @@ msgid "Mask Visionary as subscription"
 msgstr "Maskera Visionary som prenumeration"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:271
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:245
 msgid "Mass spam, fraud, fake giveaways, or account abuse."
 msgstr "Massutskick av spam, bedrägerier, falska utlottningar eller missbruk av konton."
 
@@ -19170,12 +19155,12 @@ msgid "Mature content not allowed"
 msgstr "Vuxeninnehåll är inte tillåtet"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:223
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:197
 msgid "Mature content or harassment"
 msgstr "Vuxet innehåll eller trakasserier"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:239
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:213
 msgid "Mature content or unsafe gating"
 msgstr "Vuxet innehåll eller osäker åtkomstkontroll"
 
@@ -19190,7 +19175,7 @@ msgid "Mature content policy violation"
 msgstr "Brott mot policy för vuxet innehåll"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:243
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:217
 msgid "Mature content without proper gating."
 msgstr "Vuxeninnehåll utan korrekt spärr."
 
@@ -20000,7 +19985,7 @@ msgid "Minimum lifetime (days)"
 msgstr "Minimal livslängd (dagar)"
 
 #. IAR modal: rule-category description for the child-safety / mature-content group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:70
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:52
 msgid "Minors at risk, mature content in the wrong place, or unwanted conduct."
 msgstr "Minderåriga i riskzonen, olämpligt innehåll på fel plats eller oönskat beteende."
 
@@ -22172,7 +22157,7 @@ msgstr "Opacitet"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
 #: src/features/app/components/setup/SetupWizardSteps.tsx:154
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:455
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:429
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
 msgstr "Öppna"
@@ -22572,7 +22557,7 @@ msgid "Open template JSON"
 msgstr "Öppna mall-JSON"
 
 #. IAR modal: quick-action card description for banning the reported user.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:151
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:125
 msgid "Open the ban dialog for this community."
 msgstr "Öppna bannlysningsdialogen för den här communityn."
 
@@ -22816,7 +22801,7 @@ msgid "Our phone number check is down right now. This is on us, not your number.
 msgstr "Vår kontroll av telefonnummer är nere just nu. Det är vårt fel, inte ditt nummer. Vänta några minuter och försök med samma nummer igen."
 
 #. IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:122
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:96
 msgid "Our safety team is reviewing it. We'll send you a DM and email once we've reached a verdict."
 msgstr "Vårt säkerhetsteam granskar det. Vi skickar ett DM och e-postmeddelande till dig när vi har fattat ett beslut."
 
@@ -23331,7 +23316,7 @@ msgid "PgUp"
 msgstr "PgUp"
 
 #. IAR modal: rule-category description for the scams / malware / misinformation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:86
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:68
 msgid "Phishing, fraud, malicious links, or false claims likely to cause real-world harm."
 msgstr "Nätfiske, bedrägeri, skadliga länkar eller falska påståenden som sannolikt orsakar verklig skada."
 
@@ -23409,7 +23394,7 @@ msgid "Pick a web search provider"
 msgstr "Välj sökmotor"
 
 #. Validation hint in the IAR modal when the user tries to advance without picking a radio option.
-#: src/features/moderation/components/report_modal/IARModal.tsx:73
+#: src/features/moderation/components/report_modal/IARModal.tsx:70
 msgid "Pick an option to continue."
 msgstr "Välj ett alternativ för att fortsätta."
 
@@ -23434,7 +23419,7 @@ msgid "Pick the method you can complete now."
 msgstr "Välj den metod du kan slutföra nu."
 
 #. Validation hint in the IAR modal on the rule selection step.
-#: src/features/moderation/components/report_modal/IARModal.tsx:77
+#: src/features/moderation/components/report_modal/IARModal.tsx:74
 msgid "Pick the rule to review."
 msgstr "Välj regeln att granska."
 
@@ -23913,7 +23898,7 @@ msgid "press to remove reaction"
 msgstr "tryck för att ta bort reaktion"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:335
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:309
 msgid "Pretending to be someone else, including deceptive AI-generated content."
 msgstr "Utger sig för att vara någon annan, inklusive vilseledande AI-genererat innehåll."
 
@@ -24105,7 +24090,7 @@ msgid "Privacy"
 msgstr "Integritet"
 
 #. IAR modal: rule-category label grouping privacy violations and impersonation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:74
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:56
 msgid "Privacy or impersonation"
 msgstr "Integritet eller personifiering"
 
@@ -24125,17 +24110,17 @@ msgid "Privacy URL"
 msgstr "Sekretess-URL"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:307
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:281
 msgid "Privacy violation"
 msgstr "Integritetsbrott"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:319
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:293
 msgid "Privacy violation or doxxing"
 msgstr "Integritetsbrott eller doxxing"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:315
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:289
 msgid "Privacy violation or stalking"
 msgstr "Integritetskränkning eller förföljelse"
 
@@ -24292,22 +24277,22 @@ msgid "Profile updated"
 msgstr "Profilen uppdaterad"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:343
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:317
 msgid "Profile, username, or avatar violation"
 msgstr "Brott mot profil, användarnamn eller avatar"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:203
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:177
 msgid "Promotes hatred against protected groups."
 msgstr "Främjar hat mot skyddade grupper."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:219
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:193
 msgid "Promotes, recruits for, or coordinates violent extremist activity."
 msgstr "Främjar, rekryterar för eller samordnar våldsbejakande extremistisk verksamhet."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:371
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:345
 msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "Marknadsföring eller instruktioner som uppmuntrar till självskadebeteende eller ätstörningar."
 
@@ -24653,7 +24638,7 @@ msgstr "Radiogrupp"
 
 #. IAR modal: rule label.
 #. Report category label for a community coordinating raids (mass harassment of other communities or users). "Raid" is product jargon.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:359
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:333
 #: src/features/moderation/components/report/OptionDescriptors.ts:94
 msgid "Raid coordination"
 msgstr "Raidkoordinering"
@@ -25354,7 +25339,7 @@ msgid "Remove icon"
 msgstr "Ta bort ikon"
 
 #. IAR modal: quick-action card description for deleting the reported message.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:131
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:105
 msgid "Remove it from the channel for everyone."
 msgstr "Ta bort det från kanalen för alla."
 
@@ -25708,13 +25693,8 @@ msgstr "Anmäl en community"
 msgid "Report a message"
 msgstr "Anmäl ett meddelande"
 
-#. IAR modal: primary path label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:110
-msgid "Report a platform rule violation"
-msgstr "Anmäl en överträdelse av plattformsreglerna"
-
 #. IAR modal: screen-reader description for the whole modal.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:467
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:441
 msgid "Report a rule violation, or find tools to manage contact and preferences."
 msgstr "Rapportera en regelöverträdelse eller hitta verktyg för att hantera kontakter och inställningar."
 
@@ -25751,15 +25731,10 @@ msgid "Report message"
 msgstr "Anmäl meddelande"
 
 #. IAR modal: title on the success step shown after a platform report is submitted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:118
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:92
 #: src/features/moderation/components/report/ReportStepComplete.tsx:31
 msgid "Report sent"
 msgstr "Rapport skickad"
-
-#. IAR modal: community-mod path label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:114
-msgid "Report to the moderators of this community"
-msgstr "Rapportera till moderatorerna för den här communityn"
 
 #. Button or menu action label in the moderation report step selection. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/report/ReportStepSelection.tsx:11
@@ -26897,7 +26872,7 @@ msgid "Scale"
 msgstr "Skala"
 
 #. IAR modal: rule-category label grouping spam/scams, malware, and harmful misinformation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:82
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:64
 msgid "Scams, malware, or misinformation"
 msgstr "Bedrägerier, skadlig programvara eller felaktig information"
 
@@ -27765,7 +27740,7 @@ msgstr "Val"
 
 #. IAR modal: rule label.
 #. Report category label for content that promotes or depicts self-harm or suicide. Keep tone calm and respectful; this is a safety surface.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:367
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:341
 #: src/features/moderation/components/report/OptionDescriptors.ts:52
 msgid "Self-harm or suicide"
 msgstr "Självskadebeteende eller självmord"
@@ -27915,7 +27890,7 @@ msgid "Send messages disabled"
 msgstr "Skicka meddelanden inaktiverat"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
-#: src/features/moderation/components/report_modal/IARModal.tsx:93
+#: src/features/moderation/components/report_modal/IARModal.tsx:90
 msgid "Send report"
 msgstr "Skicka rapport"
 
@@ -27997,7 +27972,7 @@ msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, 
 msgstr "Att skicka ett SMS till det här telefonnumret är för dyrt för {PRODUCT_NAME}, så vi behöver att du skickar ett SMS till oss istället. Vi vet att det här inte är optimalt. Du kan också kontakta <0>{SUPPORT_EMAIL}</0> för att få oss att ta bort det här kravet från ditt konto."
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:295
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:269
 msgid "Sending malware or dangerous links"
 msgstr "Skickar skadlig programvara eller farliga länkar"
 
@@ -28473,7 +28448,7 @@ msgid "Share with a friend"
 msgstr "Dela med en vän"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:419
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:393
 msgid "Share with community mods."
 msgstr "Dela med community-moderatorer."
 
@@ -28516,7 +28491,7 @@ msgid "Shared window audio"
 msgstr "Ljud från delat fönster"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:323
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:297
 msgid "Shares personal info, stalks users, or coordinates privacy abuse."
 msgstr "Delar personlig information, förföljer användare eller samordnar integritetsbrott."
 
@@ -29489,7 +29464,7 @@ msgid "Slowmode time remaining"
 msgstr "Återstående tid för långsamt läge"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:195
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:169
 msgid "Slurs, dehumanizing language, or attacks on protected groups."
 msgstr "Nedsättande språk, avhumaniserande språk eller attacker mot skyddade grupper."
 
@@ -29889,12 +29864,12 @@ msgid "Spam or scam community"
 msgstr "Spam eller bedrägeri i gruppen"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:275
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:249
 msgid "Spam, scam, or phishing account"
 msgstr "Spam, bedrägeri eller nätfiske"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:267
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:241
 msgid "Spam, scams, or phishing"
 msgstr "Skräppost, bedrägerier eller nätfiske"
 
@@ -30467,7 +30442,7 @@ msgid "Stop hiding muted channels by default?"
 msgstr "Sluta dölja tystade kanaler som standard?"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:411
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:385
 msgid "Stop messages and friend requests."
 msgstr "Stoppa meddelanden och vänförfrågningar."
 
@@ -30482,7 +30457,7 @@ msgid "Stop ringing"
 msgstr "Sluta ringa"
 
 #. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:439
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:413
 msgid "Stop seeing its content and members."
 msgstr "Sluta se dess innehåll och medlemmar."
 
@@ -31191,7 +31166,7 @@ msgid "Tap to add a note"
 msgstr "Tryck för att lägga till en anteckning"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:199
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:173
 msgid "Targets people by protected characteristics."
 msgstr "Riktar sig till personer baserat på skyddade egenskaper."
 
@@ -31271,7 +31246,7 @@ msgid "Terms URL"
 msgstr "URL för villkor"
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:215
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:189
 msgid "Terrorism or violent extremism"
 msgstr "Terrorism eller våldsbejakande extremism"
 
@@ -32309,7 +32284,7 @@ msgid "This member isn't connected to voice anymore."
 msgstr "Den här medlemmen är inte längre ansluten till röstkanalen."
 
 #. IAR modal: tooltip on the delete card when the reported message is already deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:143
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:117
 msgid "This message has already been deleted."
 msgstr "Det här meddelandet har redan raderats."
 
@@ -32482,7 +32457,7 @@ msgid "This user has no roles in this community."
 msgstr "Den här användaren har inga roller i den här gruppen."
 
 #. IAR modal: tooltip on the ban card when the reported user is already banned.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:163
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:137
 msgid "This user is already banned from the community."
 msgstr "Användaren är redan avstängd från communityn."
 
@@ -32610,12 +32585,12 @@ msgid "This window updates automatically after we receive your message."
 msgstr "Det här fönstret uppdateras automatiskt när vi har tagit emot ditt meddelande."
 
 #. IAR modal: rule description for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:179
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:153
 msgid "Threats, following across spaces, or unwanted contact."
 msgstr "Hot, förföljelse över olika utrymmen eller oönskad kontakt."
 
 #. IAR modal: rule-category label grouping harassment, hate, violence, terrorism, raids, and self-harm content.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:57
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:39
 msgid "Threats, harassment, or harm"
 msgstr "Hot, trakasserier eller skada"
 
@@ -33677,7 +33652,7 @@ msgid "Undeafen yourself"
 msgstr "Slå på ljudet för dig själv"
 
 #. IAR modal: child-safety rule label (user reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:102
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:84
 msgid "Underage or child-safety concern"
 msgstr "Minderårig eller oro för barnsäkerhet"
 
@@ -34290,12 +34265,12 @@ msgid "Unverified email"
 msgstr "Overifierad e-post"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:227
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:201
 msgid "Unwanted conduct or mature content in the wrong place."
 msgstr "Oönskat beteende eller vuxeninnehåll på fel plats."
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:235
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:209
 msgid "Unwanted mature conduct, comments, or requests."
 msgstr "Oönskat vuxet beteende, kommentarer eller förfrågningar."
 
@@ -34902,7 +34877,7 @@ msgid "Use native title bar"
 msgstr "Använd systemets namnlist"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:387
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:361
 msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
 msgstr "Använd endast om det tydligt bryter mot {productName}s regler och inte passar in ovan."
 
@@ -35058,7 +35033,7 @@ msgid "User"
 msgstr "Användare"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:251
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:225
 msgid "User appears underage, or is involved in grooming or child exploitation."
 msgstr "Användaren verkar vara minderårig eller är inblandad i grooming eller barnexploatering."
 
@@ -35952,12 +35927,12 @@ msgid "Violation category"
 msgstr "Kategori för överträdelse"
 
 #. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:347
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:321
 msgid "Violation is in the user's profile, not a specific message."
 msgstr "Överträdelsen finns i användarens profil, inte i ett specifikt meddelande."
 
 #. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:207
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:181
 msgid "Violence or violent threats"
 msgstr "Våld eller våldsamma hot"
 
@@ -36796,13 +36771,8 @@ msgstr "Välkommen, {username}! Din nästa konversation börjar här."
 msgid "Welcome, {username}. We're happy to have you here."
 msgstr "Välkommen, {username}. Vi är glada att du är här."
 
-#. IAR modal: accessible label (aria-label only — not shown visually) for the primary-path radio group on step 1.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:36
-msgid "What do you need?"
-msgstr "Vad behöver du?"
-
 #. IAR modal: category-step title for the platform-report path. User picks a broad area before drilling in.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:49
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:31
 msgid "What kind of rule was broken?"
 msgstr "Vilken typ av regel bröts?"
 
@@ -36909,7 +36879,7 @@ msgid "Which conversations"
 msgstr "Vilka konversationer"
 
 #. IAR modal: reason-step title for the platform-report path after a category has been picked.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:53
+#: src/features/moderation/components/report_modal/IARModalCopy.ts:35
 msgid "Which rule was broken?"
 msgstr "Vilken regel bröts?"
 
