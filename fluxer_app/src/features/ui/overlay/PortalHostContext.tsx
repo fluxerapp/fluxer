@@ -39,3 +39,8 @@ export function usePortalHost(): PortalHostElement {
 export function resolvePortalHost(host: PortalHostElement): HTMLElement {
 	return host ?? document.body;
 }
+
+export function scopePortalHostToDocument(host: PortalHostElement, scopeDocument: Document): PortalHostElement {
+	if (host == null) return null;
+	return host.ownerDocument === scopeDocument ? host : null;
+}
