@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MAX_GUILD_STICKER_TAGS} from '@fluxer/constants/src/LimitConstants';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
@@ -27,7 +28,7 @@ export const GuildStickerResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this sticker'),
 	name: z.string().describe('The name of the sticker'),
 	description: z.string().describe('The description of the sticker'),
-	tags: z.array(z.string()).max(100).describe('Autocomplete/suggestion tags for the sticker'),
+	tags: z.array(z.string()).max(MAX_GUILD_STICKER_TAGS).describe('Autocomplete/suggestion tags for the sticker'),
 	animated: z.boolean().describe('Whether this sticker is animated'),
 	nsfw: z.boolean().describe('Deprecated; always false. Retained for compatibility with older clients'),
 });
@@ -38,7 +39,7 @@ export const GuildStickerWithUserResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this sticker'),
 	name: z.string().describe('The name of the sticker'),
 	description: z.string().describe('The description of the sticker'),
-	tags: z.array(z.string()).max(100).describe('Autocomplete/suggestion tags for the sticker'),
+	tags: z.array(z.string()).max(MAX_GUILD_STICKER_TAGS).describe('Autocomplete/suggestion tags for the sticker'),
 	animated: z.boolean().describe('Whether this sticker is animated'),
 	nsfw: z.boolean().describe('Deprecated; always false. Retained for compatibility with older clients'),
 	user: z.lazy(() => UserPartialResponse).describe('The user who uploaded this sticker'),

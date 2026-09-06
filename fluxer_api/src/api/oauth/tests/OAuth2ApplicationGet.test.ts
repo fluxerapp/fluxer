@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
+import type {ApplicationPublicResponse} from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount, createTotpSecret, generateTotpCode} from '../../auth/tests/AuthTestUtils';
+import {createUserID} from '../../BrandedTypes';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {UserRepository} from '../../user/repositories/UserRepository';
 import {createOAuth2Application, createUniqueApplicationName, getOAuth2Application} from './OAuth2TestUtils';
 
 describe('OAuth2 Application Get', () => {
@@ -51,5 +55,30 @@ describe('OAuth2 Application Get', () => {
 	});
 	test('requires authentication', async () => {
 		await createBuilderWithoutAuth(harness).get('/oauth2/applications/123').expect(HTTP_STATUS.UNAUTHORIZED).execute();
+	});
+	test('public bot representation omits the owner MFA mirror the owner view keeps', async () => {
+		const account = await createTestAccount(harness);
+		const createResult = await createOAuth2Application(harness, account.token, {
+			name: createUniqueApplicationName(),
+		});
+		const secret = createTotpSecret();
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mfa/totp/enable')
+			.body({secret, code: generateTotpCode(secret), password: account.password})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const botUser = await new UserRepository().findUnique(createUserID(BigInt(createResult.botUserId)));
+		expect(botUser?.authenticatorTypes.has(UserAuthenticatorTypes.TOTP)).toBe(true);
+		const ownerView = await getOAuth2Application(harness, account.token, createResult.application.id);
+		expect(ownerView.bot).toBeDefined();
+		expect(ownerView.bot!.mfa_enabled).toBe(true);
+		expect(ownerView.bot!.authenticator_types).toEqual([UserAuthenticatorTypes.TOTP]);
+		const publicView = await createBuilderWithoutAuth<ApplicationPublicResponse>(harness)
+			.get(`/oauth2/applications/${createResult.application.id}/public`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(publicView.bot).toBeTruthy();
+		expect('mfa_enabled' in publicView.bot!).toBe(false);
+		expect('authenticator_types' in publicView.bot!).toBe(false);
 	});
 });
