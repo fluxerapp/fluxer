@@ -23,6 +23,7 @@ import {MessageEditFailedModal} from '@app/features/messaging/components/alerts/
 import {MessageEditTooQuickModal} from '@app/features/messaging/components/alerts/MessageEditTooQuickModal';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import type {JumpOptions} from '@app/features/messaging/state/ChannelMessages';
+import {selectChannelMessagesTailProbeOutcome} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageEditMobile from '@app/features/messaging/state/MessageEditMobile';
 import MessageQueue from '@app/features/messaging/state/MessageQueue';
@@ -115,6 +116,19 @@ export interface JumpToMessageOptions {
 
 interface FetchMessagesOptions {
 	throwOnError?: boolean;
+	tailProbe?: TailProbeContext;
+}
+
+export type TailProbeSettlement = 'applied' | 'retry' | 'failed';
+
+export interface TailProbeContext {
+	watermarkMessageId: string;
+	onSettled: (settlement: TailProbeSettlement) => void;
+}
+
+interface TailProbeEpoch {
+	loadGeneration: number;
+	jumpTicket: number;
 }
 
 interface MessagePageState {
@@ -142,11 +156,12 @@ function makeFetchKey(
 ): string {
 	const SEP = '\x1f';
 	const throwOnError = options?.throwOnError ? '1' : '0';
+	const tailProbe = options?.tailProbe ? `1.${options.tailProbe.watermarkMessageId}` : '0';
 	if (!jump) {
-		return `${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}`;
+		return `${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}${tailProbe}`;
 	}
 	return (
-		`${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}` +
+		`${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}${tailProbe}${SEP}` +
 		`${jump.present ? '1' : '0'}${SEP}${jump.messageId ?? ''}${SEP}${jump.offset ?? 0}${SEP}` +
 		`${jump.flash ? '1' : '0'}${SEP}${jump.returnToMessageId ?? ''}${SEP}` +
 		`${jump.returnChannelId ?? ''}${SEP}${jump.returnGuildId ?? ''}${SEP}${jump.jumpType ?? ''}`
@@ -244,6 +259,7 @@ function handleMessageFetchSuccess(
 	messages: Array<WireMessage>,
 	pageState: MessagePageState,
 	jump?: JumpOptions,
+	tailProbe?: TailProbeContext,
 ): void {
 	Messages.handleLoadMessagesSuccess({
 		channelId,
@@ -254,11 +270,13 @@ function handleMessageFetchSuccess(
 		hasMoreAfter: pageState.hasMoreAfter,
 		cached: false,
 		jump,
+		tailProbe: tailProbe != null,
 	});
 	ReadStates.handleLoadMessages({
 		channelId,
 		isAfter: pageState.isAfter,
 		messages,
+		tailProbeWatermarkId: tailProbe?.watermarkMessageId ?? null,
 	});
 	MessageReferences.handleMessagesFetchSuccess(channelId, messages);
 	void requestMissingGuildMembers(channelId, messages);
@@ -374,6 +392,30 @@ function applyMessageFetchCacheHit(
 	}
 }
 
+function isTailProbeApplicable(channelId: string, probe: TailProbeEpoch, after: string | null): boolean {
+	const current = Messages.getMessages(channelId);
+	const outcome = selectChannelMessagesTailProbeOutcome({
+		probeGeneration: probe.loadGeneration,
+		currentGeneration: current.loadGeneration,
+		probeJumpTicket: probe.jumpTicket,
+		currentJumpTicket: current.jumpTicket,
+		ready: current.ready,
+		hasMoreAfter: current.hasMoreAfter,
+		anchorMessageId: after,
+		newestLoadedMessageId: current.last()?.id ?? null,
+	});
+	if (outcome === 'apply') {
+		return true;
+	}
+	logger.debug(`Discarding tail probe for channel ${channelId} (${outcome})`);
+	Messages.handleTailProbeSettled({channelId});
+	return false;
+}
+
+function settleTailProbe(options: FetchMessagesOptions | undefined, settlement: TailProbeSettlement): void {
+	options?.tailProbe?.onSettled(settlement);
+}
+
 export async function fetchMessages(
 	channelId: string,
 	before: string | null,
@@ -392,13 +434,16 @@ export async function fetchMessages(
 	switch (preflightDecision.type) {
 		case 'useInFlightRequest':
 			logger.debug(`Using in-flight fetchMessages for channel ${channelId} (deduped)`);
+			settleTailProbe(options, 'retry');
 			return inFlight as Promise<Array<WireMessage>>;
 		case 'blockForGate':
 			logger.debug(`Skipping message fetch for gated channel ${channelId}`);
 			Messages.handleLoadMessagesBlocked({channelId});
+			settleTailProbe(options, 'retry');
 			return [];
 		case 'useCache':
 			applyMessageFetchCacheHit(channelId, preflightDecision.cacheHit, before, after, limit, jump);
+			settleTailProbe(options, 'retry');
 			return [];
 		case 'startFetch':
 			break;
@@ -409,19 +454,38 @@ export async function fetchMessages(
 			forceFailure: DeveloperOptions.forceFailMessageLoads,
 		});
 		if (executionDecision.type === 'simulateFailure') {
+			if (options?.tailProbe != null) {
+				settleTailProbe(options, 'failed');
+				return [];
+			}
 			return handleForcedMessageLoadFailure(channelId, jump);
 		}
-		Messages.handleLoadMessages({channelId, jump});
+		Messages.handleLoadMessages({channelId, jump, tailProbe: options?.tailProbe != null});
+		let probeEpoch: TailProbeEpoch | null = null;
+		if (options?.tailProbe) {
+			const started = Messages.getMessages(channelId);
+			probeEpoch = {loadGeneration: started.loadGeneration, jumpTicket: started.jumpTicket};
+		}
 		try {
 			const timeStart = Date.now();
 			logger.debug(`Fetching messages for channel ${channelId}`);
 			const messages = await requestChannelMessages(channelId, before, after, limit, jump);
+			if (probeEpoch != null && !isTailProbeApplicable(channelId, probeEpoch, after)) {
+				settleTailProbe(options, 'retry');
+				return [];
+			}
 			const pageState = calculateMessagePageState(channelId, before, after, limit, messages, jump);
 			logger.info(`Fetched ${messages.length} messages for channel ${channelId}, took ${Date.now() - timeStart}ms`);
-			handleMessageFetchSuccess(channelId, messages, pageState, jump);
+			handleMessageFetchSuccess(channelId, messages, pageState, jump, options?.tailProbe);
+			settleTailProbe(options, 'applied');
 			return messages;
 		} catch (error) {
 			logger.error(`Failed to fetch messages for channel ${channelId}:`, error);
+			if (probeEpoch != null) {
+				Messages.handleTailProbeSettled({channelId});
+				settleTailProbe(options, 'failed');
+				return [];
+			}
 			Messages.handleLoadMessagesFailure({channelId});
 			if (options?.throwOnError) {
 				throw error;

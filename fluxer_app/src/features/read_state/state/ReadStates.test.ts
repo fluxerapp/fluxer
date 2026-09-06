@@ -102,6 +102,48 @@ describe('ReadStates unread invariant', () => {
 		expect(ReadStates.getVisualUnreadMessageId(channelId)).toBeNull();
 	});
 
+	it('lowers a watermark its own probe finds nothing behind', () => {
+		const {channelId, state} = seedReadChannel();
+		state.lastMessageId = ID.newer;
+		loadedMessages.push({id: ID.ack, author: {id: 'someone'}});
+		ReadStates.handleLoadMessages({channelId, isAfter: true, messages: [], tailProbeWatermarkId: ID.newer});
+		expect(ReadStates.lastMessageId(channelId)).toBe(ID.ack);
+		expect(ReadStates.hasUnread(channelId)).toBe(false);
+	});
+
+	it('keeps a watermark that is ahead when an ordinary after page comes back empty', () => {
+		const {channelId, state} = seedReadChannel();
+		state.lastMessageId = ID.newer;
+		loadedMessages.push({id: ID.ack, author: {id: 'someone'}});
+		ReadStates.handleLoadMessages({channelId, isAfter: true, messages: []});
+		expect(ReadStates.lastMessageId(channelId)).toBe(ID.newer);
+	});
+
+	it('keeps a watermark that advanced while its own probe was in flight', () => {
+		const {channelId, state} = seedReadChannel();
+		state.lastMessageId = ID.newer;
+		loadedMessages.push({id: ID.ack, author: {id: 'someone'}});
+		ReadStates.handleLoadMessages({channelId, isAfter: true, messages: [], tailProbeWatermarkId: ID.ack});
+		expect(ReadStates.lastMessageId(channelId)).toBe(ID.newer);
+	});
+
+	it('keeps a watermark that is ahead when the page was not an after page', () => {
+		const {channelId, state} = seedReadChannel();
+		state.lastMessageId = ID.newer;
+		loadedMessages.push({id: ID.ack, author: {id: 'someone'}});
+		ReadStates.handleLoadMessages({channelId, messages: [], tailProbeWatermarkId: ID.newer});
+		expect(ReadStates.lastMessageId(channelId)).toBe(ID.newer);
+	});
+
+	it('keeps a watermark that is ahead when the window is not at the live edge', () => {
+		const {channelId, state} = seedReadChannel();
+		hasNewestMessages = false;
+		state.lastMessageId = ID.newer;
+		loadedMessages.push({id: ID.ack, author: {id: 'someone'}});
+		ReadStates.handleLoadMessages({channelId, isAfter: true, messages: [], tailProbeWatermarkId: ID.newer});
+		expect(ReadStates.lastMessageId(channelId)).toBe(ID.newer);
+	});
+
 	it('anchors the divider when a window is loaded whose ack sits outside it', () => {
 		const {channelId, state} = seedReadChannel();
 		state.lastMessageId = ID.newer;

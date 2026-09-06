@@ -12,6 +12,9 @@ import {
 	selectChannelMessagesFillerVisible,
 	selectChannelMessagesLoadDecision,
 	selectChannelMessagesSpacerHeight,
+	selectChannelMessagesTailGapId,
+	selectChannelMessagesTailProbeId,
+	selectChannelMessagesTailProbeOutcome,
 	selectChannelMessagesWindowBar,
 	selectChannelMessagesWindowStatus,
 	transitionChannelMessagesLoadSnapshot,
@@ -387,5 +390,131 @@ describe('selectChannelMessagesFillerVisible', () => {
 			}
 		}
 		expect(streamCases).toBeGreaterThan(0);
+	});
+});
+
+describe('selectChannelMessagesTailProbeId', () => {
+	const ID = {older: '1519773906704011264', newer: '1519773906708205568'};
+
+	function tailInput(
+		overrides: Partial<ChannelMessagesWindowInput> = {},
+		tail: {
+			loading?: boolean;
+			newestLoadedMessageId?: string | null;
+			knownLatestMessageId?: string | null;
+		} = {},
+	) {
+		const windowInput: ChannelMessagesWindowInput = {
+			ready: true,
+			loading: false,
+			failed: false,
+			messageCount: 12,
+			hasMoreBefore: true,
+			hasMoreAfter: false,
+			...overrides,
+		};
+		return {
+			status: resolveChannelMessagesWindowStatus(windowInput),
+			loading: tail.loading ?? windowInput.loading,
+			newestLoadedMessageId: tail.newestLoadedMessageId === undefined ? ID.older : tail.newestLoadedMessageId,
+			knownLatestMessageId: tail.knownLatestMessageId === undefined ? ID.newer : tail.knownLatestMessageId,
+		};
+	}
+
+	it('probes from the newest loaded message when the live edge is known to be ahead', () => {
+		expect(selectChannelMessagesTailProbeId(tailInput())).toBe(ID.older);
+	});
+
+	it('stays silent for a window that already advertises a newer page', () => {
+		expect(selectChannelMessagesTailProbeId(tailInput({hasMoreAfter: true}))).toBeNull();
+	});
+
+	it('stays silent for a failed window so a failed probe cannot re-arm itself', () => {
+		expect(selectChannelMessagesTailProbeId(tailInput({failed: true}))).toBeNull();
+	});
+
+	it('stays silent while a load is in flight', () => {
+		expect(selectChannelMessagesTailProbeId(tailInput({loading: true}))).toBeNull();
+	});
+
+	it('stays silent for a window that has not loaded a page yet', () => {
+		expect(selectChannelMessagesTailProbeId(tailInput({ready: false}))).toBeNull();
+	});
+
+	it('never probes an empty window, so a channel with no readable history cannot arm it', () => {
+		expect(
+			selectChannelMessagesTailProbeId(
+				tailInput({messageCount: 0, hasMoreBefore: false}, {newestLoadedMessageId: null}),
+			),
+		).toBeNull();
+	});
+
+	it('stays silent when the watermark matches or trails the newest loaded message', () => {
+		expect(selectChannelMessagesTailProbeId(tailInput({}, {knownLatestMessageId: ID.older}))).toBeNull();
+		expect(
+			selectChannelMessagesTailProbeId(
+				tailInput({}, {newestLoadedMessageId: ID.newer, knownLatestMessageId: ID.older}),
+			),
+		).toBeNull();
+		expect(selectChannelMessagesTailProbeId(tailInput({}, {knownLatestMessageId: null}))).toBeNull();
+	});
+
+	it('keeps reporting the tail gap while the probe it armed is in flight', () => {
+		const inFlight = tailInput({loading: true});
+		expect(selectChannelMessagesTailProbeId(inFlight)).toBeNull();
+		expect(selectChannelMessagesTailGapId(inFlight)).toBe(ID.older);
+	});
+
+	it('reports no tail gap once the newest loaded message reaches the watermark', () => {
+		expect(selectChannelMessagesTailGapId(tailInput({}, {newestLoadedMessageId: ID.newer}))).toBeNull();
+	});
+
+	it('still reports the gap on a deep window so auto-ack cannot run past it', () => {
+		expect(selectChannelMessagesTailGapId(tailInput({messageCount: 200}))).toBe(ID.older);
+		expect(selectChannelMessagesTailProbeId(tailInput({messageCount: 200}))).toBe(ID.older);
+	});
+});
+
+describe('selectChannelMessagesTailProbeOutcome', () => {
+	const ID = {older: '1519773906704011264', newer: '1519773906708205568'};
+
+	function outcomeInput(overrides: Partial<Parameters<typeof selectChannelMessagesTailProbeOutcome>[0]> = {}) {
+		return {
+			probeGeneration: 4,
+			currentGeneration: 4,
+			probeJumpTicket: 2,
+			currentJumpTicket: 2,
+			ready: true,
+			hasMoreAfter: false,
+			anchorMessageId: ID.older,
+			newestLoadedMessageId: ID.older,
+			...overrides,
+		};
+	}
+
+	it('applies a probe onto the window it was issued against', () => {
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput())).toBe('apply');
+	});
+
+	it('discards without touching shared state once another load owns the window', () => {
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({currentGeneration: 5}))).toBe('discard');
+	});
+
+	it('releases a probe whose window a jump has taken out of the ready state', () => {
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({ready: false}))).toBe('release');
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({currentGeneration: 9, ready: false}))).toBe('discard');
+	});
+
+	it('releases a probe whose tail moved under it', () => {
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({newestLoadedMessageId: ID.newer}))).toBe('release');
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({newestLoadedMessageId: null}))).toBe('release');
+	});
+
+	it('releases a probe whose window started advertising a newer page', () => {
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({hasMoreAfter: true}))).toBe('release');
+	});
+
+	it('discards a probe whose window a cached jump took over without starting a load', () => {
+		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({currentJumpTicket: 3}))).toBe('discard');
 	});
 });
