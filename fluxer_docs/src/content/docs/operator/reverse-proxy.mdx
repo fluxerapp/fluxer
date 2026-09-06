@@ -483,8 +483,10 @@ LiveKit signalling goes through `/livekit/*` like everything else. WebRTC media 
 
 Both ports are published directly by the stack and must reach the host. A proxy or tunnel in front of `443` does nothing for them.
 
-Hosting LiveKit on a hostname other than `FLUXER_DOMAIN` means widening the Content-Security-Policy the web app runs under:
+Hosting LiveKit on a hostname other than `FLUXER_DOMAIN` means widening the Content-Security-Policy the web app runs under. The line goes in `.env`, beside `FLUXER_DOMAIN`:
 
 ```ini
 FLUXER_CSP_EXTRA_CONNECT_SRC=wss://livekit.example.com:7881
 ```
+
+`app-proxy` builds the policy and reads its environment at container start, so apply the change with `docker compose up -d app-proxy`. `docker compose restart app-proxy` reuses the existing container with its old environment. [Content Security Policy](/operator/configuration/#content-security-policy) has the other ten variables.

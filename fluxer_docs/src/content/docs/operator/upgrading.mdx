@@ -46,19 +46,72 @@ A failed run leaves the instance running on the images it already had.
 
 `docker compose up -d` does not notice a changed `Caddyfile`. The script restarts `edge` by name to pick it up.
 
-The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade.
+The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade. [Keep a local compose change](#keep-a-local-compose-change) has the file layout that survives one, and [When the compose file list names a missing file](#when-the-compose-file-list-names-a-missing-file) has the failure a line naming an absent file produces.
 
 The rename also moves the `caddy-data` and `caddy-config` volumes to `edge-data` and `edge-config`, so the old two are left unused and the edge requests its certificate again on the first start.
 
-`FLUXER_IMAGE_TAG` is the only line in `.env` that either upgrade mode writes. Every secret is left as it is.
+`FLUXER_IMAGE_TAG` is the only line in `.env` that either upgrade mode rewrites once the instance holds every key the stack requires. An upgrade also writes a key the refreshed stack requires that `.env` does not hold at all, listed below, and it leaves every value already set as it is.
 
-The refreshed `docker-compose.yml` requires `FLUXER_ERLANG_COOKIE`. An `.env` written by an earlier installer has no such line, so add `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` to it before you upgrade. The value is 64 hex characters, which is what a fresh install writes. Until `.env` sets it, every Compose command against the stack stops with `set FLUXER_ERLANG_COOKIE in .env`.
+The refreshed `docker-compose.yml` requires `FLUXER_ERLANG_COOKIE`. An `.env` written by an earlier installer holds no such line, and `--update` writes one into `.env` before it reads anything, so an upgrade needs no edit for it. The value is 64 hex characters, which is what a fresh install writes. Until `.env` sets it, every Compose command against the stack stops with `set FLUXER_ERLANG_COOKIE in .env`.
 
-`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. The line has been in `.env.example` for a while as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. Set it with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=$(openssl rand -base64 32)` before you upgrade. Both services read the same value, so give them one secret rather than two. A fresh install writes it for you. Without it `api` stops at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
+To write it by hand, run the generator in a shell:
+
+```bash
+printf '\nFLUXER_ERLANG_COOKIE=%s\n' "$(openssl rand -hex 32)" >> .env
+```
+
+Run that as a command. Pasting `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env` as text stores those characters as the value, because Compose reads a line literally and runs nothing in it. The leading newline is what keeps the key on its own line when the last line of `.env` ends without one, which an editor can leave behind and which would otherwise join the two.
+
+`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. The line has been in `.env.example` for a while as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. `--update` replaces an absent or `CHANGE_ME` value with a generated one before it reads anything. Both services read the same value, so they take one secret rather than two, and writing it in one place is what gives them that. A `CHANGE_ME` value stops `api` at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes`, and an empty one with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
+
+To write it by hand, run the generator in a shell the same way:
+
+```bash
+printf '\nFLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=%s\n' "$(openssl rand -base64 32)" >> .env
+```
 
 ## The script is the reference
 
 Every step above sits in the script beside a comment holding the command that does that step alone and the reason the step exists. Read [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1) for Windows.
+
+## Keep a local compose change
+
+The Place step replaces all five stack files with the copies at the ref. An edit made directly in `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` or the `Caddyfile` is gone once that step runs. The run prints one line for the whole step and never names the files it replaced. `--dry-run` names every one of them, as `changes`, `unchanged` or `is new`.
+
+The supported way to hold a local choice is a separate file, listed in `COMPOSE_FILE` in `.env`:
+
+```ini
+COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:local.compose.yml
+```
+
+Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the five stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those five files, and no other file from the working directory, so an override file is never backed up with them and belongs wherever the rest of the configuration lives.
+
+`.env` needs no such file. `FLUXER_IMAGE_TAG` is the only line either upgrade mode writes.
+
+[Enable the overlay](/operator/reverse-proxy/#enable-the-overlay) has the overlay this is most often used for, and [Docker labels](/operator/reverse-proxy/#docker-labels) has a worked third file.
+
+## When the compose file list names a missing file
+
+`COMPOSE_FILE` names files relative to the working directory, and Compose refuses to load the set when one of them is absent:
+
+```
+stat /srv/fluxer/docker-compose.proxy.yml: no such file or directory
+```
+
+Every `docker compose` command stops there. An upgrade checks the list before it runs any of them, so it stops with a sentence naming the file and the `curl` that puts it back, and writes nothing.
+
+This happens on an instance older than the installer. `docker-compose.proxy.yml` and `tunnel.compose.yml` are files the upgrade downloads, so a `COMPOSE_FILE` line naming one of them in a directory that never held it fails long before the Fetch step that would have supplied it.
+
+Download the missing file at the ref the upgrade moves to, then run the upgrade:
+
+```bash
+curl -fsSL --proto '=https' --tlsv1.2 -o docker-compose.proxy.yml \
+  https://raw.githubusercontent.com/fluxerapp/fluxer/main/deploy/self-hosting/docker-compose.proxy.yml
+```
+
+`main` is the ref for `FLUXER_IMAGE_TAG=v1` and for `latest`. [Match the images to the stack files](#match-the-images-to-the-stack-files) has the ref a pinned tag needs.
+
+Removing the line from `.env` also gets the run moving and is the wrong fix. Without the overlay the edge publishes `80` and `443` and takes them from the reverse proxy already on the host.
 
 ## Run the upgrade
 
@@ -97,6 +150,32 @@ The run ends by naming the record it wrote and the command that rolls back to it
 | `--skip-backup-accept-data-loss` | `-SkipBackupAcceptDataLoss` | Upgrade with no backup at all |
 
 `--dir` and `--ref` mean what they mean on an install, and the installer derives an omitted `--ref` from the `FLUXER_IMAGE_TAG` line in `.env`. Every failure prints a sentence on standard error and exits non-zero, and the script header lists what each code means. A Postgres major version change is exit 3.
+
+## Voice signalling moved to /livekit
+
+The edge serves LiveKit at `/livekit/*`. An instance set up before that routing served it under `/gateway/livekit`, and that path is gone. Voice stops connecting after the upgrade and the run still reports success, because the readiness poll and the `/_health` probe never reach voice.
+
+Before:
+
+```
+wss://chat.example.com/gateway/livekit
+```
+
+After:
+
+```
+wss://chat.example.com/livekit
+```
+
+Only the path is wrong. `docker-compose.yml` derives `https://chat.example.com/livekit` when `.env` sets no `FLUXER_LIVEKIT_URL`, and the client rewrites a leading `http` to `ws` itself, so `https` and `wss` both work.
+
+The address browsers dial is a column on a voice server row in the database. No upgrade migrates that row, and it is corrected in two places.
+
+First `.env`. When it sets `FLUXER_LIVEKIT_URL`, put the new path in that line and run `docker compose up -d api`. `api` writes that value onto the default voice server row at every start, so a row corrected in the dashboard while `.env` still names the old path goes back to the old path on the next restart. Removing the line is also correct, and Compose then derives the URL from `FLUXER_PUBLIC_ORIGIN`, or from the scheme and the domain.
+
+Then the dashboard, at `https://chat.example.com/admin` under **Voice Servers**. The **Endpoint** field on that page holds the address. `api` writes one row only, the one in region `default` with server id `default-server-1`, and leaves every other row as it is. That row corrects itself on the first `api` start after `.env` is right, so the dashboard is for every other row. When that region or that server is absent, its log says `skipping config sync` and it writes nothing. A region added by hand, or one left from an older layout under another id, keeps the endpoint it already holds until that field is edited.
+
+Voice media is unaffected. It never went through the edge, and `7881/tcp` and `7882/udp` still reach the host directly.
 
 ## What the backup covers
 

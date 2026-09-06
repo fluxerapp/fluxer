@@ -22,8 +22,9 @@
 # an operator types to do that step by hand, and the reason the step exists.
 #
 # Read this file before you run it. The default mode writes .env, which holds
-# every secret the instance has. The upgrade generates no secret and rewrites no
-# secret. The only line either upgrade mode ever changes in .env is
+# every secret the instance has. The upgrade generates a secret only for a key
+# the refreshed stack requires that .env does not hold, and rewrites no
+# secret. The only value either upgrade mode ever replaces in .env is
 # FLUXER_IMAGE_TAG, and only during a rollback that moves off a pinned tag.
 #
 # Rewriting a secret in .env against volumes that already exist is the one thing
@@ -338,8 +339,25 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+# An upgrade acts on an instance that already exists, and the directory holding
+# one is recognisable: a compose file with content, an .env beside it, and at
+# least one FLUXER_ key in that .env. Taking the working directory when it holds
+# those is what an operator standing in their own instance means, and it is the
+# only case where the default is not ~/fluxer.
+#
+# The FLUXER_ test is what keeps this off somebody else's stack. A compose file
+# and an .env together describe every Compose project there is, and an upgrade
+# replaces the stack files in the directory it acts on, so a looser test would
+# overwrite a project that has nothing to do with Fluxer.
+#
+# An install writes a new instance, so it never adopts the working directory.
 if [ -z "$opt_dir" ]; then
-	if [ -n "${HOME:-}" ]; then
+	if { [ "$opt_update" -eq 1 ] || [ "$opt_rollback" -eq 1 ]; } &&
+		[ -s "$(pwd)/docker-compose.yml" ] && [ -e "$(pwd)/.env" ] &&
+		grep -q '^FLUXER_' "$(pwd)/.env" 2>/dev/null; then
+		opt_dir="$(pwd)"
+		fluxer_say "Acting on the instance in $opt_dir, the working directory. Pass --dir to name another."
+	elif [ -n "${HOME:-}" ]; then
 		opt_dir="$HOME/fluxer"
 	else
 		opt_dir="$(pwd)/fluxer"
@@ -886,12 +904,188 @@ fluxer_env_value() {
 	sed -n "s/^$1=\\(.*\\)\$/\\1/p" "$opt_dir/.env" | head -n 1
 }
 
+# The keys a refreshed stack requires that an .env written by an older installer
+# does not hold. Only keys with no state anywhere else are here. A value like
+# POSTGRES_PASSWORD is matched by a password stored inside the database, so
+# minting a new one locks the stack out of its own data and it is not listed.
+#
+# CHANGE_ME counts as absent. .env.example shipped the relay secret with that
+# value for a while, and nothing read it until the API began refusing to start
+# on a value under 32 bytes.
+fluxer_upgrade_secret_keys() {
+	cat <<'KEYS'
+FLUXER_ERLANG_COOKIE hex
+FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 base64
+KEYS
+}
+
+# One key written into .env, through a temporary file that replaces the whole
+# file at once.
+#
+# Appending is not an option. A .env whose last line has no newline takes an
+# appended line onto the end of that line instead, which reads as one key whose
+# value ends in the name of the next, and destroys the secret that was there.
+# awk ends every line it prints, so reading the file and writing it back gives
+# the missing newline as a side effect.
+#
+# The replacement is a rename, so an interrupt leaves the old file whole rather
+# than a truncated one, and this runs before the record exists.
+fluxer_env_set() {
+	fluxer_old_umask=$(umask)
+	umask 077
+	awk -v fluxer_k="$1" -v fluxer_v="$2" '
+		index($0, fluxer_k "=") == 1 && !fluxer_done {print fluxer_k "=" fluxer_v; fluxer_done = 1; next}
+		{print}
+		END {if (!fluxer_done) print fluxer_k "=" fluxer_v}
+	' "$opt_dir/.env" > "$fluxer_scratch/env.set"
+	if [ ! -s "$fluxer_scratch/env.set" ]; then
+		umask "$fluxer_old_umask"
+		fluxer_fail 5 "Rewriting $1 into .env produced an empty file. Nothing was written."
+	fi
+	if ! grep -q "^$1=" "$fluxer_scratch/env.set"; then
+		umask "$fluxer_old_umask"
+		fluxer_fail 5 "Rewriting $1 into .env did not write that key. Nothing was written."
+	fi
+	mv "$fluxer_scratch/env.set" "$opt_dir/.env"
+	chmod 600 "$opt_dir/.env"
+	umask "$fluxer_old_umask"
+}
+
+# Step 0 of an upgrade: mint the values the refreshed stack requires.
+#
+# Compose stops on a ${NAME:?} it cannot resolve, so a key the running .env does
+# not hold fails every command this script runs before it reaches the step that
+# would have reported it. Writing the value first is what makes the rest of the
+# run possible, and a generated secret is as good as a hand-written one for
+# every key listed above.
+#
+# This runs before the record, so the .env the record saves is the one that
+# works and a rollback does not reintroduce the gap.
+fluxer_fill_required_secrets() {
+	fluxer_upgrade_secret_keys > "$fluxer_scratch/upgrade-keys"
+	while read -r fluxer_key fluxer_kind; do
+		[ -n "$fluxer_key" ] || continue
+		fluxer_current=$(fluxer_env_value "$fluxer_key")
+		case ${fluxer_current:-} in
+			''|CHANGE_ME) ;;
+			*) continue ;;
+		esac
+		case $fluxer_kind in
+			hex) fluxer_new=$(openssl rand -hex 32) ;;
+			base64) fluxer_new=$(openssl rand -base64 32) ;;
+			*) fluxer_fail 5 "Unknown secret kind $fluxer_kind for $fluxer_key." ;;
+		esac
+		[ -n "$fluxer_new" ] || fluxer_fail 5 "Generated an empty value for $fluxer_key."
+		fluxer_env_set "$fluxer_key" "$fluxer_new"
+		fluxer_say "Wrote $fluxer_key into .env. The refreshed stack requires it and this instance held no usable value."
+	done < "$fluxer_scratch/upgrade-keys"
+}
+
 fluxer_require_instance() {
 	if [ ! -e "$opt_dir/.env" ]; then
 		fluxer_fail 2 "No .env in $opt_dir. That directory holds no instance. Run install.sh with neither --update nor --rollback to set one up."
 	fi
 	if [ ! -e "$opt_dir/docker-compose.yml" ]; then
 		fluxer_fail 2 "No docker-compose.yml in $opt_dir. That directory does not hold an instance."
+	fi
+	if [ ! -s "$opt_dir/docker-compose.yml" ]; then
+		fluxer_fail 2 "$opt_dir/docker-compose.yml is empty. A redirect that captured a failed download leaves that, and Compose refuses an empty compose file. Put the file back from a backup or from the record of the last upgrade, then run this again."
+	fi
+}
+
+# Compose reads COMPOSE_FILE from .env and loads every file it names before it
+# answers anything, so one file the directory does not hold fails every docker
+# compose command run in it. What Compose prints for that is a single stat line
+# that names neither COMPOSE_FILE nor .env.
+#
+# Two of the files this script downloads sit in .env.example as a COMPOSE_FILE
+# line to uncomment, so an instance set up before this script existed can hold
+# the line and not the file. An upgrade reads the running images before it
+# refreshes the stack files, so such an instance stops on the first step and no
+# re-run gets any further.
+#
+# The line stays. Without the file it names the edge container binds 80 and 443
+# and requests its own certificate.
+#
+# By hand:
+#   grep COMPOSE_FILE .env
+# A value as Compose reads it: no surrounding quotes, no carriage return from an
+# editor that writes CRLF, no trailing blanks. Reading it any other way invents a
+# filename the operator cannot see and refuses a run that would have worked.
+fluxer_env_scalar() {
+	fluxer_scalar=$(fluxer_env_value "$1" | tr -d '\r')
+	fluxer_scalar=${fluxer_scalar%"${fluxer_scalar##*[! 	]}"}
+	case $fluxer_scalar in
+		\"*\") fluxer_scalar=${fluxer_scalar#\"}; fluxer_scalar=${fluxer_scalar%\"} ;;
+		"'"*"'") fluxer_scalar=${fluxer_scalar#"'"}; fluxer_scalar=${fluxer_scalar%"'"} ;;
+	esac
+	printf '%s' "$fluxer_scalar"
+}
+
+fluxer_require_compose_files() {
+	fluxer_compose_file=${COMPOSE_FILE:-}
+	fluxer_compose_from="the environment"
+	if [ -z "$fluxer_compose_file" ]; then
+		fluxer_compose_file=$(fluxer_env_scalar COMPOSE_FILE)
+		fluxer_compose_from="$opt_dir/.env"
+	fi
+	[ -n "$fluxer_compose_file" ] || return 0
+	fluxer_path_sep=${COMPOSE_PATH_SEPARATOR:-}
+	if [ -z "$fluxer_path_sep" ]; then
+		fluxer_path_sep=$(fluxer_env_scalar COMPOSE_PATH_SEPARATOR)
+	fi
+	if [ -z "$fluxer_path_sep" ]; then
+		fluxer_path_sep=':'
+	fi
+	fluxer_rest=$fluxer_compose_file
+	while [ -n "$fluxer_rest" ]; do
+		case $fluxer_rest in
+			*"$fluxer_path_sep"*)
+				fluxer_name=${fluxer_rest%%"$fluxer_path_sep"*}
+				fluxer_rest=${fluxer_rest#*"$fluxer_path_sep"}
+				;;
+			*)
+				fluxer_name=$fluxer_rest
+				fluxer_rest=''
+				;;
+		esac
+		[ -n "$fluxer_name" ] || continue
+		case $fluxer_name in
+			/*) fluxer_path=$fluxer_name ;;
+			*) fluxer_path="$opt_dir/$fluxer_name" ;;
+		esac
+		[ ! -e "$fluxer_path" ] || continue
+		if fluxer_stack_files | grep -qxF "$fluxer_name"; then
+			fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every docker compose command in $opt_dir fails and this run stops before it changes anything. This script downloads $fluxer_name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:
+  curl -fsSL --proto '=https' --tlsv1.2 -o $fluxer_path $FLUXER_RAW_BASE/$opt_ref/$FLUXER_STACK_PATH/$fluxer_name
+Leave the COMPOSE_FILE line as it is. Without $fluxer_name the edge container binds 80 and 443 and requests its own certificate."
+		fi
+		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every docker compose command in $opt_dir fails. This script does not download $fluxer_name. Put that file back, or take it out of the COMPOSE_FILE line."
+	done
+}
+
+# One read-only Compose query, with what Compose printed on stderr kept.
+#
+# Compose loads the whole file set and interpolates every variable in it before
+# it answers either query below. A file that is not there, a file it cannot
+# read and a required variable .env does not set all fail at that point, and the
+# stderr text is the only thing that says which of them it was.
+#
+# The query writes to files rather than through a pipe, because the status of a
+# pipeline is the status of its last command and the query is not the last
+# command.
+fluxer_compose_query() {
+	fluxer_query_status=0
+	docker compose config "$1" > "$fluxer_scratch/compose-out" 2> "$fluxer_scratch/compose-err" || fluxer_query_status=$?
+	return "$fluxer_query_status"
+}
+
+# What Compose printed on the last query, indented one level for the caller.
+fluxer_compose_error() {
+	if [ -s "$fluxer_scratch/compose-err" ]; then
+		sed "s/^/$1/" "$fluxer_scratch/compose-err"
+	else
+		printf '%snothing\n' "$1"
 	fi
 }
 
@@ -902,7 +1096,8 @@ fluxer_require_instance() {
 # By hand:
 #   docker compose config --images
 fluxer_compose_images() {
-	docker compose config --images 2>/dev/null | sort -u
+	fluxer_compose_query --images || return 1
+	sort -u "$fluxer_scratch/compose-out"
 }
 
 # The image ID each container was actually created from, against the reference
@@ -945,12 +1140,16 @@ fluxer_recorded_id_for() {
 # By hand:
 #   docker compose images
 fluxer_record_state() {
-	printf '%s\n' "$(fluxer_env_value FLUXER_IMAGE_TAG)" > "$fluxer_record/$FLUXER_TAG_FILE"
 	fluxer_running_image_ids > "$fluxer_scratch/running"
-	fluxer_compose_images > "$fluxer_scratch/refs"
-	if [ ! -s "$fluxer_scratch/refs" ]; then
-		fluxer_fail 2 "docker compose config --images returned nothing in $opt_dir, so the running version cannot be recorded."
+	if ! fluxer_compose_images > "$fluxer_scratch/refs"; then
+		fluxer_fail 2 "docker compose config --images failed in $opt_dir, so the running version cannot be recorded. Compose printed:
+$(fluxer_compose_error '  ')"
 	fi
+	if [ ! -s "$fluxer_scratch/refs" ]; then
+		fluxer_fail 2 "docker compose config --images returned nothing in $opt_dir, so the running version cannot be recorded. The stack files there declare no service with an image."
+	fi
+	fluxer_prepare_record
+	printf '%s\n' "$(fluxer_env_value FLUXER_IMAGE_TAG)" > "$fluxer_record/$FLUXER_TAG_FILE"
 	: > "$fluxer_record/$FLUXER_IMAGES_FILE"
 	while read -r fluxer_ref; do
 		[ -n "$fluxer_ref" ] || continue
@@ -1026,8 +1225,18 @@ fluxer_dump_postgres() {
 	fluxer_say "Dumped the database to $fluxer_dump_path."
 }
 
+# What the sizing container printed, indented one level for the caller.
+fluxer_volume_error() {
+	if [ -s "$fluxer_scratch/volume-err" ]; then
+		sed "s/^/$1/" "$fluxer_scratch/volume-err"
+	else
+		printf '%snothing\n' "$1"
+	fi
+}
+
 fluxer_volume_size_kb() {
-	docker run --rm -v "$1:/data:ro" "$FLUXER_HELPER_IMAGE" du -sk /data 2>/dev/null | awk 'NR==1 {print $1}'
+	docker run --rm -v "$1:/data:ro" "$FLUXER_HELPER_IMAGE" du -sk /data 2> "$fluxer_scratch/volume-err" |
+		awk 'NR==1 {print $1}'
 }
 
 fluxer_free_kb() {
@@ -1046,16 +1255,19 @@ fluxer_free_kb() {
 #   docker compose up -d
 fluxer_copy_volumes() {
 	fluxer_backup_volumes > "$fluxer_scratch/backup-volumes"
+	: > "$fluxer_scratch/copy-volumes"
 	fluxer_copy_any=0
 	while read -r fluxer_volume; do
 		[ -n "$fluxer_volume" ] || continue
 		fluxer_full="${fluxer_project}_${fluxer_volume}"
 		if ! docker volume inspect "$fluxer_full" >/dev/null 2>&1; then
-			fluxer_fail 7 "The volume $fluxer_full does not exist, so the uploads cannot be copied."
+			fluxer_fail 7 "The volume $fluxer_full does not exist, so the uploads cannot be copied. The stack declares that volume, so this is a project name other than $fluxer_project or a volume that was removed. Pass --no-volume-backup to take the database dump alone when the uploads of this instance live somewhere this script cannot reach."
 		fi
 		fluxer_size=$(fluxer_volume_size_kb "$fluxer_full")
 		case ${fluxer_size:-} in
-			''|*[!0-9]*) fluxer_fail 7 "Cannot measure the volume $fluxer_full." ;;
+			''|*[!0-9]*)
+				fluxer_fail 7 "Cannot measure the volume $fluxer_full, so the uploads copy cannot be sized. Pass --no-volume-backup to take the database dump alone. Docker printed:
+$(fluxer_volume_error '  ')" ;;
 		esac
 		fluxer_free=$(fluxer_free_kb "$fluxer_record")
 		case ${fluxer_free:-} in
@@ -1065,6 +1277,7 @@ fluxer_copy_volumes() {
 		if [ "$fluxer_free" -lt "$fluxer_need" ]; then
 			fluxer_fail 7 "$fluxer_full holds $((fluxer_size / 1024)) MB and $fluxer_record has $((fluxer_free / 1024)) MB free. Point --backup-dir at a filesystem with room, or pass --no-volume-backup to take the database dump alone."
 		fi
+		printf '%s\n' "$fluxer_volume" >> "$fluxer_scratch/copy-volumes"
 		fluxer_copy_any=1
 	done < "$fluxer_scratch/backup-volumes"
 	if [ "$fluxer_copy_any" -eq 0 ]; then
@@ -1082,7 +1295,7 @@ fluxer_copy_volumes() {
 			docker compose up -d --remove-orphans || true
 			fluxer_fail 7 "Copying $fluxer_full failed. The stack is started again on the images it was running."
 		fi
-	done < "$fluxer_scratch/backup-volumes"
+	done < "$fluxer_scratch/copy-volumes"
 	fluxer_say 'Starting the stack again before the upgrade continues.'
 	if ! docker compose up -d --remove-orphans; then
 		fluxer_fail 7 "docker compose up -d failed in $opt_dir after the copy. Read docker compose logs there."
@@ -1153,12 +1366,16 @@ fluxer_note_mounted_changes() {
 # By hand:
 #   docker compose config --services
 fluxer_compose_services() {
-	docker compose config --services 2>/dev/null | sort -u
+	fluxer_compose_query --services || return 1
+	sort -u "$fluxer_scratch/compose-out"
 }
 
 fluxer_restart_mounted() {
 	[ -s "$fluxer_scratch/restart" ] || return 0
-	fluxer_compose_services > "$fluxer_scratch/services"
+	if ! fluxer_compose_services > "$fluxer_scratch/services"; then
+		fluxer_fail 6 "docker compose config --services failed in $opt_dir, so the services that mount a refreshed file cannot be restarted. Compose printed:
+$(fluxer_compose_error '  ')"
+	fi
 	while read -r fluxer_file fluxer_service; do
 		[ -n "$fluxer_service" ] || continue
 		if ! grep -qxF "$fluxer_service" "$fluxer_scratch/services"; then
@@ -1214,9 +1431,16 @@ fluxer_plan_update() {
 	fluxer_say "  ref           $opt_ref"
 	fluxer_say "  image tag     $(fluxer_env_value FLUXER_IMAGE_TAG) from .env"
 	fluxer_say "  backup dir    $opt_backup_dir"
-	fluxer_say '  running now'
 	fluxer_running_image_ids > "$fluxer_scratch/running"
-	fluxer_compose_images > "$fluxer_scratch/refs" || true
+	if ! fluxer_compose_images > "$fluxer_scratch/refs"; then
+		fluxer_say '  refusal       docker compose config --images fails here, and step 1 of the upgrade reads that list'
+		fluxer_say '  compose said'
+		fluxer_compose_error '    '
+		fluxer_say '  outcome       the run stops on step 1 and changes nothing'
+		fluxer_say 'Nothing outside a temporary directory was written. Fix what Compose reports, then run this again.'
+		return 0
+	fi
+	fluxer_say '  running now'
 	while read -r fluxer_ref; do
 		[ -n "$fluxer_ref" ] || continue
 		fluxer_id=$(fluxer_recorded_id_for "$fluxer_ref")
@@ -1307,7 +1531,7 @@ fluxer_plan_rollback() {
 fluxer_run_update() {
 	fluxer_open_scratch "$opt_dir"
 	fluxer_stack_files > "$fluxer_scratch/files"
-	fluxer_prepare_record
+	fluxer_fill_required_secrets
 	fluxer_record_state
 	fluxer_save_current_files
 	fluxer_backup
@@ -1357,7 +1581,7 @@ fluxer_run_update() {
 
 # Puts one line of .env back, and proves it touched nothing else.
 #
-# FLUXER_IMAGE_TAG is the only key either upgrade mode writes. Every other line,
+# FLUXER_IMAGE_TAG is the only key this function writes. Every other line,
 # which is every secret, is compared byte for byte before the new file replaces
 # the old one, so a rewrite that lost or changed a secret cannot land.
 fluxer_set_image_tag() {
@@ -1473,6 +1697,7 @@ fluxer_resolve_values
 if [ "$opt_update" -eq 1 ] || [ "$opt_rollback" -eq 1 ]; then
 	fluxer_require_instance
 	fluxer_resolve_ref
+	fluxer_require_compose_files
 	cd "$opt_dir"
 	fluxer_set_project
 	if [ "$opt_dry_run" -eq 1 ]; then

@@ -18,6 +18,15 @@ The installer in [Get started](/operator/get-started/) writes `.env` for you and
 
 Compose reads `.env` and passes the values it names into containers. A name reaches a container only when `docker-compose.yml` lists it, either in the shared `x-fluxer-env` block or in that service's own `environment` block. No service declares `env_file`, so a name in `.env` that appears in neither block never arrives, whatever it is set to.
 
+A `$` inside a value is a variable reference to Compose, not a character. `POSTGRES_PASSWORD=ab$cd` reaches the container as `ab`, and every command against the stack prints `The "cd" variable is not set. Defaulting to a blank string.` first. Write the `$` as `$$`, or put single quotes around the whole value. Both deliver one literal `$`:
+
+```ini
+POSTGRES_PASSWORD=ab$$cd
+POSTGRES_PASSWORD='ab$cd'
+```
+
+Double quotes do not escape it. `docker compose config` prints a literal `$` back as `$$`, so a value that reads `ab$$cd` in that output is the correct one. The fourteen secrets the installer generates are hex or base64 and hold no `$`, so this reaches an instance through a password, an API key or an SMTP secret pasted in by hand.
+
 A container's environment is fixed when the container is created, and `api` and `worker` cache their configuration at first load. Either way a change needs the process restarted, which `docker compose up -d` does by recreating the service.
 
 Precedence, highest first:
@@ -1535,9 +1544,11 @@ Defaults to the crate version. The reported build. `BUILD_VERSION` is preferred 
 
 `app-proxy` builds a per-request nonce-based policy for the client HTML and the assets it serves. Each variable appends sources to one directive on top of the built-in ones. All are empty by default, and Compose forwards all eleven.
 
+Every name below goes in `.env`. `app-proxy` reads its environment at container start, so a change takes effect on `docker compose up -d app-proxy` and not on `docker compose restart app-proxy`.
+
 `FLUXER_CSP_EXTRA_DEFAULT_SRC`, `FLUXER_CSP_EXTRA_CONNECT_SRC`, `FLUXER_CSP_EXTRA_IMG_SRC`, `FLUXER_CSP_EXTRA_MEDIA_SRC`, `FLUXER_CSP_EXTRA_FONT_SRC`, `FLUXER_CSP_EXTRA_SCRIPT_SRC`, `FLUXER_CSP_EXTRA_STYLE_SRC`, `FLUXER_CSP_EXTRA_FRAME_SRC`, `FLUXER_CSP_EXTRA_WORKER_SRC`, and `FLUXER_CSP_EXTRA_MANIFEST_SRC` take one or more sources separated by commas, spaces, tabs, or newlines. Blank entries and sources the directive already lists are dropped. `FLUXER_CSP_REPORT_URI` sets a single `report-uri` value.
 
-`object-src`, `base-uri`, and `frame-ancestors` are fixed and have no override. `app-proxy` reads the discovery document and adds the static CDN endpoint, the media endpoint, and the origins of the configured branding images, so a stack on one hostname needs no extra sources. The usual reason to set one is a voice server on another hostname, which needs its WebSocket origin in `FLUXER_CSP_EXTRA_CONNECT_SRC`.
+`object-src`, `base-uri`, and `frame-ancestors` are fixed and have no override. `app-proxy` reads the discovery document and adds the static CDN endpoint, the media endpoint, and the origins of the configured branding images, so a stack on one hostname needs no extra sources. The usual reason to set one is a voice server on another hostname, which needs its WebSocket origin in `FLUXER_CSP_EXTRA_CONNECT_SRC`. [Voice media does not use the proxy](/operator/reverse-proxy/#voice-media-does-not-use-the-proxy) has that line in place.
 
 A front proxy must not add a Content-Security-Policy of its own.
 

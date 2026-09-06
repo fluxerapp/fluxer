@@ -19,8 +19,9 @@
 # types to do that step by hand, and the reason the step exists.
 #
 # Read this file before running it. The default mode writes .env, which holds every secret the
-# instance has. The upgrade generates no secret and rewrites no secret. The only line either
-# upgrade mode ever changes in .env is FLUXER_IMAGE_TAG, and only during a rollback that moves
+# instance has. The upgrade generates a secret only for a key the refreshed stack requires that
+# .env does not hold, and rewrites no secret. The only value either
+# upgrade mode ever replaces in .env is FLUXER_IMAGE_TAG, and only during a rollback that moves
 # off a pinned tag.
 #
 # Rewriting a secret in .env against volumes that already exist is the one thing this script
@@ -136,6 +137,15 @@ $FluxerBackupVolumes = @(
 	'seaweedfs-data'
 )
 
+# The keys a refreshed stack requires that an .env written by an older installer does not hold.
+# Only keys with no state anywhere else are here. A value like POSTGRES_PASSWORD is matched by a
+# password stored inside the database, so minting a new one locks the stack out of its own data
+# and it is not listed. CHANGE_ME counts as absent.
+$FluxerUpgradeSecretKeys = @(
+	@{Name = 'FLUXER_ERLANG_COOKIE'; Kind = 'hex'}
+	@{Name = 'FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64'; Kind = 'base64'}
+)
+
 $FluxerSecretKeys = @(
 	@{Name = 'POSTGRES_PASSWORD'; Kind = 'hex'}
 	@{Name = 'MEILI_MASTER_KEY'; Kind = 'hex'}
@@ -240,21 +250,30 @@ function Test-FluxerVersionAtLeast([string]$Found, [string]$Minimum) {
 	return $true
 }
 
+# docker writes the reason a command failed to stderr and nothing else ever repeats it, so stderr
+# is kept rather than discarded. The two streams stay apart because every caller reads Text as
+# data, and one warning line on stderr would be one more line of JSON, one more image reference or
+# one more container ID.
 function Invoke-FluxerCapture([string[]]$CommandArgs) {
 	$previous = $ErrorActionPreference
 	$ErrorActionPreference = 'Continue'
-	$text = ''
+	$out = @()
+	$err = @()
 	$code = 0
 	try {
-		$output = & docker @CommandArgs 2>$null
+		$output = & docker @CommandArgs 2>&1
 		$code = $LASTEXITCODE
-		if ($null -ne $output) {
-			$text = (@($output) | ForEach-Object {[string]$_}) -join "`n"
+		foreach ($item in @($output)) {
+			if ($item -is [System.Management.Automation.ErrorRecord]) {
+				$err += [string]$item
+			} else {
+				$out += [string]$item
+			}
 		}
 	} finally {
 		$ErrorActionPreference = $previous
 	}
-	return @{Code = $code; Text = $text.Trim()}
+	return @{Code = $code; Text = (($out -join "`n").Trim()); Error = (($err -join "`n").Trim())}
 }
 
 function Invoke-FluxerDocker([string[]]$CommandArgs) {
@@ -753,19 +772,39 @@ function Get-FluxerComposeProject([string]$TargetDir) {
 	return ''
 }
 
-# The image references the stack resolves to, deduplicated. Compose expands them from
-# docker-compose.yml and .env, so this is the same resolution docker compose pull performs. It
-# names the images, not the versions of them.
+$script:FluxerComposeOut = ''
+$script:FluxerComposeErr = ''
+
+# One read-only Compose query, with what Compose printed on stderr kept.
+#
+# Compose loads the whole file set and interpolates every variable in it before it answers either
+# query below. A file that is not there, a file it cannot read and a required variable .env does
+# not set all fail at that point, and the stderr text is the only thing that says which of them it
+# was.
+function Invoke-FluxerComposeQuery([string]$Selector) {
+	$result = Invoke-FluxerCapture @('compose', 'config', $Selector)
+	$script:FluxerComposeOut = $result.Text
+	$script:FluxerComposeErr = $result.Error
+	return $result.Code
+}
+
+# What Compose printed on the last query, indented one level for the caller.
+function Get-FluxerComposeError([string]$Indent) {
+	if ($script:FluxerComposeErr.Length -eq 0) {
+		return "${Indent}nothing"
+	}
+	return (($script:FluxerComposeErr.Split("`n") | ForEach-Object {"$Indent$_"}) -join "`n")
+}
+
+# The image references the stack resolves to, deduplicated, from the last query. Compose expands
+# them from docker-compose.yml and .env, so this is the same resolution docker compose pull
+# performs. It names the images, not the versions of them.
 #
 # By hand:
 #   docker compose config --images
 function Get-FluxerComposeImages {
-	$result = Invoke-FluxerCapture @('compose', 'config', '--images')
-	if ($result.Code -ne 0 -or $result.Text.Length -eq 0) {
-		return @()
-	}
 	$refs = @()
-	foreach ($line in $result.Text.Split("`n")) {
+	foreach ($line in $script:FluxerComposeOut.Split("`n")) {
 		$candidate = $line.Trim()
 		if ($candidate.Length -gt 0) {
 			$refs += $candidate
@@ -839,6 +878,16 @@ function Get-FluxerPostgresMajor([string]$Path) {
 	return ''
 }
 
+# -Force, because Get-Item without it returns nothing for a file the filesystem marks hidden while
+# Test-Path still reports that file as present, and the pair reads as a file of zero bytes.
+function Get-FluxerFileLength([string]$Path) {
+	$item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+	if ($null -eq $item -or $item.PSIsContainer) {
+		return 0
+	}
+	return [long]$item.Length
+}
+
 function Test-FluxerSameFile([string]$Left, [string]$Right) {
 	if (-not (Test-Path -LiteralPath $Left)) {
 		return $false
@@ -876,12 +925,8 @@ function Get-FluxerChangedMounts([string]$TargetDir, [string]$StagingDir) {
 # By hand:
 #   docker compose config --services
 function Get-FluxerComposeServices {
-	$result = Invoke-FluxerCapture @('compose', 'config', '--services')
-	if ($result.Code -ne 0 -or $result.Text.Length -eq 0) {
-		return @()
-	}
 	$services = @()
-	foreach ($line in $result.Text.Split("`n")) {
+	foreach ($line in $script:FluxerComposeOut.Split("`n")) {
 		$candidate = $line.Trim()
 		if ($candidate.Length -gt 0) {
 			$services += $candidate
@@ -890,14 +935,17 @@ function Get-FluxerComposeServices {
 	return @($services)
 }
 
-function Restart-FluxerMounts($Entries) {
+function Restart-FluxerMounts($Entries, [string]$TargetDir) {
 	if (@($Entries).Count -eq 0) {
 		return
 	}
-	$services = Get-FluxerComposeServices
+	if ((Invoke-FluxerComposeQuery '--services') -ne 0) {
+		Stop-Fluxer "docker compose config --services failed in $TargetDir, so the services that mount a refreshed file cannot be restarted. Compose printed:`n$(Get-FluxerComposeError '  ')" $FluxerExitUnhealthy
+	}
+	$services = @(Get-FluxerComposeServices)
 	foreach ($entry in $Entries) {
 		if ($services -notcontains $entry.Service) {
-			Write-FluxerLine "Skipping the restart of $($entry.Service), because the docker-compose.yml in place defines no service by that name."
+			Write-FluxerLine "Skipping the restart of $($entry.Service), because the docker-compose.yml in $TargetDir defines no service by that name."
 			continue
 		}
 		Write-FluxerLine "Restarting $($entry.Service), because $($entry.Name) is mounted into it and up -d does not reload a mounted file."
@@ -939,6 +987,52 @@ function Get-FluxerRecordTag([string]$Record) {
 	return ([string]$lines[0]).Trim()
 }
 
+function Set-FluxerEnvValue([string]$EnvPath, [string]$Name, [string]$Value) {
+	$lines = @(Get-FluxerEnvLines $EnvPath)
+	$written = $false
+	$out = @()
+	foreach ($line in $lines) {
+		if ($line.StartsWith("$Name=")) {
+			$out += "$Name=$Value"
+			$written = $true
+		} else {
+			$out += $line
+		}
+	}
+	if (-not $written) {
+		$out += "$Name=$Value"
+	}
+	Write-FluxerEnvFile $EnvPath $out
+}
+
+# Step 0 of an upgrade: mint the values the refreshed stack requires.
+#
+# Compose stops on a ${NAME:?} it cannot resolve, so a key the running .env does not hold fails
+# every command this script runs before it reaches the step that would have reported it. Writing
+# the value first is what makes the rest of the run possible. This runs before the record, so the
+# .env the record saves is the one that works.
+function Add-FluxerRequiredSecrets([string]$EnvPath) {
+	foreach ($entry in $FluxerUpgradeSecretKeys) {
+		$current = Get-FluxerEnvValue $EnvPath $entry.Name
+		if ($current.Length -ne 0 -and $current -ne 'CHANGE_ME') {
+			continue
+		}
+		$value = ''
+		if ($entry.Kind -eq 'hex') {
+			$value = ConvertTo-FluxerHex (New-FluxerRandomBytes 32)
+		} elseif ($entry.Kind -eq 'base64') {
+			$value = [System.Convert]::ToBase64String((New-FluxerRandomBytes 32))
+		} else {
+			Stop-Fluxer "Unknown secret kind $($entry.Kind) for $($entry.Name)." $FluxerExitSecret
+		}
+		if ($value.Length -eq 0) {
+			Stop-Fluxer "Generated an empty value for $($entry.Name)." $FluxerExitSecret
+		}
+		Set-FluxerEnvValue $EnvPath $entry.Name $value
+		Write-FluxerLine "Wrote $($entry.Name) into .env. The refreshed stack requires it and this instance held no usable value."
+	}
+}
+
 function Get-FluxerNewestRecord([string]$BackupRoot) {
 	if (-not (Test-Path -LiteralPath $BackupRoot)) {
 		return ''
@@ -970,13 +1064,21 @@ function Write-FluxerTextFile([string]$Path, [string[]]$Lines) {
 #
 # By hand:
 #   docker compose images
-function Save-FluxerVersionRecord([string]$Record, [string]$EnvPath) {
-	Write-FluxerTextFile (Join-Path $Record $FluxerTagFile) @((Get-FluxerEnvValue $EnvPath 'FLUXER_IMAGE_TAG'))
+# The record directory is created once both refusals above have passed, so a run
+# that stops here leaves no record behind. A record with no images file would
+# otherwise sort newest and take the place of the last usable one, and a rollback
+# reads the newest.
+function Save-FluxerVersionRecord([string]$BackupRoot, [string]$EnvPath, [string]$TargetDir) {
+	$running = Get-FluxerRunningImageIds
+	if ((Invoke-FluxerComposeQuery '--images') -ne 0) {
+		Stop-Fluxer "docker compose config --images failed in $TargetDir, so the running version cannot be recorded. Compose printed:`n$(Get-FluxerComposeError '  ')" $FluxerExitPrerequisite
+	}
 	$refs = @(Get-FluxerComposeImages)
 	if ($refs.Count -eq 0) {
-		Stop-Fluxer 'docker compose config --images returned nothing, so the running version cannot be recorded.' $FluxerExitPrerequisite
+		Stop-Fluxer "docker compose config --images returned nothing in $TargetDir, so the running version cannot be recorded. The stack files there declare no service with an image." $FluxerExitPrerequisite
 	}
-	$running = Get-FluxerRunningImageIds
+	$Record = New-FluxerRecord $BackupRoot
+	Write-FluxerTextFile (Join-Path $Record $FluxerTagFile) @((Get-FluxerEnvValue $EnvPath 'FLUXER_IMAGE_TAG'))
 	$lines = @()
 	foreach ($reference in $refs) {
 		$id = Get-FluxerRunningImageId $running $reference
@@ -987,6 +1089,7 @@ function Save-FluxerVersionRecord([string]$Record, [string]$EnvPath) {
 	}
 	Write-FluxerTextFile (Join-Path $Record $FluxerImagesFile) $lines
 	Write-FluxerLine "Recorded $($lines.Count) image references in $Record."
+	return $Record
 }
 
 # .env and the stack files go into the record because nothing else regenerates them. .env holds
@@ -1071,8 +1174,18 @@ function Backup-FluxerDatabase([string]$Record, [string]$TargetDir) {
 	Write-FluxerLine "Dumped the database to $dump."
 }
 
+$script:FluxerVolumeError = ''
+
+function Get-FluxerVolumeError([string]$Indent) {
+	if ([string]::IsNullOrWhiteSpace($script:FluxerVolumeError)) {
+		return "${Indent}nothing"
+	}
+	return (($script:FluxerVolumeError -split "`n") | ForEach-Object {"$Indent$_"}) -join "`n"
+}
+
 function Get-FluxerVolumeSizeKb([string]$Volume) {
 	$result = Invoke-FluxerCapture @('run', '--rm', '-v', "${Volume}:/data:ro", $FluxerHelperImage, 'du', '-sk', '/data')
+	$script:FluxerVolumeError = $result.Error
 	if ($result.Code -ne 0) {
 		return -1
 	}
@@ -1100,27 +1213,32 @@ function Get-FluxerFreeKb([string]$Path) {
 #   docker run --rm -v fluxer_seaweedfs-data:/data -v "${PWD}\backups:/backup" alpine tar czf /backup/seaweedfs-data.tgz -C /data .
 #   docker compose up -d
 function Copy-FluxerVolumes([string]$Record, [string]$Project) {
+	$present = @()
 	foreach ($volume in $FluxerBackupVolumes) {
 		$full = "${Project}_$volume"
 		$inspect = Invoke-FluxerCapture @('volume', 'inspect', $full)
 		if ($inspect.Code -ne 0) {
-			Stop-Fluxer "The volume $full does not exist, so the uploads cannot be copied." $FluxerExitBackup
+			Stop-Fluxer "The volume $full does not exist, so the uploads cannot be copied. The stack declares that volume, so this is a project name other than $Project or a volume that was removed. Pass -NoVolumeBackup to take the database dump alone when the uploads of this instance live somewhere this script cannot reach." $FluxerExitBackup
 		}
 		$size = Get-FluxerVolumeSizeKb $full
 		if ($size -lt 0) {
-			Stop-Fluxer "Cannot measure the volume $full." $FluxerExitBackup
+			Stop-Fluxer "Cannot measure the volume $full, so the uploads copy cannot be sized. Pass -NoVolumeBackup to take the database dump alone. Docker printed:`n$(Get-FluxerVolumeError '  ')" $FluxerExitBackup
 		}
 		$free = Get-FluxerFreeKb $Record
 		$need = [long]($size * $FluxerVolumeHeadroomPercent / 100)
 		if ($free -lt $need) {
 			Stop-Fluxer "$full holds $([long]($size / 1024)) MB and $Record has $([long]($free / 1024)) MB free. Point -BackupDir at a drive with room, or pass -NoVolumeBackup to take the database dump alone." $FluxerExitBackup
 		}
+		$present += $volume
+	}
+	if ($present.Count -eq 0) {
+		return
 	}
 	Write-FluxerLine 'Stopping the stack for a consistent copy of the uploads.'
 	if ((Invoke-FluxerDocker @('compose', 'stop')) -ne 0) {
 		Stop-Fluxer 'docker compose stop failed.' $FluxerExitBackup
 	}
-	foreach ($volume in $FluxerBackupVolumes) {
+	foreach ($volume in $present) {
 		$full = "${Project}_$volume"
 		Write-FluxerLine "Copying $full."
 		$code = Invoke-FluxerDocker @('run', '--rm', '-v', "${full}:/data:ro", '-v', "${Record}:/backup", $FluxerHelperImage, 'tar', 'czf', "/backup/$volume.tgz", '-C', '/data', '.')
@@ -1166,7 +1284,7 @@ function Assert-FluxerPostgresMajor([string]$TargetDir, [string]$StagingDir) {
 
 # Puts one line of .env back, and proves it touched nothing else.
 #
-# FLUXER_IMAGE_TAG is the only key either upgrade mode writes. Every other line, which is every
+# FLUXER_IMAGE_TAG is the only key this function writes. Every other line, which is every
 # secret, is compared before the new file replaces the old one, so a rewrite that lost or changed
 # a secret cannot land.
 function Set-FluxerImageTag([string]$EnvPath, [string]$Tag) {
@@ -1199,8 +1317,16 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 	Write-FluxerLine "  Ref:        $Ref"
 	Write-FluxerLine "  Image tag:  $(Get-FluxerEnvValue $EnvPath 'FLUXER_IMAGE_TAG') from .env"
 	Write-FluxerLine "  Backup dir: $BackupRoot"
-	Write-FluxerLine '  Running now:'
 	$running = Get-FluxerRunningImageIds
+	if ((Invoke-FluxerComposeQuery '--images') -ne 0) {
+		Write-FluxerLine '  Refusal:    docker compose config --images fails here, and step 1 of the upgrade reads that list'
+		Write-FluxerLine '  Compose said:'
+		Write-FluxerLine (Get-FluxerComposeError '    ')
+		Write-FluxerLine '  Outcome:    the run stops on step 1 and changes nothing'
+		Write-FluxerLine 'Nothing outside a temporary directory was written. Fix what Compose reports, then run this again.'
+		return
+	}
+	Write-FluxerLine '  Running now:'
 	foreach ($reference in Get-FluxerComposeImages) {
 		$id = Get-FluxerRunningImageId $running $reference
 		if ($id.Length -eq 0) {
@@ -1293,8 +1419,8 @@ function Show-FluxerRollbackPlan([string]$TargetDir, [string]$EnvPath, [string]$
 
 # The full upgrade, in the order that leaves a working instance behind at every point it can fail.
 function Invoke-FluxerUpgrade([string]$TargetDir, [string]$EnvPath, [string]$BackupRoot, [string]$Project) {
-	$record = New-FluxerRecord $BackupRoot
-	Save-FluxerVersionRecord $record $EnvPath
+	Add-FluxerRequiredSecrets $EnvPath
+	$record = Save-FluxerVersionRecord $BackupRoot $EnvPath $TargetDir
 	Save-FluxerCurrentFiles $record $TargetDir $EnvPath
 	Backup-FluxerInstance $record $TargetDir $Project
 
@@ -1339,7 +1465,7 @@ function Invoke-FluxerUpgrade([string]$TargetDir, [string]$EnvPath, [string]$Bac
 	if ((Invoke-FluxerDocker @('compose', 'up', '-d', '--remove-orphans')) -ne 0) {
 		Stop-Fluxer 'docker compose up -d failed. Read docker compose logs.' $FluxerExitUnhealthy
 	}
-	Restart-FluxerMounts $changedMounts
+	Restart-FluxerMounts $changedMounts $TargetDir
 	Wait-FluxerStack 'Waiting for every service to report ready.'
 	$domainValue = Get-FluxerEnvValue $EnvPath 'FLUXER_DOMAIN'
 	if ($domainValue.Length -gt 0) {
@@ -1425,7 +1551,7 @@ function Invoke-FluxerRollback([string]$TargetDir, [string]$EnvPath, [string]$Ba
 	}
 	# The mounted file came back from the record, so its service restarts. Comparing it first
 	# would save one restart and cost the reader a reason.
-	Restart-FluxerMounts $FluxerMountedFiles
+	Restart-FluxerMounts $FluxerMountedFiles $TargetDir
 	Wait-FluxerStack 'Waiting for every service to report ready.'
 	$domainValue = Get-FluxerEnvValue $EnvPath 'FLUXER_DOMAIN'
 	if ($domainValue.Length -gt 0) {
@@ -1439,6 +1565,88 @@ function Invoke-FluxerRollback([string]$TargetDir, [string]$EnvPath, [string]$Ba
 		Write-FluxerLine 'The database did not move. That record holds no dump, because the upgrade ran with -SkipBackupAcceptDataLoss, so a release that changed the schema has no way back.'
 	}
 	exit 0
+}
+
+function Assert-FluxerInstance([string]$TargetDir, [string]$EnvPath) {
+	if (-not (Test-Path -LiteralPath $EnvPath)) {
+		Stop-Fluxer "No .env in $TargetDir. That directory holds no instance. Run install.ps1 with neither -Update nor -Rollback to set one up." $FluxerExitPrerequisite
+	}
+	$compose = Join-Path $TargetDir 'docker-compose.yml'
+	if (-not (Test-Path -LiteralPath $compose)) {
+		Stop-Fluxer "No docker-compose.yml in $TargetDir. That directory does not hold an instance." $FluxerExitPrerequisite
+	}
+	if ((Get-FluxerFileLength $compose) -eq 0) {
+		Stop-Fluxer "$compose is empty. A redirect that captured a failed download leaves that, and Compose refuses an empty compose file. Put the file back from a backup or from the record of the last upgrade, then run this again." $FluxerExitPrerequisite
+	}
+}
+
+# Compose reads COMPOSE_FILE from .env and loads every file it names before it answers anything, so
+# one file the directory does not hold fails every docker compose command run in it. What Compose
+# prints for that is a single stat line that names neither COMPOSE_FILE nor .env.
+#
+# Two of the files this script downloads sit in .env.example as a COMPOSE_FILE line to uncomment,
+# so an instance set up before this script existed can hold the line and not the file. An upgrade
+# reads the running images before it refreshes the stack files, so such an instance stops on the
+# first step and no re-run gets any further.
+#
+# The line stays. Without the file it names the edge container binds 80 and 443 and requests its
+# own certificate.
+#
+# By hand:
+#   Select-String COMPOSE_FILE .env
+# A value as Compose reads it: no surrounding quotes and no trailing blanks.
+# Get-FluxerEnvLines already drops a carriage return. Reading it any other way
+# invents a filename the operator cannot see and refuses a run that would have
+# worked.
+function Get-FluxerEnvScalar([string]$EnvPath, [string]$Name) {
+	$raw = (Get-FluxerEnvValue $EnvPath $Name).TrimEnd()
+	if ($raw.Length -ge 2) {
+		if (($raw[0] -eq '"' -and $raw[-1] -eq '"') -or ($raw[0] -eq "'" -and $raw[-1] -eq "'")) {
+			return $raw.Substring(1, $raw.Length - 2)
+		}
+	}
+	return $raw
+}
+
+function Assert-FluxerComposeFiles([string]$TargetDir, [string]$EnvPath) {
+	$value = ''
+	$source = 'the environment'
+	if ($null -ne $env:COMPOSE_FILE) {
+		$value = [string]$env:COMPOSE_FILE
+	}
+	if ($value.Length -eq 0) {
+		$value = Get-FluxerEnvScalar $EnvPath 'COMPOSE_FILE'
+		$source = $EnvPath
+	}
+	if ($value.Length -eq 0) {
+		return
+	}
+	$separator = ''
+	if ($null -ne $env:COMPOSE_PATH_SEPARATOR) {
+		$separator = [string]$env:COMPOSE_PATH_SEPARATOR
+	}
+	if ($separator.Length -eq 0) {
+		$separator = Get-FluxerEnvScalar $EnvPath 'COMPOSE_PATH_SEPARATOR'
+	}
+	if ($separator.Length -eq 0) {
+		$separator = [System.IO.Path]::PathSeparator
+	}
+	foreach ($name in $value.Split([string[]]$separator, [System.StringSplitOptions]::None)) {
+		if ($name.Length -eq 0) {
+			continue
+		}
+		$path = $name
+		if (-not [System.IO.Path]::IsPathRooted($path)) {
+			$path = Join-Path $TargetDir $name
+		}
+		if (Test-Path -LiteralPath $path) {
+			continue
+		}
+		if ($FluxerStackFiles -contains $name) {
+			Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails and this run stops before it changes anything. This script downloads $name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:`n  Invoke-WebRequest -Uri $FluxerRawBase/$Ref/$FluxerStackPath/$name -OutFile $path -UseBasicParsing`nLeave the COMPOSE_FILE line as it is. Without $name the edge container binds 80 and 443 and requests its own certificate." $FluxerExitPrerequisite
+		}
+		Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails. This script does not download $name. Put that file back, or take it out of the COMPOSE_FILE line." $FluxerExitPrerequisite
+	}
 }
 
 function Invoke-FluxerInstall {
@@ -1478,8 +1686,17 @@ function Invoke-FluxerInstall {
 	Invoke-FluxerPreflight
 
 	$targetPath = $Dir
+	$adoptedCwd = $false
 	if ($targetPath.Length -eq 0) {
-		$targetPath = Join-Path $HOME 'fluxer'
+		$here = (Get-Location).Path
+		$hereEnv = Join-Path $here '.env'
+		$hereIsFluxer = (Test-Path -LiteralPath $hereEnv) -and (@(Get-FluxerEnvLines $hereEnv | Where-Object {$_.StartsWith('FLUXER_')}).Count -gt 0)
+		if (($Update -or $Rollback) -and (Get-FluxerFileLength (Join-Path $here 'docker-compose.yml')) -gt 0 -and $hereIsFluxer) {
+			$targetPath = $here
+			$adoptedCwd = $true
+		} else {
+			$targetPath = Join-Path $HOME 'fluxer'
+		}
 	}
 	$targetDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($targetPath)
 	$envPath = Join-Path $targetDir '.env'
@@ -1488,18 +1705,17 @@ function Invoke-FluxerInstall {
 		$backupPath = Join-Path $targetDir 'backups'
 	}
 	$backupRoot = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($backupPath)
+	if ($adoptedCwd) {
+		Write-FluxerLine "Acting on the instance in $targetDir, the working directory. Pass -Dir to name another."
+	}
 
 	if ($Update -or $Rollback) {
-		if (-not (Test-Path -LiteralPath $envPath)) {
-			Stop-Fluxer "No .env in $targetDir. That directory holds no instance. Run install.ps1 with neither -Update nor -Rollback to set one up." $FluxerExitPrerequisite
-		}
-		if (-not (Test-Path -LiteralPath (Join-Path $targetDir 'docker-compose.yml'))) {
-			Stop-Fluxer "No docker-compose.yml in $targetDir. That directory does not hold an instance." $FluxerExitPrerequisite
-		}
+		Assert-FluxerInstance $targetDir $envPath
 		if ($Ref.Length -eq 0) {
 			$script:Ref = Get-FluxerRefForTag (Get-FluxerEnvValue $envPath 'FLUXER_IMAGE_TAG')
 			Assert-FluxerDerivedRef $Ref $envPath
 		}
+		Assert-FluxerComposeFiles $targetDir $envPath
 		$project = Get-FluxerComposeProject $targetDir
 		if ($project.Length -eq 0) {
 			Stop-Fluxer "docker-compose.yml in $targetDir declares no project name, so the volume names cannot be derived." $FluxerExitPrerequisite

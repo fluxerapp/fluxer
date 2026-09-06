@@ -332,10 +332,11 @@ services:
         rtc:
           tcp_port: ${FLUXER_LIVEKIT_TCP_PORT:-7881}
           udp_port: ${FLUXER_LIVEKIT_UDP_PORT:-7882}
-          use_external_ip: true
+          use_external_ip: ${FLUXER_LIVEKIT_USE_EXTERNAL_IP:-true}
+          node_ip: "${FLUXER_LIVEKIT_NODE_IP:-}"
           stun_servers:
-            - stun.l.google.com:19302
-            - stun1.l.google.com:19302
+            - ${FLUXER_LIVEKIT_STUN_PRIMARY:-stun.l.google.com:19302}
+            - ${FLUXER_LIVEKIT_STUN_SECONDARY:-stun1.l.google.com:19302}
         webhook:
           api_key: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}
           urls:
